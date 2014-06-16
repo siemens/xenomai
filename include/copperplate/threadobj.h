@@ -83,8 +83,6 @@ struct threadobj_corespec {
 	int policy_unlocked;
 	struct sched_param_ex schedparam_unlocked;
 	timer_t rr_timer;
-	struct timespec wakeup;
-	ticks_t period;
 	/** Timeout reported by sysregd. */
 	struct timespec timeout;
 };
@@ -178,6 +176,7 @@ struct threadobj {
 	int wait_prio;
 	void *wait_union;
 	size_t wait_size;
+	timer_t periodic_timer;
 
 	struct threadobj_corespec core;
 	struct timespec tslice;

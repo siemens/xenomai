@@ -840,13 +840,6 @@ int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 	if (tcb == NULL)
 		goto out;
 
-	/*
-	 * XXX: we enforce locality since Cobalt wants this for
-	 * pthread_make_periodic_np(), although Mercury would accept
-	 * remote threads. This seems an acceptable limitation
-	 * compared to introducing a new Cobalt API for supporting a
-	 * somewhat weird feature.
-	 */
 	if (!threadobj_local_p(&tcb->thobj)) {
 		ret = -EINVAL;
 		goto out;

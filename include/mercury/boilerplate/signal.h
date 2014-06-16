@@ -32,6 +32,7 @@
 #define SIGRELS		__SIGRSVD(2)	/* Syscall abort */
 #define SIGRRB		__SIGRSVD(3)	/* Round-robin event */
 #define SIGAGENT	__SIGRSVD(4)	/* Request to remote agent */
+#define SIGPERIOD	__SIGRSVD(5)	/* Periodic signal */
 
 /* Generates private signal numbers for clients, up to SIGRTMAX. */
 #define __SIGPRIV(n)	__SIGRSVD(8 + (n))

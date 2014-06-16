@@ -56,6 +56,8 @@ static int request_setschedparam(struct threadobj *thobj, int policy,
 
 static int request_cancel(struct threadobj *thobj);
 
+static sigset_t sigperiod_set;
+
 static int threadobj_agent_prio;
 
 int threadobj_high_prio;
@@ -448,21 +450,6 @@ static inline void disable_rr_corespec(struct threadobj *thobj) /* thobj->lock h
 	/* nop */
 }
 
-int threadobj_set_periodic(struct threadobj *thobj,
-			   const struct timespec *__restrict__ idate,
-			   const struct timespec *__restrict__ period)
-{				/* thobj->lock held */
-	__threadobj_check_locked(thobj);
-
-	return -pthread_make_periodic_np(thobj->ptid,
-					 CLOCK_COPPERPLATE, idate, period);
-}
-
-int threadobj_wait_period(unsigned long *overruns_r)
-{
-	return -pthread_wait_np(overruns_r);
-}
-
 int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->lock held */
 {
 	struct cobalt_threadstat stat;
@@ -536,7 +523,7 @@ static void suspend_sighandler(int sig)
 	sleep_suspended();
 }
 
-static void resume_sighandler(int sig)
+static void nop_sighandler(int sig)
 {
 	/* nop */
 }
@@ -568,8 +555,9 @@ static inline void pkg_init_corespec(void)
 	sigaction(SIGRRB, &sa, NULL);
 	sa.sa_handler = suspend_sighandler;
 	sigaction(SIGSUSP, &sa, NULL);
-	sa.sa_handler = resume_sighandler;
+	sa.sa_handler = nop_sighandler;
 	sigaction(SIGRESM, &sa, NULL);
+	sigaction(SIGPERIOD, &sa, NULL);
 }
 
 static inline int threadobj_init_corespec(struct threadobj *thobj)
@@ -616,12 +604,14 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	 * - we must process the suspension signal on behalf of the
 	 * target thread, as we want that thread to block upon
 	 * receipt.
+	 *
+	 * In addition, we block the periodic signal, which we only
+	 * want to receive from within threadobj_wait_period().
 	 */
 	sigemptyset(&set);
 	sigaddset(&set, SIGRESM);
+	sigaddset(&set, SIGPERIOD);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
-
-	thobj->core.period = 0;
 
 	/*
 	 * Create the per-thread round-robin timer.
@@ -834,68 +824,6 @@ static void disable_rr_corespec(struct threadobj *thobj) /* thobj->lock held */
 	timer_settime(thobj->core.rr_timer, 0, &value, NULL);
 }
 
-int threadobj_set_periodic(struct threadobj *thobj,
-			   const struct timespec *__restrict__ idate,
-			   const struct timespec *__restrict__ period)
-{				/* thobj->lock held */
-	struct timespec now, wakeup;
-
-	__threadobj_check_locked(thobj);
-
-	clock_gettime(CLOCK_COPPERPLATE, &now);
-
-	if (idate->tv_sec || idate->tv_nsec) {
-		if (timespec_before(idate, &now))
-			return -ETIMEDOUT;
-		wakeup = *idate;
-	} else
-		wakeup = now;
-
-	timespec_add(&thobj->core.wakeup, &wakeup, period);
-	thobj->core.period = timespec_scalar(period);
-
-	return 0;
-}
-
-int threadobj_wait_period(unsigned long *overruns_r)
-{
-	struct threadobj *current = threadobj_current();
-	struct timespec now, delta, wakeup;
-	unsigned long overruns = 0;
-	ticks_t d, period;
-	int ret;
-
-	period = current->core.period;
-	if (period == 0)
-		return -EWOULDBLOCK;
-
-	wakeup = current->core.wakeup;
-	ret = threadobj_sleep(&wakeup);
-	if (ret)
-		return ret;
-
-	/* Check whether we had an overrun. */
-
-	clock_gettime(CLOCK_COPPERPLATE, &now);
-
-	timespec_sub(&delta, &now, &wakeup);
-	d = timespec_scalar(&delta);
-	if (d >= period) {
-		overruns = d / period;
-		timespec_adds(&current->core.wakeup, &wakeup,
-			      overruns * (period + 1));
-	} else
-		timespec_adds(&current->core.wakeup, &wakeup, period);
-
-	if (overruns)
-		ret = -ETIMEDOUT;
-
-	if (overruns_r)
-		*overruns_r = overruns;
-
-	return ret;
-}
-
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat) /* thobj->lock held */
 {
@@ -1037,6 +965,7 @@ int threadobj_init(struct threadobj *thobj,
 	thobj->cnode = __node_id;
 	thobj->pid = 0;
 	thobj->cancel_sem = NULL;
+	thobj->periodic_timer = NULL;
 
 	/*
 	 * CAUTION: wait_union and wait_size have been set in
@@ -1075,6 +1004,8 @@ static void uninit_thread(struct threadobj *thobj)
 static void destroy_thread(struct threadobj *thobj)
 {
 	threadobj_cleanup_corespec(thobj);
+	if (thobj->periodic_timer)
+		__RT(timer_delete(thobj->periodic_timer));
 	uninit_thread(thobj);
 }
 
@@ -1484,6 +1415,72 @@ int threadobj_sleep(const struct timespec *ts)
 	return -ret;
 }
 
+int threadobj_set_periodic(struct threadobj *thobj,
+			   const struct timespec *__restrict__ idate,
+			   const struct timespec *__restrict__ period)
+{				/* thobj->lock held */
+	struct itimerspec its;
+	struct sigevent sev;
+	int ret;
+
+	__threadobj_check_locked(thobj);
+
+	if (thobj->periodic_timer == NULL) {
+		memset(&sev, 0, sizeof(sev));
+		sev.sigev_signo = SIGPERIOD;
+		sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
+		sev.sigev_notify_thread_id = threadobj_get_pid(thobj);
+		ret = __RT(timer_create(CLOCK_COPPERPLATE, &sev,
+					&thobj->periodic_timer));
+		if (ret)
+			return __bt(-errno);
+	}
+
+	if (period == NULL) {
+		/* Maybe a oneshot specification. */
+		its.it_interval.tv_sec = 0;
+		its.it_interval.tv_nsec = 0;
+	} else
+		its.it_interval = *period;
+
+	if (idate == NULL) {
+		/* Maybe a start now or stop specification. */
+		its.it_value.tv_sec = 0;
+		its.it_value.tv_nsec = 0;
+		ret = __RT(timer_settime(thobj->periodic_timer, 0,
+					 &its, NULL));
+	} else {
+		its.it_value = *idate;
+		ret = __RT(timer_settime(thobj->periodic_timer, TIMER_ABSTIME,
+					 &its, NULL));
+	}
+
+	if (ret)
+		return __bt(-errno);
+
+	return 0;
+}
+
+int threadobj_wait_period(unsigned long *overruns_r)
+{
+	siginfo_t si;
+	int sig;
+
+	for (;;) {
+		sig = __RT(sigwaitinfo(&sigperiod_set, &si));
+		if (sig == SIGPERIOD)
+			break;
+		if (errno == EINTR)
+			return -EINTR;
+		panic("cannot wait for next period, %s", symerror(-errno));
+	}
+
+	if (overruns_r)
+		*overruns_r = si.si_overrun;
+
+	return 0;
+}
+
 void threadobj_spin(ticks_t ns)
 {
 	ticks_t end;
@@ -1603,6 +1600,7 @@ int threadobj_pkg_init(void)
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_CORE));
 	threadobj_high_prio = threadobj_irq_prio - 1;
 	threadobj_agent_prio = threadobj_high_prio;
+	sigaddset(&sigperiod_set, SIGPERIOD);
 
 	pkg_init_corespec();
 	start_agent();

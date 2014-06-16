@@ -24,6 +24,7 @@
 #define __SIGRSVD(n)	(SIGRTMIN + 8 + (n))
 
 #define SIGAGENT	__SIGRSVD(0) /* Request to remote agent */
+#define SIGPERIOD	__SIGRSVD(1) /* Periodic signal */
 
 /* Generates private signal numbers for clients, up to SIGRTMAX. */
 #define __SIGPRIV(n)	__SIGRSVD(8 + (n))
