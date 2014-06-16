@@ -49,7 +49,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#ifdef __XENO__
+#ifdef CONFIG_XENO_COBALT
 #include <rtdm/can.h>
 #else
 #include <linux/can.h>
@@ -101,7 +101,7 @@ static void *transmitter(void *arg)
     frame.can_id = can_id;
     frame.can_dlc = sizeof(*rtt_time);
 
-#ifdef __XENO__
+#ifdef CONFIG_XENO_COBALT
     pthread_set_name_np(pthread_self(), "rtcan_rtt_transmitter");
 #endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
@@ -147,7 +147,7 @@ static void *receiver(void *arg)
     struct rtt_stat rtt_stat = {0, 1000000000000000000LL, -1000000000000000000LL,
 				0, 0, 0};
 
-#ifdef __XENO__
+#ifdef CONFIG_XENO_COBALT
     pthread_set_name_np(pthread_self(), "rtcan_rtt_receiver");
 #endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
