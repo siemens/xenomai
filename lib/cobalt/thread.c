@@ -552,54 +552,6 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
 }
 
 /**
- * Make a thread periodic.
- *
- * This service make the Cobalt interface @a thread periodic.
- *
- * This service is a non-portable extension of the POSIX interface.
- *
- * @param thread thread identifier.
- *
- * @param clk_id clock identifier, either CLOCK_REALTIME,
- * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW.
- *
- * @param starttp start time, expressed as an absolute value of the
- * clock @a clock_id. The affected thread will be delayed until this
- * point is reached.
- *
- * @param periodtp period, expressed as a time interval.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a thread is invalid;
- * - ETIMEDOUT, the start time has already passed.
- * - EINVAL, the specified clock is unsupported;
- */
-int pthread_make_periodic_np(pthread_t thread,
-			     clockid_t clk_id,
-			     const struct timespec *__restrict__ starttp,
-			     const struct timespec *__restrict__ periodtp)
-{
-	return -XENOMAI_SKINCALL4(__cobalt_muxid,
-				  sc_cobalt_thread_make_periodic,
-				  thread, clk_id, starttp, periodtp);
-}
-
-int pthread_wait_np(unsigned long *overruns_r)
-{
-	int ret, oldtype;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-
-	ret = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_thread_wait, overruns_r);
-
-	pthread_setcanceltype(oldtype, NULL);
-
-	return ret;
-}
-
-/**
  * Set the mode of the current thread.
  *
  * This service sets the mode of the calling thread. @a clrmask and @a setmask

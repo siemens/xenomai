@@ -92,8 +92,6 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_thread_getschedparam_ex, cobalt_thread_getschedparam_ex, current),
 	SKINCALL_DEF(sc_cobalt_sched_weightprio, cobalt_sched_weighted_prio, current),
 	SKINCALL_DEF(sc_cobalt_sched_yield, cobalt_sched_yield, primary),
-	SKINCALL_DEF(sc_cobalt_thread_make_periodic, cobalt_thread_make_periodic_np, conforming),
-	SKINCALL_DEF(sc_cobalt_thread_wait, cobalt_thread_wait_np, primary),
 	SKINCALL_DEF(sc_cobalt_thread_set_mode, cobalt_thread_set_mode_np, primary),
 	SKINCALL_DEF(sc_cobalt_thread_set_name, cobalt_thread_set_name_np, current),
 	SKINCALL_DEF(sc_cobalt_thread_kill, cobalt_thread_kill, conforming),

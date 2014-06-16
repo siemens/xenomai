@@ -129,52 +129,6 @@ DEFINE_EVENT(cobalt_posix_schedparam, cobalt_pthread_getschedparam,
 	TP_ARGS(pth, policy, param_ex)
 );
 
-TRACE_EVENT(cobalt_pthread_make_periodic,
-	TP_PROTO(unsigned long pth, clockid_t clk_id,
-		 struct timespec *start, struct timespec *period),
-	TP_ARGS(pth, clk_id, start, period),
-
-	TP_STRUCT__entry(
-		__field(unsigned long, pth)
-		__field(clockid_t, clk_id)
-		__timespec_fields(start)
-		__timespec_fields(period)
-	),
-
-	TP_fast_assign(
-		__entry->pth = pth;
-		__entry->clk_id = clk_id;
-		__assign_timespec(start, start);
-		__assign_timespec(period, period);
-	),
-
-	TP_printk("pth=%p clock_id=%d start=(%ld.%09ld) period=(%ld.%09ld)",
-		  (void *)__entry->pth, __entry->clk_id,
-		  __timespec_args(start),
-		  __timespec_args(period)
-	)
-);
-
-DEFINE_EVENT(cobalt_void, cobalt_pthread_wait_entry,
-	TP_PROTO(int dummy),
-	TP_ARGS(dummy)
-);
-
-TRACE_EVENT(cobalt_pthread_wait_exit,
-	TP_PROTO(int status, unsigned long overruns),
-	TP_ARGS(status, overruns),
-	TP_STRUCT__entry(
-		__field(int, status)
-		__field(unsigned long, overruns)
-	),
-	TP_fast_assign(
-		__entry->status = status;
-		__entry->overruns = overruns;
-	),
-	TP_printk("status=%d overruns=%lu",
-		  __entry->status, __entry->overruns)
-);
-
 #define cobalt_print_thread_mode(__mode)			\
 	__print_flags(__mode, "|",				\
 		      {PTHREAD_WARNSW, "warnsw"},		\

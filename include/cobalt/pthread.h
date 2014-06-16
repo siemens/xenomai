@@ -96,13 +96,6 @@ COBALT_DECL(int, pthread_kill(pthread_t ptid, int sig));
 
 COBALT_DECL(int, pthread_join(pthread_t ptid, void **retval));
 
-int pthread_make_periodic_np(pthread_t thread,
-			     clockid_t clk_id,
-			     const struct timespec *__restrict__ starttp,
-			     const struct timespec *__restrict__ periodtp);
-
-int pthread_wait_np(unsigned long *overruns_r);
-
 int pthread_set_mode_np(int clrmask, int setmask,
 			int *mask_r);
 

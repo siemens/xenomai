@@ -417,41 +417,6 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 	return 0;
 }
 
-static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
-					   clockid_t clock_id,
-					   struct timespec *starttp,
-					   struct timespec *periodtp)
-{
-
-	xnticks_t start, period;
-	int ret;
-	spl_t s;
-
-	if (clock_id != CLOCK_MONOTONIC &&
-	    clock_id != CLOCK_MONOTONIC_RAW &&
-	    clock_id != CLOCK_REALTIME)
-		return -EINVAL;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC,
-			       struct cobalt_thread)) {
-		ret = -ESRCH;
-		goto unlock_and_exit;
-	}
-
-	start = ts2ns(starttp);
-	period = ts2ns(periodtp);
-	ret = xnthread_set_periodic(&thread->threadbase, start,
-				    clock_flag(TIMER_ABSTIME, clock_id),
-				    period);
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return ret;
-}
-
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
 	const int valid_flags = XNLOCK|XNTRAPSW|XNTRAPLB;
@@ -637,46 +602,6 @@ fail:
 	xnthread_cancel(&thread->threadbase);
 
 	return ERR_PTR(ret);
-}
-
-int cobalt_thread_make_periodic_np(unsigned long pth,
-				   clockid_t clk_id,
-				   struct timespec __user *u_startt,
-				   struct timespec __user *u_periodt)
-{
-	struct timespec startt, periodt;
-	struct cobalt_local_hkey hkey;
-	struct cobalt_thread *thread;
-
-	hkey.u_pth = pth;
-	hkey.mm = current->mm;
-	thread = thread_lookup(&hkey);
-
-	if (__xn_safe_copy_from_user(&startt, u_startt, sizeof(startt)))
-		return -EFAULT;
-
-	if (__xn_safe_copy_from_user(&periodt, u_periodt, sizeof(periodt)))
-		return -EFAULT;
-
-	trace_cobalt_pthread_make_periodic(pth, clk_id, &startt, &periodt);
-
-	return pthread_make_periodic_np(thread, clk_id, &startt, &periodt);
-}
-
-int cobalt_thread_wait_np(unsigned long __user *u_overruns)
-{
-	unsigned long overruns = 0;
-	int ret;
-
-	trace_cobalt_pthread_wait_entry(0);
-
-	ret = xnthread_wait_period(&overruns);
-	if (u_overruns && (ret == 0 || ret == -ETIMEDOUT))
-		__xn_put_user(overruns, u_overruns);
-
-	trace_cobalt_pthread_wait_exit(ret, overruns);
-
-	return ret;
 }
 
 int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)

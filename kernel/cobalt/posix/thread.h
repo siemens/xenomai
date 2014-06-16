@@ -138,13 +138,6 @@ cobalt_thread_shadow(struct task_struct *p,
 		     struct cobalt_local_hkey *lhkey,
 		     unsigned long __user *u_window_offset);
 
-int cobalt_thread_make_periodic_np(unsigned long tid,
-				   clockid_t clk_id,
-				   struct timespec __user *u_startt,
-				   struct timespec __user *u_periodt);
-
-int cobalt_thread_wait_np(unsigned long __user *u_overruns);
-
 int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r);
 
 int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name);
