@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
@@ -26,6 +25,21 @@
 #include "init.h"
 #include "tickLib.h"
 #include "taskLib.h"
+
+/**
+ * @defgroup vxworks VxWorks&reg; emulator
+ *
+ * A VxWorks&reg; emulation library on top of Xenomai.
+ *
+ * The emulator mimicks the behavior described in the public
+ * documentation of the WIND 5.x API for the following class of
+ * services:
+ *
+ * - taskLib, taskInfoLib, taskHookLib,
+ * - semLib, msgQLib, wdLib, memPartLib
+ * - intLib, tickLib, sysLib (partial)
+ * - errnoLib, lstLib, kernelLib (partial)
+ */
 
 static unsigned int clock_resolution = 1000000; /* 1ms */
 

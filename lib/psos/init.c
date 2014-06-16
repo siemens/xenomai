@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -36,6 +35,18 @@
 #include "pt.h"
 #include "rn.h"
 
+/**
+ * @defgroup psos pSOS&reg; emulator
+ *
+ * A pSOS&reg; emulation library on top of Xenomai.
+ *
+ * The emulator mimicks the behavior described in the public
+ * documentation of the pSOS 2.x API for the following class of
+ * services:
+ *
+ * - Tasks, Events, Queues, Semaphores
+ * - Partitions, Regions, Timers
+ */
 unsigned int psos_long_names;
 
 static unsigned int clock_resolution = 1000000; /* 1ms */

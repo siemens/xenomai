@@ -866,7 +866,9 @@ INPUT                  =						\
  		       @top_srcdir@/kernel/drivers			\
  		       @top_srcdir@/lib/cobalt				\
  		       @top_srcdir@/lib/analogy				\
- 		       @top_srcdir@/lib/alchemy
+ 		       @top_srcdir@/lib/alchemy				\
+ 		       @top_srcdir@/lib/vxworks				\
+ 		       @top_srcdir@/lib/psos
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or
 # directories that contain example code fragments that are included (see
