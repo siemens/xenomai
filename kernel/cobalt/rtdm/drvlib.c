@@ -87,7 +87,7 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
  *
  * After initialising a task, the task handle remains valid and can be
  * passed to RTDM services until either rtdm_task_destroy() or
- * rtdm_task_join_nrt() was invoked.
+ * rtdm_task_join() was invoked.
  *
  * @param[in,out] task Task handle
  * @param[in] name Optional task name
@@ -317,30 +317,24 @@ EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
  * @brief Wait on a real-time task to terminate
  *
  * @param[in,out] task Task handle as returned by rtdm_task_init()
- * @param[in] poll_delay Delay in milliseconds between periodic tests for the
- * state of the real-time task. This parameter is ignored if the termination
- * is internally realised without polling.
  *
- * @note Passing the same task handle to RTDM services after the completion of
- * this function is not allowed.
+ * @note Passing the same task handle to RTDM services after the
+ * completion of this function is not allowed.
  *
- * @note This service does not trigger the termination of the targeted task.
- * The user has to take of this, otherwise rtdm_task_join_nrt() will never
- * return.
+ * @note This service does not trigger the termination of the targeted
+ * task.  The user has to take of this, otherwise rtdm_task_join()
+ * will never return.
  *
- * @coretags{secondary-only}
+ * @coretags{mode-unrestricted}
  */
-void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
+void rtdm_task_join(rtdm_task_t *task)
 {
-	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
-		return;
-
 	trace_cobalt_driver_task_join(task);
 
 	xnthread_join(task, true);
 }
 
-EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
+EXPORT_SYMBOL_GPL(rtdm_task_join);
 
 /**
  * @brief Busy-wait a specified amount of time

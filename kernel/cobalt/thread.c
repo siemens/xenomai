@@ -1452,7 +1452,7 @@ unlock_and_exit:
 EXPORT_SYMBOL_GPL(xnthread_cancel);
 
 /**
- * @fn void xnthread_join(struct xnthread *thread)
+ * @fn void xnthread_join(struct xnthread *thread, bool uninterruptible)
  * @brief Join with a terminated thread.
  *
  * This service waits for @a thread to terminate after a call to
@@ -1464,6 +1464,9 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  * secondary).
  *
  * @param thread The descriptor address of the thread to join with.
+ *
+ * @param uninterruptible Boolean telling whether the service should
+ * wait for completion uninterruptible if called from secondary mode.
  *
  * @return 0 is returned on success. Otherwise, the following error
  * codes indicate the cause of the failure:

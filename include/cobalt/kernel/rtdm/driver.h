@@ -987,7 +987,13 @@ static inline int rtdm_task_should_stop(void)
 	return xnthread_test_info(xnshadow_current(), XNCANCELD);
 }
 
-void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay);
+void rtdm_task_join(rtdm_task_t *task);
+
+static inline void __deprecated rtdm_task_join_nrt(rtdm_task_t *task,
+						   unsigned int poll_delay)
+{
+	rtdm_task_join(task);
+}
 
 static inline void rtdm_task_set_priority(rtdm_task_t *task, int priority)
 {

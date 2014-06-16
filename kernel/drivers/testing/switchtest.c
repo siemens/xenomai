@@ -563,7 +563,7 @@ static void rtswitch_close(struct rtdm_fd *fd)
 
 			if (task->base.flags & RTSWITCH_KERNEL) {
 				rtdm_task_destroy(&task->ktask);
-				rtdm_task_join_nrt(&task->ktask, 0);
+				rtdm_task_join(&task->ktask);
 			}
 			rtdm_event_destroy(&task->rt_synch);
 		}
