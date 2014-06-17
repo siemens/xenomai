@@ -377,10 +377,10 @@ patch_kernelversion_specific="y"
 case $linux_VERSION.$linux_PATCHLEVEL in
 
     #
-    #  Linux v2.6 and 3.x section
+    #  Linux 3.x section
     #
 
-    2.6|3.*)
+    3.*)
 
     patch_architecture_specific="y"
 
