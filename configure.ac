@@ -836,7 +836,6 @@ AC_CONFIG_FILES([ \
 	lib/analogy/Makefile \
 	testsuite/Makefile \
 	testsuite/latency/Makefile \
-	testsuite/cyclic/Makefile \
 	testsuite/switchtest/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/unit/Makefile \

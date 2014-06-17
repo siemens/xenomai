@@ -80,7 +80,6 @@ host_triplet = @host@
 target_triplet = @target@
 @XENO_COBALT_TRUE@am__append_1 = \
 @XENO_COBALT_TRUE@	clocktest \
-@XENO_COBALT_TRUE@	cyclic \
 @XENO_COBALT_TRUE@	latency \
 @XENO_COBALT_TRUE@	regression \
 @XENO_COBALT_TRUE@	switchtest \
@@ -156,8 +155,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = latency unit clocktest cyclic regression switchtest \
-	xeno-test
+DIST_SUBDIRS = latency unit clocktest regression switchtest xeno-test
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
