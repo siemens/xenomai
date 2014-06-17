@@ -25,7 +25,6 @@ EXTRA_DIST = kernel debian
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
 		-o -name '*~' -o -name autom4te.cache`
-	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
 dev devices:
 if XENO_COBALT
