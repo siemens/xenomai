@@ -422,15 +422,16 @@ static int process_input(struct config *cfg, int *elements)
 		for (i = 0; i < cfg->chans_count; i++)
 			memcpy(cfg->buffer + filled * scan_size + i * chan_size,
 			       tmp, chan_size);
-
 		filled ++;
 	}
-
 out:
         if (err < 0)
 		return err;
 
         *elements = filled;
+
+	fprintf(stderr, "cmd_write: converted %d doubles [each on %d bytes] \n",
+		filled, chan_size);
 
 	return 0;
 }
@@ -456,10 +457,16 @@ static int run_acquisition(struct config *cfg)
 	if (elements == 0)
 		return -ENOENT;
 
+	fprintf(stderr, "cmd_write: write %d elements [%d bytes per element] on "
+			"%d channels \n", elements, chan_size, cfg->chans_count );
+
+	/* write data to the asynchronous buffer */
 	err = a4l_async_write(&cfg->dsc, cfg->buffer, elements * scan_size,
 		              A4L_INFINITE);
-	if (err < 0)
+	if (err < 0) {
+		fprintf(stderr, "cmd_write: a4l_async_write failed (%d) \n", err );
 		return err;
+	}
 
 	return 0;
 }

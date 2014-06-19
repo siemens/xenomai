@@ -11,7 +11,6 @@
 #define TRANSFER_SIZE 0x1000
 
 /* --- Driver related structures --- */
-
 struct fake_priv {
 	/* Attach configuration parameters
 	   (they should be relocated in ai_priv) */
@@ -183,22 +182,23 @@ int ao_pull_values(struct a4l_subdevice *subd)
 
 	/* Let's have a look at how many samples are available */
 	priv->count = a4l_buf_count(subd) < TRANSFER_SIZE ?
-		a4l_buf_count(subd) : TRANSFER_SIZE;
+		      a4l_buf_count(subd) : TRANSFER_SIZE;
 
 	if (!priv->count)
 		return 0;
 
 	err = a4l_buf_get(subd, priv->buffer, priv->count);
 	if (err < 0) {
+		a4l_err(subd->dev, "ao_get_values: a4l_buf_get failed (err=%d)\n", err);
 		priv->count = 0;
-		a4l_err(subd->dev,
-			"ao_get_values: a4l_buf_get failed (err=%d)\n", err);
+		return err;
+
 	}
 
-	if (priv->count)
-		a4l_buf_evt(subd, 0);
+	a4l_info(subd->dev, "ao_pull_values: count %d \n", priv->count);
+	a4l_buf_evt(subd, 0);
 
-	return err;
+	return 0;
 }
 
 /* --- Data redirection for 2nd AI (from AO) --- */
@@ -209,7 +209,6 @@ int ai2_push_values(struct a4l_subdevice *subd)
 	int err = 0;
 
 	if (priv->count) {
-
 		err = a4l_buf_put(subd, priv->buffer, priv->count);
 
 		/* If there is no more place in the asynchronous
@@ -217,7 +216,6 @@ int ai2_push_values(struct a4l_subdevice *subd)
 		test driver so no need to implement trickier mechanism */
 		err = (err == -EAGAIN) ? 0 : err;
 		priv->count = 0;
-
 		if (err < 0)
 			a4l_err(subd->dev,
 				"ai2_push_values: "
@@ -227,50 +225,6 @@ int ai2_push_values(struct a4l_subdevice *subd)
 	}
 
 	return err;
-}
-
-/* --- Global task part --- */
-
-/* One task is enough for all the asynchronous subdevices, it is just
-   a fake driver after all */
-
-static void task_proc(void *arg)
-{
-	struct a4l_subdevice *ai_subd, *ao_subd, *ai2_subd;
-	struct a4l_device *dev;
-	struct fake_priv *priv;
-	int running;
-
-	dev = arg;
-	ai_subd = a4l_get_subd(dev, AI_SUBD);
-	ao_subd = a4l_get_subd(dev, AO_SUBD);
-	ai2_subd = a4l_get_subd(dev, AI2_SUBD);
-
-	priv = dev->priv;
-
-	while(!rtdm_task_should_stop()) {
-
-		running = priv->ai_running;
-		if (running && ai_push_values(ai_subd) < 0) {
-			/* on error, wait for detach to destroy the task */
-			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
-			continue;
-		}
-
-		running = priv->ao_running;
-		if (running && ao_pull_values(ao_subd) < 0) {
-			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
-			continue;
-		}
-
-		running = priv->ai2_running;
-		if (running && ai2_push_values(ai2_subd) < 0) {
-			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
-			continue;
-		}
-
-		rtdm_task_sleep(TASK_PERIOD);
-	}
 }
 
 /* --- Asynchronous AI functions --- */
@@ -469,6 +423,62 @@ int ai2_insn_read(struct a4l_subdevice *subd, struct a4l_kernel_instruction *ins
 	return 0;
 }
 
+/* --- Global task part --- */
+
+/* One task is enough for all the asynchronous subdevices, it is just a fake
+ * driver after all
+ */
+static void task_proc(void *arg)
+{
+	struct a4l_subdevice *ai_subd, *ao_subd, *ai2_subd;
+	struct a4l_device *dev;
+	struct fake_priv *priv;
+	int running;
+
+	dev = arg;
+	ai_subd = a4l_get_subd(dev, AI_SUBD);
+	ao_subd = a4l_get_subd(dev, AO_SUBD);
+	ai2_subd = a4l_get_subd(dev, AI2_SUBD);
+
+	priv = dev->priv;
+
+	while(!rtdm_task_should_stop()) {
+
+		/* copy sample static data from the subd private buffer to the
+		 * asynchronous buffer
+		 */
+		running = priv->ai_running;
+		if (running && ai_push_values(ai_subd) < 0) {
+			/* on error, wait for detach to destroy the task */
+			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
+			continue;
+		}
+
+		/*
+		 * pull the data from the output subdevice (asynchronous buffer)
+		 * into its private buffer
+		 */
+		running = priv->ao_running;
+		if (running && ao_pull_values(ao_subd) < 0) {
+			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
+			continue;
+		}
+
+		running = priv->ai2_running;
+		/*
+		 * then loop it to the ai2 subd since their private data is shared: so
+		 * pull the data from the private buffer back into the device's
+		 * asynchronous buffer
+		 */
+		if (running && ai2_push_values(ai2_subd) < 0) {
+			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
+			continue;
+		}
+
+		rtdm_task_sleep(TASK_PERIOD);
+	}
+}
+
 /* --- Initialization functions --- */
 
 void setup_ai_subd(struct a4l_subdevice *subd)
@@ -529,97 +539,97 @@ void setup_ai2_subd(struct a4l_subdevice *subd)
 
 int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
-	int ret = 0;
+	typedef void (*setup_subd_function) (struct a4l_subdevice *subd);
+	struct fake_priv *priv = (struct fake_priv *) dev->priv;
 	struct a4l_subdevice *subd;
-	struct fake_priv *priv = (struct fake_priv *)dev->priv;
-	struct ai_priv *ai_priv;
-	struct ao_ai2_priv *shared_priv;
+	struct ai_priv* p;
+	int i, ret = 0;
+
+	struct initializers {
+		struct a4l_subdevice *subd;
+		setup_subd_function init;
+		int private_len;
+		char *name;
+		int index;
+	} sds[] = {
+		[AI_SUBD] = {
+			.name = "AI",
+			.private_len = sizeof(struct ai_priv),
+			.init = setup_ai_subd,
+			.index = AI_SUBD,
+			.subd = NULL,
+		},
+		[DIO_SUBD] = {
+			.name = "DIO",
+			.private_len = sizeof(struct dio_priv),
+			.init = setup_dio_subd,
+			.index = DIO_SUBD,
+			.subd = NULL,
+		},
+		[AO_SUBD] = {
+			.name = "AO",
+			.private_len = sizeof(struct ao_ai2_priv),
+			.init = setup_ao_subd,
+			.index = AO_SUBD,
+			.subd = NULL,
+		},
+		[AI2_SUBD] = {
+			.name = "AI2",
+			.private_len = sizeof(struct a0_ai2_priv *),
+			.init = setup_ai2_subd,
+			.index = AI2_SUBD,
+			.subd = NULL,
+		},
+	};
 
 	a4l_dbg(1, drv_dbg, dev, "starting attach procedure...\n");
 
 	/* Set default values for attach parameters */
 	priv->amplitude_div = 1;
 	priv->quanta_cnt = 1;
-
 	if (arg->opts_size) {
 		unsigned long *args = (unsigned long *)arg->opts;
 		priv->amplitude_div = args[0];
-
 		if (arg->opts_size == 2 * sizeof(unsigned long))
 			priv->quanta_cnt = (args[1] > 7 || args[1] == 0) ?
 				1 : args[1];
 	}
 
-	a4l_dbg(1, drv_dbg, dev,
-		"amplitude divisor = %lu\n", priv->amplitude_div);
-	a4l_dbg(1, drv_dbg, dev,
-		"quanta count = %lu\n", priv->quanta_cnt);
+	/* create and register the subdevices */
+	for (i = 0; i < ARRAY_SIZE(sds) ; i++) {
 
-	/* Add the AI subdevice to the device */
-	subd = a4l_alloc_subd(sizeof(struct ai_priv), setup_ai_subd);
-	if(subd == NULL)
-		return -ENOMEM;
+		subd = a4l_alloc_subd(sds[i].private_len, sds[i].init);
+		if (subd == NULL)
+			return -ENOMEM;
 
-	ai_priv = (struct ai_priv*)subd->priv;
-	ai_priv->amplitude_div = priv->amplitude_div;
-	ai_priv->quanta_cnt = priv->quanta_cnt;
+		ret = a4l_add_subd(dev, subd);
+		if (ret != sds[i].index)
+			return (ret < 0) ? ret : -EINVAL;
 
-	ret = a4l_add_subd(dev, subd);
-	if(ret != AI_SUBD)
-		return (ret < 0) ? ret : -EINVAL;
+		sds[i].subd = subd;
 
-	a4l_dbg(1, drv_dbg, dev, "AI subdevice registered\n");
+		a4l_dbg(1, drv_dbg, dev, " %s subdevice registered\n", sds[i].name);
+	}
 
-	/* Add the DIO subdevice to the device */
-	subd = a4l_alloc_subd(sizeof(struct dio_priv), setup_dio_subd);
-	if(subd == NULL)
-		return -ENOMEM;
+	/* initialize specifics */
+	p = (void *) sds[AI_SUBD].subd->priv;
+	p->amplitude_div = priv->amplitude_div;
+	p->quanta_cnt = priv->quanta_cnt;
 
-	ret = a4l_add_subd(dev, subd);
-	if(ret != DIO_SUBD)
-		return (ret < 0) ? ret : -EINVAL;
+	/* A0 and AI2 shared their private buffers */
+	memcpy(sds[AI2_SUBD].subd->priv, &sds[AO_SUBD].subd->priv, sds[AI2_SUBD].private_len);
 
-	a4l_dbg(1, drv_dbg, dev, "DIO subdevice registered\n");
-
-
-	/* Add the AO subdevice to the device */
-	subd = a4l_alloc_subd(sizeof(struct ao_ai2_priv), setup_ao_subd);
-	if(subd == NULL)
-		return -ENOMEM;
-
-	memset(subd->priv, 0, sizeof(struct ao_ai2_priv));
-	shared_priv = (struct ao_ai2_priv *)subd->priv;
-
-	ret = a4l_add_subd(dev, subd);
-	if(ret != AO_SUBD)
-		return (ret < 0) ? ret : -EINVAL;
-
-	a4l_dbg(1, drv_dbg, dev, "AO subdevice registered\n");
-
-	/* Add the 2nd AI subdevice to the device */
-	subd = a4l_alloc_subd(sizeof(struct ao_ai2_priv *), setup_ai2_subd);
-	if(subd == NULL)
-		return -ENOMEM;
-
-	memcpy(subd->priv, &shared_priv, sizeof(struct ao_ai2_priv *));
-	ret = a4l_add_subd(dev, subd);
-	if(ret != AI2_SUBD)
-		return (ret < 0) ? ret : -EINVAL;
-
-	a4l_dbg(1, drv_dbg, dev, "AI2 subdevice registered\n");
-
-	ret = rtdm_task_init(&priv->task,
-			    "Fake AI task",
-			    task_proc,
-			    dev, RTDM_TASK_HIGHEST_PRIORITY, 0);
+	/* create the task */
+	ret = rtdm_task_init(&priv->task, "Fake AI task", task_proc, dev,
+		             RTDM_TASK_HIGHEST_PRIORITY, 0);
 	if (ret)
 		a4l_dbg(1, drv_dbg, dev, "Error creating A4L task \n");
 
-	a4l_dbg(1, drv_dbg, dev, "AI2 subdevice registered\n");
+	a4l_dbg(1, drv_dbg, dev, "attach procedure completed \n");
+	a4l_dbg(1, drv_dbg, dev, " amplitude divisor = %lu\n", priv->amplitude_div);
+	a4l_dbg(1, drv_dbg, dev, " quanta count = %lu\n", priv->quanta_cnt);
 
-	a4l_dbg(1, drv_dbg, dev, "attach procedure complete\n");
-
-	return 0;
+	return ret;
 }
 
 int test_detach(struct a4l_device *dev)
@@ -627,7 +637,6 @@ int test_detach(struct a4l_device *dev)
 	struct fake_priv *priv = (struct fake_priv *)dev->priv;
 
 	rtdm_task_destroy(&priv->task);
-
 	a4l_dbg(1, drv_dbg, dev, "detach procedure complete\n");
 
 	return 0;
