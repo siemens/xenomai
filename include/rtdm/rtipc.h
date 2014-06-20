@@ -396,7 +396,7 @@ enum {
  *
  * Real-time Xenomai threads and regular Linux threads may want to
  * exchange data in a way that does not require the former to leave
- * the real-time domain (i.e. secondary mode). The RTDM-based XDDP
+ * the real-time domain (i.e. primary mode). The RTDM-based XDDP
  * protocol is available for this purpose.
  *
  * On the Linux domain side, pseudo-device files named /dev/rtp@em \<minor\>
@@ -405,7 +405,7 @@ enum {
  * Xenomai domain side, sockets may be bound to XDDP ports, which act
  * as proxies to send and receive data to/from the associated
  * pseudo-device files. Ports and pseudo-device minor numbers are
- * paired, meaning that e.g. port 7 will proxy the traffic to/from
+ * paired, meaning that e.g. socket port 7 will proxy the traffic to/from
  * /dev/rtp7.
  *
  * All data sent through a bound/connected XDDP socket via @c
