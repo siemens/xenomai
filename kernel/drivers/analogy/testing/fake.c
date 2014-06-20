@@ -542,7 +542,8 @@ int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	typedef void (*setup_subd_function) (struct a4l_subdevice *subd);
 	struct fake_priv *priv = (struct fake_priv *) dev->priv;
 	struct a4l_subdevice *subd;
-	struct ai_priv* p;
+	unsigned long tmp;
+	struct ai_priv *r;
 	int i, ret = 0;
 
 	struct initializers {
@@ -575,7 +576,7 @@ int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 		},
 		[AI2_SUBD] = {
 			.name = "AI2",
-			.private_len = sizeof(struct a0_ai2_priv *),
+			.private_len = sizeof(struct ao_ai2_priv *),
 			.init = setup_ai2_subd,
 			.index = AI2_SUBD,
 			.subd = NULL,
@@ -608,16 +609,17 @@ int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 
 		sds[i].subd = subd;
 
-		a4l_dbg(1, drv_dbg, dev, " %s subdevice registered\n", sds[i].name);
+		a4l_dbg(1, drv_dbg, dev, " %s subdev registered \n", sds[i].name);
 	}
 
 	/* initialize specifics */
-	p = (void *) sds[AI_SUBD].subd->priv;
-	p->amplitude_div = priv->amplitude_div;
-	p->quanta_cnt = priv->quanta_cnt;
+	r = (void *) sds[AI_SUBD].subd->priv;
+	r->amplitude_div = priv->amplitude_div;
+	r->quanta_cnt = priv->quanta_cnt;
 
 	/* A0 and AI2 shared their private buffers */
-	memcpy(sds[AI2_SUBD].subd->priv, &sds[AO_SUBD].subd->priv, sds[AI2_SUBD].private_len);
+	tmp = (unsigned long) sds[AO_SUBD].subd->priv;
+	memcpy(sds[AI2_SUBD].subd->priv, &tmp, sds[AI2_SUBD].private_len) ;
 
 	/* create the task */
 	ret = rtdm_task_init(&priv->task, "Fake AI task", task_proc, dev,
@@ -625,9 +627,10 @@ int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	if (ret)
 		a4l_dbg(1, drv_dbg, dev, "Error creating A4L task \n");
 
-	a4l_dbg(1, drv_dbg, dev, "attach procedure completed \n");
-	a4l_dbg(1, drv_dbg, dev, " amplitude divisor = %lu\n", priv->amplitude_div);
-	a4l_dbg(1, drv_dbg, dev, " quanta count = %lu\n", priv->quanta_cnt);
+	a4l_dbg(1, drv_dbg, dev, "attach procedure completed \n"
+				 " - amplitude divisor = %lu \n"
+		                 " - quanta count = %lu\n "
+		                  , priv->amplitude_div, priv->quanta_cnt);
 
 	return ret;
 }
