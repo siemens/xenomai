@@ -879,9 +879,9 @@ if test \! x$XENO_RUN_DOC = x ; then
       AC_CONFIG_FILES([ \
 	doc/Makefile \
 	doc/doxygen/Makefile \
-	doc/doxygen/manual-common.conf \
-	doc/doxygen/manual-html.conf \
-	doc/doxygen/manual-pdf.conf \
+	doc/doxygen/xeno3prm-common.conf \
+	doc/doxygen/xeno3prm-html.conf \
+	doc/doxygen/xeno3prm-pdf.conf \
 	doc/asciidoc/Makefile \
       ])
 fi

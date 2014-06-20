@@ -1,6 +1,6 @@
-HTML_DOCS = manual-html manual-html/search
-PDF_DOCS  = manual.pdf
-EXTRA_DIST = manual-common.conf.in manual-html.conf.in manual-pdf.conf.in
+HTML_DOCS = xeno3prm-html xeno3prm-html/search
+PDF_DOCS  = xeno3prm.pdf
+EXTRA_DIST = xeno3prm-common.conf.in xeno3prm-html.conf.in xeno3prm-pdf.conf.in
 
 if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
@@ -20,7 +20,7 @@ html: $(HTML_DOCS)
 
 pdf: $(PDF_DOCS)
 
-manual-html:
+xeno3prm-html:
 	$(DOXYGEN) $@.conf
 
 %.pdf: FORCE
@@ -33,7 +33,7 @@ distclean-local:
 	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 	done
 
-.PHONY: manual-html FORCE
+.PHONY: xeno3prm-html FORCE
 
 .DELETE_ON_ERROR:
 
