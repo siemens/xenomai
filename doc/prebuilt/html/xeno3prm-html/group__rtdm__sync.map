@@ -1,0 +1,8 @@
+<map id="Synchronisation Services" name="Synchronisation Services">
+<area shape="rect" id="node1" href="$group__rtdm__sync__sem.html" title="Semaphore Services" alt="" coords="421,5,563,32"/>
+<area shape="rect" id="node2" href="$group__rtdm__sync__mutex.html" title="Mutex services" alt="" coords="437,56,547,83"/>
+<area shape="rect" id="node3" href="$group__rtdm__sync__biglock.html" title="Big dual kernel lock" alt="" coords="424,107,560,133"/>
+<area shape="rect" id="node4" href="$group__rtdm__driver__interface.html" title="RTDM driver programming interface. " alt="" coords="5,99,141,141"/>
+<area shape="rect" id="node5" href="$group__rtdm__sync__spinlock.html" title="Spinlock with preemption\l deactivation" alt="" coords="408,158,576,199"/>
+<area shape="rect" id="node7" href="$group__rtdm__sync__event.html" title="Event Services" alt="" coords="437,224,547,251"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="POSIX interface" name="POSIX interface">
+<area shape="rect" id="node1" href="$group__cobalt__api__sched.html" title="Cobalt/POSIX scheduling management services. " alt="" coords="280,5,445,32"/>
+<area shape="rect" id="node2" href="$group__cobalt__api__mutex.html" title="Cobalt/POSIX mutual exclusion services. " alt="" coords="303,56,423,83"/>
+<area shape="rect" id="node3" href="$group__cobalt__api__time.html" title="Cobalt/POSIX clock and timer services. " alt="" coords="299,107,427,133"/>
+<area shape="rect" id="node4" href="$group__cobalt__api__sem.html" title="Cobalt/POSIX semaphore services. " alt="" coords="315,157,410,184"/>
+<area shape="rect" id="node5" href="$group__cobalt__api__mq.html" title="Cobalt/POSIX message queue services. " alt="" coords="302,208,423,235"/>
+<area shape="rect" id="node7" href="$group__cobalt__api__thread.html" title="Cobalt/POSIX thread management services. " alt="" coords="292,259,433,285"/>
+<area shape="rect" id="node9" href="$group__cobalt__api__cond.html" title="Cobalt/POSIX condition variable services. " alt="" coords="296,309,429,336"/>
+<area shape="rect" id="node8" href="$group__cobalt.html" title="Cobalt supplements the native Linux kernel in dual kernel configurations. " alt="" coords="6,157,66,184"/>
+</map>

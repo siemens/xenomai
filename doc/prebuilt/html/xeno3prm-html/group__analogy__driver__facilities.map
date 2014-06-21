@@ -1,0 +1,9 @@
+<map id="Driver API" name="Driver API">
+<area shape="rect" id="node1" href="$group__analogy__channel__range.html" title="Channels. " alt="" coords="342,5,487,32"/>
+<area shape="rect" id="node2" href="$group__analogy__buffer.html" title="Buffer management services. " alt="" coords="320,56,509,83"/>
+<area shape="rect" id="node3" href="$group__analogy__driver.html" title="Analogy driver registration / unregistration. " alt="" coords="320,107,509,133"/>
+<area shape="rect" id="node4" href="$group__analogy__subdevice.html" title="Subdevice declaration in a driver. " alt="" coords="333,158,496,199"/>
+<area shape="rect" id="node5" href="$group__analogy__irq.html" title="Interrupt management\l services" alt="" coords="340,223,489,265"/>
+<area shape="rect" id="node6" href="$group__analogy.html" title="A RTDM&#45;based interface for implementing DAQ card drivers. " alt="" coords="6,136,141,163"/>
+<area shape="rect" id="node7" href="$group__analogy__misc.html" title="Misc services" alt="" coords="363,289,466,316"/>
+</map>

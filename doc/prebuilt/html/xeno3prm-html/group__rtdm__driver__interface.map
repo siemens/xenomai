@@ -1,0 +1,12 @@
+<map id="Driver programming interface" name="Driver programming interface">
+<area shape="rect" id="node1" href="$group__rtdm__irq.html" title="Interrupt Management\l Services" alt="" coords="309,5,459,46"/>
+<area shape="rect" id="node2" href="$group__rtdm__util.html" title="Utility Services" alt="" coords="329,71,439,97"/>
+<area shape="rect" id="node4" href="$group__rtdm__timer.html" title="Timer Services" alt="" coords="329,121,439,148"/>
+<area shape="rect" id="node5" href="$group__rtdm__sync.html" title="Synchronisation Services" alt="" coords="299,172,469,199"/>
+<area shape="rect" id="node6" href="$group__rtdm__clock.html" title="Clock Services" alt="" coords="329,223,439,249"/>
+<area shape="rect" id="node7" href="$group__rtdm__task.html" title="Task Services" alt="" coords="331,273,437,300"/>
+<area shape="rect" id="node8" href="$group__rtdm__nrtsignal.html" title="These services provide a mechanism to request the execution of a specified handler in non&#45;real&#45;time c..." alt="" coords="299,325,469,366"/>
+<area shape="rect" id="node10" href="$group__rtdm__device__register.html" title="Device Registration\l Services" alt="" coords="315,390,453,431"/>
+<area shape="rect" id="node11" href="$group__rtdm__interdriver__api.html" title="Inter&#45;driver interface. " alt="" coords="303,456,465,483"/>
+<area shape="rect" id="node9" href="$group__rtdm.html" title="The Real&#45;Time Driver Model (RTDM) provides a unified interface to both users and developers of real&#45;t..." alt="" coords="5,223,67,249"/>
+</map>

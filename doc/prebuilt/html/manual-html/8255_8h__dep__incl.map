@@ -1,5 +1,0 @@
-<map id="kernel/drivers/analogy/intel/8255.h" name="kernel/drivers/analogy/intel/8255.h">
-<area shape="rect" id="node2" href="$8255_8c.html" title="Analogy subdevice driver for 8255 chip. " alt="" coords="5,103,155,145"/>
-<area shape="rect" id="node3" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards. " alt="" coords="179,96,328,152"/>
-<area shape="rect" id="node4" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards. " alt="" coords="352,96,501,152"/>
-</map>

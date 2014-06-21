@@ -1,9 +1,0 @@
-<map id="Cobalt/POSIX real&#45;time API" name="Cobalt/POSIX real&#45;time API">
-<area shape="rect" id="node1" href="$group__cobalt__cond.html" title="Cobalt/POSIX condition variable services. " alt="" coords="256,5,389,32"/>
-<area shape="rect" id="node2" href="$group__cobalt__mq.html" title="Cobalt/POSIX message queue services. " alt="" coords="262,56,383,83"/>
-<area shape="rect" id="node3" href="$group__cobalt__sem.html" title="Cobalt/POSIX semaphore services. " alt="" coords="275,107,370,133"/>
-<area shape="rect" id="node4" href="$group__cobalt__mutex.html" title="Cobalt/POSIX mutual exclusion services. " alt="" coords="263,157,383,184"/>
-<area shape="rect" id="node5" href="$group__cobalt__thread.html" title="Cobalt/POSIX thread management services. " alt="" coords="252,208,393,235"/>
-<area shape="rect" id="node6" href="$group__cobalt__time.html" title="Cobalt/POSIX clock and timer services. " alt="" coords="259,259,387,285"/>
-<area shape="rect" id="node7" href="$group__cobalt__sched.html" title="Cobalt/POSIX scheduling management services. " alt="" coords="240,309,405,336"/>
-</map>

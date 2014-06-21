@@ -1,0 +1,20 @@
+<map id="include/rtdm/uapi/analogy.h" name="include/rtdm/uapi/analogy.h">
+<area shape="rect" id="node2" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="179,275,328,317"/>
+<area shape="rect" id="node10" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features. " alt="" coords="166,80,316,136"/>
+<area shape="rect" id="node12" href="$command_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/command.h" alt="" coords="341,87,515,129"/>
+<area shape="rect" id="node13" href="$analogy_8h.html" title="Analogy for Linux, library facilities. " alt="" coords="739,95,892,121"/>
+<area shape="rect" id="node3" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="90,366,237,407"/>
+<area shape="rect" id="node9" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="263,366,423,407"/>
+<area shape="rect" id="node4" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="176,457,331,498"/>
+<area shape="rect" id="node5" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,554,155,595"/>
+<area shape="rect" id="node6" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,547,328,603"/>
+<area shape="rect" id="node7" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,547,501,603"/>
+<area shape="rect" id="node8" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,651,501,707"/>
+<area shape="rect" id="node11" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="166,185,340,226"/>
+<area shape="rect" id="node14" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc. " alt="" coords="417,192,551,219"/>
+<area shape="rect" id="node15" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features. " alt="" coords="575,192,731,219"/>
+<area shape="rect" id="node16" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc. " alt="" coords="756,192,876,219"/>
+<area shape="rect" id="node17" href="$range_8c.html" title="Analogy for Linux, range related features. " alt="" coords="900,192,1031,219"/>
+<area shape="rect" id="node18" href="$sync_8c.html" title="Analogy for Linux, instruction related features. " alt="" coords="1055,192,1181,219"/>
+<area shape="rect" id="node19" href="$sys_8c.html" title="Analogy for Linux, descriptor related features. " alt="" coords="1207,192,1327,219"/>
+</map>

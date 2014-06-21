@@ -1,8 +1,0 @@
-<map id="include/cobalt/kernel/vfile.h" name="include/cobalt/kernel/vfile.h">
-<area shape="rect" id="node4" href="$cobalt_2kernel_2lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="270,96,404,123"/>
-<area shape="rect" id="node7" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="413,171,560,197"/>
-<area shape="rect" id="node8" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="241,245,380,272"/>
-<area shape="rect" id="node12" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="518,245,687,272"/>
-<area shape="rect" id="node11" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="345,321,468,362"/>
-<area shape="rect" id="node15" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="737,321,860,362"/>
-</map>
