@@ -94,221 +94,6 @@ static int libc_setschedparam(pthread_t thread,
 	return __STD(pthread_setschedparam(thread, policy, &param));
 }
 
-COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
-					 int policy, const struct sched_param *param))
-{
-	/*
-	 * XXX: We currently assume that all available policies
-	 * supported by the host kernel define a single scheduling
-	 * parameter only, i.e. a priority level.
-	 */
-	struct sched_param_ex param_ex = {
-		.sched_priority = param->sched_priority,
-	};
-
-	return pthread_setschedparam_ex(thread, policy, &param_ex);
-}
-
-/**
- * Set extended scheduling policy of thread
- *
- * This service is an extended version of the regular
- * pthread_setschedparam() service, which supports Xenomai-specific or
- * additional scheduling policies, not available with the host Linux
- * environment.
- *
- * This service set the scheduling policy of the Xenomai thread @a
- * thread to the value @a policy, and its scheduling parameters
- * (e.g. its priority) to the value pointed to by @a param_ex.
- *
- * If @a thread does not match the identifier of a Xenomai thread, this
- * action falls back to the regular pthread_setschedparam() service.
- *
- * @param thread target Cobalt thread;
- *
- * @param policy scheduling policy, one of SCHED_WEAK, SCHED_FIFO,
- * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP, SCHED_QUOTA or
- * SCHED_NORMAL;
- *
- * @param param_ex scheduling parameters address. As a special
- * exception, a negative sched_priority value is interpreted as if
- * SCHED_WEAK was given in @a policy, using the absolute value of this
- * parameter as the weak priority level.
- *
- * When CONFIG_XENO_OPT_SCHED_WEAK is enabled, SCHED_WEAK exhibits
- * priority levels in the [0..99] range (inclusive). Otherwise,
- * sched_priority must be zero for the SCHED_WEAK policy.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a thread is invalid;
- * - EINVAL, @a policy or @a param_ex->sched_priority is invalid;
- * - EAGAIN, in user-space, insufficient memory exists in the system heap,
- *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
- * - EFAULT, in user-space, @a param_ex is an invalid address;
- * - EPERM, in user-space, the calling process does not have superuser
- *   permissions.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
- * Specification.</a>
- *
- * @note
- *
- * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGSHADOW signal. If
- * you had installed a handler before that, it will be automatically
- * called by Xenomai for SIGSHADOW signals that it has not sent.
- *
- * If, however, you install a signal handler for SIGSHADOW after
- * creating or shadowing the first Xenomai thread, you have to
- * explicitly call the function cobalt_sigshadow_handler at the
- * beginning of your signal handler, using its return to know if the
- * signal was in fact an internal signal of Xenomai (in which case it
- * returns 1), or if you should handle the signal (in which case it
- * returns 0). cobalt_sigshadow_handler prototype is:
- *
- * <b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b>
- *
- * Which means that you should register your handler with sigaction,
- * using the SA_SIGINFO flag, and pass all the arguments you received
- * to cobalt_sigshadow_handler.
- *
- * pthread_setschedparam_ex() may switch the caller to secondary mode.
- */
-int pthread_setschedparam_ex(pthread_t thread,
-			     int policy, const struct sched_param_ex *param_ex)
-{
-	unsigned long u_winoff;
-	int ret, promoted;
-
-	/*
-	 * First we tell the libc and the regular kernel about the
-	 * policy/param change, then we tell Xenomai.
-	 */
-	ret = libc_setschedparam(thread, policy, param_ex);
-	if (ret)
-		return ret;
-
-	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 sc_cobalt_thread_setschedparam_ex,
-				 thread, policy, param_ex,
-				 &u_winoff, &promoted);
-
-	if (ret == 0 && promoted) {
-		prefault_stack();
-		cobalt_sigshadow_install_once();
-		cobalt_set_current();
-		cobalt_set_current_window(u_winoff);
-		cobalt_thread_harden();
-	}
-
-	return ret;
-}
-
-COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
-					 int *__restrict__ policy,
-					 struct sched_param *__restrict__ param))
-{
-	struct sched_param_ex param_ex;
-	int ret;
-
-	ret = pthread_getschedparam_ex(thread, policy, &param_ex);
-	if (ret)
-		return ret;
-
-	param->sched_priority = param_ex.sched_priority;
-
-	return 0;
-}
-
-/**
- * Get extended scheduling policy of thread
- *
- * This service is an extended version of the regular
- * pthread_getschedparam() service, which also supports
- * Xenomai-specific or additional POSIX scheduling policies, not
- * available with the host Linux environment.
- *
- * @param thread target thread;
- *
- * @param policy_r address where the scheduling policy of @a thread is stored on
- * success;
- *
- * @param param_ex address where the scheduling parameters of @a thread are
- * stored on success.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a thread is invalid.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
- * Specification.</a>
- */
-int pthread_getschedparam_ex(pthread_t thread,
-			     int *__restrict__ policy_r,
-			     struct sched_param_ex *__restrict__ param_ex)
-{
-	struct sched_param short_param;
-	int ret;
-
-	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 sc_cobalt_thread_getschedparam_ex,
-				 thread, policy_r, param_ex);
-	if (ret == ESRCH) {
-		ret = __STD(pthread_getschedparam(thread, policy_r, &short_param));
-		if (ret == 0)
-			param_ex->sched_priority = short_param.sched_priority;
-	}
-
-	return ret;
-}
-
-COBALT_IMPL(int, sched_yield, (void))
-{
-	if (cobalt_get_current() == XN_NO_HANDLE ||
-	    (cobalt_get_current_mode() & (XNWEAK|XNRELAX)) == (XNWEAK|XNRELAX))
-		return __STD(sched_yield());
-
-	return -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
-}
-
-COBALT_IMPL(int, sched_get_priority_min, (int policy))
-{
-	int ret;
-
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_minprio, policy);
-	if (ret < 0) {
-		if (ret == -ENOSYS)
-			return __STD(sched_get_priority_min(policy));
-		errno = -ret;
-		ret = -1;
-	}
-
-	return ret;
-}
-
-COBALT_IMPL(int, sched_get_priority_max, (int policy))
-{
-	int ret;
-
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_maxprio, policy);
-	if (ret < 0) {
-		if (ret == -ENOSYS)
-			return __STD(sched_get_priority_max(policy));
-		errno = -ret;
-		ret = -1;
-	}
-
-	return ret;
-}
-
-COBALT_IMPL(int, pthread_yield, (void))
-{
-	return __WRAP(sched_yield());
-}
-
 struct pthread_iargs {
 	struct sched_param_ex param_ex;
 	int policy;
@@ -600,18 +385,74 @@ int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 				  clrmask, setmask, mode_r);
 }
 
+/**
+ * Set a thread name.
+ *
+ * This service set to @a name, the name of @a thread. This name is used for
+ * displaying information in /proc/xenomai/sched.
+ *
+ * This service is a non-portable extension of the POSIX interface.
+ *
+ * @param thread target thread;
+ *
+ * @param name name of the thread.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid.
+ *
+ */
 int pthread_set_name_np(pthread_t thread, const char *name)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_thread_set_name, thread, name);
 }
 
+/**
+ * Set a thread name.
+ *
+ * This service set to @a name, the name of @a thread. This name is used for
+ * displaying information in /proc/xenomai/sched.
+ *
+ * This service is a non-portable extension of the POSIX interface.
+ *
+ * @param thread target thread;
+ *
+ * @param name name of the thread.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid.
+ *
+ */
 COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_thread_set_name, thread, name);
 }
 
+/**
+ * Send a signal to a thread.
+ *
+ * This service send the signal @a sig to the Xenomai POSIX skin thread @a
+ * thread (created with pthread_create()). If @a sig is zero, this service check
+ * for existence of the thread @a thread, but no signal is sent.
+ *
+ * @param thread thread identifier;
+ *
+ * @param sig signal number.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a sig is an invalid signal number;
+ * - EAGAIN, the maximum number of pending signals has been exceeded;
+ * - ESRCH, @a thread is an invalid thread identifier.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 {
 	int ret;
@@ -624,6 +465,45 @@ COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 	return ret;
 }
 
+/**
+ * Wait for termination of a specified thread.
+ *
+ * If the thread @a thread is running and joinable, this service blocks the
+ * calling thread until the thread @a thread terminates or detaches. In this
+ * case, the calling context must be a blockable context (i.e. a Xenomai thread
+ * without the scheduler locked) or the root thread (i.e. a module initilization
+ * or cleanup routine). When @a thread terminates, the calling thread is
+ * unblocked and its return value is stored at* the address @a value_ptr.
+ *
+ * If, on the other hand, the thread @a thread has already finished execution,
+ * its return value is stored at the address @a value_ptr and this service
+ * returns immediately. In this case, this service may be called from any
+ * context.
+ *
+ * This service is a cancelation point for POSIX skin threads: if the calling
+ * thread is canceled while blocked in a call to this service, the cancelation
+ * request is honored and @a thread remains joinable.
+ *
+ * Multiple simultaneous calls to pthread_join() specifying the same running
+ * target thread block all the callers until the target thread terminates.
+ *
+ * @param thread identifier of the thread to wait for;
+ *
+ * @param retval address where the target thread return value will be stored
+ * on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid;
+ * - EDEADLK, attempting to join the calling thread;
+ * - EINVAL, @a thread is detached;
+ * - EPERM, the caller context is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
 {
 	int ret;
@@ -646,6 +526,363 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
  * Cobalt/POSIX scheduling management services
  * @{
  */
+
+/**
+ * Set the scheduling policy and parameters of the specified thread.
+ *
+ * This service set the scheduling policy of the Xenomai POSIX skin thread @a
+ * tid to the value @a  pol, and its scheduling parameters (i.e. its priority)
+ * to the value pointed to by @a par.
+ *
+ * When used in user-space, passing the current thread ID as @a tid argument,
+ * this service turns the current thread into a Xenomai POSIX skin thread. If @a
+ * tid is neither the identifier of the current thread nor the identifier of a
+ * Xenomai POSIX skin thread this service falls back to the regular
+ * pthread_setschedparam() service, hereby causing the current thread to switch
+ * to secondary mode if it is Xenomai thread.
+ *
+ * @param thread target thread;
+ *
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
+ * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER;
+ *
+ * @param param scheduling parameters address.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a tid is invalid;
+ * - EINVAL, @a pol or @a par->sched_priority is invalid;
+ * - EAGAIN, in user-space, insufficient memory exists in the system heap,
+ *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EFAULT, in user-space, @a par is an invalid address;
+ * - EPERM, in user-space, the calling process does not have superuser
+ *   permissions.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
+ * Specification.</a>
+ *
+ * @note
+ *
+ * When creating or shadowing a Xenomai thread for the first time in
+ * user-space, Xenomai installs a handler for the SIGSHADOW signal. If you had
+ * installed a handler before that, it will be automatically called by Xenomai
+ * for SIGSHADOW signals that it has not sent.
+ *
+ * If, however, you install a signal handler for SIGSHADOW after creating
+ * or shadowing the first Xenomai thread, you have to explicitly call the
+ * function xeno_sigwinch_handler at the beginning of your signal handler,
+ * using its return to know if the signal was in fact an internal signal of
+ * Xenomai (in which case it returns 1), or if you should handle the signal (in
+ * which case it returns 0). xeno_sigwinch_handler prototype is:
+ *
+ * <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ *
+ * Which means that you should register your handler with sigaction, using the
+ * SA_SIGINFO flag, and pass all the arguments you received to
+ * xeno_sigwinch_handler.
+ *
+ */
+COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
+					 int policy, const struct sched_param *param))
+{
+	/*
+	 * XXX: We currently assume that all available policies
+	 * supported by the host kernel define a single scheduling
+	 * parameter only, i.e. a priority level.
+	 */
+	struct sched_param_ex param_ex = {
+		.sched_priority = param->sched_priority,
+	};
+
+	return pthread_setschedparam_ex(thread, policy, &param_ex);
+}
+
+/**
+ * Set extended scheduling policy of thread
+ *
+ * This service is an extended version of the regular
+ * pthread_setschedparam() service, which supports Xenomai-specific or
+ * additional scheduling policies, not available with the host Linux
+ * environment.
+ *
+ * This service set the scheduling policy of the Xenomai thread @a
+ * thread to the value @a policy, and its scheduling parameters
+ * (e.g. its priority) to the value pointed to by @a param_ex.
+ *
+ * If @a thread does not match the identifier of a Xenomai thread, this
+ * action falls back to the regular pthread_setschedparam() service.
+ *
+ * @param thread target Cobalt thread;
+ *
+ * @param policy scheduling policy, one of SCHED_WEAK, SCHED_FIFO,
+ * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP, SCHED_QUOTA or
+ * SCHED_NORMAL;
+ *
+ * @param param_ex scheduling parameters address. As a special
+ * exception, a negative sched_priority value is interpreted as if
+ * SCHED_WEAK was given in @a policy, using the absolute value of this
+ * parameter as the weak priority level.
+ *
+ * When CONFIG_XENO_OPT_SCHED_WEAK is enabled, SCHED_WEAK exhibits
+ * priority levels in the [0..99] range (inclusive). Otherwise,
+ * sched_priority must be zero for the SCHED_WEAK policy.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid;
+ * - EINVAL, @a policy or @a param_ex->sched_priority is invalid;
+ * - EAGAIN, in user-space, insufficient memory exists in the system heap,
+ *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EFAULT, in user-space, @a param_ex is an invalid address;
+ * - EPERM, in user-space, the calling process does not have superuser
+ *   permissions.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
+ * Specification.</a>
+ *
+ * @note
+ *
+ * When creating or shadowing a Xenomai thread for the first time in
+ * user-space, Xenomai installs a handler for the SIGSHADOW signal. If
+ * you had installed a handler before that, it will be automatically
+ * called by Xenomai for SIGSHADOW signals that it has not sent.
+ *
+ * If, however, you install a signal handler for SIGSHADOW after
+ * creating or shadowing the first Xenomai thread, you have to
+ * explicitly call the function cobalt_sigshadow_handler at the
+ * beginning of your signal handler, using its return to know if the
+ * signal was in fact an internal signal of Xenomai (in which case it
+ * returns 1), or if you should handle the signal (in which case it
+ * returns 0). cobalt_sigshadow_handler prototype is:
+ *
+ * <b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b>
+ *
+ * Which means that you should register your handler with sigaction,
+ * using the SA_SIGINFO flag, and pass all the arguments you received
+ * to cobalt_sigshadow_handler.
+ *
+ * pthread_setschedparam_ex() may switch the caller to secondary mode.
+ */
+int pthread_setschedparam_ex(pthread_t thread,
+			     int policy, const struct sched_param_ex *param_ex)
+{
+	unsigned long u_winoff;
+	int ret, promoted;
+
+	/*
+	 * First we tell the libc and the regular kernel about the
+	 * policy/param change, then we tell Xenomai.
+	 */
+	ret = libc_setschedparam(thread, policy, param_ex);
+	if (ret)
+		return ret;
+
+	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
+				 sc_cobalt_thread_setschedparam_ex,
+				 thread, policy, param_ex,
+				 &u_winoff, &promoted);
+
+	if (ret == 0 && promoted) {
+		prefault_stack();
+		cobalt_sigshadow_install_once();
+		cobalt_set_current();
+		cobalt_set_current_window(u_winoff);
+		cobalt_thread_harden();
+	}
+
+	return ret;
+}
+
+/**
+ * Get the scheduling policy and parameters of the specified thread.
+ *
+ * This service returns, at the addresses @a pol and @a par, the current
+ * scheduling policy and scheduling parameters (i.e. priority) of the Xenomai
+ * POSIX skin thread @a tid. If this service is called from user-space and @a
+ * tid is not the identifier of a Xenomai POSIX skin thread, this service
+ * fallback to Linux regular pthread_getschedparam service.
+ *
+ * @param thread target thread;
+ *
+ * @param policy address where the scheduling policy of @a tid is stored on
+ * success;
+ *
+ * @param param address where the scheduling parameters of @a tid is stored on
+ * success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a tid is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
+ * Specification.</a>
+ *
+ */
+COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
+					 int *__restrict__ policy,
+					 struct sched_param *__restrict__ param))
+{
+	struct sched_param_ex param_ex;
+	int ret;
+
+	ret = pthread_getschedparam_ex(thread, policy, &param_ex);
+	if (ret)
+		return ret;
+
+	param->sched_priority = param_ex.sched_priority;
+
+	return 0;
+}
+
+/**
+ * Get extended scheduling policy of thread
+ *
+ * This service is an extended version of the regular
+ * pthread_getschedparam() service, which also supports
+ * Xenomai-specific or additional POSIX scheduling policies, not
+ * available with the host Linux environment.
+ *
+ * @param thread target thread;
+ *
+ * @param policy_r address where the scheduling policy of @a thread is stored on
+ * success;
+ *
+ * @param param_ex address where the scheduling parameters of @a thread are
+ * stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a thread is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
+ * Specification.</a>
+ */
+int pthread_getschedparam_ex(pthread_t thread,
+			     int *__restrict__ policy_r,
+			     struct sched_param_ex *__restrict__ param_ex)
+{
+	struct sched_param short_param;
+	int ret;
+
+	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				 sc_cobalt_thread_getschedparam_ex,
+				 thread, policy_r, param_ex);
+	if (ret == ESRCH) {
+		ret = __STD(pthread_getschedparam(thread, policy_r, &short_param));
+		if (ret == 0)
+			param_ex->sched_priority = short_param.sched_priority;
+	}
+
+	return ret;
+}
+
+/**
+ * Yield the processor.
+ *
+ * This function move the current thread at the end of its priority group.
+ *
+ * @retval 0
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">
+ * Specification.</a>
+ *
+ */
+COBALT_IMPL(int, sched_yield, (void))
+{
+	if (cobalt_get_current() == XN_NO_HANDLE ||
+	    (cobalt_get_current_mode() & (XNWEAK|XNRELAX)) == (XNWEAK|XNRELAX))
+		return __STD(sched_yield());
+
+	return -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
+}
+
+/**
+ * Get minimum priority of the specified scheduling policy.
+ *
+ * This service returns the minimum priority of the scheduling policy @a
+ * policy.
+ *
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
+ * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a policy is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
+ * Specification.</a>
+ *
+ */
+COBALT_IMPL(int, sched_get_priority_min, (int policy))
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_minprio, policy);
+	if (ret < 0) {
+		if (ret == -ENOSYS)
+			return __STD(sched_get_priority_min(policy));
+		errno = -ret;
+		ret = -1;
+	}
+
+	return ret;
+}
+
+/**
+ * Get maximum priority of the specified scheduling policy.
+ *
+ * This service returns the maximum priority of the scheduling policy @a
+ * policy.
+ *
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
+ * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a policy is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
+ * Specification.</a>
+ *
+ */
+COBALT_IMPL(int, sched_get_priority_max, (int policy))
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_maxprio, policy);
+	if (ret < 0) {
+		if (ret == -ENOSYS)
+			return __STD(sched_get_priority_max(policy));
+		errno = -ret;
+		ret = -1;
+	}
+
+	return ret;
+}
+
+/**
+ * Yield the processor.
+ *
+ * This function move the current thread at the end of its priority group.
+ *
+ * @retval 0
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">
+ * Specification.</a>
+ *
+ */
+COBALT_IMPL(int, pthread_yield, (void))
+{
+	return __WRAP(sched_yield());
+}
 
 /**
  * Set CPU-specific scheduler settings for a policy

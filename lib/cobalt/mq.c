@@ -95,11 +95,6 @@
  * - EINVAL, the @a attr argument is invalid;
  * - EMFILE, too many descriptors are currently open.
  *
- * @par Valid contexts:
- * When creating a message queue, only the following contexts are valid:
- * - kernel module initialization or cleanup routine;
- * - user-space thread (Xenomai threads switch to secondary mode).
- *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">
  * Specification.</a>
@@ -146,12 +141,6 @@ COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
  * - EBADF, @a mqd is an invalid message queue descriptor;
  * - EPERM, the caller context is invalid.
  *
- * @par Valid contexts:
- * - kernel module initialization or cleanup routine;
- * - kernel-space cancellation cleanup routine;
- * - user-space thread (Xenomai threads switch to secondary mode);
- * - user-space cancellation cleanup routine.
- *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">
  * Specification.</a>
@@ -185,12 +174,6 @@ COBALT_IMPL(int, mq_close, (mqd_t mqd))
  * - EPERM, the caller context is invalid;
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
  * - ENOENT, the message queue does not exist.
- *
- * @par Valid contexts:
- * - kernel module initialization or cleanup routine;
- * - kernel-space cancellation cleanup routine;
- * - user-space thread (Xenomai threads switch to secondary mode);
- * - user-space cancellation cleanup routine.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">
@@ -290,6 +273,42 @@ COBALT_IMPL(int, mq_setattr, (mqd_t mqd,
 	return -1;
 }
 
+/**
+ * Send a message to a message queue.
+ *
+ * If the message queue @a fd is not full, this service sends the message of
+ * length @a len pointed to by the argument @a buffer, with priority @a prio. A
+ * message with greater priority is inserted in the queue before a message with
+ * lower priority.
+ *
+ * If the message queue is full and the flag @a O_NONBLOCK is not set, the
+ * calling thread is suspended until the queue is not full. If the message queue
+ * is full and the flag @a O_NONBLOCK is set, the message is not sent and the
+ * service returns immediately a value of -1 with @a errno set to EAGAIN.
+ *
+ * @param q message queue descriptor;
+ *
+ * @param buffer pointer to the message to be sent;
+ *
+ * @param len length of the message;
+ *
+ * @param prio priority of the message.
+ *
+ * @return 0 and send a message on success;
+ * @return -1 with no message sent and @a errno set if:
+ * - EBADF, @a fd is not a valid message queue descriptor open for writing;
+ * - EMSGSIZE, the message length @a len exceeds the @a mq_msgsize attribute of
+ *   the message queue;
+ * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
+ *   queue is full;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, the service was interrupted by a signal.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned prio))
 {
 	int err, oldtype;
@@ -297,7 +316,7 @@ COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned pri
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				sc_cobalt_mq_timedsend, 
+				sc_cobalt_mq_timedsend,
 				q, buffer, len, prio, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -309,6 +328,41 @@ COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned pri
 	return -1;
 }
 
+/**
+ * Attempt, during a bounded time, to send a message to a message queue.
+ *
+ * This service is equivalent to mq_send(), except that if the message queue is
+ * full and the flag @a O_NONBLOCK is not set for the descriptor @a fd, the
+ * calling thread is only suspended until the timeout specified by @a
+ * abs_timeout expires.
+ *
+ * @param q message queue descriptor;
+ *
+ * @param buffer pointer to the message to be sent;
+ *
+ * @param len length of the message;
+ *
+ * @param prio priority of the message;
+ *
+ * @param timeout the timeout, expressed as an absolute value of the
+ * CLOCK_REALTIME clock.
+ *
+ * @return 0 and send a message on success;
+ * @return -1 with no message sent and @a errno set if:
+ * - EBADF, @a fd is not a valid message queue descriptor open for writing;
+ * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
+ *   message queue;
+ * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
+ *   queue is full;
+ * - EPERM, the caller context is invalid;
+ * - ETIMEDOUT, the specified timeout expired;
+ * - EINTR, the service was interrupted by a signal.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, mq_timedsend, (mqd_t q,
 				const char *buffer,
 				size_t len,
@@ -331,6 +385,45 @@ COBALT_IMPL(int, mq_timedsend, (mqd_t q,
 	return -1;
 }
 
+/**
+ * Receive a message from a message queue.
+ *
+ * If the message queue @a fd is not empty and if @a len is greater than the @a
+ * mq_msgsize of the message queue, this service copies, at the address
+ * @a buffer, the queued message with the highest priority.
+ *
+ * If the queue is empty and the flag @a O_NONBLOCK is not set for the
+ * descriptor @a fd, the calling thread is suspended until some message is sent
+ * to the queue. If the queue is empty and the flag @a O_NONBLOCK is set for the
+ * descriptor @a fd, this service returns immediately a value of -1 with @a
+ * errno set to EAGAIN.
+ *
+ * @param q the queue descriptor;
+ *
+ * @param buffer the address where the received message will be stored on
+ * success;
+ *
+ * @param len @a buffer length;
+ *
+ * @param prio address where the priority of the received message will be
+ * stored on success.
+ *
+ * @return the message length, and copy a message at the address @a buffer on
+ * success;
+ * @return -1 with no message unqueued and @a errno set if:
+ * - EBADF, @a fd is not a valid descriptor open for reading;
+ * - EMSGSIZE, the length @a len is lesser than the message queue @a mq_msgsize
+ *   attribute;
+ * - EAGAIN, the queue is empty, and the flag @a O_NONBLOCK is set for the
+ *   descriptor @a fd;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, the service was interrupted by a signal.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *prio))
 {
 	ssize_t rlen = (ssize_t) len;
@@ -339,7 +432,7 @@ COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *p
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				sc_cobalt_mq_timedreceive, 
+				sc_cobalt_mq_timedreceive,
 				q, buffer, &rlen, prio, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -351,6 +444,44 @@ COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *p
 	return -1;
 }
 
+/**
+ * Attempt, during a bounded time, to receive a message from a message queue.
+ *
+ * This service is equivalent to mq_receive(), except that if the flag @a
+ * O_NONBLOCK is not set for the descriptor @a fd and the message queue is
+ * empty, the calling thread is only suspended until the timeout @a abs_timeout
+ * expires.
+ *
+ * @param q the queue descriptor;
+ *
+ * @param buffer the address where the received message will be stored on
+ * success;
+ *
+ * @param len @a buffer length;
+ *
+ * @param prio address where the priority of the received message will be
+ * stored on success.
+ *
+ * @param timeout the timeout, expressed as an absolute value of the
+ * CLOCK_REALTIME clock.
+ *
+ * @return the message length, and copy a message at the address @a buffer on
+ * success;
+ * @return -1 with no message unqueued and @a errno set if:
+ * - EBADF, @a fd is not a valid descriptor open for reading;
+ * - EMSGSIZE, the length @a len is lesser than the message queue @a mq_msgsize
+ *   attribute;
+ * - EAGAIN, the queue is empty, and the flag @a O_NONBLOCK is set for the
+ *   descriptor @a fd;
+ * - EPERM, the caller context is invalid;
+ * - EINTR, the service was interrupted by a signal;
+ * - ETIMEDOUT, the specified timeout expired.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
 				       char *__restrict__ buffer,
 				       size_t len,
@@ -406,10 +537,6 @@ COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
  * - EPERM, the caller context is invalid;
  * - EBADF, @a mqd is not a valid message queue descriptor;
  * - EBUSY, another thread is already registered.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space Cobalt thread,
- * - Xenomai user-space Cobalt thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">

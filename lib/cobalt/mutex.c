@@ -61,6 +61,32 @@ void cobalt_default_mutexattr_init(void)
 	pthread_mutexattr_init(&cobalt_default_mutexattr);
 }
 
+/**
+ * Initialize a mutex.
+ *
+ * This services initializes the mutex @a mx, using the mutex attributes object
+ * @a attr. If @a attr is @a NULL, default attributes are used (see
+ * pthread_mutexattr_init()).
+ *
+ * @param mutex the mutex to be initialized;
+ *
+ * @param attr the mutex attributes object.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid or uninitialized;
+ * - EBUSY, the mutex @a mx was already initialized;
+ * - ENOMEM, insufficient memory exists in the system heap to initialize the
+ *   mutex, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
+ * - EAGAIN, insufficient memory exists in the semaphore heap to initialize the
+ *   mutex, increase CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ for a process-shared
+ *   mutex, or CONFG_XENO_OPT_SEM_HEAPSZ for a process-private mutex.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 				      const pthread_mutexattr_t *attr))
 {
@@ -116,6 +142,27 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	return err;
 }
 
+/**
+ * Destroy a mutex.
+ *
+ * This service destroys the mutex @a mx, if it is unlocked and not referenced
+ * by any condition variable. The mutex becomes invalid for all mutex services
+ * (they all return the EINVAL error) except pthread_mutex_init().
+ *
+ * @param mutex the mutex to be destroyed.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
+ * - EBUSY, the mutex is locked, or used by a condition variable.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
@@ -130,6 +177,38 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 	return -err;
 }
 
+/**
+ * Lock a mutex.
+ *
+ * This service attempts to lock the mutex @a mx. If the mutex is free, it
+ * becomes locked. If it was locked by another thread than the current one, the
+ * current thread is suspended until the mutex is unlocked. If it was already
+ * locked by the current mutex, the behaviour of this service depends on the
+ * mutex type :
+ * - for mutexes of the @a PTHREAD_MUTEX_NORMAL type, this service deadlocks;
+ * - for mutexes of the @a PTHREAD_MUTEX_ERRORCHECK type, this service returns
+ *   the EDEADLK error number;
+ * - for mutexes of the @a PTHREAD_MUTEX_RECURSIVE type, this service increments
+ *   the lock recursion count and returns 0.
+ *
+ * @param mutex the mutex to be locked.
+ *
+ * @return 0 on success
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
+ * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and was
+ *   already locked by the current thread;
+ * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
+ *   number of recursive locks has been exceeded.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
@@ -188,6 +267,36 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 	return -err;
 }
 
+/**
+ * Attempt, during a bounded time, to lock a mutex.
+ *
+ * This service is equivalent to pthread_mutex_lock(), except that if the mutex
+ * @a mx is locked by another thread than the current one, this service only
+ * suspends the current thread until the timeout specified by @a to expires.
+ *
+ * @param mutex the mutex to be locked;
+ *
+ * @param to the timeout, expressed as an absolute value of the CLOCK_REALTIME
+ * clock.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
+ * - ETIMEDOUT, the mutex could not be locked and the specified timeout
+ *   expired;
+ * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and the mutex
+ *   was already locked by the current thread;
+ * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
+ *   number of recursive locks has been exceeded.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 					   const struct timespec *to))
 {
@@ -244,6 +353,30 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 	return -err;
 }
 
+/**
+ * Attempt to lock a mutex.
+ *
+ * This service is equivalent to pthread_mutex_lock(), except that if the mutex
+ * @a mx is locked by another thread than the current one, this service returns
+ * immediately.
+ *
+ * @param mutex the mutex to be locked.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
+ * - EBUSY, the mutex was locked by another thread than the current one;
+ * - EAGAIN, the mutex is recursive, and the maximum number of recursive locks
+ *   has been exceeded.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
@@ -297,6 +430,31 @@ do_syscall:
 	return -err;
 }
 
+/**
+ * Unlock a mutex.
+ *
+ * This service unlocks the mutex @a mx. If the mutex is of the @a
+ * PTHREAD_MUTEX_RECURSIVE @a type and the locking recursion count is greater
+ * than one, the lock recursion count is decremented and the mutex remains
+ * locked.
+ *
+ * Attempting to unlock a mutex which is not locked or which is locked by
+ * another thread than the current one yields the EPERM error, whatever the
+ * mutex @a type attribute.
+ *
+ * @param mutex the mutex to be released.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex was not locked by the current thread.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
@@ -338,5 +496,219 @@ do_syscall:
 
 	return -err;
 }
+
+/**
+ * Initialize a mutex attributes object.
+ *
+ * This services initializes the mutex attributes object @a attr with default
+ * values for all attributes. Default value are :
+ * - for the @a type attribute, @a PTHREAD_MUTEX_NORMAL;
+ * - for the @a protocol attribute, @a PTHREAD_PRIO_NONE;
+ * - for the @a pshared attribute, @a PTHREAD_PROCESS_PRIVATE.
+ *
+ * If this service is called specifying a mutex attributes object that was
+ * already initialized, the attributes object is reinitialized.
+ *
+ * @param attr the mutex attributes object to be initialized.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ENOMEM, the mutex attributes object pointer @a attr is @a NULL.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_init(pthread_mutexattr_t * attr);
+
+/**
+ * Destroy a mutex attributes object.
+ *
+ * This service destroys the mutex attributes object @a attr. The object becomes
+ * invalid for all mutex services (they all return EINVAL) except
+ * pthread_mutexattr_init().
+ *
+ * @param attr the initialized mutex attributes object to be destroyed.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_destroy(pthread_mutexattr_t * attr);
+
+/**
+ * Get the mutex type attribute from a mutex attributes object.
+ *
+ * This service stores, at the address @a type, the value of the @a type
+ * attribute in the mutex attributes object @a attr.
+ *
+ * See pthread_mutex_lock() and pthread_mutex_unlock() documentations for a
+ * description of the values of the @a type attribute and their effect on a
+ * mutex.
+ *
+ * @param attr an initialized mutex attributes object,
+ *
+ * @param type address where the @a type attribute value will be stored on
+ * success.
+ *
+ * @return 0 on sucess,
+ * @return an error number if:
+ * - EINVAL, the @a type address is invalid;
+ * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type);
+
+/**
+ * Set the mutex type attribute of a mutex attributes object.
+ *
+ * This service set the @a type attribute of the mutex attributes object
+ * @a attr.
+ *
+ * See pthread_mutex_lock() and pthread_mutex_unlock() documentations for a
+ * description of the values of the @a type attribute and their effect on a
+ * mutex.
+ *
+ * The @a PTHREAD_MUTEX_DEFAULT default @a type is the same as @a
+ * PTHREAD_MUTEX_NORMAL. Note that using a Xenomai POSIX skin recursive mutex
+ * with a Xenomai POSIX skin condition variable is safe (see pthread_cond_wait()
+ * documentation).
+ *
+ * @param attr an initialized mutex attributes object,
+ *
+ * @param type value of the @a type attribute.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid;
+ * - EINVAL, the value of @a type is invalid for the @a type attribute.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type);
+
+/**
+ * Get the protocol attribute from a mutex attributes object.
+ *
+ * This service stores, at the address @a proto, the value of the @a protocol
+ * attribute in the mutex attributes object @a attr.
+ *
+ * The @a protcol attribute may only be one of @a PTHREAD_PRIO_NONE or @a
+ * PTHREAD_PRIO_INHERIT. See pthread_mutexattr_setprotocol() for the meaning of
+ * these two constants.
+ *
+ * @param attr an initialized mutex attributes object;
+ *
+ * @param proto address where the value of the @a protocol attribute will be
+ * stored on success.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the @a proto address is invalid;
+ * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto);
+
+/**
+ * Set the protocol attribute of a mutex attributes object.
+ *
+ * This service set the @a type attribute of the mutex attributes object
+ * @a attr.
+ *
+ * @param attr an initialized mutex attributes object,
+ *
+ * @param proto value of the @a protocol attribute, may be one of:
+ * - PTHREAD_PRIO_NONE, meaning that a mutex created with the attributes object
+ *   @a attr will not follow any priority protocol;
+ * - PTHREAD_PRIO_INHERIT, meaning that a mutex created with the attributes
+ *   object @a attr, will follow the priority inheritance protocol.
+ *
+ * The value PTHREAD_PRIO_PROTECT (priority ceiling protocol) is unsupported.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid;
+ * - ENOTSUP, the value of @a proto is unsupported;
+ * - EINVAL, the value of @a proto is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto);
+
+/**
+ * Get the process-shared attribute of a mutex attributes object.
+ *
+ * This service stores, at the address @a pshared, the value of the @a pshared
+ * attribute in the mutex attributes object @a attr.
+ *
+ * The @a pashared attribute may only be one of @a PTHREAD_PROCESS_PRIVATE or
+ * @a PTHREAD_PROCESS_SHARED. See pthread_mutexattr_setpshared() for the meaning
+ * of these two constants.
+ *
+ * @param attr an initialized mutex attributes object;
+ *
+ * @param pshared address where the value of the @a pshared attribute will be
+ * stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, the @a pshared address is invalid;
+ * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getpshared.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared);
+
+/**
+ * Set the process-shared attribute of a mutex attributes object.
+ *
+ * This service set the @a pshared attribute of the mutex attributes object @a
+ * attr.
+ *
+ * @param attr an initialized mutex attributes object.
+ *
+ * @param pshared value of the @a pshared attribute, may be one of:
+ * - PTHREAD_PROCESS_PRIVATE, meaning that a mutex created with the attributes
+ *   object @a attr will only be accessible by threads within the same process
+ *   as the thread that initialized the mutex;
+ * - PTHREAD_PROCESS_SHARED, meaning that a mutex created with the attributes
+ *   object @a attr will be accessible by any thread that has access to the
+ *   memory where the mutex is allocated.
+ *
+ * @return 0 on success,
+ * @return an error status if:
+ * - EINVAL, the mutex attributes object @a attr is invalid;
+ * - EINVAL, the value of @a pshared is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setpshared.html">
+ * Specification.</a>
+ *
+ */
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
 
 /** @} */

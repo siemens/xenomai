@@ -84,6 +84,23 @@ COBALT_IMPL(int, timer_create, (clockid_t clockid,
 	return -1;
 }
 
+/**
+ * Delete a timer object.
+ *
+ * This service deletes the timer @a timerid.
+ *
+ * @param timerid identifier of the timer to be removed;
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, timer_delete, (timer_t timerid))
 {
 	int ret;
@@ -137,12 +154,6 @@ COBALT_IMPL(int, timer_delete, (timer_t timerid))
  * @retval -1 with @a errno set if:
  * - EINVAL, the specified timer identifier, expiration date or reload value is
  *   invalid. For @a timerid to be valid, it must belong to the current process.
- *
- * @par Valid contexts:
- * - Cobalt kernel-space thread,
- * - kernel-space thread cancellation cleanup routine,
- * - Cobalt user-space thread (switches to primary mode),
- * - user-space thread cancellation cleanup routine.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">
@@ -208,6 +219,26 @@ COBALT_IMPL(int, timer_gettime, (timer_t timerid, struct itimerspec *value))
 	return -1;
 }
 
+/**
+ * Get expiration overruns count since the most recent timer expiration
+ * signal delivery.
+ *
+ * This service returns @a timerid expiration overruns count since the most
+ * recent timer expiration signal delivery. If this count is more than @a
+ * DELAYTIMER_MAX expirations, @a DELAYTIMER_MAX is returned.
+ *
+ * @param timerid Timer identifier.
+ *
+ * @return the overruns count on success;
+ * @return -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, timer_getoverrun, (timer_t timerid))
 {
 	int overrun;

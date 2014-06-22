@@ -45,8 +45,8 @@
 static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
 {
 	unsigned pshared = shadow->datp_offset < 0;
-	
-	if (pshared) 
+
+	if (pshared)
 		return (struct sem_dat *)
 			(cobalt_sem_heap[1] - shadow->datp_offset);
 	else
@@ -54,6 +54,34 @@ static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
 			(cobalt_sem_heap[0] + shadow->datp_offset);
 }
 
+/**
+ * Initialize an unnamed semaphore.
+ *
+ * This service initializes the semaphore @a sm, with the value @a value.
+ *
+ * This service fails if @a sm is already initialized or is a named semaphore.
+ *
+ * @param sem the semaphore to be initialized;
+ *
+ * @param pshared if zero, means that the new semaphore may only be used by
+ * threads in the same process as the thread calling sem_init(); if non zero,
+ * means that the new semaphore may be used by any thread that has access to the
+ * memory where the semaphore is allocated.
+ *
+ * @param value the semaphore initial value.
+ *
+ * @retval 0 on success,
+ * @retval -1 with @a errno set if:
+ * - EBUSY, the semaphore @a sm was already initialized;
+ * - ENOSPC, insufficient memory exists in the system heap to initialize the
+ *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
@@ -65,7 +93,7 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 		errno = err;
 		return -1;
 	}
-	
+
 	__cobalt_prefault(sem_get_datp(_sem));
 	return 0;
 }
@@ -165,7 +193,7 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 
 	if (value >= 0) {
 		long old, new;
-		
+
 		if (datp->flags & SEM_PULSE)
 			return 0;
 
@@ -179,7 +207,7 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 		} while (value != old);
 
 		return 0;
-	}	
+	}
 
   do_syscall:
 	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_post, _sem);
@@ -233,12 +261,12 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 		do {
 			old = value;
 			new = value - 1;
-			
+
 			value = atomic_long_cmpxchg(&datp->value, old, new);
 			if (value <= 0)
 				goto eagain;
 		} while (value != old);
-		
+
 		return 0;
 	}
 
@@ -272,10 +300,6 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
  * - EINTR, the caller was interrupted by a signal while blocked in this
  *   service.
  *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">
  * Specification.</a>
@@ -286,10 +310,10 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
 	int err, oldtype;
 
 	err = __RT(sem_trywait(sem));
-	
+
 	if (err != -1 || errno != EAGAIN)
 		return err;
-	
+
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_wait, _sem);
@@ -298,7 +322,7 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
 
 	if (err == 0)
 		return 0;
-	
+
 	errno = err;
 	return -1;
 }
@@ -329,10 +353,6 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
  * - ETIMEDOUT, the semaphore could not be decremented and the
  *   specified timeout expired.
  *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">
  * Specification.</a>
@@ -343,9 +363,9 @@ COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *abs_timeout)
 	int err, oldtype;
 
 	err = __RT(sem_trywait(sem));
-	
+
 	if (err != -1 || errno != EAGAIN)
-		return err;	
+		return err;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 

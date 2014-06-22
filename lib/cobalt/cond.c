@@ -196,6 +196,52 @@ static void __pthread_cond_cleanup(void *data)
 	c->mutex->lockcnt = c->count;
 }
 
+/**
+ * Wait on a condition variable.
+ *
+ * This service atomically unlocks the mutex @a mx, and block the calling thread
+ * until the condition variable @a cnd is signalled using pthread_cond_signal()
+ * or pthread_cond_broadcast(). When the condition is signaled, this service
+ * re-acquire the mutex before returning.
+ *
+ * Spurious wakeups occur if a signal is delivered to the blocked thread, so, an
+ * application should not assume that the condition changed upon successful
+ * return from this service.
+ *
+ * Even if the mutex @a mx is recursive and its recursion count is greater than
+ * one on entry, it is unlocked before blocking the caller, and the recursion
+ * count is restored once the mutex is re-acquired by this service before
+ * returning.
+ *
+ * Once a thread is blocked on a condition variable, a dynamic binding is formed
+ * between the condition vairable @a cnd and the mutex @a mx; if another thread
+ * calls this service specifying @a cnd as a condition variable but another
+ * mutex than @a mx, this service returns immediately with the EINVAL status.
+ *
+ * This service is a cancellation point for Xenomai POSIX skin threads
+ * (created with the pthread_create() service). When such a thread is cancelled
+ * while blocked in a call to this service, the mutex @a mx is re-acquired
+ * before the cancellation cleanup handlers are called.
+ *
+ * @param cond the condition variable to wait for;
+ *
+ * @param mutex the mutex associated with @a cnd.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the specified condition variable or mutex is invalid;
+ * - EPERM, the specified condition variable is not process-shared and does not
+ *   belong to the current process;
+ * - EINVAL, another thread is currently blocked on @a cnd using another mutex
+ *   than @a mx;
+ * - EPERM, the specified mutex is not owned by the caller.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
@@ -248,6 +294,40 @@ COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mute
 	return -err ?: -c.err;
 }
 
+/**
+ * Wait a bounded time on a condition variable.
+ *
+ * This service is equivalent to pthread_cond_wait(), except that the calling
+ * thread remains blocked on the condition variable @a cnd only until the
+ * timeout specified by @a abstime expires.
+ *
+ * The timeout @a abstime is expressed as an absolute value of the @a clock
+ * attribute passed to pthread_cond_init(). By default, @a CLOCK_REALTIME is
+ * used.
+ *
+ * @param cond the condition variable to wait for;
+ *
+ * @param mutex the mutex associated with @a cnd;
+ *
+ * @param abstime the timeout, expressed as an absolute value of the clock
+ * attribute passed to pthread_cond_init().
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - EPERM, the specified condition variable is not process-shared and does not
+ *   belong to the current process;
+ * - EINVAL, the specified condition variable, mutex or timeout is invalid;
+ * - EINVAL, another thread is currently blocked on @a cnd using another mutex
+ *   than @a mx;
+ * - EPERM, the specified mutex is not owned by the caller;
+ * - ETIMEDOUT, the specified timeout expired.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 					  pthread_mutex_t *mutex,
 					  const struct timespec *abstime))
@@ -300,6 +380,27 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 	return -err ?: -c.err;
 }
 
+/**
+ * Signal a condition variable.
+ *
+ * This service unblocks one thread blocked on the condition variable @a cnd.
+ *
+ * If more than one thread is blocked on the specified condition variable, the
+ * highest priority thread is unblocked.
+ *
+ * @param cond the condition variable to be signalled.
+ *
+ * @return 0 on succes,
+ * @return an error number if:
+ * - EINVAL, the condition variable is invalid;
+ * - EPERM, the condition variable is not process-shared and does not belong to
+ *   the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
@@ -332,6 +433,24 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 	return 0;
 }
 
+/**
+ * Broadcast a condition variable.
+ *
+ * This service unblocks all threads blocked on the condition variable @a cnd.
+ *
+ * @param cond the condition variable to be signalled.
+ *
+ * @return 0 on succes,
+ * @return an error number if:
+ * - EINVAL, the condition variable is invalid;
+ * - EPERM, the condition variable is not process-shared and does not belong to
+ *   the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
@@ -359,5 +478,160 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 
 	return 0;
 }
+
+/**
+ * Initialize a condition variable attributes object.
+ *
+ * This services initializes the condition variable attributes object @a attr
+ * with default values for all attributes. Default value are:
+ * - for the @a clock attribute, @a CLOCK_REALTIME;
+ * - for the @a pshared attribute @a PTHREAD_PROCESS_PRIVATE.
+ *
+ * If this service is called specifying a condition variable attributes object
+ * that was already initialized, the attributes object is reinitialized.
+ *
+ * @param attr the condition variable attributes object to be initialized.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ENOMEM, the condition variable attribute object pointer @a attr is @a
+ *   NULL.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">
+ * Specification.</a>
+ *
+ */
+int pthread_condattr_init(pthread_condattr_t * attr);
+
+/**
+ * Destroy a condition variable attributes object.
+ *
+ * This service destroys the condition variable attributes object @a attr. The
+ * object becomes invalid for all condition variable services (they all return
+ * EINVAL) except pthread_condattr_init().
+ *
+ * @param attr the initialized mutex attributes object to be destroyed.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, the mutex attributes object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">
+ * Specification.</a>
+ *
+ */
+int pthread_condattr_destroy(pthread_condattr_t * attr);
+
+/**
+ * Get the clock selection attribute from a condition variable attributes
+ * object.
+ *
+ * This service stores, at the address @a clk_id, the value of the @a clock
+ * attribute in the condition variable attributes object @a attr.
+ *
+ * See pthread_cond_timedwait() documentation for a description of the effect of
+ * this attribute on a condition variable. The clock ID returned is @a
+ * CLOCK_REALTIME or @a CLOCK_MONOTONIC.
+ *
+ * @param attr an initialized condition variable attributes object,
+ *
+ * @param clk_id address where the @a clock attribute value will be stored on
+ * success.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the attribute object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">
+ * Specification.</a>
+ *
+ */
+int pthread_condattr_getclock(const pthread_condattr_t * attr,
+			clockid_t * clk_id);
+
+/**
+ * Set the clock selection attribute of a condition variable attributes object.
+ *
+ * This service set the @a clock attribute of the condition variable attributes
+ * object @a attr.
+ *
+ * See pthread_cond_timedwait() documentation for a description of the effect
+ * of this attribute on a condition variable.
+ *
+ * @param attr an initialized condition variable attributes object,
+ *
+ * @param clk_id value of the @a clock attribute, may be @a CLOCK_REALTIME or @a
+ * CLOCK_MONOTONIC.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the condition variable attributes object @a attr is invalid;
+ * - EINVAL, the value of @a clk_id is invalid for the @a clock attribute.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">
+ * Specification.</a>
+ *
+ */
+int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id);
+
+/**
+ * Get the process-shared attribute from a condition variable attributes
+ * object.
+ *
+ * This service stores, at the address @a pshared, the value of the @a pshared
+ * attribute in the condition variable attributes object @a attr.
+ *
+ * The @a pshared attribute may only be one of @a PTHREAD_PROCESS_PRIVATE or @a
+ * PTHREAD_PROCESS_SHARED. See pthread_condattr_setpshared() for the meaning of
+ * these two constants.
+ *
+ * @param attr an initialized condition variable attributes object.
+ *
+ * @param pshared address where the value of the @a pshared attribute will be
+ * stored on success.
+ *
+ * @return 0 on success,
+ * @return an error number if:
+ * - EINVAL, the @a pshared address is invalid;
+ * - EINVAL, the condition variable attributes object @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getpshared.html">
+ * Specification.</a>
+ *
+ */
+int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
+
+/**
+ * Set the process-shared attribute of a condition variable attributes object.
+ *
+ * This service set the @a pshared attribute of the condition variable
+ * attributes object @a attr.
+ *
+ * @param attr an initialized condition variable attributes object.
+ *
+ * @param pshared value of the @a pshared attribute, may be one of:
+ * - PTHREAD_PROCESS_PRIVATE, meaning that a condition variable created with the
+ *   attributes object @a attr will only be accessible by threads within the
+ *   same process as the thread that initialized the condition variable;
+ * - PTHREAD_PROCESS_SHARED, meaning that a condition variable created with the
+ *   attributes object @a attr will be accessible by any thread that has access
+ *   to the memory where the condition variable is allocated.
+ *
+ * @return 0 on success,
+ * @return an error status if:
+ * - EINVAL, the condition variable attributes object @a attr is invalid;
+ * - EINVAL, the value of @a pshared is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setpshared.html">
+ * Specification.</a>
+ *
+ */
+int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
 
 /** @}*/

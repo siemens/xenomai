@@ -70,6 +70,30 @@
  *
  *@{
  */
+
+/**
+ * Get the resolution of the specified clock.
+ *
+ * This service returns, at the address @a res, if it is not @a NULL, the
+ * resolution of the clock @a clock_id.
+ *
+ * For both CLOCK_REALTIME and CLOCK_MONOTONIC, this resolution is the duration
+ * of one system clock tick. No other clock is supported.
+ *
+ * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;
+ *
+ * @param tp the address where the resolution of the specified clock will be
+ * stored on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a clock_id is invalid;
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
 	int ret;
@@ -123,6 +147,34 @@ static int __do_clock_host_realtime(struct timespec *ts)
 	return 0;
 }
 
+/**
+ * Read the specified clock.
+ *
+ * This service returns, at the address @a tp the current value of the clock @a
+ * clock_id. If @a clock_id is:
+ * - CLOCK_REALTIME, the clock value represents the amount of time since the
+ *   Epoch, with a precision of one system clock tick;
+ * - CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW, the clock value is given
+ *   by an architecture-dependent high resolution counter, with a
+ *   precision independent from the system clock tick duration.
+ * - CLOCK_HOST_REALTIME, the clock value as seen by the host, typically
+ *   Linux. Resolution and precision depend on the host, but it is guaranteed
+ *   that both, host and Xenomai, see the same information.
+ *
+ * @param clock_id clock identifier, either CLOCK_REALTIME, CLOCK_MONOTONIC,
+ *        or CLOCK_HOST_REALTIME;
+ *
+ * @param tp the address where the value of the specified clock will be stored.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a clock_id is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 {
 	unsigned long long ns;
@@ -160,6 +212,26 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 	return 0;
 }
 
+/**
+ * Set the specified clock.
+ *
+ * This allow setting the CLOCK_REALTIME clock.
+ *
+ * @param clock_id the id of the clock to be set, only CLOCK_REALTIME is
+ * supported.
+ *
+ * @param tp the address of a struct timespec specifying the new date.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a clock_id is not CLOCK_REALTIME;
+ * - EINVAL, the date specified by @a tp is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 {
 	int ret;
@@ -175,6 +247,45 @@ COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 	return 0;
 }
 
+/**
+ * Sleep some amount of time.
+ *
+ * This service suspends the calling thread until the wakeup time specified by
+ * @a rqtp, or a signal is delivered to the caller. If the flag TIMER_ABSTIME is
+ * set in the @a flags argument, the wakeup time is specified as an absolute
+ * value of the clock @a clock_id. If the flag TIMER_ABSTIME is not set, the
+ * wakeup time is specified as a time interval.
+ *
+ * If this service is interrupted by a signal, the flag TIMER_ABSTIME is not
+ * set, and @a rmtp is not @a NULL, the time remaining until the specified
+ * wakeup time is returned at the address @a rmtp.
+ *
+ * The resolution of this service is one system clock tick.
+ *
+ * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC.
+ *
+ * @param flags one of:
+ * - 0 meaning that the wakeup time @a rqtp is a time interval;
+ * - TIMER_ABSTIME, meaning that the wakeup time is an absolute value of the
+ *   clock @a clock_id.
+ *
+ * @param rqtp address of the wakeup time.
+ *
+ * @param rmtp address where the remaining time before wakeup will be stored if
+ * the service is interrupted by a signal.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller context is invalid;
+ * - ENOTSUP, the specified clock is unsupported;
+ * - EINVAL, the specified wakeup time is invalid;
+ * - EINTR, this service was interrupted by a signal.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
 				   int flags,
 				   const struct timespec *rqtp, struct timespec *rmtp))
@@ -192,6 +303,35 @@ COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
 	return ret;
 }
 
+/**
+ * Sleep some amount of time.
+ *
+ * This service suspends the calling thread until the wakeup time specified by
+ * @a rqtp, or a signal is delivered. The wakeup time is specified as a time
+ * interval.
+ *
+ * If this service is interrupted by a signal and @a rmtp is not @a NULL, the
+ * time remaining until the specified wakeup time is returned at the address @a
+ * rmtp.
+ *
+ * The resolution of this service is one system clock tick.
+ *
+ * @param rqtp address of the wakeup time.
+ *
+ * @param rmtp address where the remaining time before wakeup will be stored if
+ * the service is interrupted by a signal.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the specified wakeup time is invalid;
+ * - EINTR, this service was interrupted by a signal.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">
+ * Specification.</a>
+ *
+ */
 COBALT_IMPL(int, nanosleep, (const struct timespec *rqtp, struct timespec *rmtp))
 {
 	int ret;
