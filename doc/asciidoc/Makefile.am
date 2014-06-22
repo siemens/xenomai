@@ -14,9 +14,7 @@ HTML_DOCS = 				\
 	html/TROUBLESHOOTING			\
 	html/MIGRATION				\
 	html/asciidoc-icons			\
-	html/asciidoc-icons/callouts		\
-	html/asciidoc-css			\
-	html/asciidoc-js
+	html/asciidoc-icons/callouts
 
 PDF_DOCS = 			\
 	README.INSTALL.pdf 	\
@@ -63,7 +61,6 @@ PDF_DOCSDIR = ./
 MAN_DOCSDIR = ./
 
 ASCIIDOC_HTML_OPTS=-a icons -a iconsdir=../asciidoc-icons \
-	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
 	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
 
 ASCIIDOC_PDF_OPTS=-a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
@@ -104,17 +101,6 @@ html/asciidoc-icons html/asciidoc-icons/callouts:
 	@test -d /usr/share/asciidoc/images && \
 	cp -a /usr/share/asciidoc/images/icons html/asciidoc-icons || \
 	cp -a /usr/share/asciidoc/icons html/asciidoc-icons
-
-html/asciidoc-css:
-	@$(mkdir_p) $@
-	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
-	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
-	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
-
-html/asciidoc-js:
-	@$(mkdir_p) $@
-	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
-	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
 
 endif
 
