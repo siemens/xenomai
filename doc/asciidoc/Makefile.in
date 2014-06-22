@@ -293,13 +293,23 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 HTML_DOCS = \
-	html/README.INSTALL		\
-	html/README.APPLICATIONS 	\
-	html/TROUBLESHOOTING 		\
-	html/MIGRATION 			\
-	html/asciidoc-icons		\
-	html/asciidoc-icons/callouts	\
-	html/asciidoc-css		\
+	html/clocktest				\
+	html/dohell				\
+	html/latency				\
+	html/rtcanconfig			\
+	html/rtcanrecv				\
+	html/rtcansend				\
+	html/switchtest				\
+	html/xeno-config			\
+	html/xeno-test				\
+	html/xeno				\
+	html/README.INSTALL			\
+	html/README.APPLICATIONS		\
+	html/TROUBLESHOOTING			\
+	html/MIGRATION				\
+	html/asciidoc-icons			\
+	html/asciidoc-icons/callouts		\
+	html/asciidoc-css			\
 	html/asciidoc-js
 
 PDF_DOCS = \
@@ -557,7 +567,7 @@ uninstall-am: uninstall-local
 @XENO_BUILD_DOC_TRUE@	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
 @XENO_BUILD_DOC_TRUE@%.1: %.adoc Makefile
-@XENO_BUILD_DOC_TRUE@	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<       
+@XENO_BUILD_DOC_TRUE@	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<
 
 @XENO_BUILD_DOC_TRUE@%.pdf: %.adoc Makefile
 @XENO_BUILD_DOC_TRUE@	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
@@ -583,9 +593,8 @@ uninstall-am: uninstall-local
 
 @XENO_BUILD_DOC_TRUE@html/asciidoc-css:
 @XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
-@XENO_BUILD_DOC_TRUE@	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
-@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
-@XENO_BUILD_DOC_TRUE@	true
+@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
+@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
 @XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
 @XENO_BUILD_DOC_TRUE@html/asciidoc-js:
