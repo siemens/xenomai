@@ -49,7 +49,7 @@ install-docs-local: install-htmldocs install-pdfdocs install-mandocs
 dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(GEN_DOC_DIST_ROOT)/html/$$dir; \
+	    dest=$(GEN_DOC_DIST_ROOT)/$$dir; \
 	    $(mkinstalldirs) $$dest && abs_dest=`cd $$dest && pwd` && \
 	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \

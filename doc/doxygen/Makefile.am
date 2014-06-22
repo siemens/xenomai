@@ -1,6 +1,6 @@
-HTML_DOCS = xeno3prm-html xeno3prm-html/search
+HTML_DOCS = html/xeno3prm html/xeno3prm/search
 PDF_DOCS  = xeno3prm.pdf
-EXTRA_DIST = xeno3prm-common.conf.in xeno3prm-html.conf.in xeno3prm-pdf.conf.in
+EXTRA_DIST = xeno3prm-common.conf.in xeno3prm-html.conf.in xeno3prm-latex.conf.in
 
 if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
@@ -20,20 +20,20 @@ html: $(HTML_DOCS)
 
 pdf: $(PDF_DOCS)
 
-xeno3prm-html:
-	$(DOXYGEN) $@.conf
+html/xeno3prm latex/xeno3prm: FORCE
+	@mkdir -p $@
+	$(DOXYGEN) $(@F)-$(@D).conf
 
-%.pdf: FORCE
-	$(DOXYGEN) $*-pdf.conf
-	$(MAKE) -C $*-latex refman.pdf
-	mv $*-latex/refman.pdf $@
+%.pdf: latex/%
+	$(MAKE) -C $< refman.pdf > /dev/null
+	mv $</refman.pdf $@
 
 distclean-local:
-	for dir in $(HTML_DOCS) *-latex; do \
+	for dir in *-html *-latex; do \
 	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 	done
 
-.PHONY: xeno3prm-html FORCE
+.PHONY: FORCE
 
 .DELETE_ON_ERROR:
 

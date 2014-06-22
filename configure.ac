@@ -881,7 +881,7 @@ if test \! x$XENO_RUN_DOC = x ; then
 	doc/doxygen/Makefile \
 	doc/doxygen/xeno3prm-common.conf \
 	doc/doxygen/xeno3prm-html.conf \
-	doc/doxygen/xeno3prm-pdf.conf \
+	doc/doxygen/xeno3prm-latex.conf \
 	doc/asciidoc/Makefile \
       ])
 fi

@@ -1,12 +1,12 @@
-HTML_DOCS = 			\
-	README.INSTALL		\
-	README.APPLICATIONS 	\
-	TROUBLESHOOTING 	\
-	MIGRATION 		\
-	asciidoc-icons		\
-	asciidoc-icons/callouts	\
-	asciidoc-css		\
-	asciidoc-js
+HTML_DOCS = 				\
+	html/README.INSTALL		\
+	html/README.APPLICATIONS 	\
+	html/TROUBLESHOOTING 		\
+	html/MIGRATION 			\
+	html/asciidoc-icons		\
+	html/asciidoc-icons/callouts	\
+	html/asciidoc-css		\
+	html/asciidoc-js
 
 PDF_DOCS = 			\
 	README.INSTALL.pdf 	\
@@ -66,7 +66,7 @@ tmpdir=adoc_plaintext
 
 all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS) $(MAN_DOCS)
 
-%: %.adoc Makefile
+html/%: %.adoc Makefile
 	@$(mkdir_p) $@
 	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
@@ -89,20 +89,20 @@ $(tmpdir)/%.txt: %.adoc Makefile plaintext.conf plaintext.xsl
 %.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
 	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
-asciidoc-icons asciidoc-icons/callouts:
+html/asciidoc-icons html/asciidoc-icons/callouts:
 	@$(RM) -R asciidoc-icons
 	@test -d /usr/share/asciidoc/images && \
-	cp -a /usr/share/asciidoc/images/icons asciidoc-icons || \
-	cp -a /usr/share/asciidoc/icons asciidoc-icons
+	cp -a /usr/share/asciidoc/images/icons html/asciidoc-icons || \
+	cp -a /usr/share/asciidoc/icons html/asciidoc-icons
 
-asciidoc-css:
+html/asciidoc-css:
 	@$(mkdir_p) $@
 	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
 	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
 	true
 	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
-asciidoc-js:
+html/asciidoc-js:
 	@$(mkdir_p) $@
 	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
 	@cp -a /usr/share/asciidoc/javascripts/toc.js $@

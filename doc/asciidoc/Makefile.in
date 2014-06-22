@@ -293,14 +293,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 HTML_DOCS = \
-	README.INSTALL		\
-	README.APPLICATIONS 	\
-	TROUBLESHOOTING 	\
-	MIGRATION 		\
-	asciidoc-icons		\
-	asciidoc-icons/callouts	\
-	asciidoc-css		\
-	asciidoc-js
+	html/README.INSTALL		\
+	html/README.APPLICATIONS 	\
+	html/TROUBLESHOOTING 		\
+	html/MIGRATION 			\
+	html/asciidoc-icons		\
+	html/asciidoc-icons/callouts	\
+	html/asciidoc-css		\
+	html/asciidoc-js
 
 PDF_DOCS = \
 	README.INSTALL.pdf 	\
@@ -552,7 +552,7 @@ uninstall-am: uninstall-local
 
 @XENO_BUILD_DOC_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS) $(MAN_DOCS)
 
-@XENO_BUILD_DOC_TRUE@%: %.adoc Makefile
+@XENO_BUILD_DOC_TRUE@html/%: %.adoc Makefile
 @XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
 @XENO_BUILD_DOC_TRUE@	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
@@ -575,20 +575,20 @@ uninstall-am: uninstall-local
 @XENO_BUILD_DOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
 @XENO_BUILD_DOC_TRUE@	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
-@XENO_BUILD_DOC_TRUE@asciidoc-icons asciidoc-icons/callouts:
+@XENO_BUILD_DOC_TRUE@html/asciidoc-icons html/asciidoc-icons/callouts:
 @XENO_BUILD_DOC_TRUE@	@$(RM) -R asciidoc-icons
 @XENO_BUILD_DOC_TRUE@	@test -d /usr/share/asciidoc/images && \
-@XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/images/icons asciidoc-icons || \
-@XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/icons asciidoc-icons
+@XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/images/icons html/asciidoc-icons || \
+@XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/icons html/asciidoc-icons
 
-@XENO_BUILD_DOC_TRUE@asciidoc-css:
+@XENO_BUILD_DOC_TRUE@html/asciidoc-css:
 @XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
 @XENO_BUILD_DOC_TRUE@	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
 @XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
 @XENO_BUILD_DOC_TRUE@	true
 @XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
-@XENO_BUILD_DOC_TRUE@asciidoc-js:
+@XENO_BUILD_DOC_TRUE@html/asciidoc-js:
 @XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
 @XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
 @XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
@@ -627,7 +627,7 @@ install-docs-local: install-htmldocs install-pdfdocs install-mandocs
 dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(GEN_DOC_DIST_ROOT)/html/$$dir; \
+	    dest=$(GEN_DOC_DIST_ROOT)/$$dir; \
 	    $(mkinstalldirs) $$dest && abs_dest=`cd $$dest && pwd` && \
 	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \

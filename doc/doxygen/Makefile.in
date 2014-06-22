@@ -81,7 +81,8 @@ target_triplet = @target@
 DIST_COMMON = $(top_srcdir)/doc/install-dist.rules \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(srcdir)/xeno3prm-common.conf.in \
-	$(srcdir)/xeno3prm-html.conf.in $(srcdir)/xeno3prm-pdf.conf.in
+	$(srcdir)/xeno3prm-html.conf.in \
+	$(srcdir)/xeno3prm-latex.conf.in
 subdir = doc/doxygen
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
@@ -96,7 +97,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES = xeno3prm-common.conf xeno3prm-html.conf \
-	xeno3prm-pdf.conf
+	xeno3prm-latex.conf
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -295,9 +296,9 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-HTML_DOCS = xeno3prm-html xeno3prm-html/search
+HTML_DOCS = html/xeno3prm html/xeno3prm/search
 PDF_DOCS = xeno3prm.pdf
-EXTRA_DIST = xeno3prm-common.conf.in xeno3prm-html.conf.in xeno3prm-pdf.conf.in
+EXTRA_DIST = xeno3prm-common.conf.in xeno3prm-html.conf.in xeno3prm-latex.conf.in
 @XENO_BUILD_DOC_FALSE@HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
 @XENO_BUILD_DOC_TRUE@HTML_DOCSDIR = ./
 @XENO_BUILD_DOC_FALSE@PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
@@ -342,7 +343,7 @@ xeno3prm-common.conf: $(top_builddir)/config.status $(srcdir)/xeno3prm-common.co
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno3prm-html.conf: $(top_builddir)/config.status $(srcdir)/xeno3prm-html.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-xeno3prm-pdf.conf: $(top_builddir)/config.status $(srcdir)/xeno3prm-pdf.conf.in
+xeno3prm-latex.conf: $(top_builddir)/config.status $(srcdir)/xeno3prm-latex.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mostlyclean-libtool:
@@ -519,20 +520,20 @@ uninstall-am: uninstall-local
 
 @XENO_BUILD_DOC_TRUE@pdf: $(PDF_DOCS)
 
-@XENO_BUILD_DOC_TRUE@xeno3prm-html:
-@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $@.conf
+@XENO_BUILD_DOC_TRUE@html/xeno3prm latex/xeno3prm: FORCE
+@XENO_BUILD_DOC_TRUE@	@mkdir -p $@
+@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $(@F)-$(@D).conf
 
-@XENO_BUILD_DOC_TRUE@%.pdf: FORCE
-@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $*-pdf.conf
-@XENO_BUILD_DOC_TRUE@	$(MAKE) -C $*-latex refman.pdf
-@XENO_BUILD_DOC_TRUE@	mv $*-latex/refman.pdf $@
+@XENO_BUILD_DOC_TRUE@%.pdf: latex/%
+@XENO_BUILD_DOC_TRUE@	$(MAKE) -C $< refman.pdf > /dev/null
+@XENO_BUILD_DOC_TRUE@	mv $</refman.pdf $@
 
 @XENO_BUILD_DOC_TRUE@distclean-local:
-@XENO_BUILD_DOC_TRUE@	for dir in $(HTML_DOCS) *-latex; do \
+@XENO_BUILD_DOC_TRUE@	for dir in *-html *-latex; do \
 @XENO_BUILD_DOC_TRUE@	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 @XENO_BUILD_DOC_TRUE@	done
 
-@XENO_BUILD_DOC_TRUE@.PHONY: xeno3prm-html FORCE
+@XENO_BUILD_DOC_TRUE@.PHONY: FORCE
 
 @XENO_BUILD_DOC_TRUE@.DELETE_ON_ERROR:
 
@@ -570,7 +571,7 @@ install-docs-local: install-htmldocs install-pdfdocs install-mandocs
 dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(GEN_DOC_DIST_ROOT)/html/$$dir; \
+	    dest=$(GEN_DOC_DIST_ROOT)/$$dir; \
 	    $(mkinstalldirs) $$dest && abs_dest=`cd $$dest && pwd` && \
 	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \
