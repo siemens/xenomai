@@ -107,9 +107,8 @@ html/asciidoc-icons html/asciidoc-icons/callouts:
 
 html/asciidoc-css:
 	@$(mkdir_p) $@
-	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
-	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
-	true
+	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
+	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
 	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
 html/asciidoc-js:
