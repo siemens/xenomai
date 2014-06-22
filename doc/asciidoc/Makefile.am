@@ -1,11 +1,21 @@
 HTML_DOCS = 				\
-	html/README.INSTALL		\
-	html/README.APPLICATIONS 	\
-	html/TROUBLESHOOTING 		\
-	html/MIGRATION 			\
-	html/asciidoc-icons		\
-	html/asciidoc-icons/callouts	\
-	html/asciidoc-css		\
+	html/clocktest				\
+	html/dohell				\
+	html/latency				\
+	html/rtcanconfig			\
+	html/rtcanrecv				\
+	html/rtcansend				\
+	html/switchtest				\
+	html/xeno-config			\
+	html/xeno-test				\
+	html/xeno				\
+	html/README.INSTALL			\
+	html/README.APPLICATIONS		\
+	html/TROUBLESHOOTING			\
+	html/MIGRATION				\
+	html/asciidoc-icons			\
+	html/asciidoc-icons/callouts		\
+	html/asciidoc-css			\
 	html/asciidoc-js
 
 PDF_DOCS = 			\
@@ -71,7 +81,7 @@ html/%: %.adoc Makefile
 	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
 %.1: %.adoc Makefile
-	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<       
+	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<
 
 %.pdf: %.adoc Makefile
 	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
