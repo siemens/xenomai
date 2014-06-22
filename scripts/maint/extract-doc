@@ -26,7 +26,7 @@ Options:
 "
 
 ECHO=echo
-GIT_CLONE="git-clone"
+GIT_CLONE="git clone"
 RSYNC="rsync"
 
 # Parse command line arguments.
@@ -34,24 +34,24 @@ while :; do
     case "$1" in
     # Really verbose, output details
     -v|--verbose) SVN=svn
-        RSYNC="rsync -v"
-        ;;
-    
+	RSYNC="rsync -v"
+	;;
+
     # Really silent, for cron jobs
     -q|--quiet) ECHO=:
-        RSYNC="rsync -q"
-	GIT_CLONE="git-clone -q"
-        ;;
+	RSYNC="rsync -q"
+	GIT_CLONE="git clone -q"
+	;;
 
     # Debugging
     -d|--debug) set -x
-        ;;
+	;;
 
     -h|--help) cat <<EOF
 $USAGE
 EOF
-        exit 0
-        ;;
+	exit 0
+	;;
 
     *) break
        ;;
@@ -84,25 +84,20 @@ fi
 mkdir $tmpdir
 cd $tmpdir
 
-for dir in ${1+"$@"}; do
-    $ECHO Checking out Xenomai directory $dir documentation...
-    $GIT_CLONE $repository/$dir.git $dir
-    $ECHO done.
+dir=$1
+$ECHO Checking out Xenomai directory $dir documentation...
+$GIT_CLONE -b next $repository/xenomai-forge.git $dir
+$ECHO done.
 
-    $ECHO Changing files and directories modes...
-    find $dir/doc/prebuilt $dir/doc/nodist | xargs chmod u=rwX,g=rwX,o=rX
-    chmod u=rw,g=rw $dir/TROUBLESHOOTING $dir/README.INSTALL
-    $ECHO done.
+$ECHO Changing files and directories modes...
+find $dir/doc/prebuilt | xargs chmod u=rwX,g=rwX,o=rX
+$ECHO done.
 
-    $ECHO Copying to $installdir/$dir...
-    mkdir -p $installdir/$dir
-    $RSYNC -e ssh -prltgDz --delete --delete-after \
-	$dir/doc/prebuilt/ $dir/doc/nodist/ \
-	$dir/README.INSTALL $dir/TROUBLESHOOTING \
-	$installdir/$dir/
-    $ECHO done.
-done
+$ECHO Copying to $installdir/$dir...
+mkdir -p $installdir/$dir
+$RSYNC -e ssh -prltgDz --delete --delete-after \
+    $dir/doc/prebuilt/ $installdir/$dir/
+$ECHO done.
 
 cd ..
 rm -Rf $tmpdir
-
