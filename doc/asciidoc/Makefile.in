@@ -308,9 +308,7 @@ HTML_DOCS = \
 	html/TROUBLESHOOTING			\
 	html/MIGRATION				\
 	html/asciidoc-icons			\
-	html/asciidoc-icons/callouts		\
-	html/asciidoc-css			\
-	html/asciidoc-js
+	html/asciidoc-icons/callouts
 
 PDF_DOCS = \
 	README.INSTALL.pdf 	\
@@ -354,7 +352,6 @@ EXTRA_DIST := \
 @XENO_BUILD_DOC_FALSE@MAN_DOCSDIR = $(srcdir)/../prebuilt/man/
 @XENO_BUILD_DOC_TRUE@MAN_DOCSDIR = ./
 @XENO_BUILD_DOC_TRUE@ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
-@XENO_BUILD_DOC_TRUE@	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
 @XENO_BUILD_DOC_TRUE@	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
 
 @XENO_BUILD_DOC_TRUE@ASCIIDOC_PDF_OPTS = -a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
@@ -590,17 +587,6 @@ uninstall-am: uninstall-local
 @XENO_BUILD_DOC_TRUE@	@test -d /usr/share/asciidoc/images && \
 @XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/images/icons html/asciidoc-icons || \
 @XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/icons html/asciidoc-icons
-
-@XENO_BUILD_DOC_TRUE@html/asciidoc-css:
-@XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
-@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
-@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
-@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
-
-@XENO_BUILD_DOC_TRUE@html/asciidoc-js:
-@XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
-@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
-@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
 
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
