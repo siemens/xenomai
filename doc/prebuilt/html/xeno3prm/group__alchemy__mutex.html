@@ -240,6 +240,8 @@ Functions</h2></td></tr>
 <p>Over the Cobalt core, a real-time task with effective priority zero keeps running in primary mode until it releases the mutex.</p>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
+<p>References <a class="el" href="group__cobalt__api__mutex.html#ga12809c44718c21544ceb280dc1a53573">pthread_mutex_lock()</a>, <a class="el" href="group__cobalt__api__mutex.html#ga072986d91bfdd73c620385e4351830ba">pthread_mutex_timedlock()</a>, and <a class="el" href="group__cobalt__api__mutex.html#ga27da386211db1a7e9a3b2a0db4d22144">pthread_mutex_trylock()</a>.</p>
+
 <p>Referenced by <a class="el" href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire()</a>, and <a class="el" href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">rt_mutex_acquire_until()</a>.</p>
 
 </div>
@@ -392,6 +394,8 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Mutexes can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
 
+<p>References <a class="el" href="group__cobalt__api__mutex.html#ga7454d249ed94ad5d5e57ba1529d7a7f2">pthread_mutex_init()</a>, <a class="el" href="group__cobalt__api__mutex.html#ga2321aabf58224b06021185708d0f9658">pthread_mutexattr_destroy()</a>, <a class="el" href="group__cobalt__api__mutex.html#gaf98f6b6c483077a39d1400b1de1577b8">pthread_mutexattr_init()</a>, <a class="el" href="group__cobalt__api__mutex.html#ga9c67ad95bb6cc0fb38dcc87b441b16b4">pthread_mutexattr_setprotocol()</a>, <a class="el" href="group__cobalt__api__mutex.html#ga73bd8697b91e0ee9a63c30052ac9f72f">pthread_mutexattr_setpshared()</a>, and <a class="el" href="group__cobalt__api__mutex.html#ga8387c80e660e9426f801ac0217ecfae5">pthread_mutexattr_settype()</a>.</p>
+
 </div>
 </div>
 <a class="anchor" id="gad0c2342227f821bd09f580b6a9684179"></a>
@@ -427,6 +431,8 @@ Functions</h2></td></tr>
 <li>Regular POSIX threads</li>
 <li>Xenomai threads </li>
 </ul>
+
+<p>References <a class="el" href="group__cobalt__api__mutex.html#ga3cf620ff3a40af11d79cf28901dc55e2">pthread_mutex_destroy()</a>.</p>
 
 </div>
 </div>
@@ -473,7 +479,7 @@ Functions</h2></td></tr>
 <li>Xenomai threads </li>
 </ul>
 
-<p>References <a class="el" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">RT_MUTEX_INFO::name</a>, and <a class="el" href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">RT_MUTEX_INFO::owner</a>.</p>
+<p>References <a class="el" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">RT_MUTEX_INFO::name</a>, <a class="el" href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">RT_MUTEX_INFO::owner</a>, <a class="el" href="group__cobalt__api__mutex.html#ga27da386211db1a7e9a3b2a0db4d22144">pthread_mutex_trylock()</a>, and <a class="el" href="group__cobalt__api__mutex.html#ga96184290ffb60e04c53a52869cf960a2">pthread_mutex_unlock()</a>.</p>
 
 </div>
 </div>
@@ -508,6 +514,8 @@ Functions</h2></td></tr>
 <ul>
 <li>Xenomai threads </li>
 </ul>
+
+<p>References <a class="el" href="group__cobalt__api__mutex.html#ga96184290ffb60e04c53a52869cf960a2">pthread_mutex_unlock()</a>.</p>
 
 </div>
 </div>

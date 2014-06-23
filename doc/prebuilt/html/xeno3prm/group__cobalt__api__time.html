@@ -103,26 +103,316 @@ Collaboration diagram for Clocks and timers:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:gaeb3dd7af457eca5b106d65c929a60a87"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#gaeb3dd7af457eca5b106d65c929a60a87">clock_getres</a> (clockid_t clock_id, struct timespec *tp)</td></tr>
+<tr class="memdesc:gaeb3dd7af457eca5b106d65c929a60a87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the resolution of the specified clock.  <a href="#gaeb3dd7af457eca5b106d65c929a60a87">More...</a><br/></td></tr>
+<tr class="separator:gaeb3dd7af457eca5b106d65c929a60a87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga10b73e75d375e5c244e32ea46be775bf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a> (clockid_t clock_id, struct timespec *tp)</td></tr>
+<tr class="memdesc:ga10b73e75d375e5c244e32ea46be775bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the specified clock.  <a href="#ga10b73e75d375e5c244e32ea46be775bf">More...</a><br/></td></tr>
+<tr class="separator:ga10b73e75d375e5c244e32ea46be775bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab0dbabb3e47efe9483b81235fdd0c297"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#gab0dbabb3e47efe9483b81235fdd0c297">clock_settime</a> (clockid_t clock_id, const struct timespec *tp)</td></tr>
+<tr class="memdesc:gab0dbabb3e47efe9483b81235fdd0c297"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the specified clock.  <a href="#gab0dbabb3e47efe9483b81235fdd0c297">More...</a><br/></td></tr>
+<tr class="separator:gab0dbabb3e47efe9483b81235fdd0c297"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga924d51d78cdcd9d7dee2613fb3a33cd1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep</a> (clockid_t clock_id, int flags, const struct timespec *rqtp, struct timespec *rmtp)</td></tr>
+<tr class="memdesc:ga924d51d78cdcd9d7dee2613fb3a33cd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sleep some amount of time.  <a href="#ga924d51d78cdcd9d7dee2613fb3a33cd1">More...</a><br/></td></tr>
+<tr class="separator:ga924d51d78cdcd9d7dee2613fb3a33cd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9ce6a1ed91a601dee133c8b6cf8b721a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#ga9ce6a1ed91a601dee133c8b6cf8b721a">nanosleep</a> (const struct timespec *rqtp, struct timespec *rmtp)</td></tr>
+<tr class="memdesc:ga9ce6a1ed91a601dee133c8b6cf8b721a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sleep some amount of time.  <a href="#ga9ce6a1ed91a601dee133c8b6cf8b721a">More...</a><br/></td></tr>
+<tr class="separator:ga9ce6a1ed91a601dee133c8b6cf8b721a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a> (clockid_t clockid, const struct sigevent *__restrict__ evp, timer_t *__restrict__ timerid)</td></tr>
 <tr class="memdesc:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a timer.  <a href="#ga8a24ab6b0901162bbbbbca4f5205abd0">More...</a><br/></td></tr>
 <tr class="separator:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad114bb350d7d5d12cff3fd19bf533303"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#gad114bb350d7d5d12cff3fd19bf533303">timer_delete</a> (timer_t timerid)</td></tr>
+<tr class="memdesc:gad114bb350d7d5d12cff3fd19bf533303"><td class="mdescLeft">&#160;</td><td class="mdescRight">Delete a timer object.  <a href="#gad114bb350d7d5d12cff3fd19bf533303">More...</a><br/></td></tr>
+<tr class="separator:gad114bb350d7d5d12cff3fd19bf533303"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2c513dc9b3734f5e23fc7b8a5cf11c95"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a> (timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</td></tr>
 <tr class="memdesc:ga2c513dc9b3734f5e23fc7b8a5cf11c95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start or stop a timer.  <a href="#ga2c513dc9b3734f5e23fc7b8a5cf11c95">More...</a><br/></td></tr>
 <tr class="separator:ga2c513dc9b3734f5e23fc7b8a5cf11c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga520e1913c35aa3352259dafa3259d140"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a> (timer_t timerid, struct itimerspec *value)</td></tr>
 <tr class="memdesc:ga520e1913c35aa3352259dafa3259d140"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get timer next expiration date and reload value.  <a href="#ga520e1913c35aa3352259dafa3259d140">More...</a><br/></td></tr>
 <tr class="separator:ga520e1913c35aa3352259dafa3259d140"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad779f0bc22f64bd3bd977221b0ce1b8f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__time.html#gad779f0bc22f64bd3bd977221b0ce1b8f">timer_getoverrun</a> (timer_t timerid)</td></tr>
+<tr class="memdesc:gad779f0bc22f64bd3bd977221b0ce1b8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get expiration overruns count since the most recent timer expiration signal delivery.  <a href="#gad779f0bc22f64bd3bd977221b0ce1b8f">More...</a><br/></td></tr>
+<tr class="separator:gad779f0bc22f64bd3bd977221b0ce1b8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Cobalt/POSIX clock and timer services. </p>
 <p>Cobalt supports three built-in clocks:</p>
 <p>CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of time since the Epoch, with a resolution of one nanosecond.</p>
-<p>CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution of one nanosecond, like the CLOCK_REALTIME clock.</p>
+<p>CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with <a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1" title="Sleep some amount of time. ">clock_nanosleep()</a>), the CLOCK_MONOTONIC clock has a resolution of one nanosecond, like the CLOCK_REALTIME clock.</p>
 <p>CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time values from a hardware timer which is not adjusted by NTP. This is strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not NTP adjusted either.</p>
 <p>In addition, external clocks can be dynamically registered using the cobalt_clock_register() service. These clocks are fully managed by Cobalt extension code, which should advertise each incoming tick by calling <a class="el" href="group__cobalt__core__clock.html#ga1ab1751db4c73cf20a13982ab14e5563" title="Process a clock tick. ">xnclock_tick()</a> for the relevant clock, from an interrupt context.</p>
-<p>Timer objects may be created with the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a> service using any of the built-in or external clocks. The resolution of these timers is clock-specific. However, built-in clocks all have nanosecond resolution, as specified for clock_nanosleep().</p>
+<p>Timer objects may be created with the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a> service using any of the built-in or external clocks. The resolution of these timers is clock-specific. However, built-in clocks all have nanosecond resolution, as specified for <a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1" title="Sleep some amount of time. ">clock_nanosleep()</a>.</p>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">Specification.</a> </dd></dl>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="gaeb3dd7af457eca5b106d65c929a60a87"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int clock_getres </td>
+          <td>(</td>
+          <td class="paramtype">clockid_t&#160;</td>
+          <td class="paramname"><em>clock_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct timespec *&#160;</td>
+          <td class="paramname"><em>tp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the resolution of the specified clock. </p>
+<p>This service returns, at the address <em>res</em>, if it is not <em>NULL</em>, the resolution of the clock <em>clock_id</em>.</p>
+<p>For both CLOCK_REALTIME and CLOCK_MONOTONIC, this resolution is the duration of one system clock tick. No other clock is supported.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">clock_id</td><td>clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;</td></tr>
+    <tr><td class="paramname">tp</td><td>the address where the resolution of the specified clock will be stored on success.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>clock_id</em> is invalid;</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga10b73e75d375e5c244e32ea46be775bf"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int clock_gettime </td>
+          <td>(</td>
+          <td class="paramtype">clockid_t&#160;</td>
+          <td class="paramname"><em>clock_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct timespec *&#160;</td>
+          <td class="paramname"><em>tp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read the specified clock. </p>
+<p>This service returns, at the address <em>tp</em> the current value of the clock <em>clock_id</em>. If <em>clock_id</em> is:</p>
+<ul>
+<li>CLOCK_REALTIME, the clock value represents the amount of time since the Epoch, with a precision of one system clock tick;</li>
+<li>CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW, the clock value is given by an architecture-dependent high resolution counter, with a precision independent from the system clock tick duration.</li>
+<li>CLOCK_HOST_REALTIME, the clock value as seen by the host, typically Linux. Resolution and precision depend on the host, but it is guaranteed that both, host and Xenomai, see the same information.</li>
+</ul>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">clock_id</td><td>clock identifier, either CLOCK_REALTIME, CLOCK_MONOTONIC, or CLOCK_HOST_REALTIME;</td></tr>
+    <tr><td class="paramname">tp</td><td>the address where the value of the specified clock will be stored.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>clock_id</em> is invalid.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga924d51d78cdcd9d7dee2613fb3a33cd1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int clock_nanosleep </td>
+          <td>(</td>
+          <td class="paramtype">clockid_t&#160;</td>
+          <td class="paramname"><em>clock_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct timespec *&#160;</td>
+          <td class="paramname"><em>rqtp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct timespec *&#160;</td>
+          <td class="paramname"><em>rmtp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sleep some amount of time. </p>
+<p>This service suspends the calling thread until the wakeup time specified by <em>rqtp</em>, or a signal is delivered to the caller. If the flag TIMER_ABSTIME is set in the <em>flags</em> argument, the wakeup time is specified as an absolute value of the clock <em>clock_id</em>. If the flag TIMER_ABSTIME is not set, the wakeup time is specified as a time interval.</p>
+<p>If this service is interrupted by a signal, the flag TIMER_ABSTIME is not set, and <em>rmtp</em> is not <em>NULL</em>, the time remaining until the specified wakeup time is returned at the address <em>rmtp</em>.</p>
+<p>The resolution of this service is one system clock tick.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">clock_id</td><td>clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC.</td></tr>
+    <tr><td class="paramname">flags</td><td>one of:<ul>
+<li>0 meaning that the wakeup time <em>rqtp</em> is a time interval;</li>
+<li>TIMER_ABSTIME, meaning that the wakeup time is an absolute value of the clock <em>clock_id</em>.</li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">rqtp</td><td>address of the wakeup time.</td></tr>
+    <tr><td class="paramname">rmtp</td><td>address where the remaining time before wakeup will be stored if the service is interrupted by a signal.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
+<dd>
+an error number if:<ul>
+<li>EPERM, the caller context is invalid;</li>
+<li>ENOTSUP, the specified clock is unsupported;</li>
+<li>EINVAL, the specified wakeup time is invalid;</li>
+<li>EINTR, this service was interrupted by a signal.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="group__cobalt__api__time.html#ga9ce6a1ed91a601dee133c8b6cf8b721a">nanosleep()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gab0dbabb3e47efe9483b81235fdd0c297"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int clock_settime </td>
+          <td>(</td>
+          <td class="paramtype">clockid_t&#160;</td>
+          <td class="paramname"><em>clock_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct timespec *&#160;</td>
+          <td class="paramname"><em>tp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the specified clock. </p>
+<p>This allow setting the CLOCK_REALTIME clock.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">clock_id</td><td>the id of the clock to be set, only CLOCK_REALTIME is supported.</td></tr>
+    <tr><td class="paramname">tp</td><td>the address of a struct timespec specifying the new date.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>clock_id</em> is not CLOCK_REALTIME;</li>
+<li>EINVAL, the date specified by <em>tp</em> is invalid.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga9ce6a1ed91a601dee133c8b6cf8b721a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int nanosleep </td>
+          <td>(</td>
+          <td class="paramtype">const struct timespec *&#160;</td>
+          <td class="paramname"><em>rqtp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct timespec *&#160;</td>
+          <td class="paramname"><em>rmtp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sleep some amount of time. </p>
+<p>This service suspends the calling thread until the wakeup time specified by <em>rqtp</em>, or a signal is delivered. The wakeup time is specified as a time interval.</p>
+<p>If this service is interrupted by a signal and <em>rmtp</em> is not <em>NULL</em>, the time remaining until the specified wakeup time is returned at the address <em>rmtp</em>.</p>
+<p>The resolution of this service is one system clock tick.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">rqtp</td><td>address of the wakeup time.</td></tr>
+    <tr><td class="paramname">rmtp</td><td>address where the remaining time before wakeup will be stored if the service is interrupted by a signal.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EPERM, the caller context is invalid;</li>
+<li>EINVAL, the specified wakeup time is invalid;</li>
+<li>EINTR, this service was interrupted by a signal.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">Specification.</a> </dd></dl>
+
+<p>References <a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="ga8a24ab6b0901162bbbbbca4f5205abd0"></a>
 <div class="memitem">
 <div class="memproto">
@@ -181,6 +471,76 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gad114bb350d7d5d12cff3fd19bf533303"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int timer_delete </td>
+          <td>(</td>
+          <td class="paramtype">timer_t&#160;</td>
+          <td class="paramname"><em>timerid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Delete a timer object. </p>
+<p>This service deletes the timer <em>timerid</em>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timerid</td><td>identifier of the timer to be removed;</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>timerid</em> is invalid;</li>
+<li>EPERM, the timer <em>timerid</em> does not belong to the current process.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gad779f0bc22f64bd3bd977221b0ce1b8f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int timer_getoverrun </td>
+          <td>(</td>
+          <td class="paramtype">timer_t&#160;</td>
+          <td class="paramname"><em>timerid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get expiration overruns count since the most recent timer expiration signal delivery. </p>
+<p>This service returns <em>timerid</em> expiration overruns count since the most recent timer expiration signal delivery. If this count is more than <em>DELAYTIMER_MAX</em> expirations, <em>DELAYTIMER_MAX</em> is returned.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timerid</td><td>Timer identifier.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the overruns count on success; </dd>
+<dd>
+-1 with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>timerid</em> is invalid;</li>
+<li>EPERM, the timer <em>timerid</em> does not belong to the current process.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">Specification.</a> </dd></dl>
 
 </div>
 </div>
@@ -291,13 +651,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
-<li>Cobalt kernel-space thread,</li>
-<li>kernel-space thread cancellation cleanup routine,</li>
-<li>Cobalt user-space thread (switches to primary mode),</li>
-<li>user-space thread cancellation cleanup routine.</li>
-</ul>
-</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">Specification.</a> </dd></dl>
 
 </div>

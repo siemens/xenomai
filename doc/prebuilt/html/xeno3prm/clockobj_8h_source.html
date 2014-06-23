@@ -246,7 +246,7 @@ $(document).ready(function(){initNavTree('clockobj_8h_source.html','');});
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;{</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        <span class="keyword">struct </span>timespec now, delta;</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        __RT(clock_gettime(clk_id, &amp;now));</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        __RT(<a class="code" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a>(clk_id, &amp;now));</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        clockobj_ns_to_timespec(ticks, &amp;delta);</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;        timespec_add(ts, &amp;now, &amp;delta);</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;}</div>
@@ -335,6 +335,7 @@ $(document).ready(function(){initNavTree('clockobj_8h_source.html','');});
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;}</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _COPPERPLATE_CLOCKOBJ_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga10b73e75d375e5c244e32ea46be775bf"><div class="ttname"><a href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a></div><div class="ttdeci">int clock_gettime(clockid_t clock_id, struct timespec *tp)</div><div class="ttdoc">Read the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:178</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -103,18 +103,24 @@ Collaboration diagram for Thread management:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga405020019f5df8c7e74d30fd457384ed"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga405020019f5df8c7e74d30fd457384ed">pthread_setschedparam_ex</a> (pthread_t thread, int policy, const struct sched_param_ex *param_ex)</td></tr>
-<tr class="memdesc:ga405020019f5df8c7e74d30fd457384ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set extended scheduling policy of thread.  <a href="#ga405020019f5df8c7e74d30fd457384ed">More...</a><br/></td></tr>
-<tr class="separator:ga405020019f5df8c7e74d30fd457384ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga889551a09dbb57727ea733dd79cc2e36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga889551a09dbb57727ea733dd79cc2e36">pthread_getschedparam_ex</a> (pthread_t thread, int *__restrict__ policy_r, struct sched_param_ex *__restrict__ param_ex)</td></tr>
-<tr class="memdesc:ga889551a09dbb57727ea733dd79cc2e36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get extended scheduling policy of thread.  <a href="#ga889551a09dbb57727ea733dd79cc2e36">More...</a><br/></td></tr>
-<tr class="separator:ga889551a09dbb57727ea733dd79cc2e36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae1a96424296ef872696c7fb90a8ae9aa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a> (pthread_t *ptid_r, const pthread_attr_t *attr, void *(*start)(void *), void *arg)</td></tr>
 <tr class="memdesc:gae1a96424296ef872696c7fb90a8ae9aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new thread.  <a href="#gae1a96424296ef872696c7fb90a8ae9aa">More...</a><br/></td></tr>
 <tr class="separator:gae1a96424296ef872696c7fb90a8ae9aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8c23276876e1e9374d4cad841390eedc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga8c23276876e1e9374d4cad841390eedc">pthread_set_mode_np</a> (int clrmask, int setmask, int *mode_r)</td></tr>
 <tr class="memdesc:ga8c23276876e1e9374d4cad841390eedc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the mode of the current thread.  <a href="#ga8c23276876e1e9374d4cad841390eedc">More...</a><br/></td></tr>
 <tr class="separator:ga8c23276876e1e9374d4cad841390eedc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga414a759c928f7be7ac105980d8e73431"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga414a759c928f7be7ac105980d8e73431">pthread_set_name_np</a> (pthread_t thread, const char *name)</td></tr>
+<tr class="memdesc:ga414a759c928f7be7ac105980d8e73431"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a thread name.  <a href="#ga414a759c928f7be7ac105980d8e73431">More...</a><br/></td></tr>
+<tr class="separator:ga414a759c928f7be7ac105980d8e73431"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa21465e084e7185bfbb94bb50d60cd08"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#gaa21465e084e7185bfbb94bb50d60cd08">pthread_setname_np</a> (pthread_t thread, const char *name)</td></tr>
+<tr class="memdesc:gaa21465e084e7185bfbb94bb50d60cd08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a thread name.  <a href="#gaa21465e084e7185bfbb94bb50d60cd08">More...</a><br/></td></tr>
+<tr class="separator:gaa21465e084e7185bfbb94bb50d60cd08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5aafacc071cdfafd0eb992004dee3e62"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill</a> (pthread_t thread, int sig)</td></tr>
+<tr class="memdesc:ga5aafacc071cdfafd0eb992004dee3e62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a signal to a thread.  <a href="#ga5aafacc071cdfafd0eb992004dee3e62">More...</a><br/></td></tr>
+<tr class="separator:ga5aafacc071cdfafd0eb992004dee3e62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga28a15bba47cab57cbc9f5dac9af99c8b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a> (pthread_t thread, void **retval)</td></tr>
+<tr class="memdesc:ga28a15bba47cab57cbc9f5dac9af99c8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for termination of a specified thread.  <a href="#ga28a15bba47cab57cbc9f5dac9af99c8b">More...</a><br/></td></tr>
+<tr class="separator:ga28a15bba47cab57cbc9f5dac9af99c8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Cobalt/POSIX thread management services. </p>
@@ -187,12 +193,12 @@ an error number if:<ul>
 
 </div>
 </div>
-<a class="anchor" id="ga889551a09dbb57727ea733dd79cc2e36"></a>
+<a class="anchor" id="ga28a15bba47cab57cbc9f5dac9af99c8b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int pthread_getschedparam_ex </td>
+          <td class="memname">int pthread_join </td>
           <td>(</td>
           <td class="paramtype">pthread_t&#160;</td>
           <td class="paramname"><em>thread</em>, </td>
@@ -200,14 +206,8 @@ an error number if:<ul>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int *__restrict__&#160;</td>
-          <td class="paramname"><em>policy_r</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">struct sched_param_ex *__restrict__&#160;</td>
-          <td class="paramname"><em>param_ex</em>&#160;</td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>retval</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -217,23 +217,75 @@ an error number if:<ul>
       </table>
 </div><div class="memdoc">
 
-<p>Get extended scheduling policy of thread. </p>
-<p>This service is an extended version of the regular pthread_getschedparam() service, which also supports Xenomai-specific or additional POSIX scheduling policies, not available with the host Linux environment.</p>
+<p>Wait for termination of a specified thread. </p>
+<p>If the thread <em>thread</em> is running and joinable, this service blocks the calling thread until the thread <em>thread</em> terminates or detaches. In this case, the calling context must be a blockable context (i.e. a Xenomai thread without the scheduler locked) or the root thread (i.e. a module initilization or cleanup routine). When <em>thread</em> terminates, the calling thread is unblocked and its return value is stored at* the address <em>value_ptr</em>.</p>
+<p>If, on the other hand, the thread <em>thread</em> has already finished execution, its return value is stored at the address <em>value_ptr</em> and this service returns immediately. In this case, this service may be called from any context.</p>
+<p>This service is a cancelation point for POSIX skin threads: if the calling thread is canceled while blocked in a call to this service, the cancelation request is honored and <em>thread</em> remains joinable.</p>
+<p>Multiple simultaneous calls to <a class="el" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b" title="Wait for termination of a specified thread. ">pthread_join()</a> specifying the same running target thread block all the callers until the target thread terminates.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">thread</td><td>target thread;</td></tr>
-    <tr><td class="paramname">policy_r</td><td>address where the scheduling policy of <em>thread</em> is stored on success;</td></tr>
-    <tr><td class="paramname">param_ex</td><td>address where the scheduling parameters of <em>thread</em> are stored on success.</td></tr>
+    <tr><td class="paramname">thread</td><td>identifier of the thread to wait for;</td></tr>
+    <tr><td class="paramname">retval</td><td>address where the target thread return value will be stored on success.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
 <dd>
 an error number if:<ul>
-<li>ESRCH, <em>thread</em> is invalid.</li>
+<li>ESRCH, <em>thread</em> is invalid;</li>
+<li>EDEADLK, attempting to join the calling thread;</li>
+<li>EINVAL, <em>thread</em> is detached;</li>
+<li>EPERM, the caller context is invalid.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="group__alchemy__task.html#ga8c77d57638578a126812e29429f61fe7">rt_task_join()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ga5aafacc071cdfafd0eb992004dee3e62"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_kill </td>
+          <td>(</td>
+          <td class="paramtype">pthread_t&#160;</td>
+          <td class="paramname"><em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sig</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Send a signal to a thread. </p>
+<p>This service send the signal <em>sig</em> to the Xenomai POSIX skin thread <em>thread</em> (created with <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>). If <em>sig</em> is zero, this service check for existence of the thread <em>thread</em>, but no signal is sent.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">thread</td><td>thread identifier;</td></tr>
+    <tr><td class="paramname">sig</td><td>signal number.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
+<dd>
+an error number if:<ul>
+<li>EINVAL, <em>sig</em> is an invalid signal number;</li>
+<li>EAGAIN, the maximum number of pending signals has been exceeded;</li>
+<li>ESRCH, <em>thread</em> is an invalid thread identifier.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">Specification.</a> </dd></dl>
 
 </div>
 </div>
@@ -295,12 +347,12 @@ an error number if:<ul>
 
 </div>
 </div>
-<a class="anchor" id="ga405020019f5df8c7e74d30fd457384ed"></a>
+<a class="anchor" id="ga414a759c928f7be7ac105980d8e73431"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int pthread_setschedparam_ex </td>
+          <td class="memname">int pthread_set_name_np </td>
           <td>(</td>
           <td class="paramtype">pthread_t&#160;</td>
           <td class="paramname"><em>thread</em>, </td>
@@ -308,14 +360,8 @@ an error number if:<ul>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>policy</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const struct sched_param_ex *&#160;</td>
-          <td class="paramname"><em>param_ex</em>&#160;</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -325,36 +371,65 @@ an error number if:<ul>
       </table>
 </div><div class="memdoc">
 
-<p>Set extended scheduling policy of thread. </p>
-<p>This service is an extended version of the regular pthread_setschedparam() service, which supports Xenomai-specific or additional scheduling policies, not available with the host Linux environment.</p>
-<p>This service set the scheduling policy of the Xenomai thread <em>thread</em> to the value <em>policy</em>, and its scheduling parameters (e.g. its priority) to the value pointed to by <em>param_ex</em>.</p>
-<p>If <em>thread</em> does not match the identifier of a Xenomai thread, this action falls back to the regular pthread_setschedparam() service.</p>
+<p>Set a thread name. </p>
+<p>This service set to <em>name</em>, the name of <em>thread</em>. This name is used for displaying information in /proc/xenomai/sched.</p>
+<p>This service is a non-portable extension of the POSIX interface.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">thread</td><td>target Cobalt thread;</td></tr>
-    <tr><td class="paramname">policy</td><td>scheduling policy, one of SCHED_WEAK, SCHED_FIFO, SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP, SCHED_QUOTA or SCHED_NORMAL;</td></tr>
-    <tr><td class="paramname">param_ex</td><td>scheduling parameters address. As a special exception, a negative sched_priority value is interpreted as if SCHED_WEAK was given in <em>policy</em>, using the absolute value of this parameter as the weak priority level.</td></tr>
+    <tr><td class="paramname">thread</td><td>target thread;</td></tr>
+    <tr><td class="paramname">name</td><td>name of the thread.</td></tr>
   </table>
   </dd>
 </dl>
-<p>When CONFIG_XENO_OPT_SCHED_WEAK is enabled, SCHED_WEAK exhibits priority levels in the [0..99] range (inclusive). Otherwise, sched_priority must be zero for the SCHED_WEAK policy.</p>
 <dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
 <dd>
 an error number if:<ul>
-<li>ESRCH, <em>thread</em> is invalid;</li>
-<li>EINVAL, <em>policy</em> or <em>param_ex-&gt;sched_priority</em> is invalid;</li>
-<li>EAGAIN, in user-space, insufficient memory exists in the system heap, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li>
-<li>EFAULT, in user-space, <em>param_ex</em> is an invalid address;</li>
-<li>EPERM, in user-space, the calling process does not have superuser permissions.</li>
+<li>ESRCH, <em>thread</em> is invalid. </li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">Specification.</a></dd></dl>
-<dl class="section note"><dt>Note</dt><dd></dd></dl>
-<p>When creating or shadowing a Xenomai thread for the first time in user-space, Xenomai installs a handler for the SIGSHADOW signal. If you had installed a handler before that, it will be automatically called by Xenomai for SIGSHADOW signals that it has not sent.</p>
-<p>If, however, you install a signal handler for SIGSHADOW after creating or shadowing the first Xenomai thread, you have to explicitly call the function cobalt_sigshadow_handler at the beginning of your signal handler, using its return to know if the signal was in fact an internal signal of Xenomai (in which case it returns 1), or if you should handle the signal (in which case it returns 0). cobalt_sigshadow_handler prototype is:</p>
-<p><b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b></p>
-<p>Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to cobalt_sigshadow_handler.</p>
-<p><a class="el" href="group__cobalt__api__thread.html#ga405020019f5df8c7e74d30fd457384ed" title="Set extended scheduling policy of thread. ">pthread_setschedparam_ex()</a> may switch the caller to secondary mode. </p>
+
+</div>
+</div>
+<a class="anchor" id="gaa21465e084e7185bfbb94bb50d60cd08"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_setname_np </td>
+          <td>(</td>
+          <td class="paramtype">pthread_t&#160;</td>
+          <td class="paramname"><em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set a thread name. </p>
+<p>This service set to <em>name</em>, the name of <em>thread</em>. This name is used for displaying information in /proc/xenomai/sched.</p>
+<p>This service is a non-portable extension of the POSIX interface.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">thread</td><td>target thread;</td></tr>
+    <tr><td class="paramname">name</td><td>name of the thread.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
+<dd>
+an error number if:<ul>
+<li>ESRCH, <em>thread</em> is invalid. </li>
+</ul>
+</dd></dl>
 
 </div>
 </div>

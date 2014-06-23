@@ -191,11 +191,11 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    frame.can_dlc = <span class="keyword">sizeof</span>(*rtt_time);</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#ifdef CONFIG_XENO_COBALT</span></div>
-<div class="line"><span class="preprocessor"></span>    pthread_set_name_np(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_transmitter&quot;</span>);</div>
+<div class="line"><span class="preprocessor"></span>    <a name="a2"></a><a class="code" href="group__cobalt__api__thread.html#ga414a759c928f7be7ac105980d8e73431">pthread_set_name_np</a>(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_transmitter&quot;</span>);</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-<div class="line"><span class="preprocessor"></span>    pthread_setschedparam(pthread_self(), SCHED_FIFO, &amp;param);</div>
+<div class="line"><span class="preprocessor"></span>    <a name="a3"></a><a class="code" href="group__cobalt__api__sched.html#ga14f50e1f5d815c90f1f4225eca5d3a8c">pthread_setschedparam</a>(pthread_self(), SCHED_FIFO, &amp;param);</div>
 <div class="line"></div>
-<div class="line">    clock_gettime(CLOCK_MONOTONIC, &amp;next_period);</div>
+<div class="line">    <a name="a4"></a><a class="code" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a>(CLOCK_MONOTONIC, &amp;next_period);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">while</span>(1) {</div>
 <div class="line">        next_period.tv_nsec += cycle * 1000;</div>
@@ -204,14 +204,14 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">                next_period.tv_sec++;</div>
 <div class="line">        }</div>
 <div class="line"></div>
-<div class="line">        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &amp;next_period, NULL);</div>
+<div class="line">        <a name="a5"></a><a class="code" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep</a>(CLOCK_MONOTONIC, TIMER_ABSTIME, &amp;next_period, NULL);</div>
 <div class="line"></div>
 <div class="line">        <span class="keywordflow">if</span> (rxcount != txcount) {</div>
 <div class="line">            overruns++;</div>
 <div class="line">            <span class="keywordflow">continue</span>;</div>
 <div class="line">        }</div>
 <div class="line"></div>
-<div class="line">        clock_gettime(CLOCK_MONOTONIC, &amp;time);</div>
+<div class="line">        <a class="code" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a>(CLOCK_MONOTONIC, &amp;time);</div>
 <div class="line">        *rtt_time = (<span class="keywordtype">long</span> long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;</div>
 <div class="line"></div>
 <div class="line">        <span class="comment">/* Transmit the message containing the local time */</span></div>
@@ -237,9 +237,9 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">                                0, 0, 0};</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#ifdef CONFIG_XENO_COBALT</span></div>
-<div class="line"><span class="preprocessor"></span>    pthread_set_name_np(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_receiver&quot;</span>);</div>
+<div class="line"><span class="preprocessor"></span>    <a class="code" href="group__cobalt__api__thread.html#ga414a759c928f7be7ac105980d8e73431">pthread_set_name_np</a>(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_receiver&quot;</span>);</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-<div class="line"><span class="preprocessor"></span>    pthread_setschedparam(pthread_self(), SCHED_FIFO, &amp;param);</div>
+<div class="line"><span class="preprocessor"></span>    <a class="code" href="group__cobalt__api__sched.html#ga14f50e1f5d815c90f1f4225eca5d3a8c">pthread_setschedparam</a>(pthread_self(), SCHED_FIFO, &amp;param);</div>
 <div class="line"></div>
 <div class="line">    rtt_stat.counts_per_sec = 1000000 / cycle;</div>
 <div class="line"></div>
@@ -262,7 +262,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">            }</div>
 <div class="line">            txcount++;</div>
 <div class="line">        } <span class="keywordflow">else</span> {</div>
-<div class="line">            clock_gettime(CLOCK_MONOTONIC, &amp;time);</div>
+<div class="line">            <a class="code" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a>(CLOCK_MONOTONIC, &amp;time);</div>
 <div class="line">            <span class="keywordflow">if</span> (rxcount &gt; 0) {</div>
 <div class="line">                rtt_stat.rtt = ((<span class="keywordtype">long</span> long)time.tv_sec * 1000000000LL +</div>
 <div class="line">                                time.tv_nsec - *rtt_time);</div>
@@ -276,7 +276,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">        rxcount++;</div>
 <div class="line"></div>
 <div class="line">        <span class="keywordflow">if</span> ((rxcount % rtt_stat.counts_per_sec) == 0) {</div>
-<div class="line">            mq_send(mq, (<span class="keywordtype">char</span> *)&amp;rtt_stat, <span class="keyword">sizeof</span>(rtt_stat), 0);</div>
+<div class="line">            <a name="a6"></a><a class="code" href="group__cobalt__api__mq.html#gad9082cca2363532f2916d943f9839199">mq_send</a>(mq, (<span class="keywordtype">char</span> *)&amp;rtt_stat, <span class="keyword">sizeof</span>(rtt_stat), 0);</div>
 <div class="line">            rtt_stat.rtt_sum_last = rtt_stat.rtt_sum;</div>
 <div class="line">        }</div>
 <div class="line">    }</div>
@@ -284,7 +284,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line"></div>
 <div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> catch_signal(<span class="keywordtype">int</span> sig)</div>
 <div class="line">{</div>
-<div class="line">    <a name="a2"></a><a class="code" href="group__cobalt__api__mq.html#ga23f7fcc74fa8db3c7ec60fd6f442cec0">mq_close</a>(mq);</div>
+<div class="line">    <a name="a7"></a><a class="code" href="group__cobalt__api__mq.html#ga23f7fcc74fa8db3c7ec60fd6f442cec0">mq_close</a>(mq);</div>
 <div class="line">}</div>
 <div class="line"></div>
 <div class="line"></div>
@@ -293,8 +293,8 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="keyword">struct </span>sched_param param = { .sched_priority = 1 };</div>
 <div class="line">    pthread_attr_t thattr;</div>
 <div class="line">    <span class="keyword">struct </span>mq_attr mqattr;</div>
-<div class="line">    <span class="keyword">struct </span><a name="_a3"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> rxaddr, txaddr;</div>
-<div class="line">    <span class="keyword">struct </span><a name="_a4"></a><a class="code" href="structcan__filter.html">can_filter</a> rxfilter[1];</div>
+<div class="line">    <span class="keyword">struct </span><a name="_a8"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> rxaddr, txaddr;</div>
+<div class="line">    <span class="keyword">struct </span><a name="_a9"></a><a class="code" href="structcan__filter.html">can_filter</a> rxfilter[1];</div>
 <div class="line">    <span class="keyword">struct </span>rtt_stat rtt_stat;</div>
 <div class="line">    <span class="keywordtype">char</span> mqname[32];</div>
 <div class="line">    <span class="keywordtype">char</span> *txdev, *rxdev;</div>
@@ -342,7 +342,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    rxdev = argv[optind + 1];</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">/* Create and configure RX socket */</span></div>
-<div class="line">    <span class="keywordflow">if</span> ((rxsock = socket(<a name="a5"></a><a class="code" href="group__rtdm__can.html#gaeac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a6"></a><a class="code" href="group__rtdm__can.html#ga57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>)) &lt; 0) {</div>
+<div class="line">    <span class="keywordflow">if</span> ((rxsock = socket(<a name="a10"></a><a class="code" href="group__rtdm__can.html#gaeac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a11"></a><a class="code" href="group__rtdm__can.html#ga57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>)) &lt; 0) {</div>
 <div class="line">        perror(<span class="stringliteral">&quot;RX socket failed&quot;</span>);</div>
 <div class="line">        <span class="keywordflow">return</span> -1;</div>
 <div class="line">    }</div>
@@ -350,7 +350,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    strncpy(ifr.ifr_name, rxdev, IFNAMSIZ);</div>
 <div class="line">    printf(<span class="stringliteral">&quot;RX rxsock=%d, ifr_name=%s\n&quot;</span>, rxsock, ifr.ifr_name);</div>
 <div class="line"></div>
-<div class="line">    <span class="keywordflow">if</span> (ioctl(rxsock, <a name="a7"></a><a class="code" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr) &lt; 0) {</div>
+<div class="line">    <span class="keywordflow">if</span> (ioctl(rxsock, <a name="a12"></a><a class="code" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr) &lt; 0) {</div>
 <div class="line">        perror(<span class="stringliteral">&quot;RX ioctl SIOCGIFINDEX failed&quot;</span>);</div>
 <div class="line">        <span class="keywordflow">goto</span> failure1;</div>
 <div class="line">    }</div>
@@ -358,14 +358,14 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="comment">/* We only want to receive our own messages */</span></div>
 <div class="line">    rxfilter[0].can_id = can_id;</div>
 <div class="line">    rxfilter[0].can_mask = 0x3ff;</div>
-<div class="line">    <span class="keywordflow">if</span> (setsockopt(rxsock, <a name="a8"></a><a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a9"></a><a class="code" href="group__rtdm__can.html#ga87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>,</div>
+<div class="line">    <span class="keywordflow">if</span> (setsockopt(rxsock, <a name="a13"></a><a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a14"></a><a class="code" href="group__rtdm__can.html#ga87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>,</div>
 <div class="line">                   &amp;rxfilter, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <a class="code" href="structcan__filter.html">can_filter</a>)) &lt; 0) {</div>
 <div class="line">        perror(<span class="stringliteral">&quot;RX setsockopt CAN_RAW_FILTER failed&quot;</span>);</div>
 <div class="line">        <span class="keywordflow">goto</span> failure1;</div>
 <div class="line">    }</div>
 <div class="line">    memset(&amp;rxaddr, 0, <span class="keyword">sizeof</span>(rxaddr));</div>
 <div class="line">    rxaddr.can_ifindex = ifr.ifr_ifindex;</div>
-<div class="line">    rxaddr.can_family = <a name="a10"></a><a class="code" href="group__rtdm__can.html#ga546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;</div>
+<div class="line">    rxaddr.can_family = <a name="a15"></a><a class="code" href="group__rtdm__can.html#ga546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;</div>
 <div class="line">    <span class="keywordflow">if</span> (bind(rxsock, (<span class="keyword">struct</span> sockaddr *)&amp;rxaddr, <span class="keyword">sizeof</span>(rxaddr)) &lt; 0) {</div>
 <div class="line">        perror(<span class="stringliteral">&quot;RX bind failed\n&quot;</span>);</div>
 <div class="line">        <span class="keywordflow">goto</span> failure1;</div>
@@ -420,7 +420,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    mqattr.mq_flags   = 0;</div>
 <div class="line">    mqattr.mq_maxmsg  = 100;</div>
 <div class="line">    mqattr.mq_msgsize = <span class="keyword">sizeof</span>(<span class="keyword">struct </span>rtt_stat);</div>
-<div class="line">    mq = <a name="a11"></a><a class="code" href="group__cobalt__api__mq.html#ga6e6c4881ac0fd3ad18d733b96d088b8b">mq_open</a>(mqname, O_RDWR | O_CREAT | O_EXCL, 0600, &amp;mqattr);</div>
+<div class="line">    mq = <a name="a16"></a><a class="code" href="group__cobalt__api__mq.html#ga6e6c4881ac0fd3ad18d733b96d088b8b">mq_open</a>(mqname, O_RDWR | O_CREAT | O_EXCL, 0600, &amp;mqattr);</div>
 <div class="line">    <span class="keywordflow">if</span> (mq == (mqd_t)-1) {</div>
 <div class="line">        perror(<span class="stringliteral">&quot;opening mqueue failed&quot;</span>);</div>
 <div class="line">        <span class="keywordflow">goto</span> failure2;</div>
@@ -430,7 +430,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    pthread_attr_init(&amp;thattr);</div>
 <div class="line">    pthread_attr_setdetachstate(&amp;thattr, PTHREAD_CREATE_JOINABLE);</div>
 <div class="line">    pthread_attr_setstacksize(&amp;thattr, PTHREAD_STACK_MIN);</div>
-<div class="line">    ret = <a name="a12"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rxthread, &amp;thattr, &amp;receiver, NULL);</div>
+<div class="line">    ret = <a name="a17"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rxthread, &amp;thattr, &amp;receiver, NULL);</div>
 <div class="line">    <span class="keywordflow">if</span> (ret) {</div>
 <div class="line">        fprintf(stderr, <span class="stringliteral">&quot;%s: pthread_create(receiver) failed\n&quot;</span>,</div>
 <div class="line">                strerror(-ret));</div>
@@ -447,7 +447,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line"></div>
-<div class="line">    pthread_setschedparam(pthread_self(), SCHED_FIFO, &amp;param);</div>
+<div class="line">    <a class="code" href="group__cobalt__api__sched.html#ga14f50e1f5d815c90f1f4225eca5d3a8c">pthread_setschedparam</a>(pthread_self(), SCHED_FIFO, &amp;param);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">if</span> (repeater)</div>
 <div class="line">        printf(<span class="stringliteral">&quot;Messages\n&quot;</span>);</div>
@@ -457,7 +457,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="keywordflow">while</span> (1) {</div>
 <div class="line">        <span class="keywordtype">long</span> <span class="keywordtype">long</span> rtt_avg;</div>
 <div class="line"></div>
-<div class="line">        ret = mq_receive(mq, (<span class="keywordtype">char</span> *)&amp;rtt_stat, <span class="keyword">sizeof</span>(rtt_stat), NULL);</div>
+<div class="line">        ret = <a name="a18"></a><a class="code" href="group__cobalt__api__mq.html#gafa4509ed0e587655de95b67382e1e9fc">mq_receive</a>(mq, (<span class="keywordtype">char</span> *)&amp;rtt_stat, <span class="keyword">sizeof</span>(rtt_stat), NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (ret != <span class="keyword">sizeof</span>(rtt_stat)) {</div>
 <div class="line">            <span class="keywordflow">if</span> (ret &lt; 0) {</div>
 <div class="line">                <span class="keywordflow">if</span> (errno == EBADF)</div>
@@ -496,15 +496,15 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">        sleep(1);</div>
 <div class="line">    }</div>
 <div class="line"></div>
-<div class="line">    pthread_join(txthread, NULL);</div>
-<div class="line">    pthread_kill(rxthread, SIGHUP);</div>
-<div class="line">    pthread_join(rxthread, NULL);</div>
+<div class="line">    <a name="a19"></a><a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(txthread, NULL);</div>
+<div class="line">    <a name="a20"></a><a class="code" href="group__cobalt__api__thread.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill</a>(rxthread, SIGHUP);</div>
+<div class="line">    <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(rxthread, NULL);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line"></div>
 <div class="line"> failure4:</div>
-<div class="line">    pthread_kill(rxthread, SIGHUP);</div>
-<div class="line">    pthread_join(rxthread, NULL);</div>
+<div class="line">    <a class="code" href="group__cobalt__api__thread.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill</a>(rxthread, SIGHUP);</div>
+<div class="line">    <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(rxthread, NULL);</div>
 <div class="line"> failure3:</div>
 <div class="line">    <a class="code" href="group__cobalt__api__mq.html#ga23f7fcc74fa8db3c7ec60fd6f442cec0">mq_close</a>(mq);</div>
 <div class="line"> failure2:</div>

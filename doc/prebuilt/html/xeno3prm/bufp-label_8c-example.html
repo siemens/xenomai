@@ -246,7 +246,7 @@ $(document).ready(function(){initNavTree('bufp-label_8c-example.html','');});
 <div class="line"><span class="comment">                 */</span></div>
 <div class="line">                ts.tv_sec = 0;</div>
 <div class="line">                ts.tv_nsec = 500000000; <span class="comment">/* 500 ms */</span></div>
-<div class="line">                clock_nanosleep(CLOCK_REALTIME, 0, &amp;ts, NULL);</div>
+<div class="line">                <a name="a5"></a><a class="code" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep</a>(CLOCK_REALTIME, 0, &amp;ts, NULL);</div>
 <div class="line">        }</div>
 <div class="line"></div>
 <div class="line">        <span class="keywordflow">return</span> NULL;</div>
@@ -257,8 +257,8 @@ $(document).ready(function(){initNavTree('bufp-label_8c-example.html','');});
 <div class="line">        pthread_cancel(svtid);</div>
 <div class="line">        pthread_cancel(cltid);</div>
 <div class="line">        signal(sig, SIG_DFL);</div>
-<div class="line">        pthread_join(svtid, NULL);</div>
-<div class="line">        pthread_join(cltid, NULL);</div>
+<div class="line">        <a name="a6"></a><a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(svtid, NULL);</div>
+<div class="line">        <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(cltid, NULL);</div>
 <div class="line">}</div>
 <div class="line"></div>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
@@ -292,7 +292,7 @@ $(document).ready(function(){initNavTree('bufp-label_8c-example.html','');});
 <div class="line">        pthread_attr_setschedpolicy(&amp;svattr, SCHED_FIFO);</div>
 <div class="line">        pthread_attr_setschedparam(&amp;svattr, &amp;svparam);</div>
 <div class="line"></div>
-<div class="line">        errno = <a name="a5"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;svtid, &amp;svattr, &amp;server, NULL);</div>
+<div class="line">        errno = <a name="a7"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;svtid, &amp;svattr, &amp;server, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>

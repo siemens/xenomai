@@ -118,6 +118,18 @@ Functions</h2></td></tr>
 <tr class="memitem:ga85b8a375477878a386aaa844d002c71f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__mq.html#ga85b8a375477878a386aaa844d002c71f">mq_setattr</a> (mqd_t mqd, const struct mq_attr *__restrict__ attr, struct mq_attr *__restrict__ oattr)</td></tr>
 <tr class="memdesc:ga85b8a375477878a386aaa844d002c71f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set message queue attributes.  <a href="#ga85b8a375477878a386aaa844d002c71f">More...</a><br/></td></tr>
 <tr class="separator:ga85b8a375477878a386aaa844d002c71f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad9082cca2363532f2916d943f9839199"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__mq.html#gad9082cca2363532f2916d943f9839199">mq_send</a> (mqd_t q, const char *buffer, size_t len, unsigned prio)</td></tr>
+<tr class="memdesc:gad9082cca2363532f2916d943f9839199"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a message to a message queue.  <a href="#gad9082cca2363532f2916d943f9839199">More...</a><br/></td></tr>
+<tr class="separator:gad9082cca2363532f2916d943f9839199"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad75b9593027d444b837f24af4fb86373"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__mq.html#gad75b9593027d444b837f24af4fb86373">mq_timedsend</a> (mqd_t q, const char *buffer, size_t len, unsigned prio, const struct timespec *timeout)</td></tr>
+<tr class="memdesc:gad75b9593027d444b837f24af4fb86373"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempt, during a bounded time, to send a message to a message queue.  <a href="#gad75b9593027d444b837f24af4fb86373">More...</a><br/></td></tr>
+<tr class="separator:gad75b9593027d444b837f24af4fb86373"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafa4509ed0e587655de95b67382e1e9fc"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__mq.html#gafa4509ed0e587655de95b67382e1e9fc">mq_receive</a> (mqd_t q, char *buffer, size_t len, unsigned *prio)</td></tr>
+<tr class="memdesc:gafa4509ed0e587655de95b67382e1e9fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Receive a message from a message queue.  <a href="#gafa4509ed0e587655de95b67382e1e9fc">More...</a><br/></td></tr>
+<tr class="separator:gafa4509ed0e587655de95b67382e1e9fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga034caa6596c808e279857c480ad51e8e"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__mq.html#ga034caa6596c808e279857c480ad51e8e">mq_timedreceive</a> (mqd_t q, char *__restrict__ buffer, size_t len, unsigned *__restrict__ prio, const struct timespec *__restrict__ timeout)</td></tr>
+<tr class="memdesc:ga034caa6596c808e279857c480ad51e8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempt, during a bounded time, to receive a message from a message queue.  <a href="#ga034caa6596c808e279857c480ad51e8e">More...</a><br/></td></tr>
+<tr class="separator:ga034caa6596c808e279857c480ad51e8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga445c542ee2055c389047e644990eef46"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__mq.html#ga445c542ee2055c389047e644990eef46">mq_notify</a> (mqd_t mqd, const struct sigevent *evp)</td></tr>
 <tr class="memdesc:ga445c542ee2055c389047e644990eef46"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable notification on message arrival.  <a href="#ga445c542ee2055c389047e644990eef46">More...</a><br/></td></tr>
 <tr class="separator:ga445c542ee2055c389047e644990eef46"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,13 +171,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li>
-<li>kernel-space cancellation cleanup routine;</li>
-<li>user-space thread (Xenomai threads switch to secondary mode);</li>
-<li>user-space cancellation cleanup routine.</li>
-</ul>
-</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">Specification.</a> </dd></dl>
 
 </div>
@@ -249,7 +254,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Enable notification on message arrival. </p>
-<p>If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to the message queue <em>mqd</em>, the queue is empty, and no thread is blocked in call to mq_receive() or mq_timedreceive(). After the notification, the thread is unregistered.</p>
+<p>If <em>evp</em> is not <em>NULL</em> and is the address of a <b>sigevent</b> structure with the <em>sigev_notify</em> member set to SIGEV_SIGNAL, the current thread will be notified by a signal when a message is sent to the message queue <em>mqd</em>, the queue is empty, and no thread is blocked in call to <a class="el" href="group__cobalt__api__mq.html#gafa4509ed0e587655de95b67382e1e9fc" title="Receive a message from a message queue. ">mq_receive()</a> or <a class="el" href="group__cobalt__api__mq.html#ga034caa6596c808e279857c480ad51e8e" title="Attempt, during a bounded time, to receive a message from a message queue. ">mq_timedreceive()</a>. After the notification, the thread is unregistered.</p>
 <p>If <em>evp</em> is <em>NULL</em> or the <em>sigev_notify</em> member is SIGEV_NONE, the current thread is unregistered.</p>
 <p>Only one thread may be registered at a time.</p>
 <p>If the current thread is not a Cobalt thread (created with <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>), this service fails.</p>
@@ -274,11 +279,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
-<li>Xenomai kernel-space Cobalt thread,</li>
-<li>Xenomai user-space Cobalt thread (switches to primary mode).</li>
-</ul>
-</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">Specification.</a> </dd></dl>
 
 </div>
@@ -327,7 +327,7 @@ Functions</h2></td></tr>
 <li>an <em>attr</em> argument, pointer to an <b>mq_attr</b> structure, specifying the attributes of the new message queue.</li>
 </ul>
 <p>If <em>oflags</em> has the two bits <em>O_CREAT</em> and <em>O_EXCL</em> set and the message queue alread exists, this service fails.</p>
-<p>If the O_NONBLOCK bit is set in <em>oflags</em>, the mq_send(), mq_receive(), mq_timedsend() and mq_timedreceive() services return <em>-1</em> with <em>errno</em> set to EAGAIN instead of blocking their caller.</p>
+<p>If the O_NONBLOCK bit is set in <em>oflags</em>, the <a class="el" href="group__cobalt__api__mq.html#gad9082cca2363532f2916d943f9839199" title="Send a message to a message queue. ">mq_send()</a>, <a class="el" href="group__cobalt__api__mq.html#gafa4509ed0e587655de95b67382e1e9fc" title="Receive a message from a message queue. ">mq_receive()</a>, <a class="el" href="group__cobalt__api__mq.html#gad75b9593027d444b837f24af4fb86373" title="Attempt, during a bounded time, to send a message to a message queue. ">mq_timedsend()</a> and <a class="el" href="group__cobalt__api__mq.html#ga034caa6596c808e279857c480ad51e8e" title="Attempt, during a bounded time, to receive a message from a message queue. ">mq_timedreceive()</a> services return <em>-1</em> with <em>errno</em> set to EAGAIN instead of blocking their caller.</p>
 <p>The following arguments of the <b>mq_attr</b> structure at the address <em>attr</em> are used when creating a message queue:</p>
 <ul>
 <li><em>mq_maxmsg</em> is the maximum number of messages in the queue (128 by default);</li>
@@ -353,12 +353,131 @@ Functions</h2></td></tr>
 <li>EMFILE, too many descriptors are currently open.</li>
 </ul>
 </dd></dl>
-<dl class="section user"><dt>Valid contexts:</dt><dd>When creating a message queue, only the following contexts are valid:<ul>
-<li>kernel module initialization or cleanup routine;</li>
-<li>user-space thread (Xenomai threads switch to secondary mode).</li>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gafa4509ed0e587655de95b67382e1e9fc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t mq_receive </td>
+          <td>(</td>
+          <td class="paramtype">mqd_t&#160;</td>
+          <td class="paramname"><em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned *&#160;</td>
+          <td class="paramname"><em>prio</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Receive a message from a message queue. </p>
+<p>If the message queue <em>fd</em> is not empty and if <em>len</em> is greater than the <em>mq_msgsize</em> of the message queue, this service copies, at the address <em>buffer</em>, the queued message with the highest priority.</p>
+<p>If the queue is empty and the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em>, the calling thread is suspended until some message is sent to the queue. If the queue is empty and the flag <em>O_NONBLOCK</em> is set for the descriptor <em>fd</em>, this service returns immediately a value of -1 with <em>errno</em> set to EAGAIN.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">q</td><td>the queue descriptor;</td></tr>
+    <tr><td class="paramname">buffer</td><td>the address where the received message will be stored on success;</td></tr>
+    <tr><td class="paramname">len</td><td><em>buffer</em> length;</td></tr>
+    <tr><td class="paramname">prio</td><td>address where the priority of the received message will be stored on success.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the message length, and copy a message at the address <em>buffer</em> on success; </dd>
+<dd>
+-1 with no message unqueued and <em>errno</em> set if:<ul>
+<li>EBADF, <em>fd</em> is not a valid descriptor open for reading;</li>
+<li>EMSGSIZE, the length <em>len</em> is lesser than the message queue <em>mq_msgsize</em> attribute;</li>
+<li>EAGAIN, the queue is empty, and the flag <em>O_NONBLOCK</em> is set for the descriptor <em>fd</em>;</li>
+<li>EPERM, the caller context is invalid;</li>
+<li>EINTR, the service was interrupted by a signal.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gad9082cca2363532f2916d943f9839199"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int mq_send </td>
+          <td>(</td>
+          <td class="paramtype">mqd_t&#160;</td>
+          <td class="paramname"><em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>prio</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Send a message to a message queue. </p>
+<p>If the message queue <em>fd</em> is not full, this service sends the message of length <em>len</em> pointed to by the argument <em>buffer</em>, with priority <em>prio</em>. A message with greater priority is inserted in the queue before a message with lower priority.</p>
+<p>If the message queue is full and the flag <em>O_NONBLOCK</em> is not set, the calling thread is suspended until the queue is not full. If the message queue is full and the flag <em>O_NONBLOCK</em> is set, the message is not sent and the service returns immediately a value of -1 with <em>errno</em> set to EAGAIN.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">q</td><td>message queue descriptor;</td></tr>
+    <tr><td class="paramname">buffer</td><td>pointer to the message to be sent;</td></tr>
+    <tr><td class="paramname">len</td><td>length of the message;</td></tr>
+    <tr><td class="paramname">prio</td><td>priority of the message.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 and send a message on success; </dd>
+<dd>
+-1 with no message sent and <em>errno</em> set if:<ul>
+<li>EBADF, <em>fd</em> is not a valid message queue descriptor open for writing;</li>
+<li>EMSGSIZE, the message length <em>len</em> exceeds the <em>mq_msgsize</em> attribute of the message queue;</li>
+<li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li>
+<li>EPERM, the caller context is invalid;</li>
+<li>EINTR, the service was interrupted by a signal.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">Specification.</a> </dd></dl>
 
 </div>
 </div>
@@ -418,6 +537,144 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga034caa6596c808e279857c480ad51e8e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t mq_timedreceive </td>
+          <td>(</td>
+          <td class="paramtype">mqd_t&#160;</td>
+          <td class="paramname"><em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *__restrict__&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned *__restrict__&#160;</td>
+          <td class="paramname"><em>prio</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct timespec *__restrict__&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Attempt, during a bounded time, to receive a message from a message queue. </p>
+<p>This service is equivalent to <a class="el" href="group__cobalt__api__mq.html#gafa4509ed0e587655de95b67382e1e9fc" title="Receive a message from a message queue. ">mq_receive()</a>, except that if the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em> and the message queue is empty, the calling thread is only suspended until the timeout <em>abs_timeout</em> expires.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">q</td><td>the queue descriptor;</td></tr>
+    <tr><td class="paramname">buffer</td><td>the address where the received message will be stored on success;</td></tr>
+    <tr><td class="paramname">len</td><td><em>buffer</em> length;</td></tr>
+    <tr><td class="paramname">prio</td><td>address where the priority of the received message will be stored on success.</td></tr>
+    <tr><td class="paramname">timeout</td><td>the timeout, expressed as an absolute value of the CLOCK_REALTIME clock.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the message length, and copy a message at the address <em>buffer</em> on success; </dd>
+<dd>
+-1 with no message unqueued and <em>errno</em> set if:<ul>
+<li>EBADF, <em>fd</em> is not a valid descriptor open for reading;</li>
+<li>EMSGSIZE, the length <em>len</em> is lesser than the message queue <em>mq_msgsize</em> attribute;</li>
+<li>EAGAIN, the queue is empty, and the flag <em>O_NONBLOCK</em> is set for the descriptor <em>fd</em>;</li>
+<li>EPERM, the caller context is invalid;</li>
+<li>EINTR, the service was interrupted by a signal;</li>
+<li>ETIMEDOUT, the specified timeout expired.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gad75b9593027d444b837f24af4fb86373"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int mq_timedsend </td>
+          <td>(</td>
+          <td class="paramtype">mqd_t&#160;</td>
+          <td class="paramname"><em>q</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>prio</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct timespec *&#160;</td>
+          <td class="paramname"><em>timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Attempt, during a bounded time, to send a message to a message queue. </p>
+<p>This service is equivalent to <a class="el" href="group__cobalt__api__mq.html#gad9082cca2363532f2916d943f9839199" title="Send a message to a message queue. ">mq_send()</a>, except that if the message queue is full and the flag <em>O_NONBLOCK</em> is not set for the descriptor <em>fd</em>, the calling thread is only suspended until the timeout specified by <em>abs_timeout</em> expires.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">q</td><td>message queue descriptor;</td></tr>
+    <tr><td class="paramname">buffer</td><td>pointer to the message to be sent;</td></tr>
+    <tr><td class="paramname">len</td><td>length of the message;</td></tr>
+    <tr><td class="paramname">prio</td><td>priority of the message;</td></tr>
+    <tr><td class="paramname">timeout</td><td>the timeout, expressed as an absolute value of the CLOCK_REALTIME clock.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 and send a message on success; </dd>
+<dd>
+-1 with no message sent and <em>errno</em> set if:<ul>
+<li>EBADF, <em>fd</em> is not a valid message queue descriptor open for writing;</li>
+<li>EMSGSIZE, the message length exceeds the <em>mq_msgsize</em> attribute of the message queue;</li>
+<li>EAGAIN, the flag O_NONBLOCK is set for the descriptor <em>fd</em> and the message queue is full;</li>
+<li>EPERM, the caller context is invalid;</li>
+<li>ETIMEDOUT, the specified timeout expired;</li>
+<li>EINTR, the service was interrupted by a signal.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="gaccd8c5ee36e60d990963e1d544ef4140"></a>
 <div class="memitem">
 <div class="memproto">
@@ -452,13 +709,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
-<li>kernel module initialization or cleanup routine;</li>
-<li>kernel-space cancellation cleanup routine;</li>
-<li>user-space thread (Xenomai threads switch to secondary mode);</li>
-<li>user-space cancellation cleanup routine.</li>
-</ul>
-</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">Specification.</a> </dd></dl>
 
 </div>

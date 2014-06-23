@@ -230,6 +230,8 @@ Functions</h2></td></tr>
 </ul>
 <p>Valid calling context: any. </p>
 
+<p>References <a class="el" href="group__cobalt__api__cond.html#gafc4b19aa8ea2dce0956579ce878b4998">pthread_cond_broadcast()</a>.</p>
+
 </div>
 </div>
 <a class="anchor" id="ga04646a121e57765848eb2a51ed6be855"></a>
@@ -278,7 +280,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Condition variables can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__api__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy()</a>, and <a class="el" href="group__cobalt__api__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init()</a>.</p>
+<p>References <a class="el" href="group__cobalt__api__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy()</a>, <a class="el" href="group__cobalt__api__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init()</a>, <a class="el" href="group__cobalt__api__cond.html#ga066f082e4a085641043714e3bc4d70d7">pthread_condattr_destroy()</a>, <a class="el" href="group__cobalt__api__cond.html#ga34083fe1cd54d5d67599b4cca593ffa4">pthread_condattr_init()</a>, <a class="el" href="group__cobalt__api__cond.html#ga68d1e544c6bbf3cedeee5455b14c642d">pthread_condattr_setclock()</a>, and <a class="el" href="group__cobalt__api__cond.html#ga1a026d48926e804fed515bb01b0cbb45">pthread_condattr_setpshared()</a>.</p>
 
 </div>
 </div>
@@ -390,6 +392,8 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>cond</em> is not a valid condition variable descriptor.</li>
 </ul>
 <p>Valid calling context: any. </p>
+
+<p>References <a class="el" href="group__cobalt__api__cond.html#ga20f98235b024efb10e5c76a64f0d94e5">pthread_cond_signal()</a>.</p>
 
 </div>
 </div>
@@ -525,6 +529,8 @@ Functions</h2></td></tr>
 <li>Xenomai threads</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
+
+<p>References <a class="el" href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40">pthread_cond_timedwait()</a>, and <a class="el" href="group__cobalt__api__cond.html#ga907ae104b6dfd8fc12e23e84952aa7ca">pthread_cond_wait()</a>.</p>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">rt_cond_wait()</a>, and <a class="el" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">rt_cond_wait_until()</a>.</p>
 
