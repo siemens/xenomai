@@ -99,7 +99,7 @@ ENDPROC(__asm_vfp_load)
 	.macro load_tls base, tp, tpuser
 	ldr     \tp, [\base, #TI_TP_VALUE]
 	.endm
-	
+
 	.macro switch_tls base, tp, tpuser, tmp1, tmp2
 	set_tls \tp, \tmp1, \tmp2
 	.endm
@@ -109,7 +109,7 @@ ENDPROC(__asm_vfp_load)
 	ldr	\tpuser, [\base, #TI_TP_VALUE + 4]
 	.endm
 #endif
-	
+
 /*
 /*
  * Switch context routine.
@@ -146,10 +146,18 @@ ENTRY(__asm_thread_switch)
 	ldr     r6, [r1, #TI_CPU_DOMAIN]
 #endif
 	switch_tls r0, r4, r5, r3, r7
+#if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP)
+	ldr	r7, [r1, #TI_TASK]
+	ldr	r8, =__stack_chk_guard
+	ldr	r7, [r7, #TSK_STACK_CANARY]
+#endif
 #ifdef CONFIG_CPU_USE_DOMAINS
 	mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
 	fpu_switch r4
+#if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP)
+	str	r7, [r8]
+#endif
  ARM(	add	r4, r1, #TI_CPU_SAVE	   )
  ARM(	ldmia	r4, {r4 - sl, fp, sp, pc}  )	@ Load all regs saved previously
  THUMB(	add	ip, r1, #TI_CPU_SAVE	   )
