@@ -1084,13 +1084,12 @@ static int ni_660x_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 
 
 	if(mitedev == NULL) {
-		a4l_info(dev, "%s: mite device not found\n", __FUNCTION__);
+		a4l_info(dev, "mite device not found\n");
 		return -ENOENT;
 	}
 
-	a4l_info(dev,
-		 "%s: Board found (name=%s), continue initialization ...",
-		 __FUNCTION__, boardptr->name);
+	a4l_info(dev, "Board found (name=%s), continue initialization ...",
+		 boardptr->name);
 
 	private(dev)->mite      = mitedev;
 	private(dev)->board_ptr = boardptr;
@@ -1123,9 +1122,7 @@ static int ni_660x_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 
 	err = a4l_add_subd(dev, s);
 	if (err != nsubdev) {
-		a4l_info(dev,
-			 "%s: cannot add first subdevice, "
-			 "returns %d, expect %d\n", __FUNCTION__, err, i);
+		a4l_info(dev, "cannot add first subdevice, returns %d, expect %d\n", err, i);
 		return err;
 	}
 
@@ -1134,9 +1131,7 @@ static int ni_660x_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	/* Setup second subdevice */
 	s = a4l_alloc_subd(sizeof(struct ni_660x_subd_priv), NULL);
 	if (s == NULL) {
-		a4l_info(dev,
-			 "%s: cannot allocate second subdevice\n",
-			 __FUNCTION__);
+		a4l_info(dev, "cannot allocate second subdevice\n");
 		return -ENOMEM;
 	}
 
@@ -1251,7 +1246,7 @@ static int ni_660x_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	ni_660x_write_register(dev, 0, global_interrupt_config_bits,
 			       GlobalInterruptConfigRegister);
 
-	a4l_info(dev, "%s: attach succeed, ready to be used\n", __FUNCTION__);
+	a4l_info(dev, "attach succeed, ready to be used\n");
 
 	return 0;
 }
@@ -1260,7 +1255,7 @@ static int ni_660x_detach(struct a4l_device *dev)
 {
 	int i;
 
-	a4l_info(dev, "%s: begin to detach the driver ...", __FUNCTION__);
+	a4l_info(dev, "begin to detach the driver ...");
 
 	/* Free irq */
 	if(a4l_get_irq(dev)!=A4L_IRQ_UNUSED)
@@ -1283,7 +1278,7 @@ static int ni_660x_detach(struct a4l_device *dev)
 		}
 	}
 
-	a4l_info(dev, "%s: driver detached !\n", __FUNCTION__);
+	a4l_info(dev, "driver detached !\n");
 
 	return 0;
 }

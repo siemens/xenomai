@@ -56,6 +56,12 @@ static unsigned long wake_count = 0;
 
 static RT_TASK rt_task_desc;
 
+#define DBG(fmt, args...) 						\
+        do {								\
+	        if (verbose) 						\
+		           printf(fmt, ##args);				\
+	} while (0);
+
 /* The command to send by default */
 a4l_cmd_t cmd = {
 	.idx_subd = ID_SUBD,
@@ -257,8 +263,7 @@ int main(int argc, char *argv[])
 
 	if (real_time != 0) {
 
-		if (verbose != 0)
-			printf("cmd_read: switching to real-time mode\n");
+		DBG("cmd_read: switching to real-time mode\n");
 
 		/* Prevent any memory-swapping for this program */
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -287,14 +292,11 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	if (verbose != 0) {
-		printf("cmd_read: device %s opened (fd=%d)\n",
-		       filename, dsc.fd);
-		printf("cmd_read: basic descriptor retrieved\n");
-		printf("\t subdevices count = %d\n", dsc.nb_subd);
-		printf("\t read subdevice index = %d\n", dsc.idx_read_subd);
-		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
-	}
+	DBG("cmd_read: device %s opened (fd=%d)\n", filename, dsc.fd);
+	DBG("cmd_read: basic descriptor retrieved\n");
+	DBG("\t subdevices count = %d\n", dsc.nb_subd);
+	DBG("\t read subdevice index = %d\n", dsc.idx_read_subd);
+	DBG("\t write subdevice index = %d\n", dsc.idx_write_subd);
 
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
@@ -311,8 +313,8 @@ int main(int argc, char *argv[])
 		goto out_main;
 	}
 
-	if (verbose != 0)
-		printf("cmd_read: complex descriptor retrieved\n");
+
+	DBG("cmd_read: complex descriptor retrieved\n");
 
 	/* Get the size of a single acquisition */
 	for (i = 0; i < cmd.nb_chan; i++) {
@@ -327,21 +329,15 @@ int main(int argc, char *argv[])
 			goto out_main;
 		}
 
-		if (verbose != 0) {
-			printf("cmd_read: channel %x\n", cmd.chan_descs[i]);
-			printf("\t ranges count = %d\n", info->nb_rng);
-			printf("\t bit width = %d (bits)\n", info->nb_bits);
-		}
+		DBG("cmd_read: channel %x\n", cmd.chan_descs[i]);
+		DBG("\t ranges count = %d\n", info->nb_rng);
+		DBG("\t bit width = %d (bits)\n", info->nb_bits);
 
 		scan_size += a4l_sizeof_chan(info);
 	}
 
-	if (verbose != 0) {
-		printf("cmd_read: scan size = %u\n", scan_size);
-		if (cmd.stop_arg != 0)
-			printf("cmd_read: size to read = %u\n",
-			       scan_size * cmd.stop_arg);
-	}
+	DBG("cmd_read: scan size = %u\n", scan_size);
+	DBG("cmd_read: size to read = %u\n", scan_size * cmd.stop_arg);
 
 	/* Cancel any former command which might be in progress */
 	a4l_snd_cancel(&dsc, cmd.idx_subd);
@@ -357,8 +353,7 @@ int main(int argc, char *argv[])
 			goto out_main;
 		}
 
-		if (verbose != 0)
-			printf("cmd_read: buffer size = %lu bytes\n", buf_size);
+		DBG("cmd_read: buffer size = %lu bytes\n", buf_size);
 
 		/* Map the analog input subdevice buffer */
 		ret = a4l_mmap(&dsc, cmd.idx_subd, buf_size, &map);
@@ -369,10 +364,7 @@ int main(int argc, char *argv[])
 			goto out_main;
 		}
 
-		if (verbose != 0)
-			printf
-				("cmd_read: mmap performed successfully (map=0x%p)\n",
-				 map);
+		DBG("cmd_read: mmap performed successfully (map=0x%p)\n",map);
 	}
 
 	ret = a4l_set_wakesize(&dsc, wake_count);
@@ -382,20 +374,16 @@ int main(int argc, char *argv[])
 		goto out_main;
 	}
 
-	if (verbose != 0)
-		printf("cmd_read: wake size successfully set (%lu)\n",
-		       wake_count);
+	DBG("cmd_read: wake size successfully set (%lu)\n", wake_count);
 
 	/* Send the command to the input device */
 	ret = a4l_snd_command(&dsc, &cmd);
 	if (ret < 0) {
-		fprintf(stderr,
-			"cmd_read: a4l_snd_command failed (ret=%d)\n", ret);
+		fprintf(stderr, "cmd_read: a4l_snd_command failed (ret=%d)\n", ret);
 		goto out_main;
 	}
 
-	if (verbose != 0)
-		printf("cmd_read: command successfully sent\n");
+	DBG("cmd_read: command successfully sent\n");
 
 	if (use_mmap == 0) {
 
@@ -410,6 +398,8 @@ int main(int argc, char *argv[])
 				goto out_main;
 			}
 
+			DBG("cmd_read: read %d bytes \n", ret);
+
 			/* Display the results */
 			if (dump_function(&dsc, &cmd, buf, ret) < 0) {
 				ret = -EIO;
@@ -418,6 +408,10 @@ int main(int argc, char *argv[])
 
 			/* Update the counter */
 			cnt += ret;
+
+			if (ret == 0) {
+				DBG("cmd_read: no more data in the buffer \n");
+			}
 
 		} while (ret > 0);
 
@@ -471,8 +465,7 @@ int main(int argc, char *argv[])
 		} while (1);
 	}
 
-	if (verbose != 0)
-		printf("cmd_read: %d bytes successfully received\n", cnt);
+	DBG("cmd_read: %d bytes successfully received\n", cnt);
 
 	ret = 0;
 

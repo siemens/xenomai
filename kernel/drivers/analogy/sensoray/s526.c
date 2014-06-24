@@ -715,7 +715,7 @@ static int dev_s526_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 
 	devpriv->io_base = io_base;
 
-	a4l_info(dev, "dev_s526_attach: attached (address = 0x%x)\n", io_base);
+	a4l_info(dev, " attached (address = 0x%x)\n", io_base);
 
 	return 0;
 }

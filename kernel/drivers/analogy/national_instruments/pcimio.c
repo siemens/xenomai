@@ -1507,7 +1507,7 @@ static int pcimio_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	   devpriv->gpct_mite_ring[1] == NULL)
 		return -ENOMEM;
 
-	a4l_info(dev, "pcimio_attach: found %s board\n", boardtype.name);
+	a4l_info(dev, "found %s board\n", boardtype.name);
 
 	if(boardtype.reg_type & ni_reg_m_series_mask)
 	{
@@ -1540,7 +1540,7 @@ static int pcimio_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	if(irq == 0){
 		a4l_warn(dev, "pcimio_attach: unknown irq (bad)\n\n");
 	}else{
-		a4l_info(dev, "pcimio_attach: found irq %u\n", irq);
+		a4l_info(dev, "found irq %u\n", irq);
 		ret = a4l_request_irq(dev,
 				      irq,
 				      a4l_ni_E_interrupt, RTDM_IRQTYPE_SHARED, dev);

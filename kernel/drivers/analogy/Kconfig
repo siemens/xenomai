@@ -10,11 +10,19 @@ config XENO_DRIVERS_ANALOGY
 config XENO_DRIVERS_ANALOGY_DEBUG
        depends on XENO_DRIVERS_ANALOGY
        bool "Analogy debug trace"
-       default y
+       default n
        help
 
        Enable debugging traces in Analogy so as to monitor Analogy's
        core and drivers behaviours.
+
+config XENO_DRIVERS_ANALOGY_DEBUG_FTRACE
+       depends on XENO_DRIVERS_ANALOGY_DEBUG
+       bool "Analogy debug ftrace"
+       default n
+       help
+
+       Route the Analogy a4l_dbg and a4l_info statements to /sys/kernel/debug/
 
 config XENO_DRIVERS_ANALOGY_DEBUG_LEVEL
        depends on XENO_DRIVERS_ANALOGY_DEBUG

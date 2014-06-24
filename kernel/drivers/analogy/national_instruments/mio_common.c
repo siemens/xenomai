@@ -1263,12 +1263,9 @@ static int ni_ai_drain_dma(struct a4l_subdevice *subd)
 			a4l_udelay(5);
 		}
 		if (i == timeout) {
-			a4l_info(dev,
-				 "ni_mio_common: "
-				 "wait for dma drain timed out\n");
+			a4l_info(dev, "wait for dma drain timed out\n");
 
-			a4l_info(dev,
-				 "a4l_mite_bytes_in_transit=%i, "
+			a4l_info(dev, "a4l_mite_bytes_in_transit=%i, "
 				 "AI_Status1_Register=0x%x\n",
 				 a4l_mite_bytes_in_transit(devpriv->ai_mite_chan),
 				 devpriv->stc_readw(dev, AI_Status_1_Register));
@@ -2197,7 +2194,7 @@ static int ni_ai_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 	unsigned int stop_count;
 	int interrupt_a_enable = 0;
 
-	a4l_info(dev, "ni_ai_cmd: start\n");
+	a4l_info(dev, "start\n");
 
 	if (a4l_get_irq(dev) == A4L_IRQ_UNUSED) {
 		a4l_err(dev, "ni_ai_cmd: cannot run command without an irq");
@@ -2445,8 +2442,7 @@ static int ni_ai_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 		ni_set_bits(dev, Interrupt_A_Enable_Register,
 			    interrupt_a_enable, 1);
 
-		a4l_info(dev,
-			 "ni_ai_cmd: Interrupt_A_Enable_Register = 0x%04x\n",
+		a4l_info(dev, "Interrupt_A_Enable_Register = 0x%04x\n",
 			 devpriv->int_a_enable_reg);
 	} else {
 		/* interrupt on nothing */
@@ -2497,7 +2493,7 @@ static int ni_ai_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 		break;
 	}
 
-	a4l_info(dev, "ni_ai_cmd: exit\n");
+	a4l_info(dev, "exit\n");
 
 	return 0;
 }
@@ -3233,9 +3229,7 @@ int ni_dio_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction
 	unsigned int *data = (unsigned int *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_dio_insn_config() chan=%d io=%d\n",
-		 CR_CHAN(insn->chan_desc), data[0]);
+	a4l_info(dev, "chan=%d io=%d\n", CR_CHAN(insn->chan_desc), data[0]);
 #endif /* CONFIG_DEBUG_DIO */
 
 	switch (data[0]) {
@@ -3268,9 +3262,7 @@ int ni_dio_insn_bits(struct a4l_subdevice *subd, struct a4l_kernel_instruction *
 	uint8_t *data = (uint8_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_dio_insn_bits_8() mask=0x%x bits=0x%x\n",
-		 data[0], data[1]);
+	a4l_info(dev, "mask=0x%x bits=0x%x\n", data[0], data[1]);
 #endif
 
 	if (insn->data_size != 2 * sizeof(uint8_t))
@@ -3304,9 +3296,7 @@ int ni_m_series_dio_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_in
 	unsigned int *data = (unsigned int *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_m_series_dio_insn_config() chan=%d io=%d\n",
-		 CR_CHAN(insn->chan_desc), data[0]);
+	a4l_info(dev, "chan=%d io=%d\n", CR_CHAN(insn->chan_desc), data[0]);
 #endif
 	switch (data[0]) {
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
@@ -3336,9 +3326,7 @@ int ni_m_series_dio_insn_bits_8(struct a4l_subdevice *subd, struct a4l_kernel_in
 	uint8_t *data = (uint8_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n",
-		 data[0], data[1]);
+	a4l_info(dev, "mask=0x%x bits=0x%x\n", data[0], data[1]);
 #endif
 
 	if (insn->data_size != 2 * sizeof(uint8_t))
@@ -3361,9 +3349,7 @@ int ni_m_series_dio_insn_bits_32(struct a4l_subdevice *subd, struct a4l_kernel_i
 	uint32_t *data = (uint32_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n",
-		 data[0], data[1]);
+	a4l_info(dev, "mask=0x%x bits=0x%x\n", data[0], data[1]);
 #endif
 
 	if (insn->data_size != 2 * sizeof(uint32_t))
@@ -3563,8 +3549,7 @@ static int ni_serial_hw_readwrite8(struct a4l_device * dev,
 	int err = 0, count = 20;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_serial_hw_readwrite8: outputting 0x%x\n", data_out);
+	a4l_info(dev, "outputting 0x%x\n", data_out);
 #endif
 
 	devpriv->dio_output &= ~DIO_Serial_Data_Mask;
@@ -3604,9 +3589,7 @@ static int ni_serial_hw_readwrite8(struct a4l_device * dev,
 	if (data_in != NULL) {
 		*data_in = devpriv->stc_readw(dev, DIO_Serial_Input_Register);
 #ifdef CONFIG_DEBUG_DIO
-		a4l_info(dev,
-			 "ni_serial_hw_readwrite8: inputted 0x%x\n",
-			 *data_in);
+		a4l_info(dev, "inputted 0x%x\n", *data_in);
 #endif
 	}
 
@@ -3622,8 +3605,7 @@ static int ni_serial_sw_readwrite8(struct a4l_device * dev,
 	unsigned char mask, input = 0;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev,
-		 "ni_serial_sw_readwrite8: outputting 0x%x\n", data_out);
+	a4l_info(dev, "outputting 0x%x\n", data_out);
 #endif
 
 	/* Wait for one bit before transfer */
@@ -3661,7 +3643,7 @@ static int ni_serial_sw_readwrite8(struct a4l_device * dev,
 		}
 	}
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, "ni_serial_sw_readwrite8: inputted 0x%x\n", input);
+	a4l_info(dev, "inputted 0x%x\n", input);
 #endif
 	if (data_in)
 		*data_in = input;
@@ -3683,7 +3665,7 @@ int ni_serial_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruct
 	case A4L_INSN_CONFIG_SERIAL_CLOCK:
 
 #ifdef CONFIG_DEBUG_DIO
-		a4l_info(dev, "SPI serial clock Config cd\n", data[1]);
+		a4l_info(dev, "SPI serial clock Config %d\n", data[1]);
 #endif
 
 		devpriv->serial_hw_mode = 1;

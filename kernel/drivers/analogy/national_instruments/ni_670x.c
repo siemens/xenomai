@@ -270,9 +270,8 @@ static int ni_670x_attach (struct a4l_device *dev, a4l_lnkdesc_t *arg)
 			((unsigned long *)arg->opts)[1] : 0;
 	}
 
-	a4l_info(dev,
-		 "%s: ni670x attach procedure started(bus=%d/slot=%d)...\n",
-		 __FUNCTION__, bus, slot);
+	a4l_info(dev, "ni670x attach procedure started(bus=%d/slot=%d)...\n",
+		 bus, slot);
 
 	mite = NULL;
 
@@ -287,9 +286,7 @@ static int ni_670x_attach (struct a4l_device *dev, a4l_lnkdesc_t *arg)
 		return -ENOENT;
 	}
 
-	a4l_info(dev,
-		 "%s: Found device %d %s\n",
-		 __FUNCTION__, i , ni_670x_boards[i].name);
+	a4l_info(dev, "Found device %d %s\n", i, ni_670x_boards[i].name);
 
 	devpriv->irq_polarity = PCIMIO_IRQ_POLARITY;
 	devpriv->irq_pin = 0;
@@ -306,7 +303,7 @@ static int ni_670x_attach (struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	irq = mite_irq(devpriv->mite);
 	devpriv->irq = irq;
 
-	a4l_info(dev, "ni670x attach: found %s board\n", board->name);
+	a4l_info(dev, "found %s board\n", board->name);
 
 	for (i = 0; i < 2; i++) {
 		struct a4l_subdevice *subd =
@@ -335,20 +332,19 @@ static int ni_670x_attach (struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	/* Config of ao registers */
 	writel(0x00, devpriv->mite->daq_io_addr + AO_CONTROL_OFFSET);
 
-	a4l_info(dev, "%s: ni670x attached\n", __FUNCTION__);
+	a4l_info(dev, "ni670x attached\n");
 
 	return 0;
 }
 
 static int ni_670x_detach(struct a4l_device *dev)
 {
-	a4l_info(dev, "%s: ni670x detach procedure started...\n", __FUNCTION__);
+	a4l_info(dev, "ni670x detach procedure started...\n");
 
 	if(dev->priv != NULL && devpriv->mite != NULL)
 		a4l_mite_unsetup(devpriv->mite);
 
-	a4l_info(dev,
-		 "%s: ni670x detach procedure succeeded...\n", __FUNCTION__);
+	a4l_info(dev, "ni670x detach procedure succeeded...\n");
 
 	return 0;
 }

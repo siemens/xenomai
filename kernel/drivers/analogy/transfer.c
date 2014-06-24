@@ -45,9 +45,7 @@ int a4l_precleanup_transfer(struct a4l_device_context * cxt)
 	for (i = 0; i < tsf->nb_subd; i++) {
 		unsigned long *status = &tsf->subds[i]->status;
 
-		__a4l_dbg(1, core_dbg,
-			  "a4l_precleanup_transfer: "
-			  "subd[%d]->status=0x%08lx\n", i, *status);
+		__a4l_dbg(1, core_dbg, "subd[%d]->status=0x%08lx\n", i, *status);
 
 		if (test_and_set_bit(A4L_SUBD_BUSY, status)) {
 			__a4l_err("a4l_precleanup_transfer: "
@@ -125,8 +123,7 @@ int a4l_setup_transfer(struct a4l_device_context * cxt)
 		tsf->nb_subd++;
 	}
 
-	__a4l_dbg(1, core_dbg,
-		  "a4l_setup_transfer: nb_subd=%d\n", tsf->nb_subd);
+	__a4l_dbg(1, core_dbg, "nb_subd=%d\n", tsf->nb_subd);
 
 	/* Allocates a suitable tab for the subdevices */
 	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(struct a4l_subdevice *));

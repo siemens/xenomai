@@ -195,7 +195,7 @@ int ao_pull_values(struct a4l_subdevice *subd)
 
 	}
 
-	a4l_info(subd->dev, "ao_pull_values: count %d \n", priv->count);
+	a4l_info(subd->dev, A4L_FUNCTION " count %d \n", priv->count);
 	a4l_buf_evt(subd, 0);
 
 	return 0;
@@ -238,8 +238,8 @@ static int ai_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 	ai_priv->convert_period_ns = (cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
 
-	a4l_dbg(1, drv_dbg, subd->dev,
-		"ai_cmd: scan_period=%luns convert_period=%luns\n",
+	a4l_dbg(1, drv_dbg, subd->dev, A4L_FUNCTION
+		" scan_period=%luns convert_period=%luns\n",
 		ai_priv->scan_period_ns, ai_priv->convert_period_ns);
 
 	ai_priv->last_ns = a4l_get_time();
@@ -287,7 +287,7 @@ static void ai_munge(struct a4l_subdevice *subd, void *buf, unsigned long size)
 
 int ao_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
-	a4l_info(subd->dev, "ao_cmd: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
 	return 0;
 }
 
@@ -295,7 +295,7 @@ int ao_trigger(struct a4l_subdevice *subd, lsampl_t trignum)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, "ao_trigger: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
 	priv->ao_running = 1;
 	return 0;
 }
@@ -306,7 +306,7 @@ void ao_cancel(struct a4l_subdevice *subd)
 	struct ao_ai2_priv *ao_priv = (struct ao_ai2_priv *)subd->priv;
 	int running;
 
-	a4l_info(subd->dev, "ao_cancel: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
 	priv->ao_running = 0;
 
 	running = priv->ai2_running;
@@ -328,7 +328,7 @@ int ai2_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, "ai2_cmd: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
 	priv->ai2_running = 1;
 	return 0;
 }
@@ -340,7 +340,7 @@ void ai2_cancel(struct a4l_subdevice *subd)
 
 	int running;
 
-	a4l_info(subd->dev, "ai2_cancel: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
 	priv->ai2_running = 0;
 
 	running = priv->ao_running;
@@ -627,9 +627,8 @@ int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	if (ret)
 		a4l_dbg(1, drv_dbg, dev, "Error creating A4L task \n");
 
-	a4l_dbg(1, drv_dbg, dev, "attach procedure completed \n"
-				 " - amplitude divisor = %lu \n"
-		                 " - quanta count = %lu\n "
+	a4l_dbg(1, drv_dbg, dev, "attach procedure completed: "
+				 "adiv = %lu, qcount = %lu \n"
 		                  , priv->amplitude_div, priv->quanta_cnt);
 
 	return ret;

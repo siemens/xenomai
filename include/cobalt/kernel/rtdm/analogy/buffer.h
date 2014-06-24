@@ -50,6 +50,7 @@
 #define A4L_BUF_MAP_NR 9
 #define A4L_BUF_MAP (1 << A4L_BUF_MAP_NR)
 
+
 /* Buffer descriptor structure */
 struct a4l_buffer {
 
@@ -86,6 +87,13 @@ struct a4l_buffer {
 	   awakened */
 	unsigned long wake_count;
 };
+
+static inline void __dump_buffer_counters(struct a4l_buffer *buf)
+{
+	__a4l_dbg(1, core_dbg, "a4l_buffer=0x%p, p=0x%p \n", buf, buf->buf);
+	__a4l_dbg(1, core_dbg, "end=%06ld, prd=%06ld, cns=%06ld, tmp=%06ld \n",
+		buf->end_count, buf->prd_count, buf->cns_count, buf->tmp_count);
+}
 
 /* --- Static inline functions related with
    user<->kernel data transfers --- */
@@ -191,13 +199,11 @@ static inline int __handle_event(struct a4l_buffer * buf)
 
 	/* The event "End of acquisition" must not be cleaned
 	   before the complete flush of the buffer */
-	if (test_bit(A4L_BUF_EOA_NR, &buf->flags)) {
+	if (test_bit(A4L_BUF_EOA_NR, &buf->flags))
 		ret = -ENOENT;
-	}
 
-	if (test_bit(A4L_BUF_ERROR_NR, &buf->flags)) {
+	if (test_bit(A4L_BUF_ERROR_NR, &buf->flags))
 		ret = -EPIPE;
-	}
 
 	return ret;
 }

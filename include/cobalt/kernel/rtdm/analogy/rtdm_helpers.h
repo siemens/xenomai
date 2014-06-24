@@ -36,22 +36,30 @@
 
 #define RTDM_SUBCLASS_ANALOGY 0
 
-#define __a4l_err(fmt, args...) \
-	rtdm_printk(KERN_ERR A4L_PROMPT fmt, ##args)
+#define __a4l_err(fmt, args...)  rtdm_printk(KERN_ERR A4L_PROMPT fmt, ##args)
+#define __a4l_warn(fmt, args...) rtdm_printk(KERN_WARNING A4L_PROMPT fmt, ##args)
 
-#define __a4l_warn(fmt, args...) \
-	rtdm_printk(KERN_WARNING A4L_PROMPT fmt, ##args)
-
-#define __a4l_info(fmt, args...) \
-	rtdm_printk(KERN_INFO A4L_PROMPT fmt, ##args)
+#ifdef  CONFIG_XENO_DRIVERS_ANALOGY_DEBUG_FTRACE
+#define __a4l_info(fmt, args...) trace_printk(fmt, ##args)
+#else
+#define __a4l_info(fmt, args...) 						\
+        rtdm_printk(KERN_INFO A4L_PROMPT "%s: " fmt, __FUNCTION__, ##args)
+#endif
 
 #ifdef CONFIG_XENO_DRIVERS_ANALOGY_DEBUG
-
-#define __a4l_dbg(level, debug, fmt, args...)			\
-	do {							\
-	if ((debug) >= (level))					\
-		rtdm_printk(KERN_DEBUG A4L_PROMPT fmt, ##args); \
+#ifdef CONFIG_XENO_DRIVERS_ANALOGY_DEBUG_FTRACE
+#define __a4l_dbg(level, debug, fmt, args...)				\
+	do {								\
+	if ((debug) >= (level))						\
+		trace_printk(fmt, ##args); 				\
 	} while (0)
+#else
+#define __a4l_dbg(level, debug, fmt, args...)						\
+	do {										\
+	if ((debug) >= (level))								\
+		rtdm_printk(KERN_DEBUG A4L_PROMPT "%s: " fmt, __FUNCTION__ , ##args);	\
+	} while (0)
+#endif
 
 #define core_dbg CONFIG_XENO_DRIVERS_ANALOGY_DEBUG_LEVEL
 #define drv_dbg CONFIG_XENO_DRIVERS_ANALOGY_DRIVER_DEBUG_LEVEL
@@ -62,16 +70,16 @@
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_DEBUG */
 
-#define __a4l_dev_name(dev) \
+#define __a4l_dev_name(dev) 						\
 	(dev->driver == NULL) ? "unattached dev" : dev->driver->board_name
 
-#define a4l_err(dev, fmt, args...) \
+#define a4l_err(dev, fmt, args...) 					\
 	__a4l_err("%s: " fmt, __a4l_dev_name(dev), ##args)
 
-#define a4l_warn(dev, fmt, args...) \
+#define a4l_warn(dev, fmt, args...) 					\
 	__a4l_warn("%s: " fmt, __a4l_dev_name(dev), ##args)
 
-#define a4l_info(dev, fmt, args...) \
+#define a4l_info(dev, fmt, args...) 					\
 	__a4l_info("%s: " fmt, __a4l_dev_name(dev), ##args)
 
 #define a4l_dbg(level, debug, dev, fmt, args...)			\

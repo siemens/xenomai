@@ -269,9 +269,8 @@ int a4l_assign_driver(struct a4l_device_context * cxt,
 	INIT_LIST_HEAD(&dev->subdvsq);
 
 	if (drv->privdata_size == 0)
-		__a4l_dbg(1, core_dbg,
-			  "a4l_assign_driver: warning! "
-			  "the field priv will not be usable\n");
+		__a4l_dbg(1, core_dbg, " warning! "
+				       "the field priv will not be usable\n");
 	else {
 		dev->priv = rtdm_malloc(drv->privdata_size);
 		if (dev->priv == NULL) {

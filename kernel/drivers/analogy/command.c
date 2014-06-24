@@ -57,7 +57,7 @@ int a4l_fill_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc
 
 	desc->chan_descs = tmpchans;
 
-	__a4l_dbg(1, core_dbg, "a4l_fill_cmddesc: desc dump\n");
+	__a4l_dbg(1, core_dbg, "desc dump\n");
 	__a4l_dbg(1, core_dbg, "\t->idx_subd=%u\n", desc->idx_subd);
 	__a4l_dbg(1, core_dbg, "\t->flags=%lu\n", desc->flags);
 	__a4l_dbg(1, core_dbg, "\t->nb_chan=%u\n", desc->nb_chan);
@@ -327,8 +327,7 @@ int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
-	__a4l_dbg(1, core_dbg,
-		  "a4l_ioctl_cmd: 1st cmd checks passed\n");
+	__a4l_dbg(1, core_dbg,"1st cmd checks passed\n");
 
 	subd = dev->transfer.subds[cmd_desc->idx_subd];
 
@@ -340,8 +339,7 @@ int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 		goto out_ioctl_cmd;
 	}
 
-	__a4l_dbg(1, core_dbg,
-		  "a4l_ioctl_cmd: driver's cmd checks passed\n");
+	__a4l_dbg(1, core_dbg, "driver's cmd checks passed\n");
 
 	if (cmd_desc->flags & A4L_CMD_SIMUL) {
 		simul_flag = 1;

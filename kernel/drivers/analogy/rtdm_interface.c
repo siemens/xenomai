@@ -132,20 +132,22 @@ int a4l_open(struct rtdm_fd *fd, int flags)
 {
 	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
-	/* Get a pointer on the selected device
-	   (thanks to minor index) */
+	/* Get a pointer on the selected device (thanks to minor index) */
 	a4l_set_dev(cxt);
 
 	/* Initialize the buffer structure */
 	cxt->buffer = rtdm_malloc(sizeof(struct a4l_buffer));
-	a4l_init_buffer(cxt->buffer);
 
+	a4l_init_buffer(cxt->buffer);
 	/* Allocate the asynchronous buffer
 	   NOTE: it should be interesting to allocate the buffer only
 	   on demand especially if the system is short of memory */
 	if (cxt->dev->transfer.default_bufsize)
 		a4l_alloc_buffer(cxt->buffer,
 				 cxt->dev->transfer.default_bufsize);
+
+	__a4l_dbg(1, core_dbg, "cxt=%p cxt->buf=%p, cxt->buf->buf=%p\n",
+		cxt, cxt->buffer, cxt->buffer->buf);
 
 	return 0;
 }

@@ -34,6 +34,8 @@
 
 void a4l_free_buffer(struct a4l_buffer * buf_desc)
 {
+	__a4l_dbg(1, core_dbg, "buf=%p buf->buf=%p\n", buf_desc, buf_desc->buf);
+
 	if (buf_desc->pg_list != NULL) {
 		rtdm_free(buf_desc->pg_list);
 		buf_desc->pg_list = NULL;
@@ -80,6 +82,8 @@ int a4l_alloc_buffer(struct a4l_buffer *buf_desc, int buf_size)
 	     vaddr += PAGE_SIZE)
 		buf_desc->pg_list[(vaddr - vabase) >> PAGE_SHIFT] =
 			(unsigned long) page_to_phys(vmalloc_to_page(vaddr));
+
+	__a4l_dbg(1, core_dbg, "buf=%p buf->buf=%p\n", buf_desc, buf_desc->buf);
 
 out_virt_contig_alloc:
 	if (ret != 0)
@@ -160,8 +164,7 @@ int a4l_setup_buffer(struct a4l_device_context *cxt, struct a4l_cmd_desc *cmd)
 		buf_desc->end_count *= cmd->stop_arg;
 	}
 
-	__a4l_dbg(1, core_dbg,
-		  "a4l_setup_buffer: end_count=%lu\n", buf_desc->end_count);
+	__a4l_dbg(1, core_dbg, "end_count=%lu\n", buf_desc->end_count);
 
 	return 0;
 }
@@ -709,8 +712,7 @@ int a4l_ioctl_bufinfo(struct a4l_device_context * cxt, void *arg)
 		/* Retrieves the data amount to read */
 		tmp_cnt = info.rw_count = __count_to_get(buf);
 
-		__a4l_dbg(1, core_dbg,
-			  "a4l_ioctl_bufinfo: count to read=%lu\n", tmp_cnt);
+		__a4l_dbg(1, core_dbg, "count to read=%lu\n", tmp_cnt);
 
 		if ((ret < 0 && ret != -ENOENT) ||
 		    (ret == -ENOENT && tmp_cnt == 0)) {
@@ -740,9 +742,7 @@ int a4l_ioctl_bufinfo(struct a4l_device_context * cxt, void *arg)
 		/* Retrieves the data amount which is writable */
 		info.rw_count = __count_to_put(buf);
 
-		__a4l_dbg(1, core_dbg,
-			  "a4l_ioctl_bufinfo: count to write=%lu\n",
-			  info.rw_count);
+		__a4l_dbg(1, core_dbg, " count to write=%lu\n", info.rw_count);
 
 	} else {
 		__a4l_err("a4l_ioctl_bufinfo: inappropriate subdevice\n");
@@ -828,11 +828,15 @@ ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t n
 
 	while (count < nbytes) {
 
+		unsigned long tmp_cnt;
+
 		/* Check the events */
 		int ret = __handle_event(buf);
 
+		__dump_buffer_counters(buf);
+
 		/* Compute the data amount to copy */
-		unsigned long tmp_cnt = __count_to_get(buf);
+		tmp_cnt = __count_to_get(buf);
 
 		/* Check tmp_cnt count is not higher than
 		   the global count to read */
@@ -841,6 +845,7 @@ ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t n
 
 		/* We check whether there is an error */
 		if (ret < 0 && ret != -ENOENT) {
+			__a4l_err("a4l_read: failed to handle event %d \n", ret);
 			a4l_cancel_buffer(cxt);
 			count = ret;
 			goto out_a4l_read;
@@ -848,6 +853,8 @@ ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t n
 
 		/* We check whether the acquisition is over */
 		if (ret == -ENOENT && tmp_cnt == 0) {
+			__a4l_info("a4l_read: acquisition done - all data "
+				   "requested by the client was delivered \n");
 			a4l_cancel_buffer(cxt);
 			count = 0;
 			goto out_a4l_read;
@@ -873,6 +880,7 @@ ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t n
 
 			/* Updates consume count */
 			buf->cns_count += tmp_cnt;
+			a4l_dbg(1, core_dbg, dev, "buf->cns_cnt=%ld \n", buf->cns_count);
 
 			/* Updates the return value */
 			count += tmp_cnt;
@@ -882,9 +890,9 @@ ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t n
 			if (!test_bit(A4L_BUF_BULK, &buf->flags))
 				goto out_a4l_read;
 		}
-		/* If the acquisition is not over, we must not
-		   leave the function without having read a least byte */
 		else {
+			/* If the acquisition is not over, we must not
+			   leave the function without having read a least byte */
 			ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
@@ -929,11 +937,15 @@ ssize_t a4l_write_buffer(struct a4l_device_context *cxt, const void *bufdata, si
 
 	while (count < nbytes) {
 
+		unsigned long tmp_cnt;
+
 		/* Check the events */
 		int ret = __handle_event(buf);
 
+		__dump_buffer_counters(buf);
+
 		/* Compute the data amount to copy */
-		unsigned long tmp_cnt = __count_to_put(buf);
+		tmp_cnt = __count_to_put(buf);
 
 		/* Check tmp_cnt count is not higher than
 		   the global count to write */
@@ -941,12 +953,14 @@ ssize_t a4l_write_buffer(struct a4l_device_context *cxt, const void *bufdata, si
 			tmp_cnt = nbytes - count;
 
 		if (ret < 0) {
-			a4l_cancel_buffer(cxt);
 			count = (ret == -ENOENT) ? -EINVAL : ret;
+			__a4l_err("a4l_write: failed to handle event %d \n", ret);
+			a4l_cancel_buffer(cxt);
 			goto out_a4l_write;
 		}
 
 		if (tmp_cnt > 0) {
+
 
 			/* Performs the copy */
 			ret = __produce(cxt,
@@ -966,6 +980,7 @@ ssize_t a4l_write_buffer(struct a4l_device_context *cxt, const void *bufdata, si
 
 			/* Updates produce count */
 			buf->prd_count += tmp_cnt;
+			a4l_dbg(1, core_dbg, dev , "buf->prd_cnt=%ld \n", buf->prd_count);
 
 			/* Updates the return value */
 			count += tmp_cnt;
@@ -978,6 +993,7 @@ ssize_t a4l_write_buffer(struct a4l_device_context *cxt, const void *bufdata, si
 			/* The buffer is full, we have to wait for a slot to free */
 			ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 			if (ret < 0) {
+				__a4l_err("a4l_write: failed to wait for free slot (%d)\n", ret);
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
 				count = ret;

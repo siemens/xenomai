@@ -33,7 +33,7 @@ int a4l_lct_drv(char *pin, struct a4l_driver ** pio)
 	struct list_head *this;
 	int ret = -EINVAL;
 
-	__a4l_dbg(1, core_dbg, "a4l_lct_drv: name=%s\n", pin);
+	__a4l_dbg(1, core_dbg, "name=%s\n", pin);
 
 	/* Goes through the linked list so as to find
 	   a driver instance with the same name */
@@ -58,7 +58,7 @@ int a4l_register_drv(struct a4l_driver * drv)
 	if (!realtime_core_enabled())
 		return 0;
 
-	__a4l_dbg(1, core_dbg, "a4l_add_drv: name=%s\n", drv->board_name);
+	__a4l_dbg(1, core_dbg, "name=%s\n", drv->board_name);
 
 	if (a4l_lct_drv(drv->board_name, NULL) != 0) {
 		list_add(&drv->list, &a4l_drvs);
@@ -72,7 +72,7 @@ int a4l_unregister_drv(struct a4l_driver * drv)
 	if (!realtime_core_enabled())
 		return 0;
 
-	__a4l_dbg(1, core_dbg, "a4l_rm_drv: name=%s\n", drv->board_name);
+	__a4l_dbg(1, core_dbg, "name=%s\n", drv->board_name);
 
 	if (a4l_lct_drv(drv->board_name, NULL) == 0) {
 		/* Here, we consider the argument is pointing

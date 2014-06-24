@@ -238,7 +238,7 @@ static void parport_intr_cancel(struct a4l_subdevice *subd)
 {
 	struct a4l_device *dev = subd->dev;
 
-	a4l_info(dev, "parport_intr_cancel: cancel in progress\n");
+	a4l_info(dev, "cancel in progress\n");
 
 	devpriv->c_data &= ~0x10;
 	outb(devpriv->c_data, devpriv->io_base + PARPORT_C);
@@ -369,7 +369,7 @@ static int dev_parport_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 		return -EIO;
 	}
 
-	a4l_info(dev, "dev_parport_attach: address = 0x%lx\n", io_base);
+	a4l_info(dev, "address = 0x%lx\n", io_base);
 
 	for (i = 0; i < 3; i++) {
 
@@ -387,7 +387,7 @@ static int dev_parport_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 
 		struct a4l_subdevice *subd;
 
-		a4l_info(dev, "dev_parport_attach: irq = %d\n", irq);
+		a4l_info(dev, "irq = %d\n", irq);
 
 		err = a4l_request_irq(dev, irq, parport_interrupt, 0, dev);
 		if (err < 0) {

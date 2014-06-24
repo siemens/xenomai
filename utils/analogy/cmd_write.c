@@ -439,7 +439,7 @@ out:
 /* --- Acquisition related stuff --- */
 static int run_acquisition(struct config *cfg)
 {
-	int err = 0, elements = 0;
+	int err = 0, elements = BUFFER_DEPTH;
 
 	/* The return value of a4l_sizeof_chan() was already
 	controlled in init_config so no need to do it twice */
@@ -450,12 +450,9 @@ static int run_acquisition(struct config *cfg)
 		err = process_input(cfg, &elements);
 		if (err < 0)
 			return err;
+		if (elements == 0)
+			return -ENOENT;
 	}
-	else
-		elements = BUFFER_DEPTH;
-
-	if (elements == 0)
-		return -ENOENT;
 
 	fprintf(stderr, "cmd_write: write %d elements [%d bytes per element] on "
 			"%d channels \n", elements, chan_size, cfg->chans_count );
