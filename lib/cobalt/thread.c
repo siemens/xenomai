@@ -345,7 +345,7 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the
  *   current thread from being switched out until the scheduler
  *   is unlocked;
- * - PTHREAD_WARNSW, when set, causes the signal SIGXCPU to be sent to the
+ * - PTHREAD_WARNSW, when set, causes the signal SIGDEBUG to be sent to the
  *   current thread, whenever it involontary switches to secondary mode;
  * - PTHREAD_CONFORMING can be passed in @a setmask to switch the
  * current user-space task to its preferred runtime mode. The only

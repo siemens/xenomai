@@ -369,7 +369,7 @@ fail_syncinit:
  * entering the user routine specified by rt_task_start(). A call to
  * rt_task_set_mode() from the new task is required to drop this lock.
  *
- * - When running over the Cobalt core, T_WARNSW causes the SIGXCPU
+ * - When running over the Cobalt core, T_WARNSW causes the SIGDEBUG
  * signal to be sent to the current task whenever it switches to the
  * secondary mode. This feature is useful to detect unwanted
  * migrations to the Linux domain. This flag has no effect over the
@@ -692,7 +692,7 @@ out:
  * switches on the current CPU. A call to rt_task_set_mode() from the
  * current task is required to drop this lock.
  *
- * - When running over the Cobalt core, T_WARNSW causes the SIGXCPU
+ * - When running over the Cobalt core, T_WARNSW causes the SIGDEBUG
  * signal to be sent to the current task whenever it switches to the
  * secondary mode. This feature is useful to detect unwanted
  * migrations to the Linux domain. This flag has no effect over the
@@ -1410,7 +1410,7 @@ out:
  *
  * - Only when running over the Cobalt core:
  *
- *   - T_WARNSW causes the SIGXCPU signal to be sent to the current
+ *   - T_WARNSW causes the SIGDEBUG signal to be sent to the current
  * task whenever it switches to the secondary mode. This feature is
  * useful to detect unwanted migrations to the Linux domain.
  *

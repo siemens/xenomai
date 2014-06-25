@@ -473,7 +473,7 @@ static void faulthand(int sig)
 #include <cobalt/uapi/syscall.h>
 
 static const char *reason_str[] = {
-	[SIGDEBUG_UNDEFINED] = "latency: received SIGXCPU for unknown reason",
+	[SIGDEBUG_UNDEFINED] = "latency: received SIGDEBUG for unknown reason",
 	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
 	[SIGDEBUG_MIGRATE_SYSCALL] = "invoked syscall",
 	[SIGDEBUG_MIGRATE_FAULT] = "triggered fault",

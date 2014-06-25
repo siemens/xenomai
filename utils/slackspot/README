@@ -3,7 +3,7 @@
 We desperately needed a way to help spotting code locations causing
 spurious relaxes of real-time threads, at source level.
 
-Combining SIGXCPU receipts and the backtrace() utility directly from
+Combining SIGDEBUG receipts and the backtrace() utility directly from
 the application code used to be the recommended way of doing this, but
 this fell short of being really handy, simply because that debug
 feature had to be implemented in an ad hoc manner within each new

@@ -41,7 +41,7 @@ static void assert_nrt_inner(void)
 	}
 
 	if (stat.status & XNTRAPSW)
-		pthread_kill(pthread_self(), SIGXCPU);
+		pthread_kill(pthread_self(), SIGDEBUG);
 }
 
 void assert_nrt(void)

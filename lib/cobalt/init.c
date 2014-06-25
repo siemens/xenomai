@@ -151,7 +151,7 @@ void __libcobalt_init(void)
 	sa.sa_sigaction = cobalt_sigdebug_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
-	sigaction(SIGXCPU, &sa, &__cobalt_orig_sigdebug);
+	sigaction(SIGDEBUG, &sa, &__cobalt_orig_sigdebug);
 
 	__cobalt_muxid = __xn_mux_shifted_id(muxid);
 
