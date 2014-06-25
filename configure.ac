@@ -766,6 +766,8 @@ if test x"$want_fortify" != xno; then
 	       fi])
 fi
 
+XENO_CONFIG_ARGS="$ac_configure_args"
+
 dnl
 dnl Build the Makefiles
 dnl
@@ -793,6 +795,8 @@ AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_FUSE_CFLAGS)
 AC_SUBST(XENO_TEST_DIR)
 AC_SUBST(XENO_DEMO_DIR)
+
+AC_SUBST(XENO_CONFIG_ARGS)
 
 AC_CONFIG_FILES([ \
 	Makefile \

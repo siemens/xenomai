@@ -637,6 +637,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+XENO_CONFIG_ARGS
 XENO_DEMO_DIR
 XENO_TEST_DIR
 XENO_FUSE_CFLAGS
@@ -14082,6 +14083,10 @@ else
 fi
 
 fi
+
+XENO_CONFIG_ARGS="$ac_configure_args"
+
+
 
 
 
