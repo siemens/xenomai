@@ -59,8 +59,28 @@ Options :
         --ldflags
         --lib*-dir,--libdir,--user-libdir
         --core
+        --info
 EOF
     exit $1
+}
+
+dump_info ()
+{
+    if test -r /proc/ipipe/version; then
+	uname -a 2>/dev/null || echo "cannot determine system information (uname?)"
+	echo "Kernel parameters: `cat /proc/cmdline`"
+	echo "I-pipe release #`cat /proc/ipipe/version` detected"
+	if test -r /proc/xenomai/version; then
+	    echo "Xenomai/cobalt `cat /proc/xenomai/version` detected"
+	else
+	    echo "Xenomai/cobalt disabled on this system"
+	fi
+    else
+	    echo "Xenomai/cobalt is NOT present on this system"
+    fi
+
+    eval echo "Configure args: @XENO_CONFIG_ARGS@"
+    exit 0
 }
 
 verbose ()
@@ -195,6 +215,9 @@ while test $# -gt 0; do
 	    ;;
         --help)
             usage 0 1>&2
+            ;;
+        --info)
+            dump_info
             ;;
         *)
          usage 1 1>&2

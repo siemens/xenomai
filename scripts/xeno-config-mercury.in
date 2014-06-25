@@ -40,6 +40,7 @@ Options :
         --ldflags
         --lib*-dir,--libdir,--user-libdir
         --core
+        --info
 EOF
     exit $1
 }
@@ -54,6 +55,17 @@ verbose ()
     echo "        --arch=\"$XENO_TARGET_ARCH\""
     echo "        --prefix=\"$XENO_PREFIX\""
     echo "        --library-dir=\"$XENO_LIBRARY_DIR\""
+    exit 0
+}
+
+dump_info ()
+{
+    uname -a 2>/dev/null || echo "cannot determine system information (uname?)"
+    echo "Kernel parameters: `cat /proc/cmdline`"
+    if test -r /mnt/xenomai/system/version; then
+	echo "Xenomai/mercury `cat /mnt/xenomai/system/version` detected"
+    fi
+    eval echo "Configure args: @XENO_CONFIG_ARGS@"
 }
 
 if test $# -eq 0; then
@@ -163,6 +175,9 @@ while test $# -gt 0; do
 	    ;;
         --help)
             usage 0 1>&2
+            ;;
+        --info)
+            dump_info
             ;;
         *)
          usage 1 1>&2
