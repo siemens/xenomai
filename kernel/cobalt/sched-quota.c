@@ -21,26 +21,21 @@
 #include <cobalt/kernel/arith.h>
 
 /*
- * With this policy, each per-CPU scheduler slot maintains a single
- * global runqueue holding all runnable threads, and a list of active
- * thread groups.
+ * With this policy, each per-CPU scheduler slot maintains a list of
+ * active thread groups, picking from the sched_rt runqueue.
  *
  * Each time a thread is picked from the runqueue, we check whether we
  * still have budget for running it, looking at the group it belongs
- * to. If so, then a timer is armed to elapse when that group has no
- * more budget, would the incoming thread run unpreempted until then
+ * to. If so, a timer is armed to elapse when that group has no more
+ * budget, would the incoming thread run unpreempted until then
  * (i.e. xnsched_quota->limit_timer).
  *
  * Otherwise, if no budget remains in the group for running the
- * candidate thread, then we move the latter to a local expiry queue
- * maintained by the group, so that we won't have to walk through
- * expired threads several times uselessly. This process is done on
- * the fly as we pull from the run queue, which may be more efficient
- * than doing bulk transfers eagerly to the expiry queue each time the
- * budget is depleted, as we might get a budget refill in the
- * meantime.
+ * candidate thread, we move the latter to a local expiry queue
+ * maintained by the group. This process is done on the fly as we pull
+ * from the runqueue.
  *
- * Updating the remaining budget is done each time the Xenomai core
+ * Updating the remaining budget is done each time the Cobalt core
  * asks for replacing the current thread with the next runnable one,
  * i.e. xnsched_quota_pick(). There we charge the elapsed run time of
  * the outgoing thread to the relevant group, and conversely, we check
@@ -55,16 +50,16 @@
  * NOTE: since the core logic enforcing the budget entirely happens in
  * xnsched_quota_pick(), applying a budget change can be done as
  * simply as forcing the rescheduling procedure to be invoked asap. As
- * a result of this, the Xenomai core will ask for the next thread to
+ * a result of this, the Cobalt core will ask for the next thread to
  * run, which means calling xnsched_quota_pick() eventually.
  *
  * CAUTION: xnsched_quota_group->nr_active does count both the threads
- * from that group linked to the run queue, _and_ the threads moved to
- * the expiry queue. As a matter of fact, the expired threads - those
- * for which we consumed all the per-group budget - are still seen as
- * runnable (i.e. not blocked/suspended) by the Xenomai core. This
- * only means that the SCHED_QUOTA policy won't pick them until the
- * relevant budget is replenished.
+ * from that group linked to the sched_rt runqueue, _and_ the threads
+ * moved to the local expiry queue. As a matter of fact, the expired
+ * threads - those for which we consumed all the per-group budget -
+ * are still seen as runnable (i.e. not blocked/suspended) by the
+ * Cobalt core. This only means that the SCHED_QUOTA policy won't pick
+ * them until the corresponding budget is replenished.
  */
 static DECLARE_BITMAP(group_map, CONFIG_XENO_OPT_SCHED_QUOTA_NR_GROUPS);
 
