@@ -577,7 +577,7 @@ void xnshadow_relax(int notify, int reason)
 
 	if (xnthread_test_state(thread, XNUSER) && notify) {
 		xndebug_notify_relax(thread, reason);
-		if (xnthread_test_state(thread, XNTRAPSW)) {
+		if (xnthread_test_state(thread, XNWARN)) {
 			/* Help debugging spurious relaxes. */
 			memset(&si, 0, sizeof(si));
 			si.si_signo = SIGDEBUG;

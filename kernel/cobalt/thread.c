@@ -654,7 +654,7 @@ EXPORT_SYMBOL_GPL(xnthread_start);
 
 /**
  * @fn void xnthread_set_mode(struct xnthread *thread,int clrmask,int setmask)
- * @brief Change a thread's control mode.
+ * @brief Change thread control mode.
  *
  * Change the control mode of a given thread. The control mode affects
  * the behaviour of the nucleus regarding the specified thread.
@@ -676,14 +676,26 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * locked, otherwise such lock will take effect next time @a thread
  * resumes on a CPU.
  *
- * - XNTRAPSW causes the thread to receive a SIGDEBUG signal when it
- * switches to secondary mode. This is a debugging aid for detecting
- * spurious relaxes.
+ * - XNWARN is a debugging aid, causing the thread to receive a
+ * SIGDEBUG signal when the following atypical or abnormal behavior is
+ * detected:
+ *
+ * - @a thread switches to secondary mode (usable for detecting
+ * spurious relaxes).
+ *
+ * - @a thread is about to sleep on a Cobalt mutex currently owned by
+ * a thread running in secondary mode, which reveals a priority
+ * inversion case.
+ *
+ * - @a thread has both XNTRAPLB and XNLOCK set, and attempts to
+ * block on a Cobalt service, causing a lock break.
  *
  * - XNTRAPLB disallows breaking the scheduler lock. In the default
  * case, a thread which holds the scheduler lock is allowed to drop it
  * temporarily for sleeping. If this mode bit is set, such thread
- * would return immediately with XNBREAK set from xnthread_suspend().
+ * would return immediately with XNBREAK set from
+ * xnthread_suspend(). If XNWARN is set for @a thread, SIGDEBUG is
+ * sent in addition to raising the break condition.
  *
  * @coretags{task-unrestricted, might-switch}
  *
@@ -692,12 +704,13 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  */
 int xnthread_set_mode(struct xnthread *thread, int clrmask, int setmask)
 {
-	struct xnthread *curr = xnsched_current_thread();
+	struct xnthread *curr;
 	unsigned long oldmode;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
+	curr = xnsched_current_thread();
 	oldmode = xnthread_state_flags(thread) & XNTHREAD_MODE_BITS;
 	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
@@ -824,7 +837,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 				goto abort;
 			if (thread == sched->curr &&
 			    (oldstate & (XNTRAPLB|XNLOCK)) == (XNTRAPLB|XNLOCK))
-				goto abort;
+				goto lock_break;
 		}
 		xnthread_clear_info(thread,
 				    XNRMID|XNTIMEO|XNBREAK|XNWAKEN|XNROBBED|XNKICKED);
@@ -941,6 +954,12 @@ out:
 	xnlock_put_irqrestore(&nklock, s);
 	return;
 
+lock_break:
+	if (xnthread_test_state(thread, XNWARN) &&
+	    !xnthread_test_info(thread, XNLBALERT)) {
+		xnthread_set_info(thread, XNLBALERT);
+		xnshadow_send_sig(thread, SIGDEBUG, SIGDEBUG_LOCK_BREAK);
+	}
 abort:
 	if (wchan) {
 		thread->wchan = wchan;

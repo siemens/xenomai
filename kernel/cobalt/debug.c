@@ -423,6 +423,7 @@ static const char *reason_str[] = {
     [SIGDEBUG_NOMLOCK] = "mlock-check",
     [SIGDEBUG_WATCHDOG] = "runaway-break",
     [SIGDEBUG_RESCNT_IMBALANCE] = "resource-count-imbalance",
+    [SIGDEBUG_LOCK_BREAK] = "scheduler-lock-break",
 };
 
 static int relax_vfile_show(struct xnvfile_regular_iterator *it, void *data)

@@ -44,7 +44,7 @@
 #define XNDEBUG   0x00000800 /**< Hit a debugger breakpoint */
 #define XNLOCK    0x00001000 /**< Holds the scheduler lock (i.e. not preemptible) */
 #define XNRRB     0x00002000 /**< Undergoes a round-robin scheduling */
-#define XNTRAPSW  0x00004000 /**< Trap execution mode switches */
+#define XNWARN    0x00004000 /**< Issue SIGDEBUG on error detection */
 #define XNFPU     0x00008000 /**< Thread uses FPU */
 #define XNROOT    0x00010000 /**< Root thread (that is, Linux/IDLE) */
 #define XNWEAK    0x00020000 /**< Non real-time shadow (from the WEAK class) */
@@ -70,8 +70,9 @@
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNCANCELD 0x00000040 /**< Cancellation request is pending */
-#define XNSWREP   0x00000080 /**< Mode switch already reported */
-#define XNMOVED   0x00000100 /**< CPU migration in primary mode occurred */
+#define XNMOVED   0x00000080 /**< CPU migration in primary mode occurred */
+#define XNPIALERT 0x00001000 /**< Priority inversion alert (SIGDEBUG sent) */
+#define XNLBALERT 0x00002000 /**< Scheduler lock break alert (SIGDEBUG sent) */
 
 /** @} */
 

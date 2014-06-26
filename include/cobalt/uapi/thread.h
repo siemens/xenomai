@@ -20,7 +20,7 @@
 
 #include <cobalt/uapi/kernel/thread.h>
 
-#define PTHREAD_WARNSW             XNTRAPSW
+#define PTHREAD_WARNSW             XNWARN
 #define PTHREAD_LOCK_SCHED         XNLOCK
 #define PTHREAD_DISABLE_LOCKBREAK  XNTRAPLB
 #define PTHREAD_CONFORMING     0

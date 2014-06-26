@@ -338,6 +338,7 @@ void ___xnsched_unlock(struct xnsched *sched)
 
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
+		xnthread_clear_info(curr, XNLBALERT);
 		sched->lflags &= ~XNINLOCK;
 		xnsched_run();
 	}
@@ -350,6 +351,7 @@ void ___xnsched_unlock_fully(struct xnsched *sched)
 
 	xnthread_lock_count(curr) = 0;
 	xnthread_clear_state(curr, XNLOCK);
+	xnthread_clear_info(curr, XNLBALERT);
 	sched->lflags &= ~XNINLOCK;
 	xnsched_run();
 }

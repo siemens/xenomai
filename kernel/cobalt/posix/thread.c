@@ -419,7 +419,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	const int valid_flags = XNLOCK|XNTRAPSW|XNTRAPLB;
+	const int valid_flags = XNLOCK|XNWARN|XNTRAPLB;
 	struct xnthread *curr = xnshadow_current();
 	int old;
 

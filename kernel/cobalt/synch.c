@@ -826,14 +826,14 @@ EXPORT_SYMBOL_GPL(xnsynch_release_all_ownerships);
  */
 void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleeper)
 {
-	if (xnthread_test_state(sleeper, XNTRAPSW) &&
-	    !xnthread_test_info(sleeper, XNSWREP) &&
+	if (xnthread_test_state(sleeper, XNWARN) &&
+	    !xnthread_test_info(sleeper, XNPIALERT) &&
 	    xnthread_test_state(synch->owner, XNRELAX)) {
-		xnthread_set_info(sleeper, XNSWREP);
+		xnthread_set_info(sleeper, XNPIALERT);
 		xnshadow_send_sig(sleeper, SIGDEBUG,
 				  SIGDEBUG_MIGRATE_PRIOINV);
 	} else
-		xnthread_clear_info(sleeper,  XNSWREP);
+		xnthread_clear_info(sleeper,  XNPIALERT);
 }
 
 /*
@@ -851,8 +851,8 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 
 	xnthread_for_each_claimed(synch, owner) {
 		xnsynch_for_each_sleeper(sleeper, synch) {
-			if (xnthread_test_state(sleeper, XNTRAPSW)) {
-				xnthread_set_info(sleeper, XNSWREP);
+			if (xnthread_test_state(sleeper, XNWARN)) {
+				xnthread_set_info(sleeper, XNPIALERT);
 				xnshadow_send_sig(sleeper, SIGDEBUG,
 						  SIGDEBUG_MIGRATE_PRIOINV);
 			}
