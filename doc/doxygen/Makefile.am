@@ -3,7 +3,7 @@ PDF_DOCS  = xeno3prm.pdf
 EXTRA_DIST = xeno3prm-common.conf.in xeno3prm-html.conf.in xeno3prm-latex.conf.in
 
 if !XENO_BUILD_DOC
-HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
+HTML_DOCSDIR = $(srcdir)/../prebuilt/
 PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
 
 html pdf:

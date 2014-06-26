@@ -348,7 +348,7 @@ EXTRA_DIST := \
 	plaintext.xsl			\
 	$(MAN_DOCS:%.1:%.adoc)
 
-@XENO_BUILD_DOC_FALSE@HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
+@XENO_BUILD_DOC_FALSE@HTML_DOCSDIR = $(srcdir)/../prebuilt/
 @XENO_BUILD_DOC_TRUE@HTML_DOCSDIR = ./
 @XENO_BUILD_DOC_FALSE@PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
 @XENO_BUILD_DOC_TRUE@PDF_DOCSDIR = ./
@@ -594,7 +594,7 @@ uninstall-am: uninstall-local
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(DESTDIR)$(docdir)/html/$$dir; \
+	    dest=$(DESTDIR)$(docdir)/$$dir; \
 	    $(mkinstalldirs) $$dest; \
 	    abs_dest=`cd $$dest && pwd` ; \
 	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
@@ -655,7 +655,7 @@ dist-docs-hook: all-local dist-htmldocs dist-mandocs dist-pdfdocs
 # To make distcheck happy.
 uninstall-docs:
 	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(MAN_DOCS)"; then \
-	    targets="$(HTML_DOCS:%=$(DESTDIR)$(docdir)/html/%) \
+	    targets="$(HTML_DOCS:%=$(DESTDIR)$(docdir)/%) \
 		$(PDF_DOCS:%=$(DESTDIR)$(docdir)/pdf/%) \
 		$(MAN_DOCS:%=$(DESTDIR)$(docdir)/man/%)"; \
 	    for t in $$targets; do \

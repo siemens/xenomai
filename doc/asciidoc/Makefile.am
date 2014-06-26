@@ -54,7 +54,7 @@ EXTRA_DIST :=				\
 	$(MAN_DOCS:%.1:%.adoc)
 
 if !XENO_BUILD_DOC
-HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
+HTML_DOCSDIR = $(srcdir)/../prebuilt/
 PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
 MAN_DOCSDIR = $(srcdir)/../prebuilt/man/
 else

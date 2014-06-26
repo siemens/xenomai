@@ -656,11 +656,14 @@ doxygen asciidoc: FORCE
 	$(MAKE) -C $@
 
 resync prebuild: FORCE
-	@if test \! -e $(RESYNC_SCRIPT) -o \! -e $(top_srcdir)/.git ; then \
-		echo "$@ wants $top_srcdir to be a GIT working tree." ; \
-	else \
-		srcdir=$(srcdir) $(RESYNC_SCRIPT) ; \
-	fi
+@XENO_BUILD_DOC_TRUE@	@if test \! -e $(RESYNC_SCRIPT) -o \! -e $(top_srcdir)/.git ; then \
+@XENO_BUILD_DOC_TRUE@		echo "$@ wants $top_srcdir to be a GIT working tree." ; \
+@XENO_BUILD_DOC_TRUE@	else \
+@XENO_BUILD_DOC_TRUE@		srcdir=$(srcdir) $(RESYNC_SCRIPT) ; \
+@XENO_BUILD_DOC_TRUE@	fi
+@XENO_BUILD_DOC_FALSE@	@echo "build tree not configured for regenerating documentation"
+@XENO_BUILD_DOC_FALSE@	@echo "reconfigure with --enable-doc-build"
+@XENO_BUILD_DOC_FALSE@	@/bin/false
 
 .PHONY: FORCE
 

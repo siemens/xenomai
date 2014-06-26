@@ -18,7 +18,7 @@ GEN_DOC_DIST_ROOT=$(doc_top_distdir)/doc/prebuilt
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(DESTDIR)$(docdir)/html/$$dir; \
+	    dest=$(DESTDIR)$(docdir)/$$dir; \
 	    $(mkinstalldirs) $$dest; \
 	    abs_dest=`cd $$dest && pwd` ; \
 	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
@@ -79,7 +79,7 @@ dist-docs-hook: all-local dist-htmldocs dist-mandocs dist-pdfdocs
 # To make distcheck happy.
 uninstall-docs:
 	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(MAN_DOCS)"; then \
-	    targets="$(HTML_DOCS:%=$(DESTDIR)$(docdir)/html/%) \
+	    targets="$(HTML_DOCS:%=$(DESTDIR)$(docdir)/%) \
 		$(PDF_DOCS:%=$(DESTDIR)$(docdir)/pdf/%) \
 		$(MAN_DOCS:%=$(DESTDIR)$(docdir)/man/%)"; \
 	    for t in $$targets; do \
