@@ -37,7 +37,7 @@ extern volatile struct xnarch_tsc_area *__cobalt_sh_tsc;
 
 extern volatile unsigned long *__cobalt_sh_tcnt;
 
-static inline unsigned long long __xn_rdtsc(void)
+static inline unsigned long long cobalt_read_tsc(void)
 {
 	unsigned long long tsc;
 	unsigned long low;

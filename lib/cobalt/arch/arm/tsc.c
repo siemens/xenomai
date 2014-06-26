@@ -25,7 +25,7 @@
 #include <asm/xenomai/tsc.h>
 #include <asm/xenomai/features.h>
 
-unsigned long long __xn_rdtsc(void)
+unsigned long long cobalt_read_tsc(void)
 {
 #if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
 	return __xn_tscinfo.kuser_tsc_get(__xn_tscinfo.kinfo.counter);

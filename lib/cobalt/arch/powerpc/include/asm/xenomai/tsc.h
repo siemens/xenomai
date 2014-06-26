@@ -18,7 +18,7 @@
 #ifndef _LIB_COBALT_POWERPC_TSC_H
 #define _LIB_COBALT_POWERPC_TSC_H
 
-static inline unsigned long long __xn_rdtsc(void)
+static inline unsigned long long cobalt_read_tsc(void)
 {
 #if defined(__powerpc64__)
 	unsigned long long t;

@@ -20,7 +20,7 @@
 
 extern volatile void *__cobalt_nios2_hrclock;
 
-static inline unsigned long long __xn_rdtsc(void)
+static inline unsigned long long cobalt_read_tsc(void)
 {
 	volatile unsigned short *hrclock;
 	int64_t t0, t1;

@@ -234,7 +234,7 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 ticks_t clockobj_get_tsc(void)
 {
 	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
-	return __xn_rdtsc();
+	return cobalt_read_tsc();
 }
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
@@ -252,7 +252,7 @@ void clockobj_get_time(struct clockobj *clkobj,
 {
 	unsigned long long ns, tsc;
 
-	tsc = __xn_rdtsc();
+	tsc = cobalt_read_tsc();
 	ns = cobalt_ticks_to_ns(tsc);
 	if (clockobj_get_resolution(clkobj) > 1)
 		ns /= clockobj_get_resolution(clkobj);
@@ -268,7 +268,7 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	read_lock_nocancel(&clkobj->lock);
 
-	ns = cobalt_ticks_to_ns(__xn_rdtsc());
+	ns = cobalt_ticks_to_ns(cobalt_read_tsc());
 	/* Add offset to epoch. */
 	ns += (unsigned long long)clkobj->offset.tv_sec * 1000000000ULL;
 	ns += clkobj->offset.tv_nsec;

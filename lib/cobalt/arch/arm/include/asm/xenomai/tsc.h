@@ -43,7 +43,7 @@ struct __xn_full_tscinfo {
 };
 extern struct __xn_full_tscinfo __xn_tscinfo;
 
-static inline unsigned long long __xn_rdtsc(void)
+static inline unsigned long long cobalt_read_tsc(void)
 {
 #if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
 	return __xn_tscinfo.kuser_tsc_get(__xn_tscinfo.kinfo.counter);

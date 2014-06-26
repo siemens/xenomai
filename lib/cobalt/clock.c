@@ -129,7 +129,7 @@ static int __do_clock_host_realtime(struct timespec *ts)
 	 * mechanism in the kernel.
 	 */
 	unsynced_read_block(&tmp, &hostrt_data->lock) {
-		now = __xn_rdtsc();
+		now = cobalt_read_tsc();
 		base = hostrt_data->cycle_last;
 		mask = hostrt_data->mask;
 		mult = hostrt_data->mult;
@@ -187,12 +187,12 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 		break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		ns = cobalt_ticks_to_ns(__xn_rdtsc());
+		ns = cobalt_ticks_to_ns(cobalt_read_tsc());
 		tp->tv_sec = cobalt_divrem_billion(ns, &rem);
 		tp->tv_nsec = rem;
 		return 0;
 	case CLOCK_REALTIME:
-		ns = cobalt_ticks_to_ns(__xn_rdtsc());
+		ns = cobalt_ticks_to_ns(cobalt_read_tsc());
 		ns += vdso->wallclock_offset;
 		tp->tv_sec = cobalt_divrem_billion(ns, &rem);
 		tp->tv_nsec = rem;
