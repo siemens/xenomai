@@ -1,5 +1,6 @@
 var NAVTREEINDEX7 =
 {
+"structRT__QUEUE__INFO.html#a3f82152fe946a24ff4feae8b14fc45ac":[1,2,7,0,5],
 "structRT__QUEUE__INFO.html#a5a91d7436be72dc6ac4900e759709a35":[1,2,7,0,4],
 "structRT__QUEUE__INFO.html#a81c53102b3b42deb57e1a6ccffdba5b9":[1,2,7,0,0],
 "structRT__QUEUE__INFO.html#acf2095e8a9c0e1f7da197123bb324a21":[1,2,7,0,6],
@@ -248,6 +249,5 @@ var NAVTREEINDEX7 =
 "tree_8h_source.html":[3,0,0,2,1,33],
 "uapi_2analogy_8h.html":[3,0,0,7,0,0],
 "uapi_2analogy_8h.html#a0a6e191046fb86c68ca3fb24cbff8fe8":[3,0,0,7,0,0,12],
-"uapi_2analogy_8h.html#ab98b3cfc59541c6af311aeb6b52ff813":[3,0,0,7,0,0,16],
-"uapi_2analogy_8h.html#abe170a121b3315a6f29be6a350bd1de6":[3,0,0,7,0,0,14]
+"uapi_2analogy_8h.html#ab98b3cfc59541c6af311aeb6b52ff813":[3,0,0,7,0,0,16]
 };

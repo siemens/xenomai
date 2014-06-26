@@ -1,5 +1,6 @@
 var NAVTREEINDEX6 =
 {
+"rtcanconfig_8c-example.html":[4,6],
 "rtcanrecv_8c-example.html":[4,7],
 "rtcansend_8c-example.html":[4,8],
 "rtdm_2can_8h.html":[3,0,0,7,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX6 =
 "structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4":[1,2,5,0,0],
 "structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4":[1,2,5,0,1],
 "structRT__QUEUE__INFO.html":[1,2,7,0],
-"structRT__QUEUE__INFO.html#a280258c4d2ad599d6e38c84c1d295bd2":[1,2,7,0,2],
-"structRT__QUEUE__INFO.html#a3f82152fe946a24ff4feae8b14fc45ac":[1,2,7,0,5]
+"structRT__QUEUE__INFO.html#a280258c4d2ad599d6e38c84c1d295bd2":[1,2,7,0,2]
 };

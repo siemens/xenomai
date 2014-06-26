@@ -1,5 +1,6 @@
 var NAVTREEINDEX5 =
 {
+"group__rtdm__util.html#gab0b2db892afe1bd77a80f6b8367eb0c9":[1,0,1,8,10],
 "group__rtdm__util.html#gab42031be84dba5825ac90dbf28606c54":[1,0,1,8,12],
 "group__rtdm__util.html#gac164efcdc1eff8bffe9e22aa933d52f4":[1,0,1,8,9],
 "group__rtdm__util.html#gaeb119c817cb05628d8afd3f25319ac75":[1,0,1,8,16],
@@ -248,6 +249,5 @@ var NAVTREEINDEX5 =
 "rtcan__sja1000_8h_source.html":[3,0,1,1,1,1,0],
 "rtcan__sja1000__regs_8h_source.html":[3,0,1,1,1,1,1],
 "rtcan__socket_8h_source.html":[3,0,1,1,1,6],
-"rtcan__version_8h_source.html":[3,0,1,1,1,7],
-"rtcanconfig_8c-example.html":[4,6]
+"rtcan__version_8h_source.html":[3,0,1,1,1,7]
 };

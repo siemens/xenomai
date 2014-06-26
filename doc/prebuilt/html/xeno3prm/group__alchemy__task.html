@@ -397,7 +397,7 @@ Functions</h2></td></tr>
 <ul>
 <li>T_JOINABLE allows another task to wait on the termination of the new task. <a class="el" href="group__alchemy__task.html#ga8c77d57638578a126812e29429f61fe7" title="Wait on the termination of a real-time task. ">rt_task_join()</a> shall be called for this task to clean up any resources after its termination.</li>
 <li>T_LOCK causes the new task to lock the scheduler prior to entering the user routine specified by <a class="el" href="group__alchemy__task.html#ga3ee3863a29497e2181d49d5b3ecfd855" title="Start a real-time task. ">rt_task_start()</a>. A call to <a class="el" href="group__alchemy__task.html#ga915e7edfb0aaddb643794d7abc7093bf" title="Change the current task mode. ">rt_task_set_mode()</a> from the new task is required to drop this lock.</li>
-<li>When running over the Cobalt core, T_WARNSW causes the SIGXCPU signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain. This flag has no effect over the Mercury core.</li>
+<li>When running over the Cobalt core, T_WARNSW causes the SIGDEBUG signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain. This flag has no effect over the Mercury core.</li>
 </ul>
 <dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
 <ul>
@@ -1138,7 +1138,7 @@ Functions</h2></td></tr>
 <ul>
 <li>T_LOCK causes the current task to lock the scheduler on the current CPU, preventing all further involuntary task switches on this CPU. Clearing this bit unlocks the scheduler.</li>
 <li>Only when running over the Cobalt core:<ul>
-<li>T_WARNSW causes the SIGXCPU signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain.</li>
+<li>T_WARNSW causes the SIGDEBUG signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain.</li>
 <li>T_CONFORMING can be passed in <em>setmask</em> to switch the current Alchemy task to its preferred runtime mode. The only meaningful use of this switch is to force a real-time task back to primary mode (see note). Any other use leads to a nop.</li>
 </ul>
 </li>
@@ -1322,7 +1322,7 @@ Functions</h2></td></tr>
 </dl>
 <ul>
 <li>T_LOCK causes the current task to lock the scheduler before returning to the caller, preventing all further involuntary task switches on the current CPU. A call to <a class="el" href="group__alchemy__task.html#ga915e7edfb0aaddb643794d7abc7093bf" title="Change the current task mode. ">rt_task_set_mode()</a> from the current task is required to drop this lock.</li>
-<li>When running over the Cobalt core, T_WARNSW causes the SIGXCPU signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain. This flag has no effect over the Mercury core.</li>
+<li>When running over the Cobalt core, T_WARNSW causes the SIGDEBUG signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain. This flag has no effect over the Mercury core.</li>
 </ul>
 <dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
 <ul>

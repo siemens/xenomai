@@ -17,8 +17,8 @@ var group__cobalt__core__thread__states =
     [ "XNRRB", "group__cobalt__core__thread__states.html#ga6f451131910f816dd01fe1ec1fb50fe9", null ],
     [ "XNSUSP", "group__cobalt__core__thread__states.html#ga6b605ad2bb16ae2386821be8ce8d341b", null ],
     [ "XNTRAPLB", "group__cobalt__core__thread__states.html#gad5651b09bfb391a0ac94f7d81c2e05f1", null ],
-    [ "XNTRAPSW", "group__cobalt__core__thread__states.html#gade2e62645781aa1badafd97659cf3473", null ],
     [ "XNUSER", "group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06", null ],
+    [ "XNWARN", "group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482", null ],
     [ "XNWEAK", "group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0", null ],
     [ "XNZOMBIE", "group__cobalt__core__thread__states.html#gaa5b9ff889ab0bfbfb96a435cbea25d6a", null ]
 ];

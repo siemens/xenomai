@@ -1,0 +1,213 @@
+'\" t
+.\"     Title: slackspot
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2014/06/26
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.99.5
+.\"  Language: English
+.\"
+.TH "SLACKSPOT" "1" "2014/06/26" "Xenomai 2\&.99\&.5" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+slackspot \- Trace secondary mode switches
+.SH "SYNOPSIS"
+.sp
+\fBslackspot\fR [ options ]
+.SH "DESCRIPTION"
+.sp
+\fBslackspot\fR is a utility to decode the trace data collected by the Cobalt core when CONFIG_XENO_OPT_DEBUG_TRACE_RELAX is enabled in the kernel configuration\&.
+.sp
+This data describes each call hierarchy causing migration to secondary mode (i\&.e\&. \fIrelaxes\fR) within the application\&. \fBslackspot\fR presents such data in a human\-readable format as symbolic stack backtraces, for helping in debugging spurious relaxes\&.
+.SH "OPTIONS"
+.sp
+\fBslackspot\fR accepts the following options:
+.PP
+\fB\-\-file <trace\-file>\fR
+.RS 4
+Read the trace information to decode from
+\fItrace\-file\fR\&. By default, trace data is read from
+/proc/xenomai/debug/relax
+unless the standard input stream was redirected, in which case
+stdin
+is read\&. In addition, the dash character "\-" is interpreted as a placeholder for
+stdin\&.
+.RE
+.PP
+\fB\-\-path <dir[:dir\&...]>\fR
+.RS 4
+Search directory list for executables and dynamic libraries\&. Directories are separatared by a semi\-colon within the list\&. Each directory may be scanned for binary executables when resolving symbols found in stack backtraces\&.
+.RE
+.PP
+\fB\-\-filter\-in <name=exp[,name=\&...]>\fR
+.RS 4
+Only retain backtraces matching the given filters in the output\&. Each filter is specified by a
+\fIname=<expr>\fR
+pair, where
+\fIname\fR
+identifies the information field to be matched in the backtrace, and
+\fIexpr\fR
+is a regular expression which should match such data\&. Filters are separated by a comma within the list\&. The available filters are as follows:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIthread\fR
+matches the thread name\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIpid\fR
+matches the kernel task identifier, i\&.e\&. per\-task
+\fIpid\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIexe\fR
+matches the name of the main executable being traced\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfunction\fR
+matches the name of the function being traced\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfile\fR
+matches the path of the source file being traced\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fImap\fR
+matches the path of the mapped executable being traced\&.
+.RE
+.RE
+.PP
+\fB\-\-filter <name=exp[,name=\&...]>\fR
+.RS 4
+A shorthand for
+\fB\-\-filter\-in\fR\&.
+.RE
+.PP
+\fB\-\-filter\-out <name=exp[,name=\&...]>\fR
+.RS 4
+Only retain backtraces NOT matching the given filters in the output\&. This option inverts the sense of matching defined by
+\fB\-\-filter\-in\fR\&.
+.RE
+.PP
+\fBCROSS_COMPILE=<toolchain\-prefix>\fR
+.RS 4
+A cross\-compilation toolchain prefix should be specified for decoding the data obtained from a target system, on a build/development machine\&. When present, the value of CROSS_COMPILE will be prepended to
+gcc
+and
+addr2line
+for running the corresponding utilities on the development system\&.
+.RE
+.SH "EXAMPLE"
+.sp
+In the following scenario, the \fItarget\fR system built with the CONFIG_XENO_OPT_DEBUG_TRACE_RELAX feature enabled in the kernel configuration, just ran the \fI/bin/relax\fR program\&.
+.sp
+This program caused a transition to secondary mode switch of the current task (\fITask 2\fR) as a result of calling putchar()\&. The Cobalt core saved the corresponding backtrace information, which is now available from /proc/xenomai/debug/relax on the target system\&.
+.sp
+Since the target system has limited horsepower, and doesn\(cqt have access to the binary utilities required for decoding the trace data, we will send such data over the network to the \fIhost\fR system, in order for the latter to do the decoding and display the call stacks\&.
+.sp
+We use the standard netcat utility to send and receive the contents of /proc/xenomai/debug/relax over the wire between the target and host systems\&. The host will also have to mention where the cross\-compilation toolchain can be found, by setting the CROSS_COMPILE variable appropriately\&. The example assumes that /opt/rootfs/MPC5200/lib is the host\-based location of the system libraries mounted over NFS onto the target file hierarchy\&.
+.PP
+\fBOn the target system:\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+target> netcat \-l \-p 67676 \-c < /proc/xenomai/debug/relax
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBOn the host system:\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+host> netcat target 67676 | CROSS_COMPILE=ppc_6xx\- slackspot
+      \-\-path=/opt/rootfs/MPC5200/lib:$HOME/frags/relax \-\-filter thread=Task*
+Thread[828] "Task 2" started by /bin/relax:
+   #0  0xfff00000 ???
+   #1  0x000001bb ???
+   #2  0x00064393 _IO_file_doallocate() in ??:?
+   #3  0x00073d6f _IO_doallocbuf() in ??:?
+   #4  0x00072d87 _IO_file_overflow() in ??:?
+   #5  0x00075f83 __overflow() in ??:?
+   #6  0x0006997b putchar() in ??:?
+   #7  0x100017db task2_func() in /home/rpm/frags/relax/relax\&.c:23
+   #8  0x000078d7 task_entry() in /home/rpm/git/xenomai\-forge/lib/alchemy/task\&.c:235
+   #9  0x00005a6b start_thread() in pthread_create\&.c:?
+   #10 0x000d389f __clone() in ??:?
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "AUTHOR"
+.sp
+\fBslackspot\fR was written by Philippe Gerum <rpm@xenomai\&.org>\&.

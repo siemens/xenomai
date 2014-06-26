@@ -323,7 +323,7 @@ an error number if:<ul>
 <p>This service sets the mode of the calling thread. <em>clrmask</em> and <em>setmask</em> are two bit masks which are respectively cleared and set in the calling thread status. They are a bitwise OR of the following values:</p>
 <ul>
 <li>PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the current thread from being switched out until the scheduler is unlocked;</li>
-<li>PTHREAD_WARNSW, when set, causes the signal SIGXCPU to be sent to the current thread, whenever it involontary switches to secondary mode;</li>
+<li>PTHREAD_WARNSW, when set, causes the signal SIGDEBUG to be sent to the current thread, whenever it involontary switches to secondary mode;</li>
 <li>PTHREAD_CONFORMING can be passed in <em>setmask</em> to switch the current user-space task to its preferred runtime mode. The only meaningful use of this switch is to force a real-time shadow back to primary mode. Any other use leads to a nop.</li>
 <li>PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler lock. In the default case, a thread which holds the scheduler lock is allowed to drop it temporarily for sleeping. If this mode bit is set, such thread would return with EINTR immediately from any blocking call.</li>
 </ul>
