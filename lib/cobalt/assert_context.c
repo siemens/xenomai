@@ -40,7 +40,7 @@ static void assert_nrt_inner(void)
 		return;
 	}
 
-	if (stat.status & XNTRAPSW)
+	if (stat.status & XNWARN)
 		pthread_kill(pthread_self(), SIGDEBUG);
 }
 

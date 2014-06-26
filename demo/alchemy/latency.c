@@ -473,21 +473,20 @@ static void faulthand(int sig)
 #include <cobalt/uapi/syscall.h>
 
 static const char *reason_str[] = {
-	[SIGDEBUG_UNDEFINED] = "latency: received SIGDEBUG for unknown reason",
+	[SIGDEBUG_UNDEFINED] = "received SIGDEBUG for unknown reason",
 	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
 	[SIGDEBUG_MIGRATE_SYSCALL] = "invoked syscall",
 	[SIGDEBUG_MIGRATE_FAULT] = "triggered fault",
 	[SIGDEBUG_MIGRATE_PRIOINV] = "affected by priority inversion",
-	[SIGDEBUG_NOMLOCK] = "Xenomai: process memory not locked "
-	"(missing mlockall?)",
-	[SIGDEBUG_WATCHDOG] = "Xenomai: watchdog triggered "
-	"(period too short?)",
+	[SIGDEBUG_NOMLOCK] = "process memory not locked",
+	[SIGDEBUG_WATCHDOG] = "watchdog triggered (period too short?)",
+	[SIGDEBUG_LOCK_BREAK] = "scheduler lock break",
 };
 
 static void sigdebug(int sig, siginfo_t *si, void *context)
 {
-	const char fmt[] = "Mode switch detected (reason: %s), aborting.\n"
-		"Enable XENO_OPT_DEBUG_TRACE_RELAX to find the cause.\n";
+	const char fmt[] = "%s, aborting.\n"
+		"(enabling CONFIG_XENO_OPT_DEBUG_TRACE_RELAX may help)\n";
 	unsigned int reason = si->si_value.sival_int;
 	int n __attribute__ ((unused));
 	static char buffer[256];
@@ -504,7 +503,7 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 	case SIGDEBUG_UNDEFINED:
 	case SIGDEBUG_NOMLOCK:
 	case SIGDEBUG_WATCHDOG:
-		n = snprintf(buffer, sizeof(buffer), "%s\n",
+		n = snprintf(buffer, sizeof(buffer), "latency: %s\n",
 			     reason_str[reason]);
 		n = write(STDERR_FILENO, buffer, n);
 		exit(EXIT_FAILURE);
