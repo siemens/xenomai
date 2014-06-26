@@ -1,5 +1,6 @@
-HTML_DOCS = 				\
+HTML_DOCS = 					\
 	html/clocktest				\
+	html/slackspot				\
 	html/dohell				\
 	html/latency				\
 	html/rtcanconfig			\
@@ -39,7 +40,8 @@ MAN_DOCS = 		\
 	xeno.1 		\
 	xeno-config.1 	\
 	xeno-test.1 	\
-	dohell.1
+	dohell.1	\
+	slackspot.1
 
 EXTRA_DIST :=				\
 	README.INSTALL.adoc 		\

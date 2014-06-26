@@ -1,0 +1,133 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for slackspot
+//
+// Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+SLACKSPOT(1)
+==========
+:doctype: manpage
+:revdate: 2014/06/26
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+slackspot - Trace secondary mode switches
+
+SYNOPSIS
+---------
+*slackspot* [ options ]
+
+DESCRIPTION
+------------
+*slackspot* is a utility to decode the trace data collected by the
+Cobalt core when CONFIG_XENO_OPT_DEBUG_TRACE_RELAX is enabled in the
+kernel configuration.
+
+This data describes each call hierarchy causing migration to secondary
+mode (i.e. _relaxes_) within the application. *slackspot* presents
+such data in a human-readable format as symbolic stack backtraces, for
+helping in debugging spurious relaxes.
+
+OPTIONS
+--------
+*slackspot* accepts the following options:
+
+*--file <trace-file>*::
+Read the trace information to decode from _trace-file_. By default,
+trace data is read from +/proc/xenomai/debug/relax+ unless the
+standard input stream was redirected, in which case +stdin+ is read.
+In addition, the dash character "-" is interpreted as a placeholder
+for +stdin+.
+
+*--path <dir[:dir...]>*::
+Search directory list for executables and dynamic
+libraries. Directories are separatared by a semi-colon within the
+list.  Each directory may be scanned for binary executables when
+resolving symbols found in stack backtraces.
+
+*--filter-in <name=exp[,name=...]>*::
+Only retain backtraces matching the given filters in the output. Each
+filter is specified by a _name=<expr>_ pair, where _name_ identifies
+the information field to be matched in the backtrace, and _expr_ is a
+regular expression which should match such data. Filters are separated
+by a comma within the list. The available filters are as follows:
+
+   * _thread_ matches the thread name.
+   * _pid_ matches the kernel task identifier, i.e. per-task _pid_.
+   * _exe_ matches the name of the main executable being traced.
+   * _function_ matches the name of the function being traced.
+   * _file_ matches the path of the source file being traced.
+   * _map_ matches the path of the mapped executable being traced.
+
+*--filter <name=exp[,name=...]>*::
+A shorthand for *--filter-in*.
+
+*--filter-out <name=exp[,name=...]>*::
+Only retain backtraces NOT matching the given filters in the
+output. This option inverts the sense of matching defined by
+*--filter-in*.
+
+*CROSS_COMPILE=<toolchain-prefix>*::
+A cross-compilation toolchain prefix should be specified for decoding
+the data obtained from a target system, on a build/development
+machine. When present, the value of CROSS_COMPILE will be prepended to
++gcc+ and +addr2line+ for running the corresponding utilities on the
+development system.
+
+EXAMPLE
+-------
+
+In the following scenario, the _target_ system built with the
+CONFIG_XENO_OPT_DEBUG_TRACE_RELAX feature enabled in the kernel
+configuration, just ran the _/bin/relax_ program.
+
+This program caused a transition to secondary mode switch of the
+current task (_Task 2_) as a result of calling +putchar()+. The Cobalt
+core saved the corresponding backtrace information, which is now
+available from +/proc/xenomai/debug/relax+ on the target system.
+
+Since the target system has limited horsepower, and doesn't have
+access to the binary utilities required for decoding the trace data,
+we will send such data over the network to the _host_ system, in order
+for the latter to do the decoding and display the call stacks.
+
+We use the standard +netcat+ utility to send and receive the contents
+of +/proc/xenomai/debug/relax+ over the wire between the target and
+host systems. The host will also have to mention where the
+cross-compilation toolchain can be found, by setting the CROSS_COMPILE
+variable appropriately. The example assumes that
++/opt/rootfs/MPC5200/lib+ is the host-based location of the system
+libraries mounted over NFS onto the target file hierarchy.
+
+.On the target system:
+---------------------------------------------------------------------------
+target> netcat -l -p 67676 -c < /proc/xenomai/debug/relax
+---------------------------------------------------------------------------
+.On the host system:
+---------------------------------------------------------------------------
+host> netcat target 67676 | CROSS_COMPILE=ppc_6xx- slackspot
+      --path=/opt/rootfs/MPC5200/lib:$HOME/frags/relax --filter thread=Task*
+Thread[828] "Task 2" started by /bin/relax:
+   #0  0xfff00000 ???
+   #1  0x000001bb ???
+   #2  0x00064393 _IO_file_doallocate() in ??:?
+   #3  0x00073d6f _IO_doallocbuf() in ??:?
+   #4  0x00072d87 _IO_file_overflow() in ??:?
+   #5  0x00075f83 __overflow() in ??:?
+   #6  0x0006997b putchar() in ??:?
+   #7  0x100017db task2_func() in /home/rpm/frags/relax/relax.c:23
+   #8  0x000078d7 task_entry() in /home/rpm/git/xenomai-forge/lib/alchemy/task.c:235
+   #9  0x00005a6b start_thread() in pthread_create.c:?
+   #10 0x000d389f __clone() in ??:?
+---------------------------------------------------------------------------
+
+AUTHOR
+-------
+*slackspot* was written by Philippe Gerum <rpm@xenomai.org>.
