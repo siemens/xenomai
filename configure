@@ -13982,6 +13982,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TEST_DIR" >&5
 $as_echo "$XENO_TEST_DIR" >&6; }
 
+demodir='${exec_prefix}/demo'
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking location for demo programs" >&5
 $as_echo_n "checking location for demo programs... " >&6; }
 
@@ -13996,7 +13997,7 @@ if test "${with_demodir+set}" = set; then :
 	XENO_DEMO_DIR="$withval"
 
 else
-  XENO_DEMO_DIR=$prefix/demo
+  XENO_DEMO_DIR=$demodir
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_DEMO_DIR" >&5

@@ -682,6 +682,7 @@ AC_ARG_WITH(testdir,
     ], [XENO_TEST_DIR=$bindir])
 AC_MSG_RESULT($XENO_TEST_DIR)
 
+demodir='${exec_prefix}/demo'
 AC_MSG_CHECKING(location for demo programs)
 AC_ARG_WITH(demodir,
     AS_HELP_STRING([--with-demo=<demo-program-dir>],[location for demo programs (defaults to $prefix/demo)]),
@@ -692,7 +693,7 @@ AC_ARG_WITH(demodir,
 	  ;;
 	esac
 	XENO_DEMO_DIR="$withval"
-    ], [XENO_DEMO_DIR=$prefix/demo])
+    ], [XENO_DEMO_DIR=$demodir])
 AC_MSG_RESULT($XENO_DEMO_DIR)
 
 AC_MSG_CHECKING([for test source generation])
