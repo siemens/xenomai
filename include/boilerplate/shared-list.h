@@ -294,6 +294,15 @@ static inline int list_heading_p(const struct holder *holder,
 	     pos = tmp, tmp = list_entry(__hptr((heap), (pos)->member.next), \
 					 typeof(*pos), member))
 
+#define __list_for_each_entry_reverse_safe(heap, pos, tmp, list, member) \
+	for (pos = list_entry(__hptr((heap), (list)->head.prev),	\
+			      typeof(*pos), member),			\
+		     tmp = list_entry(__hptr((heap), (pos)->member.prev), \
+				      typeof(*pos), member);		\
+	     &(pos)->member != &(list)->head;				\
+	     pos = tmp, tmp = list_entry(__hptr((heap), (pos)->member.prev), \
+					 typeof(*pos), member))
+
 #define list_for_each_entry_safe(pos, tmp, list, member)		\
 	__list_for_each_entry_safe(__main_heap, pos, tmp, list, member)
 
@@ -306,5 +315,8 @@ static inline int list_heading_p(const struct holder *holder,
 
 #define list_for_each_entry_reverse(pos, list, member)			\
 	__list_for_each_entry_reverse(__main_heap, pos, list, member)
+
+#define list_for_each_entry_reverse_safe(pos, tmp, list, member)	\
+	__list_for_each_entry_reverse_safe(__main_heap, pos, tmp, list, member)
 
 #endif /* !_BOILERPLATE_SHARED_LIST_H */

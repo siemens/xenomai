@@ -187,4 +187,13 @@ static inline int pvlist_heading_p(const struct pvholder *holder,
 	     pos = pvlist_entry(pos->member.prev,			\
 			      typeof(*pos), member))
 
+#define pvlist_for_each_entry_reverse_safe(pos, tmp, list, member)	\
+	for (pos = pvlist_entry((list)->head.prev,			\
+			      typeof(*pos), member),			\
+		     tmp = pvlist_entry((pos)->member.prev,		\
+				      typeof(*pos), member);		\
+	     &(pos)->member != &(list)->head;				\
+	     pos = tmp, tmp = pvlist_entry((pos)->member.prev,		\
+					 typeof(*pos), member))
+
 #endif /* !_BOILERPLATE_PRIVATE_LIST_H */
