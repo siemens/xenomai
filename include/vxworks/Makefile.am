@@ -3,6 +3,7 @@ includesubdir = $(includedir)/vxworks
 includesub_HEADERS =	\
 	errnoLib.h	\
 	intLib.h	\
+	kernLib.h	\
 	lstLib.h	\
 	memPartLib.h	\
 	msgQLib.h	\

@@ -312,13 +312,16 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 bin_SCRIPTS = xeno-config xeno wrap-link.sh
 EXTRA_DIST = \
+	$(wildcard postinstall.sh)	\
+	Kconfig.frag			\
 	bootstrap			\
+	dynlist.ld			\
+	histo.gp			\
 	prepare-kernel.sh		\
 	wrap-link.sh			\
-	dynlist.ld			\
-	Kconfig.frag			\
-	$(wildcard postinstall.sh)	\
-	histo.gp
+	xeno-config-cobalt.in		\
+	xeno-config-mercury.in		\
+	xeno.in
 
 all: all-am
 
@@ -536,7 +539,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binSCRIPTS
+uninstall-am: uninstall-binSCRIPTS uninstall-local
 
 .MAKE: install-am install-strip
 
@@ -551,7 +554,8 @@ uninstall-am: uninstall-binSCRIPTS
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags-am uninstall uninstall-am uninstall-binSCRIPTS
+	tags-am uninstall uninstall-am uninstall-binSCRIPTS \
+	uninstall-local
 
 
 install-exec-local:
@@ -563,6 +567,13 @@ install-exec-local:
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) $(srcdir)/dynlist.ld $(DESTDIR)$(libdir)
+
+uninstall-local:
+	$(RM) $(DESTDIR)$(libdir)/dynlist.ld
+	@if test -r $(srcdir)/postinstall.sh ; then \
+	   echo "Running post-uninstall script..." ;\
+	   $(srcdir)/postinstall.sh --uninstall ; \
+	fi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

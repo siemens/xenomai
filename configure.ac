@@ -85,7 +85,7 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_HOST_STRING,"$host",[Host system alias])
 XENO_HOST_STRING="$host"
 AC_DEFINE_UNQUOTED(CONFIG_XENO_COMPILER,"`$CC -v 2>&1 | tail -n 1`",[Compiler])
 
-AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2])
+AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2 tar-ustar])
 AM_MAINTAINER_MODE
 AM_PROG_AS
 AM_PROG_LEX
@@ -878,17 +878,12 @@ AC_CONFIG_FILES([ \
 	include/alchemy/Makefile \
 	include/vxworks/Makefile \
 	include/psos/Makefile \
-	])
-
-if test \! x$XENO_RUN_DOC = x ; then
-      AC_CONFIG_FILES([ \
 	doc/Makefile \
 	doc/doxygen/Makefile \
 	doc/doxygen/xeno3prm-common.conf \
 	doc/doxygen/xeno3prm-html.conf \
 	doc/doxygen/xeno3prm-latex.conf \
 	doc/asciidoc/Makefile \
-      ])
-fi
+	])
 
 AC_OUTPUT()

@@ -78,7 +78,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@XENO_RUN_DOC_TRUE@am__append_1 = doc
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -157,7 +156,6 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = lib config include scripts testsuite utils demo doc
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -366,9 +364,27 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
-SUBDIRS = lib config include scripts testsuite utils demo \
-	$(am__append_1)
+SUBDIRS = \
+	doc		\
+	lib 		\
+	config		\
+	include		\
+	scripts		\
+	testsuite	\
+	utils		\
+	demo
+
 EXTRA_DIST = kernel debian
+DIST_SUBDIRS = \
+	config		\
+	demo		\
+	doc		\
+	include		\
+	lib 		\
+	scripts		\
+	testsuite	\
+	utils
+
 all: all-recursive
 
 .SUFFIXES:
@@ -830,10 +846,8 @@ uninstall-am:
 	ps ps-am tags tags-am uninstall uninstall-am
 
 
-@XENO_RUN_DOC_TRUE@doc/%: FORCE
-@XENO_RUN_DOC_TRUE@	$(MAKE) -C doc/ $*
-
-@XENO_RUN_DOC_TRUE@.PHONY: FORCE
+doc/%: FORCE
+	$(MAKE) -C doc/ $*
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
@@ -883,6 +897,8 @@ install-exec-local: devices
 
 install-user:
 	$(MAKE) SUDO=false install
+
+.PHONY: FORCE
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

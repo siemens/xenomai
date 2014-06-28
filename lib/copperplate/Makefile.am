@@ -77,6 +77,8 @@ if XENO_REGISTRY
 SUBDIRS += regd
 endif
 
+DIST_SUBDIRS = regd
+
 SPARSE = sparse
 
 sparse:

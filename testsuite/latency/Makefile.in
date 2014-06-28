@@ -338,14 +338,14 @@ testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 latency_SOURCES = latency.c
 latency_CPPFLAGS = \
-	$(XENO_USER_CFLAGS)				\
+	$(XENO_USER_CFLAGS)	\
 	-I$(top_srcdir)/include
 
 latency_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 core_libs = $(am__append_1)
 latency_LDADD = \
-	$(core_libs)				\
-	 @XENO_USER_LDADD@			\
+	$(core_libs)		\
+	 @XENO_USER_LDADD@	\
 	-lpthread -lrt -lm
 
 all: all-am

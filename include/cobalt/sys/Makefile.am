@@ -4,4 +4,5 @@ includesub_HEADERS =	\
 	ioctl.h		\
 	select.h	\
 	socket.h	\
-	time.h
+	time.h		\
+	timerfd.h

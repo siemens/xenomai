@@ -2,12 +2,17 @@
 SUBDIRS = latency unit
 
 if XENO_COBALT
-
-SUBDIRS += \
-	clocktest \
-	latency \
-	regression \
-	switchtest \
+SUBDIRS += 		\
+	clocktest	\
+	regression	\
+	switchtest	\
 	xeno-test
-
 endif
+
+DIST_SUBDIRS =		\
+	clocktest	\
+	latency		\
+	regression	\
+	switchtest	\
+	unit		\
+	xeno-test

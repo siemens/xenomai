@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS=-I config
 SUDO=sudo
 
 SUBDIRS = 		\
+	doc		\
 	lib 		\
 	config		\
 	include		\
@@ -11,16 +12,20 @@ SUBDIRS = 		\
 	utils		\
 	demo
 
-if XENO_RUN_DOC
-SUBDIRS += doc
+EXTRA_DIST = kernel debian
+
+DIST_SUBDIRS =		\
+	config		\
+	demo		\
+	doc		\
+	include		\
+	lib 		\
+	scripts		\
+	testsuite	\
+	utils
 
 doc/%: FORCE
 	$(MAKE) -C doc/ $*
-
-.PHONY: FORCE
-endif
-
-EXTRA_DIST = kernel debian
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
@@ -72,3 +77,5 @@ install-exec-local: devices
 
 install-user:
 	$(MAKE) SUDO=false install
+
+.PHONY: FORCE

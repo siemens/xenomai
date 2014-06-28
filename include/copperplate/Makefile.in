@@ -336,11 +336,12 @@ includesub_HEADERS = \
 	eventobj.h		\
 	heapobj.h		\
 	init.h			\
-	semobj.h		\
 	reference.h		\
 	registry.h		\
+	semobj.h		\
 	syncobj.h		\
 	threadobj.h		\
+	timerobj.h		\
 	traceobj.h		\
 	wrappers.h
 

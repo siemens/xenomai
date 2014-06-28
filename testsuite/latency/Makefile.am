@@ -6,8 +6,8 @@ test_PROGRAMS = latency
 
 latency_SOURCES = latency.c
 
-latency_CPPFLAGS = 					\
-	$(XENO_USER_CFLAGS)				\
+latency_CPPFLAGS = 		\
+	$(XENO_USER_CFLAGS)	\
 	-I$(top_srcdir)/include
 
 latency_LDFLAGS = $(XENO_POSIX_WRAPPERS)
@@ -17,7 +17,7 @@ if XENO_COBALT
 core_libs += ../../lib/cobalt/libcobalt.la
 endif
 
-latency_LDADD = \
-	$(core_libs)				\
-	 @XENO_USER_LDADD@			\
+latency_LDADD =			\
+	$(core_libs)		\
+	 @XENO_USER_LDADD@	\
 	-lpthread -lrt -lm

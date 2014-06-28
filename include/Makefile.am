@@ -18,4 +18,13 @@ else
 SUBDIRS += mercury
 endif
 
-EXTRA_DIST = testing
+DIST_SUBDIRS = 		\
+	alchemy		\
+	boilerplate	\
+	cobalt 		\
+	copperplate	\
+	mercury		\
+	nocore		\
+	psos 		\
+	rtdm		\
+	vxworks
