@@ -33,6 +33,7 @@
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
 #include <cobalt/uapi/sem.h>
+#include <cobalt/cobalt.h>
 #include <xeno_config.h>
 #include "current.h"
 
@@ -42,9 +43,9 @@
 #define report_error_cont(fmt, args...) \
 	__STD(fprintf(stderr, "                " fmt "\n", ##args))
 
-void cobalt_sigshadow_install_once(void);
-
 extern unsigned long cobalt_sem_heap[2];
+
+void cobalt_sigshadow_install_once(void);
 
 static inline struct mutex_dat *mutex_get_datp(struct cobalt_mutex_shadow *shadow)
 {
@@ -59,19 +60,9 @@ static inline atomic_long_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow
 	return &mutex_get_datp(shadow)->owner;
 }
 
-size_t cobalt_get_stacksize(size_t size);
-
-void ___cobalt_prefault(void *p, size_t len);
-#define __cobalt_prefault(p) ___cobalt_prefault(p, sizeof(*p))
-
 void cobalt_thread_harden(void);
 
-int cobalt_thread_stat(pid_t pid,
-		       struct cobalt_threadstat *stat);
-
 int cobalt_thread_join(pthread_t thread);
-
-int cobalt_serial_debug(const char *fmt, ...);
 
 int cobalt_monitor_init(cobalt_monitor_t *mon,
 			clockid_t clk_id, int flags);
@@ -142,8 +133,6 @@ void cobalt_ticks_init(unsigned long long freq);
 void cobalt_default_mutexattr_init(void);
 
 void cobalt_default_condattr_init(void);
-
-void cobalt_sigdebug_handler(int sig, siginfo_t *si, void *context);
 
 struct xnfeatinfo;
 

@@ -47,7 +47,7 @@ void cobalt_set_current_window(unsigned long offset)
 {
 	cobalt_current_window = (struct xnthread_user_window *)
 		(cobalt_sem_heap[0] + offset);
-	__cobalt_prefault(cobalt_current_window);
+	cobalt_commit_memory(cobalt_current_window);
 }
 
 #else /* !HAVE_TLS */
@@ -84,7 +84,7 @@ void cobalt_set_current_window(unsigned long offset)
 
 	window = (void *)(cobalt_sem_heap[0] + offset);
 	pthread_setspecific(cobalt_current_window_key, window);
-	__cobalt_prefault(window);
+	cobalt_commit_memory(window);
 }
 
 #endif /* !HAVE_TLS */

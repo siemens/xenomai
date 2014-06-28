@@ -34,7 +34,11 @@
 extern "C" {
 #endif
 
-int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);
+int cobalt_sigshadow_handler(int sig, siginfo_t *si,
+			     void *ctxt);
+
+void cobalt_sigdebug_handler(int sig, siginfo_t *si,
+			     void *context);
 
 COBALT_DECL(int, sigpending(sigset_t *set));
 

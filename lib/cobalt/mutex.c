@@ -137,7 +137,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	} else
 		datp = mutex_get_datp(_mutex);
 
-	__cobalt_prefault(datp);
+	cobalt_commit_memory(datp);
 
 	return err;
 }

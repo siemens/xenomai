@@ -140,7 +140,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 	} else
 		pending_signalsp = cond_get_signalsp(_cnd);
 
-	__cobalt_prefault(pending_signalsp);
+	cobalt_commit_memory(pending_signalsp);
 
 	return 0;
 }

@@ -49,11 +49,11 @@ static int linuxthreads;
 
 static int std_maxpri;
 
-static void prefault_stack(void)
+static void commit_stack_memory(void)
 {
 	if (pthread_self() == __cobalt_main_ptid) {
 		char stk[cobalt_get_stacksize(1)];
-		__cobalt_prefault(stk);
+		cobalt_commit_memory(stk);
 	}
 }
 
@@ -120,7 +120,7 @@ static void *cobalt_thread_trampoline(void *p)
 	long ret;
 
 	cobalt_sigshadow_install_once();
-	prefault_stack();
+	commit_stack_memory();
 
 	personality = iargs->personality;
 	param_ex = iargs->param_ex;
@@ -685,7 +685,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 				 &u_winoff, &promoted);
 
 	if (ret == 0 && promoted) {
-		prefault_stack();
+		commit_stack_memory();
 		cobalt_sigshadow_install_once();
 		cobalt_set_current();
 		cobalt_set_current_window(u_winoff);

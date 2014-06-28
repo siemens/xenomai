@@ -19,7 +19,6 @@
  * Internal Cobalt services. No sanity check will be done with
  * respect to object validity, callers have to take care of this.
  */
-
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -92,7 +91,7 @@ int cobalt_thread_join(pthread_t thread)
 	return ret;
 }
 
-void ___cobalt_prefault(void *p, size_t len)
+void __cobalt_commit_memory(void *p, size_t len)
 {
 	volatile char *_p = (volatile char *)p, *end;
 	long pagesz = sysconf(_SC_PAGESIZE);
@@ -165,7 +164,7 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 	} else
 		datp = get_monitor_data(mon);
 
-	__cobalt_prefault(datp);
+	cobalt_commit_memory(datp);
 
 	return 0;
 }
@@ -454,7 +453,7 @@ int cobalt_event_init(cobalt_event_t *event, unsigned long value,
 	} else
 		datp = get_event_data(event);
 
-	__cobalt_prefault(datp);
+	cobalt_commit_memory(datp);
 
 	return 0;
 }

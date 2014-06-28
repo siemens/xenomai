@@ -94,7 +94,8 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 		return -1;
 	}
 
-	__cobalt_prefault(sem_get_datp(_sem));
+	cobalt_commit_memory(sem_get_datp(_sem));
+
 	return 0;
 }
 
