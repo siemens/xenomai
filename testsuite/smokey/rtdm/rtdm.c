@@ -5,16 +5,30 @@
  *
  * Released under the terms of GPLv2.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <alchemy/timer.h>
 #include <rtdm/testing.h>
+#include <smokey/smokey.h>
+
+smokey_test_plugin(rtdm,
+		   SMOKEY_NOARGS,
+		   "Check core interface to RTDM services."
+);
 
 #define NS_PER_MS (1000000)
+
+static inline unsigned long long timer_get_tsc(void)
+{
+	return clockobj_get_tsc();
+}
+
+static inline unsigned long long timer_tsc2ns(unsigned long long tsc)
+{
+	return clockobj_tsc_to_ns(tsc);
+}
 
 static void check_inner(const char *fn, int line, const char *msg,
 			int status, int expected)
@@ -44,7 +58,7 @@ static void check_inner(const char *fn, int line, const char *msg,
 static void check_sleep_inner(const char *fn, int line,
 			      const char *msg, unsigned long long start)
 {
-	unsigned long long diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	unsigned long long diff = timer_tsc2ns(timer_get_tsc() - start);
 
 	if (diff < 300 * NS_PER_MS) {
 		fprintf(stderr, "FAILED %s:%d: %s waited only %Ld.%06u ms\n",
@@ -59,7 +73,7 @@ static void check_sleep_inner(const char *fn, int line,
 static const char *devname = "/dev/rttest-rtdm0";
 static const char *devname2 = "/dev/rttest-rtdm1";
 
-int main(int argc, const char *argv[])
+static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 {
 	unsigned long long start;
 	int dev, dev2;
@@ -78,7 +92,7 @@ int main(int argc, const char *argv[])
 	printf("Defer close by pending reference\n");
 	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
 			     RTTST_RTDM_DEFER_CLOSE_CONTEXT), 0);
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("close", close(dev), 0);
 	check("open", open(devname, O_RDWR), -EBUSY);
 	dev2 = check("open", open(devname2, O_RDWR), dev);
@@ -95,7 +109,7 @@ int main(int argc, const char *argv[])
 	printf("Deferred module unload\n");
 	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
 			     RTTST_RTDM_DEFER_CLOSE_CONTEXT), 0);
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("close", close(dev), 0);
 	check("rmmod", system("rmmod xeno_rtdmtest"), 0);
 	check_sleep("rmmod", start);

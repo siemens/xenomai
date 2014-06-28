@@ -5,8 +5,6 @@
  *
  * Released under the terms of GPLv2.
  */
-
-#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -19,14 +17,20 @@
 #include <sched.h>
 #include <errno.h>
 #include <error.h>
+#include <smokey/smokey.h>
+
+smokey_test_plugin(sched_tp,
+		   SMOKEY_NOARGS,
+		   "Check the SCHED_TP scheduling policy"
+);
 
 int clock_nanosleep(clockid_t __clock_id, int __flags,
 		    __const struct timespec *__req,
 		    struct timespec *__rem);
 
-pthread_t threadA, threadB, threadC;
+static pthread_t threadA, threadB, threadC;
 
-sem_t barrier;
+static sem_t barrier;
 
 static void *thread_body(void *arg)
 {
@@ -56,12 +60,11 @@ static void *thread_body(void *arg)
 	return NULL;
 }
 
-static void cleanup(int sig)
+static void cleanup(void)
 {
 	pthread_cancel(threadC);
 	pthread_cancel(threadB);
 	pthread_cancel(threadA);
-	signal(sig, SIG_DFL);
 	pthread_join(threadC, NULL);
 	pthread_join(threadB, NULL);
 	pthread_join(threadA, NULL);
@@ -90,14 +93,11 @@ static void __create_thread(pthread_t *tid, const char *name, int seq)
 #define create_thread(tid, n) __create_thread(&(tid), # tid, n)
 #define NR_WINDOWS  4
 
-int main(int argc, char **argv)
+static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 {
-	sigset_t mask, oldmask;
 	union sched_config *p;
 	size_t len;
 	int ret, n;
-
-	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	/*
 	 * For a recurring global time frame of 400 ms, we define a TP
@@ -167,22 +167,15 @@ int main(int argc, char **argv)
 		       p->tp.windows[n].duration.tv_nsec,
 		       p->tp.windows[n].ptid);
 
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGINT);
-	signal(SIGINT, cleanup);
-	sigaddset(&mask, SIGTERM);
-	signal(SIGTERM, cleanup);
-	sigaddset(&mask, SIGHUP);
-	signal(SIGHUP, cleanup);
-	pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
-
 	sem_init(&barrier, 0, 0);
 	create_thread(threadA, 0);
 	create_thread(threadB, 1);
 	create_thread(threadC, 2);
 	sem_post(&barrier);
 
-	sigsuspend(&oldmask);
+	sleep(5);
+	cleanup();
+	sem_destroy(&barrier);
 
 	return 0;
 }

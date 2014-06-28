@@ -342,7 +342,8 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = boilerplate $(am__append_1) copperplate alchemy vxworks psos
+SUBDIRS = boilerplate $(am__append_1) copperplate smokey alchemy \
+	vxworks psos
 DIST_SUBDIRS = \
 	alchemy		\
 	analogy		\
@@ -350,6 +351,7 @@ DIST_SUBDIRS = \
 	cobalt		\
 	copperplate	\
 	psos		\
+	smokey		\
 	vxworks
 
 all: all-recursive

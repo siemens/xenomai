@@ -1,5 +1,5 @@
 
-SUBDIRS = latency unit
+SUBDIRS = latency smokey
 
 if XENO_COBALT
 SUBDIRS += 		\
@@ -13,6 +13,6 @@ DIST_SUBDIRS =		\
 	clocktest	\
 	latency		\
 	regression	\
+	smokey		\
 	switchtest	\
-	unit		\
 	xeno-test

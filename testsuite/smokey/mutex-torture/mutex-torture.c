@@ -7,7 +7,6 @@
  *
  * Released under the terms of GPLv2.
  */
-#include <sys/mman.h>
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
@@ -17,9 +16,14 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
-#include <alchemy/timer.h>
 #include <cobalt/uapi/syscall.h>
 #include "lib/cobalt/current.h"
+#include <smokey/smokey.h>
+
+smokey_test_plugin(mutex_torture,
+		   SMOKEY_NOARGS,
+		   "Check POSIX mutexes"
+);
 
 #define MUTEX_CREATE		1
 #define MUTEX_LOCK		2
@@ -54,6 +58,16 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 
 	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
 	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
+}
+
+static inline unsigned long long timer_get_tsc(void)
+{
+	return clockobj_get_tsc();
+}
+
+static inline unsigned long long timer_tsc2ns(unsigned long long tsc)
+{
+	return clockobj_tsc_to_ns(tsc);
 }
 
 static void add_timespec(struct timespec *ts, unsigned long long value)
@@ -241,9 +255,9 @@ static void *waiter(void *cookie)
 	unsigned long long start, diff;
 
 	dispatch("waiter pthread_detach", THREAD_DETACH, 1, 0);
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("waiter mutex_lock", MUTEX_LOCK, 1, 0, mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: waiter, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -271,9 +285,9 @@ static void simple_wait(void)
 	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	sched_yield();
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("simple mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -305,9 +319,9 @@ static void recursive_wait(void)
 	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	sched_yield();
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("rec mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
@@ -350,9 +364,9 @@ static void errorcheck_wait(void)
 		exit(EXIT_FAILURE);
 	}
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("errorcheck mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -369,10 +383,10 @@ static void *timed_waiter(void *cookie)
 
 	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1, 0);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("timed_waiter mutex_timed_lock", MUTEX_TIMED_LOCK, 1,
 		 ETIMEDOUT, mutex, 10000000ULL);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: timed_waiter, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -445,9 +459,9 @@ static void pi_wait(void)
 
 	check_current_prio(2);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("pi mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -534,8 +548,8 @@ static void *victim(void *cookie)
 	dispatch("victim pthread_detach", THREAD_DETACH, 1, 0);
 	dispatch("victim mutex_lock", MUTEX_LOCK, 1, 0, mutex);
 
-	start = rt_timer_tsc();
-	while (rt_timer_tsc2ns(rt_timer_tsc() - start) < 110000000);
+	start = timer_get_tsc();
+	while (timer_tsc2ns(timer_get_tsc() - start) < 110000000);
 
 	dispatch("victim mutex_unlock", MUTEX_UNLOCK, 1, 0, mutex);
 
@@ -570,9 +584,9 @@ static void deny_stealing(void)
 	ms_sleep(6);
 
 	/* Try to reacquire the lock, but the lowprio thread should hold it */
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("deny_stealing mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -597,9 +611,9 @@ static void *cond_signaler(void *cookie)
 	struct cond_mutex *cm = (struct cond_mutex *) cookie;
 	unsigned long long start, diff;
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("cond_signaler mutex_lock 1", MUTEX_LOCK, 1, 0, cm->mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 
 	if (diff < 10000000) {
 		fprintf(stderr,
@@ -612,9 +626,9 @@ static void *cond_signaler(void *cookie)
 	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, 0, cm->mutex);
 	sched_yield();
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("cond_signaler mutex_lock 2", MUTEX_LOCK, 1, 0, cm->mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr,
 			"FAILURE: cond_signaler, mutex_lock 2 waited %Ld.%03u us\n",
@@ -646,9 +660,9 @@ static void simple_condwait(void)
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
 	ms_sleep(11);
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("simple_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -686,9 +700,9 @@ static void recursive_condwait(void)
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
 	ms_sleep(11);
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	dispatch("rec_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
-	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -749,12 +763,10 @@ static void auto_switchback(void)
 	dispatch("auto_switchback mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-int main(void)
+int run_mutex_torture(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct sched_param sparam;
 	struct sigaction sa;
-
-	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_sigaction = sigdebug;
@@ -777,6 +789,5 @@ int main(void)
 	simple_condwait();
 	recursive_condwait();
 	auto_switchback();
-	fprintf(stderr, "Test OK\n");
 	return 0;
 }

@@ -8,6 +8,7 @@ endif
 
 SUBDIRS +=		\
 	copperplate	\
+	smokey		\
 	alchemy		\
 	vxworks		\
 	psos
@@ -19,4 +20,5 @@ DIST_SUBDIRS = 		\
 	cobalt		\
 	copperplate	\
 	psos		\
+	smokey		\
 	vxworks

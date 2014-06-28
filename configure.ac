@@ -839,11 +839,19 @@ AC_CONFIG_FILES([ \
 	lib/vxworks/Makefile \
 	lib/psos/Makefile \
 	lib/analogy/Makefile \
+	lib/smokey/Makefile \
 	testsuite/Makefile \
 	testsuite/latency/Makefile \
 	testsuite/switchtest/Makefile \
+	testsuite/smokey/Makefile \
+	testsuite/smokey/arith/Makefile \
+	testsuite/smokey/sched-quota/Makefile \
+	testsuite/smokey/sched-tp/Makefile \
+	testsuite/smokey/rtdm/Makefile \
+	testsuite/smokey/vdso-access/Makefile \
+	testsuite/smokey/cond-torture/Makefile \
+	testsuite/smokey/mutex-torture/Makefile \
 	testsuite/clocktest/Makefile \
-	testsuite/unit/Makefile \
 	testsuite/xeno-test/Makefile \
 	testsuite/regression/Makefile \
 	testsuite/regression/posix/Makefile \
@@ -878,6 +886,7 @@ AC_CONFIG_FILES([ \
 	include/alchemy/Makefile \
 	include/vxworks/Makefile \
 	include/psos/Makefile \
+	include/smokey/Makefile \
 	doc/Makefile \
 	doc/doxygen/Makefile \
 	doc/doxygen/xeno3prm-common.conf \

@@ -18,7 +18,6 @@
 
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <sched.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

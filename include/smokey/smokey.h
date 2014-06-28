@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ */
+#ifndef _XENOMAI_SMOKEY_SMOKEY_H
+#define _XENOMAI_SMOKEY_SMOKEY_H
+
+#include <boilerplate/list.h>
+#include <copperplate/clockobj.h>
+
+#define SMOKEY_INT(__name) {		\
+	 .name = # __name,		\
+	 .parser = smokey_int,		\
+	 .matched = 0,			\
+	 }
+
+#define SMOKEY_BOOL(__name) {		\
+	 .name = # __name,		\
+	 .parser = smokey_bool,		\
+	 .matched = 0,			\
+	 }
+
+#define SMOKEY_STRING(__name) {		\
+	 .name = # __name,		\
+	 .parser = smokey_string,	\
+	 .matched = 0,			\
+	 }
+
+#define SMOKEY_ARGLIST(__args...)  ((struct smokey_arg[]){ __args })
+
+#define SMOKEY_NOARGS  (((struct smokey_arg[]){ { .name = NULL } }))
+
+struct smokey_arg {
+	const char *name;
+	int (*parser)(const char *s,
+		      struct smokey_arg *arg);
+	union {
+		int n_val;
+		char *s_val;
+	} u;
+	int matched;
+};
+
+struct smokey_test {
+	const char *name;
+	struct smokey_arg *args;
+	int nargs;
+	const char *description;
+	int (*run)(struct smokey_test *t,
+		   int argc, char *const argv[]);
+	struct {
+		int id;
+		struct pvholder next;
+	} __reserved;
+};
+
+#define for_each_smokey_test(__pos)	\
+	pvlist_for_each_entry((__pos), &smokey_test_list, __reserved.next)
+
+#define __SMOKEYPLUG_CTOR_PRIO  310
+
+#define __smokey_arg_count(__args)	\
+	(sizeof(__args) / sizeof(__args[0]))
+
+#define smokey_test_plugin(__name, __args, __desc)			\
+	static int run_ ## __name(struct smokey_test *t,		\
+				  int argc, char *const argv[]);	\
+	static struct smokey_test __name = {				\
+		.name = #__name,					\
+		.args = (__args),					\
+		.nargs = __smokey_arg_count(__args),			\
+		.description = (__desc),				\
+		.run = run_ ## __name,					\
+	};								\
+	void smokey_plugin_ ## __name(void);				\
+	__attribute__((constructor(__SMOKEYPLUG_CTOR_PRIO)))		\
+	void smokey_plugin_ ## __name(void)				\
+	{								\
+		smokey_register_plugin(&(__name));			\
+	}
+
+#define SMOKEY_ARG(__name, __pos)	  ((__name).args + __pos)
+#define SMOKEY_ARG_ISSET(__name, __pos)	  (SMOKEY_ARG(__name, __pos)->matched)
+#define SMOKEY_ARG_INT(__name, __pos)	  (SMOKEY_ARG(__name, __pos)->u.n_val)
+#define SMOKEY_ARG_STRING(__name, __pos)  (SMOKEY_ARG(__name, __pos)->u.s_val)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void smokey_register_plugin(struct smokey_test *t);
+
+int smokey_int(const char *s, struct smokey_arg *arg);
+
+int smokey_bool(const char *s, struct smokey_arg *arg);
+
+int smokey_string(const char *s, struct smokey_arg *arg);
+
+int smokey_parse_args(struct smokey_test *t,
+		      int argc, char *const argv[]);
+
+#ifdef __cplusplus
+}
+#endif
+
+extern struct pvlist smokey_test_list;
+
+extern int smokey_keep_going;
+
+#endif /* _XENOMAI_SMOKEY_SMOKEY_H */

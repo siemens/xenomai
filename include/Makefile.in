@@ -377,7 +377,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 nodist_include_HEADERS = $(CONFIG_HEADER)
 include_HEADERS = version.h
-SUBDIRS = nocore boilerplate copperplate alchemy psos vxworks \
+SUBDIRS = nocore boilerplate copperplate smokey alchemy psos vxworks \
 	$(am__append_1) $(am__append_2)
 DIST_SUBDIRS = \
 	alchemy		\
@@ -388,6 +388,7 @@ DIST_SUBDIRS = \
 	nocore		\
 	psos 		\
 	rtdm		\
+	smokey		\
 	vxworks
 
 all: xeno_config.h

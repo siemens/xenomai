@@ -1,11 +1,12 @@
-#include <sys/mman.h>
 #include <stdio.h>
-
-#include <alchemy/timer.h>
-
+#include <smokey/smokey.h>
 #include <cobalt/arith.h>
-
 #include "arith-noinline.h"
+
+smokey_test_plugin(arith,
+		   SMOKEY_NOARGS,
+		   "Check helpers for fast arithmetics"
+);
 
 static volatile unsigned nsec_per_sec = 1000000000;
 static volatile unsigned sample_freq = 33000000;
@@ -16,12 +17,12 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 		unsigned long long result;				\
 		avg = rejected = 0;					\
 		for (i = 0; i < 10000; i++) {				\
-			unsigned long long start, end;			\
+		  	ticks_t start, end;				\
 			unsigned long delta;				\
 									\
-			start = rt_timer_tsc();				\
+			start = clockobj_get_tsc();			\
 			result = (f);					\
-			end = rt_timer_tsc();				\
+			end = clockobj_get_tsc();			\
 			delta = end - start;				\
 									\
 			if (i == 0 || delta < (avg / i) * 4) {		\
@@ -31,7 +32,7 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 		}							\
 		if (rejected < 10000) {					\
 			avg = xnarch_llimd(avg, 10000, 10000 - rejected); \
-			avg = rt_timer_tsc2ns(avg) - calib;		\
+			avg = clockobj_tsc_to_ns(avg) - calib;		\
 			fprintf(stderr, "%s: 0x%016llx: %lld.%03llu ns," \
 				" rejected %d/10000\n",			\
 				display, result, avg / 10000,		\
@@ -41,9 +42,9 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 			fprintf(stderr, "%s: rejected 10000/10000\n", display); \
 	} while (0)
 
-int main(void)
+static int run_arith(struct smokey_test *t, int argc, char *const argv[])
 {
-	unsigned mul, shft, rejected;
+	unsigned int mul, shft, rejected;
 	long long avg, calib = 0;
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 	struct xnarch_u32frac frac;

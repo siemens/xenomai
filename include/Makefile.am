@@ -6,6 +6,7 @@ SUBDIRS = 		\
 	nocore		\
 	boilerplate	\
 	copperplate	\
+	smokey		\
 	alchemy		\
 	psos 		\
 	vxworks
@@ -27,4 +28,5 @@ DIST_SUBDIRS = 		\
 	nocore		\
 	psos 		\
 	rtdm		\
+	smokey		\
 	vxworks

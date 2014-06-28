@@ -4,32 +4,11 @@
  * Copyright (C) Philippe Gerum <rpm@xenomai.org>
  *
  * Released under the terms of GPLv2.
- *
- * --
- *
- * This test exercizes the SCHED_QUOTA scheduling policy. Using a pool
- * of SCHED_FIFO threads, the code first calibrates, by estimating how
- * much work the system under test can perform when running
- * uninterrupted over a second.
- *
- * The same thread pool is re-started afterwards, as a SCHED_QUOTA
- * group this time, which is allotted a user-definable percentage of
- * the global quota interval
- * (CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD). Using the reference
- * calibration value obtained by running the SCHED_FIFO pool, the
- * percentage of runtime consumed by the SCHED_QUOTA group over a
- * second is calculated.
- *
- * A successful test shows that the effective percentage of runtime
- * observed with the SCHED_QUOTA group closely matches the allotted
- * quota (barring rounding errors and system latency).
  */
-#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <unistd.h>
-#include <signal.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <sched.h>
@@ -37,6 +16,27 @@
 #include <error.h>
 #include <boilerplate/time.h>
 #include <boilerplate/ancillaries.h>
+#include <smokey/smokey.h>
+
+smokey_test_plugin(sched_quota,
+		   SMOKEY_ARGLIST(
+			   SMOKEY_INT(quota),
+			   SMOKEY_INT(threads),
+		   ),
+   "Check the SCHED_QUOTA scheduling policy. Using a pool\n"
+   "\tof SCHED_FIFO threads, the code first calibrates, by estimating how\n"
+   "\tmuch work the system under test can perform when running\n"
+   "\tuninterrupted over a second.\n\n"
+   "\tThe same thread pool is re-started afterwards, as a SCHED_QUOTA\n"
+   "\tgroup this time, which is allotted a user-definable percentage of\n"
+   "\tthe global quota interval (CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD).\n"
+   "\tUsing the reference calibration value obtained by running the\n"
+   "\tSCHED_FIFO pool, the percentage of runtime consumed by the\n"
+   "\tSCHED_QUOTA group over a second is calculated.\n\n"
+   "\tA successful test shows that the effective percentage of runtime\n"
+   "\tobserved with the SCHED_QUOTA group closely matches the allotted\n"
+   "\tquota (barring rounding errors and marginal latency)."
+);
 
 #define MAX_THREADS 8
 #define TEST_SECS   1
@@ -267,37 +267,34 @@ static unsigned long long calibrate(void)
 	return lps;
 }
 
-int main(int argc, char **argv)
+static int run_sched_quota(struct smokey_test *t, int argc, char *const argv[])
 {
 	pthread_t me = pthread_self();
 	struct sched_param param;
-	sigset_t mask, oldmask;
 	int ret, quota = 0;
 	double effective;
 
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGINT);
-	sigaddset(&mask, SIGTERM);
-	sigaddset(&mask, SIGHUP);
-	pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
+	smokey_parse_args(t, argc, argv);
 	pthread_mutex_init(&lock, NULL);
 	pthread_cond_init(&barrier, NULL);
 	sem_init(&ready, 0, 0);
 
 	param.sched_priority = 50;
 	ret = pthread_setschedparam(me, SCHED_FIFO, &param);
-	if (ret)
-		error(1, ret, "pthread_setschedparam");
+	if (ret) {
+		warning("pthread_setschedparam(SCHED_FIFO, 50) failed");
+		return -ret;
+	}
 
-	if (argc > 1)
-		quota = atoi(argv[1]);
+	if (SMOKEY_ARG_ISSET(sched_quota, 0))
+		quota = SMOKEY_ARG_INT(sched_quota, 0);
+
 	if (quota <= 0)
 		quota = 10;
 
-	if (argc > 2)
-		nrthreads = atoi(argv[2]);
+	if (SMOKEY_ARG_ISSET(sched_quota, 1))
+		nrthreads = SMOKEY_ARG_INT(sched_quota, 1);
+
 	if (nrthreads <= 0)
 		nrthreads = 3;
 	if (nrthreads > MAX_THREADS)

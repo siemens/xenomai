@@ -5,7 +5,6 @@
  *
  * Released under the terms of GPLv2.
  */
-
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -14,9 +13,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <sys/mman.h>
 #include <pthread.h>
-#include <alchemy/timer.h>
+#include <smokey/smokey.h>
+
+smokey_test_plugin(cond_torture,
+		   SMOKEY_NOARGS,
+		   "Check POSIX condition variables"
+);
 
 #define NS_PER_MS (1000000)
 #define NS_PER_S (1000000000)
@@ -27,6 +30,16 @@ static unsigned long long timer_read(void)
 
 	clock_gettime(CLOCK_REALTIME, &ts);
 	return (unsigned long long)ts.tv_sec * NS_PER_S + ts.tv_nsec;
+}
+
+static inline unsigned long long timer_get_tsc(void)
+{
+	return clockobj_get_tsc();
+}
+
+static inline unsigned long long timer_tsc2ns(unsigned long long tsc)
+{
+	return clockobj_tsc_to_ns(tsc);
 }
 
 static int mutex_init(pthread_mutex_t *mutex, int type, int pi)
@@ -163,7 +176,7 @@ static void check_inner(const char *file, int line, const char *fn, const char *
 static void check_sleep_inner(const char *fn,
 		       const char *prefix, unsigned long long start)
 {
-	unsigned long long diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	unsigned long long diff = timer_tsc2ns(timer_get_tsc() - start);
 
 	if (diff < 10 * NS_PER_MS) {
 		fprintf(stderr, "%s waited %Ld.%03u us\n",
@@ -185,7 +198,7 @@ static void *cond_signaler(void *cookie)
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("mutex_lock", mutex_lock(cm->mutex), 0);
 	check_sleep("mutex_lock", start);
 	thread_msleep(10);
@@ -215,7 +228,7 @@ static void simple_condwait(void)
 	      thread_spawn(&cond_signaler_tid, 2, cond_signaler, &cm), 0);
 	thread_msleep(11);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	thread_msleep(10);
@@ -237,7 +250,7 @@ static void relative_condwait(void)
 	check("cond_init", cond_init(&cond, 0), 0);
 	check("mutex_lock", mutex_lock(&mutex), 0);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("cond_wait",
 	      cond_wait(&cond, &mutex, 10 * NS_PER_MS), -ETIMEDOUT);
 	check_sleep("cond_wait", start);
@@ -260,7 +273,7 @@ static void absolute_condwait(void)
 	check("cond_init", cond_init(&cond, 1), 0);
 	check("mutex_lock", mutex_lock(&mutex), 0);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("cond_wait",
 	      cond_wait_until(&cond, &mutex, timer_read() + 10 * NS_PER_MS),
 	      -ETIMEDOUT);
@@ -276,7 +289,7 @@ static void *cond_killer(void *cookie)
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("mutex_lock", mutex_lock(cm->mutex), 0);
 	check_sleep("mutex_lock", start);
 	thread_msleep(10);
@@ -320,7 +333,7 @@ static void sig_norestart_condwait(void)
 	      thread_spawn(&cond_killer_tid, 2, cond_killer, &cm), 0);
 	thread_msleep(11);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	sig_seen = 0;
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
@@ -358,7 +371,7 @@ static void sig_restart_condwait(void)
 	      thread_spawn(&cond_killer_tid, 2, cond_killer, &cm), 0);
 	thread_msleep(11);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	sig_seen = 0;
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
@@ -374,7 +387,7 @@ static void *mutex_killer(void *cookie)
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("mutex_lock", mutex_lock(cm->mutex), 0);
 	check_sleep("mutex_lock", start);
 	check("cond_signal", cond_signal(cm->cond), 0);
@@ -413,7 +426,7 @@ static void sig_norestart_condwait_mutex(void)
 	thread_msleep(11);
 
 	sig_seen = 0;
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 1);
@@ -453,7 +466,7 @@ static void sig_restart_condwait_mutex(void)
 	thread_msleep(11);
 
 	sig_seen = 0;
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
@@ -470,7 +483,7 @@ static void *double_killer(void *cookie)
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("mutex_lock", mutex_lock(cm->mutex), 0);
 	check_sleep("mutex_lock", start);
 	check("thread_kill 1", thread_kill(cm->tid, SIGRTMIN), 0);
@@ -509,7 +522,7 @@ static void sig_norestart_double(void)
 	thread_msleep(11);
 
 	sig_seen = 0;
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 2);
@@ -549,7 +562,7 @@ static void sig_restart_double(void)
 	thread_msleep(11);
 
 	sig_seen = 0;
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 
 	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
@@ -567,7 +580,7 @@ static void *cond_destroyer(void *cookie)
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 	check("mutex_lock", mutex_lock(cm->mutex), 0);
 	check_sleep("mutex_lock", start);
 	thread_msleep(10);
@@ -604,7 +617,7 @@ static void cond_destroy_whilewait(void)
 	      thread_spawn(&cond_destroyer_tid, 2, cond_destroyer, &cm), 0);
 	thread_msleep(11);
 
-	start = rt_timer_tsc();
+	start = timer_get_tsc();
 
 	check("cond_wait", cond_wait(&cond, &mutex, 10 * NS_PER_MS), -ETIMEDOUT);
 	check_sleep("cond_wait", start);
@@ -616,11 +629,9 @@ static void cond_destroy_whilewait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-int main(void)
+int run_cond_torture(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct sched_param sparam;
-
-	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	/* Set scheduling parameters for the current process */
 	sparam.sched_priority = 2;
