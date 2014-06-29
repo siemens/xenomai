@@ -209,7 +209,7 @@ static int build_filter_list(const char *filters)
 	filter = strdup(filters);
 	while ((filter = strtok(filter, ",")) != NULL) {
 		f = malloc(sizeof(*f));
-		ret = sscanf(filter, "%a[a-z]=%a[^\n]", &name, &f->exp);
+		ret = sscanf(filter, "%m[a-z]=%m[^\n]", &name, &f->exp);
 		if (ret != 2)
 			return EINVAL;
 		if (strcmp(name, "thread") == 0)
