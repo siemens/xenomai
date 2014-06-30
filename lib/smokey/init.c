@@ -128,7 +128,7 @@ static int resolve_id(const char *s)
 
 static int build_test_list(const char *test_enum)
 {
-	char *s = strdup(test_enum), *n, *range, *range_p, *id, *id_r;
+	char *s = strdup(test_enum), *n, *range, *range_p = NULL, *id, *id_r;
 	int start, end;
 
 	n = s;
