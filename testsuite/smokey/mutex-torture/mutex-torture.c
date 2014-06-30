@@ -109,7 +109,8 @@ static void check_current_prio(int expected_prio)
 	}
 }
 
-static void check_current_mode(int mask, int expected_value)
+static void __check_current_mode(const char *file, int line,
+				 int mask, int expected_value)
 {
 	int current_mode;
 
@@ -120,11 +121,14 @@ static void check_current_mode(int mask, int expected_value)
 
 	if (current_mode != expected_value) {
 		fprintf(stderr,
-			"FAILURE: current mode (%x) != expected mode (%x)\n",
-			current_mode, expected_value);
+			"FAILURE at %s:%d: current mode (%x) != expected mode (%x)\n",
+			file, line, current_mode, expected_value);
 		exit(EXIT_FAILURE);
 	}
 }
+
+#define check_current_mode(mask, expected_value)	\
+	__check_current_mode(__FILE__, __LINE__, (mask), (expected_value))
 
 static int dispatch(const char *service_name,
 		      int service_type, int check, int expected, ...)
