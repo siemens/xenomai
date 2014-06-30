@@ -163,7 +163,7 @@ sync_with_creator:
 	 * scheduling order.
 	 */
 	if (param_ex.sched_priority == parent_prio)
-		__cobalt_sched_yield();
+		__STD(sched_yield());
 
 	cobalt_thread_harden();
 
