@@ -145,7 +145,7 @@ static void clock_decrease_before_oneshot_timer_first_tick(void)
 	check_unix(clock_gettime(CLOCK_MONOTONIC, &now));
 	diff = now.tv_sec * 1000000000ULL + now.tv_nsec -
 		(timer.it_value.tv_sec * 1000000000ULL + timer.it_value.tv_nsec);
-	assert(diff >= 5500000000 && diff <= 6500000000);
+	assert(diff >= 5500000000LL && diff <= 6500000000LL);
 	check_unix(close(t));
 }
 
@@ -173,7 +173,7 @@ static void clock_decrease_before_periodic_timer_first_tick(void)
 	check_unix(clock_gettime(CLOCK_MONOTONIC, &now));
 	diff = now.tv_sec * 1000000000ULL + now.tv_nsec -
 		(timer.it_value.tv_sec * 1000000000ULL + timer.it_value.tv_nsec);
-	assert(diff >= 5500000000 && diff <= 6500000000);
+	assert(diff >= 5500000000LL && diff <= 6500000000LL);
 	check_unix(read(t, &ticks, sizeof(ticks)));
 	assert(ticks == 1);
 	check_unix(close(t));
