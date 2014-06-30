@@ -10,7 +10,8 @@ usage() {
 $1 [options] command-line
 
 Split command-line in two parts for linking static applications with
-Xenomai user-space posix skin in two stages.
+the Xenomai POSIX/Cobalt interface in two stages, so that symbols
+from the system libraries are not wrapped.
 
 Options:
 -q be quiet
@@ -137,7 +138,14 @@ while test $# -gt 0; do
 	    next_is_wrapped_symbol=:
 	    ;;
 
-	-Wl,@*.wrappers|-Wl,--wrap,*)
+	-Wl,--wrap,main|-Wl,--wrap=main)
+	    # special case so that Copperplate can interpose on the
+	    # main() routine. For this we need this wrapping to
+	    # take place in the second stage.
+	    stage2_args="$stage2_args $arg"
+	    ;;
+
+	-Wl,@*.wrappers|-Wl,--wrap,*|-Wl,--wrap=*)
 	    stage1_args="$stage1_args $arg"
 	    ;;
 
@@ -145,7 +153,7 @@ while test $# -gt 0; do
 	    add_linker_flag "$arg"
 	    ;;
 
-	*cobalt*)
+	*libcobalt.so*|*libcobalt.a|-lcobalt)
 	    # linker directives might contain this pattern as well, so
 	    # match it later in the test sequence.
 	    stage2_args="$stage2_args $arg"
