@@ -269,3 +269,13 @@ void warning(const char *fmt, ...)
 	__warning(thobj ? threadobj_get_name(thobj) : NULL, fmt, ap);
 	va_end(ap);
 }
+
+void notice(const char *fmt, ...)
+{
+	struct threadobj *thobj = threadobj_current();
+	va_list ap;
+
+	va_start(ap, fmt);
+	__notice(thobj ? threadobj_get_name(thobj) : NULL, fmt, ap);
+	va_end(ap);
+}
