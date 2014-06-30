@@ -34,7 +34,7 @@ Options :
         --ccld
         --arch
         --prefix
-        --[skin=]vxworks|psos|alchemy|rtdm
+        --[skin=]vxworks|psos|alchemy|rtdm|smokey
         --auto-init|no-auto-init
         --cflags
         --ldflags
@@ -111,7 +111,7 @@ while test $# -gt 0; do
 		skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
 	    fi
 	    ;;
-	--vxworks|--psos|--alchemy|--rtdm)
+	--vxworks|--psos|--alchemy|--rtdm|--smokey)
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
@@ -122,7 +122,7 @@ while test $# -gt 0; do
 	    cflags="$XENO_BASE_CFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
-		    vxworks|psos|alchemy)
+		    vxworks|psos|alchemy|smokey)
 			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
 			;;
 		    *)
@@ -159,7 +159,7 @@ while test $# -gt 0; do
 	    ldflags="$WRAP_MAIN $XENO_BASE_LDFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
-		    vxworks|psos|alchemy)
+		    vxworks|psos|alchemy|smokey)
 			ldflags="-l$skin $ldflags"
 			;;
 		    *)

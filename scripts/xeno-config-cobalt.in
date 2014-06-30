@@ -52,7 +52,7 @@ Options :
         --ccld
         --arch
         --prefix
-        --[skin=]posix/cobalt|vxworks|psos|alchemy|rtdm
+        --[skin=]posix/cobalt|vxworks|psos|alchemy|rtdm|smokey
         --auto-init|no-auto-init
         --cflags
         --kcflags
@@ -141,7 +141,7 @@ while test $# -gt 0; do
 		skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
 	    fi
 	    ;;
-	--posix|--cobalt|--vxworks|--psos|--alchemy|--rtdm)
+	--posix|--cobalt|--vxworks|--psos|--alchemy|--rtdm|--smokey)
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
@@ -154,7 +154,7 @@ while test $# -gt 0; do
 		case "$skin" in
 		    posix|cobalt|rtdm)
 			;;
-		    vxworks|psos|alchemy)
+		    vxworks|psos|alchemy|smokey)
 			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
 			;;
 		    *)
@@ -195,7 +195,7 @@ while test $# -gt 0; do
 		    posix|cobalt)
 			ldflags="`dump_wrappers cobalt.wrappers` $ldflags"
 			;;
-		    vxworks|psos|alchemy)
+		    vxworks|psos|alchemy|smokey)
 			copperplate="$WRAP_MAIN -lcopperplate"
 			ldflags="$ldflags -l$skin"
 			if [ -r ${XENO_LIBRARY_DIR}/${skin}.wrappers ]; then
