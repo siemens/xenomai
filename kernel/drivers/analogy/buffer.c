@@ -23,6 +23,7 @@
 #include <linux/mman.h>
 #include <linux/vmalloc.h>
 #include <asm/errno.h>
+#include <asm/io.h>
 #include <rtdm/analogy/device.h>
 
 /* --- Initialization functions (init, alloc, free) --- */

@@ -25,17 +25,6 @@
 #include <boilerplate/list.h>
 #include <boilerplate/ancillaries.h>
 
-struct coppernode {
-	unsigned int mem_pool;
-	const char *session_label;
-	const char *registry_root;
-	cpu_set_t cpu_affinity;
-	int no_mlock;
-	int no_registry;
-	int reset_session;
-	int silent_mode;
-};
-
 struct option;
 
 struct copperskin {
@@ -64,7 +53,5 @@ void copperplate_register_skin(struct copperskin *p);
 #ifdef __cplusplus
 }
 #endif
-
-extern struct coppernode __node_info;
 
 #endif /* _COPPERPLATE_INIT_H */

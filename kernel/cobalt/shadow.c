@@ -40,6 +40,7 @@
 #include <linux/vmalloc.h>
 #include <linux/completion.h>
 #include <linux/kallsyms.h>
+#include <linux/ipipe.h>
 #include <linux/ipipe_tickdev.h>
 #include <asm/signal.h>
 #include <cobalt/kernel/sched.h>

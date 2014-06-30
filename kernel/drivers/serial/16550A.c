@@ -19,6 +19,7 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/ioport.h>
+#include <linux/slab.h>
 #include <asm/io.h>
 
 #include <rtdm/serial.h>
