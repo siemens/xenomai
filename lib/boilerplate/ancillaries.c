@@ -69,6 +69,11 @@ void __warning(const char *name, const char *fmt, va_list ap)
 	__printout(name, "WARNING: ", fmt, ap);
 }
 
+void __notice(const char *name, const char *fmt, va_list ap)
+{
+	__printout(name, NULL, fmt, ap);
+}
+
 void __panic(const char *name, const char *fmt, va_list ap)
 {
 	__printout(name, "BUG: ", fmt, ap);
@@ -171,6 +176,18 @@ void early_warning(const char *fmt, ...)
 
 void warning(const char *fmt, ...)
 __attribute__((alias("early_warning"), weak));
+
+void early_notice(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	__notice(NULL, fmt, ap);
+	va_end(ap);
+}
+
+void notice(const char *fmt, ...)
+__attribute__((alias("early_notice"), weak));
 
 char *generate_name(char *buf, const char *radix,
 		    struct name_generator *ngen)

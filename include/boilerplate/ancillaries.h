@@ -70,6 +70,13 @@ void early_warning(const char *fmt, ...);
 
 void warning(const char *fmt, ...);
 
+void __notice(const char *name,
+	      const char *fmt, va_list ap);
+
+void early_notice(const char *fmt, ...);
+
+void notice(const char *fmt, ...);
+
 const char *symerror(int errnum);
 
 char *generate_name(char *buf, const char *radix,
