@@ -21,7 +21,7 @@ LD_FILE_OPTION="@LD_FILE_OPTION@"
 WRAP_MAIN_OPT="-Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
 WRAP_MAIN="$WRAP_MAIN_OPT"
 
-unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
+unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list compat
 
 dump_wrappers()
 {
@@ -60,6 +60,7 @@ Options :
         --lib*-dir,--libdir,--user-libdir
         --core
         --info
+        --compat
 EOF
     exit $1
 }
@@ -142,6 +143,7 @@ while test $# -gt 0; do
 	--skin=*)
 	    if [ "$1" = "--skin=native" ]; then
 		skin_list="$skin_list alchemy"
+		compat=y
             else
 		skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
 	    fi
@@ -155,6 +157,7 @@ while test $# -gt 0; do
 		exit 1
 	    fi
 	    cflags="$XENO_BASE_CFLAGS"
+	    test x$compat = xy && cflags="-I$XENO_INCLUDE_DIR/trank $cflags"
 	    for skin in $skin_list; do
 		case "$skin" in
 		    posix|cobalt|rtdm)
@@ -194,6 +197,7 @@ while test $# -gt 0; do
 		exit 1
 	    fi
 	    ldflags=
+	    test x$compat = xy && ldflags="-ltrank "
 	    copperplate=
 	    for skin in $skin_list; do
 		case "$skin" in
@@ -223,6 +227,9 @@ while test $# -gt 0; do
             ;;
         --info)
             dump_info
+            ;;
+	--compat)
+	    compat=y
             ;;
         *)
          usage 1 1>&2

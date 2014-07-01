@@ -14,7 +14,8 @@ SUBDIRS = 		\
 if XENO_COBALT
 SUBDIRS += 		\
 	cobalt 		\
-	rtdm
+	rtdm		\
+	trank
 else
 SUBDIRS += mercury
 endif

@@ -840,6 +840,7 @@ AC_CONFIG_FILES([ \
 	lib/psos/Makefile \
 	lib/analogy/Makefile \
 	lib/smokey/Makefile \
+	lib/trank/Makefile \
 	testsuite/Makefile \
 	testsuite/latency/Makefile \
 	testsuite/switchtest/Makefile \
@@ -887,6 +888,10 @@ AC_CONFIG_FILES([ \
 	include/vxworks/Makefile \
 	include/psos/Makefile \
 	include/smokey/Makefile \
+	include/trank/Makefile \
+	include/trank/posix/Makefile \
+	include/trank/native/Makefile \
+	include/trank/rtdm/Makefile \
 	doc/Makefile \
 	doc/doxygen/Makefile \
 	doc/doxygen/xeno3prm-common.conf \

@@ -1,0 +1,17 @@
+
+lib_LTLIBRARIES = libtrank.la
+
+libtrank_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
+
+libtrank_la_SOURCES =	\
+	init.c		\
+	init.h		\
+	internal.c	\
+	internal.h	\
+	posix.c		\
+	native.c
+
+libtrank_la_CPPFLAGS =			\
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include		\
+	-I$(top_srcdir)/lib

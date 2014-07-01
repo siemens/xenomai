@@ -3,7 +3,8 @@ SUBDIRS = boilerplate
 if XENO_COBALT
 SUBDIRS +=	\
 	cobalt	\
-	analogy
+	analogy	\
+	trank
 endif
 
 SUBDIRS +=		\
