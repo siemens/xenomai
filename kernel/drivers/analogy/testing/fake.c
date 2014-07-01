@@ -195,7 +195,9 @@ int ao_pull_values(struct a4l_subdevice *subd)
 
 	}
 
-	a4l_info(subd->dev, A4L_FUNCTION " count %d \n", priv->count);
+	a4l_info(subd->dev, " %d bytes added to private buffer from async p=%p\n",
+		priv->count, subd->buf->buf);
+
 	a4l_buf_evt(subd, 0);
 
 	return 0;
@@ -215,6 +217,10 @@ int ai2_push_values(struct a4l_subdevice *subd)
 		buffer, data are likely to be dropped; it is just a
 		test driver so no need to implement trickier mechanism */
 		err = (err == -EAGAIN) ? 0 : err;
+
+		a4l_info(subd->dev, "%d bytes added to async buffer p=%p\n",
+			priv->count, subd->buf->buf);
+
 		priv->count = 0;
 		if (err < 0)
 			a4l_err(subd->dev,
@@ -238,8 +244,7 @@ static int ai_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 	ai_priv->convert_period_ns = (cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
 
-	a4l_dbg(1, drv_dbg, subd->dev, A4L_FUNCTION
-		" scan_period=%luns convert_period=%luns\n",
+	a4l_dbg(1, drv_dbg, subd->dev, "scan_period=%luns convert_period=%luns\n",
 		ai_priv->scan_period_ns, ai_priv->convert_period_ns);
 
 	ai_priv->last_ns = a4l_get_time();
@@ -287,7 +292,7 @@ static void ai_munge(struct a4l_subdevice *subd, void *buf, unsigned long size)
 
 int ao_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
-	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "(subd=%d)\n", subd->idx);
 	return 0;
 }
 
@@ -295,7 +300,7 @@ int ao_trigger(struct a4l_subdevice *subd, lsampl_t trignum)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "(subd=%d)\n", subd->idx);
 	priv->ao_running = 1;
 	return 0;
 }
@@ -306,7 +311,7 @@ void ao_cancel(struct a4l_subdevice *subd)
 	struct ao_ai2_priv *ao_priv = (struct ao_ai2_priv *)subd->priv;
 	int running;
 
-	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "(subd=%d)\n", subd->idx);
 	priv->ao_running = 0;
 
 	running = priv->ai2_running;
@@ -318,6 +323,10 @@ void ao_cancel(struct a4l_subdevice *subd)
 		   end of the acquisition; that is why we force it */
 		priv->ai2_running = 0;
 		ao_priv->count = 0;
+
+		a4l_info(subd->dev, "subd %d cancelling subd %d too \n",
+			subd->idx, AI2_SUBD);
+
 		a4l_buf_evt(ai2_subd, A4L_BUF_EOA);
 	}
 }
@@ -328,7 +337,7 @@ int ai2_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "(subd=%d)\n", subd->idx);
 	priv->ai2_running = 1;
 	return 0;
 }
@@ -340,7 +349,7 @@ void ai2_cancel(struct a4l_subdevice *subd)
 
 	int running;
 
-	a4l_info(subd->dev, A4L_FUNCTION " (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "(subd=%d)\n", subd->idx);
 	priv->ai2_running = 0;
 
 	running = priv->ao_running;
@@ -352,8 +361,13 @@ void ai2_cancel(struct a4l_subdevice *subd)
 		   end of the acquisition; that is why we force it */
 		priv->ao_running = 0;
 		ai2_priv->count = 0;
+
+		a4l_info(subd->dev, "subd %d cancelling subd %d too \n",
+			 subd->idx, AO_SUBD);
+
 		a4l_buf_evt(ao_subd, A4L_BUF_EOA);
 	}
+
 }
 
 
