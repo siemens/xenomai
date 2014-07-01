@@ -140,10 +140,8 @@ static void *cobalt_thread_trampoline(void *p)
 	 */
 	ret = -XENOMAI_SKINCALL5(__cobalt_muxid, sc_cobalt_thread_create, ptid,
 				 policy, &param_ex, personality, &u_winoff);
-	if (ret == 0) {
-		cobalt_set_current();
-		cobalt_set_current_window(u_winoff);
-	}
+	if (ret == 0)
+		cobalt_set_tsd(u_winoff);
 
 	/*
 	 * We must access anything we'll need from *iargs before
@@ -664,8 +662,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 	if (ret == 0 && promoted) {
 		commit_stack_memory();
 		cobalt_sigshadow_install_once();
-		cobalt_set_current();
-		cobalt_set_current_window(u_winoff);
+		cobalt_set_tsd(u_winoff);
 		cobalt_thread_harden();
 	}
 

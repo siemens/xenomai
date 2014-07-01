@@ -33,9 +33,19 @@ xnhandle_t cobalt_current = XN_NO_HANDLE;
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 struct xnthread_user_window *cobalt_current_window;
 
-static inline void __cobalt_set_current(xnhandle_t current)
+static inline void __cobalt_set_tsd(xnhandle_t current, unsigned long u_winoff)
 {
+	struct xnthread_user_window *window;
+
 	cobalt_current = current;
+	window = (void *)(cobalt_sem_heap[0] + u_winoff);
+	cobalt_current_window = window;
+	cobalt_commit_memory(cobalt_current_window);
+}
+
+static inline void __cobalt_clear_tsd(void)
+{
+	cobalt_current = XN_NO_HANDLE;
 }
 
 static void init_current_keys(void)
@@ -43,22 +53,27 @@ static void init_current_keys(void)
 	pthread_atfork(NULL, NULL, &child_fork_handler);
 }
 
-void cobalt_set_current_window(unsigned long offset)
-{
-	cobalt_current_window = (struct xnthread_user_window *)
-		(cobalt_sem_heap[0] + offset);
-	cobalt_commit_memory(cobalt_current_window);
-}
-
 #else /* !HAVE_TLS */
 
 pthread_key_t cobalt_current_window_key;
 pthread_key_t cobalt_current_key;
 
-static inline void __cobalt_set_current(xnhandle_t current)
+static inline void __cobalt_set_tsd(xnhandle_t current,
+				    unsigned long u_winoff)
 {
+	struct xnthread_user_window *window;
+
 	current = (current != XN_NO_HANDLE ? current : (xnhandle_t)(0));
 	pthread_setspecific(cobalt_current_key, (void *)current);
+
+	window = (void *)(cobalt_sem_heap[0] + u_winoff);
+	pthread_setspecific(cobalt_current_window_key, window);
+	cobalt_commit_memory(window);
+}
+
+static inline void __cobalt_clear_tsd(void)
+{
+	pthread_setspecific(cobalt_current_key, NULL);
 }
 
 static void init_current_keys(void)
@@ -72,19 +87,9 @@ static void init_current_keys(void)
 	err = pthread_key_create(&cobalt_current_window_key, NULL);
 	if (err) {
 	  error_exit:
-		fprintf(stderr, "Xenomai: error creating TSD key: %s\n",
-			strerror(err));
+		report_error("error creating TSD key: %s", strerror(err));
 		exit(EXIT_FAILURE);
 	}
-}
-
-void cobalt_set_current_window(unsigned long offset)
-{
-	struct xnthread_user_window *window;
-
-	window = (void *)(cobalt_sem_heap[0] + offset);
-	pthread_setspecific(cobalt_current_window_key, window);
-	cobalt_commit_memory(window);
 }
 
 #endif /* !HAVE_TLS */
@@ -92,7 +97,7 @@ void cobalt_set_current_window(unsigned long offset)
 static void child_fork_handler(void)
 {
 	if (cobalt_get_current() != XN_NO_HANDLE)
-		__cobalt_set_current(XN_NO_HANDLE);
+		__cobalt_clear_tsd();
 }
 
 xnhandle_t cobalt_get_current_slow(void)
@@ -105,18 +110,19 @@ xnhandle_t cobalt_get_current_slow(void)
 	return err ? XN_NO_HANDLE : current;
 }
 
-void cobalt_set_current(void)
+void cobalt_set_tsd(unsigned long u_winoff)
 {
 	xnhandle_t current;
-	int err;
+	int ret;
 
-	err = XENOMAI_SYSCALL1(sc_nucleus_current, &current);
-	if (err) {
-		fprintf(stderr, "Xenomai: error obtaining handle for current "
-			"thread: %s\n", strerror(-err));
+	ret = XENOMAI_SYSCALL1(sc_nucleus_current, &current);
+	if (ret) {
+		report_error("error retrieving current handle: %s",
+			     strerror(-ret));
 		exit(EXIT_FAILURE);
 	}
-	__cobalt_set_current(current);
+
+	__cobalt_set_tsd(current, u_winoff);
 }
 
 void cobalt_init_current_keys(void)
