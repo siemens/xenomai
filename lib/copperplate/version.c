@@ -30,3 +30,14 @@
 
 const char *xenomai_version_string = PACKAGE_NAME \
 	core_suffix PACKAGE_VERSION " -- " GIT_STAMP;
+
+#ifdef __PROGRAM__
+
+#include <stdio.h>
+
+int main(int argc, char *const argv[])
+{
+	return puts(xenomai_version_string) == EOF;
+}
+
+#endif

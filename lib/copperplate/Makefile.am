@@ -40,6 +40,10 @@ git-stamp.h: git-stamp
 	    rm -f $@ && touch $@;							\
 	fi; true
 
+sbin_PROGRAMS = version
+version_CFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir)/include -D__PROGRAM__
+version_SOURCES = version.c
+
 clean-local:
 	$(RM) git-stamp.h
 
