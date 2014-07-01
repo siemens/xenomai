@@ -296,8 +296,7 @@ static void *task_trampoline(void *arg)
  * priorities returned by this routine must be in the range [ 1
  * .. sched_get_priority_max(SCHED_FIFO) - 1 ] inclusive.
  */
-__attribute__ ((weak))
-int wind_task_normalize_priority(int wind_prio)
+__weak int wind_task_normalize_priority(int wind_prio)
 {
 	/*
 	 * SCHED_FIFO priorities are always 1-based regardless of the
@@ -314,8 +313,7 @@ int wind_task_normalize_priority(int wind_prio)
 	return threadobj_high_prio - wind_prio - 1;
 }
 
-__attribute__ ((weak))
-int wind_task_denormalize_priority(int core_prio)
+__weak int wind_task_denormalize_priority(int core_prio)
 {
 	/* Map a SCHED_FIFO priority level to a VxWorks one. */
 	return threadobj_high_prio - core_prio - 1;

@@ -26,15 +26,14 @@
 #include <limits.h>
 #include <cobalt/wrappers.h>
 #include <asm/xenomai/uapi/features.h>
+#include <boilerplate/compiler.h>
 #include "internal.h"
 
 struct xnarch_tsc_area;
 
-__attribute__((weak))
-volatile struct xnarch_tsc_area *__cobalt_sh_tsc = NULL;
+__weak volatile struct xnarch_tsc_area *__cobalt_sh_tsc = NULL;
 
-__attribute__((weak))
-volatile unsigned long *__cobalt_sh_tcnt = NULL;
+__weak volatile unsigned long *__cobalt_sh_tcnt = NULL;
 
 static volatile void *map_kmem(unsigned long pa, unsigned int pagesz)
 {

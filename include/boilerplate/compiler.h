@@ -39,4 +39,8 @@
 #define __must_check	__attribute__((__warn_unused_result__))
 #endif
 
+#ifndef __weak
+#define __weak		__attribute__((__weak__))
+#endif
+
 #endif /* _BOILERPLATE_COMPILER_H */

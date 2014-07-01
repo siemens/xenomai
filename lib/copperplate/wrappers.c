@@ -15,13 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#include <boilerplate/compiler.h>
 
 int main(int argc, char *const argv[]);
 
 int __real_main(int argc, char *const argv[]);
 
-__attribute__((weak))
-int __real_main(int argc, char *const argv[])
+__weak int __real_main(int argc, char *const argv[])
 {
 	return main(argc, argv);
 }

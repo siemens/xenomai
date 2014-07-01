@@ -44,11 +44,9 @@
  * Single Unix specification</a> over the Cobalt core.
  */
 
-__attribute__ ((weak))
-int __cobalt_defer_init = 0;
+__weak int __cobalt_defer_init = 0;
 
-__attribute__ ((weak))
-int __cobalt_main_prio = -1;
+__weak int __cobalt_main_prio = -1;
 
 int __cobalt_muxid = -1;
 

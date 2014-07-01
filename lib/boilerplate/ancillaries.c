@@ -81,8 +81,7 @@ void __panic(const char *name, const char *fmt, va_list ap)
 	exit(1);
 }
 
-__attribute__ ((weak))
-void error_hook(struct error_frame *ef) /* NULL in non-debug mode */
+__weak void error_hook(struct error_frame *ef) /* NULL in non-debug mode */
 {
 }
 
@@ -213,13 +212,12 @@ char *generate_name(char *buf, const char *radix,
  * pointer validation in their own context (e.g. copperplate).
  */
 
-__attribute__ ((weak))
-int pshared_check(void *heap, void *addr)
+__weak int pshared_check(void *heap, void *addr)
 {
 	return 1;
 }
 
-__attribute__ ((weak)) void *__main_heap = NULL;
+__weak void *__main_heap = NULL;
 
 #endif /* !CONFIG_XENO_PSHARED */
 

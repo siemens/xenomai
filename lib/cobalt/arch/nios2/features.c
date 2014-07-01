@@ -26,9 +26,10 @@
 #include <cobalt/wrappers.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/uapi/fptest.h>
+#include <boilerplate/compiler.h>
 #include "internal.h"
 
-__attribute__((weak)) volatile void *__cobalt_nios2_hrclock = NULL;
+__weak volatile void *__cobalt_nios2_hrclock = NULL;
 
 void cobalt_check_features(struct xnfeatinfo *finfo)
 {

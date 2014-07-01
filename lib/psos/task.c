@@ -227,8 +227,7 @@ static void *task_trampoline(void *arg)
  * returned by this routine must be in the range [ 1
  * .. sched_get_priority_max(SCHED_FIFO) - 1 ] inclusive.
  */
-__attribute__ ((weak))
-int psos_task_normalize_priority(unsigned long psos_prio)
+__weak int psos_task_normalize_priority(unsigned long psos_prio)
 {
 	if (psos_prio > threadobj_high_prio)
 		panic("current implementation restricts pSOS "
@@ -245,8 +244,7 @@ int psos_task_normalize_priority(unsigned long psos_prio)
  * weak and application code may be override the call and implement
  * the mapping differently.
  */
-__attribute__ ((weak))
-unsigned long psos_task_denormalize_priority(int core_prio)
+__weak unsigned long psos_task_denormalize_priority(int core_prio)
 {
 	/* Map a SCHED_FIFO priority level to a pSOS one. */
 	return core_prio;

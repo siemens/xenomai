@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <nocore/atomic.h>
+#include <boilerplate/compiler.h>
 #include "current.h"
 #include "internal.h"
 
@@ -71,8 +72,7 @@ struct print_buffer {
 	off_t read_pos;
 };
 
-__attribute__ ((weak))
-int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
+__weak int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
 
 static struct print_buffer *first_buffer;
 static int buffers;
