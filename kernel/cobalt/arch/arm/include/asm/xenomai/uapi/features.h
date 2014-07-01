@@ -21,13 +21,6 @@
 #ifndef _COBALT_ARM_ASM_UAPI_FEATURES_H
 #define _COBALT_ARM_ASM_UAPI_FEATURES_H
 
-#define __XN_TSC_TYPE_NONE                  0
-#define __XN_TSC_TYPE_KUSER                 1
-#define __XN_TSC_TYPE_FREERUNNING           2
-#define __XN_TSC_TYPE_DECREMENTER           3
-#define __XN_TSC_TYPE_FREERUNNING_FAST_WRAP 4
-#define __XN_TSC_TYPE_FREERUNNING_COUNTDOWN 5
-
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   7UL
 

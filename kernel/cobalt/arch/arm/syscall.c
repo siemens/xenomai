@@ -39,51 +39,14 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 		return ret;
 
 	switch (p->type) {
-	case IPIPE_TSC_TYPE_FREERUNNING:
-		info.type = __XN_TSC_TYPE_FREERUNNING;
-		info.counter = p->u.fr.counter;
-		info.mask = p->u.fr.mask;
-		info.tsc = p->u.fr.tsc;
-		break;
 	case IPIPE_TSC_TYPE_DECREMENTER:
-		info.type = __XN_TSC_TYPE_DECREMENTER;
 		info.counter = p->u.dec.counter;
-		info.mask = p->u.dec.mask;
-		info.last_cnt = p->u.dec.last_cnt;
-		info.tsc = p->u.dec.tsc;
-		break;
-#ifdef IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN
-	case IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN:
-		info.type = __XN_TSC_TYPE_FREERUNNING_COUNTDOWN;
-		info.counter = p->u.fr.counter;
-		info.mask = p->u.fr.mask;
-		info.tsc = p->u.fr.tsc;
-		break;
-#endif /* IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN */
-#ifdef IPIPE_TSC_TYPE_FREERUNNING_TWICE
-	case IPIPE_TSC_TYPE_FREERUNNING_TWICE:
-		/*
-		 * Requires kuser, not backward compatible with old
-		 * xenomai versions
-		 */
-		info.type = __XN_TSC_TYPE_KUSER;
-		info.counter = p->u.fr.counter;
-		info.mask = p->u.fr.mask;
-		info.tsc = p->u.fr.tsc;
-		break;
-#endif /* IPIPE_TSC_TYPE_FREERUNNING_TWICE */
-	default:
-		/*
-		 * Newer tsc types, require kuser, not backward
-		 * compatible with old xenomai versions
-		 */
-		info.type = __XN_TSC_TYPE_KUSER;
-		info.counter = (void *)p->u.counter_paddr;
-		info.mask = p->u.mask;
-		info.tsc = p->u.fr.tsc;
 		break;
 	case IPIPE_TSC_TYPE_NONE:
 		return -ENOSYS;
+	default:
+		info.counter = p->u.fr.counter;
+		break;
 	}
 
 	if (__xn_copy_to_user((void *)a2, &info, sizeof(info)))

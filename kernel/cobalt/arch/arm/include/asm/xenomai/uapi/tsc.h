@@ -19,11 +19,7 @@
 #define _COBALT_ARM_ASM_UAPI_TSC_H
 
 struct __xn_tscinfo {
-	int type;		/* Must remain first member */
-	unsigned mask;
 	volatile unsigned int *counter;
-	volatile unsigned int *last_cnt; /* Only used by decrementers */
-	volatile unsigned long long *tsc;
 };
 
 #endif /* !_COBALT_ARM_ASM_UAPI_TSC_H */

@@ -286,7 +286,7 @@ AC_ARG_ENABLE(registry,
 AC_MSG_RESULT(${use_registry:-no})
 
 if test x$use_registry = xy; then
-        PKG_CHECK_MODULES(FUSE, fuse)
+	PKG_CHECK_MODULES(FUSE, fuse)
 	FUSE_CFLAGS="$FUSE_CFLAGS -DFUSE_USE_VERSION=25"
 	AC_DEFINE(CONFIG_XENO_REGISTRY,1,[config])
 fi
@@ -325,48 +325,8 @@ fi
 dnl ARCH support for ARM (default: 4)
 
 if test $XENO_TARGET_ARCH = arm ; then
-
   unset CONFIG_XENO_ARM_SA1100
   unset CONFIG_XENO_CPU_XSC3
-  CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER
-
-  AC_MSG_CHECKING(for ARM tsc type)
-  AC_ARG_ENABLE(arm-tsc,
-	AS_HELP_STRING([--enable-arm-tsc], [You only need this option
-  if you get the following message when starting an application:
-Xenomai: incompatible feature set
-(userland requires "kuser_tsc ...", kernel provides "...", missing="kuser_tsc").
-In that case, this option allows to select the machine for which a
-user-space tsc emulation should be generated. Valid machines are at91,
-kuser, imx, ixp4xx, omap, orion, pxa, s3c24x, sa1100. [default=kuser]]),
-	[case "$enableval" in
-	at91*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
-
-	integrator) unset tsc_type;;
-
-	ixp4xx)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	imx*|mx*)   CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	generic|kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
-
-	omap*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	orion)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
-
-	pxa*)	    CONFIG_XENO_CPU_XSC3=y
-		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	s3c24*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_DECREMENTER;;
-
-	sa1100)	    CONFIG_XENO_ARM_SA1100=y
-		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	n | no)	    unset CONFIG_XENO_ARM_TSC_TYPE;;
-
-	*)AC_MSG_ERROR([Invalid SOC selected: "$enableval"]);;
-	esac])
-  AC_MSG_RESULT(${enable_arm_tsc:-kuser})
 
   AC_ARG_ENABLE(arm-quirks,
 	AS_HELP_STRING([--enable-arm-quirks], [Enable quirks for
@@ -426,7 +386,7 @@ AC_MSG_CHECKING(for LaTeX mode)
 AC_ARG_ENABLE(verbose-latex,
 	AS_HELP_STRING([--enable-nonstop-latex], [Use LaTeX non-stop mode]),
 	[case "$enableval" in
-	y | yes) 
+	y | yes)
 	   LATEX_BATCHMODE=NO
 	   LATEX_MODE=non-stop
 	   ;;
@@ -750,12 +710,12 @@ fi
 
 unset want_fortify
 AC_MSG_CHECKING(for fortify support)
-AC_ARG_ENABLE([fortify], 
+AC_ARG_ENABLE([fortify],
 	      AC_HELP_STRING([--enable-fortify],
 			     [Enable support for applications compiled
 			     with _FORTIFY_SOURCE]),
 	      [case "$enableval" in
-              y | yes) want_fortify=yes;;
+	      y | yes) want_fortify=yes;;
 	      *) want_fortify=no;;
 	      esac])
 AC_MSG_RESULT(${want_fortify:-autodetect})
