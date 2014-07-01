@@ -522,7 +522,7 @@ int cobalt_sched_setconfig_np(int cpu, int policy,
 	union sched_config *buf;
 	int ret;
 
-	trace_cobalt_sched_set_config(cpu, policy, len);
+	trace_cobalt_sched_setconfig(cpu, policy, len);
 
 	if (cpu < 0 || cpu >= NR_CPUS || !cpu_online(cpu))
 		return -EINVAL;

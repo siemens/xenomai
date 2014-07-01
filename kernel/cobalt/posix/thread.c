@@ -417,7 +417,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 	return 0;
 }
 
-static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
+static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
 	const int valid_flags = XNLOCK|XNWARN|XNTRAPLB;
 	struct xnthread *curr = xnshadow_current();
@@ -604,13 +604,13 @@ fail:
 	return ERR_PTR(ret);
 }
 
-int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
+int cobalt_thread_setmode_np(int clrmask, int setmask, int __user *u_mode_r)
 {
 	int ret, old;
 
-	trace_cobalt_pthread_set_mode(clrmask, setmask);
+	trace_cobalt_pthread_setmode(clrmask, setmask);
 
-	ret = pthread_set_mode_np(clrmask, setmask, &old);
+	ret = pthread_setmode_np(clrmask, setmask, &old);
 	if (ret)
 		return ret;
 
@@ -620,7 +620,7 @@ int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
 	return 0;
 }
 
-int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
+int cobalt_thread_setname_np(unsigned long pth, const char __user *u_name)
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -636,7 +636,7 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 
-	trace_cobalt_pthread_set_name(pth, name);
+	trace_cobalt_pthread_setname(pth, name);
 
 	xnlock_get_irqsave(&nklock, s);
 

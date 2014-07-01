@@ -135,7 +135,7 @@ DEFINE_EVENT(cobalt_posix_schedparam, cobalt_pthread_getschedparam,
 		      {PTHREAD_LOCK_SCHED, "lock"},		\
 		      {PTHREAD_DISABLE_LOCKBREAK, "nolockbreak"})
 
-TRACE_EVENT(cobalt_pthread_set_mode,
+TRACE_EVENT(cobalt_pthread_setmode,
 	TP_PROTO(int clrmask, int setmask),
 	TP_ARGS(clrmask, setmask),
 	TP_STRUCT__entry(
@@ -151,7 +151,7 @@ TRACE_EVENT(cobalt_pthread_set_mode,
 		  __entry->setmask, cobalt_print_thread_mode(__entry->setmask))
 );
 
-TRACE_EVENT(cobalt_pthread_set_name,
+TRACE_EVENT(cobalt_pthread_setname,
 	TP_PROTO(unsigned long pth, const char *name),
 	TP_ARGS(pth, name),
 	TP_STRUCT__entry(
@@ -246,7 +246,7 @@ DEFINE_EVENT(cobalt_void, cobalt_pthread_yield,
 	TP_ARGS(dummy)
 );
 
-TRACE_EVENT(cobalt_sched_set_config,
+TRACE_EVENT(cobalt_sched_setconfig,
 	TP_PROTO(int cpu, int policy, size_t len),
 	TP_ARGS(cpu, policy, len),
 	TP_STRUCT__entry(

@@ -102,7 +102,7 @@ static void *transmitter(void *arg)
     frame.can_dlc = sizeof(*rtt_time);
 
 #ifdef CONFIG_XENO_COBALT
-    pthread_set_name_np(pthread_self(), "rtcan_rtt_transmitter");
+    pthread_setname_np(pthread_self(), "rtcan_rtt_transmitter");
 #endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
@@ -148,7 +148,7 @@ static void *receiver(void *arg)
 				0, 0, 0};
 
 #ifdef CONFIG_XENO_COBALT
-    pthread_set_name_np(pthread_self(), "rtcan_rtt_receiver");
+    pthread_setname_np(pthread_self(), "rtcan_rtt_receiver");
 #endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 

@@ -428,9 +428,9 @@ static void *rtup(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(0, PTHREAD_CONFORMING, NULL))) {
+	if ((err = pthread_setmode_np(0, PTHREAD_CONFORMING, NULL))) {
 		fprintf(stderr,
-			"rtup: pthread_set_mode_np: %s\n",
+			"rtup: pthread_setmode_np: %s\n",
 			strerror(err));
 		clean_exit(EXIT_FAILURE);
 	}
@@ -514,9 +514,9 @@ static void *rtus(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(PTHREAD_CONFORMING, 0, NULL))) {
+	if ((err = pthread_setmode_np(PTHREAD_CONFORMING, 0, NULL))) {
 		fprintf(stderr,
-			"rtus: pthread_set_mode_np: %s\n",
+			"rtus: pthread_setmode_np: %s\n",
 			strerror(err));
 		clean_exit(EXIT_FAILURE);
 	}
@@ -600,9 +600,9 @@ static void *rtuo(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(0, PTHREAD_CONFORMING, NULL))) {
+	if ((err = pthread_setmode_np(0, PTHREAD_CONFORMING, NULL))) {
 		fprintf(stderr,
-			"rtup: pthread_set_mode_np: %s\n",
+			"rtup: pthread_setmode_np: %s\n",
 			strerror(err));
 		clean_exit(EXIT_FAILURE);
 	}
@@ -659,10 +659,10 @@ static void *rtuo(void *cookie)
 		/* Switch mode. */
 		if (i % 3 == 2) {
 			mode = PTHREAD_CONFORMING - mode;
-			if ((err = pthread_set_mode_np
+			if ((err = pthread_setmode_np
 			     (PTHREAD_CONFORMING - mode, mode, NULL))) {
 				fprintf(stderr,
-					"rtuo: pthread_set_mode_np: %s\n",
+					"rtuo: pthread_setmode_np: %s\n",
 					strerror(err));
 				clean_exit(EXIT_FAILURE);
 			}
@@ -881,12 +881,12 @@ static int task_create(struct cpu_tasks *cpu,
 		return err;
 	}
 
-	err = pthread_set_name_np(param->thread,
-				  task_name(buffer, sizeof(buffer),
-				  param->cpu,param->swt.index));
+	err = pthread_setname_np(param->thread,
+				 task_name(buffer, sizeof(buffer),
+					   param->cpu,param->swt.index));
 
 	if (err)
-		fprintf(stderr,"pthread_set_name_np: %s\n", strerror(err));
+		fprintf(stderr,"pthread_setname_np: %s\n", strerror(err));
 
 	return err;
 }

@@ -87,7 +87,7 @@ static void __create_thread(pthread_t *tid, const char *name, int seq)
 		error(1, ret, "pthread_create");
 
 	pthread_attr_destroy(&attr);
-	pthread_set_name_np(*tid, name);
+	pthread_setname_np(*tid, name);
 }
 
 #define create_thread(tid, n) __create_thread(&(tid), # tid, n)

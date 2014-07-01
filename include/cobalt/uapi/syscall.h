@@ -27,8 +27,8 @@
 #define sc_cobalt_sched_weightprio      2
 #define sc_cobalt_sched_yield           3
 /* 4-5 unimplemented */
-#define sc_cobalt_thread_set_mode       6
-#define sc_cobalt_thread_set_name       7
+#define sc_cobalt_thread_setmode        6
+#define sc_cobalt_thread_setname        7
 #define sc_cobalt_sem_init              8
 #define sc_cobalt_sem_destroy           9
 #define sc_cobalt_sem_post              10

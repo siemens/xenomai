@@ -138,9 +138,9 @@ cobalt_thread_shadow(struct task_struct *p,
 		     struct cobalt_local_hkey *lhkey,
 		     unsigned long __user *u_window_offset);
 
-int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r);
+int cobalt_thread_setmode_np(int clrmask, int setmask, int __user *u_mode_r);
 
-int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name);
+int cobalt_thread_setname_np(unsigned long tid, const char __user *u_name);
 
 int cobalt_thread_probe_np(pid_t h_tid);
 

@@ -103,7 +103,7 @@ static void *latency(void *cookie)
 	}
 
 #ifdef CONFIG_XENO_COBALT
-	err = pthread_set_mode_np(0, PTHREAD_WARNSW, NULL);
+	err = pthread_setmode_np(0, PTHREAD_WARNSW, NULL);
 	if (err) {
 		fprintf(stderr, "latency: setting WARNSW: error code %d\n", err);
 		return NULL;

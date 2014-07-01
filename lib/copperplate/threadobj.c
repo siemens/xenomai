@@ -110,7 +110,7 @@ struct remote_request {
 
 static inline void agent_init_corespec(const char *name)
 {
-	pthread_set_name_np(pthread_self(), name);
+	__RT(pthread_setname_np(pthread_self(), name));
 }
 
 #else /* CONFIG_XENO_MERCURY */
@@ -255,7 +255,7 @@ static inline void threadobj_uninit_corespec(struct threadobj *thobj)
 
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
-	pthread_set_name_np(pthread_self(), thobj->name);
+	__RT(pthread_setname_np(pthread_self(), thobj->name));
 	thobj->core.handle = cobalt_get_current();
 	thobj->core.u_window = cobalt_get_current_window();
 
@@ -356,7 +356,7 @@ int __threadobj_lock_sched(struct threadobj *current)
 	 * locking the scheduler, so no need to drop the thread lock
 	 * across this call.
 	 */
-	return __bt(-pthread_set_mode_np(0, PTHREAD_LOCK_SCHED, NULL));
+	return __bt(-pthread_setmode_np(0, PTHREAD_LOCK_SCHED, NULL));
 }
 
 int threadobj_lock_sched(void)
@@ -383,7 +383,7 @@ int __threadobj_unlock_sched(struct threadobj *current)
 	if (--current->schedlock_depth > 0)
 		return 0;
 
-	return __bt(-pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL));
+	return __bt(-pthread_setmode_np(PTHREAD_LOCK_SCHED, 0, NULL));
 }
 
 int threadobj_unlock_sched(void)
@@ -417,7 +417,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 		__threadobj_unlock_sched(current);
 
 	if (mode_r || __setmask || __clrmask)
-		return __bt(-pthread_set_mode_np(__clrmask, __setmask, mode_r));
+		return __bt(-pthread_setmode_np(__clrmask, __setmask, mode_r));
 
 	return 0;
 }

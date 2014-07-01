@@ -96,11 +96,11 @@ COBALT_DECL(int, pthread_kill(pthread_t ptid, int sig));
 
 COBALT_DECL(int, pthread_join(pthread_t ptid, void **retval));
 
-int pthread_set_mode_np(int clrmask, int setmask,
-			int *mask_r);
+int pthread_setmode_np(int clrmask, int setmask,
+		       int *mask_r);
 
-int pthread_set_name_np(pthread_t thread,
-			const char *name);
+/* May be absent from outdated glibc releases. */
+int pthread_setname_np(pthread_t thread, const char *name);
 
 COBALT_DECL(int, pthread_setname_np(pthread_t thread, const char *name));
 

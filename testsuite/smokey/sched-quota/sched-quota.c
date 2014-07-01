@@ -120,7 +120,7 @@ static void __create_quota_thread(pthread_t *tid, const char *name,
 		error(1, ret, "pthread_create_ex(SCHED_QUOTA)");
 
 	pthread_attr_destroy_ex(&attr_ex);
-	pthread_set_name_np(*tid, name);
+	pthread_setname_np(*tid, name);
 }
 
 #define create_quota_thread(__tid, __label, __tgid, __count)	\
@@ -145,7 +145,7 @@ static void __create_fifo_thread(pthread_t *tid, const char *name,
 		error(1, ret, "pthread_create(SCHED_FIFO)");
 
 	pthread_attr_destroy(&attr);
-	pthread_set_name_np(*tid, name);
+	pthread_setname_np(*tid, name);
 }
 
 #define create_fifo_thread(__tid, __label, __count)	\

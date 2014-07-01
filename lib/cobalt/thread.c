@@ -169,7 +169,7 @@ sync_with_creator:
 
 	retval = start(arg);
 
-	pthread_set_mode_np(PTHREAD_WARNSW, 0, NULL);
+	pthread_setmode_np(PTHREAD_WARNSW, 0, NULL);
 
 	return retval;
 }
@@ -378,34 +378,11 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
  */
-int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
+int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
 	return -XENOMAI_SKINCALL3(__cobalt_muxid,
-				  sc_cobalt_thread_set_mode,
+				  sc_cobalt_thread_setmode,
 				  clrmask, setmask, mode_r);
-}
-
-/**
- * Set a thread name.
- *
- * This service set to @a name, the name of @a thread. This name is used for
- * displaying information in /proc/xenomai/sched.
- *
- * This service is a non-portable extension of the POSIX interface.
- *
- * @param thread target thread;
- *
- * @param name name of the thread.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a thread is invalid.
- *
- */
-int pthread_set_name_np(pthread_t thread, const char *name)
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_thread_set_name, thread, name);
 }
 
 /**
@@ -428,7 +405,7 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_thread_set_name, thread, name);
+				  sc_cobalt_thread_setname, thread, name);
 }
 
 /**
