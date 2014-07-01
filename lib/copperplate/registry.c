@@ -601,7 +601,7 @@ static int spawn_daemon(const char *sessdir)
 	pid_t pid;
 	int ret;
 
-	ret = asprintf(&exec_path, "%s/bin/sysregd", CONFIG_XENO_PREFIX);
+	ret = asprintf(&exec_path, "%s/sbin/sysregd", CONFIG_XENO_PREFIX);
 	if (ret < 0)
 		return -ENOMEM;
 

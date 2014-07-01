@@ -1,4 +1,4 @@
-bin_PROGRAMS = sysregd
+sbin_PROGRAMS = sysregd
 
 if XENO_COBALT
 coredep_lib = ../../cobalt/libcobalt.la
