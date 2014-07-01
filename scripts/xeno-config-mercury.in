@@ -60,11 +60,14 @@ verbose ()
 
 dump_info ()
 {
-    uname -a 2>/dev/null || echo "cannot determine system information (uname?)"
-    echo "Kernel parameters: `cat /proc/cmdline`"
-    if test -r /mnt/xenomai/system/version; then
-	echo "Xenomai/mercury `cat /mnt/xenomai/system/version` detected"
+    version=${XENO_VERSION}
+    if test -x $XENO_PREFIX/sbin/version; then
+	_version=`$XENO_PREFIX/sbin/version 2>/dev/null`
+	test x$_version = x || version=$_version
     fi
+    echo "Xenomai version: ${version}"
+    uname -a 2>/dev/null || echo "Cannot determine system information (uname?)"
+    echo "Kernel parameters: `cat /proc/cmdline`"
     eval echo "Configure args: @XENO_CONFIG_ARGS@"
 }
 

@@ -66,19 +66,24 @@ EOF
 
 dump_info ()
 {
+    version=${XENO_VERSION}
+    if test -x $XENO_PREFIX/sbin/version; then
+	_version=`$XENO_PREFIX/sbin/version 2>/dev/null`
+	test x$_version = x || version=$_version
+    fi
+    echo "Xenomai version: ${version}"
     if test -r /proc/ipipe/version; then
-	uname -a 2>/dev/null || echo "cannot determine system information (uname?)"
+	uname -a 2>/dev/null || echo "Cannot determine system information (uname?)"
 	echo "Kernel parameters: `cat /proc/cmdline`"
 	echo "I-pipe release #`cat /proc/ipipe/version` detected"
 	if test -r /proc/xenomai/version; then
-	    echo "Xenomai/cobalt `cat /proc/xenomai/version` detected"
+	    echo "Cobalt core `cat /proc/xenomai/version` detected"
 	else
-	    echo "Xenomai/cobalt disabled on this system"
+	    echo "Cobalt core disabled on this system"
 	fi
     else
-	    echo "Xenomai/cobalt is NOT present on this system"
+	    echo "Cobalt core is NOT present on this system"
     fi
-
     eval echo "Configure args: @XENO_CONFIG_ARGS@"
     exit 0
 }
