@@ -26,8 +26,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <fcntl.h>
 #include <sys/timerfd.h>
 #include "check.h"
+
+#ifndef TFD_NONBLOCK
+#define TFD_NONBLOCK O_NONBLOCK
+#endif
 
 static void timerfd_basic_check(void)
 {
