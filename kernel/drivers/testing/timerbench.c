@@ -411,11 +411,6 @@ static int rt_tmbench_ioctl_nrt(struct rtdm_fd *fd,
 	case RTTST_RTIOC_TMBENCH_STOP:
 		err = rt_tmbench_stop(ctx, arg);
 		break;
-
-	case RTTST_RTIOC_INTERM_BENCH_RES:
-		err = -ENOSYS;
-		break;
-
 	default:
 		err = -ENOTTY;
 	}
@@ -451,13 +446,8 @@ static int rt_tmbench_ioctl_rt(struct rtdm_fd *fd,
 
 		break;
 
-	case RTTST_RTIOC_TMBENCH_START:
-	case RTTST_RTIOC_TMBENCH_STOP:
-		err = -ENOSYS;
-		break;
-
 	default:
-		err = -ENOTTY;
+		err = -ENOSYS;
 	}
 
 	return err;

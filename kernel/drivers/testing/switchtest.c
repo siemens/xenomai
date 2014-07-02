@@ -685,11 +685,6 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 	struct rttst_swtest_dir fromto;
 
 	switch (request) {
-	case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
-	case RTTST_RTIOC_SWTEST_CREATE_KTASK:
-	case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
-		return -ENOSYS;
-
 	case RTTST_RTIOC_SWTEST_PEND:
 		if (!rtdm_read_user_ok(fd, arg, sizeof(task)))
 			return -EFAULT;
@@ -721,7 +716,7 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 		return 0;
 
 	default:
-		return -ENOTTY;
+		return -ENOSYS;
 	}
 }
 
