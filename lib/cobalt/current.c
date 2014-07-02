@@ -20,8 +20,11 @@
 #include <string.h>
 #include <pthread.h>
 #include <asm/xenomai/syscall.h>
+#include <boilerplate/list.h>
 #include "current.h"
 #include "internal.h"
+
+static DEFINE_PRIVATE_LIST(tsd_hooks);
 
 static void child_fork_handler(void);
 
@@ -96,8 +99,17 @@ static void init_current_keys(void)
 
 static void child_fork_handler(void)
 {
-	if (cobalt_get_current() != XN_NO_HANDLE)
-		__cobalt_clear_tsd();
+	struct cobalt_tsd_hook *th;
+
+	if (cobalt_get_current() == XN_NO_HANDLE)
+		return;
+
+	__cobalt_clear_tsd();
+
+	if (!pvlist_empty(&tsd_hooks)) {
+		pvlist_for_each_entry(th, &tsd_hooks, next)
+			th->delete_tsd();
+	}
 }
 
 xnhandle_t cobalt_get_current_slow(void)
@@ -112,6 +124,7 @@ xnhandle_t cobalt_get_current_slow(void)
 
 void cobalt_set_tsd(unsigned long u_winoff)
 {
+	struct cobalt_tsd_hook *th;
 	xnhandle_t current;
 	int ret;
 
@@ -123,10 +136,25 @@ void cobalt_set_tsd(unsigned long u_winoff)
 	}
 
 	__cobalt_set_tsd(current, u_winoff);
+
+	if (!pvlist_empty(&tsd_hooks)) {
+		pvlist_for_each_entry(th, &tsd_hooks, next)
+			th->create_tsd();
+	}
 }
 
 void cobalt_init_current_keys(void)
 {
 	static pthread_once_t cobalt_init_current_keys_once = PTHREAD_ONCE_INIT;
 	pthread_once(&cobalt_init_current_keys_once, init_current_keys);
+}
+
+void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th)
+{
+	/*
+	 * CAUTION: we assume inherently mt-safe conditions. Unless
+	 * multiple dlopen() ends up loading extension libs
+	 * concurrently, we should be ok.
+	 */
+	pvlist_append(&th->next, &tsd_hooks);
 }

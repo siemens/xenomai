@@ -35,6 +35,7 @@
 #include <cobalt/uapi/sem.h>
 #include <cobalt/cobalt.h>
 #include <xeno_config.h>
+#include <boilerplate/list.h>
 #include "current.h"
 
 #define report_error(fmt, args...) \
@@ -42,6 +43,12 @@
 
 #define report_error_cont(fmt, args...) \
 	__STD(fprintf(stderr, "                " fmt "\n", ##args))
+
+struct cobalt_tsd_hook {
+	void (*create_tsd)(void);
+	void (*delete_tsd)(void);
+	struct pvholder next;
+};
 
 extern unsigned long cobalt_sem_heap[2];
 
@@ -133,6 +140,8 @@ void cobalt_ticks_init(unsigned long long freq);
 void cobalt_default_mutexattr_init(void);
 
 void cobalt_default_condattr_init(void);
+
+void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
 
 struct xnfeatinfo;
 
