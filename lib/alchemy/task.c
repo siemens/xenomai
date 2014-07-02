@@ -826,15 +826,30 @@ undo:
  */
 int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 {
-	struct timespec its, pts;
+	struct timespec its, pts, now;
 	struct alchemy_task *tcb;
 	struct service svc;
 	int ret;
 
 	CANCEL_DEFER(svc);
 
-	clockobj_ticks_to_timespec(&alchemy_clock, idate, &its);
-	clockobj_ticks_to_timespec(&alchemy_clock, period, &pts);
+	if (period == TM_INFINITE) {
+		pts.tv_sec = 0;
+		pts.tv_nsec = 0;
+		its = pts;
+	} else {
+		clockobj_ticks_to_timespec(&alchemy_clock, period, &pts);
+		if (idate == TM_NOW) {
+			__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+			timespec_add(&its, &now, &pts);
+		} else
+			/*
+			 * idate is an absolute time specification
+			 * already, so we want a direct conversion to
+			 * timespec.
+			 */
+			clockobj_ticks_to_timespec(&alchemy_clock, idate, &its);
+	}
 
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
