@@ -507,7 +507,7 @@ static void cleanup(void)
 	     (test_duration / 60) % 60, test_duration % 60);
 	if (max_relaxed > 0)
 		printf(
-"Warning! some latency maxima may have been due to involuntary mode switches.\n"
+"Warning! some latency peaks may have been due to involuntary mode switches.\n"
 "Please contact xenomai@xenomai.org\n");
 
 	if (histogram_avg)
