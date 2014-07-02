@@ -27,20 +27,32 @@
 
 COBALT_IMPL(int, sigwait, (const sigset_t *set, int *sig))
 {
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_sigwait, set, sig);
+	int ret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 sc_cobalt_sigwait, set, sig);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return ret;
 }
 
 COBALT_IMPL(int, sigwaitinfo, (const sigset_t *set, siginfo_t *si))
 {
-	int ret;
+	int ret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
 				sc_cobalt_sigwaitinfo, set, si);
 	if (ret < 0) {
 		errno = -ret;
-		return -1;
+		ret = -1;
 	}
+
+	pthread_setcanceltype(oldtype, NULL);
 
 	return ret;
 }
@@ -48,14 +60,18 @@ COBALT_IMPL(int, sigwaitinfo, (const sigset_t *set, siginfo_t *si))
 COBALT_IMPL(int, sigtimedwait, (const sigset_t *set, siginfo_t *si,
 				const struct timespec *timeout))
 {
-	int ret;
+	int ret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
 				sc_cobalt_sigtimedwait, set, si, timeout);
 	if (ret < 0) {
 		errno = -ret;
-		return -1;
+		ret = -1;
 	}
+
+	pthread_setcanceltype(oldtype, NULL);
 
 	return ret;
 }
