@@ -1436,25 +1436,10 @@ int threadobj_set_periodic(struct threadobj *thobj,
 			return __bt(-errno);
 	}
 
-	if (period == NULL) {
-		/* Maybe a oneshot specification. */
-		its.it_interval.tv_sec = 0;
-		its.it_interval.tv_nsec = 0;
-	} else
-		its.it_interval = *period;
+	its.it_value = *idate;
+	its.it_interval = *period;
 
-	if (idate == NULL) {
-		/* Maybe a start now or stop specification. */
-		its.it_value.tv_sec = 0;
-		its.it_value.tv_nsec = 0;
-		ret = __RT(timer_settime(thobj->periodic_timer, 0,
-					 &its, NULL));
-	} else {
-		its.it_value = *idate;
-		ret = __RT(timer_settime(thobj->periodic_timer, TIMER_ABSTIME,
-					 &its, NULL));
-	}
-
+	ret = __RT(timer_settime(thobj->periodic_timer, TIMER_ABSTIME, &its, NULL));
 	if (ret)
 		return __bt(-errno);
 
