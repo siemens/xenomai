@@ -41,8 +41,12 @@ endif
 
 include $(top_srcdir)/doc/install-dist.rules
 
+if XENO_INSTALL_DOC
 install-data-local: install-docs-local
+uninstall-local: uninstall-docs
+else
+install-data-local:
+uninstall-local:
+endif
 
 dist-hook: dist-docs-hook
-
-uninstall-local: uninstall-docs

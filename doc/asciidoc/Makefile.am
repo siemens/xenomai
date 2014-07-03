@@ -108,13 +108,17 @@ endif
 
 include $(top_srcdir)/doc/install-dist.rules
 
+if XENO_INSTALL_DOC
 install-data-local: install-docs-local
+uninstall-local: uninstall-docs
+else
+install-data-local:
+uninstall-local:
+endif
 
 dist-hook: dist-docs-hook
 
-uninstall-local: uninstall-docs
+distclean-local: clean-local
 
 clean-local:
 	$(RM) -R $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS) $(tmpdir)
-
-distclean-local: clean-local

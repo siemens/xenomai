@@ -664,16 +664,17 @@ uninstall-docs:
 	    done; \
 	fi
 
-install-data-local: install-docs-local
+@XENO_INSTALL_DOC_TRUE@install-data-local: install-docs-local
+@XENO_INSTALL_DOC_TRUE@uninstall-local: uninstall-docs
+@XENO_INSTALL_DOC_FALSE@install-data-local:
+@XENO_INSTALL_DOC_FALSE@uninstall-local:
 
 dist-hook: dist-docs-hook
 
-uninstall-local: uninstall-docs
+distclean-local: clean-local
 
 clean-local:
 	$(RM) -R $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS) $(tmpdir)
-
-distclean-local: clean-local
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
