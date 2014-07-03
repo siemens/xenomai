@@ -98,12 +98,12 @@
  *      if (ret)
  *          return ret;
  *
- *	if (SMOKEY_ARG_ISSET(foo, 0))
- *		i_arg = SMOKEY_ARG_INT(foo, 0);
- *	if (SMOKEY_ARG_ISSET(foo, 1))
- *		s_arg = SMOKEY_ARG_STRING(foo, 1);
- *	if (SMOKEY_ARG_ISSET(foo, 2))
- *		b_arg = SMOKEY_ARG_INT(foo, 2);
+ *	if (SMOKEY_ARG_ISSET(foo, some_integer))
+ *		i_arg = SMOKEY_ARG_INT(foo, some_integer);
+ *	if (SMOKEY_ARG_ISSET(foo, some_string))
+ *		s_arg = SMOKEY_ARG_STRING(foo, some_string);
+ *	if (SMOKEY_ARG_ISSET(foo, some_boolean))
+ *		b_arg = SMOKEY_ARG_INT(foo, some_boolean);
  *
  *      return run_some_hypothetical_smoke_test_code(i_arg, s_arg, b_arg);
  * }
@@ -127,12 +127,11 @@
  *
  * Once smokey_parse_args() has returned, each argument can be checked
  * individually for presence. If a valid argument was matched on the
- * command line, SMOKEY_ARG_ISSET(name, position) returns non-zero,
- * with @a position defined as the 0-based argument position in the
- * declarator list. In the latter case, its value can be retrieved by
- * a corresponding call to SMOKEY_ARG_INT(name, position),
- * SMOKEY_ARG_STRING(name, position) or SMOKEY_ARG_BOOL(name,
- * position).
+ * command line, SMOKEY_ARG_ISSET(test_name, arg_name) returns
+ * non-zero. In the latter case, its value can be retrieved by a
+ * similar call to SMOKEY_ARG_INT(test_name, arg_name),
+ * SMOKEY_ARG_STRING(test_name, arg_name) or
+ * SMOKEY_ARG_BOOL(test_name, arg_name).
  *
  * In the above example, passing "some_integer=3" on the command line of
  * any program implementing such Smokey-based test would cause the

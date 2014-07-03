@@ -286,14 +286,14 @@ static int run_sched_quota(struct smokey_test *t, int argc, char *const argv[])
 		return -ret;
 	}
 
-	if (SMOKEY_ARG_ISSET(sched_quota, 0))
-		quota = SMOKEY_ARG_INT(sched_quota, 0);
+	if (SMOKEY_ARG_ISSET(sched_quota, quota))
+		quota = SMOKEY_ARG_INT(sched_quota, quota);
 
 	if (quota <= 0)
 		quota = 10;
 
-	if (SMOKEY_ARG_ISSET(sched_quota, 1))
-		nrthreads = SMOKEY_ARG_INT(sched_quota, 1);
+	if (SMOKEY_ARG_ISSET(sched_quota, threads))
+		nrthreads = SMOKEY_ARG_INT(sched_quota, threads);
 
 	if (nrthreads <= 0)
 		nrthreads = 3;

@@ -75,27 +75,27 @@ struct smokey_test {
 #define __smokey_arg_count(__args)	\
 	(sizeof(__args) / sizeof(__args[0]))
 
-#define smokey_test_plugin(__name, __args, __desc)			\
-	static int run_ ## __name(struct smokey_test *t,		\
-				  int argc, char *const argv[]);	\
-	static struct smokey_test __name = {				\
-		.name = #__name,					\
+#define smokey_test_plugin(__plugin, __args, __desc)			\
+	static int run_ ## __plugin(struct smokey_test *t,		\
+				    int argc, char *const argv[]);	\
+	static struct smokey_test __plugin = {				\
+		.name = #__plugin,					\
 		.args = (__args),					\
 		.nargs = __smokey_arg_count(__args),			\
 		.description = (__desc),				\
-		.run = run_ ## __name,					\
+		.run = run_ ## __plugin,				\
 	};								\
-	void smokey_plugin_ ## __name(void);				\
+	void smokey_plugin_ ## __plugin(void);				\
 	__attribute__((constructor(__SMOKEYPLUG_CTOR_PRIO)))		\
-	void smokey_plugin_ ## __name(void)				\
+	void smokey_plugin_ ## __plugin(void)				\
 	{								\
-		smokey_register_plugin(&(__name));			\
+		smokey_register_plugin(&(__plugin));			\
 	}
 
-#define SMOKEY_ARG(__name, __pos)	  ((__name).args + __pos)
-#define SMOKEY_ARG_ISSET(__name, __pos)	  (SMOKEY_ARG(__name, __pos)->matched)
-#define SMOKEY_ARG_INT(__name, __pos)	  (SMOKEY_ARG(__name, __pos)->u.n_val)
-#define SMOKEY_ARG_STRING(__name, __pos)  (SMOKEY_ARG(__name, __pos)->u.s_val)
+#define SMOKEY_ARG(__plugin, __arg)	   (smokey_lookup_arg(&(__plugin), # __arg))
+#define SMOKEY_ARG_ISSET(__plugin, __arg)  (SMOKEY_ARG(__plugin, __arg)->matched)
+#define SMOKEY_ARG_INT(__plugin, __arg)	   (SMOKEY_ARG(__plugin, __arg)->u.n_val)
+#define SMOKEY_ARG_STRING(__plugin, __arg) (SMOKEY_ARG(__plugin, __arg)->u.s_val)
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,6 +108,9 @@ int smokey_int(const char *s, struct smokey_arg *arg);
 int smokey_bool(const char *s, struct smokey_arg *arg);
 
 int smokey_string(const char *s, struct smokey_arg *arg);
+
+struct smokey_arg *smokey_lookup_arg(struct smokey_test *t,
+				     const char *arg);
 
 int smokey_parse_args(struct smokey_test *t,
 		      int argc, char *const argv[]);

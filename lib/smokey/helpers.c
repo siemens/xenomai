@@ -100,3 +100,20 @@ int smokey_parse_args(struct smokey_test *t,
 
 	return matched;
 }
+
+struct smokey_arg *smokey_lookup_arg(struct smokey_test *t,
+				     const char *name)
+{
+	struct smokey_arg *arg = NULL;
+	int ac;
+
+	for (arg = t->args, ac = 0;
+	     arg->name && ac < t->nargs; arg++, ac++) {
+		if (strcmp(arg->name, name) == 0)
+			return arg;
+	}
+
+	/* Assume this is fatal. */
+	panic("test %s has no argument \"%s\"",
+	      t->name, name);
+}
