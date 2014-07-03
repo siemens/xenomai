@@ -372,7 +372,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/cobalt
 includesub_HEADERS = \
-	cobalt.h	\
 	fcntl.h		\
 	mqueue.h	\
 	pthread.h	\

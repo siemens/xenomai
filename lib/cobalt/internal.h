@@ -18,37 +18,8 @@
 #ifndef _LIB_COBALT_INTERNAL_H
 #define _LIB_COBALT_INTERNAL_H
 
-#include <signal.h>
-#include <pthread.h>
-#include <sched.h>
-#include <semaphore.h>
-#include <errno.h>
-#include <time.h>
-#include <nocore/atomic.h>
-#include <cobalt/uapi/kernel/synch.h>
-#include <cobalt/uapi/kernel/vdso.h>
-#include <cobalt/uapi/mutex.h>
-#include <cobalt/uapi/event.h>
-#include <cobalt/uapi/monitor.h>
-#include <cobalt/uapi/thread.h>
-#include <cobalt/uapi/cond.h>
-#include <cobalt/uapi/sem.h>
-#include <cobalt/cobalt.h>
-#include <xeno_config.h>
-#include <boilerplate/list.h>
+#include <cobalt/sys/cobalt.h>
 #include "current.h"
-
-#define report_error(fmt, args...) \
-	__STD(fprintf(stderr, "Xenomai/cobalt: %s(): " fmt "\n", __func__, ##args))
-
-#define report_error_cont(fmt, args...) \
-	__STD(fprintf(stderr, "                " fmt "\n", ##args))
-
-struct cobalt_tsd_hook {
-	void (*create_tsd)(void);
-	void (*delete_tsd)(void);
-	struct pvholder next;
-};
 
 extern unsigned long cobalt_sem_heap[2];
 
@@ -67,70 +38,6 @@ static inline atomic_long_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow
 	return &mutex_get_datp(shadow)->owner;
 }
 
-void cobalt_thread_harden(void);
-
-int cobalt_thread_join(pthread_t thread);
-
-pid_t cobalt_thread_pid(pthread_t thread);
-
-int cobalt_monitor_init(cobalt_monitor_t *mon,
-			clockid_t clk_id, int flags);
-
-int cobalt_monitor_destroy(cobalt_monitor_t *mon);
-
-int cobalt_monitor_enter(cobalt_monitor_t *mon);
-
-int cobalt_monitor_exit(cobalt_monitor_t *mon);
-
-int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
-			const struct timespec *ts);
-
-void cobalt_monitor_grant(cobalt_monitor_t *mon,
-			  struct xnthread_user_window *u_window);
-
-int cobalt_monitor_grant_sync(cobalt_monitor_t *mon,
-			      struct xnthread_user_window *u_window);
-
-void cobalt_monitor_grant_all(cobalt_monitor_t *mon);
-
-int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon);
-
-void cobalt_monitor_drain(cobalt_monitor_t *mon);
-
-int cobalt_monitor_drain_sync(cobalt_monitor_t *mon);
-
-void cobalt_monitor_drain_all(cobalt_monitor_t *mon);
-
-int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon);
-
-int cobalt_event_init(cobalt_event_t *event,
-		      unsigned long value,
-		      int flags);
-
-int cobalt_event_post(cobalt_event_t *event,
-		      unsigned long bits);
-
-int cobalt_event_wait(cobalt_event_t *event,
-		      unsigned long bits,
-		      unsigned long *bits_r,
-		      int mode,
-		      const struct timespec *timeout);
-
-unsigned long cobalt_event_clear(cobalt_event_t *event,
-				 unsigned long bits);
-
-int cobalt_event_inquire(cobalt_event_t *event,
-			 struct cobalt_event_info *info,
-			 pid_t *waitlist, size_t waitsz);
-
-int cobalt_event_destroy(cobalt_event_t *event);
-
-int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
-		       pid_t *waitlist, size_t waitsz);
-
-int cobalt_sched_weighted_prio(int policy,
-			       const struct sched_param_ex *param_ex);
-
 void cobalt_thread_init(void);
 
 void cobalt_print_init(void);
@@ -142,8 +49,6 @@ void cobalt_ticks_init(unsigned long long freq);
 void cobalt_default_mutexattr_init(void);
 
 void cobalt_default_condattr_init(void);
-
-void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
 
 struct xnfeatinfo;
 
