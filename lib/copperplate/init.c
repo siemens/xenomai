@@ -464,7 +464,7 @@ void copperplate_bootstrap_minimal(const char *arg0, char *mountpt)
 
 	boilerplate_init();
 
-	__node_id = copperplate_get_tid();
+	__node_id = get_thread_pid();
 
 	ret = debug_init();
 	if (ret) {
@@ -513,7 +513,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	threadobj_init_key();
 
 	/* Our node id. is the tid of the main thread. */
-	__node_id = copperplate_get_tid();
+	__node_id = get_thread_pid();
 
 	/* No ifs, no buts: we must be called over the main thread. */
 	assert(getpid() == __node_id);

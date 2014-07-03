@@ -201,7 +201,7 @@ static int init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
 	if (ret)
 		return __bt(ret);
 
-	m_heap->cpid = copperplate_get_tid();
+	m_heap->cpid = get_thread_pid();
 
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
@@ -869,7 +869,7 @@ void heapobj_destroy(struct heapobj *hobj)
 	cpid = main_heap.cpid;
 	munmap(&main_heap, main_heap.maplen);
 
-	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
+	if (cpid == get_thread_pid() || (cpid && kill(cpid, 0)))
 		shm_unlink(hobj->fsname);
 }
 

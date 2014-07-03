@@ -38,16 +38,6 @@ static int thread_spawn_epilogue(struct corethread_attributes *cta);
 
 static void *thread_trampoline(void *arg);
 
-pid_t copperplate_get_tid(void)
-{
-	/*
-	 * The nucleus maintains a hash table indexed on
-	 * task_pid_vnr() values for mapped shadows. This is what
-	 * __NR_gettid retrieves as well in Cobalt mode.
-	 */
-	return syscall(__NR_gettid);
-}
-
 #ifdef CONFIG_XENO_COBALT
 
 #include "cobalt/internal.h"

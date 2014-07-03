@@ -95,7 +95,7 @@ static void timerobj_enqueue(struct timerobj *tmobj)
 
 static int server_prologue(void *arg)
 {
-	svpid = copperplate_get_tid();
+	svpid = get_thread_pid();
 	timersv_init_corespec("timer-internal");
 	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 

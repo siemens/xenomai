@@ -94,8 +94,6 @@ static inline void copperplate_set_silent(void)
 extern "C" {
 #endif
 
-pid_t copperplate_get_tid(void);
-
 int copperplate_kill_tid(pid_t tid, int sig);
 
 int copperplate_create_thread(struct corethread_attributes *cta,

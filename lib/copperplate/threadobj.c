@@ -124,7 +124,7 @@ static inline void agent_init_corespec(const char *name)
 
 static int agent_prologue(void *arg)
 {
-	agent_pid = copperplate_get_tid();
+	agent_pid = get_thread_pid();
 	agent_init_corespec("remote-agent");
 	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 
@@ -1169,7 +1169,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		*thobj->name = '\0';
 
 	thobj->ptid = pthread_self();
-	thobj->pid = copperplate_get_tid();
+	thobj->pid = get_thread_pid();
 	thobj->errno_pointer = &errno;
 	threadobj_set_agent(thobj);
 	backtrace_init_context(&thobj->btd, name);
