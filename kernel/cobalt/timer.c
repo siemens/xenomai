@@ -64,10 +64,8 @@ int xntimer_heading_p(struct xntimer *timer)
 	return 0;
 }
 
-/*!
- * @fn void xntimer_start(struct xntimer *timer,xnticks_t value,xnticks_t interval,
- *                        xntmode_t mode)
- * @brief Arm a timer.
+/**
+ * Arm a timer.
  *
  * Activates a timer so that the associated timeout handler will be
  * fired after each expiration time. A timer can be either periodic or
@@ -94,7 +92,9 @@ int xntimer_heading_p(struct xntimer *timer)
  * (obtained from xnclock_read_realtime()).
  *
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
- * date in the past has been given.
+ * date in the past has been given. In such an event, the timer is
+ * nevertheless armed for the next shot in the timeline if @a interval
+ * is different from XN_INFINITE.
  *
  * @coretags{unrestricted, atomic-entry}
  */
@@ -104,8 +104,9 @@ int xntimer_start(struct xntimer *timer,
 {
 	struct xnclock *clock = xntimer_clock(timer);
 	xntimerq_t *q = xntimer_percpu_queue(timer);
+	xnticks_t date, now, delay, period;
 	struct xnsched *sched;
-	xnticks_t date, now;
+	int ret = 0;
 
 	trace_cobalt_timer_start(timer, value, interval, mode);
 
@@ -127,8 +128,19 @@ int xntimer_start(struct xntimer *timer,
 		/* fall through */
 	default: /* XN_ABSOLUTE || XN_REALTIME */
 		date = xnclock_ns_to_ticks(clock, value);
-		if ((xnsticks_t)(date - now) <= 0)
-			return -ETIMEDOUT;
+		if ((xnsticks_t)(date - now) <= 0) {
+			ret = -ETIMEDOUT;
+			if (interval == XN_INFINITE)
+				return ret;
+			/*
+			 * We are late on arrival for the first
+			 * delivery, wait for the next shot on the
+			 * periodic time line.
+			 */
+			delay = now - date;
+			period = xnclock_ns_to_ticks(clock, interval);
+			date += period * (xnarch_div64(delay, period) + 1);
+		}
 		break;
 	}
 
@@ -154,7 +166,7 @@ int xntimer_start(struct xntimer *timer,
 			xnclock_program_shot(clock, sched);
 	}
 
-	return 0;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xntimer_start);
 
