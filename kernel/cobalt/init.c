@@ -474,15 +474,19 @@ device_initcall(xenomai_init);
  * @ingroup cobalt
  * @defgroup cobalt_core Cobalt kernel
  *
- * The Cobalt kernel implements generic RTOS building blocks.
+ * The Cobalt core is a co-kernel which supplements the Linux kernel
+ * for delivering real-time services with very low latency. It
+ * implements a set of generic RTOS building blocks, which the
+ * Cobalt/POSIX and Cobalt/RTDM APIs are based on.  Cobalt has higher
+ * priority over the Linux kernel activities.
  *
  * @{
  *
  * @page cobalt-core-tags Dual kernel service tags
  *
- * Cobalt kernel services may be restricted to particular calling
+ * The Cobalt kernel services may be restricted to particular calling
  * contexts, or entail specific side-effects. To describe this
- * information, each service documented by this manual bears a set of
+ * information, each service documented by this section bears a set of
  * tags when applicable.
  *
  * The table below matches the tags used throughout the documentation
