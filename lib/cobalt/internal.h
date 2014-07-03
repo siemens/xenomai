@@ -71,6 +71,8 @@ void cobalt_thread_harden(void);
 
 int cobalt_thread_join(pthread_t thread);
 
+pid_t cobalt_thread_pid(pthread_t thread);
+
 int cobalt_monitor_init(cobalt_monitor_t *mon,
 			clockid_t clk_id, int flags);
 

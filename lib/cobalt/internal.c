@@ -48,6 +48,12 @@ int cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 				 sc_cobalt_thread_getstat, pid, stat);
 }
 
+pid_t cobalt_thread_pid(pthread_t thread)
+{
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_thread_getpid, thread);
+}
+
 int cobalt_thread_join(pthread_t thread)
 {
 	int ret, oldtype;
