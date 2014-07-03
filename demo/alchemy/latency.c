@@ -113,9 +113,7 @@ static void latency(void *cookie)
 			unsigned new_relaxed;
 			unsigned long ov;
 
-			expected_tsc += period_tsc;
 			err = rt_task_wait_period(&ov);
-
 			dt = (long)(rt_timer_tsc() - expected_tsc);
 			new_relaxed = sampling_relaxed;
 			if (dt > maxj) {
@@ -140,7 +138,8 @@ static void latency(void *cookie)
 
 				overrun += ov;
 				expected_tsc += period_tsc * ov;
-			}
+			} else
+				expected_tsc += period_tsc;
 
 			if (freeze_max && (dt > gmaxjitter)
 			    && !(finished || warmup)) {
