@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <pthread.h>
+#include <string.h>
 #include <boilerplate/signal.h>
 #include <boilerplate/compiler.h>
 
@@ -46,6 +47,17 @@ struct name_generator {
 
 #define ONE_BILLION  1000000000
 
+void __namecpy_requires_character_array_as_destination(void);
+
+#define namecpy(__dst, __src)						\
+	({								\
+		if (!__builtin_types_compatible_p(typeof(__dst), char[])) \
+			__namecpy_requires_character_array_as_destination();	\
+		strncpy((__dst), __src, sizeof(__dst) - 1);		\
+		__dst[sizeof(__dst) - 1] = '\0';			\
+		__dst;							\
+	 })
+	
 #ifdef __cplusplus
 extern "C" {
 #endif

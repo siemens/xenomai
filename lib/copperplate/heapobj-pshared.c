@@ -157,8 +157,7 @@ static int init_heap(struct shared_heap *heap, const char *name,
 	pthread_mutexattr_t mattr;
 	int ret;
 
-	strncpy(heap->name, name, sizeof(heap->name) - 1);
-	heap->name[sizeof(heap->name) - 1] = '\0';
+	namecpy(heap->name, name);
 	heap->extentsize = size;
 	heap->hdrsize = internal_overhead(size);
 	heap->npages = (size - heap->hdrsize) >> HOBJ_PAGE_SHIFT;

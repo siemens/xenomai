@@ -354,10 +354,8 @@ static STATUS __taskInit(struct wind_task *task,
 
 	if (name == NULL || *name == '\0')
 		sprintf(task->name, "t%lu", ++anon_tids);
-	else {
-		strncpy(task->name, name, sizeof(task->name));
-		task->name[sizeof(task->name) - 1] = '\0';
-	}
+	else
+		namecpy(task->name, name);
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;

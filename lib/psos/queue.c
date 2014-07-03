@@ -99,8 +99,7 @@ static u_long __q_create(const char *name, u_long count,
 		sprintf(q->name, "q%lu", ++anon_qids);
 	else {
 		name = __psos_maybe_short_name(short_name, name);
-		strncpy(q->name, name, sizeof(q->name));
-		q->name[sizeof(q->name) - 1] = '\0';
+		namecpy(q->name, name);
 	}
 
 	if (flags & Q_PRIOR)

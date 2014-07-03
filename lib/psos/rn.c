@@ -115,8 +115,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 		sprintf(rn->name, "rn%lu", ++anon_rnids);
 	else {
 		name = __psos_maybe_short_name(short_name, name);
-		strncpy(rn->name, name, sizeof(rn->name));
-		rn->name[sizeof(rn->name) - 1] = '\0';
+		namecpy(rn->name, name);
 	}
 
 	if (pvcluster_addobj_dup(&psos_rn_table, rn->name, &rn->cobj)) {

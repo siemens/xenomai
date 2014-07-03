@@ -147,8 +147,7 @@ u_long pt_create(const char *name,
 		sprintf(pt->name, "pt%lu", ++anon_ptids);
 	else {
 		name = __psos_maybe_short_name(short_name, name);
-		strncpy(pt->name, name, sizeof(pt->name));
-		pt->name[sizeof(pt->name) - 1] = '\0';
+		namecpy(pt->name, name);
 	}
 
 	CANCEL_DEFER(svc);

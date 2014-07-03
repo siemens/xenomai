@@ -161,8 +161,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 	}
 
 	if (name && *name) {
-		strncpy(plabel.label, name, sizeof(plabel.label)-1);
-		plabel.label[sizeof(plabel.label)-1] = '\0';
+		namecpy(plabel.label, name);
 		ret = __RT(setsockopt(sock, SOL_XDDP, XDDP_LABEL,
 				      &plabel, sizeof(plabel)));
 		if (ret)

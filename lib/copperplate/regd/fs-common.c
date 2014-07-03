@@ -112,7 +112,7 @@ int open_threads(struct fsobj *fsobj, void *priv)
 		ret = threadobj_lock(thobj);
 		if (ret)
 			continue;
-		strncpy(p->name, thobj->name, sizeof(p->name) - 1);
+		namecpy(p->name, thobj->name);
 		p->name[sizeof(p->name) - 1] = '\0';
 		p->pid = thobj->pid;
 		p->priority = threadobj_get_priority(thobj);
@@ -234,8 +234,7 @@ int open_heaps(struct fsobj *fsobj, void *priv)
 		if (p - heap_data >= count)
 			break;
 		heap = container_of(obj, struct shared_heap, memspec);
-		strncpy(p->name, heap->name, sizeof(p->name) - 1);
-		p->name[sizeof(p->name) - 1] = '\0';
+		namecpy(p->name, heap->name);
 		p->used = heap->ubytes;
 		p->total = heap->total;
 		p++;

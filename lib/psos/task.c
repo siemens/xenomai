@@ -306,8 +306,7 @@ u_long t_create(const char *name, u_long prio,
 		sprintf(task->name, "t%lu", ++anon_tids);
 	else {
 		name = __psos_maybe_short_name(short_name, name);
-		strncpy(task->name, name, sizeof(task->name));
-		task->name[sizeof(task->name) - 1] = '\0';
+		namecpy(task->name, name);
 	}
 
 	task->flags = flags;	/* We don't do much with those. */

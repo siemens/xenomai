@@ -93,8 +93,7 @@ u_long sm_create(const char *name,
 		sprintf(sem->name, "sm%lu", ++anon_smids);
 	else {
 		name = __psos_maybe_short_name(short_name, name);
-		strncpy(sem->name, name, sizeof(sem->name));
-		sem->name[sizeof(sem->name) - 1] = '\0';
+		namecpy(sem->name, name);
 	}
 
 	if (cluster_addobj_dup(&psos_sem_table, sem->name, &sem->cobj)) {

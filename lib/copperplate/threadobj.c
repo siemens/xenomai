@@ -1162,10 +1162,9 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	} else
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
-	if (name) {
-		strncpy(thobj->name, name, sizeof(thobj->name) - 1);
-		thobj->name[sizeof(thobj->name) - 1] = '\0';
-	} else
+	if (name)
+		namecpy(thobj->name, name);
+	else
 		*thobj->name = '\0';
 
 	thobj->ptid = pthread_self();

@@ -120,7 +120,7 @@ STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 	desc->td_priority = wind_task_get_priority(task);
 	desc->td_status = get_task_status(task);
 	desc->td_flags = tcb->flags;
-	strncpy(desc->td_name, task->name, sizeof(desc->td_name));
+	namecpy(desc->td_name, task->name);
 	desc->td_entry = tcb->entry;
 	desc->td_errorStatus = *task->thobj.errno_pointer;
 	ret = pthread_getattr_np(task->thobj.ptid, &attr);
