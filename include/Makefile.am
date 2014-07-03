@@ -30,4 +30,5 @@ DIST_SUBDIRS = 		\
 	psos 		\
 	rtdm		\
 	smokey		\
+	trank		\
 	vxworks

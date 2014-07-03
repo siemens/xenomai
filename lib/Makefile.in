@@ -353,6 +353,7 @@ DIST_SUBDIRS = \
 	copperplate	\
 	psos		\
 	smokey		\
+	trank		\
 	vxworks
 
 all: all-recursive

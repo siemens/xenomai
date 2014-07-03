@@ -22,4 +22,5 @@ DIST_SUBDIRS = 		\
 	copperplate	\
 	psos		\
 	smokey		\
+	trank		\
 	vxworks

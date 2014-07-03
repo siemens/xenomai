@@ -390,6 +390,7 @@ DIST_SUBDIRS = \
 	psos 		\
 	rtdm		\
 	smokey		\
+	trank		\
 	vxworks
 
 all: xeno_config.h
