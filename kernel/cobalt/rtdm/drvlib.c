@@ -96,7 +96,8 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
  * @param[in] priority Priority of the task, see also
  * @ref rtdmtaskprio "Task Priority Range"
  * @param[in] period Period in nanoseconds of a cyclic task, 0 for non-cyclic
- * mode
+ * mode. Waiting for the first and subsequent periodic events is
+ * done using rtdm_task_wait_period().
  *
  * @return 0 on success, otherwise negative error code
  *
@@ -417,8 +418,9 @@ EXPORT_SYMBOL_GPL(rtdm_timer_destroy);
  *
  * @return 0 on success, otherwise:
  *
- * - -ETIMEDOUT is returned if @c expiry describes an absolute date in the
- * past.
+ * - -ETIMEDOUT is returned if @c expiry describes an absolute date in
+ * the past. In such an event, the timer is nevertheless armed for the
+ * next shot in the timeline if @a interval is non-zero.
  *
  * @coretags{unrestricted}
  */
