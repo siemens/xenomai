@@ -88,6 +88,7 @@ static int cobalt_syscall_ni(void)
 static struct xnsyscall cobalt_syscalls[] = {
 	[0 ... __NR_COBALT_SYSCALLS-1] = SKINCALL_NI,
 	SKINCALL_DEF(sc_cobalt_thread_create, cobalt_thread_create, init),
+	SKINCALL_DEF(sc_cobalt_thread_getpid, cobalt_thread_pid, current),
 	SKINCALL_DEF(sc_cobalt_thread_setschedparam_ex, cobalt_thread_setschedparam_ex, conforming),
 	SKINCALL_DEF(sc_cobalt_thread_getschedparam_ex, cobalt_thread_getschedparam_ex, current),
 	SKINCALL_DEF(sc_cobalt_sched_weightprio, cobalt_sched_weighted_prio, current),

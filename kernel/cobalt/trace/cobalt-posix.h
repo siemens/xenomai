@@ -177,11 +177,6 @@ DECLARE_EVENT_CLASS(cobalt_posix_pid,
 	TP_printk("pid=%d", __entry->pid)
 );
 
-DEFINE_EVENT(cobalt_posix_pid, cobalt_pthread_probe,
-	TP_PROTO(pid_t pid),
-	TP_ARGS(pid)
-);
-
 DEFINE_EVENT(cobalt_posix_pid, cobalt_pthread_stat,
 	TP_PROTO(pid_t pid),
 	TP_ARGS(pid)
@@ -202,6 +197,18 @@ TRACE_EVENT(cobalt_pthread_kill,
 );
 
 TRACE_EVENT(cobalt_pthread_join,
+	TP_PROTO(unsigned long pth),
+	TP_ARGS(pth),
+	TP_STRUCT__entry(
+		__field(unsigned long, pth)
+	),
+	TP_fast_assign(
+		__entry->pth = pth;
+	),
+	TP_printk("pth=%p", (void *)__entry->pth)
+);
+
+TRACE_EVENT(cobalt_pthread_pid,
 	TP_PROTO(unsigned long pth),
 	TP_ARGS(pth),
 	TP_STRUCT__entry(

@@ -128,7 +128,7 @@ struct cobalt_thread *cobalt_thread_find_local(pid_t pid);
 
 struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 
-int cobalt_thread_create(unsigned long tid, int policy,
+int cobalt_thread_create(unsigned long pth, int policy,
 			 struct sched_param_ex __user *u_param,
 			 int shifted_muxid,
 			 unsigned long __user *u_window_offset);
@@ -140,24 +140,24 @@ cobalt_thread_shadow(struct task_struct *p,
 
 int cobalt_thread_setmode_np(int clrmask, int setmask, int __user *u_mode_r);
 
-int cobalt_thread_setname_np(unsigned long tid, const char __user *u_name);
+int cobalt_thread_setname_np(unsigned long pth, const char __user *u_name);
 
-int cobalt_thread_probe_np(pid_t h_tid);
+int cobalt_thread_kill(unsigned long pth, int sig);
 
-int cobalt_thread_kill(unsigned long tid, int sig);
+int cobalt_thread_join(unsigned long pth);
 
-int cobalt_thread_join(unsigned long tid);
+pid_t cobalt_thread_pid(unsigned long pth);
 
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat);
 
-int cobalt_thread_setschedparam_ex(unsigned long tid,
+int cobalt_thread_setschedparam_ex(unsigned long pth,
 				   int policy,
 				   const struct sched_param_ex __user *u_param,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted);
 
-int cobalt_thread_getschedparam_ex(unsigned long tid,
+int cobalt_thread_getschedparam_ex(unsigned long pth,
 				   int __user *u_policy,
 				   struct sched_param_ex __user *u_param);
 

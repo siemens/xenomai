@@ -705,6 +705,30 @@ int cobalt_thread_join(unsigned long pth)
 	return xnthread_join(&thread->threadbase, false);
 }
 
+pid_t cobalt_thread_pid(unsigned long pth)
+{
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
+	pid_t pid;
+	spl_t s;
+
+	trace_cobalt_pthread_pid(pth);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	hkey.u_pth = pth;
+	hkey.mm = current->mm;
+	thread = thread_lookup(&hkey);
+	if (thread == NULL)
+		pid = -ESRCH;
+	else
+		pid = xnthread_host_pid(&thread->threadbase);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return pid;
+}
+
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat)
 {
