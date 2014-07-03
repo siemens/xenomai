@@ -41,8 +41,6 @@
 #define T_WARNSW	__THREAD_M_WARNSW
 #define T_CONFORMING	__THREAD_M_CONFORMING
 #define T_JOINABLE	__THREAD_M_SPARE0
-/** Deprecated, compat only. */
-#define T_FPU		0x0
 
 struct RT_TASK {
 	uintptr_t handle;

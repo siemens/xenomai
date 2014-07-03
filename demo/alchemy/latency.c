@@ -701,7 +701,7 @@ int main(int argc, char *const *argv)
 	}
 
 	snprintf(task_name, sizeof(task_name), "display-%d", getpid());
-	err = rt_task_create(&display_task, task_name, 0, 0, T_FPU);
+	err = rt_task_create(&display_task, task_name, 0, 0, 0);
 
 	if (err) {
 		fprintf(stderr,
@@ -723,7 +723,7 @@ int main(int argc, char *const *argv)
 		snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
 		err =
 		    rt_task_create(&latency_task, task_name, 0, priority,
-				   T_FPU | T_WARNSW);
+				   T_WARNSW);
 
 		if (err) {
 			fprintf(stderr,
