@@ -346,7 +346,7 @@ EXTRA_DIST := \
 	plaintext.conf 			\
 	plaintext_postproc.awk		\
 	plaintext.xsl			\
-	$(MAN_DOCS:%.1:%.adoc)
+	$(MAN_DOCS:%.1=%.adoc)
 
 @XENO_BUILD_DOC_FALSE@HTML_DOCSDIR = $(srcdir)/../prebuilt/
 @XENO_BUILD_DOC_TRUE@HTML_DOCSDIR = ./

@@ -51,7 +51,7 @@ EXTRA_DIST :=				\
 	plaintext.conf 			\
 	plaintext_postproc.awk		\
 	plaintext.xsl			\
-	$(MAN_DOCS:%.1:%.adoc)
+	$(MAN_DOCS:%.1=%.adoc)
 
 if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../prebuilt/
