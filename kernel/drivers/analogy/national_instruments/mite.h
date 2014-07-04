@@ -20,7 +20,7 @@
 #define __ANALOGY_NI_MITE_H__
 
 #include <linux/pci.h>
-
+#include <linux/slab.h>
 #include <rtdm/analogy/device.h>
 
 #define PCI_VENDOR_ID_NATINST 0x1093
