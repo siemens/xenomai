@@ -51,6 +51,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/msr.h>
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
+#include <asm/xenomai/c1e.h>
 
 #ifdef CONFIG_IPIPE_CORE
 #define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
@@ -69,6 +70,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 
 static inline void rthal_grab_control(void)
 {
+	rthal_c1e_disable();
 	rthal_smi_init();
 	rthal_smi_disable();
 }

@@ -10,7 +10,7 @@ endif
 
 obj-$(CONFIG_XENOMAI) += xeno_hal.o
 
-xeno_hal-y := hal_$(X86_MODE).o hal-common.o usercopy_$(X86_MODE).o smi.o
+xeno_hal-y := hal_$(X86_MODE).o hal-common.o usercopy_$(X86_MODE).o smi.o c1e.o
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
