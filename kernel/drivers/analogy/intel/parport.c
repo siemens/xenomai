@@ -72,6 +72,7 @@
 
 #include <linux/module.h>
 #include <linux/ioport.h>
+#include <linux/io.h>		/* For inb/outb */
 #include <rtdm/analogy/device.h>
 
 #define PARPORT_SIZE 3
