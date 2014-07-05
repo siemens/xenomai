@@ -22,6 +22,7 @@
 #include <cobalt/kernel/arith.h>
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/smi.h>
+#include <asm/xenomai/c1e.h>
 
 #ifdef __i386__
 
@@ -144,6 +145,7 @@ static unsigned long mach_x86_calibrate(void)
 
 static int mach_x86_init(void)
 {
+	mach_x86_c1e_disable();
 	mach_x86_smi_init();
 	mach_x86_smi_disable();
 
