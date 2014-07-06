@@ -158,10 +158,7 @@ static void alarm_handler(struct timerobj *tmobj)
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Alarms are process-private objects and thus cannot be shared
  * by multiple processes, even if they belong to the same Xenomai
@@ -228,7 +225,7 @@ out:
  * This routine deletes an alarm object previously created by a call
  * to rt_alarm_create().
  *
- * @param alarm The descriptor address of the deleted alarm.
+ * @param alarm The alarm descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -237,10 +234,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling contexts:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_alarm_delete(RT_ALARM *alarm)
 {
@@ -281,7 +275,7 @@ out:
  * This service overrides any previous setup of the expiry date and
  * reload interval for the alarm.
  *
- * @param alarm The descriptor address of the started alarm.
+ * @param alarm The alarm descriptor.
  *
  * @param value The relative date of the first expiry, expressed in
  * clock ticks (see note).
@@ -295,7 +289,7 @@ out:
  *
  * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  *
  * @note Each of the initial @a value and @a interval is interpreted
  * as a multiple of the Alchemy clock resolution (see
@@ -332,13 +326,13 @@ out:
  * This routine disables an alarm object, preventing any further
  * expiry until it is re-enabled via rt_alarm_start().
  *
- * @param alarm The descriptor address of the stopped alarm.
+ * @param alarm The alarm descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_alarm_stop(RT_ALARM *alarm)
 {
@@ -367,8 +361,7 @@ out:
  * This routine returns the status information about the specified @a
  * alarm.
  *
- * @param alarm The descriptor address of the alarm to get the status
- * of.
+ * @param alarm The alarm descriptor.
  *
  * @param info A pointer to the @ref RT_ALARM_INFO "return
  * buffer" to copy the information to.
@@ -378,7 +371,7 @@ out:
  *
  * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 {

@@ -126,10 +126,7 @@ DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_pipe_create(RT_PIPE *pipe,
 		   const char *name, int minor, size_t poolsize)
@@ -223,7 +220,7 @@ out:
  * rt_pipe_create(). All resources attached to that pipe are
  * automatically released, all pending data is flushed.
  *
- * @param pipe The descriptor address of the deleted pipe.
+ * @param pipe The pipe descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -234,10 +231,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_pipe_delete(RT_PIPE *pipe)
 {
@@ -277,8 +271,7 @@ out:
  * This routine is a variant of rt_queue_read_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param pipe The descriptor address of the message pipe to read
- * from.
+ * @param pipe The pipe descriptor.
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the message received.
@@ -290,6 +283,8 @@ out:
  * other action.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -299,8 +294,7 @@ out:
  * This routine is a variant of rt_queue_read_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param pipe The descriptor address of the message pipe to read
- * from.
+ * @param pipe The pipe descriptor.
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the message received.
@@ -312,6 +306,8 @@ out:
  * other action.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -320,8 +316,7 @@ out:
  *
  * This service reads the next available message from a given pipe.
  *
- * @param pipe The descriptor address of the message pipe to read
- * from.
+ * @param pipe The pipe descriptor.
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the message received.
@@ -361,10 +356,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -449,7 +441,7 @@ out:
  * pointer to the raw data to be sent, instead of a canned message
  * buffer.
  *
- * @param pipe The descriptor address of the pipe to write to.
+ * @param pipe The pipe descriptor.
  *
  * @param buf The address of the first data byte to send. The
  * data will be copied to an internal buffer before transmission.
@@ -481,6 +473,8 @@ out:
  * associated special device is allowed. The output will be buffered
  * until then, only restricted by the available memory in the
  * associated buffer pool (see rt_pipe_create()).
+ *
+ * @apitags{xcontext, switch-primary}
  */
 ssize_t rt_pipe_write(RT_PIPE *pipe,
 		      const void *buf, size_t size, int mode)
@@ -496,6 +490,46 @@ ssize_t rt_pipe_write(RT_PIPE *pipe,
 	return do_write_pipe(pipe, buf, size, flags);
 }
 
+ /**
+ * @brief Stream bytes through a pipe.
+ *
+ * This service writes a sequence of bytes to be received from the
+ * associated special device. Unlike rt_pipe_send(), this service does
+ * not preserve message boundaries. Instead, an internal buffer is
+ * filled on the fly with the data, which will be consumed as soon as
+ * the receiver wakes up.
+ *
+ * Data buffers sent by the rt_pipe_stream() service are always
+ * transmitted in FIFO order (i.e. P_NORMAL mode).
+ *
+ * @param pipe The pipe descriptor.
+ *
+ * @param buf The address of the first data byte to send. The
+ * data will be copied to an internal buffer before transmission.
+ *
+ * @param size The size in bytes of the buffer. Zero is a valid value,
+ * in which case the service returns immediately without sending any
+ * data.
+ *
+ * @return The number of bytes sent upon success; this value may be
+ * lower than @a size, depending on the available space in the
+ * internal buffer. Otherwise:
+ *
+ * - -EINVAL is returned if @a mode is invalid or @a pipe is not a
+ * pipe descriptor.
+ *
+ * - -ENOMEM is returned if not enough buffer space is available to
+ * complete the operation.
+ *
+ * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
+ *
+ * @note Writing data to a pipe before any peer has opened the
+ * associated special device is allowed. The output will be buffered
+ * until then, only restricted by the available memory in the
+ * associated buffer pool (see rt_pipe_create()).
+ *
+ * @apitags{xcontext, switch-primary}
+ */
 ssize_t rt_pipe_stream(RT_PIPE *pipe,
 		       const void *buf, size_t size)
 {
@@ -539,10 +573,7 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe,
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -562,11 +593,13 @@ int rt_pipe_bind(RT_PIPE *pipe,
  * @fn int rt_pipe_unbind(RT_PIPE *pipe)
  * @brief Unbind from a message pipe.
  *
- * @param pipe The descriptor address of the pipe to unbind from.
+ * @param pipe The pipe descriptor.
  *
  * This routine releases a previous binding to a message pipe. After
  * this call has returned, the descriptor is no more valid for
  * referencing this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_pipe_unbind(RT_PIPE *pipe)
 {

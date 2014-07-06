@@ -132,6 +132,7 @@ TAB_SIZE               = 8
 
 ALIASES                = \
  		       "coretags{1}=@par Tags\n@ref cobalt-core-tags \"\1\""	\
+ 		       "apitags{1}=@par Tags\n@ref api-tags \"\1\""	\
 		       "sideeffect=@par Side effects\n"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources 
@@ -865,6 +866,7 @@ INPUT                  =						\
  		       @top_srcdir@/kernel/cobalt			\
  		       @top_srcdir@/kernel/drivers			\
  		       @top_srcdir@/lib/cobalt				\
+ 		       @top_srcdir@/lib/copperplate			\
  		       @top_srcdir@/lib/smokey				\
  		       @top_srcdir@/lib/analogy				\
  		       @top_srcdir@/lib/alchemy				\

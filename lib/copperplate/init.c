@@ -643,3 +643,65 @@ void copperplate_register_skin(struct copperskin *p)
 {
 	pvlist_append(&p->__reserved.next, &skins);
 }
+
+/**
+ * @{
+ *
+ * @page api-tags API service tags
+ *
+ * The non-POSIX API services based on the Copperplate library may be
+ * restricted to particular calling contexts, or entail specific
+ * side-effects. This information applies to the Alchemy API services,
+ * and to all RTOS emulators as well. To describe this information,
+ * each service documented by this section bears a set of tags when
+ * applicable.
+ *
+ * The table below matches the tags used throughout the documentation
+ * with the description of their meaning for the caller.
+ *
+ * @par
+ * <b>Context tags</b>
+ * <TABLE>
+ * <TR><TH>Tag</TH> <TH>Context on entry</TH></TR>
+ * <TR><TD>xthread-only</TD>	<TD>Must be called from a Xenomai thread</TD></TR>
+ * <TR><TD>xhandler-only</TD>	<TD>Must be called from a Xenomai handler. See note.</TD></TR>
+ * <TR><TD>xcontext</TD>	<TD>May be called from any Xenomai context (thread or handler).</TD></TR>
+ * <TR><TD>pthread-only</TD>	<TD>Must be called from a regular POSIX thread</TD></TR>
+ * <TR><TD>thread-unrestricted</TD>	<TD>May be called from a Xenomai or regular POSIX thread indifferently</TD></TR>
+ * <TR><TD>xthread-nowait</TD>	<TD>May be called from a Xenomai thread unrestricted, or from a regular thread as a non-blocking service only. See note.</TD></TR>
+ * <TR><TD>unrestricted</TD>	<TD>May be called from any context previously described</TD></TR>
+ * </TABLE>
+ *
+ * @note A Xenomai handler is most often used for callback-based
+ * timeout notifications. This context is @a NOT mapped to a regular
+ * Linux signal handler, it is actually underlaid by a special thread
+ * context, so that async-unsafe POSIX services may be invoked
+ * internally by the API implementation when running on behalf of such
+ * handler. Therefore, calling Xenomai API services from asynchronous
+ * regular signal handlers is fundamentally unsafe.
+ *
+ * @note A non-blocking call for an API service is defined by a
+ * special value passed as a timeout specification.
+ *
+ * @par
+ * <b>Possible side-effects over the Cobalt core (i.e. dual kernel configuration)</b>
+ * <TABLE>
+ * <TR><TH>Tag</TH> <TH>Description</TH></TR>
+ * <TR><TD>switch-primary</TD>		<TD>the caller may switch to primary mode</TD></TR>
+ * <TR><TD>switch-secondary</TD>	<TD>the caller may switch to secondary mode</TD></TR>
+ * </TABLE>
+ *
+ * @note As a rule of thumb, any service which might block the caller,
+ * causes a switch to primary mode if invoked from secondary
+ * mode. This rule might not apply in case the service can complete
+ * fully from user-space without any syscall entailed, due to a
+ * particular optimization (e.g. fast acquisition of semaphore
+ * resources directly from user-space in the non-contended
+ * case). Therefore, the switch-{primary, secondary} tags denote
+ * either services which _will_ always switch the caller to the mode
+ * mentioned, or _might_ have to do so, depending on the context. The
+ * absence of such tag indicates that such services can complete in
+ * either modes and as such will entail no switch.
+ *
+ * @}
+ */

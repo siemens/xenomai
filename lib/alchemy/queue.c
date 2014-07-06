@@ -188,10 +188,7 @@ fnref_register(libalchemy, queue_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Queues can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -301,7 +298,7 @@ fail_cballoc:
  * rt_queue_create(). All resources attached to that queue are
  * automatically released, including all pending messages.
  *
- * @param q The descriptor address of the deleted queue.
+ * @param q The queue descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -310,10 +307,7 @@ fail_cballoc:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_queue_delete(RT_QUEUE *queue)
 {
@@ -349,8 +343,7 @@ out:
  * enqueuing it by a call to rt_queue_send().  When used in pair,
  * these services provide a zero-copy interface for sending messages.
  *
- * @param q The descriptor address of the queue to allocate a buffer
- * from.
+ * @param q The queue descriptor.
  *
  * @param size The requested size in bytes of the buffer. Zero is an
  * acceptable value, which means that the message conveys no payload;
@@ -359,7 +352,7 @@ out:
  * @return The address of the allocated buffer upon success, or NULL
  * if the call fails.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 void *rt_queue_alloc(RT_QUEUE *queue, size_t size)
 {
@@ -401,8 +394,7 @@ out:
  * This service releases a message buffer to the queue's internal
  * pool.
  *
- * @param q The descriptor address of the queue to release a buffer
- * to.
+ * @param q The queue descriptor.
  *
  * @param buf The address of the message buffer to free. Even
  * zero-sized messages carrying no payload data must be freed, since
@@ -414,7 +406,7 @@ out:
  * service, or the caller did not get ownership of the message through
  * a successful return from rt_queue_receive().
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_queue_free(RT_QUEUE *queue, void *buf)
 {
@@ -467,7 +459,7 @@ out:
  * This service sends a complete message to a given queue. The message
  * must have been allocated by a previous call to rt_queue_alloc().
  *
- * @param q The descriptor address of the message queue to send to.
+ * @param q The queue descriptor.
  *
  * @param buf The address of the message buffer to be sent.  The
  * message buffer must have been allocated using the rt_queue_alloc()
@@ -508,7 +500,7 @@ out:
  * - -ENOMEM is returned if queuing the message would exceed the limit
  * defined for the queue at creation.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_queue_send(RT_QUEUE *queue,
 		  const void *buf, size_t size, int mode)
@@ -587,7 +579,7 @@ out:
  * This service builds a message out of a raw data buffer, then send
  * it to a given queue.
  *
- * @param q The descriptor address of the message queue to write to.
+ * @param q The queue descriptor.
  *
  * @param buf The address of the payload data to be written to the
  * queue. The payload is copied to a message buffer allocated
@@ -624,7 +616,7 @@ out:
  * defined for the queue at creation, or if no memory can be obtained
  * to convey the message data internally.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_queue_write(RT_QUEUE *queue,
 		   const void *buf, size_t size, int mode)
@@ -723,13 +715,14 @@ out:
  * This routine is a variant of rt_queue_receive_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param q The descriptor address of the message queue to receive
- * from.
+ * @param q The queue descriptor.
  *
  * @param bufp A pointer to a memory location which will be written
  * with the address of the received message.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -739,13 +732,14 @@ out:
  * This routine is a variant of rt_queue_receive_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param q The descriptor address of the message queue to receive
- * from.
+ * @param q The queue descriptor.
  *
  * @param bufp A pointer to a memory location which will be written
  * with the address of the received message.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -755,8 +749,7 @@ out:
  * This service receives the next available message from a given
  * queue.
  *
- * @param q The descriptor address of the message queue to receive
- * from.
+ * @param q The queue descriptor.
  *
  * @param bufp A pointer to a memory location which will be written
  * with the address of the received message, upon success. Once
@@ -793,10 +786,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 } .
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -870,8 +860,7 @@ out:
  * This routine is a variant of rt_queue_read_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param q The descriptor address of the message queue to read
- * from.
+ * @param q The queue descriptor.
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the received message payload.
@@ -880,6 +869,8 @@ out:
  * buf.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -889,8 +880,7 @@ out:
  * This routine is a variant of rt_queue_read_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param q The descriptor address of the message queue to read
- * from.
+ * @param q The queue descriptor.
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the received message payload.
@@ -899,6 +889,8 @@ out:
  * buf.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -908,8 +900,7 @@ out:
  * This service reads the next available message from a given
  * queue.
  *
- * @param q The descriptor address of the message queue to read
- * from.
+ * @param q The queue descriptor.
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the received message payload. The internal message
@@ -948,10 +939,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -1032,13 +1020,13 @@ out:
  * This routine flushes all messages currently pending in a queue,
  * releasing all message buffers appropriately.
  *
- * @param q The descriptor address of the queue to flush.
+ * @param q The queue descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a q is not a valid queue descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_queue_flush(RT_QUEUE *queue)
 {
@@ -1084,8 +1072,7 @@ out:
  * This routine returns the status information about the specified
  * queue.
  *
- * @param q The descriptor address of the queue to get the status
- * of.
+ * @param q The queue descriptor.
  *
  * @param info A pointer to the @ref RT_QUEUE_INFO "return
  * buffer" to copy the information to.
@@ -1095,7 +1082,7 @@ out:
  *
  * - -EINVAL is returned if @a q is not a valid queue descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_queue_inquire(RT_QUEUE *queue, RT_QUEUE_INFO *info)
 {
@@ -1162,10 +1149,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -1185,11 +1169,13 @@ int rt_queue_bind(RT_QUEUE *queue,
  * @fn int rt_queue_unbind(RT_QUEUE *q)
  * @brief Unbind from a message queue.
  *
- * @param q The descriptor address of the queue to unbind from.
+ * @param q The queue descriptor.
  *
  * This routine releases a previous binding to a message queue. After
  * this call has returned, the descriptor is no more valid for
  * referencing this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_queue_unbind(RT_QUEUE *queue)
 {

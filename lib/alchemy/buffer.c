@@ -205,10 +205,7 @@ fnref_register(libalchemy, buffer_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Buffers can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -296,7 +293,7 @@ fail:
  * This routine deletes a buffer object previously created by a call
  * to rt_buffer_create().
  *
- * @param bf The descriptor address of the deleted buffer.
+ * @param bf The buffer descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -305,10 +302,7 @@ fail:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_buffer_delete(RT_BUFFER *bf)
 {
@@ -342,7 +336,7 @@ out:
  * This routine is a variant of rt_buffer_read_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param bf The descriptor address of the buffer to read from.
+ * @param bf The buffer descriptor.
  *
  * @param ptr A pointer to a memory area which will be written upon
  * success with the received data.
@@ -351,6 +345,8 @@ out:
  * ptr.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -360,7 +356,7 @@ out:
  * This routine is a variant of rt_buffer_read_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param bf The descriptor address of the buffer to read from.
+ * @param bf The buffer descriptor.
  *
  * @param ptr A pointer to a memory area which will be written upon
  * success with the received data.
@@ -369,6 +365,8 @@ out:
  * ptr.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -379,7 +377,7 @@ out:
  * no message is available on entry, the caller is allowed to block
  * until enough data is written to the buffer, or a timeout elapses.
  *
- * @param bf The descriptor address of the buffer to read from.
+ * @param bf The buffer descriptor.
  *
  * @param ptr A pointer to a memory area which will be written upon
  * success with the received data.
@@ -442,11 +440,7 @@ out:
  * that case arises, thread priorities, buffer and/or message lengths
  * should likely be fixed, in order to eliminate such condition.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0,
- * .tv_nsec = 0 }.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -579,7 +573,7 @@ out:
  * This routine is a variant of rt_buffer_write_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param bf The descriptor address of the buffer to write to.
+ * @param bf The buffer descriptor.
  *
  * @param ptr The address of the message data to be written to the
  * buffer.
@@ -587,6 +581,8 @@ out:
  * @param len The length in bytes of the message data.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -596,7 +592,7 @@ out:
  * This routine is a variant of rt_buffer_write_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param bf The descriptor address of the buffer to write to.
+ * @param bf The buffer descriptor.
  *
  * @param ptr The address of the message data to be written to the
  * buffer.
@@ -604,6 +600,8 @@ out:
  * @param len The length in bytes of the message data.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -615,7 +613,7 @@ out:
  * caller is allowed to block until enough room is freed, or a timeout
  * elapses, whichever comes first.
  *
- * @param bf The descriptor address of the buffer to write to.
+ * @param bf The buffer descriptor.
  *
  * @param ptr The address of the message data to be written to the
  * buffer.
@@ -657,10 +655,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 } .
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -798,13 +793,13 @@ out:
  *
  * This routine empties a buffer from any data.
  *
- * @param bf The descriptor address of the buffer to clear.
+ * @param bf The buffer descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a bf is not a valid buffer descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_buffer_clear(RT_BUFFER *bf)
 {
@@ -838,8 +833,7 @@ out:
  * This routine returns the status information about the specified
  * buffer.
  *
- * @param bf The descriptor address of the buffer to get the status
- * of.
+ * @param bf The buffer descriptor.
  *
  * @param info A pointer to the @ref RT_BUFFER_INFO "return
  * buffer" to copy the information to.
@@ -849,7 +843,7 @@ out:
  *
  * - -EINVAL is returned if @a bf is not a valid buffer descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_buffer_inquire(RT_BUFFER *bf, RT_BUFFER_INFO *info)
 {
@@ -914,10 +908,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -937,11 +928,13 @@ int rt_buffer_bind(RT_BUFFER *bf,
  * @fn int rt_buffer_unbind(RT_BUFFER *bf)
  * @brief Unbind from an IPC buffer.
  *
- * @param bf The descriptor address of the buffer to unbind from.
+ * @param bf The buffer descriptor.
  *
  * This routine releases a previous binding to an IPC buffer. After
  * this call has returned, the descriptor is no more valid for
  * referencing this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_buffer_unbind(RT_BUFFER *bf)
 {

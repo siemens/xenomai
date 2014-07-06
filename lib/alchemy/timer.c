@@ -38,10 +38,7 @@ struct clockobj alchemy_clock;
  *
  * @return The current time expressed in clock ticks (see note).
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{unrestricted}
  *
  * @note The @a time value is a multiple of the Alchemy clock
  * resolution (see --alchemy-clock-resolution option, defaults to 1
@@ -71,10 +68,7 @@ RTIME rt_timer_read(void)
  * the --alchemy-clock-resolution option when starting the application
  * process (defaults to 1 nanosecond).
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{unrestricted}
  */
 SRTIME rt_timer_ns2ticks(SRTIME ns)
 {
@@ -96,10 +90,7 @@ SRTIME rt_timer_ns2ticks(SRTIME ns)
  * --alchemy-clock-resolution option when starting the application
  * process (defaults to 1 nanosecond).
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{unrestricted}
  */
 SRTIME rt_timer_ticks2ns(SRTIME ticks)
 {
@@ -117,10 +108,7 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks)
  *
  * @return This service always returns 0.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{unrestricted}
  */
 int rt_timer_inquire(RT_TIMER_INFO *info)
 {
@@ -142,10 +130,7 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
  *
  * @param ns The time to wait expressed in nanoseconds.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{unrestricted}
  */
 void rt_timer_spin(RTIME ns)
 {

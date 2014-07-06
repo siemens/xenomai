@@ -98,10 +98,7 @@ static struct registry_operations registry_ops;
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Mutexes can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -172,7 +169,7 @@ out:
  * This routine deletes a mutex object previously created by a call to
  * rt_mutex_create().
  *
- * @param mutex The descriptor address of the deleted mutex.
+ * @param mutex The mutex descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -186,10 +183,7 @@ out:
  * being used in a rt_mutex_acquite(), rt_mutex_acquire_timed() or
  * rt_mutex_acquire_until() by another task).
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_mutex_delete(RT_MUTEX *mutex)
 {
@@ -227,9 +221,11 @@ out:
  * This routine is a variant of rt_mutex_acquire_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param mutex The descriptor address of the mutex to acquire.
+ * @param mutex The mutex descriptor.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -239,9 +235,11 @@ out:
  * This routine is a variant of rt_mutex_acquire_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param mutex The descriptor address of the mutex to acquire.
+ * @param mutex The mutex descriptor.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -253,7 +251,7 @@ out:
  * service returns. Xenomai mutexes are implicitely recursive and
  * implement the priority inheritance protocol.
  *
- * @param mutex The descriptor address of the mutex to acquire.
+ * @param mutex The mutex descriptor.
  *
  * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the mutex to be available (see
@@ -282,14 +280,12 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
+ * @apitags{xthread-only, switch-primary}
  *
- * - Xenomai threads
- *
- * Core specifics:
- *
- * Over the Cobalt core, a real-time task with effective priority zero
- * keeps running in primary mode until it releases the mutex.
+ * @sideeffect
+ * Over the Cobalt core, an Alchemy task with priority zero keeps
+ * running in primary mode until it releases the mutex, at which point
+ * it is switched back to secondary mode automatically.
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -370,7 +366,7 @@ done:
  * unblocked and transfered the ownership of the mutex; otherwise, the
  * mutex is left in an unlocked state.
  *
- * @param mutex The descriptor address of the deleted mutex.
+ * @param mutex The mutex descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -380,9 +376,7 @@ done:
  * or more generally if this service was called from a context which
  * cannot own any mutex (e.g. interrupt context).
  *
- * Valid calling context:
- *
- * - Xenomai threads
+ * @apitags{xthread-only, switch-primary}
  */
 int rt_mutex_release(RT_MUTEX *mutex)
 {
@@ -404,7 +398,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
  * This routine returns the status information about the specified
  * mutex.
  *
- * @param mutex The descriptor address of the mutex to get the status of.
+ * @param mutex The mutex descriptor.
  *
  * @param info A pointer to the @ref RT_MUTEX_INFO "return
  * buffer" to copy the information to.
@@ -417,9 +411,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
  * - -EPERM is returned if this service is called from an interrupt
  * context.
  *
- * Valid calling context:
- *
- * - Xenomai threads
+ * @apitags{xthread-only, switch-primary}
  */
 int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 {
@@ -490,10 +482,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -513,7 +502,7 @@ int rt_mutex_bind(RT_MUTEX *mutex,
  * @fn int rt_mutex_unbind(RT_MUTEX *mutex)
  * @brief Unbind from a mutex.
  *
- * @param mutex The descriptor address of the mutex to unbind from.
+ * @param mutex The mutex descriptor.
  *
  * This routine releases a previous binding to a mutex. After this
  * call has returned, the descriptor is no more valid for referencing

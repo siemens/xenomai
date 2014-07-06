@@ -386,23 +386,19 @@ fail_syncinit:
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered task.
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-secondary}
  *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @sideeffect
+ * - When running over the Cobalt core:
  *
- * Core specifics:
- *
- * When running over the Cobalt core:
- *
- * - calling rt_task_create() causes SCHED_FIFO tasks to switch to
+ *   - calling rt_task_create() causes SCHED_FIFO tasks to switch to
  * secondary mode.
  *
- * - members of Xenomai's SCHED_FIFO class running in the primary
+ *   - members of Xenomai's SCHED_FIFO class running in the primary
  * domain have utmost priority over all Linux activities in the
  * system, including Linux interrupt handlers.
  *
- * When running over the Mercury core, the new task belongs to the
+ * - When running over the Mercury core, the new task belongs to the
  * regular POSIX SCHED_FIFO class.
  *
  * @note Tasks can be referred to from multiple processes which all
@@ -459,8 +455,7 @@ out:
  * subsequent call to rt_task_join() once successfully deleted, to
  * reclaim all resources.
  *
- * @param task The descriptor address of the deleted task, or NULL for
- * self-deletion.
+ * @param task The task descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -471,10 +466,9 @@ out:
  * when this service is called from asynchronous context, such as a
  * timer/alarm handler.
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-secondary}
  *
- * - Alchemy tasks only if @a task is NULL, any thread context
- * otherwise.
+ * @note The caller must be an Alchemy task if @a task is NULL.
  */
 int rt_task_delete(RT_TASK *task)
 {
@@ -514,7 +508,7 @@ int rt_task_delete(RT_TASK *task)
  * subsequent call to rt_task_join() once successfully deleted, to
  * reclaim all resources.
  *
- * @param task The descriptor address of the task to join.
+ * @param task The task descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -528,10 +522,7 @@ int rt_task_delete(RT_TASK *task)
  * - -ESRCH is returned if @a task no longer exists or refers to task
  * created by a different process.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-primary}
  *
  * @note After successful completion of this service, it is neither
  * required nor valid to additionally invoke rt_task_delete() on the
@@ -542,7 +533,7 @@ int rt_task_join(RT_TASK *task)
 	if (bad_pointer(task))
 		return -EINVAL;
 
-	return -pthread_join(task->thread, NULL);
+	return -__RT(pthread_join(task->thread, NULL));
 }
 
 /**
@@ -552,8 +543,8 @@ int rt_task_join(RT_TASK *task)
  * This calls makes @a task affine to the set of CPUs defined by @a
  * cpus.
  *
- * @param task The descriptor address of the task.  If @a task is
- * NULL, the CPU affinity of the current task is changed.
+ * @param task The task descriptor.  If @a task is NULL, the CPU
+ * affinity of the current task is changed.
  *
  * @param cpus The set of CPUs @a task should be affine to.
  *
@@ -568,9 +559,9 @@ int rt_task_join(RT_TASK *task)
  * according to any restrictions that may be imposed by the "cpuset"
  * mechanism described in cpuset(7).
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-secondary}
  *
- * - Alchemy tasks if @a task is NULL, any otherwise.
+ * @note The caller must be an Alchemy task if @a task is NULL.
  */
 int rt_task_set_affinity(RT_TASK *task, const cpu_set_t *cpus)
 {
@@ -606,7 +597,7 @@ out:
  * rt_task_create(). This service causes the started task to leave the
  * initial dormant state.
  *
- * @param task The descriptor address of the task to be started.
+ * @param task The task descriptor.
  *
  * @param entry The address of the task entry point.
  *
@@ -616,7 +607,7 @@ out:
  *
  * - -EINVAL is returned if @a task is not a valid task descriptor.
  *
- * Valid calling context: any.
+ * @apitags{thread-unrestricted, switch-primary}
  *
  * @note Starting an already started task leads to a nop, returning a
  * success status.
@@ -714,15 +705,10 @@ out:
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * Valid calling context:
+ * @apitags{pthread-only, switch-secondary}
  *
- * - Regular POSIX threads
- *
- * Core specifics:
- *
- * When running over the Cobalt core:
- *
- * - the caller always returns from this service in primary mode.
+ * @sideeffect Over the Cobalt core, the caller always returns from
+ * this service in primary mode.
  *
  * @note Tasks can be referred to from multiple processes which all
  * belong to the same Xenomai session.
@@ -789,9 +775,8 @@ undo:
  * rt_task_wait_period() to sleep until the next periodic release
  * point in the processor timeline is reached.
  *
- * @param task The descriptor address of the periodic task.  If @a
- * task is NULL, the current task is made periodic. @a task must
- * belong the current process.
+ * @param task The task descriptor.  If @a task is NULL, the current
+ * task is made periodic. @a task must belong the current process.
  *
  * @param idate The initial (absolute) date of the first release
  * point, expressed in clock ticks (see note).  If @a idate is equal
@@ -810,15 +795,14 @@ undo:
  * - -ETIMEDOUT is returned if @a idate is different from TM_INFINITE
  * and represents a date in the past.
  *
- * Valid calling contexts:
+ * @apitags{thread-unrestricted, switch-primary}
  *
- * - Alchemy tasks if @a task is NULL, any otherwise.
+ * @note The caller must be an Alchemy task if @a task is NULL.
  *
- * Core specifics:
- *
- * Over Cobalt, -EINVAL is returned if @a period is different from
- * TM_INFINITE but shorter than the scheduling latency value for the
- * target system, as available from /proc/xenomai/latency.
+ * @sideeffect Over Cobalt, -EINVAL is returned if @a period is
+ * different from TM_INFINITE but shorter than the user scheduling
+ * latency value for the target system, as displayed by
+ * /proc/xenomai/latency.
  *
  * @note The @a idate and @a period values are interpreted as a
  * multiple of the Alchemy clock resolution (see
@@ -901,9 +885,7 @@ out:
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * Valid calling context:
- *
- * - Alchemy tasks.
+ * @apitags{xthread-only, switch-primary}
  *
  * @note If the current release point has already been reached at the
  * time of the call, the current task immediately returns from this
@@ -911,10 +893,7 @@ out:
  */
 int rt_task_wait_period(unsigned long *overruns_r)
 {
-	struct alchemy_task *tcb;
-
-	tcb = alchemy_task_current();
-	if (tcb == NULL)
+	if (!threadobj_current_p())
 		return -EPERM;
 
 	return threadobj_wait_period(overruns_r);
@@ -944,9 +923,9 @@ int rt_task_wait_period(unsigned long *overruns_r)
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * Valid calling context:
+ * @apitags{xthread-only, switch-primary}
  *
- * - Xenomai threads
+ * @note The caller must be an Alchemy task if @a task is NULL.
  *
  * @note The @a date value is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -987,6 +966,8 @@ int rt_task_sleep_until(RTIME date)
  * the caller with a success status.
  *
  * @return See rt_task_sleep_until().
+ *
+ * @apitags{xthread-only, switch-primary}
  *
  * @note The @a delay value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -1040,12 +1021,9 @@ int rt_task_sleep(RTIME delay)
  *
  * @return See rt_task_create().
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-secondary}
  *
- * - Regular POSIX threads
- * - Xenomai threads
- *
- * Core specifics: see rt_task_create().
+ * @sideeffect see rt_task_create().
  */
 int rt_task_spawn(RT_TASK *task, const char *name,
 		  int stksize, int prio, int mode,
@@ -1074,6 +1052,8 @@ int rt_task_spawn(RT_TASK *task, const char *name,
  *
  * @return A non-zero value is returned if both descriptors refer to
  * the same task, zero otherwise.
+ *
+ * @apitags{unrestricted}
  */
 int rt_task_same(RT_TASK *task1, RT_TASK *task2)
 {
@@ -1097,8 +1077,8 @@ int rt_task_same(RT_TASK *task1, RT_TASK *task2)
  * Receiving a Linux signal causes the suspended task to resume
  * immediately.
  *
- * @param task The descriptor address of the task to suspend. If @a
- * task is NULL, the current task is suspended.
+ * @param task The task descriptor. If @a task is NULL, the current
+ * task is suspended.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -1112,9 +1092,9 @@ int rt_task_same(RT_TASK *task1, RT_TASK *task2)
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-primary}
  *
- * - Alchemy tasks if @a task is NULL, any otherwise.
+ * @note The caller must be an Alchemy task if @a task is NULL.
  *
  * @note Blocked and suspended task states are cumulative. Therefore,
  * suspending a task currently waiting on a synchronization object
@@ -1152,13 +1132,13 @@ out:
  * suspended by a call to rt_task_suspend(), if the suspend nesting
  * count decrements to zero.
  *
- * @param task The descriptor address of the task to resume.
+ * @param task The task descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a task is not a valid task descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  *
  * @note Blocked and suspended task states are cumulative. Therefore,
  * resuming a task currently waiting on a synchronization object
@@ -1195,12 +1175,10 @@ out:
  * Return the address of the current Alchemy task descriptor.
  *
  * @return The address of the task descriptor referring to the current
- * Alchemy task is returned upon success, or NULL if not called from an
- * valid task context.
+ * Alchemy task is returned upon success, or NULL if not called from a
+ * valid Alchemy task context.
  *
- * Valid calling context:
- *
- * - Alchemy tasks.
+ * @apitags{xthread-only}
  */
 RT_TASK *rt_task_self(void)
 {
@@ -1225,8 +1203,8 @@ RT_TASK *rt_task_self(void)
  * boost the target task might have obtained as a consequence of a
  * priority inheritance undergoing.
  *
- * @param task The descriptor address of the task to update. If @a
- * task is NULL, the priority of the current task is changed.
+ * @param task The task descriptor. If @a task is NULL, the priority
+ * of the current task is changed.
  *
  * @param prio The new priority. This value must range from [T_LOPRIO
  * .. T_HIPRIO] (inclusive) where T_LOPRIO is the lowest effective
@@ -1240,9 +1218,9 @@ RT_TASK *rt_task_self(void)
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-primary}
  *
- * - Alchemy tasks if @a task is NULL, any otherwise.
+ * @note The caller must be an Alchemy task if @a task is NULL.
  *
  * @note Assigning the same priority to a running or ready task moves
  * it to the end of its priority group, thus causing a manual
@@ -1287,9 +1265,7 @@ out:
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * Valid calling context:
- *
- * - Xenomai threads.
+ * @apitags{xthread-only, switch-primary}
  */
 int rt_task_yield(void)
 {
@@ -1314,13 +1290,13 @@ int rt_task_yield(void)
  * suspensive conditions are gone, the task becomes eligible anew for
  * scheduling.
  *
- * @param task The descriptor address of the task to unblock.
+ * @param task The task descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a task is not a valid task descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_task_unblock(RT_TASK *task)
 {
@@ -1354,9 +1330,9 @@ out:
  * In other words, rt_task_slice() should be used to toggle
  * round-robin scheduling for an Alchemy task.
  *
- * @param task The descriptor address of the task to update. If @a
- * task is NULL, the time credit of the current task is changed. @a
- * task must belong to the current process.
+ * @param task The task descriptor. If @a task is NULL, the time
+ * credit of the current task is changed. @a task must belong to the
+ * current process.
  *
  * @param quantum The round-robin quantum for the task expressed in
  * clock ticks (see note).
@@ -1369,9 +1345,9 @@ out:
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-primary}
  *
- * - Alchemy tasks if @a task is NULL, any otherwise.
+ * @note The caller must be an Alchemy task if @a task is NULL.
  *
  * @note The @a quantum value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -1457,9 +1433,9 @@ out:
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * Valid calling context:
+ * @apitags{xthread-only, switch-primary}
  *
- * - Alchemy tasks.
+ * @note The caller must be an Alchemy task.
  *
  * @note Forcing the task mode using the T_CONFORMING bit from user
  * code is almost always wrong, since the Xenomai/cobalt core handles
@@ -1504,7 +1480,7 @@ out:
  * Return various information about an Alchemy task. This service may
  * also be used to probe for task existence.
  *
- * @param task The descriptor address of the task. If @a task is NULL,
+ * @param task The task descriptor. If @a task is NULL, the
  * information about the current task is returned.
  *
  * @param info  The address of a structure the task information will be
@@ -1520,10 +1496,9 @@ out:
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * Valid calling context:
+ * @apitags{thread-unrestricted, switch-primary}
  *
- * - Alchemy tasks if @a task is NULL, any otherwise.
-
+ * @note The caller must be an Alchemy task if @a task is NULL.
  */
 int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 {
@@ -1560,7 +1535,7 @@ out:
  * This routine is a variant of rt_task_send_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param task The descriptor address of the recipient task.
+ * @param task The task descriptor.
  *
  * @param mcb_s The address of the message control block referring to
  * the message to be sent.
@@ -1569,6 +1544,8 @@ out:
  * referring to the reply message area.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -1578,7 +1555,7 @@ out:
  * This routine is a variant of rt_task_send_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param task The descriptor address of the recipient task.
+ * @param task The task descriptor.
  *
  * @param mcb_s The address of the message control block referring to
  * the message to be sent.
@@ -1587,6 +1564,8 @@ out:
  * referring to the reply message area.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -1603,7 +1582,7 @@ out:
  * size of the data area to send or retrieve upon reply, in addition
  * to a user-defined operation code.
  *
- * @param task The descriptor address of the recipient task.
+ * @param task The task descriptor.
  *
  * @param mcb_s The address of the message control block referring to
  * the message to be sent. The fields from this control block should
@@ -1675,9 +1654,7 @@ out:
  * current task before any reply was received from the recipient @a
  * task.
  *
- * Valid calling context:
- *
- * - Xenomai threads
+ * @apitags{xthread-only, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -1771,6 +1748,8 @@ out:
  * the receive message area.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -1784,6 +1763,8 @@ out:
  * the receive message area.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -1842,9 +1823,7 @@ out:
  * - -ETIMEDOUT is returned if no message was received within the @a
  * timeout.
  *
- * Valid calling context:
- *
- * - Alchemy tasks
+ * @apitags{xthread-only, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -1963,9 +1942,7 @@ out:
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * Valid calling context:
- *
- * - Alchemy tasks
+ * @apitags{xthread-only, switch-primary}
  */
 int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 {
@@ -2069,10 +2046,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -2092,11 +2066,13 @@ int rt_task_bind(RT_TASK *task,
  * @fn int rt_task_unbind(RT_TASK *task)
  * @brief Unbind from a task.
  *
- * @param task The descriptor address of the task to unbind from.
+ * @param task The task descriptor.
  *
  * This routine releases a previous binding to an Alchemy task. After
  * this call has returned, the descriptor is no more valid for
  * referencing this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_task_unbind(RT_TASK *task)
 {

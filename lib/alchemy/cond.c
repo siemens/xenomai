@@ -98,10 +98,7 @@ static struct registry_operations registry_ops;
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Condition variables can be shared by multiple processes which
  * belong to the same Xenomai session.
@@ -167,7 +164,7 @@ out:
  * This routine deletes a condition variable object previously created
  * by a call to rt_cond_create().
  *
- * @param cond The descriptor address of the deleted condition variable.
+ * @param cond The condition variable descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -182,10 +179,7 @@ out:
  * being used in a rt_cond_wait(), rt_cond_wait_timed() or
  * rt_cond_wait_until() by another task).
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_cond_delete(RT_COND *cond)
 {
@@ -224,14 +218,14 @@ out:
  * immediately unblocks the first waiting task (by queuing priority
  * order).
  *
- * @param cond The descriptor address of the condition variable to signal.
+ * @param cond The condition variable descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a cond is not a valid condition variable
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_cond_signal(RT_COND *cond)
 {
@@ -252,15 +246,14 @@ int rt_cond_signal(RT_COND *cond)
  * All tasks currently waiting on the condition variable are
  * immediately unblocked.
  *
- * @param cond The descriptor address of the condition variable to
- * broadcast.
+ * @param cond The condition variable descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a cond is not a valid condition variable
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_cond_broadcast(RT_COND *cond)
 {
@@ -281,13 +274,14 @@ int rt_cond_broadcast(RT_COND *cond)
  * This routine is a variant of rt_cond_wait_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param cond The descriptor address of the condition variable to
- * wait on.
+ * @param cond The condition variable descriptor.
  *
  * @param mutex The address of the mutex serializing the access to the
  * shared data.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -297,13 +291,14 @@ int rt_cond_broadcast(RT_COND *cond)
  * This routine is a variant of rt_cond_wait_timed() accepting an
  * abs_timeout specification expressed as a scalar value.
  *
- * @param cond The descriptor address of the condition variable to
- * wait on.
+ * @param cond The condition variable descriptor.
  *
  * @param mutex The address of the mutex serializing the access to the
  * shared data.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 
 /**
@@ -315,8 +310,7 @@ int rt_cond_broadcast(RT_COND *cond)
  * occurs, whichever comes first. The mutex is re-acquired before
  * returning from this service.
  *
- * @param cond The descriptor address of the condition variable to
- * wait on.
+ * @param cond The condition variable descriptor.
  *
  * @param mutex The address of the mutex serializing the access to the
  * shared data.
@@ -347,9 +341,7 @@ int rt_cond_broadcast(RT_COND *cond)
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
+ * @apitags{xthread-only, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -389,8 +381,7 @@ int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
  * This routine returns the status information about the specified
  * condition variable.
  *
- * @param cond The descriptor address of the condition variable to get
- * the status of.
+ * @param cond The condition variable descriptor.
  *
  * @param info A pointer to the @ref RT_COND_INFO "return
  * buffer" to copy the information to.
@@ -401,7 +392,7 @@ int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
  * - -EINVAL is returned if @a cond is not a valid condition variable
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 {
@@ -455,10 +446,7 @@ int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -478,12 +466,13 @@ int rt_cond_bind(RT_COND *cond,
  * @fn int rt_cond_unbind(RT_COND *cond)
  * @brief Unbind from a condition variable.
  *
- * @param cond The descriptor address of the condition variable to
- * unbind from.
+ * @param cond The condition variable descriptor.
  *
  * This routine releases a previous binding to a condition
  * variable. After this call has returned, the descriptor is no more
  * valid for referencing this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_cond_unbind(RT_COND *cond)
 {

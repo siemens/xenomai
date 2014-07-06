@@ -170,10 +170,7 @@ fnref_register(libalchemy, sem_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Semaphores can be shared by multiple processes which belong
  * to the same Xenomai session.
@@ -249,7 +246,7 @@ out:
  * This routine deletes a semaphore previously created by a call to
  * rt_sem_create().
  *
- * @param sem The descriptor address of the deleted object.
+ * @param sem The semaphore descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -259,10 +256,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_sem_delete(RT_SEM *sem)
 {
@@ -303,9 +297,11 @@ out:
  * This routine is a variant of rt_sem_p_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param sem The descriptor address of the semaphore to wait on.
+ * @param sem The semaphore descriptor.
  *
  * @param timeout A delay expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -315,9 +311,11 @@ out:
  * This routine is a variant of rt_sem_p_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param sem The descriptor address of the semaphore to wait on.
+ * @param sem The semaphore descriptor.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -330,7 +328,7 @@ out:
  * until the semaphore is either signaled or destroyed, unless a
  * non-blocking operation was required.
  *
- * @param sem The descriptor address of the semaphore to wait on.
+ * @param sem The semaphore descriptor.
  *
  * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the request to be satisfied
@@ -360,10 +358,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -397,14 +392,14 @@ out:
  * incremented by one, unless the semaphore is used in "pulse" mode
  * (see rt_sem_create()).
  *
- * @param sem The descriptor address of the semaphore to signal.
+ * @param sem The semaphore descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a sem is not a valid semaphore
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted}
  */
 int rt_sem_v(RT_SEM *sem)
 {
@@ -432,14 +427,14 @@ out:
  * All tasks currently waiting on the semaphore are immediately
  * unblocked. The semaphore count is set to zero.
  *
- * @param sem The descriptor address of the semaphore to broadcast.
+ * @param sem The semaphore descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a sem is not a valid semaphore
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted}
  */
 int rt_sem_broadcast(RT_SEM *sem)
 {
@@ -467,8 +462,7 @@ out:
  * This routine returns the status information about the specified
  * semaphore.
  *
- * @param sem The descriptor address of the semaphore to get the
- * status of.
+ * @param sem The semaphore descriptor.
  *
  * @param info A pointer to the @ref RT_SEM_INFO "return
  * buffer" to copy the information to.
@@ -479,7 +473,7 @@ out:
  * - -EINVAL is returned if @a sem is not a valid semaphore
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted}
  */
 int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 {
@@ -543,10 +537,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -566,11 +557,13 @@ int rt_sem_bind(RT_SEM *sem,
  * @fn int rt_sem_unbind(RT_SEM *sem)
  * @brief Unbind from a semaphore.
  *
- * @param sem The descriptor address of the semaphore to unbind from.
+ * @param sem The semaphore descriptor.
  *
  * This routine releases a previous binding to a semaphore. After this
  * call has returned, the descriptor is no more valid for referencing
  * this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_sem_unbind(RT_SEM *sem)
 {

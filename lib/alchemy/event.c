@@ -160,10 +160,7 @@ fnref_register(libalchemy, event_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Event flag groups can be shared by multiple processes which
  * belong to the same Xenomai session.
@@ -232,7 +229,7 @@ out:
  * This routine deletes a event flag group previously created by a
  * call to rt_event_create().
  *
- * @param event The descriptor address of the deleted object.
+ * @param event The event descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -242,10 +239,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_event_delete(RT_EVENT *event)
 {
@@ -284,8 +278,7 @@ out:
  * This routine is a variant of rt_event_wait_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
- * @param event The descriptor address of the event flag group to wait
- * on.
+ * @param event The event descriptor.
  *
  * @param mask The set of bits to wait for.
  *
@@ -295,6 +288,8 @@ out:
  * @param mode The pend mode.
  *
  * @param timeout A delay expressed in clock ticks,
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -304,8 +299,7 @@ out:
  * This routine is a variant of rt_event_wait_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
- * @param event The descriptor address of the event flag group to wait
- * on.
+ * @param event The event descriptor.
  *
  * @param mask The set of bits to wait for.
  *
@@ -315,6 +309,8 @@ out:
  * @param mode The pend mode.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -324,8 +320,7 @@ out:
  * Waits for one or more events to be signaled in @a event, or until a
  * timeout elapses.
  *
- * @param event The descriptor address of the event flag group to wait
- * on.
+ * @param event The event descriptor.
  *
  * @param mask The set of bits to wait for. Passing zero causes this
  * service to return immediately with a success value; the current
@@ -374,11 +369,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads.
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec =
- * 0 }.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -423,7 +414,7 @@ out:
  * request satisfied as a result of this operation are immediately
  * readied.
  *
- * @param event The descriptor address of the event flag group to signal.
+ * @param event The event descriptor.
  *
  * @param mask The set of events to be posted.
  *
@@ -432,7 +423,7 @@ out:
  * - -EINVAL is returned if @a event is not an event flag group
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_event_signal(RT_EVENT *event, unsigned long mask)
 {
@@ -459,7 +450,7 @@ out:
  *
  * This routine clears a set of flags from @a event.
  *
- * @param event The descriptor address of the affected event.
+ * @param event The event descriptor.
  *
  * @param mask The set of event flags to be cleared.
  *
@@ -472,7 +463,7 @@ out:
  * - -EINVAL is returned if @a event is not a valid event flag group
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_event_clear(RT_EVENT *event,
 		   unsigned long mask, unsigned long *mask_r)
@@ -500,8 +491,7 @@ out:
  *
  * This routine returns the status information about @a event.
  *
- * @param event The descriptor address of the event flag group to get
- * the status of.
+ * @param event The event descriptor.
  *
  * @param info A pointer to the @ref RT_EVENT_INFO "return
  * buffer" to copy the information to.
@@ -512,7 +502,7 @@ out:
  * - -EINVAL is returned if @a event is not a valid event flag group
  * descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 {
@@ -577,10 +567,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -600,11 +587,13 @@ int rt_event_bind(RT_EVENT *event,
  * @fn int rt_event_unbind(RT_EVENT *event)
  * @brief Unbind from an event flag group.
  *
- * @param event The descriptor address of the object to unbind from.
+ * @param event The event descriptor.
  *
  * This routine releases a previous binding to an event flag
  * group. After this call has returned, the descriptor is no more
  * valid for referencing this object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_event_unbind(RT_EVENT *event)
 {

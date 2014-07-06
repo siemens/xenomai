@@ -207,10 +207,7 @@ fnref_register(libalchemy, heap_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  *
  * @note Heaps can be shared by multiple processes which belong to the
  * same Xenomai session.
@@ -298,7 +295,7 @@ fail_cballoc:
  * This routine deletes a heap object previously created by a call to
  * rt_heap_create(), releasing all tasks currently blocked on it.
  *
- * @param heap The descriptor address of the deleted heap.
+ * @param heap The heap descriptor.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -307,10 +304,7 @@ fail_cballoc:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * Valid calling context:
- *
- * - Regular POSIX threads
- * - Xenomai threads
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 int rt_heap_delete(RT_HEAP *heap)
 {
@@ -343,6 +337,8 @@ out:
  *
  * This routine is a variant of rt_heap_alloc_timed() accepting a
  * relative timeout specification expressed as a scalar value.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -351,6 +347,8 @@ out:
  *
  * This routine is a variant of rt_heap_alloc_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
+ *
+ * @apitags{xthread-nowait, switch-primary}
  */
 
 /**
@@ -363,7 +361,7 @@ out:
  * available on entry to this service, tasks may be blocked until
  * their allocation request can be fulfilled.
  *
- * @param heap The descriptor address of the heap to allocate from.
+ * @param heap The heap descriptor.
  *
  * @param size The requested size (in bytes) of the block. If the heap
  * is managed as a single-block area (H_SINGLE), this value can be
@@ -407,10 +405,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
@@ -494,8 +489,7 @@ out:
  * on rt_heap_alloc() is made once @a block is returned to the memory
  * pool.
  *
- * @param heap The descriptor address of the heap to release the block
- * to.
+ * @param heap The heap descriptor.
  *
  * @param block The address of the block to free.
  *
@@ -505,7 +499,7 @@ out:
  * @a block is not a valid block previously allocated by the
  * rt_heap_alloc() service from @a heap.
  *
- * Valid calling contexts: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_heap_free(RT_HEAP *heap, void *block)
 {
@@ -558,8 +552,7 @@ out:
  *
  * This routine returns the status information about @a heap.
  *
- * @param heap The descriptor address of the heap to get the status
- * of.
+ * @param heap The heap descriptor.
  *
  * @param info A pointer to the @ref RT_HEAP_INFO "return
  * buffer" to copy the information to.
@@ -569,7 +562,7 @@ out:
  *
  * - -EINVAL is returned if @a heap is not a valid heap descriptor.
  *
- * Valid calling context: any.
+ * @apitags{unrestricted, switch-primary}
  */
 int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 {
@@ -634,10 +627,7 @@ out:
  * - -EPERM is returned if this service should block, but was not
  * called from a Xenomai thread.
  *
- * Valid calling contexts:
- *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * @apitags{xthread-nowait, switch-primary}
  *
  * @note The @a timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
@@ -657,11 +647,13 @@ int rt_heap_bind(RT_HEAP *heap,
  * @fn int rt_heap_unbind(RT_HEAP *heap)
  * @brief Unbind from a heap.
  *
- * @param heap The descriptor address of the heap to unbind from.
+ * @param heap The heap descriptor.
  *
  * This routine releases a previous binding to a heap. After this call
  * has returned, the descriptor is no more valid for referencing this
  * object.
+ *
+ * @apitags{thread-unrestricted}
  */
 int rt_heap_unbind(RT_HEAP *heap)
 {
