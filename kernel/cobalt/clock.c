@@ -619,10 +619,9 @@ void xnclock_tick(struct xnclock *clock)
 			 * wait for 250 ms for the user to continue
 			 * program execution.
 			 */
-			if (timer->interval_ns > 250000000)
-				goto advance;
-			interval_ticks = 250000000 /
-				(unsigned)timer->interval_ns;
+			xntimerh_date(&timer->aplink) +=
+				xnclock_ns_to_ticks(xntimer_clock(timer),
+						250000000);
 			goto requeue;
 		}
 	fire:
@@ -638,11 +637,11 @@ void xnclock_tick(struct xnclock *clock)
 			continue;
 	advance:
 		interval_ticks = 1;
-	requeue:
 		do {
 			timer->periodic_ticks += interval_ticks;
 			xntimer_update_date(timer);
 		} while (xntimerh_date(&timer->aplink) < now + clock->gravity);
+	requeue:
 #ifdef CONFIG_SMP
 		/*
 		 * Make sure to pick the right percpu queue, in case
