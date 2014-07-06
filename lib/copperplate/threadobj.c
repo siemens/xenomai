@@ -242,6 +242,8 @@ static inline void threadobj_set_agent(struct threadobj *thobj)
 
 static inline void pkg_init_corespec(void)
 {
+	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_CORE));
+	threadobj_high_prio = __RT(sched_get_priority_max(SCHED_FIFO));
 }
 
 static inline int threadobj_init_corespec(struct threadobj *thobj)
@@ -544,8 +546,9 @@ static inline void pkg_init_corespec(void)
 	 * holding the scheduler lock, unless the latter has to block
 	 * for some reason, defeating the purpose of such lock anyway.
 	 */
-	threadobj_lock_prio = threadobj_high_prio;
-	threadobj_high_prio = threadobj_lock_prio - 1;
+	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_FIFO));
+	threadobj_lock_prio = threadobj_irq_prio - 1;
+	threadobj_high_prio = threadobj_irq_prio - 2;
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
@@ -1581,12 +1584,9 @@ static inline int main_overlay(void)
 
 int threadobj_pkg_init(void)
 {
-	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_CORE));
-	threadobj_high_prio = threadobj_irq_prio - 1;
-	threadobj_agent_prio = threadobj_high_prio;
 	sigaddset(&sigperiod_set, SIGPERIOD);
-
 	pkg_init_corespec();
+	threadobj_agent_prio = threadobj_high_prio;
 	start_agent();
 
 	return main_overlay();
