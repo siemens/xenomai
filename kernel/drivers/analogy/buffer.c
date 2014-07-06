@@ -1121,8 +1121,7 @@ int a4l_ioctl_poll(struct a4l_device_context * cxt, void *arg)
 	else {
 		unsigned long long ns = ((unsigned long long)poll.arg) *
 			((unsigned long long)NSEC_PER_MSEC);
-		ret = a4l_timedwait_sync(&(buf->sync),
-					 rtdm_in_rt_context(), ns);
+		ret = a4l_timedwait_sync(&(buf->sync), rtdm_in_rt_context(), ns);
 	}
 
 	if (ret == 0) {
@@ -1132,6 +1131,8 @@ int a4l_ioctl_poll(struct a4l_device_context * cxt, void *arg)
 		else
 			tmp_cnt = __count_to_put(buf);
 	}
+	else
+		return ret;
 
 out_poll:
 
