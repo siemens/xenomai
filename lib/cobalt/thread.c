@@ -781,8 +781,7 @@ COBALT_IMPL(int, sched_yield, (void))
  * This service returns the minimum priority of the scheduling policy @a
  * policy.
  *
- * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
- * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.
+ * @param policy scheduling policy.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -797,15 +796,55 @@ COBALT_IMPL(int, sched_get_priority_min, (int policy))
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_minprio, policy);
-	if (ret < 0) {
-		if (ret == -ENOSYS)
-			return __STD(sched_get_priority_min(policy));
-		errno = -ret;
-		ret = -1;
+	switch (policy) {
+	case SCHED_FIFO:
+	case SCHED_RR:
+		break;
+	default:
+		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+					sc_cobalt_sched_minprio, policy);
+		if (ret >= 0)
+			return ret;
+		if (ret != -EINVAL) {
+			errno = -ret;
+			return -1;
+		}
 	}
 
-	return ret;
+	return __STD(sched_get_priority_min(policy));
+}
+
+/**
+ * Get extended minimum priority of the specified scheduling policy.
+ *
+ * This service returns the minimum priority of the scheduling policy
+ * @a policy, reflecting any Cobalt extension to the standard classes.
+ *
+ * @param policy scheduling policy.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a policy is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
+ * Specification.</a>
+ *
+ */
+int sched_get_priority_min_ex(int policy)
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+				sc_cobalt_sched_minprio, policy);
+	if (ret >= 0)
+		return ret;
+	if (ret != -EINVAL) {
+		errno = -ret;
+		return -1;
+	}
+
+	return __STD(sched_get_priority_min(policy));
 }
 
 /**
@@ -814,8 +853,7 @@ COBALT_IMPL(int, sched_get_priority_min, (int policy))
  * This service returns the maximum priority of the scheduling policy @a
  * policy.
  *
- * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
- * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.
+ * @param policy scheduling policy.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -830,15 +868,55 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_maxprio, policy);
-	if (ret < 0) {
-		if (ret == -ENOSYS)
-			return __STD(sched_get_priority_max(policy));
-		errno = -ret;
-		ret = -1;
+	switch (policy) {
+	case SCHED_FIFO:
+	case SCHED_RR:
+		break;
+	default:
+		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+					sc_cobalt_sched_maxprio, policy);
+		if (ret >= 0)
+			return ret;
+		if (ret != -EINVAL) {
+			errno = -ret;
+			return -1;
+		}
 	}
 
-	return ret;
+	return __STD(sched_get_priority_max(policy));
+}
+
+/**
+ * Get extended maximum priority of the specified scheduling policy.
+ *
+ * This service returns the maximum priority of the scheduling policy
+ * @a policy, reflecting any Cobalt extension to standard classes.
+ *
+ * @param policy scheduling policy.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a policy is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
+ * Specification.</a>
+ *
+ */
+int sched_get_priority_max_ex(int policy)
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+				sc_cobalt_sched_maxprio, policy);
+	if (ret >= 0)
+		return ret;
+	if (ret != -EINVAL) {
+		errno = -ret;
+		return -1;
+	}
+
+	return __STD(sched_get_priority_max(policy));
 }
 
 /**

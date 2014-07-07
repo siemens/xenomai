@@ -225,7 +225,7 @@ static void *task_trampoline(void *arg)
  * The application code may override the routine doing the priority
  * mapping from pSOS to SCHED_FIFO (normalize). Normalized priorities
  * returned by this routine must be in the range [ 1
- * .. sched_get_priority_max(SCHED_FIFO) - 1 ] inclusive.
+ * .. threadobj_high_prio] inclusive.
  */
 __weak int psos_task_normalize_priority(unsigned long psos_prio)
 {

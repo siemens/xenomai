@@ -242,8 +242,8 @@ static inline void threadobj_set_agent(struct threadobj *thobj)
 
 static inline void pkg_init_corespec(void)
 {
-	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_CORE));
-	threadobj_high_prio = __RT(sched_get_priority_max(SCHED_FIFO));
+	threadobj_irq_prio = sched_get_priority_max_ex(SCHED_CORE);
+	threadobj_high_prio = sched_get_priority_max_ex(SCHED_FIFO);
 }
 
 static inline int threadobj_init_corespec(struct threadobj *thobj)
@@ -546,7 +546,7 @@ static inline void pkg_init_corespec(void)
 	 * holding the scheduler lock, unless the latter has to block
 	 * for some reason, defeating the purpose of such lock anyway.
 	 */
-	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_FIFO));
+	threadobj_irq_prio = sched_get_priority_max(SCHED_FIFO);
 	threadobj_lock_prio = threadobj_irq_prio - 1;
 	threadobj_high_prio = threadobj_irq_prio - 2;
 

@@ -47,6 +47,10 @@ void __sched_cpufill(size_t __setsize, cpu_set_t *__setp);
 extern "C" {
 #endif
 
+int sched_get_priority_min_ex(int policy);
+
+int sched_get_priority_max_ex(int policy);
+
 int sched_setconfig_np(int cpu, int policy,
 		       const union sched_config *config, size_t len);
 
