@@ -164,7 +164,8 @@ static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
 	else
 		priv->curr = list_next_entry(thread, glink);
 
-	if (thread->base_class != &xnsched_class_rt)
+	if (thread->base_class != &xnsched_class_rt ||
+	    xnthread_test_state(thread, XNWEAK))
 		return VFILE_SEQ_SKIP;
 
 	p->cpu = xnsched_cpu(thread->sched);
