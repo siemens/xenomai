@@ -230,6 +230,7 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 	struct cobalt_monitor_data *datp;
 	unsigned long status;
 	xnhandle_t cur;
+	int ret;
 
 	__sync_synchronize();
 
@@ -246,9 +247,13 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 	if (xnsynch_fast_release(&datp->owner, cur))
 		return 0;
 syscall:
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_monitor_exit,
-				 mon);
+	do
+		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+					sc_cobalt_monitor_exit,
+					mon);
+	while (ret == -EINTR);
+
+	return ret;
 }
 
 int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
