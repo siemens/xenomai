@@ -276,12 +276,6 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	tmode = u_ts ? mon->tmode : XN_RELATIVE;
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
-		if ((info & XNRMID) != 0 ||
-		    xnregistry_lookup(handle, NULL) != mon /* XXX: why this? */) {
-			ret = -EINVAL;
-			goto out;
-		}
-
 		if ((event & COBALT_MONITOR_WAITDRAIN) == 0 &&
 		    !list_empty(&curr->monitor_link))
 			list_del_init(&curr->monitor_link);
@@ -383,6 +377,7 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 
 int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 {
+	struct cobalt_monitor_data *datp;
 	struct cobalt_monitor *mon;
 	struct xnthread *curr;
 	xnhandle_t handle;
@@ -400,7 +395,9 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 		goto fail;
 	}
 
-	if (xnsynch_pended_p(&mon->drain) || !list_empty(&mon->waiters)) {
+	datp = mon->data;
+	if ((datp->flags & COBALT_MONITOR_PENDED) != 0 ||
+	    xnsynch_pended_p(&mon->drain) || !list_empty(&mon->waiters)) {
 		ret = -EBUSY;
 		goto fail;
 	}
