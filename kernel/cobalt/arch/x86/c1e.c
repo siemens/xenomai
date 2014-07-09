@@ -56,7 +56,7 @@ static void c1e_promotion_disable(void *dummy)
 	wrmsrl(MSR_IA32_POWER_CTL, msr_bits);
 }
 
-void __init mach_x86_c1e_disable(void)
+void mach_x86_c1e_disable(void)
 {
 	const struct x86_cpu_id *id;
 
