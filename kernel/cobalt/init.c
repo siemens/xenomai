@@ -395,6 +395,7 @@ static int __init xenomai_init(void)
 		__xnsys_disabled = 1;
 		return 0;
 	}
+	nkaffinity = xnsched_realtime_cpus;
 #endif /* CONFIG_SMP */
 
 	xnsched_register_classes();
