@@ -102,6 +102,12 @@ static void *latency(void *cookie)
 		return NULL;
 	}
 
+	tfd = timerfd_create(CLOCK_MONOTONIC, 0);
+	if (tfd == -1) {
+		fprintf(stderr, "latency: timerfd_create: %m\n");
+		return NULL;
+	}
+
 #ifdef CONFIG_XENO_COBALT
 	err = pthread_setmode_np(0, PTHREAD_WARNSW, NULL);
 	if (err) {
@@ -109,12 +115,6 @@ static void *latency(void *cookie)
 		return NULL;
 	}
 #endif
-
-	tfd = timerfd_create(CLOCK_MONOTONIC, 0);
-	if (tfd == -1) {
-		fprintf(stderr, "latency: timerfd_create: %m\n");
-		return NULL;
-	}
 
 	err = clock_gettime(CLOCK_MONOTONIC, &expected);
 	if (err) {
