@@ -283,9 +283,11 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 		if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
 			datp->flags &= ~COBALT_MONITOR_PENDED;
 
-		if (info & XNBREAK)
+		if (info & XNBREAK) {
 			opret = -EINTR;
-		else if (info & XNTIMEO)
+			goto out;
+		}
+		if (info & XNTIMEO)
 			opret = -ETIMEDOUT;
 	}
 
