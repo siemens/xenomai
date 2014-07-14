@@ -48,6 +48,11 @@
  * - ESRCH, @a thread is invalid.
  * - ETIMEDOUT, the start time has already passed.
  * - EPERM, the caller is not a Xenomai thread.
+ * - EINVAL, @a thread does not refer to the current thread.
+ *
+ * @note Unlike the original Xenomai 2.x call, this emulation does not
+ * delay the caller waiting for the first periodic release point. In
+ * addition, @a thread must be equal to pthread_self().
  *
  * @deprecated This service is a non-portable extension of the Xenomai
  * 2.x POSIX interface, not available with Xenomai 3.x.  Instead,
@@ -70,6 +75,9 @@ int pthread_make_periodic_np(pthread_t thread,
 	tc = trank_get_context();
 	if (tc == NULL)
 		return EPERM;
+
+	if (thread != pthread_self())
+		return EINVAL;
 
 	if (tc->periodic_timer == NULL) {
 		memset(&sev, 0, sizeof(sev));
