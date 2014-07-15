@@ -85,7 +85,7 @@ timer_init(struct cobalt_timer *timer,
 	 * want to deliver a signal when a timer elapses.
 	 */
 	xntimer_init(&timer->timerbase, &nkclock, cobalt_timer_handler,
-		     &target->threadbase);
+		     &target->threadbase, XNTIMER_UGRAVITY);
 
 	return target;
 }

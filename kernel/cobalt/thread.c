@@ -187,10 +187,14 @@ int __xnthread_init(struct xnthread *thread,
 	thread->entry = NULL;
 	thread->cookie = NULL;
 
-	xntimer_init(&thread->rtimer, &nkclock, timeout_handler, thread);
+	xntimer_init(&thread->rtimer, &nkclock, timeout_handler, thread,
+		     xnthread_test_state(thread, XNUSER) ?
+		     XNTIMER_UGRAVITY : XNTIMER_KGRAVITY);
 	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, &nkclock, periodic_handler, thread);
+	xntimer_init(&thread->ptimer, &nkclock, periodic_handler, thread,
+		     xnthread_test_state(thread, XNUSER) ?
+		     XNTIMER_UGRAVITY : XNTIMER_KGRAVITY);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
@@ -1234,11 +1238,14 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 		goto unlock_and_exit;
 	}
 
-	if (period < xnclock_ticks_to_ns(&nkclock, nkclock.gravity)) {
+	if (period < xnclock_ticks_to_ns(&nkclock,
+					 xnclock_get_gravity(&nkclock,
+							     kernel))) {
 		/*
 		 * LART: detect periods which are shorter than the
-		 * clock gravity. This can't work, caller must have
-		 * messed up with arguments.
+		 * core clock gravity for kernel thread timers. This
+		 * can't work, caller must have messed up with
+		 * arguments.
 		 */
 		ret = -EINVAL;
 		goto unlock_and_exit;
@@ -1366,8 +1373,8 @@ EXPORT_SYMBOL_GPL(xnthread_wait_period);
  *   - the base scheduling class of the target thread does not support
  *   time-slicing,
  *
- *   - @a quantum is smaller than the master clock gravity, which
- * denotes a spurious value.
+ *   - @a quantum is smaller than the master clock gravity for a user
+ * thread, which denotes a spurious value.
  *
  * @coretags{task-unrestricted}
  */
@@ -1376,7 +1383,7 @@ int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 	struct xnsched *sched;
 	spl_t s;
 
-	if (quantum <= xnclock_get_gravity(&nkclock))
+	if (quantum <= xnclock_get_gravity(&nkclock, user))
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);

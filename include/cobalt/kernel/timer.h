@@ -45,6 +45,12 @@ typedef enum xntmode {
 #define XNTIMER_REALTIME  0x00000008
 #define XNTIMER_FIRED     0x00000010
 #define XNTIMER_NOBLCK	  0x00000020
+#define XNTIMER_KGRAVITY  0x00000040
+#define XNTIMER_UGRAVITY  0x00000080
+#define XNTIMER_IGRAVITY  0	/* most conservative */
+
+#define XNTIMER_GRAVITY_MASK	(XNTIMER_KGRAVITY|XNTIMER_UGRAVITY)
+#define XNTIMER_INIT_MASK	(XNTIMER_GRAVITY_MASK|XNTIMER_NOBLCK)
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -313,15 +319,19 @@ static inline int xntimer_reload_p(struct xntimer *timer)
 void __xntimer_init(struct xntimer *timer,
 		    struct xnclock *clock,
 		    void (*handler)(struct xntimer *timer),
-		    struct xnthread *thread);
+		    struct xnthread *thread,
+		    int flags);
+
+void xntimer_set_gravity(struct xntimer *timer,
+			 int gravity);
 
 #ifdef CONFIG_XENO_OPT_STATS
 
-#define xntimer_init(timer, clock, handler, thread)		\
-	do {							\
-		__xntimer_init(timer, clock, handler, thread);	\
-		(timer)->handler_name = #handler;		\
-	} while (0)
+#define xntimer_init(__timer, __clock, __handler, __thread, __flags)	\
+do {									\
+	__xntimer_init(__timer, __clock, __handler, __thread, __flags);	\
+	(__timer)->handler_name = #__handler;				\
+} while (0)
 
 static inline void xntimer_reset_stats(struct xntimer *timer)
 {
@@ -366,12 +376,6 @@ static inline
 void xntimer_switch_tracking(struct xntimer *timer,
 			     struct xnclock *newclock) { }
 #endif
-
-#define xntimer_init_noblock(timer, clock, handler, thread)	\
-	do {							\
-		xntimer_init(timer, clock, handler, thread);	\
-		(timer)->status |= XNTIMER_NOBLCK;		\
-	} while (0)
 
 void xntimer_destroy(struct xntimer *timer);
 
@@ -442,10 +446,6 @@ static inline void xntimer_dequeue(struct xntimer *timer,
 }
 
 /** @} */
-
-void xntimer_init_proc(void);
-
-void xntimer_cleanup_proc(void);
 
 unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now);
 

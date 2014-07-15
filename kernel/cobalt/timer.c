@@ -269,7 +269,7 @@ xnticks_t xntimer_get_timeout(struct xntimer *timer)
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 
 /**
- * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread)
+ * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread, int flags)
  * @brief Initialize a timer object.
  *
  * Creates a timer. When created, a timer is left disarmed; it must be
@@ -289,8 +289,21 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
  *
  * @param thread The optional thread object the new timer is affine
  * to. If non-NULL, the timer will fire on the same CPU @a thread
- * currently runs on by default. A call to xntimer_set_sched() may
- * change this setting.
+ * currently runs on by default, otherwise it will fire on the CPU
+ * which initialized it.
+ *
+ * @param flags A set of flags describing the timer. The valid flags are:
+ *
+ * - XNTIMER_NOBLCK, the timer won't be frozen while GDB takes over
+ * control of the application.
+ *
+ * A set of clock gravity hints can be passed via the @a flags
+ * argument, used for optimizing the built-in heuristics aimed at
+ * latency reduction:
+ *
+ * - XNTIMER_IGRAVITY, the timer activates a leaf timer handler.
+ * - XNTIMER_KGRAVITY, the timer activates a kernel thread.
+ * - XNTIMER_UGRAVITY, the timer activates a user-space thread.
  *
  * There is no limitation on the number of timers which can be
  * created/active concurrently.
@@ -300,13 +313,15 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 #ifdef DOXYGEN_CPP
 void xntimer_init(struct xntimer *timer, struct xnclock *clock,
 		  void (*handler)(struct xntimer *timer),
-		  struct xnthread *thread);
+		  struct xnthread *thread,
+		  int flags);
 #endif
 
 void __xntimer_init(struct xntimer *timer,
 		    struct xnclock *clock,
 		    void (*handler)(struct xntimer *timer),
-		    struct xnthread *thread)
+		    struct xnthread *thread,
+		    int flags)
 {
 	spl_t s __maybe_unused;
 	int cpu;
@@ -317,19 +332,23 @@ void __xntimer_init(struct xntimer *timer,
 	xntimerh_init(&timer->aplink);
 	xntimerh_date(&timer->aplink) = XN_INFINITE;
 	xntimer_set_priority(timer, XNTIMER_STDPRIO);
-	timer->status = XNTIMER_DEQUEUED;
+	timer->status = (XNTIMER_DEQUEUED|(flags & XNTIMER_INIT_MASK));
 	timer->handler = handler;
 	timer->interval_ns = 0;
 	/*
 	 * Timers have to run on a real-time CPU, i.e. a member of the
 	 * xnsched_realtime_cpus mask. If the new timer is affine to a
-	 * thread, we assign it the same CPU (which has to be correct),
-	 * otherwise pick the first valid real-time CPU by default.
+	 * thread, we assign it the same CPU (which has to be
+	 * correct), otherwise pick the current CPU if valid, or the
+	 * first valid real-time CPU otherwise.
 	 */
 	if (thread)
 		timer->sched = thread->sched;
 	else {
-		cpu = first_cpu(xnsched_realtime_cpus);
+		cpu = ipipe_processor_id();
+		if (!xnsched_supported_cpu(cpu))
+			cpu = first_cpu(xnsched_realtime_cpus);
+
 		timer->sched = xnsched_struct(cpu);
 	}
 
@@ -341,13 +360,24 @@ void __xntimer_init(struct xntimer *timer,
 		 current->pid, current->comm);
 	xntimer_reset_stats(timer);
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&timer->next_stat, &clock->statq);
+	list_add_tail(&timer->next_stat, &clock->timerq);
 	clock->nrtimers++;
-	xnvfile_touch(&clock->vfile);
+	xnvfile_touch(&clock->timer_vfile);
 	xnlock_put_irqrestore(&nklock, s);
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 EXPORT_SYMBOL_GPL(__xntimer_init);
+
+void xntimer_set_gravity(struct xntimer *timer, int gravity)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	timer->status &= ~XNTIMER_GRAVITY_MASK;
+	timer->status |= gravity;
+	xnlock_put_irqrestore(&nklock, s);
+}
+EXPORT_SYMBOL_GPL(xntimer_set_gravity);
 
 #if defined(CONFIG_XENO_OPT_EXTCLOCK) && defined(CONFIG_XENO_OPT_STATS)
 
@@ -360,10 +390,10 @@ void xntimer_switch_tracking(struct xntimer *timer,
 	xnlock_get_irqsave(&nklock, s);
 	list_del(&timer->next_stat);
 	oldclock->nrtimers--;
-	xnvfile_touch(&oldclock->vfile);
-	list_add_tail(&timer->next_stat, &newclock->statq);
+	xnvfile_touch(&oldclock->timer_vfile);
+	list_add_tail(&timer->next_stat, &newclock->timerq);
 	newclock->nrtimers++;
-	xnvfile_touch(&newclock->vfile);
+	xnvfile_touch(&newclock->timer_vfile);
 	timer->tracker = newclock;
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -396,7 +426,7 @@ void xntimer_destroy(struct xntimer *timer)
 #ifdef CONFIG_XENO_OPT_STATS
 	list_del(&timer->next_stat);
 	clock->nrtimers--;
-	xnvfile_touch(&clock->vfile);
+	xnvfile_touch(&clock->timer_vfile);
 #endif /* CONFIG_XENO_OPT_STATS */
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -700,47 +730,5 @@ void xntimer_release_hardware(int cpu)
 {
 	ipipe_timer_stop(cpu);
 }
-
-#ifdef CONFIG_XENO_OPT_VFILE
-
-#include <cobalt/kernel/vfile.h>
-
-static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	const char *tm_status, *wd_status = "";
-
-	tm_status = atomic_read(&nkclklk) > 0 ? "locked" : "on";
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-	wd_status = "+watchdog";
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
-
-	xnvfile_printf(it,
-		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
-		       tm_status, wd_status,
-		       xnclock_ticks_to_ns(&nkclock, nktimerlat),
-		       xnclock_read_raw(&nkclock),
-		       ipipe_timer_name(), ipipe_clock_name());
-	return 0;
-}
-
-static struct xnvfile_regular_ops timer_vfile_ops = {
-	.show = timer_vfile_show,
-};
-
-static struct xnvfile_regular timer_vfile = {
-	.ops = &timer_vfile_ops,
-};
-
-void xntimer_init_proc(void)
-{
-	xnvfile_init_regular("timer", &timer_vfile, &nkvfroot);
-}
-
-void xntimer_cleanup_proc(void)
-{
-	xnvfile_destroy_regular(&timer_vfile);
-}
-
-#endif /* CONFIG_XENO_OPT_VFILE */
 
 /** @} */

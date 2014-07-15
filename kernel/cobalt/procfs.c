@@ -95,7 +95,7 @@ static struct xnvfile_regular lock_vfile = {
 static int latency_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	xnvfile_printf(it, "%Lu\n",
-		       xnclock_ticks_to_ns(&nkclock, nkclock.gravity));
+		       xnclock_ticks_to_ns(&nkclock, nkclock.gravity.user));
 
 	return 0;
 }
@@ -109,7 +109,7 @@ static ssize_t latency_vfile_store(struct xnvfile_input *input)
 	if (ret < 0)
 		return ret;
 
-	nkclock.gravity = xnclock_ns_to_ticks(&nkclock, val);
+	nkclock.gravity.user = xnclock_ns_to_ticks(&nkclock, val);
 
 	return ret;
 }
@@ -227,7 +227,6 @@ void xnprocfs_cleanup_tree(void)
 	xnvfile_destroy_regular(&latency_vfile);
 	xnintr_cleanup_proc();
 	xnheap_cleanup_proc();
-	xntimer_cleanup_proc();
 	xnclock_cleanup_proc();
 	xnsched_cleanup_proc();
 	xnvfile_destroy_root();
@@ -246,7 +245,6 @@ int __init xnprocfs_init_tree(void)
 		return ret;
 
 	xnclock_init_proc();
-	xntimer_init_proc();
 	xnheap_init_proc();
 	xnintr_init_proc();
 	xnvfile_init_regular("latency", &latency_vfile, &nkvfroot);

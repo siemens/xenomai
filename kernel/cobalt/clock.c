@@ -121,6 +121,17 @@ EXPORT_SYMBOL_GPL(xnclock_core_ticks_to_ns_rounded);
 EXPORT_SYMBOL_GPL(xnclock_core_ns_to_ticks);
 EXPORT_SYMBOL_GPL(xnclock_divrem_billion);
 
+static inline unsigned long get_timer_gravity(struct xntimer *timer)
+{
+	if (timer->status & XNTIMER_KGRAVITY)
+		return nkclock.gravity.kernel;
+
+	if (timer->status & XNTIMER_UGRAVITY)
+		return nkclock.gravity.user;
+
+	return nkclock.gravity.irq;
+}
+
 void xnclock_core_local_shot(struct xnsched *sched)
 {
 	struct xntimerdata *tmd;
@@ -176,7 +187,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	}
 
 	delay = xntimerh_date(&timer->aplink) -
-		(xnclock_core_read_raw() + nkclock.gravity);
+		(xnclock_core_read_raw() + get_timer_gravity(timer));
 
 	if (delay < 0)
 		delay = 0;
@@ -329,9 +340,9 @@ EXPORT_SYMBOL_GPL(xnclock_core_read_monotonic);
 
 #ifdef CONFIG_XENO_OPT_STATS
 
-static struct xnvfile_directory clock_vfroot;
+static struct xnvfile_directory timerlist_vfroot;
 
-static struct xnvfile_snapshot_ops vfile_clock_ops;
+static struct xnvfile_snapshot_ops timerlist_ops;
 
 struct vfile_clock_priv {
 	struct xntimer *curr;
@@ -348,20 +359,20 @@ struct vfile_clock_data {
 	char name[XNOBJECT_NAME_LEN];
 };
 
-static int clock_vfile_rewind(struct xnvfile_snapshot_iterator *it)
+static int timerlist_rewind(struct xnvfile_snapshot_iterator *it)
 {
 	struct vfile_clock_priv *priv = xnvfile_iterator_priv(it);
 	struct xnclock *clock = xnvfile_priv(it->vfile);
 
-	if (list_empty(&clock->statq))
+	if (list_empty(&clock->timerq))
 		return -ESRCH;
 
-	priv->curr = list_first_entry(&clock->statq, struct xntimer, next_stat);
+	priv->curr = list_first_entry(&clock->timerq, struct xntimer, next_stat);
 
 	return clock->nrtimers;
 }
 
-static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+static int timerlist_next(struct xnvfile_snapshot_iterator *it, void *data)
 {
 	struct vfile_clock_priv *priv = xnvfile_iterator_priv(it);
 	struct xnclock *clock = xnvfile_priv(it->vfile);
@@ -372,7 +383,7 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 		return 0;
 
 	timer = priv->curr;
-	if (list_is_last(&timer->next_stat, &clock->statq))
+	if (list_is_last(&timer->next_stat, &clock->timerq))
 		priv->curr = NULL;
 	else
 		priv->curr = list_entry(timer->next_stat.next,
@@ -393,7 +404,7 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	return 1;
 }
 
-static int clock_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+static int timerlist_show(struct xnvfile_snapshot_iterator *it, void *data)
 {
 	struct vfile_clock_data *p = data;
 	char timeout_buf[]  = "-         ";
@@ -423,46 +434,168 @@ static int clock_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 	return 0;
 }
 
-static struct xnvfile_snapshot_ops vfile_clock_ops = {
-	.rewind = clock_vfile_rewind,
-	.next = clock_vfile_next,
-	.show = clock_vfile_show,
+static struct xnvfile_snapshot_ops timerlist_ops = {
+	.rewind = timerlist_rewind,
+	.next = timerlist_next,
+	.show = timerlist_show,
+};
+
+static void init_timerlist_proc(struct xnclock *clock)
+{
+	memset(&clock->timer_vfile, 0, sizeof(clock->timer_vfile));
+	clock->timer_vfile.privsz = sizeof(struct vfile_clock_priv);
+	clock->timer_vfile.datasz = sizeof(struct vfile_clock_data);
+	clock->timer_vfile.tag = &clock->timer_revtag;
+	clock->timer_vfile.ops = &timerlist_ops;
+
+	xnvfile_init_snapshot(clock->name, &clock->timer_vfile, &timerlist_vfroot);
+	xnvfile_priv(&clock->timer_vfile) = clock;
+}
+
+static void cleanup_timerlist_proc(struct xnclock *clock)
+{
+	xnvfile_destroy_snapshot(&clock->timer_vfile);
+}
+
+void init_timerlist_root(void)
+{
+	xnvfile_init_dir("timer", &timerlist_vfroot, &nkvfroot);
+}
+
+void cleanup_timerlist_root(void)
+{
+	xnvfile_destroy_dir(&timerlist_vfroot);
+}
+
+#else  /* !CONFIG_XENO_OPT_STATS */
+
+static inline void init_timerlist_proc(struct xnclock *clock) { }
+
+static inline void cleanup_timerlist_proc(struct xnclock *clock) { }
+
+#endif	/* !CONFIG_XENO_OPT_STATS */
+
+#ifdef CONFIG_XENO_OPT_VFILE
+
+static struct xnvfile_directory clock_vfroot;
+
+void print_core_clock_status(struct xnclock *clock,
+			     struct xnvfile_regular_iterator *it)
+{
+	const char *tm_status, *wd_status = "";
+
+	tm_status = atomic_read(&nkclklk) > 0 ? "locked" : "on";
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+	wd_status = "+watchdog";
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+
+	xnvfile_printf(it, "%7s: timer=%s, clock=%s\n",
+		       "devices", ipipe_timer_name(), ipipe_clock_name());
+	xnvfile_printf(it, "%7s: %s%s\n", "status", tm_status, wd_status);
+	xnvfile_printf(it, "%7s: %Lu\n", "setup",
+		       xnclock_ticks_to_ns(&nkclock, nktimerlat));
+}
+
+static int clock_show(struct xnvfile_regular_iterator *it, void *data)
+{
+	struct xnclock *clock = xnvfile_priv(it->vfile);
+
+	xnvfile_printf(it, "%7s: irq=%Ld kernel=%Ld user=%Ld\n", "gravity",
+		       xnclock_ticks_to_ns(clock, xnclock_get_gravity(clock, irq)),
+		       xnclock_ticks_to_ns(clock, xnclock_get_gravity(clock, kernel)),
+		       xnclock_ticks_to_ns(clock, xnclock_get_gravity(clock, user)));
+
+	xnclock_print_status(clock, it);
+
+	xnvfile_printf(it, "%7s: %Lu\n", "ticks", xnclock_read_raw(clock));
+
+	return 0;
+}
+
+static ssize_t clock_store(struct xnvfile_input *input)
+{
+	char buf[128], *args = buf, *p;
+	struct xnclock_gravity gravity;
+	struct xnvfile_regular *vfile;
+	unsigned long ns, ticks;
+	struct xnclock *clock;
+	ssize_t nbytes;
+	int ret;
+
+	nbytes = xnvfile_get_string(input, buf, sizeof(buf));
+	if (nbytes < 0)
+		return nbytes;
+
+	vfile = container_of(input->vfile, struct xnvfile_regular, entry);
+	clock = xnvfile_priv(vfile);
+	gravity = clock->gravity;
+
+	while ((p = strsep(&args, " \t:/,")) != NULL) {
+		if (*p == '\0')
+			continue;
+		ns = simple_strtol(p, &p, 10);
+		ticks = xnclock_ns_to_ticks(clock, ns);
+		switch (*p) {
+		case 'i':
+			gravity.irq = ticks;
+			break;
+		case 'k':
+			gravity.kernel = ticks;
+			break;
+		case 'u':
+		case '\0':
+			gravity.user = ticks;
+			break;
+		default:
+			return -EINVAL;
+		}
+		ret = xnclock_set_gravity(clock, &gravity);
+		if (ret)
+			return ret;
+	}
+
+	return nbytes;
+}
+
+static struct xnvfile_regular_ops clock_ops = {
+	.show = clock_show,
+	.store = clock_store,
 };
 
 static void init_clock_proc(struct xnclock *clock)
 {
 	memset(&clock->vfile, 0, sizeof(clock->vfile));
-	clock->vfile.privsz = sizeof(struct vfile_clock_priv);
-	clock->vfile.datasz = sizeof(struct vfile_clock_data);
-	clock->vfile.tag = &clock->revtag;
-	clock->vfile.ops = &vfile_clock_ops;
-
-	xnvfile_init_snapshot(clock->name, &clock->vfile, &clock_vfroot);
+	clock->vfile.ops = &clock_ops;
+	xnvfile_init_regular(clock->name, &clock->vfile, &clock_vfroot);
 	xnvfile_priv(&clock->vfile) = clock;
+	init_timerlist_proc(clock);
 }
 
 static void cleanup_clock_proc(struct xnclock *clock)
 {
-	xnvfile_destroy_snapshot(&clock->vfile);
+	cleanup_timerlist_proc(clock);
+	xnvfile_destroy_regular(&clock->vfile);
 }
 
 void xnclock_init_proc(void)
 {
 	xnvfile_init_dir("clock", &clock_vfroot, &nkvfroot);
+	init_timerlist_root();
 }
 
 void xnclock_cleanup_proc(void)
 {
 	xnvfile_destroy_dir(&clock_vfroot);
+	cleanup_timerlist_root();
 }
 
-#else  /* !CONFIG_XENO_OPT_STATS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static inline void init_clock_proc(struct xnclock *clock) { }
 
 static inline void cleanup_clock_proc(struct xnclock *clock) { }
 
-#endif	/* !CONFIG_XENO_OPT_STATS */
+#endif	/* !CONFIG_XENO_OPT_VFILE */
 
 /**
  * @fn void xnclock_register(struct xnclock *clock)
@@ -493,7 +626,7 @@ int xnclock_register(struct xnclock *clock)
 	}
 
 #ifdef CONFIG_XENO_OPT_STATS
-	INIT_LIST_HEAD(&clock->statq);
+	INIT_LIST_HEAD(&clock->timerq);
 #endif /* CONFIG_XENO_OPT_STATS */
 
 	init_clock_proc(clock);
@@ -554,6 +687,7 @@ void xnclock_tick(struct xnclock *clock)
 	xntimerq_t *timerq = &xnclock_this_timerdata(clock)->q;
 	struct xnsched *sched = xnsched_current();
 	xnticks_t now, interval_ticks;
+	unsigned long gravity;
 	struct xntimer *timer;
 	xnsticks_t delta;
 	xntimerh_t *h;
@@ -570,18 +704,19 @@ void xnclock_tick(struct xnclock *clock)
 		timer = container_of(h, struct xntimer, aplink);
 		/*
 		 * If the delay to the next shot is greater than the
-		 * clock gravity value, we may stop scanning the timer
+		 * timer gravity value, we may stop scanning the timer
 		 * queue, since timeout dates are ordered by
 		 * increasing values.
 		 *
-		 * (*) The gravity gives the amount of time expressed
-		 * in clock ticks, by which we should anticipate the
-		 * next shot. For instance, this value is equal to the
-		 * typical latency observed on an idle system for
-		 * Xenomai's core clock (nkclock).
+		 * The gravity gives the amount of time expressed in
+		 * clock ticks, by which we should anticipate the next
+		 * shot for the given timer, to account for the
+		 * typical system latency when delivering the event to
+		 * an irq handler, or a kernel/user thread.
 		 */
+		gravity = get_timer_gravity(timer);
 		delta = (xnsticks_t)(xntimerh_date(&timer->aplink) - now);
-		if (delta > (xnsticks_t)clock->gravity)
+		if (delta > (xnsticks_t)gravity)
 			break;
 
 		trace_cobalt_timer_expire(timer);
@@ -640,7 +775,7 @@ void xnclock_tick(struct xnclock *clock)
 		do {
 			timer->periodic_ticks += interval_ticks;
 			xntimer_update_date(timer);
-		} while (xntimerh_date(&timer->aplink) < now + clock->gravity);
+		} while (xntimerh_date(&timer->aplink) < now + gravity);
 	requeue:
 #ifdef CONFIG_SMP
 		/*
@@ -667,9 +802,35 @@ void xnclock_tick(struct xnclock *clock)
 }
 EXPORT_SYMBOL_GPL(xnclock_tick);
 
+static int set_core_clock_gravity(struct xnclock *clock,
+				  const struct xnclock_gravity *p)
+{
+	nkclock.gravity = *p;
+
+	return 0;
+}
+
+static void reset_core_clock_gravity(struct xnclock *clock)
+{
+	xnticks_t schedlat = xnarch_get_sched_latency();
+	struct xnclock_gravity gravity;
+
+	gravity.user = xnclock_ns_to_ticks(&nkclock, schedlat) + nktimerlat;
+	gravity.kernel = gravity.user;
+	gravity.irq = nktimerlat;
+	set_core_clock_gravity(clock, &gravity);
+}
+
 struct xnclock nkclock = {
 	.name = "coreclk",
 	.resolution = 1,	/* nanosecond. */
+	.ops = {
+		.set_gravity = set_core_clock_gravity,
+		.reset_gravity = reset_core_clock_gravity,
+#ifdef CONFIG_XENO_OPT_VFILE
+		.print_status = print_core_clock_status,
+#endif
+	},
 	.id = -1,
 };
 EXPORT_SYMBOL_GPL(nkclock);
@@ -681,8 +842,6 @@ void xnclock_cleanup(void)
 
 int __init xnclock_init(unsigned long long freq)
 {
-	xnticks_t schedlat;
-
 	clockfreq = freq;
 #ifdef XNARCH_HAVE_LLMULSHFT
 	xnarch_init_llmulshft(1000000000, freq, &tsc_scale, &tsc_shift);
@@ -692,8 +851,7 @@ int __init xnclock_init(unsigned long long freq)
 #endif
 #endif
 	nktimerlat = xnarch_timer_calibrate();
-	schedlat = xnarch_get_sched_latency();
-	nkclock.gravity = xnclock_ns_to_ticks(&nkclock, schedlat) + nktimerlat;
+	xnclock_reset_gravity(&nkclock);
 	xnclock_register(&nkclock);
 
 	return 0;

@@ -181,7 +181,8 @@ int cobalt_timerfd_create(int ufd, int clockid, int flags)
 
 	tfd->flags = flags;
 	tfd->clockid = clockid;
-	xntimer_init(&tfd->timer, &nkclock, timerfd_handler, NULL);
+	xntimer_init(&tfd->timer, &nkclock, timerfd_handler,
+		     xnshadow_current(), XNTIMER_UGRAVITY);
 	xnsynch_init(&tfd->readers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
 	xnselect_init(&tfd->read_select);
 	tfd->target = NULL;
@@ -238,7 +239,7 @@ int cobalt_timerfd_settime(int fd, int flags,
 	xnlock_get_irqsave(&nklock, s);
 
 	if (flags & TFD_WAKEUP) {
-		tfd->target = xnshadow_thread(current);
+		tfd->target = xnshadow_current();
 		if (tfd->target == NULL) {
 			err = -EPERM;
 			goto out_unlock;

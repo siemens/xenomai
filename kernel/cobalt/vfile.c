@@ -827,8 +827,8 @@ EXPORT_SYMBOL_GPL(xnvfile_get_blob);
  * maxlen is larger than the actual string length, the input is
  * truncated to @a maxlen.
  *
- * @return The number of characters read and copied to the destination
- * buffer upon success. Otherwise, a negative error code is returned:
+ * @return The number of characters read upon success. Otherwise, a
+ * negative error code is returned:
  *
  * - -EFAULT indicates an invalid source buffer address.
  *
@@ -837,7 +837,7 @@ EXPORT_SYMBOL_GPL(xnvfile_get_blob);
 ssize_t xnvfile_get_string(struct xnvfile_input *input,
 			   char *s, size_t maxlen)
 {
-	ssize_t nbytes;
+	ssize_t nbytes, eol;
 
 	if (maxlen < 1)
 		return -EINVAL;
@@ -846,10 +846,11 @@ ssize_t xnvfile_get_string(struct xnvfile_input *input,
 	if (nbytes < 0)
 		return nbytes;
 
-	if (nbytes > 0 && s[nbytes - 1] == '\n')
-		nbytes--;
+	eol = nbytes;
+	if (eol > 0 && s[eol - 1] == '\n')
+		eol--;
 
-	s[nbytes] = '\0';
+	s[eol] = '\0';
 
 	return nbytes;
 }

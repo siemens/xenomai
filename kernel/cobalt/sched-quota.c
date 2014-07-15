@@ -223,13 +223,15 @@ static void xnsched_quota_init(struct xnsched *sched)
 	strcpy(refiller_name, "[quota-refill]");
 	strcpy(limiter_name, "[quota-limit]");
 #endif
-	xntimer_init_noblock(&qs->refill_timer,
-			     &nkclock, quota_refill_handler, NULL);
+	xntimer_init(&qs->refill_timer,
+		     &nkclock, quota_refill_handler, NULL,
+		     XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
 	xntimer_set_sched(&qs->refill_timer, sched);
 	xntimer_set_name(&qs->refill_timer, refiller_name);
 
-	xntimer_init_noblock(&qs->limit_timer,
-			     &nkclock, quota_limit_handler, NULL);
+	xntimer_init(&qs->limit_timer,
+		     &nkclock, quota_limit_handler, NULL,
+		     XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
 	xntimer_set_sched(&qs->limit_timer, sched);
 	xntimer_set_name(&qs->limit_timer, limiter_name);
 }

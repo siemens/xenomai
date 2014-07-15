@@ -191,11 +191,12 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	 * postponed to xnintr_irq_handler(), as part of the interrupt
 	 * exit code.
 	 */
-	xntimer_init(&sched->htimer, &nkclock, NULL, &sched->rootcb);
+	xntimer_init(&sched->htimer, &nkclock, NULL,
+		     &sched->rootcb, XNTIMER_IGRAVITY);
 	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
 	xntimer_set_name(&sched->htimer, htimer_name);
-	xntimer_init(&sched->rrbtimer, &nkclock,
-		     roundrobin_handler, &sched->rootcb);
+	xntimer_init(&sched->rrbtimer, &nkclock, roundrobin_handler,
+		     &sched->rootcb, XNTIMER_IGRAVITY);
 	xntimer_set_name(&sched->rrbtimer, rrbtimer_name);
 	xntimer_set_priority(&sched->rrbtimer, XNTIMER_LOPRIO);
 
@@ -209,8 +210,8 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	nknrthreads++;
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_init_noblock(&sched->wdtimer, &nkclock,
-			     watchdog_handler, &sched->rootcb);
+	xntimer_init(&sched->wdtimer, &nkclock, watchdog_handler,
+		     &sched->rootcb, XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */

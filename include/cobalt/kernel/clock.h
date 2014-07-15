@@ -32,16 +32,22 @@
 struct xnsched;
 struct xntimerdata;
 
+struct xnclock_gravity {
+	unsigned long irq;
+	unsigned long kernel;
+	unsigned long user;
+};
+
 struct xnclock {
 	/** ns */
 	xnticks_t wallclock_offset;
 	/** ns */
 	xnticks_t resolution;
 	/** raw clock ticks. */
-	unsigned long gravity;
+	struct xnclock_gravity gravity;
 	const char *name;
-#ifdef CONFIG_XENO_OPT_EXTCLOCK
 	struct {
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
 		xnticks_t (*read_raw)(struct xnclock *clock);
 		xnticks_t (*read_monotonic)(struct xnclock *clock);
 		int (*set_time)(struct xnclock *clock,
@@ -56,17 +62,27 @@ struct xnclock {
 					   struct xnsched *sched);
 		void (*program_remote_shot)(struct xnclock *clock,
 					    struct xnsched *sched);
+#endif
+		int (*set_gravity)(struct xnclock *clock,
+				   const struct xnclock_gravity *p);
+		void (*reset_gravity)(struct xnclock *clock);
+#ifdef CONFIG_XENO_OPT_VFILE
+		void (*print_status)(struct xnclock *clock,
+				     struct xnvfile_regular_iterator *it);
+#endif
 	} ops;
-#endif	
 	/* Private section. */
 	struct xntimerdata *timerdata;
 	int id;
 #ifdef CONFIG_XENO_OPT_STATS
-	struct xnvfile_snapshot vfile;
-	struct xnvfile_rev_tag revtag;
-	struct list_head statq;
+	struct xnvfile_snapshot timer_vfile;
+	struct xnvfile_rev_tag timer_revtag;
+	struct list_head timerq;
 	int nrtimers;
 #endif /* CONFIG_XENO_OPT_STATS */
+#ifdef CONFIG_XENO_OPT_VFILE
+	struct xnvfile_regular vfile;
+#endif
 };
 
 extern struct xnclock nkclock;
@@ -242,10 +258,22 @@ static inline xnticks_t xnclock_get_resolution(struct xnclock *clock)
 	return clock->resolution; /* ns */
 }
 
-static inline unsigned long xnclock_get_gravity(struct xnclock *clock)
+static inline int xnclock_set_gravity(struct xnclock *clock,
+				      const struct xnclock_gravity *gravity)
 {
-	return (unsigned long)xnclock_ticks_to_ns(clock, clock->gravity);
+	if (clock->ops.set_gravity)
+		return clock->ops.set_gravity(clock, gravity);
+
+	return -EINVAL;
 }
+
+static inline void xnclock_reset_gravity(struct xnclock *clock)
+{
+	if (clock->ops.reset_gravity)
+		clock->ops.reset_gravity(clock);
+}
+
+#define xnclock_get_gravity(__clock, __type)  ((__clock)->gravity.__type)
 
 static inline xnticks_t xnclock_read_realtime(struct xnclock *clock)
 {
@@ -261,9 +289,19 @@ unsigned long long xnclock_divrem_billion(unsigned long long value,
 
 xnticks_t xnclock_get_host_time(void);
 
-#ifdef CONFIG_XENO_OPT_STATS
+#ifdef CONFIG_XENO_OPT_VFILE
+
 void xnclock_init_proc(void);
+
 void xnclock_cleanup_proc(void);
+
+static inline void xnclock_print_status(struct xnclock *clock,
+					struct xnvfile_regular_iterator *it)
+{
+	if (clock->ops.print_status)
+		clock->ops.print_status(clock, it);
+}
+
 #else
 static inline void xnclock_init_proc(void) { }
 static inline void xnclock_cleanup_proc(void) { }
