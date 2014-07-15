@@ -297,6 +297,38 @@ int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time);
  */
 int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 
+/**
+ * @brief Safe busy waiting
+ *
+ * This service alternates active spinning and sleeping within a wait
+ * loop, until a condition is satisfied. While sleeping, a task is
+ * scheduled out and does not consume any CPU time.
+ *
+ * rtdm_task_busy_wait() is particularly useful for waiting for a
+ * state change reading an I/O register, which usually happens shortly
+ * after the wait starts, without incurring the adverse effects of
+ * long busy waiting if it doesn't.
+ *
+ * @param[in] condition The C expression to be tested for detecting
+ * completion.
+ * @param[in] spin_ns The time to spin on @a condition before
+ * sleeping, expressed as a count of nanoseconds.
+ * @param[in] sleep_ns The time to sleep for before spinning again,
+ * expressed as a count of nanoseconds.
+ *
+ * @return 0 on success if @a condition is satisfied, otherwise:
+ *
+ * - -EINTR is returned if the calling task has been unblocked by a
+ * Linux signal or explicitly via rtdm_task_unblock().
+ *
+ * - -EPERM may be returned if an illegal invocation environment is
+ * detected.
+ *
+ * @coretags{primary-only, might-switch}
+ */
+int rtdm_task_busy_wait(bool condition, nanosecs_rel_t spin_ns,
+	                nanosecs_rel_t sleep_ns);
+
 #endif /* DOXYGEN_CPP */
 
 int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)

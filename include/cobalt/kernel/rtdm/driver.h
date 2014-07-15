@@ -1060,6 +1060,28 @@ static inline int __deprecated rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 {
 	return __rtdm_task_sleep(wakeup_time, XN_REALTIME);
 }
+
+#define rtdm_task_busy_wait(__condition, __spin_ns, __sleep_ns)			\
+	({									\
+		__label__ done;							\
+		nanosecs_abs_t __end;						\
+		int __ret = 0;							\
+		for (;;) {							\
+			__end = rtdm_clock_read_monotonic() + __spin_ns;	\
+			for (;;) {      					\
+				if (__condition)				\
+					goto done;				\
+				if (rtdm_clock_read_monotonic() >= __end) 	\
+					break;					\
+			}							\
+			__ret = rtdm_task_sleep(__sleep_ns);			\
+			if (__ret)						\
+				break;						\
+		}								\
+	done:									\
+		__ret;								\
+	})
+
 #endif /* !DOXYGEN_CPP */
 
 /* --- event services --- */
