@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <error.h>
 #include <getopt.h>
 #include <string.h>
 #include <signal.h>
@@ -32,7 +33,7 @@
 #include <rtdm/analogy.h>
 
 typedef int (*dump_function_t) (a4l_desc_t *, a4l_cmd_t*, unsigned char *, int);
-static pthread_t thread;
+
 struct arguments {
 	int argc;
 	char **argv;
@@ -55,14 +56,9 @@ static int real_time = 0;
 static int use_mmap = 0;
 static int verbose = 0;
 
-#define ERR(fmt, args ...) fprintf(stderr, fmt, ##args)
-#define OUT(fmt, args ...) fprintf(stdout, fmt, ##args)
-#define DBG(fmt, args...) 						\
-        do {								\
-	        if (verbose) 						\
-		           printf(fmt, ##args);				\
-	} while (0)
-
+#define exit_err(fmt, args ...) error(1,0, fmt "\n", ##args)
+#define output(fmt, args ...) fprintf(stdout, fmt "\n", ##args)
+#define debug(fmt, args...)  if (verbose &&  printf(fmt "\n", ##args))
 
 /* The command to send by default */
 a4l_cmd_t cmd = {
@@ -98,20 +94,20 @@ struct option cmd_read_opts[] = {
 
 static void do_print_usage(void)
 {
-	OUT("usage:\tcmd_read [OPTS]\n");
-	OUT("\tOPTS:\t -v, --verbose: verbose output\n");
-	OUT("\t\t -r, --real-time: enable real-time acquisition mode\n");
-	OUT("\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
-	OUT("\t\t -s, --subdevice: subdevice index\n");
-	OUT("\t\t -S, --scan-count: count of scan to perform\n");
-	OUT("\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
-	OUT("\t\t -m, --mmap: mmap the buffer\n");
-	OUT("\t\t -w, --raw: dump data in raw format\n");
-	OUT("\t\t -k, --wake-count: space available before waking up the process\n");
-	OUT("\t\t -h, --help: print this help\n");
+	output("usage:\tcmd_read [OPTS]");
+	output("\tOPTS:\t -v, --verbose: verbose output");
+	output("\t\t -r, --real-time: enable real-time acquisition mode");
+	output("\t\t -d, --device: device filename (analogy0, analogy1, ...)");
+	output("\t\t -s, --subdevice: subdevice index");
+	output("\t\t -S, --scan-count: count of scan to perform");
+	output("\t\t -c, --channels: channels to use (ex.: -c 0,1)");
+	output("\t\t -m, --mmap: mmap the buffer");
+	output("\t\t -w, --raw: dump data in raw format");
+	output("\t\t -k, --wake-count: space available before waking up the process");
+	output("\t\t -h, --help: output this help");
 }
 
-static int dump_raw(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
+static inline int dump_raw(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 {
 	return fwrite(buf, size, 1, stdout);
 }
@@ -127,17 +123,12 @@ static int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int si
 		int width;
 
 		err = a4l_get_chinfo(dsc, cmd->idx_subd, cmd->chan_descs[i], &chans[i]);
-		if (err < 0) {
-			ERR("cmd_read: a4l_get_chinfo failed (ret=%d)\n", err);
-			goto out;
-		}
+		if (err < 0)
+			exit_err("a4l_get_chinfo failed (ret=%d)", err);
 
 		width = a4l_sizeof_chan(chans[i]);
-		if (width < 0) {
-			ERR("cmd_read: incoherent info for channel %d\n", cmd->chan_descs[i]);
-			err = width;
-			goto out;
-		}
+		if (width < 0)
+			exit_err("incoherent info for channel %d", cmd->chan_descs[i]);
 
 		switch (width) {
 		case 1:
@@ -159,14 +150,14 @@ static int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int si
 		if (err < 0)
 			goto out;
 
-		OUT(fmts[cur_chan], value);
+		fprintf(stdout, fmts[cur_chan], value);
 
 		/* We assume a4l_sizeof_chan() cannot return because we already
 		 * called it on the very same channel descriptor */
 		tmp_size += a4l_sizeof_chan(chans[cur_chan]);
 
 		if (++cur_chan == cmd->nb_chan) {
-			OUT("\n");
+			fprintf(stdout, "\n");
 			cur_chan = 0;
 		}
 	}
@@ -184,14 +175,12 @@ static int fetch_data(a4l_desc_t *dsc, void *buf, unsigned int *cnt, dump_functi
 		ret = a4l_async_read(dsc, buf, BUF_SIZE, A4L_INFINITE);
 
 		if (ret == 0) {
-			DBG("cmd_read: no more data in the buffer \n");
+			debug("no more data in the buffer ");
 			break;
 		}
 
-		if (ret < 0) {
-			ERR("cmd_read: a4l_read failed (ret=%d)\n", ret);
-			return ret;
-		}
+		if (ret < 0)
+			exit_err("a4l_read failed (ret=%d)", ret);
 
 		*cnt += ret;
 
@@ -219,10 +208,8 @@ static int fetch_data_mmap(a4l_desc_t *dsc, unsigned int *cnt, dump_function_t d
 		if (ret == -ENOENT)
 			break;
 
-		if (ret < 0) {
-			ERR("cmd_read: a4l_mark_bufrw() failed (ret=%d)\n", ret);
-			return ret;
-		}
+		if (ret < 0)
+			exit_err("a4l_mark_bufrw() failed (ret=%d)", ret);
 
 		/* If there is nothing to read, wait for an event
 		   (Note that a4l_poll() also retrieves the data amount
@@ -230,14 +217,11 @@ static int fetch_data_mmap(a4l_desc_t *dsc, unsigned int *cnt, dump_function_t d
 		   the data read counter) */
 		if (!cnt_updated) {
 			ret = a4l_poll(dsc, cmd.idx_subd, A4L_INFINITE);
+			if (ret < 0)
+				exit_err("a4l_poll() failed (ret=%d)", ret);
 
 			if (ret == 0)
 				break;
-
-			if (ret < 0) {
-				ERR("cmd_read: a4l_poll() failed (ret=%d)\n", ret);
-				return ret;
-			}
 
 			cnt_current = cnt_updated;
 			continue;
@@ -261,35 +245,30 @@ static int map_subdevice_buffer(a4l_desc_t *dsc, unsigned long *buf_size, void *
 
 	/* Get the buffer size to map */
 	ret = a4l_get_bufsize(dsc, cmd.idx_subd, buf_size);
-	if (ret < 0) {
-		ERR("cmd_read: a4l_get_bufsize() failed (ret=%d)\n", ret);
-		return ret;
-	}
-	DBG("cmd_read: buffer size = %lu bytes\n", *buf_size);
+	if (ret < 0)
+		exit_err("a4l_get_bufsize() failed (ret=%d)", ret);
+	debug("buffer size = %lu bytes", *buf_size);
 
 	/* Map the analog input subdevice buffer */
 	ret = a4l_mmap(dsc, cmd.idx_subd, *buf_size, &buf);
-	if (ret < 0) {
-		ERR("cmd_read: a4l_mmap() failed (ret=%d)\n", ret);
-		return ret;
-	}
-	DBG("cmd_read: mmap performed successfully (map=0x%p)\n", buf);
+	if (ret < 0)
+		exit_err("a4l_mmap() failed (ret=%d)", ret);
+	debug("mmap done (map=0x%p)", buf);
+
 	*map = buf;
 
 	return 0;
 }
 
-static void *cmd_read(void *arg)
+static int cmd_read(struct arguments *arg)
 {
 	unsigned int i, scan_size = 0, cnt = 0, ret = 0, len, ofs;
 	dump_function_t dump_function = dump_text;
 	a4l_desc_t dsc = { .sbdata = NULL };
 	unsigned long buf_size;
+	char **argv = arg->argv;
+	int argc = arg->argc;
 	void *map = NULL;
-
-	struct arguments *p = arg;
-	char **argv = p->argv;
-	int argc = p->argc;
 
 	for (;;) {
 		ret = getopt_long(argc, argv, "vrd:s:S:c:mwk:h",
@@ -329,26 +308,22 @@ static void *cmd_read(void *arg)
 		case 'h':
 		default:
 			do_print_usage();
-			pthread_exit(0);
+			return -EINVAL;
 		}
 	}
 
-	if (isatty(STDOUT_FILENO) && dump_function == dump_raw) {
-		ERR("cmd_read: cannot dump raw data on a terminal\n\n");
-		ret = -EINVAL;
-		pthread_exit(&ret);
-	}
+	if (isatty(STDOUT_FILENO) && dump_function == dump_raw)
+		exit_err("cannot dump raw data on a terminal\n");
 
 	/* Recover the channels to compute */
 	do {
 		cmd.nb_chan++;
 		len = strlen(str_chans);
 		ofs = strcspn(str_chans, ",");
-		if (sscanf(str_chans, "%u", &chans[cmd.nb_chan - 1]) == 0) {
-			ERR("cmd_read: bad channel argument\n");
-			ret = -EINVAL;
-			pthread_exit(&ret);
-		}
+
+		if (sscanf(str_chans, "%u", &chans[cmd.nb_chan - 1]) == 0)
+			exit_err("bad channel argument");
+
 		str_chans += ofs + 1;
 	} while (len != ofs);
 
@@ -357,50 +332,43 @@ static void *cmd_read(void *arg)
 	cmd.stop_src = cmd.stop_arg != 0 ? TRIG_COUNT : TRIG_NONE;
 
 	ret = a4l_open(&dsc, filename);
-	if (ret < 0) {
-		ERR("cmd_read: a4l_open %s failed (ret=%d)\n", filename, ret);
-		pthread_exit(&ret);
-	}
+	if (ret < 0)
+		exit_err("a4l_open %s failed (ret=%d)", filename, ret);
 
-	DBG("cmd_read: device %s opened (fd=%d)\n", filename, dsc.fd);
-	DBG("cmd_read: basic descriptor retrieved\n");
-	DBG("\t subdevices count = %d\n", dsc.nb_subd);
-	DBG("\t read subdevice index = %d\n", dsc.idx_read_subd);
-	DBG("\t write subdevice index = %d\n", dsc.idx_write_subd);
+	debug("device %s opened (fd=%d)", filename, dsc.fd);
+	debug("basic descriptor retrieved");
+	debug("\t subdevices count = %d", dsc.nb_subd);
+	debug("\t read subdevice index = %d", dsc.idx_read_subd);
+	debug("\t write subdevice index = %d", dsc.idx_write_subd);
 
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
-	if (dsc.sbdata == NULL) {
-		ERR("cmd_read: malloc failed \n");
-		ret = -ENOMEM;
-		pthread_exit(&ret);
-	}
+	if (dsc.sbdata == NULL)
+		exit_err("malloc failed ");
 
 	/* Get this data */
 	ret = a4l_fill_desc(&dsc);
-	if (ret < 0) {
-		ERR("cmd_read: a4l_fill_desc failed (ret=%d)\n", ret);
-		goto out;
-	}
-	DBG("cmd_read: complex descriptor retrieved\n");
+	if (ret < 0)
+		exit_err("a4l_fill_desc failed (ret=%d)", ret);
+	debug("complex descriptor retrieved");
 
 	/* Get the size of a single acquisition */
 	for (i = 0; i < cmd.nb_chan; i++) {
 		a4l_chinfo_t *info;
-		ret = a4l_get_chinfo(&dsc,cmd.idx_subd, cmd.chan_descs[i], &info);
-		if (ret < 0) {
-			ERR("cmd_read: a4l_get_chinfo failed (ret=%d)\n", ret);
-			goto out;
-		}
 
-		DBG("cmd_read: channel %x\n", cmd.chan_descs[i]);
-		DBG("\t ranges count = %d\n", info->nb_rng);
-		DBG("\t bit width = %d (bits)\n", info->nb_bits);
+		ret = a4l_get_chinfo(&dsc,cmd.idx_subd, cmd.chan_descs[i], &info);
+		if (ret < 0)
+			exit_err("a4l_get_chinfo failed (ret=%d)", ret);
+
+		debug("channel %x", cmd.chan_descs[i]);
+		debug(" ranges count = %d", info->nb_rng);
+		debug(" bit width = %d (bits)", info->nb_bits);
 
 		scan_size += a4l_sizeof_chan(info);
 	}
-	DBG("cmd_read: scan size = %u\n", scan_size);
-	DBG("cmd_read: size to read = %u\n", scan_size * cmd.stop_arg);
+
+	debug("size to read = %u", scan_size * cmd.stop_arg);
+	debug("scan size = %u", scan_size);
 
 	/* Cancel any former command which might be in progress */
 	a4l_snd_cancel(&dsc, cmd.idx_subd);
@@ -412,41 +380,32 @@ static void *cmd_read(void *arg)
 	}
 
 	ret = a4l_set_wakesize(&dsc, wake_count);
-	if (ret < 0) {
-		ERR("cmd_read: a4l_set_wakesize failed (ret=%d)\n", ret);
-		goto out;
-	}
-	DBG("cmd_read: wake size successfully set (%lu)\n", wake_count);
+	if (ret < 0)
+		exit_err("a4l_set_wakesize failed (ret=%d)", ret);
+	debug("wake size successfully set (%lu)", wake_count);
 
 	/* Send the command to the input device */
 	ret = a4l_snd_command(&dsc, &cmd);
-	if (ret < 0) {
-		ERR("cmd_read: a4l_snd_command failed (ret=%d)\n", ret);
-		goto out;
-	}
-	DBG("cmd_read: command successfully sent\n");
+	if (ret < 0)
+		exit_err("a4l_snd_command failed (ret=%d)", ret);
+	debug("command sent");
 
-	if (!use_mmap) {
-		ret = fetch_data(&dsc, buf, &cnt, dump_function);
-		if (ret) {
-			ERR("cmd_read: failed to fetch_data (ret=%d)\n", ret);
-			goto out;
-		}
+	if (use_mmap) {
+		ret = fetch_data_mmap(&dsc, &cnt, dump_function, map, buf_size);
+		if (ret)
+			exit_err("failed to fetch_data_mmap (ret=%d)", ret);
 	}
 	else {
-		ret = fetch_data_mmap(&dsc, &cnt, dump_function, map, buf_size);
-		if (ret) {
-			ERR("cmd_read: failed to fetch_data_mmap (ret=%d)\n", ret);
-			goto out;
-		}
+		ret = fetch_data(&dsc, buf, &cnt, dump_function);
+		if (ret)
+			exit_err("failed to fetch_data (ret=%d)", ret);
 	}
-	DBG("cmd_read: %d bytes successfully received\n", cnt);
+	debug("%d bytes successfully received (ret=%d)", cnt, ret);
 
-	pthread_exit(NULL);
+	return 0;
 
-	return NULL;
 out:
-	if (use_mmap != 0)
+	if (use_mmap)
 		munmap(map, buf_size);
 
 	/* Free the buffer used as device descriptor */
@@ -456,63 +415,26 @@ out:
 	/* Release the file descriptor */
 	a4l_close(&dsc);
 
-	pthread_exit(&ret);
-}
-
-static void cleanup_upon_sig(int sig)
-{
-	pthread_cancel(thread);
-	signal(sig, SIG_DFL);
+	return ret;
 }
 
 int main(int argc, char *argv[])
 {
 	struct sched_param param = {.sched_priority = 99};
 	struct arguments args = {.argc = argc, .argv = argv};
-	pthread_attr_t attr;
-	sigset_t mask;
 	int ret;
 
-	sigemptyset(&mask);
-
-	sigaddset(&mask, SIGTERM);
-	sigaddset(&mask, SIGINT);
-	sigaddset(&mask, SIGHUP);
-
-	signal(SIGTERM, cleanup_upon_sig);
-	signal(SIGINT, cleanup_upon_sig);
-	signal(SIGHUP, cleanup_upon_sig);
-
-	pthread_sigmask(SIG_BLOCK, &mask, NULL);
-
 	ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-	if (ret < 0) {
-		ret = errno;
-		ERR("cmd_read: mlockall failed (ret=%d)\n", ret);
-		return -1;
-	}
+	if (ret < 0)
+		exit_err("mlockall error (ret=%d)", errno);
 
-	/* delegate all the processing to a realtime thread */
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-	pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
-
-	ret = pthread_attr_setschedparam(&attr, &param);
-	if (ret) {
-		ERR("pthread_attr_setschedparam failed (ret=%d)\n", ret);
-		return -1;
-	}
-
-	ret = pthread_create(&thread, &attr, &cmd_read, &args);
-	if (ret) {
-		ERR("pthread_create failed (ret=%d)\n", ret);
-		return -1;
-	}
-
-	pthread_join(thread, (void **) &ret);
+	ret = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	if (ret)
-		ERR("cmd_read failed (ret=%d) \n", ret);
+		exit_err("pthread_setschedparam failed (ret=0x%x) ", ret);
+
+	ret = cmd_read(&args);
+	if (ret)
+		exit_err("cmd_read error (ret=0x%x) ", ret);
 
 	return ret;
 }
