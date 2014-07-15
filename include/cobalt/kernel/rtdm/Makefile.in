@@ -343,6 +343,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_HEADERS = \
+	autotune.h	\
 	can.h		\
 	cobalt.h	\
 	driver.h	\

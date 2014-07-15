@@ -22,9 +22,9 @@
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/ancillaries.h>
 
-#define XENO_INFO KERN_INFO    "[Xenomai] "
-#define XENO_WARN KERN_WARNING "[Xenomai] "
-#define XENO_ERR  KERN_ERR     "[Xenomai] "
+#define XENO_INFO  KERN_INFO    "[Xenomai] "
+#define XENO_WARN  KERN_WARNING "[Xenomai] "
+#define XENO_ERR   KERN_ERR     "[Xenomai] "
 
 #define XENO_DEBUG(__subsys)	\
 	(CONFIG_XENO_OPT_DEBUG_##__subsys > 0)

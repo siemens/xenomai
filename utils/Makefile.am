@@ -1,3 +1,3 @@
 if XENO_COBALT
-SUBDIRS = can analogy ps slackspot
+SUBDIRS = can analogy ps slackspot autotune
 endif

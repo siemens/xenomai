@@ -1,5 +1,6 @@
 
 noinst_HEADERS =	\
+	autotune.h	\
 	can.h		\
 	cobalt.h	\
 	driver.h	\

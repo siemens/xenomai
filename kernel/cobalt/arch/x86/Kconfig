@@ -1,5 +1,8 @@
 config XENO_HW_FPU
 	def_bool y
 
+config XENO_HW_AUTOTUNE
+	def_bool y
+
 source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

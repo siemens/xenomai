@@ -821,6 +821,7 @@ AC_CONFIG_FILES([ \
 	utils/analogy/Makefile \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
+	utils/autotune/Makefile \
 	demo/Makefile \
 	demo/posix/Makefile \
 	demo/posix/cobalt/Makefile \

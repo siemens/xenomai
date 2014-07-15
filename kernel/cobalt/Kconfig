@@ -183,9 +183,30 @@ config XENO_OPT_RR_QUANTUM
 	may be overriden internally by Xenomai services which do
 	provide a round-robin interval.
 
+config XENO_OPT_AUTOTUNE
+        bool "Auto-tuning"
+        default y if XENO_HW_AUTOTUNE
+	select XENO_DRIVERS_AUTOTUNE
+        help
+	Enable auto-tuning capabilities. Currently, Xenomai runs an
+	auto-tuning procedure once at system bootup, for adjusting the
+	core timing services to the intrinsic latency of the platform.
+
+	The calibration method is conservative, in order to never
+	cause early shots. You can set your own estimation of the
+	intrinsic latency with CONFIG_XENO_OPT_TIMING_SCHEDLAT, or use
+	our pre-calibrated value instead.
+
+if XENO_OPT_AUTOTUNE
+config XENO_OPT_TIMING_SCHEDLAT
+	int
+	default 0
+endif
+
 config XENO_OPT_TIMING_SCHEDLAT
 	int "Scheduling latency (ns)"
 	default 0
+	depends on !XENO_OPT_AUTOTUNE
 	help
 	Scheduling latency is the time between the termination of an
 	interrupt handler and the execution of the first instruction

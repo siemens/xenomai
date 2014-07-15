@@ -851,7 +851,6 @@ enable_pshared
 enable_registry
 enable_smp
 enable_x86_vsyscall
-enable_arm_tsc
 enable_arm_quirks
 enable_doc_build
 enable_doc_install
@@ -1522,15 +1521,6 @@ Optional Features:
   --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
   --enable-x86-vsyscall   Assume VSYSCALL enabled for issuing syscalls
-  --enable-arm-tsc        You only need this option if you get the following
-                          message when starting an application: Xenomai:
-                          incompatible feature set (userland requires
-                          "kuser_tsc ...", kernel provides "...",
-                          missing="kuser_tsc"). In that case, this option
-                          allows to select the machine for which a user-space
-                          tsc emulation should be generated. Valid machines
-                          are at91, kuser, imx, ixp4xx, omap, orion, pxa,
-                          s3c24x, sa1100. [default=kuser]
   --enable-arm-quirks     Enable quirks for specific systems. Currently
                           supported quirks are for sa1100 and xscale3.
   --enable-doc-build      Build Xenomai documentation
@@ -13314,46 +13304,8 @@ fi
 
 
 if test $XENO_TARGET_ARCH = arm ; then
-
   unset CONFIG_XENO_ARM_SA1100
   unset CONFIG_XENO_CPU_XSC3
-  CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM tsc type" >&5
-$as_echo_n "checking for ARM tsc type... " >&6; }
-  # Check whether --enable-arm-tsc was given.
-if test "${enable_arm_tsc+set}" = set; then :
-  enableval=$enable_arm_tsc; case "$enableval" in
-	at91*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
-
-	integrator) unset tsc_type;;
-
-	ixp4xx)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	imx*|mx*)   CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	generic|kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
-
-	omap*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	orion)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
-
-	pxa*)	    CONFIG_XENO_CPU_XSC3=y
-		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	s3c24*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_DECREMENTER;;
-
-	sa1100)	    CONFIG_XENO_ARM_SA1100=y
-		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	n | no)	    unset CONFIG_XENO_ARM_TSC_TYPE;;
-
-	*)as_fn_error $? "Invalid SOC selected: \"$enableval\"" "$LINENO" 5;;
-	esac
-fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${enable_arm_tsc:-kuser}" >&5
-$as_echo "${enable_arm_tsc:-kuser}" >&6; }
 
   # Check whether --enable-arm-quirks was given.
 if test "${enable_arm_quirks+set}" = set; then :
@@ -14180,7 +14132,7 @@ $as_echo_n "checking for fortify support... " >&6; }
 # Check whether --enable-fortify was given.
 if test "${enable_fortify+set}" = set; then :
   enableval=$enable_fortify; case "$enableval" in
-              y | yes) want_fortify=yes;;
+	      y | yes) want_fortify=yes;;
 	      *) want_fortify=no;;
 	      esac
 fi
@@ -14230,7 +14182,7 @@ XENO_CONFIG_ARGS="$ac_configure_args"
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/smokey/Makefile lib/trank/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/switchtest/Makefile testsuite/smokey/Makefile testsuite/smokey/arith/Makefile testsuite/smokey/sched-quota/Makefile testsuite/smokey/sched-tp/Makefile testsuite/smokey/rtdm/Makefile testsuite/smokey/vdso-access/Makefile testsuite/smokey/cond-torture/Makefile testsuite/smokey/mutex-torture/Makefile testsuite/clocktest/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile include/smokey/Makefile include/trank/Makefile include/trank/posix/Makefile include/trank/native/Makefile include/trank/rtdm/Makefile doc/Makefile doc/doxygen/Makefile doc/doxygen/xeno3prm-common.conf doc/doxygen/xeno3prm-html.conf doc/doxygen/xeno3prm-latex.conf doc/asciidoc/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/smokey/Makefile lib/trank/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/switchtest/Makefile testsuite/smokey/Makefile testsuite/smokey/arith/Makefile testsuite/smokey/sched-quota/Makefile testsuite/smokey/sched-tp/Makefile testsuite/smokey/rtdm/Makefile testsuite/smokey/vdso-access/Makefile testsuite/smokey/cond-torture/Makefile testsuite/smokey/mutex-torture/Makefile testsuite/clocktest/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile utils/autotune/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile include/smokey/Makefile include/trank/Makefile include/trank/posix/Makefile include/trank/native/Makefile include/trank/rtdm/Makefile doc/Makefile doc/doxygen/Makefile doc/doxygen/xeno3prm-common.conf doc/doxygen/xeno3prm-html.conf doc/doxygen/xeno3prm-latex.conf doc/asciidoc/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -15355,6 +15307,7 @@ do
     "utils/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES utils/analogy/Makefile" ;;
     "utils/ps/Makefile") CONFIG_FILES="$CONFIG_FILES utils/ps/Makefile" ;;
     "utils/slackspot/Makefile") CONFIG_FILES="$CONFIG_FILES utils/slackspot/Makefile" ;;
+    "utils/autotune/Makefile") CONFIG_FILES="$CONFIG_FILES utils/autotune/Makefile" ;;
     "demo/Makefile") CONFIG_FILES="$CONFIG_FILES demo/Makefile" ;;
     "demo/posix/Makefile") CONFIG_FILES="$CONFIG_FILES demo/posix/Makefile" ;;
     "demo/posix/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES demo/posix/cobalt/Makefile" ;;
