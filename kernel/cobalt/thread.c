@@ -1255,7 +1255,7 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 			ret = -EINVAL;
 			goto unlock_and_exit;
 		}
-		ret = xntimer_start(&thread->ptimer, idate + period, period,
+		ret = xntimer_start(&thread->ptimer, idate, period,
 				    XN_ABSOLUTE);
 	}
 
