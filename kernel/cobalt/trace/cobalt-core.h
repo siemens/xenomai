@@ -556,7 +556,7 @@ TRACE_EVENT(cobalt_timer_start,
 	TP_STRUCT__entry(
 		__field(struct xntimer *, timer)
 #ifdef CONFIG_XENO_OPT_STATS
-		__string(handler, timer->handler_name)
+		__string(name, timer->name)
 #endif
 		__field(xnticks_t, value)
 		__field(xnticks_t, interval)
@@ -566,7 +566,7 @@ TRACE_EVENT(cobalt_timer_start,
 	TP_fast_assign(
 		__entry->timer = timer;
 #ifdef CONFIG_XENO_OPT_STATS
-		__assign_str(handler, timer->handler_name);
+		__assign_str(name, timer->name);
 #endif
 		__entry->value = value;
 		__entry->interval = interval;
@@ -576,7 +576,7 @@ TRACE_EVENT(cobalt_timer_start,
 	TP_printk("timer=%p(%s) value=%Lu interval=%Lu mode=%s",
 		  __entry->timer,
 #ifdef CONFIG_XENO_OPT_STATS
-		  __get_str(handler),
+		  __get_str(name),
 #else
 		  "(anon)",
 #endif

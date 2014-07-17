@@ -23,6 +23,7 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/list.h>
+#include <cobalt/kernel/ancillaries.h>
 
 /**
  * @addtogroup cobalt_core_timer
@@ -215,8 +216,6 @@ struct xntimer {
 #endif
 	/** Timer name to be displayed. */
 	char name[XNOBJECT_NAME_LEN];
-	/** Handler name to be displayed. */
-	const char *handler_name;
 	/** Timer holder in timebase. */
 	struct list_head next_stat;
 	/** Number of timer schedules. */
@@ -330,7 +329,7 @@ void xntimer_set_gravity(struct xntimer *timer,
 #define xntimer_init(__timer, __clock, __handler, __thread, __flags)	\
 do {									\
 	__xntimer_init(__timer, __clock, __handler, __thread, __flags);	\
-	(__timer)->handler_name = #__handler;				\
+	xntimer_set_name(__timer, #__handler);				\
 } while (0)
 
 static inline void xntimer_reset_stats(struct xntimer *timer)
@@ -351,7 +350,7 @@ static inline void xntimer_account_fired(struct xntimer *timer)
 
 static inline void xntimer_set_name(struct xntimer *timer, const char *name)
 {
-	strncpy(timer->name, name, sizeof(timer->name));
+	knamecpy(timer->name, name);
 }
 
 #else /* !CONFIG_XENO_OPT_STATS */

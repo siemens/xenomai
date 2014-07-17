@@ -355,7 +355,6 @@ struct vfile_clock_data {
 	xnticks_t timeout;
 	xnticks_t interval;
 	unsigned long status;
-	char handler[XNOBJECT_NAME_LEN];
 	char name[XNOBJECT_NAME_LEN];
 };
 
@@ -398,7 +397,6 @@ static int timerlist_next(struct xnvfile_snapshot_iterator *it, void *data)
 	p->timeout = xntimer_get_timeout(timer);
 	p->interval = xntimer_interval(timer);
 	p->status = timer->status;
-	knamecpy(p->handler, timer->handler_name);
 	knamecpy(p->name, timer->name);
 
 	return 1;
@@ -413,9 +411,9 @@ static int timerlist_show(struct xnvfile_snapshot_iterator *it, void *data)
 
 	if (p == NULL)
 		xnvfile_printf(it,
-			       "%-3s  %-20s  %-10s  %-10s  %-16s  %s\n",
+			       "%-3s  %-20s  %-10s  %-10s  %s\n",
 			       "CPU", "SCHED/SHOT", "TIMEOUT",
-			       "INTERVAL", "HANDLER", "NAME");
+			       "INTERVAL", "NAME");
 	else {
 		if ((p->status & XNTIMER_DEQUEUED) == 0)
 			xntimer_format_time(p->timeout, timeout_buf,
@@ -426,9 +424,9 @@ static int timerlist_show(struct xnvfile_snapshot_iterator *it, void *data)
 		ksformat(hit_buf, sizeof(hit_buf), "%u/%u",
 			 p->scheduled, p->fired);
 		xnvfile_printf(it,
-			       "%-3u  %-20s  %-10s  %-10s  %-16s  %s\n",
+			       "%-3u  %-20s  %-10s  %-10s  %s\n",
 			       p->cpu, hit_buf, timeout_buf,
-			       interval_buf, p->handler, p->name);
+			       interval_buf, p->name);
 	}
 
 	return 0;
