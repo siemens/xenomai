@@ -61,7 +61,7 @@ struct xnintr {
 #ifdef CONFIG_XENO_OPT_SHIRQ
 	/* !< Next object in the IRQ-sharing chain. */
 	struct xnintr *next;
-#endif /* CONFIG_XENO_OPT_SHIRQ */
+#endif
 	/* !< Number of consequent unhandled interrupts */
 	unsigned int unhandled;
 	/* !< Interrupt service routine. */
@@ -76,8 +76,10 @@ struct xnintr {
 	xniack_t iack;
 	/* !< Symbolic name. */
 	const char *name;
+#ifdef CONFIG_XENO_OPT_STATS
 	/* !< Statistics. */
 	struct xnirqstat *stats;
+#endif
 };
 
 struct xnintr_iterator {
