@@ -20,6 +20,7 @@
 #define _COBALT_KERNEL_SCHED_H
 
 #include <linux/percpu.h>
+#include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/schedqueue.h>
 #include <cobalt/kernel/sched-tp.h>

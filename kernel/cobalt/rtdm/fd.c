@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/mm.h>
 #include <linux/kthread.h>
+#include <linux/semaphore.h>
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/ppd.h>

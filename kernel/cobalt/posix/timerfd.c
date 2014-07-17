@@ -17,6 +17,7 @@
  */
 
 #include <linux/timerfd.h>
+#include <linux/err.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/select.h>
 #include <rtdm/fd.h>

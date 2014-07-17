@@ -467,6 +467,10 @@ void cleanup_timerlist_root(void)
 
 #else  /* !CONFIG_XENO_OPT_STATS */
 
+static inline void init_timerlist_root(void) { }
+
+static inline void cleanup_timerlist_root(void) { }
+
 static inline void init_timerlist_proc(struct xnclock *clock) { }
 
 static inline void cleanup_timerlist_proc(struct xnclock *clock) { }
