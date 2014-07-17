@@ -44,6 +44,7 @@ struct xnsched_quota_group {
 	xnticks_t run_start_ns;
 	xnticks_t run_budget_ns;
 	xnticks_t run_credit_ns;
+	struct list_head members;
 	struct list_head expired;
 	struct list_head next;
 	int nr_active;
@@ -73,6 +74,7 @@ int xnsched_quota_create_group(struct xnsched_quota_group *tg,
 			       int *quota_sum_r);
 
 int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
+				int force,
 				int *quota_sum_r);
 
 void xnsched_quota_set_limit(struct xnsched_quota_group *tg,

@@ -87,6 +87,7 @@ struct xnthread {
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 	struct xnsched_quota_group *quota; /* Quota scheduling group. */
 	struct list_head quota_expired;
+	struct list_head quota_next;
 #endif
 
 	unsigned int idtag;	/* Unique ID tag */

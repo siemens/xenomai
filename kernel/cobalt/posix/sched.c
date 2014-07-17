@@ -401,7 +401,8 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 		return ret;
 	}
 
-	if (p->op == sched_quota_remove) {
+	if (p->op == sched_quota_remove ||
+	    p->op == sched_quota_force_remove) {
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		tg = xnsched_quota_find_group(sched, p->remove.tgid);
@@ -414,7 +415,9 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 			xnlock_put_irqrestore(&nklock, s);
 			return ret;
 		}
-		ret = xnsched_quota_destroy_group(tg, &quota_sum);
+		ret = xnsched_quota_destroy_group(tg,
+						  p->op == sched_quota_force_remove,
+						  &quota_sum);
 		if (ret) {
 			xnlock_put_irqrestore(&nklock, s);
 			return ret;
@@ -616,7 +619,7 @@ void cobalt_sched_cleanup(struct cobalt_kqueues *q)
 
 		group = list_get_entry(&q->schedq, struct cobalt_sched_group, next);
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
-		xnsched_quota_destroy_group(&group->quota, &quota_sum);
+		xnsched_quota_destroy_group(&group->quota, 1, &quota_sum);
 #endif
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(group);

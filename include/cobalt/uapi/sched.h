@@ -77,6 +77,7 @@ struct __sched_quota_param {
 enum {
 	sched_quota_add,
 	sched_quota_remove,
+	sched_quota_force_remove,
 	sched_quota_set,
 	sched_quota_get,
 };

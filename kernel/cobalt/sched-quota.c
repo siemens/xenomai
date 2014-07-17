@@ -247,14 +247,17 @@ static void xnsched_quota_setparam(struct xnthread *thread,
 
 	qs = &thread->sched->quota;
 	list_for_each_entry(tg, &qs->groups, next) {
-		if (tg->tgid == p->quota.tgid) {
-			if (thread->quota)
-				/* Dequeued earlier by our caller. */
-				thread->quota->nr_threads--;
-			thread->quota = tg;
-			tg->nr_threads++;
-			return;
+		if (tg->tgid != p->quota.tgid)
+			continue;
+		if (thread->quota) {
+			/* Dequeued earlier by our caller. */
+			list_del(&thread->quota_next);
+			thread->quota->nr_threads--;
 		}
+		thread->quota = tg;
+		list_add(&thread->quota_next, &tg->members);
+		tg->nr_threads++;
+		return;
 	}
 
 	XENO_BUG(NUCLEUS);
@@ -319,6 +322,7 @@ static void xnsched_quota_forget(struct xnthread *thread)
 {
 	thread->quota->nr_threads--;
 	XENO_BUGON(NUCLEUS, thread->quota->nr_threads < 0);
+	list_del(&thread->quota_next);
 	thread->quota = NULL;
 }
 
@@ -508,6 +512,7 @@ int xnsched_quota_create_group(struct xnsched_quota_group *tg,
 	tg->quota_peak_ns = qs->period_ns;
 	tg->nr_active = 0;
 	tg->nr_threads = 0;
+	INIT_LIST_HEAD(&tg->members);
 	INIT_LIST_HEAD(&tg->expired);
 
 	if (list_empty(&qs->groups))
@@ -522,14 +527,23 @@ int xnsched_quota_create_group(struct xnsched_quota_group *tg,
 EXPORT_SYMBOL_GPL(xnsched_quota_create_group);
 
 int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
-				int *quota_sum_r)
+				int force, int *quota_sum_r)
 {
 	struct xnsched_quota *qs = &tg->sched->quota;
+	union xnsched_policy_param param;
+	struct xnthread *thread;
 
 	atomic_only();
 
-	if (tg->nr_threads > 0)
-		return -EBUSY;
+	if (!list_empty(&tg->members)) {
+		if (!force)
+			return -EBUSY;
+		/* Move group members to the rt class. */
+		list_for_each_entry(thread, &tg->members, quota_next) {
+			param.rt.prio = thread->cprio;
+			xnsched_set_policy(thread, &xnsched_class_rt, &param);
+		}
+	}
 
 	list_del(&tg->next);
 	__clear_bit(tg->tgid, group_map);
