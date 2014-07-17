@@ -158,6 +158,7 @@ int xntimer_start(struct xntimer *timer,
 	}
 
 	xntimer_enqueue(timer, q);
+	timer->status |= XNTIMER_RUNNING;
 	if (xntimer_heading_p(timer)) {
 		sched = xntimer_sched(timer);
 		if (sched != xnsched_current())
@@ -188,13 +189,15 @@ void __xntimer_stop(struct xntimer *timer)
 	struct xnclock *clock = xntimer_clock(timer);
 	xntimerq_t *q = xntimer_percpu_queue(timer);
 	struct xnsched *sched;
-	int heading;
+	int heading = 1;
 
 	trace_cobalt_timer_stop(timer);
 
-	heading = xntimer_heading_p(timer);
-	xntimer_dequeue(timer, q);
-	timer->status &= ~XNTIMER_FIRED;
+	if ((timer->status & XNTIMER_DEQUEUED) == 0) {
+		heading = xntimer_heading_p(timer);
+		xntimer_dequeue(timer, q);
+	}
+	timer->status &= ~(XNTIMER_FIRED|XNTIMER_RUNNING);
 	sched = xntimer_sched(timer);
 
 	/*
@@ -458,9 +461,7 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 
 	trace_cobalt_timer_migrate(timer, xnsched_cpu(sched));
 
-	if (timer->status & XNTIMER_DEQUEUED)
-		timer->sched = sched;
-	else {
+	if (timer->status & XNTIMER_RUNNING) {
 		xntimer_stop(timer);
 		timer->sched = sched;
 		clock = xntimer_clock(timer);
@@ -468,7 +469,8 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 		xntimer_enqueue(timer, q);
 		if (xntimer_heading_p(timer))
 			xnclock_remote_shot(clock, sched);
-	}
+	} else
+		timer->sched = sched;
 }
 EXPORT_SYMBOL_GPL(__xntimer_migrate);
 

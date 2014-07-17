@@ -415,7 +415,7 @@ static int timerlist_show(struct xnvfile_snapshot_iterator *it, void *data)
 			       "CPU", "SCHED/SHOT", "TIMEOUT",
 			       "INTERVAL", "NAME");
 	else {
-		if ((p->status & XNTIMER_DEQUEUED) == 0)
+		if (p->status & XNTIMER_RUNNING)
 			xntimer_format_time(p->timeout, timeout_buf,
 					    sizeof(timeout_buf));
 		if (p->status & XNTIMER_PERIODIC)
@@ -762,11 +762,12 @@ void xnclock_tick(struct xnclock *clock)
 		now = xnclock_read_raw(clock);
 		timer->status |= XNTIMER_FIRED;
 		/*
-		 * If the elapsed timer has no reload value, or was
-		 * re-queued or killed by the timeout handler: do not
-		 * re-queue it for the next shot.
+		 * Only requeue periodic timers which have not been
+		 * requeued, stopped or killed.
 		 */
-		if (!xntimer_reload_p(timer))
+		if ((timer->status &
+		     (XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_KILLED|XNTIMER_RUNNING)) !=
+		    (XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_RUNNING))
 			continue;
 	advance:
 		interval_ticks = 1;

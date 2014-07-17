@@ -45,9 +45,10 @@ typedef enum xntmode {
 #define XNTIMER_PERIODIC  0x00000004
 #define XNTIMER_REALTIME  0x00000008
 #define XNTIMER_FIRED     0x00000010
-#define XNTIMER_NOBLCK	  0x00000020
-#define XNTIMER_KGRAVITY  0x00000040
-#define XNTIMER_UGRAVITY  0x00000080
+#define XNTIMER_NOBLCK    0x00000020
+#define XNTIMER_RUNNING   0x00000040
+#define XNTIMER_KGRAVITY  0x00000080
+#define XNTIMER_UGRAVITY  0x00000100
 #define XNTIMER_IGRAVITY  0	/* most conservative */
 
 #define XNTIMER_GRAVITY_MASK	(XNTIMER_KGRAVITY|XNTIMER_UGRAVITY)
@@ -295,7 +296,7 @@ static inline int xntimer_active_p(struct xntimer *timer)
 
 static inline int xntimer_running_p(struct xntimer *timer)
 {
-	return (timer->status & XNTIMER_DEQUEUED) == 0;
+	return (timer->status & XNTIMER_RUNNING) != 0;
 }
 
 static inline int xntimer_fired_p(struct xntimer *timer)
@@ -306,13 +307,6 @@ static inline int xntimer_fired_p(struct xntimer *timer)
 static inline int xntimer_periodic_p(struct xntimer *timer)
 {
 	return (timer->status & XNTIMER_PERIODIC) != 0;
-}
-
-static inline int xntimer_reload_p(struct xntimer *timer)
-{
-	return (timer->status &
-		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_KILLED)) ==
-		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED);
 }
 
 void __xntimer_init(struct xntimer *timer,
@@ -415,7 +409,7 @@ int xntimer_heading_p(struct xntimer *timer);
 
 static inline void xntimer_stop(struct xntimer *timer)
 {
-	if ((timer->status & XNTIMER_DEQUEUED) == 0)
+	if (timer->status & XNTIMER_RUNNING)
 		__xntimer_stop(timer);
 }
 
