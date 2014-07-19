@@ -186,6 +186,13 @@ void xnclock_core_local_shot(struct xnsched *sched)
 		}
 	}
 
+	/*
+	 * The gravity value gives the amount of time expressed in
+	 * clock ticks, by which we should anticipate the next shot
+	 * for the given timer, to account for the typical system
+	 * latency when delivering the event to an irq handler, or a
+	 * kernel/user thread.
+	 */
 	delay = xntimerh_date(&timer->aplink) -
 		(xnclock_core_read_raw() + get_timer_gravity(timer));
 
@@ -689,7 +696,6 @@ void xnclock_tick(struct xnclock *clock)
 	xntimerq_t *timerq = &xnclock_this_timerdata(clock)->q;
 	struct xnsched *sched = xnsched_current();
 	xnticks_t now, interval_ticks;
-	unsigned long gravity;
 	struct xntimer *timer;
 	xnsticks_t delta;
 	xntimerh_t *h;
@@ -704,21 +710,8 @@ void xnclock_tick(struct xnclock *clock)
 	now = xnclock_read_raw(clock);
 	while ((h = xntimerq_head(timerq)) != NULL) {
 		timer = container_of(h, struct xntimer, aplink);
-		/*
-		 * If the delay to the next shot is greater than the
-		 * timer gravity value, we may stop scanning the timer
-		 * queue, since timeout dates are ordered by
-		 * increasing values.
-		 *
-		 * The gravity gives the amount of time expressed in
-		 * clock ticks, by which we should anticipate the next
-		 * shot for the given timer, to account for the
-		 * typical system latency when delivering the event to
-		 * an irq handler, or a kernel/user thread.
-		 */
-		gravity = get_timer_gravity(timer);
 		delta = (xnsticks_t)(xntimerh_date(&timer->aplink) - now);
-		if (delta > (xnsticks_t)gravity)
+		if (delta > 0)
 			break;
 
 		trace_cobalt_timer_expire(timer);
@@ -778,7 +771,7 @@ void xnclock_tick(struct xnclock *clock)
 		do {
 			timer->periodic_ticks += interval_ticks;
 			xntimer_update_date(timer);
-		} while (xntimerh_date(&timer->aplink) < now + gravity);
+		} while (xntimerh_date(&timer->aplink) < now);
 	requeue:
 #ifdef CONFIG_SMP
 		/*
