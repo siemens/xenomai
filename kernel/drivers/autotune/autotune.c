@@ -427,8 +427,13 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 		if (ret)
 			goto fail;
 
-		minlat = state->min_lat;
-		if (minlat <= 0) {
+		if (state->min_lat <= 0) {
+			printk(XENO_WARN
+			       "auto-tuning[%s]: early shot by %Ld ns"
+			       ": disabling gravity\n",
+			       tuner->name,
+			       xnclock_ticks_to_ns(&nkclock, state->min_lat));
+			gravity = 0;
 			minlat = 0;
 			goto done;
 		}
@@ -445,7 +450,7 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 			       "at wedge (min_ns %Ld => %Ld), gravity reset to %Ld ns\n",
 			       tuner->name,
 			       xnclock_ticks_to_ns(&nkclock, minlat),
-			       xnclock_ticks_to_ns(&nkclock, minlat),
+			       xnclock_ticks_to_ns(&nkclock, state->min_lat),
 			       xnclock_ticks_to_ns(&nkclock, gravity));
 #endif
 			if (++wedge >= 5)
@@ -459,6 +464,7 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 		 * more, increase the gravity value by a 3rd for next
 		 * round.
 		 */
+		minlat = state->min_lat;
 		adjust = (long)xnarch_llimd(minlat, 2, 3);
 		if (adjust == 0)
 			goto done;
