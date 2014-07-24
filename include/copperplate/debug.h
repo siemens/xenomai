@@ -30,7 +30,7 @@ struct threadobj;
 		struct threadobj *__thobj = threadobj_current();	\
 		if (__thobj == NULL ||					\
 		    (__thobj->status & __THREAD_S_DEBUG) != 0)		\
-			__debug(__thobj->name, __fmt, ##__args);	\
+		  __debug(__thobj ? __thobj->name : NULL, __fmt, ##__args); \
 	} while (0)
 
 #else /* !CONFIG_XENO_DEBUG */
