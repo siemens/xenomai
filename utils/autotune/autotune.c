@@ -105,7 +105,7 @@ static void *sampler_thread(void *arg)
 static void *hog_thread(void *arg)
 {
 	int fdi, fdo, count = 0;
-	ssize_t nbytes;
+	ssize_t nbytes, ret;
 	char buf[512];
 
 	fdi = open("/dev/zero", O_RDONLY);
@@ -120,8 +120,10 @@ static void *hog_thread(void *arg)
 		nbytes = read(fdi, buf, sizeof(buf));
 		if (nbytes <= 0)
 			error(1, EIO, "hog streaming");
-		if (nbytes > 0)
-			write(fdo, buf, nbytes);
+		if (nbytes > 0) {
+			ret = write(fdo, buf, nbytes);
+			(void)ret;
+		}
 		if ((++count % 1024) == 0)
 			usleep(10000);
 	}
