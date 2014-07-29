@@ -313,10 +313,11 @@ includesubdir = $(includedir)/asm-x86
 includesub_HEADERS = \
 	arith_32.h	\
 	arith_64.h	\
-	arith.h	\
+	arith.h		\
 	atomic.h	\
 	atomic_asm.h	\
 	calibration.h	\
+	c1e.h		\
 	features_32.h	\
 	features_64.h	\
 	features.h	\
