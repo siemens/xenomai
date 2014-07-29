@@ -1045,9 +1045,11 @@ static int wait_on_barrier(struct threadobj *thobj, int mask)
 		if (status & mask)
 			break;
 		oldstate = thobj->cancel_state;
+		push_cleanup_lock(&thobj->lock);
 		__threadobj_tag_unlocked(thobj);
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
 		__threadobj_tag_locked(thobj);
+		pop_cleanup_lock(&thobj->lock);
 		thobj->cancel_state = oldstate;
 	}
 
@@ -1243,9 +1245,11 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 	 */
 	while (thobj->status & __THREAD_S_WARMUP) {
 		oldstate = thobj->cancel_state;
+		push_cleanup_lock(&thobj->lock);
 		__threadobj_tag_unlocked(thobj);
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
 		__threadobj_tag_locked(thobj);
+		pop_cleanup_lock(&thobj->lock);
 		thobj->cancel_state = oldstate;
 	}
 
