@@ -175,13 +175,13 @@ footnoteref:[disable]
 		       footnote:[The SMP switch is used
 		       to tell the build system whether
 		       CPU synchronization instructions
-		       should be emitted in atomic 
+		       should be emitted in atomic
 		       constructs appearing in some
 		       Xenomai libraries, enabling them
 		       for SMP execution. This feature
-		       is turned on by default on all 
+		       is turned on by default on all
 		       SMP-enabled architecture Xenomai
-		       supports, i.e. x86_32/64, 
+		       supports, i.e. x86_32/64,
 		       powerpc_32/64 and ARM. One may
 		       override this default setting
 		       by passing +--disable-smp+ explicitely
@@ -194,20 +194,20 @@ footnoteref:[disable]
 		       is in effect) over an SMP kernel.]
 		      	      	  		       |weak, enabled
 |--with-atomic-ops=    |Selects which implementation of atomic
-		        access operations shall be used within
-		        Xenomai libraries:
+			access operations shall be used within
+			Xenomai libraries:
 
-		        +--with-atomic-ops=builtins+ selects the
-		        GCC builtins, i.e. __sync_*()
-		        services.
-    
+			+--with-atomic-ops=builtins+ selects the
+			GCC builtins, i.e. __sync_*()
+			services.
+
 			+--with-atomic-ops=ad-hoc+ selects the
 			ad hoc Xenomai implementation.
-    
+
 			When this switch is not specified, a
 			conservative choice is made depending
 			on the target architecture.
-    
+
 			Unless the GCC toolchain is outdated (i.e.
 			does not provide these operations) or broken,
 			+--with-atomic-ops=builtins+ should be used.
@@ -538,7 +538,7 @@ $ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
 ------------------------------------------------------------------------------
 $ mkdir $build_root/xenomai && cd $build_root/xenomai
 $ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
-  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi-
+  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi
 $ make DESTDIR=$staging_dir install
 ------------------------------------------------------------------------------
 
@@ -746,6 +746,5 @@ link:../TROUBLESHOOTING/index.html#latency[TROUBLESHOOTING] guide.
 
 If the latency test succeeds, you should try next to run a latency
 test under load to evaluate the latency test of your system, the
-+xeno-test+ script allows doing that. see 
++xeno-test+ script allows doing that. see
 link:../xeno-test/index.html[xeno-test(1)] manual page for more details.
-
