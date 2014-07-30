@@ -13595,8 +13595,17 @@ if test x${XENO_BUILD_DOC} = xy -a x"$W3M" = x ; then
    as_fn_error $? "Missing the w3m tool to build the documentation" "$LINENO" 5
 fi
 
-if test x$docdir = x; then
-	docdir=$datadir/doc/$PACKAGE-$VERSION
+
+if test x$pdfdir = x'${docdir}'; then
+   pdfdir='${docdir}/pdf'
+fi
+
+if test x$mandir = x'${docdir}'; then
+   mandir='${docdir}/man'
+fi
+
+if test x$htmldir = x'${docdir}'; then
+   htmldir='${docdir}/html'
 fi
 
 

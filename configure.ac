@@ -407,10 +407,22 @@ if test x${XENO_BUILD_DOC} = xy -a x"$W3M" = x ; then
    AC_MSG_ERROR([Missing the w3m tool to build the documentation])
 fi
 
-if test x$docdir = x; then
-	docdir=$datadir/doc/$PACKAGE-$VERSION
+dnl Set better default values for pdfdir, mandir and htmldir
+dnl This won't override user settings, unless the user wants
+dnl the default values, which we ban...
+
+if test x$pdfdir = x'${docdir}'; then
+   pdfdir='${docdir}/pdf'
 fi
-AC_SUBST(docdir)
+AC_SUBST(pdfdir)
+if test x$mandir = x'${docdir}'; then
+   mandir='${docdir}/man'
+fi
+AC_SUBST(mandir)
+if test x$htmldir = x'${docdir}'; then
+   htmldir='${docdir}/html'
+fi
+AC_SUBST(htmldir)
 
 XENO_RUN_DOC=y
 if test x$XENO_BUILD_DOC = x -a x$XENO_INSTALL_DOC = x; then

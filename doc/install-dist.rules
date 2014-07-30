@@ -10,14 +10,16 @@
 # can be from . or from a directory containing pre-built versions)
 #
 # PDF_DOCSDIR & MAN_DOCSDIR: same thing for pdf and man files.
-docdir=@docdir@
+htmldir=@htmldir@
+mandir=@mandir@
+pdfdir=@pdfdir@
 doc_top_distdir=$(top_builddir)/$(PACKAGE)-$(VERSION)
 GEN_DOC_DIST_ROOT=$(doc_top_distdir)/doc/prebuilt
 
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(DESTDIR)$(docdir)/$$dir; \
+	    dest=$(DESTDIR)$(htmldir)/$$dir; \
 	    $(mkinstalldirs) $$dest; \
 	    abs_dest=`cd $$dest && pwd` ; \
 	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
@@ -30,14 +32,14 @@ install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	done
 
 install-pdfdocs: $(PDF_DOCS:%=$(PDF_DOCSDIR)%)
-	docs="$^"; dest=$(DESTDIR)$(docdir)/pdf; \
+	docs="$^"; dest=$(DESTDIR)$(pdfdir); \
 	$(mkinstalldirs) $$dest && \
 	for f in $$docs; do \
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
 install-mandocs: $(MAN_DOCS:%=$(MAN_DOCSDIR)%)
-	docs="$^"; dest=$(DESTDIR)$(docdir)/man; \
+	docs="$^"; dest=$(DESTDIR)$(mandir); \
 	$(mkinstalldirs) $$dest && \
 	for f in $$docs; do \
 	    $(INSTALL_DATA) $$f $$dest; \
@@ -78,9 +80,9 @@ dist-docs-hook: all-local dist-htmldocs dist-mandocs dist-pdfdocs
 # To make distcheck happy.
 uninstall-docs:
 	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(MAN_DOCS)"; then \
-	    targets="$(HTML_DOCS:%=$(DESTDIR)$(docdir)/%) \
-		$(PDF_DOCS:%=$(DESTDIR)$(docdir)/pdf/%) \
-		$(MAN_DOCS:%=$(DESTDIR)$(docdir)/man/%)"; \
+	    targets="$(HTML_DOCS:%=$(DESTDIR)$(htmldir)/%) \
+		$(PDF_DOCS:%=$(DESTDIR)$(pdfdir)/%) \
+		$(MAN_DOCS:%=$(DESTDIR)$(mandir)/%)"; \
 	    for t in $$targets; do \
 		if test -d $$t; then $(RM) $$t/*; $(RM) -r $$t; \
 		else $(RM) $$t; fi; \
