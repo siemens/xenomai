@@ -37,9 +37,9 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 			return;
 	}
 
-	report_error("--enable-x86-vsyscall needs NPTL and Linux 2.6.x or higher,");
-	report_error_cont("which does not match your configuration. Please upgrade, or");
-	report_error_cont("rebuild the Xenomai libraries passing --disable-x86-vsyscall");
+	report_error("--enable-x86-vsyscall requires NPTL, which does not match");
+	report_error_cont("your configuration. Please upgrade, or rebuild the");
+	report_error_cont("Xenomai libraries passing --disable-x86-vsyscall");
 	exit(1);
 #endif /* __i386__ && CONFIG_XENO_X86_VSYSCALL */
 }
