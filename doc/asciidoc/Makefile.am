@@ -1,15 +1,15 @@
 HTML_DOCS = 					\
-	html/clocktest				\
-	html/slackspot				\
-	html/dohell				\
-	html/latency				\
-	html/rtcanconfig			\
-	html/rtcanrecv				\
-	html/rtcansend				\
-	html/switchtest				\
-	html/xeno-config			\
-	html/xeno-test				\
-	html/xeno				\
+	html/man1/clocktest			\
+	html/man1/slackspot			\
+	html/man1/dohell			\
+	html/man1/latency			\
+	html/man1/rtcanconfig			\
+	html/man1/rtcanrecv			\
+	html/man1/rtcansend			\
+	html/man1/switchtest			\
+	html/man1/xeno-config			\
+	html/man1/xeno-test			\
+	html/man1/xeno				\
 	html/README.INSTALL			\
 	html/README.APPLICATIONS		\
 	html/TROUBLESHOOTING.COBALT		\
@@ -32,19 +32,19 @@ TXT_DOCS =				\
 	TROUBLESHOOTING.MERCURY.txt	\
 	MIGRATION.txt
 
-MAN_DOCS = 		\
-	clocktest.1 	\
-	cyclictest.1 	\
-	latency.1 	\
-	rtcanconfig.1 	\
-	rtcanrecv.1 	\
-	rtcansend.1 	\
-	switchtest.1 	\
-	xeno.1 		\
-	xeno-config.1 	\
-	xeno-test.1 	\
-	dohell.1	\
-	slackspot.1
+MAN1_DOCS = 			\
+	man1/clocktest.1 	\
+	man1/cyclictest.1 	\
+	man1/latency.1 		\
+	man1/rtcanconfig.1 	\
+	man1/rtcanrecv.1 	\
+	man1/rtcansend.1 	\
+	man1/switchtest.1 	\
+	man1/xeno.1 		\
+	man1/xeno-config.1 	\
+	man1/xeno-test.1 	\
+	man1/dohell.1		\
+	man1/slackspot.1
 
 EXTRA_DIST :=				\
 	README.INSTALL.adoc 		\
@@ -55,7 +55,7 @@ EXTRA_DIST :=				\
 	plaintext.conf 			\
 	plaintext_postproc.awk		\
 	plaintext.xsl			\
-	$(MAN_DOCS:%.1=%.adoc)
+	$(MAN1_DOCS:%.1=%.adoc)
 
 if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../prebuilt/
@@ -77,14 +77,15 @@ ASCIIDOC_TXT_OPTS=-a xenover=$(PACKAGE_VERSION) -a encoding=ascii
 
 tmpdir=adoc_plaintext
 
-all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS) $(MAN_DOCS)
+all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS) $(MAN1_DOCS)
 
 html/%: %.adoc Makefile
 	@$(mkdir_p) $@
 	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
 %.1: %.adoc Makefile
-	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<
+	@$(mkdir_p) man1
+	$(A2X) -f manpage -D man1 $(ASCIIDOC_MAN_OPTS) $<
 
 %.pdf: %.adoc Makefile
 	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<

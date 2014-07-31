@@ -265,12 +265,12 @@ host_vendor = @host_vendor@
 # Parameters :
 # HTML_DOCS list of html documentation directories
 # PDF_DOCS list of pdf files
-# MAN_DOCS list of man files
+# MAN1_DOCS list of man1 files
 #
 # HTML_DOCSDIR: where directories listed in HTML_DOCS should be taken from (this
 # can be from . or from a directory containing pre-built versions)
-#
-# PDF_DOCSDIR & MAN_DOCSDIR: same thing for pdf and man files.
+# PDF_DOCSDIR: root of PDF files
+# MAN_DOCSDIR: root of manN sub-directories
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -518,6 +518,8 @@ uninstall-am: uninstall-local
 
 @XENO_BUILD_DOC_TRUE@all-local: html pdf
 
+@XENO_BUILD_DOC_TRUE@html/xeno3prm/search: html/xeno3prm
+
 @XENO_BUILD_DOC_TRUE@html: $(HTML_DOCS)
 
 @XENO_BUILD_DOC_TRUE@pdf: $(PDF_DOCS)
@@ -561,12 +563,14 @@ install-pdfdocs: $(PDF_DOCS:%=$(PDF_DOCSDIR)%)
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-install-mandocs: $(MAN_DOCS:%=$(MAN_DOCSDIR)%)
-	docs="$^"; dest=$(DESTDIR)$(mandir); \
+install-man1: $(MAN1_DOCS:%=$(MAN_DOCSDIR)%)
+	docs="$^"; dest=$(DESTDIR)$(mandir)/man1; \
 	$(mkinstalldirs) $$dest && \
 	for f in $$docs; do \
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
+
+install-mandocs: install-man1
 
 install-docs-local: install-htmldocs install-pdfdocs install-mandocs
 
@@ -591,21 +595,23 @@ dist-pdfdocs: $(PDF_DOCS:%=$(PDF_DOCSDIR)%)
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-dist-mandocs: $(MAN_DOCS:%=$(MAN_DOCSDIR)%)
-	docs="$^"; dest=$(GEN_DOC_DIST_ROOT)/man; \
+dist-man1: $(MAN1_DOCS:%=$(MAN_DOCSDIR)%)
+	docs="$^"; dest=$(GEN_DOC_DIST_ROOT)/man/man1; \
 	$(mkinstalldirs) $$dest && \
 	for f in $$docs; do \
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
+dist-mandocs: dist-man1
+
 dist-docs-hook: all-local dist-htmldocs dist-mandocs dist-pdfdocs
 
 # To make distcheck happy.
 uninstall-docs:
-	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(MAN_DOCS)"; then \
+	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(MAN1_DOCS)"; then \
 	    targets="$(HTML_DOCS:%=$(DESTDIR)$(htmldir)/%) \
 		$(PDF_DOCS:%=$(DESTDIR)$(pdfdir)/%) \
-		$(MAN_DOCS:%=$(DESTDIR)$(mandir)/%)"; \
+		$(MAN1_DOCS:%=$(DESTDIR)$(mandir)/%)"; \
 	    for t in $$targets; do \
 		if test -d $$t; then $(RM) $$t/*; $(RM) -r $$t; \
 		else $(RM) $$t; fi; \

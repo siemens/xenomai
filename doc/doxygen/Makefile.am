@@ -16,6 +16,8 @@ PDF_DOCSDIR = ./
 
 all-local: html pdf
 
+html/xeno3prm/search: html/xeno3prm
+
 html: $(HTML_DOCS)
 
 pdf: $(PDF_DOCS)
