@@ -12,21 +12,24 @@ HTML_DOCS = 					\
 	html/xeno				\
 	html/README.INSTALL			\
 	html/README.APPLICATIONS		\
-	html/TROUBLESHOOTING			\
+	html/TROUBLESHOOTING.COBALT		\
+	html/TROUBLESHOOTING.MERCURY		\
 	html/MIGRATION				\
 	html/asciidoc-icons			\
 	html/asciidoc-icons/callouts
 
-PDF_DOCS = 			\
-	README.INSTALL.pdf 	\
-	README.APPLICATIONS.pdf \
-	TROUBLESHOOTING.pdf	\
+PDF_DOCS = 				\
+	README.INSTALL.pdf 		\
+	README.APPLICATIONS.pdf 	\
+	TROUBLESHOOTING.COBALT.pdf	\
+	TROUBLESHOOTING.MERCURY.pdf	\
 	MIGRATION.pdf
 
-TXT_DOCS =			\
-	README.INSTALL.txt	\
-	README.APPLICATIONS.txt \
-	TROUBLESHOOTING.txt	\
+TXT_DOCS =				\
+	README.INSTALL.txt		\
+	README.APPLICATIONS.txt 	\
+	TROUBLESHOOTING.COBALT.txt	\
+	TROUBLESHOOTING.MERCURY.txt	\
 	MIGRATION.txt
 
 MAN_DOCS = 		\
@@ -46,7 +49,8 @@ MAN_DOCS = 		\
 EXTRA_DIST :=				\
 	README.INSTALL.adoc 		\
 	README.APPLICATIONS.adoc	\
-	TROUBLESHOOTING.adoc 		\
+	TROUBLESHOOTING.COBALT.adoc	\
+	TROUBLESHOOTING.MERCURY.adoc 	\
 	MIGRATION.adoc 			\
 	plaintext.conf 			\
 	plaintext_postproc.awk		\

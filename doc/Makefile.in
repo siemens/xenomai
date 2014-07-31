@@ -271,6 +271,7 @@ XENO_BUILD_STRING = @XENO_BUILD_STRING@
 XENO_COBALT_CFLAGS = @XENO_COBALT_CFLAGS@
 XENO_CONFIG_ARGS = @XENO_CONFIG_ARGS@
 XENO_DEMO_DIR = @XENO_DEMO_DIR@
+XENO_DOC_GIT = @XENO_DOC_GIT@
 XENO_FUSE_CFLAGS = @XENO_FUSE_CFLAGS@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
@@ -339,7 +340,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = doxygen asciidoc
+SUBDIRS = gitdoc doxygen asciidoc
 RESYNC_SCRIPT = $(top_srcdir)/scripts/maint/resync-doc
 all: all-recursive
 
@@ -652,15 +653,12 @@ uninstall-am:
 	ps ps-am tags tags-am uninstall uninstall-am
 
 
-doxygen asciidoc: FORCE
+gitdoc doxygen asciidoc: FORCE
 	$(MAKE) -C $@
 
-resync prebuild: FORCE
-@XENO_BUILD_DOC_TRUE@	@if test \! -e $(RESYNC_SCRIPT) -o \! -e $(top_srcdir)/.git ; then \
-@XENO_BUILD_DOC_TRUE@		echo "$@ wants $top_srcdir to be a GIT working tree." ; \
-@XENO_BUILD_DOC_TRUE@	else \
-@XENO_BUILD_DOC_TRUE@		srcdir=$(srcdir) $(RESYNC_SCRIPT) ; \
-@XENO_BUILD_DOC_TRUE@	fi
+@XENO_BUILD_DOC_TRUE@resync prebuild: $(SUBDIRS)
+@XENO_BUILD_DOC_TRUE@	@srcdir=$(srcdir) $(RESYNC_SCRIPT)
+@XENO_BUILD_DOC_FALSE@resync prebuild: FORCE
 @XENO_BUILD_DOC_FALSE@	@echo "build tree not configured for regenerating documentation"
 @XENO_BUILD_DOC_FALSE@	@echo "reconfigure with --enable-doc-build"
 @XENO_BUILD_DOC_FALSE@	@/bin/false

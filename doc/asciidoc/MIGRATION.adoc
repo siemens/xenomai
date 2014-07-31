@@ -1,15 +1,9 @@
 Migrating from Xenomai 2.x to 3.x
 =================================
 
-The latest version of this document is available at
-http://www.xenomai.org/documentation/xenomai-forge/html/MIGRATION/[this address].
-
-For questions, corrections and improvements, write to
-mailto:xenomai@xenomai.org[the mailing list].
-
 == Configuration ==
 
-.User programs and libraries
+=== User programs and libraries ===
 
 - As with Xenomai 2.x, +xeno-config+ is available for retrieving the
 compilation and link flags for building Xenomai 3.x applications. This
@@ -30,6 +24,7 @@ indifferently.
   for which +xeno-config+ was generated. Possible output values are
   +cobalt+ and +mercury+.
 
+[[auto-init]]
  * +--no-auto-init+ can be passed to disable automatic initialization
   of the Copperplate library when the application process enters the
   +main()+ routine. In such a case, the application code using any API
@@ -37,11 +32,14 @@ indifferently.
   routine manually, as part of its initialization process, _before_
   any real-time service is invoked.
 
+  +xeno-config+ enables the auto-init feature by default for all
+  applications using APIs based on the Copperplate library.
+
 - +--enable-x86-sep+ was renamed to +--enable-x86-vsyscall+ to fix a
   misnomer. This option should be left enabled (default), unless
   *linuxthreads* are used instead of *NPTL*.
 
-.Kernel parameters (Cobalt)
+=== Kernel parameters (Cobalt) ===
 
 - System parameters have been renamed:
 
@@ -72,9 +70,12 @@ xeno_rtdm.protocol_hashtab_size -> rtdm.protocol_hashtab_size
 
 - The following parameters have been dropped
 
-[normal]
-xeno_rtdm.tick_arg. Rationale: periodic timing is directly handled
-from the API layer in user-space. Cobalt kernel timing is tickless.
+xeno_rtdm.tick_arg.
+.Rationale
+**********************************************************************
+Periodic timing is directly handled from the API layer in
+user-space. Cobalt kernel timing is tickless.
+**********************************************************************
 
 == Getting the system state ==
 
@@ -148,34 +149,55 @@ Xenomai {xenover} defines a built-in clock named _coreclk_, which has
 the same properties than the former _master_ time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).
 
-As a consequence of these changes, The information once available from
-+timerstat/master+ are now obtained by reading +clock/coreclk+, and
-the +timebases+ file was removed.
+The settings of existing clocks can be read from entries under the new
+clock/ hierarchy. Active timers for each clock can be read from
+entries under the new timer/ hierarchy.
+
+As a consequence of these changes:
+
+- the information previously available from the +timer+ entry is now
+obtained by reading +clock/coreclk+.
+
+- the information previously available from +timerstat/master+ is now
+obtained by reading +timer/coreclk.
 
 - Core clock gravity
 
 The gravity value for a Xenomai clock gives the amount of time
 expressed in clock ticks, by which the next shot should be
-anticipated. This is a static adjustment value, to take into account
-the basic latency of the system for responding to an external event
-(hardware-wise, and software-wise). This value is commonly assessed by
-measuring the typical latency of an idle system.
+anticipated.
 
-The +latency+ pseudo-file holds this value expressed as a count of
-nanoseconds.
+This is a static adjustment value, to take into account the basic
+latency of the system for responding to an external event
+(hardware-wise, and software-wise).
 
-+latency+ now represents the sum of the scheduling *and* hardware
-timer reprogramming latencies of the core clock. This departs from
-Xenomai 2.x for which only the former was accounted for in the clock
-gravity value.
+The clock gravity management departs from Xenomai 2.x as follows:
+
+- different gravity values are applied, depending on which context a
+  timer activates. This may be a real-time IRQ handler (_irq_), a RTDM
+  driver task (_kernel_), or a Xenomai application thread running in
+  user-space (_user_). Xenomai 2.x does not differentiate, only
+  applying a global gravity value regardless of the activated context.
+
+- in addition to the legacy +latency+ file which now reports the
+  _user_ timer gravity, i.e. used for timers activating user-space
+  threads, the full gravity triplet applied to timers running on the
+  core clock can be accessed by reading clock/coreclk.
+
+- at reset, the _user_ gravity for the core clock now represents the
+sum of the scheduling *and* hardware timer reprogramming time. This
+departs from Xenomai 2.x for which only the former was accounted for
+in the global gravity value.
 
 - +interfaces+ was removed
 
 Only the POSIX and RTDM APIs remain implemented directly in kernel
-space. All other APIs are implemented in user-space over the
+space, and are always present when the Cobalt core enabled in the
+configuration. All other APIs are implemented in user-space over the
 Copperplate layer. This makes the former +interfaces+ contents
 basically useless, since the corresponding information for the
-POSIX/RTDM interfaces can be obtained via +sched/threads+.
+POSIX/RTDM interfaces can be obtained via +sched/threads+
+unconditionally.
 
 - +registry/usage+ changed format
 
@@ -281,12 +303,12 @@ overrides the +main()+ routine with a Copperplate-based replacement,
 running the proper initialization code as required, before branching
 back to the user-defined application entry point.
 
-This behavior may be disabled by passing the +--no-auto-init+ option
-(see the next section).
+This behavior may be disabled by passing the
+<<auto-init,+--no-auto-init+>> option.
 
 == RTDM interface changes ==
 
-.File renames
+=== Files renamed ===
 
 - Redundant prefixes were removed from the following files:
 
@@ -301,13 +323,183 @@ rtdm/rttesting.h -> rtdm/testing.h
 [normal]
 rtdm/rtipc.h -> rtdm/ipc.h
 
-.Driver API
+=== Driver API ===
 
 - rtdm_task_init() shall be called from secondary mode.
 
+.Rationale
+**********************************************************************
+Since Xenomai 3, rtdm_task_init() involves creating a regular kernel
+thread, which will be given real-time capabilities, such as running
+under the control of the Cobalt kernel. In order to invoke standard
+kernel services, rtdm_task_init() must be called from a regular Linux
+kernel context.
+**********************************************************************
+
+- rtdm_task_join() has been introduced to wait for termination of a
+  RTDM task regardless of the caller's execution mode, which may be
+  primary or secondary. In addition, rtdm_task_join() does not need to
+  poll for such event unlike rtdm_task_join_nrt().
+
+.Rationale
+**********************************************************************
+rtdm_task_join() supersedes rtdm_task_join_nrt() feature-wise with
+less usage restrictions, therefore the latter has become pointless. It
+is therefore deprecated and will be phased out in the next release.
+**********************************************************************
+
+- A RTDM task cannot be forcibly removed from the scheduler by another
+  thread for immediate deletion. Instead, the RTDM task is notified
+  about a pending cancellation request, which it should act upon when
+  detected. To this end, RTDM driver tasks should call the new
+  +rtdm_task_should_stop()+ service to detect such notification from
+  their work loop, and exit accordingly.
+
+.Rationale
+**********************************************************************
+Since Xenomai 3, a RTDM task is based on a regular kernel thread with
+real-time capabilities when controlled by the Cobalt kernel. The Linux
+kernel requires kernel threads to exit at their earliest convenience
+upon notification, which therefore applies to RTDM tasks as well.
+**********************************************************************
+
+- +rtdm_task_set_period()+ does not suspend the target task until the
+first release point is reached. If a start date is specified, then
++rtdm_task_wait_period()+ will apply the initial delay.
+
+.Rationale
+**********************************************************************
+A periodic RTDM task has to call +rtdm_task_wait_period()+ from within
+its work loop for sleeping until the next release point is
+reached. Since waiting for the initial and subsequent release points
+will most often happen at the same code location in the driver, the
+semantics of +rtdm_task_set_period()+ can be simplified so that only
++rtdm_task_wait_period()+ may block the caller.
+**********************************************************************
+
+- RTDM_EXECUTE_ATOMICALLY() is deprecated and will be phased out in
+  the next release. Drivers should prefer the newly introduced RTDM
+  wait queues, or switch to the Cobalt-specific
+  cobalt_atomic_enter/leave() call pair, depending on the use case.
+
+.Rationale
+*******************************************************************
+This construct is not portable to a native implementation of RTDM, and
+may be replaced by other means. The usage patterns of
+RTDM_EXECUTE_ATOMICALLY() used to be:
+
+- somewhat abusing the big nucleus lock (i.e. nklock) grabbed by
+  RTDM_EXECUTE_ATOMICALLY(), for serializing access to a section that
+  should be given its own lock instead, improving concurrency in the
+  same move. Such section does not call services from the Xenomai
+  core, and does NOT specifically require the nucleus lock to be
+  held. In this case, a RTDM lock (rtdm_lock_t) should be used to
+  protect the section instead of RTDM_EXECUTE_ATOMICALLY().
+
+- protecting a section which calls into the Xenomai core, which
+  exhibits one or more of the following characteristics:
+
+    * Some callee within the section may require the nucleus lock to
+      be held on entry (e.g. Cobalt registry lookup). In what has to
+      be a Cobalt-specific case, the new cobalt_atomic_enter/leave()
+      call pair can replace RTDM_EXECUTE_ATOMICALLY(). However, this
+      construct remains by definition non-portable to Mercury.
+
+    * A set-condition-and-wakeup pattern has to be carried out
+      atomically. In this case, RTDM_EXECUTE_ATOMICALLY() can be
+      replaced by the wakeup side of a RTDM wait queue introduced in
+      Xenomai 3 (e.g. rtdm_waitqueue_signal/broadcast()).
+
+    * A test-condition-and-wait pattern has to be carried out
+      atomically. In this case, RTDM_EXECUTE_ATOMICALLY() can be
+      replaced by the wait side of a RTDM wait queue introduced in
+      Xenomai 3 (e.g. rtdm_wait_condition()).
+
+Refer to kernel/drivers/ipc/iddp.c for an illustration of the RTDM
+wait queue usage.
+*******************************************************************
+
+- rtdm_irq_request/free() and rtdm_irq_enable/disable() call pairs
+  must be called from a Linux task context, which is a restriction
+  that did not exist previously with Xenomai 2.x.
+
+.Rationale
+*******************************************************************
+Recent evolutions of the Linux kernel with respect to IRQ management
+involve complex processing for basic operations
+(e.g. enabling/disabling the interrupt line) with some interrupt types
+like MSI. Such processing cannot be made dual-kernel safe at a
+reasonable cost, without encurring measurable latency or significant
+code rewrites.
+
+Since allocating, releasing, enabling or disabling real-time
+interrupts is most commonly done from driver initialization/cleanup
+context already, the Cobalt core has simply inherited those
+requirements from the Linux kernel.
+*******************************************************************
+
+=== File descriptors ===
+
+Xenomai 3 introduces a file descriptor abstraction for RTDM
+drivers. For this reason, all RTDM driver handlers and services which
+used to receive a `user_info` opaque argument describing the calling
+context, now receive a `rtdm_fd` pointer standing for the target file
+descriptor for the operation.
+
+As a consequence of this:
+
+- The rtdm_context_get/put() call pair has been replaced by
+  rtdm_fd_get/put().
+
+- Likewise, the rtdm_context_lock/unlock() call pair has been replaced
+  by rtdm_fd_lock/unlock().
+
+[CAUTION]
+Because RTDM file descriptors may be released and destroyed
+asynchronously, rtdm_fd_get() and rtdm_fd_lock() may return -EIDRM if
+a file descriptor fetched from some driver-private registry becomes
+stale prior to calling these services. Typically, this may happen if
+the descriptor is released from the ->close() handler implemented by
+the driver. Therefore, make sure to always carefully check the return
+value of these services.
+
+- rtdm_fd_to_private() is available to fetch the context-private
+  memory allocated by the driver for a particular RTDM file
+  descriptor. Conversely, rtdm_private_to_fd() returns the file
+  descriptor owning a particular context-private memory area.
+
+=== Adaptive syscalls ===
+
++ioctl()+, +read()+, +write()+, +recvmsg()+ and +sendmsg()+ have
+become context-adaptive RTDM calls, which means that Xenomai threads
+running over the Cobalt core will be automatically switched to primary
+mode prior to running the driver handler for the corresponding
+request.
+
+.Rationale
+**********************************************************************
+Real-time handlers from RTDM drivers serve time-critical requests by
+definition, which makes them preferred targets of adaptive calls over
+non real-time handlers.
+**********************************************************************
+
+[NOTE]
+This behavior departs from Xenomai 2.x, which would run the call from
+the originating context instead (e.g. +ioctl_nrt()+ would be fired for
+a caller running in secondary mode, and conversely +ioctl_rt()+ would
+be called for a request issued from primary mode).
+
+[TIP]
+RTDM drivers implementing differentiated +ioctl()+ support for both
+domains should serve all real-time only requests from +ioctl_rt()+,
+returning +-ENOSYS+ for any unrecognized request, which will cause the
+adaptive switch to take place automatically to the +ioctl_nrt()+
+handler. The +ioctl_nrt()+ should then implement all requests which
+may be valid from the regular Linux domain exclusively.
+
 == Analogy interface changes ==
 
-.File renames
+=== Files renamed ===
 
 - DAQ drivers in kernel space now pull all Analogy core header files
   from <rtdm/analogy/*.h>. In addition:
@@ -316,13 +508,23 @@ rtdm/rtipc.h -> rtdm/ipc.h
 analogy/analogy_driver.h -> rtdm/analogy/driver.h
 [normal]
 analogy/driver.h -> rtdm/analogy/driver.h
+[normal]
+analogy/analogy.h -> rtdm/analogy.h
 
 - DAQ drivers in kernel space should include <rtdm/analogy/device.h>
   instead of <rtdm/analogy/driver.h>.
 
 - Applications need to include only a single file for pulling all
   routine declarations and constant definitions required for invoking
-  the Analogy services from user-space, namely <rtdm/analogy.h>.
+  the Analogy services from user-space, namely <rtdm/analogy.h>, i.e.
+
+[normal]
+analogy/types.h
+analogy/command.h
+analogy/device.h
+analogy/subdevice.h
+analogy/instruction.h
+analogy/ioctl.h -> all files merged into rtdm/analogy.h
 
 As a consequence of these changes, the former include/analogy/ file
 tree has been entirely removed.
@@ -331,43 +533,43 @@ tree has been entirely removed.
 
 As mentioned earlier, the former *POSIX skin* is known as the *Cobalt
 API* in Xenomai 3.x, available as +libcobalt.{so,a}+. The Cobalt API
-also includes the code of the former +libxenomai+, which is no more a
-standalone library.
+also includes the code of the former +libxenomai+, which is no longer
+a standalone library.
 
 +libcobalt+ exposes the set of POSIX and ISO/C standard features
 specifically implemented by Xenomai to honor real-time requirements
 using the Cobalt core.
 
-.Interrupt management
+=== Interrupt management ===
 
 - The former +pthread_intr+ API once provided by Xenomai 2.x is gone.
 
-[normal]
 [[irqhandling]]
-  Rationale: handling real-time interrupt events from user-space can
-  be done safely only if some top-half code exists for acknowledging
-  the issuing device request from kernel space. This should be done
-  via a RTDM driver, exposing a +read(2)+ or +ioctl(2)+ interface, for
-  waiting for interrupt events from applications running in
-  user-space.
+  
+.Rationale
+**********************************************************************
+Handling real-time interrupt events from user-space can be done safely
+only if some top-half code exists for acknowledging the issuing device
+request from kernel space, particularly when the interrupt line is
+shared. This should be done via a RTDM driver, exposing a +read(2)+ or
++ioctl(2)+ interface, for waiting for interrupt events from
+applications running in user-space.
+**********************************************************************
 
-[normal]
-  Failing this, the low-level interrupt service code in user-space
-  would be sensitive to external thread management actions, such as
-  being stopped because of GDB/ptrace(2) interaction. Unfortunately,
-  preventing the device acknowledge code from running upon interrupt
-  request may cause unfixable breakage to happen (e.g. IRQ storm
-  typically).
+Failing this, the low-level interrupt service code in user-space
+would be sensitive to external thread management actions, such as
+being stopped because of GDB/ptrace(2) interaction. Unfortunately,
+preventing the device acknowledge code from running upon interrupt
+request may cause unfixable breakage to happen (e.g. IRQ storm
+typically).
 
-[normal]
-  Since the application should provide proper top-half code in a
-  dedicated RTDM driver for synchronizing on IRQ receipt, the RTDM API
-  available in user-space is sufficient.
+Since the application should provide proper top-half code in a
+dedicated RTDM driver for synchronizing on IRQ receipt, the RTDM API
+available in user-space is sufficient.
 
-[normal]
-  Removing the +pthread_intr+ API should be considered as a
-  strong hint for keeping the top-half interrupt handling code in
-  kernel space.
+Removing the +pthread_intr+ API should be considered as a
+strong hint for keeping the top-half interrupt handling code in
+kernel space.
 
 [TIP]
 [[userirqtip]]
@@ -380,19 +582,20 @@ using the Cobalt core.
   +ioctl(2)+ request, handled by a dedicated operation handler (see
   +rtdm_dev_register()+).
 
-.Scheduling
+=== Scheduling ===
 
-- +sched_get_priority_max()+ returns a larger value for all real-time
-  policies over Cobalt, compared to their Mercury counterpart, which
-  are directly mapped over the native Linux scheduling policies
-  instead (e.g. 256 vs 99 for SCHED_FIFO/RR). Applications wary of
-  portability between the Cobalt and Mercury cores should probe for
-  such limit.
+- The +SCHED_FIFO+, +SCHED_RR+, +SCHED_SPORADIC+ and +SCHED_TP+
+  classes now support up to 256 priority levels, instead of 99 as
+  previously with Xenomai 2.x. However, +sched_get_priority_max()+
+  still returns 99. Only the Cobalt extended call forms
+  (e.g. +pthread_attr_setschedparam_ex()+, +pthread_create_ex()+)
+  recognize these additional levels.
 
-- The +SCHED_SPORADIC+ and +SCHED_TP classes now support up to 256
-  priority levels, instead of 99 as previously with Xenomai 2.x.
+- +sched_get_priority_min_ex()+ and +sched_get_priority_max_ex()+
+  should be used for querying the static priority range of Cobalt
+  policies.
 
-- +pthread_setschedparam()+ may cause a secondary mode switch for the
+- `pthread_setschedparam()` may cause a secondary mode switch for the
   caller, but will not cause any mode switch for the target thread
   unlike with Xenomai 2.x.
 
@@ -401,21 +604,23 @@ using the Cobalt core.
   Xenomai scheduler in sync, with respect to thread priorities, since
   the former maintains a process-local priority cache for the threads
   it knows about. Therefore, an explicit call to the the regular
-  +pthread_setschedparam()+ shall be issued upon each priority change
+  `pthread_setschedparam()` shall be issued upon each priority change
   Xenomai-wise, for maintaining consistency.
 
 [normal]
   In the Xenomai 2.x implementation, the thread being set a new
   priority would receive a SIGSHADOW signal, eventually handled as a
-  request to call *glibc*'s +pthread_setschedparam()+ immediately.
+  request to call *glibc*'s `pthread_setschedparam()` immediately.
 
-[normal]
-  Rationale: the target Xenomai thread may hold a mutex or any
-  resource which may only be held in primary mode, in which case
-  switching to secondary mode for applying the priority change at
-  any random location over a signal handler may create a pathological
-  issue. In addition, *glibc*'s +pthread_setschedparam()+ is not
-  async-safe, which makes the former method fragile.
+.Rationale
+**********************************************************************
+The target Xenomai thread may hold a mutex or any resource which may
+only be held in primary mode, in which case switching to secondary
+mode for applying the priority change at any random location over a
+signal handler may create a pathological issue. In addition, *glibc*'s
+`pthread_setschedparam()` is not async-safe, which makes the former
+method fragile.
+**********************************************************************
 
 [normal]
   Conversely, a thread which calls +pthread_setschedparam()+ does know
@@ -483,53 +688,74 @@ using the Cobalt core.
   quota interval starts. At this point, a new runtime budget is given
   to each group, in accordance with its share.
 
-- When called from primary mode, sched_yield() now relinquishes the
-  CPU in case no context switch happened as a result of the manual
-  round-robin.
+- When called from primary mode, sched_yield() now delays the caller
+  for a short while *only in case* no context switch happened as a
+  result of the manual round-robin. The delay ends next time the
+  regular Linux kernel switches tasks, or a kernel (virtual) tick has
+  elapsed (TICK_NSEC), whichever comes first.
 
 [normal]
   Typically, a Xenomai thread undergoing the SCHED_FIFO or SCHED_RR
   policy with no contender at the same priority level would still be
-  delayed for a while. This delay ends next time the regular Linux
-  kernel switches tasks, or a kernel (virtual) tick has elapsed
-  (TICK_NSEC), whichever comes first.
+  delayed for a while. 
 
-[normal]
-  Rationale: it is most probably unwanted that sched_yield() does not
-  cause any context switch, since this service is commonly used for
-  implementing a poor man's cooperative scheduling. A typical use case
-  involves a Xenomai thread running in primary mode which needs to
-  yield the CPU to another thread running in secondary mode. By
-  waiting for a context switch to happen in the regular kernel, we
-  guarantee that the CPU has been relinquished for a while. By
-  limiting this delay, we prevent a regular high priority SCHED_FIFO
-  thread stuck in a tight loop, from locking out the delayed Xenomai
-  thread indefinitely.
+.Rationale
+**********************************************************************
+In most case, it is unwanted that sched_yield() does not cause any
+context switch, since this service is commonly used for implementing a
+poor man's cooperative scheduling. A typical use case involves a
+Xenomai thread running in primary mode which needs to yield the CPU to
+another thread running in secondary mode. By waiting for a context
+switch to happen in the regular kernel, we guarantee that the manual
+round-robin takes place between both threads, despite the execution
+mode mismatch. By limiting the incurred delay, we prevent a regular
+high priority SCHED_FIFO thread stuck in a tight loop, from locking
+out the delayed Xenomai thread indefinitely.
+**********************************************************************
 
-.Thread management
+=== Thread management ===
 
 - The default POSIX thread stack size was raised to
   `PTHREAD_STACK_MIN * 4`. The minimum stack size enforced by the
   +libcobalt+ library is `PTHREAD_STACK_MIN + getpagesize()`.
 
-- pthread_set_mode_np() now accepts PTHREAD_DISABLE_LOCKBREAK, which
-disallows breaking the scheduler lock. When unset (default case), a
-thread which holds the scheduler lock drops it temporarily while
-sleeping.
+- pthread_set_name_np() has been renamed to pthread_setname_np() with
+  the same arguments, to conform with the GNU extension equivalent.
+
+- pthread_set_mode_np() has been renamed to pthread_setmode_np() for
+  naming consistency with pthread_setname_np(). In addition, the call
+  introduces the PTHREAD_DISABLE_LOCKBREAK mode flag, which disallows
+  breaking the scheduler lock.
+
+[normal]
+  When unset (default case), a thread which holds the scheduler lock
+  drops it temporarily while sleeping.  When set, any attempt to block
+  while holding the scheduler lock will cause a break condition to be
+  immediately raised, with the caller receiving EINTR.
 
 [WARNING]
 A Xenomai thread running with PTHREAD_DISABLE_LOCKBREAK and
 PTHREAD_LOCK_SCHED both set may enter a runaway loop when attempting
-to sleep on a resource or synchronization object (e.g. mutex,
+to sleep on a resource or synchronization object (e.g. mutex or
 condition variable).
 
-.Process management
+=== Semaphores ===
+
+- With Cobalt, sem_wait(), sem_trywait(), sem_timedwait(), and
+  sem_post() have gained fast acquisition/release operations not
+  requiring any system call, unless a contention exists on the
+  resource. As a consequence, those services may not systematically
+  switch callers executing in relaxed mode to real-time mode, unlike
+  with Xenomai 2.x.
+
+=== Process management ===
 
 - In a +fork()+ -> +exec()+ sequence, all Cobalt API objects created
   by the child process before it calls +exec()+ are automatically
   flushed by the Xenomai core.
 
-.Real-time signals
+[[real-time-signals]]
+=== Real-time signals ===
 
 - Support for Xenomai real-time signals is available.
 
@@ -584,9 +810,9 @@ the regular Linux kernel.
 This behavior also applies to the new Cobalt-based replacement for the
 +kill()+ system call.
 
-.Timers
+=== Timers ===
 
-- POSIX timers are no more dropped when the creator thread
+- POSIX timers are no longer dropped when the creator thread
   exits. However, they are dropped when the container process exits.
 
 - If the thread signaled by a POSIX timer exits, the timer is
@@ -601,22 +827,34 @@ This behavior also applies to the new Cobalt-based replacement for the
 - EPERM is not returned anymore by POSIX timer calls. EINVAL is
   substituted in the corresponding situation.
 
-- The clock to be used for enabling periodic timing for a thread may
-  now be specified in the call to +pthread_make_periodic_np()+:
+- Cobalt replacements for +timerfd_create()+, +timerfd_settime()+ and
++timerfd_gettime()+ have been introduced. The implementation delivers
+I/O notifications to RTDM file descriptors upon Cobalt-originated
+real-time signals.
 
----------------------------------------------------------------
-int pthread_make_periodic_np(pthread_t thread, clockid_t clk_id,
-    struct timespec *starttp, struct timespec *periodtp);
----------------------------------------------------------------
+- `pthread_make_periodic_np()` and `pthread_wait_np()` have been
+removed from the API.
 
-.Timerfd
+.Rationale
+**********************************************************************
+With the introduction of services to support real-time signals, those
+two non-portable calls have become redundant. Instead, Cobalt-based
+applications should set up a periodic timer using the
+`timer_create()`+`timer_settime()` call pair, then wait for release
+points via `sigwaitinfo()`. Overruns can be detected by looking at the
+siginfo.si_overrun field.
+    
+Alternatively, applications may obtain a file descriptor referring to
+a Cobalt timer via the `timerfd()` call, and `read()` from it to wait
+for timeouts.
+    
+In addition, applications may include a timer in a synchronous
+multiplexing operation involving other event sources, by passing a
+file descriptor returned by the `timerfd()` service to a `select()`
+call.
+**********************************************************************
 
-[normal] Cobalt replacements for +timerfd_create()+,
-+timerfd_settime()+ and +timerfd_gettime()+ have been introduced. The
-implementation delivers I/O notifications to RTDM file descriptors
-upon Cobalt-originated real-time signals.
-
-.Message queues
+=== Message queues ===
 
 - +mq_open()+ default attributes align on the regular kernel values,
   i.e. 10 msg x 8192 bytes (instead of 128 x 128).
@@ -624,7 +862,7 @@ upon Cobalt-originated real-time signals.
 - +mq_send()+ now enforces a maximum priority value for messages
   (32768).
 
-.POSIX I/O services
+=== POSIX I/O services ===
 
 - Cobalt's select(2) service is not automatically restarted anymore
   upon Linux signal receipt, conforming to the POSIX standard (see man
@@ -636,16 +874,16 @@ upon Cobalt-originated real-time signals.
 Similarly, the real-time suitable STDIO routines are now part of
 +libcobalt+.
 
-== Former Native interface changes (now Alchemy) ==
+== Alchemy interface (formerly _native API_) ==
 
-.General
+=== General ===
 
 - The API calls supporting a wait operation may return the -EIDRM
 error code only when the target object was deleted while
 pending. Otherwise, passing a deleted object identifier to an API call
 will result in -EINVAL being returned.
 
-.Interrupt management
+=== Interrupt management ===
 
 - The +RT_INTR+ API is gone. Please see the <<irqhandling,rationale>>
   for not handling low-level interrupt service code from user-space.
@@ -654,15 +892,15 @@ will result in -EINVAL being returned.
 It is still possible to have the application wait for interrupt
 receipts, as explained <<userirqtip,here>>.
 
-.I/O regions
+=== I/O regions ===
 
 - The RT_IOREGION API is gone. I/O memory resources should
   be controlled from a RTDM driver instead.
 
-.Timing services
+=== Timing services ===
 
-- +rt_timer_set_mode()+ was removed. The clock resolution has become a
-per-process setting, which can be tuned by passing the
+- +rt_timer_set_mode()+ is obsolete. The clock resolution has become a
+per-process setting, which should be set using the
 +--alchemy-clock-resolution+ switch on the command line.
 
 [TIP]
@@ -683,16 +921,18 @@ process to one nanosecond (i.e. tickless, highest resolution).
   forms.
 
 - +rt_task_set_periodic()+ does not suspend the target task anymore.
-
-[normal]
 If a start date is specified, then +rt_task_wait_period()+ will apply
 the initial delay.
 
-[normal]
-Rationale: a periodic task has to call +rt_task_wait_period()+ from
+.Rationale
+**********************************************************************
+A periodic Alchemy task has to call +rt_task_wait_period()+ from
 within its work loop for sleeping until the next release point is
-reached. Therefore, in most cases, there is no point in waiting for
-the initial release point from a different location.
+reached. Since waiting for the initial and subsequent release points
+will most often happen at the same code location in the application,
+the semantics of rt_task_set_periodic() can be simplified so that only
+rt_task_wait_period() may block the caller.
+**********************************************************************
 
 [TIP]
 In the unusual case where you do need to have the target task wait for
@@ -724,17 +964,19 @@ A tickless clock has a period of one nanosecond.
 - Unlike with Xenomai 2.x, the target task to +rt_task_set_periodic()+
   must be local to the current process.
 
-.Mutexes
+=== Mutexes ===
 
 - For consistency with the standard glibc implementation, deleting a
-  RT_MUTEX object in locked state is no more a valid operation.
+  RT_MUTEX object in locked state is no longer a valid operation.
 
 - +rt_mutex_inquire()+ does not return the count of waiters anymore.
 
-[normal]
-Rationale: obtaining the current count of waiters only makes sense for
-debugging purpose. Keeping it in the API would introduce a significant
-overhead to maintain internal consistency.
+.Rationale
+**********************************************************************
+Obtaining the current count of waiters only makes sense for debugging
+purpose. Keeping it in the API would introduce a significant overhead
+to maintain internal consistency.
+**********************************************************************
 
 [normal]
 The +owner+ field of a RT_MUTEX_INFO structure now reports the owner's
@@ -742,16 +984,16 @@ task handle, instead of its name. When the mutex is unlocked, a NULL
 handle is returned, which has the same meaning as a zero value in the
 former +locked+ field.
 
-.Condition variables
+=== Condition variables ===
 
 - For consistency with the standard glibc implementation, deleting a
-  RT_COND object currently pended by other tasks is no more a valid
+  RT_COND object currently pended by other tasks is no longer a valid
   operation.
 
 - Like +rt_mutex_inquire()+, +rt_cond_inquire()+ does not return the
 count of waiting tasks anymore.
 
-.Task management
+=== Task management ===
 
 - +rt_task_notify()+ and +rt_task_catch()+ have been removed. They are
   meaningless in a userland-only context.
@@ -761,10 +1003,15 @@ count of waiting tasks anymore.
 
 - T_SUSP cannot be passed to rt_task_create() anymore.
 
-[normal]
-Rationale: This behavior can be achieved by not calling
-+rt_task_start()+ immediately after +rt_task_create()+, or by calling
+- T_FPU is obsolete. FPU management is automatically enabled for
+  Alchemy tasks if the hardware supports it, disabled otherwise.
+
+.Rationale
+**********************************************************************
+This behavior can be achieved by not calling +rt_task_start()+
+immediately after +rt_task_create()+, or by calling
 +rt_task_suspend()+ before +rt_task_start()+.
+**********************************************************************
 
 - +rt_task_shadow()+ now accepts T_LOCK, T_WARNSW.
 
@@ -803,20 +1050,25 @@ the real-time core applying implicit dynamic boosts.
 - +rt_task_sleep_until()+ does not return -ETIMEDOUT anymore. Waiting
   for a date in the past blocks the caller indefinitely.
 
-.Message queues
+=== Message queues ===
 
-- +rt_queue_create()+ mode bits updated:
-   * Q_SHARED is implicit for all queues, defined as nop.
-   * Q_DMA has become meaningless, and therefore was dropped. A driver
-     should be implemented for delivering chunks of DMA-suitable
-     memory.
+- As Alchemy-based applications run in user-space, the following
+  +rt_queue_create()+ mode bits from the former _native_ API are
+  obsolete:
 
-.Heaps
+   * Q_SHARED
+   * Q_DMA
 
-- +rt_heap_create()+ mode bits updated:
-   * H_MAPPABLE has become meaningless.
-   * H_SHARED is deprecated, but still wraps to H_SINGLE.
-   * H_NONCACHED and H_DMA became meaningless.
+=== Heaps ===
+
+- As Alchemy-based applications run in user-space, the following
+  +rt_heap_create()+ mode bits from the former _native_ API are
+  obsolete:
+
+   * H_MAPPABLE
+   * H_SHARED
+   * H_NONCACHED
+   * H_DMA
 
 [TIP]
 If you need to allocate a chunk of DMA-suitable memory, then you
@@ -825,16 +1077,17 @@ should create a RTDM driver for this purpose.
 - +rt_heap_alloc_until()+ is a new call for waiting for a memory
   chunk, specifying an absolute timeout date.
 
-- +rt_heap_inquire()+ with the removal of H_DMA, phys_addr makes no
-   sense anymore, removed.
+- with the removal of H_DMA, returning a physical address (phys_addr)
+  in +rt_heap_inquire()+ does not apply anymore.
 
-.Alarms
+=== Alarms ===
 
 - +rt_alarm_wait()+ has been removed.
 
-[normal]
-Rationale: An alarm handler can be specified to +rt_alarm_create()+
-instead.
+.Rationale
+**************************************************************
+An alarm handler can be passed to +rt_alarm_create()+ instead.
+**************************************************************
 
 - The RT_ALARM_INFO structure returned by +rt_alarm_inquire()+ has
   changed:
@@ -845,7 +1098,7 @@ instead.
      the alarm object. If non-zero, the alarm is enabled
      (i.e. started).
 
-.Message pipes
+=== Message pipes ===
 
 - Writing to a message pipe is allowed from all contexts, including
   from alarm handlers.
@@ -855,12 +1108,12 @@ instead.
 
 == pSOS interface changes ==
 
-.Memory regions
+=== Memory regions ===
 
 - +rn_create()+ may return ERR_NOSEG if the region control block
   cannot be allocated internally.
 
-.Scheduling
+=== Scheduling ===
 
 - The emulator converts priority levels between the core POSIX and
   pSOS scales using normalization (pSOS -> POSIX) and denormalization
@@ -884,7 +1137,7 @@ normalization/denormalization handlers as no-ops by default.
 
 == VxWorks interface changes ==
 
-.Task management
+=== Task management ===
 
 - +WIND_*+ status bits are synced to the user-visible TCB only as a
 result of a call to +taskTcb()+ or +taskGetInfo()+.
@@ -894,7 +1147,7 @@ As a consequence of this change, any reference to a user-visible TCB
 should be refreshed by calling +taskTcb()+ anew, each time reading the
 +status+ field is required.
 
-.Scheduling
+=== Scheduling ===
 
 - The emulator converts priority levels between the core POSIX and
   VxWorks scales using normalization (VxWorks -> POSIX) and
@@ -909,4 +1162,41 @@ routines.
 int wind_task_normalize_priority(int wind_prio);
 
 int wind_task_denormalize_priority(int core_prio);
+------------------------------------------------------------
+
+== Using the Transition Kit ==
+
+Xenomai 2 applications in user-space may use a library and a set of
+compatibility headers, aimed at easing the process of transitioning to
+Xenomai 3.
+
+Enabling this compatibility layer is done via passing specific
+compilation and linker flags when building the
+application. +xeno-config+ can retrieve those flags using the
++--cflags+ and +--ldflags+ switches as usual, with the addition of the
++--compat+ flag. Alternatively, passing the +--[skin=]native+ switch
+as to +xeno-config+ implicitly turns on the compatibility mode for the
+Alchemy API.
+
+[NOTE]
+The transition kit does not currently cover _all_ the changes
+introduced in Xenomai 3 yet, but a significant subset of them
+nevertheless.
+
+.A typical Makefile fragment implicitly turning on backward compatibility
+------------------------------------------------------------
+PREFIX := /usr/xenomai
+CONFIG_CMD := $(PREFIX)/bin/xeno-config
+CFLAGS= $(shell $(CONFIG_CMD) --skin=native --cflags) -g
+LDFLAGS= $(shell $(CONFIG_CMD) --skin=native --ldflags)
+CC = $(shell $(CONFIG_CMD) --cc)
+------------------------------------------------------------
+
+.Another example for using with the POSIX API
+------------------------------------------------------------
+PREFIX := /usr/xenomai
+CONFIG_CMD := $(PREFIX)/bin/xeno-config
+CFLAGS= $(shell $(CONFIG_CMD) --skin=posix --cflags --compat) -g
+LDFLAGS= $(shell $(CONFIG_CMD) --skin=posix --ldflags --compat)
+CC = $(shell $(CONFIG_CMD) --cc)
 ------------------------------------------------------------

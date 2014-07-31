@@ -1,0 +1,16 @@
+Troubleshooting a single kernel configuration
+=============================================
+
+This page is a troubleshooting guide enumerating known issues with
+single kernel Xenomai configurations.
+
+[TIP]
+If running Xenomai 3 over the *Mercury* core, then you are using a
+single kernel configuration, and this document was meant for
+you. Otherwise, if you are running any release from the Xenomai 2
+series, or a Xenomai 3 release using the *Cobalt* real-time core, then
+you are using a running kernel configuration, for which you can find
+specific
+link:troubleshooting-a-dual-kernel-configuration/[troubleshooting information here].
+
+*No entry yet.*

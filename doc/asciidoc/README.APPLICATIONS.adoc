@@ -1,47 +1,11 @@
-Building and running applications with Xenomai 3.x
-==================================================
+Running applications with Xenomai 3.x
+=====================================
 
-The latest version of this document is available at
-http://www.xenomai.org/documentation/xenomai-forge/html/README.APPLICATIONS/[this address].
-
-Make sure to read the
-http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[installation
-document] before going through this one.
-
-For questions, corrections and improvements, write to
-mailto:xenomai@xenomai.org[the mailing list].
-
-Compiling a Xenomai application
+Running a Xenomai 3 application
 -------------------------------
 
-You should use the +xeno-config+ script to get the proper compilation
-and linker flags related to Xenomai, in order to build your
-application for whichever _Cobalt_ or _Mercury_ core.
-
-Here is a trivial Makefile fragment retrieving the compiler and flags
-for building the single-file application +vxapp.c+, over the VxWorks
-emulation API:
-
------------------------------------------------------------
-XENO_CONFIG := /usr/xenomai/bin/xeno-config
-CFLAGS := $(shell $(XENO_CONFIG) --vxworks --cflags)
-LDFLAGS := $(shell $(XENO_CONFIG) --vxworks --ldflags)
-CC := $(shell $(XENO_CONFIG) --cc)
-
-EXECUTABLE := vxapp
-
-all: $(EXECUTABLE)
-
-%: %.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
------------------------------------------------------------
-
-Running a Xenomai application
------------------------------
-
 For _Cobalt_, you will need the real-time core built into the target
-Linux kernel as described in
-http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[this
+Linux kernel as described in link:installing-xenomai-3-x[this
 document].
 
 For _Mercury_, you need no Xenomai-specific kernel support so far,
@@ -75,8 +39,7 @@ command line, namely:
 CAUTION: Specifying a resolution greater than 1 nanosecond requires
 the low resolution clock support to be available from the Xenomai
 libraries (see the +--enable-lores-clock+
-http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[configuration
-switch]).
+link:installing-xenomai-3-x[configuration switch]).
 
 *--mem-pool-size=<kb>*::
 
@@ -178,8 +141,9 @@ The Xenomai autoconf script will detect the Valgrind core header on
 the build system automatically, and define this symbol accordingly
 (i.e. /usr/include/valgrind/valgrind.h).
 
-NOTE: You may need to install the Valgrind development package on your
-build system to provide for the core header files. For instance, such
+[NOTE]
+You may need to install the Valgrind development package on your build
+system to provide for the core header files. For instance, such
 package is called _valgrind-devel_ on Fedora.
 
 Available real-time APIs

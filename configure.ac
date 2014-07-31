@@ -347,14 +347,22 @@ fi
 
 dnl Documentation package.
 
+XENO_DOC_GIT=
 AC_MSG_CHECKING(whether to build documentation)
 AC_ARG_ENABLE(doc-build,
 	AS_HELP_STRING([--enable-doc-build], [Build Xenomai documentation]),
 	[case "$enableval" in
 	y | yes) XENO_BUILD_DOC=y ;;
-	*) unset XENO_BUILD_DOC ;;
+	*) if test x$enableval = x; then
+	      unset XENO_BUILD_DOC
+	   else
+	      XENO_BUILD_DOC=y
+	      XENO_DOC_GIT=$enableval
+	   fi
+	   ;;
 	esac])
 AM_CONDITIONAL(XENO_BUILD_DOC,[test "$XENO_BUILD_DOC" = y])
+AC_SUBST(XENO_DOC_GIT)
 
 XENO_INSTALL_DOC=y
 AC_MSG_CHECKING(whether to install documentation)
@@ -870,6 +878,7 @@ AC_CONFIG_FILES([ \
 	doc/doxygen/xeno3prm-common.conf \
 	doc/doxygen/xeno3prm-html.conf \
 	doc/doxygen/xeno3prm-latex.conf \
+	doc/gitdoc/Makefile \
 	doc/asciidoc/Makefile \
 	])
 
