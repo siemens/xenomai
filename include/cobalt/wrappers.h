@@ -47,7 +47,7 @@
  * referenced as __COBALT(foo).
  */
 #define COBALT_IMPL(T, I, A)								\
-typeof(T) __wrap_ ## I A __attribute__((alias("__cobalt_" __stringify(I)), weak));	\
-typeof(T) __cobalt_ ## I A
+__typeof__(T) __wrap_ ## I A __attribute__((alias("__cobalt_" __stringify(I)), weak));	\
+__typeof__(T) __cobalt_ ## I A
 
 #endif /* !_COBALT_WRAPPERS_H */

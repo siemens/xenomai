@@ -157,7 +157,7 @@ while test $# -gt 0; do
 		exit 1
 	    fi
 	    cflags="$XENO_BASE_CFLAGS"
-	    test x$compat = xy && cflags="-I$XENO_INCLUDE_DIR/trank $cflags"
+	    test x$compat = xy && cflags="-I$XENO_INCLUDE_DIR/trank -D__XENO_COMPAT__ $cflags"
 	    for skin in $skin_list; do
 		case "$skin" in
 		    posix|cobalt|rtdm)

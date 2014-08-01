@@ -18,13 +18,13 @@
 #ifndef _XENOMAI_TRANK_NATIVE_ALARM_H
 #define _XENOMAI_TRANK_NATIVE_ALARM_H
 
+#include <trank/trank.h>
 #include <alchemy/alarm.h>
 
-__attribute__((__deprecated__))
-static inline int rt_alarm_wait(RT_ALARM *alarm);
-{
-	warning("rt_alarm_create() should be passed a handler");
-	return -ENOSYS;
-}
+COMPAT_DECL(int, rt_alarm_create(RT_ALARM *alarm, const char *name));
+
+COMPAT_DECL(int, rt_alarm_wait(RT_ALARM *alarm));
+
+COMPAT_DECL(int, rt_alarm_delete(RT_ALARM *alarm));
 
 #endif /* _XENOMAI_TRANK_NATIVE_ALARM_H */

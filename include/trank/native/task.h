@@ -20,23 +20,32 @@
 
 #include <errno.h>
 #include <alchemy/task.h>
+#include <trank/trank.h>
 #include <trank/native/types.h>
 
 #define T_FPU    0
 #define T_NOSIG  0
+#define T_SUSP	 __THREAD_M_SPARE7
+
+/* bit #24 onward are otherwise unused. */
+#define T_CPU(cpu) (1 << (24 + (cpu & 7)))
+#define T_CPUMASK  0xff000000
 
 __attribute__((__deprecated__))
 static inline int rt_task_notify(RT_TASK *task, rt_sigset_t sigs)
 {
-	warning("in-kernel native API is gone, rebase over RTDM");
+	trank_warning("in-kernel native API is gone, rebase over RTDM");
 	return -ENOSYS;
 }
 
-__attribute__((__deprecated__))
-static inline int T_CPU(int cpu)
-{
-	warning("use rt_task_set_affinity() instead");
-	return 0;
-}
+COMPAT_DECL(int, rt_task_create(RT_TASK *task, const char *name,
+				int stksize, int prio, int mode));
+
+COMPAT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
+			       int stksize, int prio, int mode,
+			       void (*entry)(void *arg), void *arg));
+
+COMPAT_DECL(int, rt_task_set_periodic(RT_TASK *task,
+				      RTIME idate, RTIME period));
 
 #endif /* _XENOMAI_TRANK_NATIVE_TASK_H */

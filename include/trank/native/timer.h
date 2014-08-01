@@ -18,6 +18,7 @@
 #ifndef _XENOMAI_TRANK_NATIVE_TIMER_H
 #define _XENOMAI_TRANK_NATIVE_TIMER_H
 
+#include <trank/trank.h>
 #include <alchemy/timer.h>
 
 #define TM_ONESHOT  0
@@ -27,7 +28,7 @@ static inline int rt_timer_set_mode(RTIME nstick)
 {
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
 	if (nstick != TM_ONESHOT) {
-		warning("start program with --alchemy-clock-resolution option instead");
+		trank_warning("start program with --alchemy-clock-resolution option instead");
 		return -ENODEV;
 	}
 #endif

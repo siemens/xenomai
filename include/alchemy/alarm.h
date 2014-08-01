@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <alchemy/timer.h>
+#include <alchemy/compat.h>
 
 /**
  * @addtogroup alchemy_alarm
@@ -60,12 +61,12 @@ typedef struct RT_ALARM_INFO RT_ALARM_INFO;
 extern "C" {
 #endif
 
-int rt_alarm_create(RT_ALARM *alarm,
-		    const char *name,
-		    void (*handler)(void *arg),
-		    void *arg);
+CURRENT_DECL(int, rt_alarm_create(RT_ALARM *alarm,
+				  const char *name,
+				  void (*handler)(void *arg),
+				  void *arg));
 
-int rt_alarm_delete(RT_ALARM *alarm);
+CURRENT_DECL(int, rt_alarm_delete(RT_ALARM *alarm));
 
 int rt_alarm_start(RT_ALARM *alarm,
 		   RTIME value,

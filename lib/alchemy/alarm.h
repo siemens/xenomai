@@ -24,6 +24,8 @@
 #include <copperplate/cluster.h>
 #include <alchemy/alarm.h>
 
+#define alarm_magic	0x8888ebeb
+
 struct alchemy_alarm {
 	unsigned int magic;	/* Must be first. */
 	char name[XNOBJECT_NAME_LEN];
@@ -35,8 +37,6 @@ struct alchemy_alarm {
 	unsigned long expiries;
 	struct fsobj fsobj;
 };
-
-#define alarm_magic	0x8888ebeb
 
 extern struct pvcluster alchemy_alarm_table;
 

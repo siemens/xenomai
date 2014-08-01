@@ -24,6 +24,7 @@
 #include <boilerplate/list.h>
 #include <copperplate/threadobj.h>
 #include <alchemy/timer.h>
+#include <alchemy/compat.h>
 
 /**
  * @addtogroup alchemy_task
@@ -91,11 +92,11 @@ typedef struct RT_TASK_INFO RT_TASK_INFO;
 extern "C" {
 #endif
 
-int rt_task_create(RT_TASK *task,
-		   const char *name,
-		   int stksize,
-		   int prio,
-		   int mode);
+CURRENT_DECL(int, rt_task_create(RT_TASK *task,
+				 const char *name,
+				 int stksize,
+				 int prio,
+				 int mode));
 
 int rt_task_delete(RT_TASK *task);
 
@@ -106,10 +107,10 @@ int rt_task_start(RT_TASK *task,
 		  void (*entry)(void *arg),
 		  void *arg);
 
-int rt_task_spawn(RT_TASK *task, const char *name,
-		  int stksize, int prio, int mode,
-		  void (*entry)(void *arg),
-		  void *arg);
+CURRENT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
+				int stksize, int prio, int mode,
+				void (*entry)(void *arg),
+				void *arg));
 
 int rt_task_shadow(RT_TASK *task,
 		   const char *name,
@@ -118,8 +119,8 @@ int rt_task_shadow(RT_TASK *task,
 
 int rt_task_join(RT_TASK *task);
 
-int rt_task_set_periodic(RT_TASK *task,
-			 RTIME idate, RTIME period);
+CURRENT_DECL(int, rt_task_set_periodic(RT_TASK *task,
+				       RTIME idate, RTIME period));
 
 int rt_task_wait_period(unsigned long *overruns_r);
 

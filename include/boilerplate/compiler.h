@@ -26,6 +26,9 @@
 		(type *)((char *)__mptr - offsetof(type, member));	\
 	})
 
+#define __stringify_1(x...)	#x
+#define __stringify(x...)	__stringify_1(x)
+
 #ifndef likely
 #define likely(x)	__builtin_expect(!!(x), 1)
 #define unlikely(x)	__builtin_expect(!!(x), 0)

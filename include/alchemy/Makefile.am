@@ -3,6 +3,7 @@ includesubdir = $(includedir)/alchemy
 includesub_HEADERS =	\
 	alarm.h		\
 	buffer.h	\
+	compat.h	\
 	cond.h		\
 	event.h		\
 	heap.h		\

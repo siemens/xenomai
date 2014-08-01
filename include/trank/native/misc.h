@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <errno.h>
+#include <trank/trank.h>
 
 #define IORN_IOPORT  0
 #define IORN_IOMEM   0
@@ -34,14 +35,14 @@ static inline int rt_io_get_region(RT_IOREGION *iorn,
 				   uint64_t len,
 				   int flags)
 {
-	warning("service should be provided by a RTDM driver");
+	trank_warning("service should be provided by a RTDM driver");
 	return -ENOSYS;
 }
 
 __attribute__((__deprecated__))
 int rt_io_put_region(RT_IOREGION *iorn)
 {
-	warning("service should be provided by a RTDM driver");
+	trank_warning("service should be provided by a RTDM driver");
 	return -ENOSYS;
 }
 

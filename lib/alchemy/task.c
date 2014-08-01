@@ -404,8 +404,8 @@ fail_syncinit:
  * @note Tasks can be referred to from multiple processes which all
  * belong to the same Xenomai session.
  */
-int rt_task_create(RT_TASK *task, const char *name,
-		   int stksize, int prio, int mode)
+CURRENT_IMPL(int, rt_task_create, (RT_TASK *task, const char *name,
+				   int stksize, int prio, int mode))
 {
 	struct corethread_attributes cta;
 	struct alchemy_task *tcb;
@@ -808,7 +808,8 @@ undo:
  * multiple of the Alchemy clock resolution (see
  * --alchemy-clock-resolution option, defaults to 1 nanosecond).
  */
-int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
+CURRENT_IMPL(int, rt_task_set_periodic,
+	     (RT_TASK *task, RTIME idate, RTIME period))
 {
 	struct timespec its, pts, now;
 	struct alchemy_task *tcb;
@@ -1025,10 +1026,10 @@ int rt_task_sleep(RTIME delay)
  *
  * @sideeffect see rt_task_create().
  */
-int rt_task_spawn(RT_TASK *task, const char *name,
-		  int stksize, int prio, int mode,
-		  void (*entry)(void *arg),
-		  void *arg)
+CURRENT_IMPL(int, rt_task_spawn, (RT_TASK *task, const char *name,
+				  int stksize, int prio, int mode,
+				  void (*entry)(void *arg),
+				  void *arg))
 {
 	int ret;
 
