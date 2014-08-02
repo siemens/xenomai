@@ -99,12 +99,17 @@ int semobj_wait(struct semobj *smobj, const struct timespec *timeout)
 {
 	int ret;
 
-	if (timeout == NULL)
-		ret = __RT(sem_wait(&smobj->core.sem));
-	else if (timeout->tv_sec == 0 && timeout->tv_nsec == 0)
+	if (timeout == NULL) {
+		do
+			ret = __RT(sem_wait(&smobj->core.sem));
+		while (ret && errno == EINTR);
+	} else if (timeout->tv_sec == 0 && timeout->tv_nsec == 0)
 		ret = __RT(sem_trywait(&smobj->core.sem));
-	else
-		ret = __RT(sem_timedwait(&smobj->core.sem, timeout));
+	else {
+		do
+			ret = __RT(sem_timedwait(&smobj->core.sem, timeout));
+		while (ret && errno == EINTR);
+	}
 
 	if (ret)
 		return errno == EINVAL ? -EIDRM : -errno;

@@ -755,9 +755,13 @@ int __registry_pkg_init(const char *arg0, char *mountpt)
 	 * complete all its init chores before returning to our
 	 * caller.
 	 */
-	ret = __bt(__STD(sem_wait(&p->sync)));
-	if (ret)
-		return -errno;
+	for (;;) {
+		ret = __STD(sem_wait(&p->sync));
+		if (ret == 0)
+			break;
+		if (errno != EINTR)
+			return __bt(-errno);
+	}
 
 	atexit(pkg_cleanup);
 
