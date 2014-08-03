@@ -342,6 +342,8 @@ int threadobj_stat(struct threadobj *thobj,
 
 int threadobj_sleep(const struct timespec *ts);
 
+void threadobj_set_current_name(const char *name);
+
 #ifdef CONFIG_XENO_PSHARED
 
 static inline int threadobj_local_p(struct threadobj *thobj)

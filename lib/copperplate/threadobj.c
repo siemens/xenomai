@@ -17,8 +17,6 @@
  *
  * Thread object abstraction.
  */
-
-#include <sys/prctl.h>
 #include <signal.h>
 #include <memory.h>
 #include <errno.h>
@@ -106,26 +104,10 @@ struct remote_request {
 	} u;
 };
 
-#ifdef CONFIG_XENO_COBALT
-
-static inline void agent_init_corespec(const char *name)
-{
-	__RT(pthread_setname_np(pthread_self(), name));
-}
-
-#else /* CONFIG_XENO_MERCURY */
-
-static inline void agent_init_corespec(const char *name)
-{
-	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
-}
-
-#endif /* CONFIG_XENO_MERCURY */
-
 static int agent_prologue(void *arg)
 {
 	agent_pid = get_thread_pid();
-	agent_init_corespec("remote-agent");
+	copperplate_set_current_name("remote-agent");
 	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 
 	return 0;
@@ -257,7 +239,6 @@ static inline void threadobj_uninit_corespec(struct threadobj *thobj)
 
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
-	__RT(pthread_setname_np(pthread_self(), thobj->name));
 	thobj->core.handle = cobalt_get_current();
 	thobj->core.u_window = cobalt_get_current_window();
 
@@ -592,8 +573,6 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	struct sigevent sev;
 	sigset_t set;
 	int ret;
-
-	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
 
 	/*
 	 * Do the per-thread setup for supporting the suspend/resume
@@ -1188,6 +1167,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	thobj->errno_pointer = &errno;
 	threadobj_set_agent(thobj);
 	backtrace_init_context(&thobj->btd, name);
+	copperplate_set_current_name(thobj->name);
 	ret = threadobj_setup_corespec(thobj);
 	if (ret) {
 		warning("prologue failed for thread %s, %s",

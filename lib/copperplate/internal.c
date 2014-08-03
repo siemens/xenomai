@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #include <sys/types.h>
+#include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,11 +92,21 @@ int copperplate_kill_tid(pid_t tid, int sig)
 	return __RT(kill(tid, sig)) ? -errno : 0;
 }
 
+void copperplate_set_current_name(const char *name)
+{
+	__RT(pthread_setname_np(pthread_self(), name));
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 int copperplate_kill_tid(pid_t tid, int sig)
 {
 	return syscall(__NR_tkill, tid, sig) ? -errno : 0;
+}
+
+void copperplate_set_current_name(const char *name)
+{
+	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
 }
 
 int copperplate_create_thread(struct corethread_attributes *cta,

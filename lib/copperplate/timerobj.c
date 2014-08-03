@@ -45,24 +45,17 @@ static DEFINE_PRIVATE_LIST(svtimers);
 
 #ifdef CONFIG_XENO_COBALT
 
-static inline void timersv_init_corespec(const char *name)
-{
-	__RT(pthread_setname_np(pthread_self(), name));
-}
+static inline void timersv_init_corespec(void) { }
 
 #else /* CONFIG_XENO_MERCURY */
 
-#include <sys/prctl.h>
-
-static inline void timersv_init_corespec(const char *name)
+static inline void timersv_init_corespec(void)
 {
 	sigset_t set;
 
 	sigemptyset(&set);
 	sigaddset(&set, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
-
-	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
 }
 
 #endif /* CONFIG_XENO_MERCURY */
@@ -96,7 +89,8 @@ static void timerobj_enqueue(struct timerobj *tmobj)
 static int server_prologue(void *arg)
 {
 	svpid = get_thread_pid();
-	timersv_init_corespec("timer-internal");
+	copperplate_set_current_name("timer-internal");
+	timersv_init_corespec();
 	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 
 	return 0;
