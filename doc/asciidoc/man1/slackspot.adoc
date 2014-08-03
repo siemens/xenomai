@@ -17,7 +17,7 @@ SLACKSPOT(1)
 :man manual: Xenomai Manual
 
 NAME
------
+----
 slackspot - Trace secondary mode switches
 
 SYNOPSIS
@@ -80,6 +80,11 @@ the data obtained from a target system, on a build/development
 machine. When present, the value of CROSS_COMPILE will be prepended to
 +gcc+ and +addr2line+ for running the corresponding utilities on the
 development system.
+
+VERSIONS
+--------
+
+*slackspot* appeared in Xenomai 3.0 for the _Cobalt_ real-time core.
 
 EXAMPLE
 -------
