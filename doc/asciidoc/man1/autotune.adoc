@@ -1,0 +1,112 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for autotune
+//
+// Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+AUTOTUNE(1)
+==========
+:doctype: manpage
+:revdate: 2014/08/03
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+----
+autotune - Calibrate the Xenomai core clock timer
+
+SYNOPSIS
+---------
+*autotune* [ options ]
+
+DESCRIPTION
+------------
+*autotune* is a utility to determine the best calibration values (aka
+ _gravity triplet_) for the core clock timer.
+
+The time spent traversing the kernel code from the low-level Xenomai
+timer handler until the kernel-based client handler is invoked, is
+shorter than the time required to schedule in a kernel thread
+instead. It takes even more time to switch in a user-space thread,
+which entails changing the current memory address space, performing
+potentially time-consuming MMU-related operations.
+
+For this reason, Xenomai differentiates timers on the target context
+they activate, among IRQ(handler), kernel and user threads,
+anticipating the next timer shot accordingly, so that such context is
+activated as close as possible to the ideal time. This anticipation is
+called the _gravity_ of the clock serving the timer, which is actually
+a triplet representing the three possible types of contexts the timer
+can activate.
+
+Therefore, the gravity is a static adjustment value to account for the
+basic latency of the target system for responding to timer events, as
+perceived by the client code waiting for the wake up events. Such
+latency is increased by additional factors, such as:
+
+- bus or CPU cache latency,
+- delay required to program the timer chip for the next shot,
+- code running with interrupts disabled on the CPU to receive the IRQ,
+- inter-processor serialization (_spinlocks_).
+
+*autotune* runs a series of internal calibration tests for estimating
+the most appropriate gravity values for its real-time clock timer,
+retaining the final values.
+
+[IMPORTANT]
+*autotune* requires the *CONFIG_XENO_OPT_AUTOTUNE* option to be
+ enabled in the kernel configuration.
+
+OPTIONS
+--------
+*autotune* accepts the following options:
+
+*--irq*::
+Estimate the IRQ gravity value, which is the shortest time the
+platform needs to deliver an IRQ to a Xenomai interrupt handler in
+kernel space.
+
+*--kernel*::
+Estimate the kernel gravity value, which is the shortest time the
+platform needs to deliver an IRQ to a RTDM task running in kernel
+space. This delay includes the context switching time.
+
+*--user*::
+Estimate the user gravity value, which is the shortest time the
+platform needs to deliver an IRQ to a user-space task/thread running
+in a Xenomai application process. This delay includes the context
+switching time.
+
+*--reset*::
+Reset the gravity values to their factory defaults. These defaults
+are statically defined by the Xenomai platform code.
+
+*--nohog*::
+Disable load generation while auto-tuning. *autotune* runs a simple
+load generator internally in parallel to estimating the latency, in
+order to eliminate irregular delays which tend to appear on fully idle
+systems.  Therefore, keeping the load generation enabled most often
+leads to a more accurate estimation.
+
+*--quiet*::
+Tame down verbosity of the auto-tuner.
+
+*--help*::
+Display a short help.
+
+If none of +--irq+, +--kernel+ or +--user+ is given, an estimation is
+done for each of them in sequence.
+
+VERSIONS
+--------
+
+*autotune* appeared in Xenomai 3.0 for the _Cobalt_ real-time core.
+
+AUTHOR
+-------
+*autotune* was written by Philippe Gerum <rpm@xenomai.org>.

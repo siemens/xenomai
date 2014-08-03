@@ -1,60 +1,62 @@
 HTML_DOCS = 					\
+	html/MIGRATION				\
+	html/README.APPLICATIONS		\
+	html/README.INSTALL			\
+	html/TROUBLESHOOTING.COBALT		\
+	html/TROUBLESHOOTING.MERCURY		\
+	html/asciidoc-icons			\
+	html/asciidoc-icons/callouts		\
+	html/man1/autotune			\
 	html/man1/clocktest			\
-	html/man1/slackspot			\
 	html/man1/dohell			\
 	html/man1/latency			\
 	html/man1/rtcanconfig			\
 	html/man1/rtcanrecv			\
 	html/man1/rtcansend			\
+	html/man1/slackspot			\
 	html/man1/switchtest			\
-	html/man1/xeno-config			\
-	html/man1/xeno-test			\
 	html/man1/xeno				\
-	html/README.INSTALL			\
-	html/README.APPLICATIONS		\
-	html/TROUBLESHOOTING.COBALT		\
-	html/TROUBLESHOOTING.MERCURY		\
-	html/MIGRATION				\
-	html/asciidoc-icons			\
-	html/asciidoc-icons/callouts
+	html/man1/xeno-config			\
+	html/man1/xeno-test
 
 PDF_DOCS = 				\
-	README.INSTALL.pdf 		\
+	MIGRATION.pdf			\
 	README.APPLICATIONS.pdf 	\
+	README.INSTALL.pdf 		\
 	TROUBLESHOOTING.COBALT.pdf	\
-	TROUBLESHOOTING.MERCURY.pdf	\
-	MIGRATION.pdf
+	TROUBLESHOOTING.MERCURY.pdf
 
 TXT_DOCS =				\
-	README.INSTALL.txt		\
+	MIGRATION.txt			\
 	README.APPLICATIONS.txt 	\
+	README.INSTALL.txt		\
 	TROUBLESHOOTING.COBALT.txt	\
-	TROUBLESHOOTING.MERCURY.txt	\
-	MIGRATION.txt
+	TROUBLESHOOTING.MERCURY.txt
 
 MAN1_DOCS = 			\
+	man1/autotune.1		\
 	man1/clocktest.1 	\
 	man1/cyclictest.1 	\
+	man1/dohell.1		\
 	man1/latency.1 		\
 	man1/rtcanconfig.1 	\
 	man1/rtcanrecv.1 	\
 	man1/rtcansend.1 	\
+	man1/slackspot.1	\
 	man1/switchtest.1 	\
-	man1/xeno.1 		\
 	man1/xeno-config.1 	\
 	man1/xeno-test.1 	\
-	man1/dohell.1		\
-	man1/slackspot.1
+	man1/xeno.1
 
 EXTRA_DIST :=				\
-	README.INSTALL.adoc 		\
+	MIGRATION.adoc 			\
 	README.APPLICATIONS.adoc	\
+	README.INSTALL.adoc 		\
 	TROUBLESHOOTING.COBALT.adoc	\
 	TROUBLESHOOTING.MERCURY.adoc 	\
-	MIGRATION.adoc 			\
 	plaintext.conf 			\
-	plaintext_postproc.awk		\
 	plaintext.xsl			\
+	plaintext_postproc.awk		\
 	$(MAN1_DOCS:%.1=%.adoc)
 
 if !XENO_BUILD_DOC
