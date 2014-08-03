@@ -103,7 +103,7 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 
 static int
 timerfd_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
-		unsigned type, unsigned index)
+		    unsigned type, unsigned index)
 {
 	struct cobalt_tfd *tfd = container_of(fd, struct cobalt_tfd, fd);
 	struct xnselect_binding *binding;
@@ -164,6 +164,7 @@ static void timerfd_handler(struct xntimer *xntimer)
 int cobalt_timerfd_create(int ufd, int clockid, int flags)
 {
 	struct cobalt_tfd *tfd;
+	struct xnthread *curr;
 	struct xnsys_ppd *p;
 
 	p = xnsys_ppd_get(0);
@@ -182,8 +183,9 @@ int cobalt_timerfd_create(int ufd, int clockid, int flags)
 
 	tfd->flags = flags;
 	tfd->clockid = clockid;
+	curr = xnshadow_current();
 	xntimer_init(&tfd->timer, &nkclock, timerfd_handler,
-		     xnshadow_current(), XNTIMER_UGRAVITY);
+		     curr ? xnthread_sched(curr) : NULL, XNTIMER_UGRAVITY);
 	xnsynch_init(&tfd->readers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
 	xnselect_init(&tfd->read_select);
 	tfd->target = NULL;

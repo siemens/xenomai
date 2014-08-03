@@ -272,7 +272,7 @@ xnticks_t xntimer_get_timeout(struct xntimer *timer)
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 
 /**
- * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread, int flags)
+ * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnsched *sched, int flags)
  * @brief Initialize a timer object.
  *
  * Creates a timer. When created, a timer is left disarmed; it must be
@@ -290,10 +290,10 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
  *
  * @param handler The routine to call upon expiration of the timer.
  *
- * @param thread The optional thread object the new timer is affine
- * to. If non-NULL, the timer will fire on the same CPU @a thread
- * currently runs on by default, otherwise it will fire on the CPU
- * which initialized it.
+ * @param sched An optional pointer to the per-CPU scheduler slot the
+ * new timer is affine to. If non-NULL, the timer will fire on the CPU
+ * @a sched is bound to, otherwise it will fire either on the current
+ * CPU if real-time, or on the first real-time CPU.
  *
  * @param flags A set of flags describing the timer. The valid flags are:
  *
@@ -316,14 +316,14 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 #ifdef DOXYGEN_CPP
 void xntimer_init(struct xntimer *timer, struct xnclock *clock,
 		  void (*handler)(struct xntimer *timer),
-		  struct xnthread *thread,
+		  struct xnsched *sched,
 		  int flags);
 #endif
 
 void __xntimer_init(struct xntimer *timer,
 		    struct xnclock *clock,
 		    void (*handler)(struct xntimer *timer),
-		    struct xnthread *thread,
+		    struct xnsched *sched,
 		    int flags)
 {
 	spl_t s __maybe_unused;
@@ -339,14 +339,14 @@ void __xntimer_init(struct xntimer *timer,
 	timer->handler = handler;
 	timer->interval_ns = 0;
 	/*
-	 * Timers have to run on a real-time CPU, i.e. a member of the
-	 * xnsched_realtime_cpus mask. If the new timer is affine to a
-	 * thread, we assign it the same CPU (which has to be
-	 * correct), otherwise pick the current CPU if valid, or the
-	 * first valid real-time CPU otherwise.
+	 * Timers are affine to a scheduler slot, which is in turn
+	 * bound to a real-time CPU. If no scheduler affinity was
+	 * given, assign the timer to the scheduler slot of the
+	 * current CPU if real-time, otherwise default to the
+	 * scheduler slot of the first real-time CPU.
 	 */
-	if (thread)
-		timer->sched = thread->sched;
+	if (sched)
+		timer->sched = sched;
 	else {
 		cpu = ipipe_processor_id();
 		if (!xnsched_supported_cpu(cpu))

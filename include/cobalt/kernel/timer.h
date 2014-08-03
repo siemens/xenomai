@@ -312,7 +312,7 @@ static inline int xntimer_periodic_p(struct xntimer *timer)
 void __xntimer_init(struct xntimer *timer,
 		    struct xnclock *clock,
 		    void (*handler)(struct xntimer *timer),
-		    struct xnthread *thread,
+		    struct xnsched *sched,
 		    int flags);
 
 void xntimer_set_gravity(struct xntimer *timer,
@@ -320,9 +320,9 @@ void xntimer_set_gravity(struct xntimer *timer,
 
 #ifdef CONFIG_XENO_OPT_STATS
 
-#define xntimer_init(__timer, __clock, __handler, __thread, __flags)	\
+#define xntimer_init(__timer, __clock, __handler, __sched, __flags)	\
 do {									\
-	__xntimer_init(__timer, __clock, __handler, __thread, __flags);	\
+	__xntimer_init(__timer, __clock, __handler, __sched, __flags);	\
 	xntimer_set_name(__timer, #__handler);				\
 } while (0)
 

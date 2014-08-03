@@ -43,7 +43,7 @@ EXPORT_SYMBOL_GPL(cobalt_timer_handler);
 
 static inline struct cobalt_thread *
 timer_init(struct cobalt_timer *timer,
-	   const struct sigevent *__restrict__ evp)
+	   const struct sigevent *__restrict__ evp) /* nklocked, IRQs off. */
 {
 	struct cobalt_thread *owner = cobalt_current_thread(), *target = NULL;
 
@@ -85,7 +85,7 @@ timer_init(struct cobalt_timer *timer,
 	 * want to deliver a signal when a timer elapses.
 	 */
 	xntimer_init(&timer->timerbase, &nkclock, cobalt_timer_handler,
-		     &target->threadbase, XNTIMER_UGRAVITY);
+		     xnthread_sched(&target->threadbase), XNTIMER_UGRAVITY);
 
 	return target;
 }
@@ -346,7 +346,7 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 	 * Make the timer affine to the CPU running the thread to be
 	 * signaled.
 	 */
-	xntimer_set_sched(&timer->timerbase, thread->threadbase.sched);
+	xntimer_set_sched(&timer->timerbase, xnthread_sched(&thread->threadbase));
 
 	return cobalt_xntimer_settime(&timer->timerbase,
 				clock_flag(flags, timer->clockid), value);

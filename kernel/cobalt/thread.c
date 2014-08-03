@@ -141,7 +141,7 @@ int __xnthread_init(struct xnthread *thread,
 		    struct xnsched_class *sched_class,
 		    const union xnsched_policy_param *sched_param)
 {
-	int flags = attr->flags, ret;
+	int flags = attr->flags, ret, gravity;
 	spl_t s;
 
 	flags &= ~XNSUSP;
@@ -187,14 +187,14 @@ int __xnthread_init(struct xnthread *thread,
 	thread->entry = NULL;
 	thread->cookie = NULL;
 
-	xntimer_init(&thread->rtimer, &nkclock, timeout_handler, thread,
-		     xnthread_test_state(thread, XNUSER) ?
-		     XNTIMER_UGRAVITY : XNTIMER_KGRAVITY);
+	gravity = xnthread_test_state(thread, XNUSER) ?
+		XNTIMER_UGRAVITY : XNTIMER_KGRAVITY;
+	xntimer_init(&thread->rtimer, &nkclock, timeout_handler,
+		     sched, gravity);
 	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, &nkclock, periodic_handler, thread,
-		     xnthread_test_state(thread, XNUSER) ?
-		     XNTIMER_UGRAVITY : XNTIMER_KGRAVITY);
+	xntimer_init(&thread->ptimer, &nkclock, periodic_handler,
+		     sched, gravity);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
