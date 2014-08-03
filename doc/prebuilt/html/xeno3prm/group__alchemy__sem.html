@@ -217,11 +217,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned if the object cannot be retrieved within the specified amount of time.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>timeout</em> equals TM_NONBLOCK.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -244,7 +240,7 @@ Functions</h2></td></tr>
 <p>All tasks currently waiting on the semaphore are immediately unblocked. The semaphore count is set to zero.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to broadcast.</td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -252,7 +248,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>sem</em> is not a valid semaphore descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -314,11 +310,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered semaphore.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Semaphores can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__sem.html#gaa156922a223af72f82168d17e844488c">S_PRIO</a>.</p>
@@ -343,7 +335,7 @@ Functions</h2></td></tr>
 <p>This routine deletes a semaphore previously created by a call to <a class="el" href="group__alchemy__sem.html#gaba36e3ac8972ea74feb60640e58d1ceb" title="Create a counting semaphore. ">rt_sem_create()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the deleted object.</td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -352,11 +344,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>sem</em> is not a valid semaphore descriptor.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -388,7 +376,7 @@ Functions</h2></td></tr>
 <p>This routine returns the status information about the specified semaphore.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to get the status of.</td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
     <tr><td class="paramname">info</td><td>A pointer to the <a class="el" href="structRT__SEM__INFO.html">return</a>buffer" to copy the information to.</td></tr>
   </table>
   </dd>
@@ -397,7 +385,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>sem</em> is not a valid semaphore descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 <p>References <a class="el" href="structRT__SEM__INFO.html#a0b0e81f66b4e936c603f18bf9641a24b">RT_SEM_INFO::count</a>, <a class="el" href="structRT__SEM__INFO.html#a661011cc10b4fabf562b8ddd92d5dd46">RT_SEM_INFO::name</a>, and <a class="el" href="structRT__SEM__INFO.html#a456c1a4a5b4c2e192e74b23b79993e71">RT_SEM_INFO::nwaiters</a>.</p>
 
@@ -439,11 +427,12 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__sem.html#gabe37d9f5900d80cdb5f729050b74482d" title="Pend on a semaphore. ">rt_sem_p_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to wait on.</td></tr>
-    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
+    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__sem.html#gabe37d9f5900d80cdb5f729050b74482d">rt_sem_p_timed()</a>.</p>
 
@@ -477,7 +466,7 @@ Functions</h2></td></tr>
 <p>Test and decrement the semaphore count. If the semaphore value is greater than zero, it is decremented by one and the service immediately returns to the caller. Otherwise, the caller is blocked until the semaphore is either signaled or destroyed, unless a non-blocking operation was required.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to wait on.</td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
     <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks, specifying a time limit to wait for the request to be satisfied (see note). Passing NULL causes the caller to block indefinitely until the request is satisfied. Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service to return without blocking in case the request cannot be satisfied immediately.</td></tr>
   </table>
   </dd>
@@ -491,11 +480,7 @@ Functions</h2></td></tr>
 <li>-EIDRM is returned if <em>sem</em> is deleted while the caller was sleeping on it. In such a case, <em>sem</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>abs_timeout</em> is { .tv_sec = 0, .tv_nsec = 0 }.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__sem.html#gadd299dfe4a53194870bf4e158ca89d1f">rt_sem_p()</a>, and <a class="el" href="group__alchemy__sem.html#gac481c1f1a2184a998deb2110f2c5b04d">rt_sem_p_until()</a>.</p>
@@ -538,11 +523,12 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__sem.html#gabe37d9f5900d80cdb5f729050b74482d" title="Pend on a semaphore. ">rt_sem_p_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to wait on.</td></tr>
-    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__sem.html#gabe37d9f5900d80cdb5f729050b74482d">rt_sem_p_timed()</a>.</p>
 
@@ -565,11 +551,12 @@ Functions</h2></td></tr>
 <p>Unbind from a semaphore. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to unbind from.</td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This routine releases a previous binding to a semaphore. After this call has returned, the descriptor is no more valid for referencing this object. </p>
+<p>This routine releases a previous binding to a semaphore. After this call has returned, the descriptor is no more valid for referencing this object.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -591,7 +578,7 @@ Functions</h2></td></tr>
 <p>If the semaphore is pended, the task heading the wait queue is immediately unblocked. Otherwise, the semaphore count is incremented by one, unless the semaphore is used in "pulse" mode (see <a class="el" href="group__alchemy__sem.html#gaba36e3ac8972ea74feb60640e58d1ceb" title="Create a counting semaphore. ">rt_sem_create()</a>).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">sem</td><td>The descriptor address of the semaphore to signal.</td></tr>
+    <tr><td class="paramname">sem</td><td>The semaphore descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -599,7 +586,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>sem</em> is not a valid semaphore descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>

@@ -110,83 +110,82 @@ $(document).ready(function(){initNavTree('include_2alchemy_2cond_8h_source.html'
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> * License along with this library; if not, write to the Free Software</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#ifndef _XENOMAI_ALCHEMY_COND_H</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_COND_H</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;alchemy/mutex.h&gt;</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">struct </span>RT_COND {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;        uintptr_t handle;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;};</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_COND RT_COND;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="structRT__COND__INFO.html">   44</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a> {</div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">   48</a></span>&#160;        <span class="keywordtype">char</span> <a class="code" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">name</a>[XNOBJECT_NAME_LEN];</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;};</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a> <a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a>;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create</a>(RT_COND *cond,</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                   <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">name</a>);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete</a>(RT_COND *cond);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#gab7a59ee47db48a78ca45e4655b569dc9">rt_cond_signal</a>(RT_COND *cond);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga37c6424e266f5c1df3439116dd429878">rt_cond_broadcast</a>(RT_COND *cond);</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a>(RT_COND *cond,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                       RT_MUTEX *mutex,</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                       <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">   70</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">rt_cond_wait_until</a>(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;{</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a>(cond, mutex,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                                  alchemy_abs_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;}</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">   78</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">rt_cond_wait</a>(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;{</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a>(cond, mutex,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                                  alchemy_rel_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;}</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#gacc9f69ed63fbc3578408cecb2bad9d2a">rt_cond_inquire</a>(RT_COND *cond,</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                    <a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a> *info);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga74f22144e9e407980ba89bf11f01c277">rt_cond_bind</a>(RT_COND *cond,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga4d271775d228ae576d8174782931b09d">rt_cond_unbind</a>(RT_COND *cond);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_COND_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__alchemy__cond_html_ga04646a121e57765848eb2a51ed6be855"><div class="ttname"><a href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create</a></div><div class="ttdeci">int rt_cond_create(RT_COND *cond, const char *name)</div><div class="ttdoc">Create a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:109</div></div>
-<div class="ttc" id="group__alchemy__cond_html_gacc9f69ed63fbc3578408cecb2bad9d2a"><div class="ttname"><a href="group__alchemy__cond.html#gacc9f69ed63fbc3578408cecb2bad9d2a">rt_cond_inquire</a></div><div class="ttdeci">int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)</div><div class="ttdoc">Query condition variable status. </div><div class="ttdef"><b>Definition:</b> cond.c:406</div></div>
-<div class="ttc" id="group__alchemy__cond_html_ga3aa51073817be2ffb2a880a7393502e8"><div class="ttname"><a href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">rt_cond_wait</a></div><div class="ttdeci">static int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Wait on a condition variable (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> cond.h:78</div></div>
-<div class="ttc" id="group__alchemy__cond_html_ga25e1741d8238ad7cc4206c7e4bb13d8c"><div class="ttname"><a href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">rt_cond_wait_until</a></div><div class="ttdeci">static int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Wait on a condition variable (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> cond.h:70</div></div>
-<div class="ttc" id="group__alchemy__cond_html_gab7a59ee47db48a78ca45e4655b569dc9"><div class="ttname"><a href="group__alchemy__cond.html#gab7a59ee47db48a78ca45e4655b569dc9">rt_cond_signal</a></div><div class="ttdeci">int rt_cond_signal(RT_COND *cond)</div><div class="ttdoc">Signal a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:236</div></div>
-<div class="ttc" id="structRT__COND__INFO_html"><div class="ttname"><a href="structRT__COND__INFO.html">RT_COND_INFO</a></div><div class="ttdoc">Condition variable status descriptor. </div><div class="ttdef"><b>Definition:</b> cond.h:44</div></div>
-<div class="ttc" id="group__alchemy__cond_html_gaba59b188f10b142b4f2500dd719aa35f"><div class="ttname"><a href="group__alchemy__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete</a></div><div class="ttdeci">int rt_cond_delete(RT_COND *cond)</div><div class="ttdoc">Delete a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:190</div></div>
-<div class="ttc" id="group__alchemy__cond_html_ga4d4999ec038366ee18ddac6550371388"><div class="ttname"><a href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a></div><div class="ttdeci">int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex, const struct timespec *abs_timeout)</div><div class="ttdoc">Wait on a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:358</div></div>
-<div class="ttc" id="structRT__COND__INFO_html_aa7e2c2d2972771e651d6327c9192c425"><div class="ttname"><a href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">RT_COND_INFO::name</a></div><div class="ttdeci">char name[XNOBJECT_NAME_LEN]</div><div class="ttdoc">Name of condition variable. </div><div class="ttdef"><b>Definition:</b> cond.h:48</div></div>
-<div class="ttc" id="group__alchemy__cond_html_ga37c6424e266f5c1df3439116dd429878"><div class="ttname"><a href="group__alchemy__cond.html#ga37c6424e266f5c1df3439116dd429878">rt_cond_broadcast</a></div><div class="ttdeci">int rt_cond_broadcast(RT_COND *cond)</div><div class="ttdoc">Broadcast a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:265</div></div>
-<div class="ttc" id="group__alchemy__cond_html_ga74f22144e9e407980ba89bf11f01c277"><div class="ttname"><a href="group__alchemy__cond.html#ga74f22144e9e407980ba89bf11f01c277">rt_cond_bind</a></div><div class="ttdeci">int rt_cond_bind(RT_COND *cond, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:467</div></div>
-<div class="ttc" id="group__alchemy__cond_html_ga4d271775d228ae576d8174782931b09d"><div class="ttname"><a href="group__alchemy__cond.html#ga4d271775d228ae576d8174782931b09d">rt_cond_unbind</a></div><div class="ttdeci">int rt_cond_unbind(RT_COND *cond)</div><div class="ttdoc">Unbind from a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:488</div></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#ifndef _XENOMAI_ALCHEMY_COND_H</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_COND_H</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;alchemy/mutex.h&gt;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keyword">struct </span>RT_COND {</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        uintptr_t handle;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;};</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_COND RT_COND;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="structRT__COND__INFO.html">   43</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a> {</div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">   47</a></span>&#160;        <span class="keywordtype">char</span> <a class="code" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">name</a>[XNOBJECT_NAME_LEN];</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;};</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a> <a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a>;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create</a>(RT_COND *cond,</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                   <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">name</a>);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete</a>(RT_COND *cond);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#gab7a59ee47db48a78ca45e4655b569dc9">rt_cond_signal</a>(RT_COND *cond);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga37c6424e266f5c1df3439116dd429878">rt_cond_broadcast</a>(RT_COND *cond);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a>(RT_COND *cond,</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                       RT_MUTEX *mutex,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                       <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">   69</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">rt_cond_wait_until</a>(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;{</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a>(cond, mutex,</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                                  alchemy_abs_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;}</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">   77</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">rt_cond_wait</a>(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;{</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a>(cond, mutex,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                                  alchemy_rel_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;}</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#gacc9f69ed63fbc3578408cecb2bad9d2a">rt_cond_inquire</a>(RT_COND *cond,</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                    <a class="code" href="structRT__COND__INFO.html">RT_COND_INFO</a> *info);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga74f22144e9e407980ba89bf11f01c277">rt_cond_bind</a>(RT_COND *cond,</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__cond.html#ga4d271775d228ae576d8174782931b09d">rt_cond_unbind</a>(RT_COND *cond);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_COND_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__alchemy__cond_html_ga04646a121e57765848eb2a51ed6be855"><div class="ttname"><a href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create</a></div><div class="ttdeci">int rt_cond_create(RT_COND *cond, const char *name)</div><div class="ttdoc">Create a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:106</div></div>
+<div class="ttc" id="group__alchemy__cond_html_gacc9f69ed63fbc3578408cecb2bad9d2a"><div class="ttname"><a href="group__alchemy__cond.html#gacc9f69ed63fbc3578408cecb2bad9d2a">rt_cond_inquire</a></div><div class="ttdeci">int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)</div><div class="ttdoc">Query condition variable status. </div><div class="ttdef"><b>Definition:</b> cond.c:397</div></div>
+<div class="ttc" id="group__alchemy__cond_html_ga3aa51073817be2ffb2a880a7393502e8"><div class="ttname"><a href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8">rt_cond_wait</a></div><div class="ttdeci">static int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Wait on a condition variable (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> cond.h:77</div></div>
+<div class="ttc" id="group__alchemy__cond_html_ga25e1741d8238ad7cc4206c7e4bb13d8c"><div class="ttname"><a href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c">rt_cond_wait_until</a></div><div class="ttdeci">static int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Wait on a condition variable (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> cond.h:69</div></div>
+<div class="ttc" id="group__alchemy__cond_html_gab7a59ee47db48a78ca45e4655b569dc9"><div class="ttname"><a href="group__alchemy__cond.html#gab7a59ee47db48a78ca45e4655b569dc9">rt_cond_signal</a></div><div class="ttdeci">int rt_cond_signal(RT_COND *cond)</div><div class="ttdoc">Signal a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:230</div></div>
+<div class="ttc" id="structRT__COND__INFO_html"><div class="ttname"><a href="structRT__COND__INFO.html">RT_COND_INFO</a></div><div class="ttdoc">Condition variable status descriptor. </div><div class="ttdef"><b>Definition:</b> cond.h:43</div></div>
+<div class="ttc" id="group__alchemy__cond_html_gaba59b188f10b142b4f2500dd719aa35f"><div class="ttname"><a href="group__alchemy__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete</a></div><div class="ttdeci">int rt_cond_delete(RT_COND *cond)</div><div class="ttdoc">Delete a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:184</div></div>
+<div class="ttc" id="group__alchemy__cond_html_ga4d4999ec038366ee18ddac6550371388"><div class="ttname"><a href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed</a></div><div class="ttdeci">int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex, const struct timespec *abs_timeout)</div><div class="ttdoc">Wait on a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:350</div></div>
+<div class="ttc" id="structRT__COND__INFO_html_aa7e2c2d2972771e651d6327c9192c425"><div class="ttname"><a href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">RT_COND_INFO::name</a></div><div class="ttdeci">char name[XNOBJECT_NAME_LEN]</div><div class="ttdoc">Name of condition variable. </div><div class="ttdef"><b>Definition:</b> cond.h:47</div></div>
+<div class="ttc" id="group__alchemy__cond_html_ga37c6424e266f5c1df3439116dd429878"><div class="ttname"><a href="group__alchemy__cond.html#ga37c6424e266f5c1df3439116dd429878">rt_cond_broadcast</a></div><div class="ttdeci">int rt_cond_broadcast(RT_COND *cond)</div><div class="ttdoc">Broadcast a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:258</div></div>
+<div class="ttc" id="group__alchemy__cond_html_ga74f22144e9e407980ba89bf11f01c277"><div class="ttname"><a href="group__alchemy__cond.html#ga74f22144e9e407980ba89bf11f01c277">rt_cond_bind</a></div><div class="ttdeci">int rt_cond_bind(RT_COND *cond, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:455</div></div>
+<div class="ttc" id="group__alchemy__cond_html_ga4d271775d228ae576d8174782931b09d"><div class="ttname"><a href="group__alchemy__cond.html#ga4d271775d228ae576d8174782931b09d">rt_cond_unbind</a></div><div class="ttdeci">int rt_cond_unbind(RT_COND *cond)</div><div class="ttdoc">Unbind from a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:477</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -111,7 +111,7 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="rtdm_2uapi_2ipc_8h__dep__incl.png" border="0" usemap="#include_2rtdm_2uapi_2ipc_8hdep" alt=""/></div>
 <map name="include_2rtdm_2uapi_2ipc_8hdep" id="include_2rtdm_2uapi_2ipc_8hdep">
-<area shape="rect" id="node2" href="cobalt_2kernel_2rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="5,81,147,122"/><area shape="rect" id="node3" href="rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="171,88,296,115"/></map>
+<area shape="rect" id="node2" href="cobalt_2kernel_2rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="5,81,147,122"/><area shape="rect" id="node3" href="rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="171,88,296,115"/><area shape="rect" id="node4" href="rtipc_8h_source.html" title="include/trank/rtdm\l/rtipc.h" alt="" coords="170,171,296,213"/></map>
 </div>
 </div>
 <p><a href="rtdm_2uapi_2ipc_8h_source.html">Go to the source code of this file.</a></p>
@@ -179,7 +179,7 @@ Macros</h2></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="sockopts_socket"></a>Setting and getting supported standard socket level options. </p>
 </div></td></tr>
 <tr class="memitem:gab9d2f7ca5c94bd51cdab3e1913b66e2d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__ipc.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d">SO_SNDTIMEO</a>&#160;&#160;&#160;defined_by_kernel_header_file</td></tr>
-<tr class="memdesc:gab9d2f7ca5c94bd51cdab3e1913b66e2d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> and <a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8afb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> protocols support the standard SO_SNDTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtdm__ipc.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d">More...</a><br/></td></tr>
+<tr class="memdesc:gab9d2f7ca5c94bd51cdab3e1913b66e2d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fa7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> and <a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fafb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> protocols support the standard SO_SNDTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtdm__ipc.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d">More...</a><br/></td></tr>
 <tr class="separator:gab9d2f7ca5c94bd51cdab3e1913b66e2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf2d1ed6a34336a6f3df80fb518325846"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__ipc.html#gaf2d1ed6a34336a6f3df80fb518325846">SO_RCVTIMEO</a>&#160;&#160;&#160;defined_by_kernel_header_file</td></tr>
 <tr class="memdesc:gaf2d1ed6a34336a6f3df80fb518325846"><td class="mdescLeft">&#160;</td><td class="mdescRight">All RTIPC protocols support the standard SO_RCVTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtdm__ipc.html#gaf2d1ed6a34336a6f3df80fb518325846">More...</a><br/></td></tr>
@@ -197,12 +197,12 @@ Enumerations</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">RTIPC protocol list</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="RTIPC_PROTO"></a>protocols for the PF_RTIPC protocol family </p>
 </div></td></tr>
-<tr class="memitem:gaabfcbcb5ac86a1edac4035264bc7d2b8"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a9a5b551f46faa3b63b002fdde789e2ba">IPCPROTO_IPC</a> = 0, 
-<a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a> = 1, 
-<a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> = 2, 
-<a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8afb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> = 3
+<tr class="memitem:ga5d76b81b0ad4c19007a781d4edb8181f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fa9a5b551f46faa3b63b002fdde789e2ba">IPCPROTO_IPC</a> = 0, 
+<a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fa28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a> = 1, 
+<a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fa7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> = 2, 
+<a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fafb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> = 3
  }</td></tr>
-<tr class="separator:gaabfcbcb5ac86a1edac4035264bc7d2b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ga5d76b81b0ad4c19007a781d4edb8181f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>

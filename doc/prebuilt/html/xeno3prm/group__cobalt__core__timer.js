@@ -8,7 +8,7 @@ var group__cobalt__core__timer =
     [ "xntimer_get_overruns", "group__cobalt__core__timer.html#ga43632fbc3c902df8a710c3d85ca7457c", null ],
     [ "xntimer_get_timeout", "group__cobalt__core__timer.html#gafcacfa3e2ac39463f57384fb14afa23f", null ],
     [ "xntimer_grab_hardware", "group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76", null ],
-    [ "xntimer_init", "group__cobalt__core__timer.html#ga3c25be3c6ab8c5813eaaee16c584177c", null ],
+    [ "xntimer_init", "group__cobalt__core__timer.html#ga78acf0c1a448654388fb480a287e4269", null ],
     [ "xntimer_interval", "group__cobalt__core__timer.html#gaf378e71fd5fd53fd220ab609c950fc47", null ],
     [ "xntimer_release_hardware", "group__cobalt__core__timer.html#gabdff54d0fa60013e63dffdd6c7334a03", null ],
     [ "xntimer_start", "group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b", null ],

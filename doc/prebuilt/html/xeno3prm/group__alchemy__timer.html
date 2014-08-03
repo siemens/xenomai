@@ -175,11 +175,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>This service always returns 0.</dd></dl>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 <p>References <a class="el" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">rt_timer_info::date</a>, <a class="el" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">rt_timer_info::period</a>, and <a class="el" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">rt_timer_info::tsc</a>.</p>
 
@@ -208,11 +204,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The corresponding value expressed in clock ticks of the Alchemy clock. The resolution of the Alchemy clock can be set using the &ndash;alchemy-clock-resolution option when starting the application process (defaults to 1 nanosecond).</dd></dl>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a7">cross-link.c</a>, and <a class="el" href="rtcansend_8c-example.html#a4">rtcansend.c</a>.</dd>
 </dl>
 </div>
@@ -234,11 +226,7 @@ Functions</h2></td></tr>
 <p>Return the current system time. </p>
 <p>Return the current time maintained by the Xenomai core clock.</p>
 <dl class="section return"><dt>Returns</dt><dd>The current time expressed in clock ticks (see note).</dd></dl>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>time</em> value is a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a9">cross-link.c</a>.</dd>
 </dl>
@@ -267,11 +255,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -298,11 +282,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The corresponding value expressed in nanoseconds. The resolution of the Alchemy clock can be set using the &ndash;alchemy-clock-resolution option when starting the application process (defaults to 1 nanosecond).</dd></dl>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>

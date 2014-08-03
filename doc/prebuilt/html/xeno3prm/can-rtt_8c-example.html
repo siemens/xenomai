@@ -191,7 +191,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    frame.can_dlc = <span class="keyword">sizeof</span>(*rtt_time);</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#ifdef CONFIG_XENO_COBALT</span></div>
-<div class="line"><span class="preprocessor"></span>    <a name="a2"></a><a class="code" href="group__cobalt__api__thread.html#ga414a759c928f7be7ac105980d8e73431">pthread_set_name_np</a>(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_transmitter&quot;</span>);</div>
+<div class="line"><span class="preprocessor"></span>    <a name="a2"></a><a class="code" href="group__cobalt__api__thread.html#gaa21465e084e7185bfbb94bb50d60cd08">pthread_setname_np</a>(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_transmitter&quot;</span>);</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
 <div class="line"><span class="preprocessor"></span>    <a name="a3"></a><a class="code" href="group__cobalt__api__sched.html#ga14f50e1f5d815c90f1f4225eca5d3a8c">pthread_setschedparam</a>(pthread_self(), SCHED_FIFO, &amp;param);</div>
 <div class="line"></div>
@@ -237,7 +237,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">                                0, 0, 0};</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#ifdef CONFIG_XENO_COBALT</span></div>
-<div class="line"><span class="preprocessor"></span>    <a class="code" href="group__cobalt__api__thread.html#ga414a759c928f7be7ac105980d8e73431">pthread_set_name_np</a>(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_receiver&quot;</span>);</div>
+<div class="line"><span class="preprocessor"></span>    <a class="code" href="group__cobalt__api__thread.html#gaa21465e084e7185bfbb94bb50d60cd08">pthread_setname_np</a>(pthread_self(), <span class="stringliteral">&quot;rtcan_rtt_receiver&quot;</span>);</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
 <div class="line"><span class="preprocessor"></span>    <a class="code" href="group__cobalt__api__sched.html#ga14f50e1f5d815c90f1f4225eca5d3a8c">pthread_setschedparam</a>(pthread_self(), SCHED_FIFO, &amp;param);</div>
 <div class="line"></div>

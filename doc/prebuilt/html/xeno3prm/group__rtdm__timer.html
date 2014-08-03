@@ -302,7 +302,7 @@ RTDM_TIMERMODE_xxx</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-ETIMEDOUT is returned if <code>expiry</code> describes an absolute date in the past.</li>
+<li>-ETIMEDOUT is returned if <code>expiry</code> describes an absolute date in the past. In such an event, the timer is nevertheless armed for the next shot in the timeline if <em>interval</em> is non-zero.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
 

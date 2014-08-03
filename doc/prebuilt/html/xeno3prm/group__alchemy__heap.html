@@ -211,7 +211,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Allocate a block from a heap (with relative scalar timeout). </p>
-<p>This routine is a variant of <a class="el" href="group__alchemy__heap.html#ga4ca496fa6b36c12f9728e4104ce3f017" title="Allocate a block from a heap. ">rt_heap_alloc_timed()</a> accepting a relative timeout specification expressed as a scalar value. </p>
+<p>This routine is a variant of <a class="el" href="group__alchemy__heap.html#ga4ca496fa6b36c12f9728e4104ce3f017" title="Allocate a block from a heap. ">rt_heap_alloc_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__heap.html#ga4ca496fa6b36c12f9728e4104ce3f017">rt_heap_alloc_timed()</a>.</p>
 
@@ -257,7 +258,7 @@ Functions</h2></td></tr>
 <p>This service allocates a block from a given heap, or returns the address of the single memory segment if H_SINGLE was mentioned in the creation mode to <a class="el" href="group__alchemy__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4" title="Create a heap. ">rt_heap_create()</a>. When not enough memory is available on entry to this service, tasks may be blocked until their allocation request can be fulfilled.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">heap</td><td>The descriptor address of the heap to allocate from.</td></tr>
+    <tr><td class="paramname">heap</td><td>The heap descriptor.</td></tr>
     <tr><td class="paramname">size</td><td>The requested size (in bytes) of the block. If the heap is managed as a single-block area (H_SINGLE), this value can be either zero, or the same value given to <a class="el" href="group__alchemy__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4" title="Create a heap. ">rt_heap_create()</a>. In that case, the same block covering the entire heap space is returned to all callers of this service.</td></tr>
     <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks, specifying a time limit to wait for a block of the requested size to be available from the heap (see note). Passing NULL causes the caller to block indefinitely until a block is available. Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service to return immediately without blocking in case not block is available.</td></tr>
     <tr><td class="paramname">blockp</td><td>A pointer to a memory location which will be written upon success with the address of the allocated block, or the start address of the single memory segment. In the former case, the block can be freed using <a class="el" href="group__alchemy__heap.html#ga300ca8c868d02dad99790fe39b443f6f" title="Release a block to a heap. ">rt_heap_free()</a>.</td></tr>
@@ -273,11 +274,7 @@ Functions</h2></td></tr>
 <li>-EIDRM is returned if <em>heap</em> is deleted while the caller was waiting for a block. In such event, <em>heap</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>abs_timeout</em> is { .tv_sec = 0, .tv_nsec = 0 }.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__heap.html#ga52678149ff2b66e47aa8cdcddab653a4">rt_heap_alloc()</a>, and <a class="el" href="group__alchemy__heap.html#ga1c06c617f85bb803676aa79273023454">rt_heap_alloc_until()</a>.</p>
@@ -329,7 +326,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Allocate a block from a heap (with absolute scalar timeout). </p>
-<p>This routine is a variant of <a class="el" href="group__alchemy__heap.html#ga4ca496fa6b36c12f9728e4104ce3f017" title="Allocate a block from a heap. ">rt_heap_alloc_timed()</a> accepting an absolute timeout specification expressed as a scalar value. </p>
+<p>This routine is a variant of <a class="el" href="group__alchemy__heap.html#ga4ca496fa6b36c12f9728e4104ce3f017" title="Allocate a block from a heap. ">rt_heap_alloc_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__heap.html#ga4ca496fa6b36c12f9728e4104ce3f017">rt_heap_alloc_timed()</a>.</p>
 
@@ -382,11 +380,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned if the object cannot be retrieved within the specified amount of time.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>timeout</em> equals TM_NONBLOCK.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -451,11 +445,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered heap.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Heaps can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__heap.html#ga03f467dfa5ca3efba8265b75ac122254">H_PRIO</a>.</p>
@@ -480,7 +470,7 @@ Functions</h2></td></tr>
 <p>This routine deletes a heap object previously created by a call to <a class="el" href="group__alchemy__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4" title="Create a heap. ">rt_heap_create()</a>, releasing all tasks currently blocked on it.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">heap</td><td>The descriptor address of the deleted heap.</td></tr>
+    <tr><td class="paramname">heap</td><td>The heap descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -489,11 +479,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>heap</em> is not a valid heap descriptor.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -525,7 +511,7 @@ Functions</h2></td></tr>
 <p>This service should be used to release a block to the heap it belongs to. An attempt to fulfill the request of every task blocked on <a class="el" href="group__alchemy__heap.html#ga52678149ff2b66e47aa8cdcddab653a4" title="Allocate a block from a heap (with relative scalar timeout). ">rt_heap_alloc()</a> is made once <em>block</em> is returned to the memory pool.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">heap</td><td>The descriptor address of the heap to release the block to.</td></tr>
+    <tr><td class="paramname">heap</td><td>The heap descriptor.</td></tr>
     <tr><td class="paramname">block</td><td>The address of the block to free.</td></tr>
   </table>
   </dd>
@@ -534,7 +520,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>heap</em> is not a valid heap descriptor, or <em>block</em> is not a valid block previously allocated by the <a class="el" href="group__alchemy__heap.html#ga52678149ff2b66e47aa8cdcddab653a4" title="Allocate a block from a heap (with relative scalar timeout). ">rt_heap_alloc()</a> service from <em>heap</em>.</li>
 </ul>
-<p>Valid calling contexts: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -566,7 +552,7 @@ Functions</h2></td></tr>
 <p>This routine returns the status information about <em>heap</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">heap</td><td>The descriptor address of the heap to get the status of.</td></tr>
+    <tr><td class="paramname">heap</td><td>The heap descriptor.</td></tr>
     <tr><td class="paramname">info</td><td>A pointer to the <a class="el" href="structRT__HEAP__INFO.html#RT_HEAP_INFO">return</a>buffer" to copy the information to.</td></tr>
   </table>
   </dd>
@@ -575,7 +561,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>heap</em> is not a valid heap descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="structRT__HEAP__INFO.html#ab2ffdb8f24680e5b31565c1c67dc0d47">RT_HEAP_INFO::heapsize</a>, <a class="el" href="structRT__HEAP__INFO.html#a4cdd30f308e5e09871b87755ca5224d3">RT_HEAP_INFO::name</a>, <a class="el" href="structRT__HEAP__INFO.html#a02db2cbfe67efccd1dc849d489db533a">RT_HEAP_INFO::nwaiters</a>, <a class="el" href="structRT__HEAP__INFO.html#adf0c5f124ab3e315664507c6a89d2dab">RT_HEAP_INFO::usablemem</a>, and <a class="el" href="structRT__HEAP__INFO.html#a8f53bac1667b14a7f05108c2a3802f54">RT_HEAP_INFO::usedmem</a>.</p>
 
@@ -598,11 +584,12 @@ Functions</h2></td></tr>
 <p>Unbind from a heap. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">heap</td><td>The descriptor address of the heap to unbind from.</td></tr>
+    <tr><td class="paramname">heap</td><td>The heap descriptor.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This routine releases a previous binding to a heap. After this call has returned, the descriptor is no more valid for referencing this object. </p>
+<p>This routine releases a previous binding to a heap. After this call has returned, the descriptor is no more valid for referencing this object.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>

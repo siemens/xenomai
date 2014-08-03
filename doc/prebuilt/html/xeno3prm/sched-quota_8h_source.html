@@ -134,50 +134,52 @@ $(document).ready(function(){initNavTree('sched-quota_8h_source.html','');});
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        xnticks_t run_start_ns;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        xnticks_t run_budget_ns;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        xnticks_t run_credit_ns;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keyword">struct </span>list_head expired;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keyword">struct </span>list_head next;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keywordtype">int</span> nr_active;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordtype">int</span> nr_threads;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keywordtype">int</span> tgid;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        <span class="keywordtype">int</span> quota_percent;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <span class="keywordtype">int</span> quota_peak_percent;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;};</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">struct </span>xnsched_quota {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        xnticks_t period_ns;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keyword">struct </span>xntimer refill_timer;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keyword">struct </span>xntimer limit_timer;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keyword">struct </span>list_head groups;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;};</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnsched_quota_init_thread(<span class="keyword">struct</span> xnthread *thread)</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;{</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        thread-&gt;quota = NULL;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        INIT_LIST_HEAD(&amp;thread-&gt;quota_expired);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;}</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">int</span> xnsched_quota_create_group(<span class="keyword">struct</span> xnsched_quota_group *tg,</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                               <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched,</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                               <span class="keywordtype">int</span> *quota_sum_r);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keywordtype">int</span> xnsched_quota_destroy_group(<span class="keyword">struct</span> xnsched_quota_group *tg,</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                                <span class="keywordtype">int</span> *quota_sum_r);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keywordtype">void</span> xnsched_quota_set_limit(<span class="keyword">struct</span> xnsched_quota_group *tg,</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                             <span class="keywordtype">int</span> quota_percent, <span class="keywordtype">int</span> quota_peak_percent,</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                             <span class="keywordtype">int</span> *quota_sum_r);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keyword">struct </span>xnsched_quota_group *</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;xnsched_quota_find_group(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched, <span class="keywordtype">int</span> tgid);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keywordtype">int</span> xnsched_quota_sum_all(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keyword">struct </span>list_head members;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keyword">struct </span>list_head expired;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keyword">struct </span>list_head next;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordtype">int</span> nr_active;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keywordtype">int</span> nr_threads;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        <span class="keywordtype">int</span> tgid;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <span class="keywordtype">int</span> quota_percent;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="keywordtype">int</span> quota_peak_percent;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;};</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">struct </span>xnsched_quota {</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        xnticks_t period_ns;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keyword">struct </span>xntimer refill_timer;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keyword">struct </span>xntimer limit_timer;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        <span class="keyword">struct </span>list_head groups;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;};</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnsched_quota_init_thread(<span class="keyword">struct</span> xnthread *thread)</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;{</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        thread-&gt;quota = NULL;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        INIT_LIST_HEAD(&amp;thread-&gt;quota_expired);</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;}</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keywordtype">int</span> xnsched_quota_create_group(<span class="keyword">struct</span> xnsched_quota_group *tg,</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                               <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                               <span class="keywordtype">int</span> *quota_sum_r);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keywordtype">int</span> xnsched_quota_destroy_group(<span class="keyword">struct</span> xnsched_quota_group *tg,</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                                <span class="keywordtype">int</span> force,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                                <span class="keywordtype">int</span> *quota_sum_r);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keywordtype">void</span> xnsched_quota_set_limit(<span class="keyword">struct</span> xnsched_quota_group *tg,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                             <span class="keywordtype">int</span> quota_percent, <span class="keywordtype">int</span> quota_peak_percent,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                             <span class="keywordtype">int</span> *quota_sum_r);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keyword">struct </span>xnsched_quota_group *</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;xnsched_quota_find_group(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched, <span class="keywordtype">int</span> tgid);</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_SCHED_QUOTA */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_SCHED_QUOTA_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:57</div></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keywordtype">int</span> xnsched_quota_sum_all(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_SCHED_QUOTA */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_SCHED_QUOTA_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:58</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

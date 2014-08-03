@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.8" />
-<title>Building and running applications with Xenomai 3.x</title>
+<title>Running applications with Xenomai 3.x</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -731,55 +731,18 @@ asciidoc.install(3);
 </head>
 <body class="article" style="max-width:55em">
 <div id="header">
-<h1>Building and running applications with Xenomai 3.x</h1>
+<h1>Running applications with Xenomai 3.x</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
 </div>
 </div>
 <div id="content">
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph"><p>The latest version of this document is available at
-<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.APPLICATIONS/">this address</a>.</p></div>
-<div class="paragraph"><p>Make sure to read the
-<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">installation
-document</a> before going through this one.</p></div>
-<div class="paragraph"><p>For questions, corrections and improvements, write to
-<a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
-</div>
-</div>
 <div class="sect1">
-<h2 id="_compiling_a_xenomai_application">1. Compiling a Xenomai application</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>You should use the <code>xeno-config</code> script to get the proper compilation
-and linker flags related to Xenomai, in order to build your
-application for whichever <em>Cobalt</em> or <em>Mercury</em> core.</p></div>
-<div class="paragraph"><p>Here is a trivial Makefile fragment retrieving the compiler and flags
-for building the single-file application <code>vxapp.c</code>, over the VxWorks
-emulation API:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><code>XENO_CONFIG := /usr/xenomai/bin/xeno-config
-CFLAGS := $(shell $(XENO_CONFIG) --vxworks --cflags)
-LDFLAGS := $(shell $(XENO_CONFIG) --vxworks --ldflags)
-CC := $(shell $(XENO_CONFIG) --cc)
-
-EXECUTABLE := vxapp
-
-all: $(EXECUTABLE)
-
-%: %.c
-        $(CC) -o $@ $&lt; $(CFLAGS) $(LDFLAGS)</code></pre>
-</div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_running_a_xenomai_application">2. Running a Xenomai application</h2>
+<h2 id="_running_a_xenomai_3_application">1. Running a Xenomai 3 application</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>For <em>Cobalt</em>, you will need the real-time core built into the target
-Linux kernel as described in
-<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">this
+Linux kernel as described in <a href="installing-xenomai-3-x">this
 document</a>.</p></div>
 <div class="paragraph"><p>For <em>Mercury</em>, you need no Xenomai-specific kernel support so far,
 beyond what your host Linux kernel already provides. Your kernel
@@ -819,8 +782,7 @@ default, i.e. <code>--alchemy-clock-resolution=1</code>.</p></div>
 <td class="content">Specifying a resolution greater than 1 nanosecond requires
 the low resolution clock support to be available from the Xenomai
 libraries (see the <code>--enable-lores-clock</code>
-<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">configuration
-switch</a>).</td>
+<a href="installing-xenomai-3-x">configuration switch</a>).</td>
 </tr></table>
 </div>
 <div class="dlist"><dl>
@@ -938,7 +900,7 @@ each process, e.g. <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code>. See
 </div>
 </div>
 <div class="sect1">
-<h2 id="_valgrind_support">3. Valgrind support</h2>
+<h2 id="_valgrind_support">2. Valgrind support</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Running Xenomai applications over <em>Valgrind</em> is currently available to
 the <em>Mercury</em> core only.</p></div>
@@ -955,15 +917,15 @@ the build system automatically, and define this symbol accordingly
 <td class="icon">
 <img src="../asciidoc-icons/note.png" alt="Note" />
 </td>
-<td class="content">You may need to install the Valgrind development package on your
-build system to provide for the core header files. For instance, such
+<td class="content">You may need to install the Valgrind development package on your build
+system to provide for the core header files. For instance, such
 package is called <em>valgrind-devel</em> on Fedora.</td>
 </tr></table>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_available_real_time_apis">4. Available real-time APIs</h2>
+<h2 id="_available_real_time_apis">3. Available real-time APIs</h2>
 <div class="sectionbody">
 <div class="hdlist"><table>
 <tr>
@@ -1010,7 +972,7 @@ package is called <em>valgrind-devel</em> on Fedora.</td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-05-27 15:38:31 CEST
+Last updated 2014-08-03 10:56:12 CEST
 </div>
 </div>
 </body>

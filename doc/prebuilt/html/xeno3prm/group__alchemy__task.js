@@ -6,7 +6,6 @@ var group__alchemy__task =
       [ "prio", "structRT__TASK__INFO.html#a632e09c1d8dabc29c020c828abf62ac6", null ],
       [ "stat", "structRT__TASK__INFO.html#ae327f3dca3f2ae89c8aa5bd0033ed4b0", null ]
     ] ],
-    [ "T_FPU", "group__alchemy__task.html#ga1c4a8a5416aa56141e0807e480c77949", null ],
     [ "T_LOCK", "group__alchemy__task.html#ga2ac6cf9677bae1012ecbcb6037d14fcb", null ],
     [ "T_LOPRIO", "group__alchemy__task.html#ga4b84dc0d444a96e1e417d480e803d32e", null ],
     [ "T_WARNSW", "group__alchemy__task.html#ga725324cb26d8b5835c0818acb738bfe6", null ],

@@ -97,7 +97,7 @@ Collaboration diagram for Timer services:</div>
 <div class="dyncontent">
 <center><table><tr><td><img src="group__cobalt__core__timer.png" border="0" alt="" usemap="#group____cobalt____core____timer"/>
 <map name="group____cobalt____core____timer" id="group____cobalt____core____timer">
-<area shape="rect" id="node2" href="group__cobalt__core.html" title="The Cobalt kernel implements generic RTOS building blocks. " alt="" coords="5,5,104,32"/></map>
+<area shape="rect" id="node2" href="group__cobalt__core.html" title="The Cobalt core is a co&#45;kernel which supplements the Linux kernel for delivering real&#45;time services w..." alt="" coords="5,5,104,32"/></map>
 </td></tr></table></center>
 </div>
 <table class="memberdecls">
@@ -121,9 +121,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop</a> (struct xntimer *timer)</td></tr>
 <tr class="memdesc:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disarm a timer.  <a href="#ga9aaa5a0dcfeb46e0e322fa7464fdb997">More...</a><br/></td></tr>
 <tr class="separator:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3c25be3c6ab8c5813eaaee16c584177c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga3c25be3c6ab8c5813eaaee16c584177c">xntimer_init</a> (struct xntimer *timer, struct xnclock *clock, void(*handler)(struct xntimer *timer), struct xnthread *thread)</td></tr>
-<tr class="memdesc:ga3c25be3c6ab8c5813eaaee16c584177c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga3c25be3c6ab8c5813eaaee16c584177c">More...</a><br/></td></tr>
-<tr class="separator:ga3c25be3c6ab8c5813eaaee16c584177c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga78acf0c1a448654388fb480a287e4269"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga78acf0c1a448654388fb480a287e4269">xntimer_init</a> (struct xntimer *timer, struct xnclock *clock, void(*handler)(struct xntimer *timer), struct xnthread *thread, int flags)</td></tr>
+<tr class="memdesc:ga78acf0c1a448654388fb480a287e4269"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga78acf0c1a448654388fb480a287e4269">More...</a><br/></td></tr>
+<tr class="separator:ga78acf0c1a448654388fb480a287e4269"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabcea9e49706bb130bb63ada53ec4bd87"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gabcea9e49706bb130bb63ada53ec4bd87">__xntimer_migrate</a> (struct xntimer *timer, struct <a class="el" href="structxnsched.html">xnsched</a> *sched)</td></tr>
 <tr class="memdesc:gabcea9e49706bb130bb63ada53ec4bd87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Migrate a timer.  <a href="#gabcea9e49706bb130bb63ada53ec4bd87">More...</a><br/></td></tr>
 <tr class="separator:gabcea9e49706bb130bb63ada53ec4bd87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -455,7 +455,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga3c25be3c6ab8c5813eaaee16c584177c"></a>
+<a class="anchor" id="ga78acf0c1a448654388fb480a287e4269"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -481,7 +481,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">struct xnthread *&#160;</td>
-          <td class="paramname"><em>thread</em>&#160;</td>
+          <td class="paramname"><em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -498,10 +504,20 @@ Functions</h2></td></tr>
     <tr><td class="paramname">timer</td><td>The address of a timer descriptor the nucleus will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
     <tr><td class="paramname">clock</td><td>The clock the timer relates to. Xenomai defines a monotonic system clock, with nanosecond resolution, named nkclock. In addition, external clocks driven by other tick sources may be created dynamically if CONFIG_XENO_OPT_EXTCLOCK is defined.</td></tr>
     <tr><td class="paramname">handler</td><td>The routine to call upon expiration of the timer.</td></tr>
-    <tr><td class="paramname">thread</td><td>The optional thread object the new timer is affine to. If non-NULL, the timer will fire on the same CPU <em>thread</em> currently runs on by default. A call to xntimer_set_sched() may change this setting.</td></tr>
+    <tr><td class="paramname">thread</td><td>The optional thread object the new timer is affine to. If non-NULL, the timer will fire on the same CPU <em>thread</em> currently runs on by default, otherwise it will fire on the CPU which initialized it.</td></tr>
+    <tr><td class="paramname">flags</td><td>A set of flags describing the timer. The valid flags are:</td></tr>
   </table>
   </dd>
 </dl>
+<ul>
+<li>XNTIMER_NOBLCK, the timer won't be frozen while GDB takes over control of the application.</li>
+</ul>
+<p>A set of clock gravity hints can be passed via the <em>flags</em> argument, used for optimizing the built-in heuristics aimed at latency reduction:</p>
+<ul>
+<li>XNTIMER_IGRAVITY, the timer activates a leaf timer handler.</li>
+<li>XNTIMER_KGRAVITY, the timer activates a kernel thread.</li>
+<li>XNTIMER_UGRAVITY, the timer activates a user-space thread.</li>
+</ul>
 <p>There is no limitation on the number of timers which can be created/active concurrently.</p>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
 
@@ -606,7 +622,7 @@ Functions</h2></td></tr>
 
 <p>Arm a timer. </p>
 <p>Activates a timer so that the associated timeout handler will be fired after each expiration time. A timer can be either periodic or one-shot, depending on the reload value passed to this routine. The given timer must have been previously initialized.</p>
-<p>A timer is attached to the clock specified in <a class="el" href="group__cobalt__core__timer.html#ga3c25be3c6ab8c5813eaaee16c584177c" title="Initialize a timer object. ">xntimer_init()</a>.</p>
+<p>A timer is attached to the clock specified in <a class="el" href="group__cobalt__core__timer.html#ga78acf0c1a448654388fb480a287e4269" title="Initialize a timer object. ">xntimer_init()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timer</td><td>The address of a valid timer descriptor.</td></tr>
@@ -616,7 +632,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>0 is returned upon success, or -ETIMEDOUT if an absolute date in the past has been given.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0 is returned upon success, or -ETIMEDOUT if an absolute date in the past has been given. In such an event, the timer is nevertheless armed for the next shot in the timeline if <em>interval</em> is different from XN_INFINITE.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted, atomic-entry</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__cobalt__core__timer.html#ga40dc6da3c5f849e4d6629f9d804fa7d7">program_htick_shot()</a>, <a class="el" href="group__rtdm__timer.html#ga429ca4935762583edb6e1ebc955fe958">rtdm_timer_start()</a>, <a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode()</a>, <a class="el" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic()</a>, <a class="el" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice()</a>, and <a class="el" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend()</a>.</p>

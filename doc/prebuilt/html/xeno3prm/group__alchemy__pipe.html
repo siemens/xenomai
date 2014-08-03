@@ -131,6 +131,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga12f801963d0db6aa60bc6cf92f65697a"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__pipe.html#ga12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write</a> (RT_PIPE *pipe, const void *buf, size_t size, int mode)</td></tr>
 <tr class="memdesc:ga12f801963d0db6aa60bc6cf92f65697a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a message to a pipe.  <a href="#ga12f801963d0db6aa60bc6cf92f65697a">More...</a><br/></td></tr>
 <tr class="separator:ga12f801963d0db6aa60bc6cf92f65697a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad8edc920499d2c5c5d821ee7b9fa2bcd"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a> (RT_PIPE *pipe, const void *buf, size_t size)</td></tr>
+<tr class="memdesc:gad8edc920499d2c5c5d821ee7b9fa2bcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stream bytes through a pipe.  <a href="#gad8edc920499d2c5c5d821ee7b9fa2bcd">More...</a><br/></td></tr>
+<tr class="separator:gad8edc920499d2c5c5d821ee7b9fa2bcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac732fe4dbc24f9c57a79b58817119048"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__pipe.html#gac732fe4dbc24f9c57a79b58817119048">rt_pipe_bind</a> (RT_PIPE *pipe, const char *name, RTIME timeout)</td></tr>
 <tr class="memdesc:gac732fe4dbc24f9c57a79b58817119048"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bind to a message pipe.  <a href="#gac732fe4dbc24f9c57a79b58817119048">More...</a><br/></td></tr>
 <tr class="separator:gac732fe4dbc24f9c57a79b58817119048"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -223,11 +226,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned if the object cannot be retrieved within the specified amount of time.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>timeout</em> equals TM_NONBLOCK.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -294,13 +293,9 @@ Functions</h2></td></tr>
 <li>-EBUSY is returned if <em>minor</em> is already open.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
-<p>References <a class="el" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>, <a class="el" href="structrtipc__port__label.html#a24cdc7d42efdcf42b76e4fbfe8b238e9">rtipc_port_label::label</a>, <a class="el" href="structsockaddr__ipc.html#a34159a73aefb7bde8064259a058599bb">sockaddr_ipc::sipc_family</a>, <a class="el" href="structsockaddr__ipc.html#a03b5a7ead5dab3968fc543aaee649dd2">sockaddr_ipc::sipc_port</a>, <a class="el" href="group__rtdm__ipc.html#ga61a2c99e1588e761aff890c27df6e5bd">XDDP_BUFSZ</a>, <a class="el" href="group__rtdm__ipc.html#gaf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>, and <a class="el" href="group__rtdm__ipc.html#ga40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>.</p>
+<p>References <a class="el" href="group__rtdm__ipc.html#gga5d76b81b0ad4c19007a781d4edb8181fa28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>, <a class="el" href="structrtipc__port__label.html#a24cdc7d42efdcf42b76e4fbfe8b238e9">rtipc_port_label::label</a>, <a class="el" href="structsockaddr__ipc.html#a34159a73aefb7bde8064259a058599bb">sockaddr_ipc::sipc_family</a>, <a class="el" href="structsockaddr__ipc.html#a03b5a7ead5dab3968fc543aaee649dd2">sockaddr_ipc::sipc_port</a>, <a class="el" href="group__rtdm__ipc.html#ga61a2c99e1588e761aff890c27df6e5bd">XDDP_BUFSZ</a>, <a class="el" href="group__rtdm__ipc.html#gaf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>, and <a class="el" href="group__rtdm__ipc.html#ga40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>.</p>
 
 </div>
 </div>
@@ -322,7 +317,7 @@ Functions</h2></td></tr>
 <p>This routine deletes a pipe object previously created by a call to <a class="el" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5" title="Create a message pipe. ">rt_pipe_create()</a>. All resources attached to that pipe are automatically released, all pending data is flushed.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pipe</td><td>The descriptor address of the deleted pipe.</td></tr>
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -332,11 +327,7 @@ Functions</h2></td></tr>
 <li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -388,13 +379,14 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__queue.html#gaa804ad003381fa7d6c67ca3fcc5851a3" title="Read from a queue. ">rt_queue_read_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pipe</td><td>The descriptor address of the message pipe to read from.</td></tr>
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>A pointer to a memory area which will be written upon success with the message received.</td></tr>
     <tr><td class="paramname">size</td><td>The count of bytes from the received message to read up into <em>buf</em>. If <em>size</em> is lower than the actual message size, -ENOBUFS is returned since the incompletely received message would be lost. If <em>size</em> is zero, this call returns immediately with no other action.</td></tr>
-    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed()</a>.</p>
 
@@ -440,7 +432,7 @@ Functions</h2></td></tr>
 <p>This service reads the next available message from a given pipe.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pipe</td><td>The descriptor address of the message pipe to read from.</td></tr>
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>A pointer to a memory area which will be written upon success with the message received.</td></tr>
     <tr><td class="paramname">size</td><td>The count of bytes from the received message to read up into <em>buf</em>. If <em>size</em> is lower than the actual message size, -ENOBUFS is returned since the incompletely received message would be lost. If <em>size</em> is zero, this call returns immediately with no other action.</td></tr>
     <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks, specifying a time limit to wait for a message to be available from the pipe (see note). Passing NULL causes the caller to block indefinitely until a message is available. Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service to return immediately without blocking in case no message is available.</td></tr>
@@ -456,11 +448,7 @@ Functions</h2></td></tr>
 <li>-EIDRM is returned if <em>pipe</em> is deleted while the caller was waiting for a message. In such event, <em>pipe</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>abs_timeout</em> is { .tv_sec = 0, .tv_nsec = 0 }.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>References <a class="el" href="group__rtdm__ipc.html#gaf2d1ed6a34336a6f3df80fb518325846">SO_RCVTIMEO</a>.</p>
@@ -517,15 +505,68 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__queue.html#gaa804ad003381fa7d6c67ca3fcc5851a3" title="Read from a queue. ">rt_queue_read_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pipe</td><td>The descriptor address of the message pipe to read from.</td></tr>
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>A pointer to a memory area which will be written upon success with the message received.</td></tr>
     <tr><td class="paramname">size</td><td>The count of bytes from the received message to read up into <em>buf</em>. If <em>size</em> is lower than the actual message size, -ENOBUFS is returned since the incompletely received message would be lost. If <em>size</em> is zero, this call returns immediately with no other action.</td></tr>
-    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gad8edc920499d2c5c5d821ee7b9fa2bcd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t rt_pipe_stream </td>
+          <td>(</td>
+          <td class="paramtype">RT_PIPE *&#160;</td>
+          <td class="paramname"><em>pipe</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Stream bytes through a pipe. </p>
+<p>This service writes a sequence of bytes to be received from the associated special device. Unlike rt_pipe_send(), this service does not preserve message boundaries. Instead, an internal buffer is filled on the fly with the data, which will be consumed as soon as the receiver wakes up.</p>
+<p>Data buffers sent by the <a class="el" href="group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd" title="Stream bytes through a pipe. ">rt_pipe_stream()</a> service are always transmitted in FIFO order (i.e. P_NORMAL mode).</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
+    <tr><td class="paramname">buf</td><td>The address of the first data byte to send. The data will be copied to an internal buffer before transmission.</td></tr>
+    <tr><td class="paramname">size</td><td>The size in bytes of the buffer. Zero is a valid value, in which case the service returns immediately without sending any data.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The number of bytes sent upon success; this value may be lower than <em>size</em>, depending on the available space in the internal buffer. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>mode</em> is invalid or <em>pipe</em> is not a pipe descriptor.</li>
+<li>-ENOMEM is returned if not enough buffer space is available to complete the operation.</li>
+<li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li>
+</ul>
+<dl class="section note"><dt>Note</dt><dd>Writing data to a pipe before any peer has opened the associated special device is allowed. The output will be buffered until then, only restricted by the available memory in the associated buffer pool (see <a class="el" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5" title="Create a message pipe. ">rt_pipe_create()</a>).</dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xcontext, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -546,11 +587,12 @@ Functions</h2></td></tr>
 <p>Unbind from a message pipe. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pipe</td><td>The descriptor address of the pipe to unbind from.</td></tr>
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This routine releases a previous binding to a message pipe. After this call has returned, the descriptor is no more valid for referencing this object. </p>
+<p>This routine releases a previous binding to a message pipe. After this call has returned, the descriptor is no more valid for referencing this object.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -595,7 +637,7 @@ Functions</h2></td></tr>
 <p>This service differs from rt_pipe_send() in that it accepts a pointer to the raw data to be sent, instead of a canned message buffer.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pipe</td><td>The descriptor address of the pipe to write to.</td></tr>
+    <tr><td class="paramname">pipe</td><td>The pipe descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>The address of the first data byte to send. The data will be copied to an internal buffer before transmission.</td></tr>
     <tr><td class="paramname">size</td><td>The size in bytes of the message (payload data only). Zero is a valid value, in which case the service returns immediately without sending any message.</td></tr>
     <tr><td class="paramname">mode</td><td>A set of flags affecting the operation:</td></tr>
@@ -612,7 +654,8 @@ Functions</h2></td></tr>
 <li>-ENOMEM is returned if not enough buffer space is available to complete the operation.</li>
 <li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li>
 </ul>
-<dl class="section note"><dt>Note</dt><dd>Writing data to a pipe before any peer has opened the associated special device is allowed. The output will be buffered until then, only restricted by the available memory in the associated buffer pool (see <a class="el" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5" title="Create a message pipe. ">rt_pipe_create()</a>). </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Writing data to a pipe before any peer has opened the associated special device is allowed. The output will be buffered until then, only restricted by the available memory in the associated buffer pool (see <a class="el" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5" title="Create a message pipe. ">rt_pipe_create()</a>).</dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xcontext, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__pipe.html#ga5ec5fa58851654f7b9770fc25c53335d">P_URGENT</a>.</p>
 

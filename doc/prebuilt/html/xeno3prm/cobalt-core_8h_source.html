@@ -651,7 +651,7 @@ $(document).ready(function(){initNavTree('cobalt-core_8h_source.html','');});
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;        TP_STRUCT__entry(</div>
 <div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;                __field(<span class="keyword">struct</span> xntimer *, timer)</div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;#ifdef CONFIG_XENO_OPT_STATS</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;                __string(handler, timer-&gt;handler_name)</div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;                __string(name, timer-&gt;name)</div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;#endif</div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;                __field(xnticks_t, value)</div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;                __field(xnticks_t, interval)</div>
@@ -661,7 +661,7 @@ $(document).ready(function(){initNavTree('cobalt-core_8h_source.html','');});
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;        TP_fast_assign(</div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;                __entry-&gt;timer = timer;</div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;#ifdef CONFIG_XENO_OPT_STATS</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;                __assign_str(handler, timer-&gt;handler_name);</div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;                __assign_str(name, timer-&gt;name);</div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;#endif</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;                __entry-&gt;value = value;</div>
 <div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;                __entry-&gt;interval = interval;</div>
@@ -671,7 +671,7 @@ $(document).ready(function(){initNavTree('cobalt-core_8h_source.html','');});
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;        TP_printk(<span class="stringliteral">&quot;timer=%p(%s) value=%Lu interval=%Lu mode=%s&quot;</span>,</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                  __entry-&gt;timer,</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;#ifdef CONFIG_XENO_OPT_STATS</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;                  __get_str(handler),</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;                  __get_str(name),</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;#<span class="keywordflow">else</span></div>
 <div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;                  <span class="stringliteral">&quot;(anon)&quot;</span>,</div>
 <div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;#endif</div>
@@ -740,8 +740,8 @@ $(document).ready(function(){initNavTree('cobalt-core_8h_source.html','');});
 <div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;<span class="comment">/* This part must be outside protection */</span></div>
 <div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;<span class="preprocessor">#include &lt;trace/define_trace.h&gt;</span></div>
-<div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:57</div></div>
-<div class="ttc" id="structxnsched_html_ad132581bc8d5df9af99f5ab7b1cadd48"><div class="ttname"><a href="structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48">xnsched::status</a></div><div class="ttdeci">unsigned long status</div><div class="ttdef"><b>Definition:</b> sched.h:59</div></div>
+<div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:58</div></div>
+<div class="ttc" id="structxnsched_html_ad132581bc8d5df9af99f5ab7b1cadd48"><div class="ttname"><a href="structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48">xnsched::status</a></div><div class="ttdeci">unsigned long status</div><div class="ttdef"><b>Definition:</b> sched.h:60</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

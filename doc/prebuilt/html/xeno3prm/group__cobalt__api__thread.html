@@ -106,12 +106,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gae1a96424296ef872696c7fb90a8ae9aa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a> (pthread_t *ptid_r, const pthread_attr_t *attr, void *(*start)(void *), void *arg)</td></tr>
 <tr class="memdesc:gae1a96424296ef872696c7fb90a8ae9aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new thread.  <a href="#gae1a96424296ef872696c7fb90a8ae9aa">More...</a><br/></td></tr>
 <tr class="separator:gae1a96424296ef872696c7fb90a8ae9aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8c23276876e1e9374d4cad841390eedc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga8c23276876e1e9374d4cad841390eedc">pthread_set_mode_np</a> (int clrmask, int setmask, int *mode_r)</td></tr>
-<tr class="memdesc:ga8c23276876e1e9374d4cad841390eedc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the mode of the current thread.  <a href="#ga8c23276876e1e9374d4cad841390eedc">More...</a><br/></td></tr>
-<tr class="separator:ga8c23276876e1e9374d4cad841390eedc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga414a759c928f7be7ac105980d8e73431"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#ga414a759c928f7be7ac105980d8e73431">pthread_set_name_np</a> (pthread_t thread, const char *name)</td></tr>
-<tr class="memdesc:ga414a759c928f7be7ac105980d8e73431"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a thread name.  <a href="#ga414a759c928f7be7ac105980d8e73431">More...</a><br/></td></tr>
-<tr class="separator:ga414a759c928f7be7ac105980d8e73431"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae3b7df7f77c04253ed19fb6346f0f9b2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#gae3b7df7f77c04253ed19fb6346f0f9b2">pthread_setmode_np</a> (int clrmask, int setmask, int *mode_r)</td></tr>
+<tr class="memdesc:gae3b7df7f77c04253ed19fb6346f0f9b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the mode of the current thread.  <a href="#gae3b7df7f77c04253ed19fb6346f0f9b2">More...</a><br/></td></tr>
+<tr class="separator:gae3b7df7f77c04253ed19fb6346f0f9b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa21465e084e7185bfbb94bb50d60cd08"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__api__thread.html#gaa21465e084e7185bfbb94bb50d60cd08">pthread_setname_np</a> (pthread_t thread, const char *name)</td></tr>
 <tr class="memdesc:gaa21465e084e7185bfbb94bb50d60cd08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a thread name.  <a href="#gaa21465e084e7185bfbb94bb50d60cd08">More...</a><br/></td></tr>
 <tr class="separator:gaa21465e084e7185bfbb94bb50d60cd08"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -289,12 +286,12 @@ an error number if:<ul>
 
 </div>
 </div>
-<a class="anchor" id="ga8c23276876e1e9374d4cad841390eedc"></a>
+<a class="anchor" id="gae3b7df7f77c04253ed19fb6346f0f9b2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int pthread_set_mode_np </td>
+          <td class="memname">int pthread_setmode_np </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>clrmask</em>, </td>
@@ -344,49 +341,6 @@ an error number if:<ul>
 </ul>
 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Setting <em>clrmask</em> and <em>setmask</em> to zero leads to a nop, only returning the previous mode if <em>mode_r</em> is a valid address. </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="ga414a759c928f7be7ac105980d8e73431"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pthread_set_name_np </td>
-          <td>(</td>
-          <td class="paramtype">pthread_t&#160;</td>
-          <td class="paramname"><em>thread</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>name</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Set a thread name. </p>
-<p>This service set to <em>name</em>, the name of <em>thread</em>. This name is used for displaying information in /proc/xenomai/sched.</p>
-<p>This service is a non-portable extension of the POSIX interface.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">thread</td><td>target thread;</td></tr>
-    <tr><td class="paramname">name</td><td>name of the thread.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
-<dd>
-an error number if:<ul>
-<li>ESRCH, <em>thread</em> is invalid. </li>
-</ul>
-</dd></dl>
 
 </div>
 </div>

@@ -110,12 +110,6 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga3a68de9a92f14911fc787de9288fc078"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__alarm.html#ga3a68de9a92f14911fc787de9288fc078">rt_alarm_create</a> (RT_ALARM *alarm, const char *name, void(*handler)(void *arg), void *arg)</td></tr>
-<tr class="memdesc:ga3a68de9a92f14911fc787de9288fc078"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an alarm object.  <a href="#ga3a68de9a92f14911fc787de9288fc078">More...</a><br/></td></tr>
-<tr class="separator:ga3a68de9a92f14911fc787de9288fc078"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf00e05b47b1183816480e270d326f9ac"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__alarm.html#gaf00e05b47b1183816480e270d326f9ac">rt_alarm_delete</a> (RT_ALARM *alarm)</td></tr>
-<tr class="memdesc:gaf00e05b47b1183816480e270d326f9ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Delete an alarm.  <a href="#gaf00e05b47b1183816480e270d326f9ac">More...</a><br/></td></tr>
-<tr class="separator:gaf00e05b47b1183816480e270d326f9ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0d9cb8ae623be0f7224ac47b10a0b542"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__alarm.html#ga0d9cb8ae623be0f7224ac47b10a0b542">rt_alarm_start</a> (RT_ALARM *alarm, RTIME value, RTIME interval)</td></tr>
 <tr class="memdesc:ga0d9cb8ae623be0f7224ac47b10a0b542"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start an alarm.  <a href="#ga0d9cb8ae623be0f7224ac47b10a0b542">More...</a><br/></td></tr>
 <tr class="separator:ga0d9cb8ae623be0f7224ac47b10a0b542"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,6 +119,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ga25c4556b6e2f6fa220a734bf83c4c374"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__alarm.html#ga25c4556b6e2f6fa220a734bf83c4c374">rt_alarm_inquire</a> (RT_ALARM *alarm, <a class="el" href="structRT__ALARM__INFO.html">RT_ALARM_INFO</a> *info)</td></tr>
 <tr class="memdesc:ga25c4556b6e2f6fa220a734bf83c4c374"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query alarm status.  <a href="#ga25c4556b6e2f6fa220a734bf83c4c374">More...</a><br/></td></tr>
 <tr class="separator:ga25c4556b6e2f6fa220a734bf83c4c374"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3a68de9a92f14911fc787de9288fc078"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__alarm.html#ga3a68de9a92f14911fc787de9288fc078">rt_alarm_create</a> (RT_ALARM *alarm, const char *name, void(*handler)(void *arg), void *arg)</td></tr>
+<tr class="memdesc:ga3a68de9a92f14911fc787de9288fc078"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an alarm object.  <a href="#ga3a68de9a92f14911fc787de9288fc078">More...</a><br/></td></tr>
+<tr class="separator:ga3a68de9a92f14911fc787de9288fc078"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf00e05b47b1183816480e270d326f9ac"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__alarm.html#gaf00e05b47b1183816480e270d326f9ac">rt_alarm_delete</a> (RT_ALARM *alarm)</td></tr>
+<tr class="memdesc:gaf00e05b47b1183816480e270d326f9ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Delete an alarm.  <a href="#gaf00e05b47b1183816480e270d326f9ac">More...</a><br/></td></tr>
+<tr class="separator:gaf00e05b47b1183816480e270d326f9ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>General-purpose watchdog timers. </p>
@@ -183,11 +183,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered alarm.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Alarms are process-private objects and thus cannot be shared by multiple processes, even if they belong to the same Xenomai session. </dd></dl>
 
 </div>
@@ -210,7 +206,7 @@ Functions</h2></td></tr>
 <p>This routine deletes an alarm object previously created by a call to <a class="el" href="group__alchemy__alarm.html#ga3a68de9a92f14911fc787de9288fc078" title="Create an alarm object. ">rt_alarm_create()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">alarm</td><td>The descriptor address of the deleted alarm.</td></tr>
+    <tr><td class="paramname">alarm</td><td>The alarm descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -219,11 +215,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>alarm</em> is not a valid alarm descriptor.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -255,7 +247,7 @@ Functions</h2></td></tr>
 <p>This routine returns the status information about the specified <em>alarm</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">alarm</td><td>The descriptor address of the alarm to get the status of.</td></tr>
+    <tr><td class="paramname">alarm</td><td>The alarm descriptor.</td></tr>
     <tr><td class="paramname">info</td><td>A pointer to the <a class="el" href="structRT__ALARM__INFO.html#RT_ALARM_INFO">return</a>buffer" to copy the information to.</td></tr>
   </table>
   </dd>
@@ -264,7 +256,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>alarm</em> is not a valid alarm descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="structRT__ALARM__INFO.html#af0a45680476596e86488276a0bb624ae">RT_ALARM_INFO::active</a>, <a class="el" href="structRT__ALARM__INFO.html#a9f793d6a1ccdb6e4172c153821c11865">RT_ALARM_INFO::expiries</a>, and <a class="el" href="structRT__ALARM__INFO.html#a6d49da2aa84fe76b1099a47ad286415a">RT_ALARM_INFO::name</a>.</p>
 
@@ -306,7 +298,7 @@ Functions</h2></td></tr>
 <p>This service overrides any previous setup of the expiry date and reload interval for the alarm.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">alarm</td><td>The descriptor address of the started alarm.</td></tr>
+    <tr><td class="paramname">alarm</td><td>The alarm descriptor.</td></tr>
     <tr><td class="paramname">value</td><td>The relative date of the first expiry, expressed in clock ticks (see note).</td></tr>
     <tr><td class="paramname">interval</td><td>The reload value of the alarm. It is a periodic interval value to be used for reprogramming the next alarm shot, expressed in clock ticks (see note). If <em>interval</em> is equal to TM_INFINITE, the alarm will not be reloaded after it has expired.</td></tr>
   </table>
@@ -316,7 +308,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>alarm</em> is not a valid alarm descriptor.</li>
 </ul>
-<p>Valid calling context: any.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Each of the initial <em>value</em> and <em>interval</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -339,7 +331,7 @@ Functions</h2></td></tr>
 <p>This routine disables an alarm object, preventing any further expiry until it is re-enabled via <a class="el" href="group__alchemy__alarm.html#ga0d9cb8ae623be0f7224ac47b10a0b542" title="Start an alarm. ">rt_alarm_start()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">alarm</td><td>The descriptor address of the stopped alarm.</td></tr>
+    <tr><td class="paramname">alarm</td><td>The alarm descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -347,7 +339,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>alarm</em> is not a valid alarm descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>

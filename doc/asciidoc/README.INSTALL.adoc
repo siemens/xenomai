@@ -300,7 +300,7 @@ although this is not mandatory if building with `--disable-tls`.
 _Cobalt_-specific requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- The kernel version must be 3.5.7 or better.
+- The kernel version must be 3.10 or better.
 
 - An interrupt pipeline (I-pipe) patch must be available for your
   target kernel. You can find the official patches issued by the

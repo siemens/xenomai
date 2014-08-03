@@ -738,18 +738,12 @@ asciidoc.install(3);
 </div>
 </div>
 <div id="content">
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph"><p>The latest version of this document is available at
-<a href="http://www.xenomai.org/documentation/xenomai-forge/html/MIGRATION/">this address</a>.</p></div>
-<div class="paragraph"><p>For questions, corrections and improvements, write to
-<a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
-</div>
-</div>
 <div class="sect1">
 <h2 id="_configuration">1. Configuration</h2>
 <div class="sectionbody">
-<div class="ulist"><div class="title">User programs and libraries</div><ul>
+<div class="sect2">
+<h3 id="_user_programs_and_libraries">1.1. User programs and libraries</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 As with Xenomai 2.x, <code>xeno-config</code> is available for retrieving the
@@ -793,6 +787,11 @@ Specifying <code>--[skin=]cobalt</code> or <code>--[skin=]posix</code> on the co
   routine manually, as part of its initialization process, <em>before</em>
   any real-time service is invoked.
 </p>
+<div class="literalblock" id="auto-init">
+<div class="content">
+<pre><code>+xeno-config+ enables the auto-init feature by default for all
+applications using APIs based on the Copperplate library.</code></pre>
+</div></div>
 </li>
 </ul></div>
 </li>
@@ -804,7 +803,10 @@ Specifying <code>--[skin=]cobalt</code> or <code>--[skin=]posix</code> on the co
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Kernel parameters (Cobalt)</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_kernel_parameters_cobalt">1.2. Kernel parameters (Cobalt)</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 System parameters have been renamed:
@@ -830,8 +832,14 @@ The following parameters have been dropped
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>xeno_rtdm.tick_arg. Rationale: periodic timing is directly handled
-from the API layer in user-space. Cobalt kernel timing is tickless.</p></div>
+<div class="paragraph"><p>xeno_rtdm.tick_arg.
+.Rationale</p></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph"><p>Periodic timing is directly handled from the API layer in
+user-space. Cobalt kernel timing is tickless.</p></div>
+</div></div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -906,10 +914,23 @@ libraries in user-space.</p></div>
 <div class="paragraph"><p>Xenomai 2.99.5 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
-<div class="paragraph"><p>As a consequence of these changes, The information once available from
-<code>timerstat/master</code> are now obtained by reading <code>clock/coreclk</code>, and
-the <code>timebases</code> file was removed.</p></div>
+<div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
+clock/ hierarchy. Active timers for each clock can be read from
+entries under the new timer/ hierarchy.</p></div>
+<div class="paragraph"><p>As a consequence of these changes:</p></div>
 <div class="ulist"><ul>
+<li>
+<p>
+the information previously available from the <code>timer</code> entry is now
+obtained by reading <code>clock/coreclk</code>.
+</p>
+</li>
+<li>
+<p>
+the information previously available from <code>timerstat/master</code> is now
+obtained by reading +timer/coreclk.
+</p>
+</li>
 <li>
 <p>
 Core clock gravity
@@ -918,17 +939,37 @@ Core clock gravity
 </ul></div>
 <div class="paragraph"><p>The gravity value for a Xenomai clock gives the amount of time
 expressed in clock ticks, by which the next shot should be
-anticipated. This is a static adjustment value, to take into account
-the basic latency of the system for responding to an external event
-(hardware-wise, and software-wise). This value is commonly assessed by
-measuring the typical latency of an idle system.</p></div>
-<div class="paragraph"><p>The <code>latency</code> pseudo-file holds this value expressed as a count of
-nanoseconds.</p></div>
-<div class="paragraph"><p><code>latency</code> now represents the sum of the scheduling <strong>and</strong> hardware
-timer reprogramming latencies of the core clock. This departs from
-Xenomai 2.x for which only the former was accounted for in the clock
-gravity value.</p></div>
+anticipated.</p></div>
+<div class="paragraph"><p>This is a static adjustment value, to take into account the basic
+latency of the system for responding to an external event
+(hardware-wise, and software-wise).</p></div>
+<div class="paragraph"><p>The clock gravity management departs from Xenomai 2.x as follows:</p></div>
 <div class="ulist"><ul>
+<li>
+<p>
+different gravity values are applied, depending on which context a
+  timer activates. This may be a real-time IRQ handler (<em>irq</em>), a RTDM
+  driver task (<em>kernel</em>), or a Xenomai application thread running in
+  user-space (<em>user</em>). Xenomai 2.x does not differentiate, only
+  applying a global gravity value regardless of the activated context.
+</p>
+</li>
+<li>
+<p>
+in addition to the legacy <code>latency</code> file which now reports the
+  <em>user</em> timer gravity, i.e. used for timers activating user-space
+  threads, the full gravity triplet applied to timers running on the
+  core clock can be accessed by reading clock/coreclk.
+</p>
+</li>
+<li>
+<p>
+at reset, the <em>user</em> gravity for the core clock now represents the
+sum of the scheduling <strong>and</strong> hardware timer reprogramming time. This
+departs from Xenomai 2.x for which only the former was accounted for
+in the global gravity value.
+</p>
+</li>
 <li>
 <p>
 <code>interfaces</code> was removed
@@ -936,10 +977,12 @@ gravity value.</p></div>
 </li>
 </ul></div>
 <div class="paragraph"><p>Only the POSIX and RTDM APIs remain implemented directly in kernel
-space. All other APIs are implemented in user-space over the
+space, and are always present when the Cobalt core enabled in the
+configuration. All other APIs are implemented in user-space over the
 Copperplate layer. This makes the former <code>interfaces</code> contents
 basically useless, since the corresponding information for the
-POSIX/RTDM interfaces can be obtained via <code>sched/threads</code>.</p></div>
+POSIX/RTDM interfaces can be obtained via <code>sched/threads</code>
+unconditionally.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1041,15 +1084,17 @@ user, the <code>xeno-config</code> script emits link flags which temporarily
 overrides the <code>main()</code> routine with a Copperplate-based replacement,
 running the proper initialization code as required, before branching
 back to the user-defined application entry point.</p></div>
-<div class="paragraph"><p>This behavior may be disabled by passing the <code>--no-auto-init</code> option
-(see the next section).</p></div>
+<div class="paragraph"><p>This behavior may be disabled by passing the
+<a href="#auto-init"><code>--no-auto-init</code></a> option.</p></div>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_rtdm_interface_changes">5. RTDM interface changes</h2>
 <div class="sectionbody">
-<div class="ulist"><div class="title">File renames</div><ul>
+<div class="sect2">
+<h3 id="_files_renamed">5.1. Files renamed</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 Redundant prefixes were removed from the following files:
@@ -1061,19 +1106,264 @@ Redundant prefixes were removed from the following files:
 <div class="paragraph"><p>rtdm/rtserial.h &#8594; rtdm/serial.h</p></div>
 <div class="paragraph"><p>rtdm/rttesting.h &#8594; rtdm/testing.h</p></div>
 <div class="paragraph"><p>rtdm/rtipc.h &#8594; rtdm/ipc.h</p></div>
-<div class="ulist"><div class="title">Driver API</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_driver_api">5.2. Driver API</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 rtdm_task_init() shall be called from secondary mode.
 </p>
 </li>
 </ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Since Xenomai 3, rtdm_task_init() involves creating a regular kernel
+thread, which will be given real-time capabilities, such as running
+under the control of the Cobalt kernel. In order to invoke standard
+kernel services, rtdm_task_init() must be called from a regular Linux
+kernel context.</p></div>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+rtdm_task_join() has been introduced to wait for termination of a
+  RTDM task regardless of the caller&#8217;s execution mode, which may be
+  primary or secondary. In addition, rtdm_task_join() does not need to
+  poll for such event unlike rtdm_task_join_nrt().
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>rtdm_task_join() supersedes rtdm_task_join_nrt() feature-wise with
+less usage restrictions, therefore the latter has become pointless. It
+is therefore deprecated and will be phased out in the next release.</p></div>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+A RTDM task cannot be forcibly removed from the scheduler by another
+  thread for immediate deletion. Instead, the RTDM task is notified
+  about a pending cancellation request, which it should act upon when
+  detected. To this end, RTDM driver tasks should call the new
+  <code>rtdm_task_should_stop()</code> service to detect such notification from
+  their work loop, and exit accordingly.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Since Xenomai 3, a RTDM task is based on a regular kernel thread with
+real-time capabilities when controlled by the Cobalt kernel. The Linux
+kernel requires kernel threads to exit at their earliest convenience
+upon notification, which therefore applies to RTDM tasks as well.</p></div>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<code>rtdm_task_set_period()</code> does not suspend the target task until the
+first release point is reached. If a start date is specified, then
+<code>rtdm_task_wait_period()</code> will apply the initial delay.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>A periodic RTDM task has to call <code>rtdm_task_wait_period()</code> from within
+its work loop for sleeping until the next release point is
+reached. Since waiting for the initial and subsequent release points
+will most often happen at the same code location in the driver, the
+semantics of <code>rtdm_task_set_period()</code> can be simplified so that only
+<code>rtdm_task_wait_period()</code> may block the caller.</p></div>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+RTDM_EXECUTE_ATOMICALLY() is deprecated and will be phased out in
+  the next release. Drivers should prefer the newly introduced RTDM
+  wait queues, or switch to the Cobalt-specific
+  cobalt_atomic_enter/leave() call pair, depending on the use case.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>This construct is not portable to a native implementation of RTDM, and
+may be replaced by other means. The usage patterns of
+RTDM_EXECUTE_ATOMICALLY() used to be:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+somewhat abusing the big nucleus lock (i.e. nklock) grabbed by
+  RTDM_EXECUTE_ATOMICALLY(), for serializing access to a section that
+  should be given its own lock instead, improving concurrency in the
+  same move. Such section does not call services from the Xenomai
+  core, and does NOT specifically require the nucleus lock to be
+  held. In this case, a RTDM lock (rtdm_lock_t) should be used to
+  protect the section instead of RTDM_EXECUTE_ATOMICALLY().
+</p>
+</li>
+<li>
+<p>
+protecting a section which calls into the Xenomai core, which
+  exhibits one or more of the following characteristics:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+Some callee within the section may require the nucleus lock to
+      be held on entry (e.g. Cobalt registry lookup). In what has to
+      be a Cobalt-specific case, the new cobalt_atomic_enter/leave()
+      call pair can replace RTDM_EXECUTE_ATOMICALLY(). However, this
+      construct remains by definition non-portable to Mercury.
+</p>
+</li>
+<li>
+<p>
+A set-condition-and-wakeup pattern has to be carried out
+      atomically. In this case, RTDM_EXECUTE_ATOMICALLY() can be
+      replaced by the wakeup side of a RTDM wait queue introduced in
+      Xenomai 3 (e.g. rtdm_waitqueue_signal/broadcast()).
+</p>
+</li>
+<li>
+<p>
+A test-condition-and-wait pattern has to be carried out
+      atomically. In this case, RTDM_EXECUTE_ATOMICALLY() can be
+      replaced by the wait side of a RTDM wait queue introduced in
+      Xenomai 3 (e.g. rtdm_wait_condition()).
+</p>
+</li>
+</ul></div>
+</li>
+</ul></div>
+<div class="paragraph"><p>Refer to kernel/drivers/ipc/iddp.c for an illustration of the RTDM
+wait queue usage.</p></div>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+rtdm_irq_request/free() and rtdm_irq_enable/disable() call pairs
+  must be called from a Linux task context, which is a restriction
+  that did not exist previously with Xenomai 2.x.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Recent evolutions of the Linux kernel with respect to IRQ management
+involve complex processing for basic operations
+(e.g. enabling/disabling the interrupt line) with some interrupt types
+like MSI. Such processing cannot be made dual-kernel safe at a
+reasonable cost, without encurring measurable latency or significant
+code rewrites.</p></div>
+<div class="paragraph"><p>Since allocating, releasing, enabling or disabling real-time
+interrupts is most commonly done from driver initialization/cleanup
+context already, the Cobalt core has simply inherited those
+requirements from the Linux kernel.</p></div>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_file_descriptors">5.3. File descriptors</h3>
+<div class="paragraph"><p>Xenomai 3 introduces a file descriptor abstraction for RTDM
+drivers. For this reason, all RTDM driver handlers and services which
+used to receive a <code>user_info</code> opaque argument describing the calling
+context, now receive a <code>rtdm_fd</code> pointer standing for the target file
+descriptor for the operation.</p></div>
+<div class="paragraph"><p>As a consequence of this:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+The rtdm_context_get/put() call pair has been replaced by
+  rtdm_fd_get/put().
+</p>
+</li>
+<li>
+<p>
+Likewise, the rtdm_context_lock/unlock() call pair has been replaced
+  by rtdm_fd_lock/unlock().
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">Because RTDM file descriptors may be released and destroyed
+asynchronously, rtdm_fd_get() and rtdm_fd_lock() may return -EIDRM if
+a file descriptor fetched from some driver-private registry becomes
+stale prior to calling these services. Typically, this may happen if
+the descriptor is released from the &#8594;close() handler implemented by
+the driver. Therefore, make sure to always carefully check the return
+value of these services.</td>
+</tr></table>
+</div>
+<div class="ulist"><ul>
+<li>
+<p>
+rtdm_fd_to_private() is available to fetch the context-private
+  memory allocated by the driver for a particular RTDM file
+  descriptor. Conversely, rtdm_private_to_fd() returns the file
+  descriptor owning a particular context-private memory area.
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_adaptive_syscalls">5.4. Adaptive syscalls</h3>
+<div class="paragraph"><p><code>ioctl()</code>, <code>read()</code>, <code>write()</code>, <code>recvmsg()</code> and <code>sendmsg()</code> have
+become context-adaptive RTDM calls, which means that Xenomai threads
+running over the Cobalt core will be automatically switched to primary
+mode prior to running the driver handler for the corresponding
+request.</p></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Real-time handlers from RTDM drivers serve time-critical requests by
+definition, which makes them preferred targets of adaptive calls over
+non real-time handlers.</p></div>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">This behavior departs from Xenomai 2.x, which would run the call from
+the originating context instead (e.g. <code>ioctl_nrt()</code> would be fired for
+a caller running in secondary mode, and conversely <code>ioctl_rt()</code> would
+be called for a request issued from primary mode).</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">RTDM drivers implementing differentiated <code>ioctl()</code> support for both
+domains should serve all real-time only requests from <code>ioctl_rt()</code>,
+returning <code>-ENOSYS</code> for any unrecognized request, which will cause the
+adaptive switch to take place automatically to the <code>ioctl_nrt()</code>
+handler. The <code>ioctl_nrt()</code> should then implement all requests which
+may be valid from the regular Linux domain exclusively.</td>
+</tr></table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_analogy_interface_changes">6. Analogy interface changes</h2>
 <div class="sectionbody">
-<div class="ulist"><div class="title">File renames</div><ul>
+<div class="sect2">
+<h3 id="_files_renamed_2">6.1. Files renamed</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 DAQ drivers in kernel space now pull all Analogy core header files
@@ -1083,6 +1373,7 @@ DAQ drivers in kernel space now pull all Analogy core header files
 </ul></div>
 <div class="paragraph"><p>analogy/analogy_driver.h &#8594; rtdm/analogy/driver.h</p></div>
 <div class="paragraph"><p>analogy/driver.h &#8594; rtdm/analogy/driver.h</p></div>
+<div class="paragraph"><p>analogy/analogy.h &#8594; rtdm/analogy.h</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1094,12 +1385,19 @@ DAQ drivers in kernel space should include &lt;rtdm/analogy/device.h&gt;
 <p>
 Applications need to include only a single file for pulling all
   routine declarations and constant definitions required for invoking
-  the Analogy services from user-space, namely &lt;rtdm/analogy.h&gt;.
+  the Analogy services from user-space, namely &lt;rtdm/analogy.h&gt;, i.e.
 </p>
 </li>
 </ul></div>
+<div class="paragraph"><p>analogy/types.h
+analogy/command.h
+analogy/device.h
+analogy/subdevice.h
+analogy/instruction.h
+analogy/ioctl.h &#8594; all files merged into rtdm/analogy.h</p></div>
 <div class="paragraph"><p>As a consequence of these changes, the former include/analogy/ file
 tree has been entirely removed.</p></div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1107,22 +1405,30 @@ tree has been entirely removed.</p></div>
 <div class="sectionbody">
 <div class="paragraph"><p>As mentioned earlier, the former <strong>POSIX skin</strong> is known as the <strong>Cobalt
 API</strong> in Xenomai 3.x, available as <code>libcobalt.{so,a}</code>. The Cobalt API
-also includes the code of the former <code>libxenomai</code>, which is no more a
-standalone library.</p></div>
+also includes the code of the former <code>libxenomai</code>, which is no longer
+a standalone library.</p></div>
 <div class="paragraph"><p><code>libcobalt</code> exposes the set of POSIX and ISO/C standard features
 specifically implemented by Xenomai to honor real-time requirements
 using the Cobalt core.</p></div>
-<div class="ulist"><div class="title">Interrupt management</div><ul>
+<div class="sect2">
+<h3 id="_interrupt_management">7.1. Interrupt management</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The former <code>pthread_intr</code> API once provided by Xenomai 2.x is gone.
 </p>
-<div class="paragraph" id="irqhandling"><p>Rationale: handling real-time interrupt events from user-space can
-be done safely only if some top-half code exists for acknowledging
-the issuing device request from kernel space. This should be done
-via a RTDM driver, exposing a <code>read(2)</code> or <code>ioctl(2)</code> interface, for
-waiting for interrupt events from applications running in
-user-space.</p></div>
+</li>
+</ul></div>
+<div class="sidebarblock" id="irqhandling">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Handling real-time interrupt events from user-space can be done safely
+only if some top-half code exists for acknowledging the issuing device
+request from kernel space, particularly when the interrupt line is
+shared. This should be done via a RTDM driver, exposing a <code>read(2)</code> or
+<code>ioctl(2)</code> interface, for waiting for interrupt events from
+applications running in user-space.</p></div>
+</div></div>
 <div class="paragraph"><p>Failing this, the low-level interrupt service code in user-space
 would be sensitive to external thread management actions, such as
 being stopped because of GDB/ptrace(2) interaction. Unfortunately,
@@ -1150,23 +1456,25 @@ by calling into the RTDM driver, either via a <code>read(2)</code> or
 <code>rtdm_dev_register()</code>).</td>
 </tr></table>
 </div>
-</li>
-</ul></div>
-<div class="ulist"><div class="title">Scheduling</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_scheduling">7.2. Scheduling</h3>
+<div class="ulist"><ul>
 <li>
 <p>
-<code>sched_get_priority_max()</code> returns a larger value for all real-time
-  policies over Cobalt, compared to their Mercury counterpart, which
-  are directly mapped over the native Linux scheduling policies
-  instead (e.g. 256 vs 99 for SCHED_FIFO/RR). Applications wary of
-  portability between the Cobalt and Mercury cores should probe for
-  such limit.
+The <code>SCHED_FIFO</code>, <code>SCHED_RR</code>, <code>SCHED_SPORADIC</code> and <code>SCHED_TP</code>
+  classes now support up to 256 priority levels, instead of 99 as
+  previously with Xenomai 2.x. However, <code>sched_get_priority_max()</code>
+  still returns 99. Only the Cobalt extended call forms
+  (e.g. <code>pthread_attr_setschedparam_ex()</code>, <code>pthread_create_ex()</code>)
+  recognize these additional levels.
 </p>
 </li>
 <li>
 <p>
-The <code>SCHED_SPORADIC</code> and +SCHED_TP classes now support up to 256
-  priority levels, instead of 99 as previously with Xenomai 2.x.
+<code>sched_get_priority_min_ex()</code> and <code>sched_get_priority_max_ex()</code>
+  should be used for querying the static priority range of Cobalt
+  policies.
 </p>
 </li>
 <li>
@@ -1184,16 +1492,22 @@ Xenomai-wise, for maintaining consistency.</p></div>
 <div class="paragraph"><p>In the Xenomai 2.x implementation, the thread being set a new
 priority would receive a SIGSHADOW signal, eventually handled as a
 request to call <strong>glibc</strong>'s <code>pthread_setschedparam()</code> immediately.</p></div>
-<div class="paragraph"><p>Rationale: the target Xenomai thread may hold a mutex or any
-resource which may only be held in primary mode, in which case
-switching to secondary mode for applying the priority change at
-any random location over a signal handler may create a pathological
-issue. In addition, <strong>glibc</strong>'s <code>pthread_setschedparam()</code> is not
-async-safe, which makes the former method fragile.</p></div>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>The target Xenomai thread may hold a mutex or any resource which may
+only be held in primary mode, in which case switching to secondary
+mode for applying the priority change at any random location over a
+signal handler may create a pathological issue. In addition, <strong>glibc</strong>'s
+<code>pthread_setschedparam()</code> is not async-safe, which makes the former
+method fragile.</p></div>
+</div></div>
 <div class="paragraph"><p>Conversely, a thread which calls <code>pthread_setschedparam()</code> does know
 unambiguously whether the current calling context is safe for the
 incurred migration.</p></div>
-</li>
+<div class="ulist"><ul>
 <li>
 <p>
 A new SCHED_WEAK class is available to POSIX threads, which may be
@@ -1251,28 +1565,35 @@ to each group, in accordance with its share.</p></div>
 </li>
 <li>
 <p>
-When called from primary mode, sched_yield() now relinquishes the
-  CPU in case no context switch happened as a result of the manual
-  round-robin.
+When called from primary mode, sched_yield() now delays the caller
+  for a short while <strong>only in case</strong> no context switch happened as a
+  result of the manual round-robin. The delay ends next time the
+  regular Linux kernel switches tasks, or a kernel (virtual) tick has
+  elapsed (TICK_NSEC), whichever comes first.
 </p>
 <div class="paragraph"><p>Typically, a Xenomai thread undergoing the SCHED_FIFO or SCHED_RR
 policy with no contender at the same priority level would still be
-delayed for a while. This delay ends next time the regular Linux
-kernel switches tasks, or a kernel (virtual) tick has elapsed
-(TICK_NSEC), whichever comes first.</p></div>
-<div class="paragraph"><p>Rationale: it is most probably unwanted that sched_yield() does not
-cause any context switch, since this service is commonly used for
-implementing a poor man&#8217;s cooperative scheduling. A typical use case
-involves a Xenomai thread running in primary mode which needs to
-yield the CPU to another thread running in secondary mode. By
-waiting for a context switch to happen in the regular kernel, we
-guarantee that the CPU has been relinquished for a while. By
-limiting this delay, we prevent a regular high priority SCHED_FIFO
-thread stuck in a tight loop, from locking out the delayed Xenomai
-thread indefinitely.</p></div>
+delayed for a while.</p></div>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Thread management</div><ul>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>In most case, it is unwanted that sched_yield() does not cause any
+context switch, since this service is commonly used for implementing a
+poor man&#8217;s cooperative scheduling. A typical use case involves a
+Xenomai thread running in primary mode which needs to yield the CPU to
+another thread running in secondary mode. By waiting for a context
+switch to happen in the regular kernel, we guarantee that the manual
+round-robin takes place between both threads, despite the execution
+mode mismatch. By limiting the incurred delay, we prevent a regular
+high priority SCHED_FIFO thread stuck in a tight loop, from locking
+out the delayed Xenomai thread indefinitely.</p></div>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_thread_management">7.3. Thread management</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The default POSIX thread stack size was raised to
@@ -1282,11 +1603,21 @@ The default POSIX thread stack size was raised to
 </li>
 <li>
 <p>
-pthread_set_mode_np() now accepts PTHREAD_DISABLE_LOCKBREAK, which
-disallows breaking the scheduler lock. When unset (default case), a
-thread which holds the scheduler lock drops it temporarily while
-sleeping.
+pthread_set_name_np() has been renamed to pthread_setname_np() with
+  the same arguments, to conform with the GNU extension equivalent.
 </p>
+</li>
+<li>
+<p>
+pthread_set_mode_np() has been renamed to pthread_setmode_np() for
+  naming consistency with pthread_setname_np(). In addition, the call
+  introduces the PTHREAD_DISABLE_LOCKBREAK mode flag, which disallows
+  breaking the scheduler lock.
+</p>
+<div class="paragraph"><p>When unset (default case), a thread which holds the scheduler lock
+drops it temporarily while sleeping.  When set, any attempt to block
+while holding the scheduler lock will cause a break condition to be
+immediately raised, with the caller receiving EINTR.</p></div>
 </li>
 </ul></div>
 <div class="admonitionblock">
@@ -1296,11 +1627,29 @@ sleeping.
 </td>
 <td class="content">A Xenomai thread running with PTHREAD_DISABLE_LOCKBREAK and
 PTHREAD_LOCK_SCHED both set may enter a runaway loop when attempting
-to sleep on a resource or synchronization object (e.g. mutex,
+to sleep on a resource or synchronization object (e.g. mutex or
 condition variable).</td>
 </tr></table>
 </div>
-<div class="ulist"><div class="title">Process management</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_semaphores">7.4. Semaphores</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+With Cobalt, sem_wait(), sem_trywait(), sem_timedwait(), and
+  sem_post() have gained fast acquisition/release operations not
+  requiring any system call, unless a contention exists on the
+  resource. As a consequence, those services may not systematically
+  switch callers executing in relaxed mode to real-time mode, unlike
+  with Xenomai 2.x.
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_process_management">7.5. Process management</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 In a <code>fork()</code> &#8594; <code>exec()</code> sequence, all Cobalt API objects created
@@ -1309,7 +1658,10 @@ In a <code>fork()</code> &#8594; <code>exec()</code> sequence, all Cobalt API ob
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Real-time signals</div><ul>
+</div>
+<div class="sect2">
+<h3 id="real-time-signals">7.6. Real-time signals</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 Support for Xenomai real-time signals is available.
@@ -1361,10 +1713,13 @@ co-kernel. Otherwise, the caller keeps running under the control of
 the regular Linux kernel.</p></div>
 <div class="paragraph"><p>This behavior also applies to the new Cobalt-based replacement for the
 <code>kill()</code> system call.</p></div>
-<div class="ulist"><div class="title">Timers</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_timers">7.7. Timers</h3>
+<div class="ulist"><ul>
 <li>
 <p>
-POSIX timers are no more dropped when the creator thread
+POSIX timers are no longer dropped when the creator thread
   exits. However, they are dropped when the container process exits.
 </p>
 </li>
@@ -1391,21 +1746,40 @@ EPERM is not returned anymore by POSIX timer calls. EINVAL is
 </li>
 <li>
 <p>
-The clock to be used for enabling periodic timing for a thread may
-  now be specified in the call to <code>pthread_make_periodic_np()</code>:
+Cobalt replacements for <code>timerfd_create()</code>, <code>timerfd_settime()</code> and
+<code>timerfd_gettime()</code> have been introduced. The implementation delivers
+I/O notifications to RTDM file descriptors upon Cobalt-originated
+real-time signals.
+</p>
+</li>
+<li>
+<p>
+<code>pthread_make_periodic_np()</code> and <code>pthread_wait_np()</code> have been
+removed from the API.
 </p>
 </li>
 </ul></div>
-<div class="listingblock">
+<div class="sidebarblock">
 <div class="content">
-<pre><code>int pthread_make_periodic_np(pthread_t thread, clockid_t clk_id,
-    struct timespec *starttp, struct timespec *periodtp);</code></pre>
+<div class="title">Rationale</div>
+<div class="paragraph"><p>With the introduction of services to support real-time signals, those
+two non-portable calls have become redundant. Instead, Cobalt-based
+applications should set up a periodic timer using the
+<code>timer_create()</code>+<code>timer_settime()</code> call pair, then wait for release
+points via <code>sigwaitinfo()</code>. Overruns can be detected by looking at the
+siginfo.si_overrun field.</p></div>
+<div class="paragraph"><p>Alternatively, applications may obtain a file descriptor referring to
+a Cobalt timer via the <code>timerfd()</code> call, and <code>read()</code> from it to wait
+for timeouts.</p></div>
+<div class="paragraph"><p>In addition, applications may include a timer in a synchronous
+multiplexing operation involving other event sources, by passing a
+file descriptor returned by the <code>timerfd()</code> service to a <code>select()</code>
+call.</p></div>
 </div></div>
-<div class="paragraph"><div class="title">Timerfd</div><p>[normal] Cobalt replacements for <code>timerfd_create()</code>,
-<code>timerfd_settime()</code> and <code>timerfd_gettime()</code> have been introduced. The
-implementation delivers I/O notifications to RTDM file descriptors
-upon Cobalt-originated real-time signals.</p></div>
-<div class="ulist"><div class="title">Message queues</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_message_queues">7.8. Message queues</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>mq_open()</code> default attributes align on the regular kernel values,
@@ -1419,7 +1793,10 @@ upon Cobalt-originated real-time signals.</p></div>
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">POSIX I/O services</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_posix_i_o_services">7.9. POSIX I/O services</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 Cobalt&#8217;s select(2) service is not automatically restarted anymore
@@ -1439,10 +1816,13 @@ Similarly, the real-time suitable STDIO routines are now part of
 </ul></div>
 </div>
 </div>
+</div>
 <div class="sect1">
-<h2 id="_former_native_interface_changes_now_alchemy">8. Former Native interface changes (now Alchemy)</h2>
+<h2 id="_alchemy_interface_formerly_em_native_api_em">8. Alchemy interface (formerly <em>native API</em>)</h2>
 <div class="sectionbody">
-<div class="ulist"><div class="title">General</div><ul>
+<div class="sect2">
+<h3 id="_general">8.1. General</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The API calls supporting a wait operation may return the -EIDRM
@@ -1452,7 +1832,10 @@ will result in -EINVAL being returned.
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Interrupt management</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_interrupt_management_2">8.2. Interrupt management</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The <code>RT_INTR</code> API is gone. Please see the <a href="#irqhandling">rationale</a>
@@ -1469,7 +1852,10 @@ The <code>RT_INTR</code> API is gone. Please see the <a href="#irqhandling">rati
 receipts, as explained <a href="#userirqtip">here</a>.</td>
 </tr></table>
 </div>
-<div class="ulist"><div class="title">I/O regions</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_i_o_regions">8.3. I/O regions</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The RT_IOREGION API is gone. I/O memory resources should
@@ -1477,11 +1863,14 @@ The RT_IOREGION API is gone. I/O memory resources should
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Timing services</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_timing_services">8.4. Timing services</h3>
+<div class="ulist"><ul>
 <li>
 <p>
-<code>rt_timer_set_mode()</code> was removed. The clock resolution has become a
-per-process setting, which can be tuned by passing the
+<code>rt_timer_set_mode()</code> is obsolete. The clock resolution has become a
+per-process setting, which should be set using the
 <code>--alchemy-clock-resolution</code> switch on the command line.
 </p>
 </li>
@@ -1514,24 +1903,30 @@ TM_INFINITE also means infinite wait with all <code>rt_*_until()</code> call
 <li>
 <p>
 <code>rt_task_set_periodic()</code> does not suspend the target task anymore.
+If a start date is specified, then <code>rt_task_wait_period()</code> will apply
+the initial delay.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>If a start date is specified, then <code>rt_task_wait_period()</code> will apply
-the initial delay.</p></div>
-<div class="paragraph"><p>Rationale: a periodic task has to call <code>rt_task_wait_period()</code> from
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>A periodic Alchemy task has to call <code>rt_task_wait_period()</code> from
 within its work loop for sleeping until the next release point is
-reached. Therefore, in most cases, there is no point in waiting for
-the initial release point from a different location.</p></div>
+reached. Since waiting for the initial and subsequent release points
+will most often happen at the same code location in the application,
+the semantics of rt_task_set_periodic() can be simplified so that only
+rt_task_wait_period() may block the caller.</p></div>
+</div></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="../asciidoc-icons/tip.png" alt="Tip" />
 </td>
-<td class="content">In the unusual case where you do need to have the target task wait for
-the initial release point outside of its periodic work loop, you can
-issue a call to <code>rt_task_wait_period()</code> separately, exclusively for
-this purpose, i.e.</td>
+<td class="content">In the unusual case where you do need to have the current task wait
+for the initial release point outside of its periodic work loop, you
+can issue a call to <code>rt_task_wait_period()</code> separately, exclusively
+for this purpose, i.e.</td>
 </tr></table>
 </div>
 <div class="listingblock">
@@ -1545,6 +1940,9 @@ this purpose, i.e.</td>
                        /* ...do periodic work... */
               }</code></pre>
 </div></div>
+<div class="paragraph"><p>However, this work around won&#8217;t work if the caller is not the target
+task of rt_task_set_periodic(), which is fortunately unusual for most
+applications.</p></div>
 <div class="paragraph"><p><code>rt_task_set_periodic()</code> still switches to primary as previously over
 Cobalt. However, it does not return -EWOULDBLOCK anymore.</p></div>
 <div class="ulist"><ul>
@@ -1572,11 +1970,14 @@ Unlike with Xenomai 2.x, the target task to <code>rt_task_set_periodic()</code>
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Mutexes</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_mutexes">8.5. Mutexes</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 For consistency with the standard glibc implementation, deleting a
-  RT_MUTEX object in locked state is no more a valid operation.
+  RT_MUTEX object in locked state is no longer a valid operation.
 </p>
 </li>
 <li>
@@ -1585,18 +1986,25 @@ For consistency with the standard glibc implementation, deleting a
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Rationale: obtaining the current count of waiters only makes sense for
-debugging purpose. Keeping it in the API would introduce a significant
-overhead to maintain internal consistency.</p></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Obtaining the current count of waiters only makes sense for debugging
+purpose. Keeping it in the API would introduce a significant overhead
+to maintain internal consistency.</p></div>
+</div></div>
 <div class="paragraph"><p>The <code>owner</code> field of a RT_MUTEX_INFO structure now reports the owner&#8217;s
 task handle, instead of its name. When the mutex is unlocked, a NULL
 handle is returned, which has the same meaning as a zero value in the
 former <code>locked</code> field.</p></div>
-<div class="ulist"><div class="title">Condition variables</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_condition_variables">8.6. Condition variables</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 For consistency with the standard glibc implementation, deleting a
-  RT_COND object currently pended by other tasks is no more a valid
+  RT_COND object currently pended by other tasks is no longer a valid
   operation.
 </p>
 </li>
@@ -1607,7 +2015,10 @@ count of waiting tasks anymore.
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Task management</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_task_management">8.7. Task management</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>rt_task_notify()</code> and <code>rt_task_catch()</code> have been removed. They are
@@ -1622,13 +2033,24 @@ As a consequence of the previous change, the T_NOSIG flag to
 </li>
 <li>
 <p>
-T_SUSP cannot be passed to rt_task_create() anymore.
+T_SUSP cannot be passed to rt_task_create() or rt_task_spawn()
+  anymore.
+</p>
+</li>
+<li>
+<p>
+T_FPU is obsolete. FPU management is automatically enabled for
+  Alchemy tasks if the hardware supports it, disabled otherwise.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Rationale: This behavior can be achieved by not calling
-<code>rt_task_start()</code> immediately after <code>rt_task_create()</code>, or by calling
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>This behavior can be achieved by not calling <code>rt_task_start()</code>
+immediately after <code>rt_task_create()</code>, or by calling
 <code>rt_task_suspend()</code> before <code>rt_task_start()</code>.</p></div>
+</div></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1706,46 +2128,59 @@ T_CPU disappears from the <code>rt_task_create()</code> mode flags. The new
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Message queues</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_message_queues_2">8.8. Message queues</h3>
+<div class="ulist"><ul>
 <li>
 <p>
-<code>rt_queue_create()</code> mode bits updated:
+As Alchemy-based applications run in user-space, the following
+  <code>rt_queue_create()</code> mode bits from the former <em>native</em> API are
+  obsolete:
 </p>
 <div class="ulist"><ul>
 <li>
 <p>
-Q_SHARED is implicit for all queues, defined as nop.
+Q_SHARED
 </p>
 </li>
 <li>
 <p>
-Q_DMA has become meaningless, and therefore was dropped. A driver
-     should be implemented for delivering chunks of DMA-suitable
-     memory.
+Q_DMA
 </p>
 </li>
 </ul></div>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Heaps</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_heaps">8.9. Heaps</h3>
+<div class="ulist"><ul>
 <li>
 <p>
-<code>rt_heap_create()</code> mode bits updated:
+As Alchemy-based applications run in user-space, the following
+  <code>rt_heap_create()</code> mode bits from the former <em>native</em> API are
+  obsolete:
 </p>
 <div class="ulist"><ul>
 <li>
 <p>
-H_MAPPABLE has become meaningless.
+H_MAPPABLE
 </p>
 </li>
 <li>
 <p>
-H_SHARED is deprecated, but still wraps to H_SINGLE.
+H_SHARED
 </p>
 </li>
 <li>
 <p>
-H_NONCACHED and H_DMA became meaningless.
+H_NONCACHED
+</p>
+</li>
+<li>
+<p>
+H_DMA
 </p>
 </li>
 </ul></div>
@@ -1769,20 +2204,26 @@ should create a RTDM driver for this purpose.</td>
 </li>
 <li>
 <p>
-<code>rt_heap_inquire()</code> with the removal of H_DMA, phys_addr makes no
-   sense anymore, removed.
+with the removal of H_DMA, returning a physical address (phys_addr)
+  in <code>rt_heap_inquire()</code> does not apply anymore.
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Alarms</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_alarms">8.10. Alarms</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>rt_alarm_wait()</code> has been removed.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Rationale: An alarm handler can be specified to <code>rt_alarm_create()</code>
-instead.</p></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>An alarm handler can be passed to <code>rt_alarm_create()</code> instead.</p></div>
+</div></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1806,7 +2247,10 @@ field <code>active</code> has been added, to reflect the current state of
 </ul></div>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Message pipes</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_message_pipes">8.11. Message pipes</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 Writing to a message pipe is allowed from all contexts, including
@@ -1822,10 +2266,13 @@ Writing to a message pipe is allowed from all contexts, including
 </ul></div>
 </div>
 </div>
+</div>
 <div class="sect1">
 <h2 id="_psos_interface_changes">9. pSOS interface changes</h2>
 <div class="sectionbody">
-<div class="ulist"><div class="title">Memory regions</div><ul>
+<div class="sect2">
+<h3 id="_memory_regions">9.1. Memory regions</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>rn_create()</code> may return ERR_NOSEG if the region control block
@@ -1833,7 +2280,10 @@ Writing to a message pipe is allowed from all contexts, including
 </p>
 </li>
 </ul></div>
-<div class="ulist"><div class="title">Scheduling</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_scheduling_2">9.2. Scheduling</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The emulator converts priority levels between the core POSIX and
@@ -1856,10 +2306,13 @@ to map pSOS over the POSIX scale 1:1, leaving
 normalization/denormalization handlers as no-ops by default.</p></div>
 </div>
 </div>
+</div>
 <div class="sect1">
 <h2 id="_vxworks_interface_changes">10. VxWorks interface changes</h2>
 <div class="sectionbody">
-<div class="ulist"><div class="title">Task management</div><ul>
+<div class="sect2">
+<h3 id="_task_management_2">10.1. Task management</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>WIND_*</code> status bits are synced to the user-visible TCB only as a
@@ -1870,7 +2323,10 @@ result of a call to <code>taskTcb()</code> or <code>taskGetInfo()</code>.
 <div class="paragraph"><p>As a consequence of this change, any reference to a user-visible TCB
 should be refreshed by calling <code>taskTcb()</code> anew, each time reading the
 <code>status</code> field is required.</p></div>
-<div class="ulist"><div class="title">Scheduling</div><ul>
+</div>
+<div class="sect2">
+<h3 id="_scheduling_3">10.2. Scheduling</h3>
+<div class="ulist"><ul>
 <li>
 <p>
 The emulator converts priority levels between the core POSIX and
@@ -1891,10 +2347,54 @@ int wind_task_denormalize_priority(int core_prio);</code></pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_using_the_transition_kit">11. Using the Transition Kit</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Xenomai 2 applications in user-space may use a library and a set of
+compatibility headers, aimed at easing the process of transitioning to
+Xenomai 3.</p></div>
+<div class="paragraph"><p>Enabling this compatibility layer is done via passing specific
+compilation and linker flags when building the
+application. <code>xeno-config</code> can retrieve those flags using the
+<code>--cflags</code> and <code>--ldflags</code> switches as usual, with the addition of the
+<code>--compat</code> flag. Alternatively, passing the <code>--[skin=]native</code> switch
+as to <code>xeno-config</code> implicitly turns on the compatibility mode for the
+Alchemy API.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">The transition kit does not currently cover <em>all</em> the changes
+introduced in Xenomai 3 yet, but a significant subset of them
+nevertheless.</td>
+</tr></table>
+</div>
+<div class="listingblock">
+<div class="title">A typical Makefile fragment implicitly turning on backward compatibility</div>
+<div class="content">
+<pre><code>PREFIX := /usr/xenomai
+CONFIG_CMD := $(PREFIX)/bin/xeno-config
+CFLAGS= $(shell $(CONFIG_CMD) --skin=native --cflags) -g
+LDFLAGS= $(shell $(CONFIG_CMD) --skin=native --ldflags)
+CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
+</div></div>
+<div class="listingblock">
+<div class="title">Another example for using with the POSIX API</div>
+<div class="content">
+<pre><code>PREFIX := /usr/xenomai
+CONFIG_CMD := $(PREFIX)/bin/xeno-config
+CFLAGS= $(shell $(CONFIG_CMD) --skin=posix --cflags --compat) -g
+LDFLAGS= $(shell $(CONFIG_CMD) --skin=posix --ldflags --compat)
+CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
+</div></div>
+</div>
+</div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-05-27 15:39:53 CEST
+Last updated 2014-08-03 10:56:12 CEST
 </div>
 </div>
 </body>

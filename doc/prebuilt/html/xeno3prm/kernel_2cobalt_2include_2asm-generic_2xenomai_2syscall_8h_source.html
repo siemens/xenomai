@@ -159,7 +159,7 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2include_2asm-generic_2
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor"></span><span class="comment">/* Shorthand for non-restartable primary syscall. */</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">#define __xn_exec_nonrestartable (__xn_exec_primary|__xn_exec_norestart)</span></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor"></span><span class="comment">/* Shorthand for domain probing syscall */</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#define __xn_exec_probing   (__xn_exec_current|__xn_exec_adaptive)</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#define __xn_exec_probing   (__xn_exec_conforming|__xn_exec_adaptive)</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor"></span><span class="comment">/* Shorthand for oneway trap - does not return to call site. */</span></div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">#define __xn_exec_oneway    __xn_exec_norestart</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor"></span></div>

@@ -10,7 +10,6 @@ var group__alchemy__queue =
       [ "usedmem", "structRT__QUEUE__INFO.html#acf2095e8a9c0e1f7da197123bb324a21", null ]
     ] ],
     [ "Q_PRIO", "group__alchemy__queue.html#ga6184fd1b608179ebfe57a86d45555846", null ],
-    [ "Q_SHARED", "group__alchemy__queue.html#ga45aeba7addddd57e056334f7091f7695", null ],
     [ "rt_queue_alloc", "group__alchemy__queue.html#ga1f2d9dd0be6cb739ebfe97a7ce158302", null ],
     [ "rt_queue_bind", "group__alchemy__queue.html#ga0cb4a6f6f3e87f730450b1b1c1bfa4bb", null ],
     [ "rt_queue_create", "group__alchemy__queue.html#gafcca092449615e243e02050d9fe9cedb", null ],

@@ -2,6 +2,7 @@ var dir_76d5addc6821621178045871d206a7fc =
 [
     [ "alarm.h", "include_2alchemy_2alarm_8h_source.html", null ],
     [ "buffer.h", "include_2alchemy_2buffer_8h_source.html", null ],
+    [ "compat.h", "compat_8h_source.html", null ],
     [ "cond.h", "include_2alchemy_2cond_8h_source.html", null ],
     [ "event.h", "include_2alchemy_2event_8h_source.html", null ],
     [ "heap.h", "include_2alchemy_2heap_8h_source.html", null ],

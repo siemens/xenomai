@@ -324,7 +324,7 @@ Task Priority Modification</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">task_proc</td><td>Procedure to be executed by the task </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Custom argument passed to <code>task_proc()</code> on entry </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>Priority of the task, see also <a class="el" href="group__rtdm__task.html#rtdmtaskprio">Task Priority Range</a> </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">period</td><td>Period in nanoseconds of a cyclic task, 0 for non-cyclic mode</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">period</td><td>Period in nanoseconds of a cyclic task, 0 for non-cyclic mode. Waiting for the first and subsequent periodic events is done using <a class="el" href="group__rtdm__task.html#ga577886a7588cdceac10f1b7b6ffcd1c7" title="Wait on next real-time task period. ">rtdm_task_wait_period()</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -545,7 +545,7 @@ This service does not trigger the termination of the targeted task. The user has
 </div><div class="memdoc">
 
 <p>Sleep until a specified absolute time. </p>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Use rtdm_task_sleep_abs instead!</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000004">Deprecated:</a></b></dt><dd>Use rtdm_task_sleep_abs instead!</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">wakeup_time</td><td>Absolute timeout in nanoseconds</td></tr>

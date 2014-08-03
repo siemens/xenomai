@@ -935,10 +935,10 @@ rt_task_wait_period() may block the caller.
 **********************************************************************
 
 [TIP]
-In the unusual case where you do need to have the target task wait for
-the initial release point outside of its periodic work loop, you can
-issue a call to +rt_task_wait_period()+ separately, exclusively for
-this purpose, i.e.
+In the unusual case where you do need to have the current task wait
+for the initial release point outside of its periodic work loop, you
+can issue a call to +rt_task_wait_period()+ separately, exclusively
+for this purpose, i.e.
 ---------------------------------------------------------------
               /* wait for the initial release point. */
               ret = rt_task_wait_period(&overruns);
@@ -949,6 +949,9 @@ this purpose, i.e.
 		       /* ...do periodic work... */
 	      }
 ---------------------------------------------------------------
+However, this work around won't work if the caller is not the target
+task of rt_task_set_periodic(), which is fortunately unusual for most
+applications.
 
 [normal]
 +rt_task_set_periodic()+ still switches to primary as previously over
@@ -1001,7 +1004,8 @@ count of waiting tasks anymore.
 - As a consequence of the previous change, the T_NOSIG flag to
   +rt_task_set_mode()+ was dropped in the same move.
 
-- T_SUSP cannot be passed to rt_task_create() anymore.
+- T_SUSP cannot be passed to rt_task_create() or rt_task_spawn()
+  anymore.
 
 - T_FPU is obsolete. FPU management is automatically enabled for
   Alchemy tasks if the hardware supports it, disabled otherwise.

@@ -1,5 +1,5 @@
 <map id="Thread services" name="Thread services">
 <area shape="rect" id="node1" href="$group__cobalt__core__thread__states.html" title="Bits reporting permanent or transient states of threads. " alt="" coords="317,5,443,32"/>
 <area shape="rect" id="node2" href="$group__cobalt__core__thread__info.html" title="Bits reporting events notified to threads. " alt="" coords="315,57,445,98"/>
-<area shape="rect" id="node4" href="$group__cobalt__core.html" title="The Cobalt kernel implements generic RTOS building blocks. " alt="" coords="5,35,104,61"/>
+<area shape="rect" id="node4" href="$group__cobalt__core.html" title="The Cobalt core is a co&#45;kernel which supplements the Linux kernel for delivering real&#45;time services w..." alt="" coords="5,35,104,61"/>
 </map>

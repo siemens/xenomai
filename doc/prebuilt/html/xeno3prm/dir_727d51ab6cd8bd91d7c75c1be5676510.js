@@ -7,7 +7,7 @@ var dir_727d51ab6cd8bd91d7c75c1be5676510 =
     [ "arith.h", "include_2cobalt_2arith_8h_source.html", null ],
     [ "fcntl.h", "fcntl_8h_source.html", null ],
     [ "mqueue.h", "include_2cobalt_2mqueue_8h_source.html", null ],
-    [ "pthread.h", "pthread_8h_source.html", null ],
+    [ "pthread.h", "cobalt_2pthread_8h_source.html", null ],
     [ "sched.h", "include_2cobalt_2sched_8h_source.html", null ],
     [ "semaphore.h", "semaphore_8h_source.html", null ],
     [ "signal.h", "include_2cobalt_2signal_8h_source.html", null ],

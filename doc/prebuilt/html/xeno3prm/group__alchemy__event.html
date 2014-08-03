@@ -237,11 +237,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned if the object cannot be retrieved within the specified amount of time.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>timeout</em> equals TM_NONBLOCK.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -280,7 +276,7 @@ Functions</h2></td></tr>
 <p>This routine clears a set of flags from <em>event</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the affected event.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
     <tr><td class="paramname">mask</td><td>The set of event flags to be cleared.</td></tr>
     <tr><td class="paramname">mask_r</td><td>If non-NULL, <em>mask_r</em> is the address of a memory location which will receive the previous value of the event flag group before the flags are cleared.</td></tr>
   </table>
@@ -290,7 +286,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>event</em> is not a valid event flag group descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -352,11 +348,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered event flag group.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Event flag groups can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__event.html#ga332e18be49bf253b8a3a4eb3f0d4df2c">EV_PRIO</a>.</p>
@@ -381,7 +373,7 @@ Functions</h2></td></tr>
 <p>This routine deletes a event flag group previously created by a call to <a class="el" href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c" title="Create an event flag group. ">rt_event_create()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the deleted object.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -390,11 +382,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>event</em> is not a valid event flag group descriptor.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -426,7 +414,7 @@ Functions</h2></td></tr>
 <p>This routine returns the status information about <em>event</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the event flag group to get the status of.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
     <tr><td class="paramname">info</td><td>A pointer to the <a class="el" href="structRT__EVENT__INFO.html#RT_EVENT_INFO">return</a>buffer" to copy the information to.</td></tr>
   </table>
   </dd>
@@ -435,7 +423,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>event</em> is not a valid event flag group descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">RT_EVENT_INFO::name</a>, <a class="el" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">RT_EVENT_INFO::nwaiters</a>, and <a class="el" href="structRT__EVENT__INFO.html#adbf286bbacfacdf430e72dc930356e24">RT_EVENT_INFO::value</a>.</p>
 
@@ -469,7 +457,7 @@ Functions</h2></td></tr>
 <p>Post a set of flags to <em>event</em>. All tasks having their wait request satisfied as a result of this operation are immediately readied.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the event flag group to signal.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
     <tr><td class="paramname">mask</td><td>The set of events to be posted.</td></tr>
   </table>
   </dd>
@@ -478,7 +466,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>event</em> is not an event flag group descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -499,11 +487,12 @@ Functions</h2></td></tr>
 <p>Unbind from an event flag group. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the object to unbind from.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This routine releases a previous binding to an event flag group. After this call has returned, the descriptor is no more valid for referencing this object. </p>
+<p>This routine releases a previous binding to an event flag group. After this call has returned, the descriptor is no more valid for referencing this object.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -561,14 +550,15 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8" title="Wait for an arbitrary set of events. ">rt_event_wait_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the event flag group to wait on.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
     <tr><td class="paramname">mask</td><td>The set of bits to wait for.</td></tr>
     <tr><td class="paramname">mask_r</td><td>The value of the event mask at the time the task was readied.</td></tr>
     <tr><td class="paramname">mode</td><td>The pend mode.</td></tr>
-    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks, </td></tr>
+    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks,</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed()</a>.</p>
 
@@ -620,7 +610,7 @@ Functions</h2></td></tr>
 <p>Waits for one or more events to be signaled in <em>event</em>, or until a timeout elapses.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the event flag group to wait on.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
     <tr><td class="paramname">mask</td><td>The set of bits to wait for. Passing zero causes this service to return immediately with a success value; the current value of the event mask is also copied to <em>mask_r</em>.</td></tr>
     <tr><td class="paramname">mask_r</td><td>The value of the event mask at the time the task was readied.</td></tr>
     <tr><td class="paramname">mode</td><td>The pend mode. The following flags can be OR'ed into this bitmask, each of them affecting the operation:</td></tr>
@@ -646,11 +636,7 @@ Functions</h2></td></tr>
 <li>-EIDRM is returned if <em>event</em> is deleted while the caller was sleeping on it. In such a case, <em>event</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads.</li>
-<li>Any other context if <em>abs_timeout</em> is { .tv_sec = 0, .tv_nsec = 0 }.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__event.html#ga1bbb8e9b7c802aded726ad136fd6444c">EV_ANY</a>.</p>
@@ -713,14 +699,15 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8" title="Wait for an arbitrary set of events. ">rt_event_wait_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">event</td><td>The descriptor address of the event flag group to wait on.</td></tr>
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
     <tr><td class="paramname">mask</td><td>The set of bits to wait for.</td></tr>
     <tr><td class="paramname">mask_r</td><td>The value of the event mask at the time the task was readied.</td></tr>
     <tr><td class="paramname">mode</td><td>The pend mode.</td></tr>
-    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed()</a>.</p>
 

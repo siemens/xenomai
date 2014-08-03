@@ -51,20 +51,20 @@ Table of Contents
     7.1. Booting the Cobalt kernel
     7.2. Testing the real-time system (both cores)
 
-The latest version of this document is available at this address: 
-"http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/".
 
-For questions, corrections and improvements, write to the mailing list: 
-"xenomai@xenomai.org".
+9. Migrating applications to Xenomai 3
+--------------------------------------
 
 
 1. Introduction
 ---------------
 
-Xenomai 3 is the new architecture of the Xenomai RTOS emulation system, which
-can run seamlessly as a dual kernel (i.e. like the legacy Xenomai 2.x, I-pipe
-based), or over mainline Linux kernels (likely PREEMPT-RT enabled, but this is
-not mandatory, if the latency requirements are relaxed).
+Xenomai 3 is the new architecture of the Xenomai real-time framework, which can
+run seamlessly side-by-side Linux as a co-kernel system like Xenomai 2, or
+natively over mainline Linux kernels. In the latter case, the mainline kernel
+can be supplemented by the PREEMPT-RT patch: 
+"https://www.kernel.org/pub/linux/kernel/projects/rt/" to meet stricter response time requirements than standard
+kernel preemption would bring.
 
 This new architecture therefore exhibits two real-time cores, selected at build
 time. The dual kernel core nicknamed Cobalt, is a significant rework of the
@@ -72,10 +72,10 @@ Xenomai 2.x system. The native linux version, an enhanced implementation of the
 experimental Xenomai/SOLO: 
 "http://www.osadl.org/Migration-Portability.migration-portability.0.html" work, is called Mercury.
 
-This magic works with the introduction of the "Copperplate" interface, which
+This magic works with the introduction of the Copperplate interface, which
 mediates between the real-time API/emulator your application uses, and the
 underlying real-time core. This way, applications are able to run in either
-environments without visible change.
+environments without visible code change.
 
 
 2. Installation steps
@@ -133,10 +133,10 @@ $ scripts/prepare-kernel.sh [--linux=<linux-srctree>]
     host architecture suggested as a reasonable default.
 
 For instance, the following command would prepare the Linux tree located at /
-home/me/linux-3.8-ipipe in order to patch the Xenomai support in:
+home/me/linux-3.10-ipipe in order to patch the Xenomai support in:
 
 $ cd xenomai-forge
-$ scripts/prepare-kernel.sh --linux=/home/me/linux-3.8
+$ scripts/prepare-kernel.sh --linux=/home/me/linux-3.10
 
 Note: The script will infer the location of the Xenomai kernel code from its
 own location within the Xenomai source tree. For instance, if /home/me/
@@ -190,8 +190,7 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86 \
   --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
 $ make [ARCH=i386] xconfig/gconfig/menuconfig
 
-?configure the kernel (see also the recommended settings here: 
-"http://www.xenomai.org/index.php/Configuring_x86_kernels").
+?configure the kernel (see also the recommended settings here).
 
 Enable Xenomai options, then build with:
 
@@ -206,8 +205,7 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
   --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
 $ make xconfig/gconfig/menuconfig
 
-?configure the kernel (see also the recommended settings here: 
-"http://www.xenomai.org/index.php/Configuring_x86_kernels").
+?configure the kernel (see also the recommended settings here).
 
 Enable Xenomai options, then build with:
 
@@ -220,8 +218,7 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
   --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
 $ make xconfig/gconfig/menuconfig
 
-?configure the kernel (see also the recommended settings here: 
-"http://www.xenomai.org/index.php/Configuring_x86_kernels").
+?configure the kernel (see also the recommended settings here).
 
 Enable Xenomai options, then build with:
 
@@ -234,11 +231,11 @@ cross-compilation toolchain for the target system first.
 Building a Cobalt/powerpc kernel (32/64bit)
 
 A typical cross-compilation setup, in order to build Xenomai for a ppc-6xx
-architecture running a 3.8.13 kernel. We use the DENX ELDK cross-compiler:
+architecture running a 3.10.32 kernel. We use the DENX ELDK cross-compiler:
 
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/powerpc/patches/ipipe-core-3.8.13-powerpc-1.patch
+  --ipipe=$xenomai_root/kernel/cobalt/arch/powerpc/patches/ipipe-core-3.10.32-powerpc-1.patch
 $ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig
 
 ?select the kernel and Xenomai options, save the configuration
@@ -314,7 +311,7 @@ Generic requirements (both cores)
 
 Cobalt-specific requirements
 
-  * The kernel version must be 3.5.7 or better.
+  * The kernel version must be 3.10 or better.
   * An interrupt pipeline (I-pipe) patch must be available for your target
     kernel. You can find the official patches issued by the Xenomai project
     there: "http://download.gna.org/adeos/patches/v3.x/". Only patches from the
@@ -326,7 +323,7 @@ Cobalt-specific requirements
 
 Mercury-specific requirement
 
-  * Only [eg]libc-based platforms are currently supported.
+  * Only glibc-based platforms are currently supported.
 
 
 5.2. Configuring
@@ -503,6 +500,19 @@ You may override the default root of the registry hierarchy by using the
 --disable-valgrind-client
     Turns off the Valgrind client support, forcing CONFIG_XENO_VALGRIND_API off
     in the Xenomai configuration header.
+--enable-doc-build
+
+    Causes the inline Xenomai documentation based on the Doxygen markup
+    language: "http://doxygen.org" to be produced as PDF and HTML documents.
+    Additional documentation like manpages based on the Asciidoc markup
+    language: "http://asciidoc.org/" is produced too.
+
+    A pre-built copy of the documentation is present in the source tree, under
+    the doc/generated/ file hierarchy.
+
+--disable-doc-install
+    Disables the copying of the pre-built documentation to the installation
+    directory.
 
 Cobalt-specific configuration options
 
@@ -577,9 +587,9 @@ $staging_dir
     path to a directory that will hold the installed file temporarily before
     they are moved to their final location; when used in a cross-compilation
     setup, it is usually a NFS mount point from the target?s root directory to
-    the local build host, as a consequence of which running make DESTDIR=
-    $staging_dir install on the host immediately updates the target system with
-    the installed programs and libraries.
+    the local build host, as a consequence of which running make{nbsp}DESTDIR=
+    $staging_dir{nbsp}install on the host immediately updates the target system
+    with the installed programs and libraries.
 
 [Caution] Caution
           In the examples below, make sure to add --enable-smp to the configure
@@ -756,4 +766,26 @@ If the latency test succeeds, you should try next to run the xeno-test test in
 order to assess the worst-case latency of your system. Try:
 
 $ xeno-test --help
+
+
+8. Building and running Xenomai 3 applications
+----------------------------------------------
+
+Once the latency test behaves as expected on your target system, it is deemed
+ready to run real-time applications.
+
+You may want to have a look at this document for details about the application
+build process.
+
+In addition, you should refer to this document to learn about the builtin
+command line switches available with any Xenomai 3 application.
+
+
+9. Migrating applications to Xenomai 3
+--------------------------------------
+
+If you plan to port an existing application based on Xenomai 2.x to Xenomai
+
+3.x, you should have a look at this migration guide.
+----------------------------------------------------
 

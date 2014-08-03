@@ -110,82 +110,81 @@ $(document).ready(function(){initNavTree('include_2alchemy_2mutex_8h_source.html
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> * License along with this library; if not, write to the Free Software</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#ifndef _XENOMAI_ALCHEMY_MUTEX_H</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_MUTEX_H</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;alchemy/task.h&gt;</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">struct </span>RT_MUTEX {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;        uintptr_t handle;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;};</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_MUTEX RT_MUTEX;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="structRT__MUTEX__INFO.html">   44</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a> {</div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">   50</a></span>&#160;        RT_TASK <a class="code" href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">owner</a>;</div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">   54</a></span>&#160;        <span class="keywordtype">char</span> <a class="code" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">name</a>[XNOBJECT_NAME_LEN];</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;};</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a> <a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a>;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gac89c13a781e4636acf9e66f02d9feb83">rt_mutex_create</a>(RT_MUTEX *mutex,</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">name</a>);</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gad0c2342227f821bd09f580b6a9684179">rt_mutex_delete</a>(RT_MUTEX *mutex);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a>(RT_MUTEX *mutex,</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                           <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">   72</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">rt_mutex_acquire_until</a>(RT_MUTEX *mutex, RTIME timeout)</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;{</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a>(mutex,</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                                      alchemy_abs_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;}</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">   80</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a>(RT_MUTEX *mutex, RTIME timeout)</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;{</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a>(mutex,</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                                      alchemy_rel_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;}</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a>(RT_MUTEX *mutex);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a>(RT_MUTEX *mutex,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                     <a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a> *info);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga39b3a0e7f6f6ee41b8068ed59e25d1d1">rt_mutex_bind</a>(RT_MUTEX *mutex,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga3f308046a8fb83442d5d97e33d0516a4">rt_mutex_unbind</a>(RT_MUTEX *mutex);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_MUTEX_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__alchemy__mutex_html_gad0c2342227f821bd09f580b6a9684179"><div class="ttname"><a href="group__alchemy__mutex.html#gad0c2342227f821bd09f580b6a9684179">rt_mutex_delete</a></div><div class="ttdeci">int rt_mutex_delete(RT_MUTEX *mutex)</div><div class="ttdoc">Delete a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:194</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_ga3f308046a8fb83442d5d97e33d0516a4"><div class="ttname"><a href="group__alchemy__mutex.html#ga3f308046a8fb83442d5d97e33d0516a4">rt_mutex_unbind</a></div><div class="ttdeci">int rt_mutex_unbind(RT_MUTEX *mutex)</div><div class="ttdoc">Unbind from a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:522</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_ga8f7db304bb5a839d81614f00c4cde145"><div class="ttname"><a href="group__alchemy__mutex.html#ga8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a></div><div class="ttdeci">int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)</div><div class="ttdoc">Query mutex status. </div><div class="ttdef"><b>Definition:</b> mutex.c:424</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_ga8a087d5bfeaaf10b6f0a924b272d72c9"><div class="ttname"><a href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a></div><div class="ttdeci">static int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Acquire/lock a mutex (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> mutex.h:80</div></div>
-<div class="ttc" id="structRT__MUTEX__INFO_html_afc07033ecd5df60683b72edc1c4d3de4"><div class="ttname"><a href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">RT_MUTEX_INFO::owner</a></div><div class="ttdeci">RT_TASK owner</div><div class="ttdoc">Current mutex owner, or null if unlocked. </div><div class="ttdef"><b>Definition:</b> mutex.h:50</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_gad6c91e42bdbf7b7b6e9e2235e98efdf7"><div class="ttname"><a href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a></div><div class="ttdeci">int rt_mutex_acquire_timed(RT_MUTEX *mutex, const struct timespec *abs_timeout)</div><div class="ttdoc">Acquire/lock a mutex (with absolute timeout date). </div><div class="ttdef"><b>Definition:</b> mutex.c:298</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_ga1d7ee706d0f898f940d5c1139fa38194"><div class="ttname"><a href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">rt_mutex_acquire_until</a></div><div class="ttdeci">static int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Acquire/lock a mutex (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> mutex.h:72</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_gac89c13a781e4636acf9e66f02d9feb83"><div class="ttname"><a href="group__alchemy__mutex.html#gac89c13a781e4636acf9e66f02d9feb83">rt_mutex_create</a></div><div class="ttdeci">int rt_mutex_create(RT_MUTEX *mutex, const char *name)</div><div class="ttdoc">Create a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:109</div></div>
-<div class="ttc" id="structRT__MUTEX__INFO_html_a81d7495c2c822fe5b21498ff5bead3d4"><div class="ttname"><a href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">RT_MUTEX_INFO::name</a></div><div class="ttdeci">char name[XNOBJECT_NAME_LEN]</div><div class="ttdoc">Name of mutex. </div><div class="ttdef"><b>Definition:</b> mutex.h:54</div></div>
-<div class="ttc" id="structRT__MUTEX__INFO_html"><div class="ttname"><a href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a></div><div class="ttdoc">Mutex status descriptor. </div><div class="ttdef"><b>Definition:</b> mutex.h:44</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_gac87911b7279f55ef2f5f9aefe36ff070"><div class="ttname"><a href="group__alchemy__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a></div><div class="ttdeci">int rt_mutex_release(RT_MUTEX *mutex)</div><div class="ttdoc">Release/unlock a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:387</div></div>
-<div class="ttc" id="group__alchemy__mutex_html_ga39b3a0e7f6f6ee41b8068ed59e25d1d1"><div class="ttname"><a href="group__alchemy__mutex.html#ga39b3a0e7f6f6ee41b8068ed59e25d1d1">rt_mutex_bind</a></div><div class="ttdeci">int rt_mutex_bind(RT_MUTEX *mutex, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:502</div></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#ifndef _XENOMAI_ALCHEMY_MUTEX_H</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_MUTEX_H</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;alchemy/task.h&gt;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keyword">struct </span>RT_MUTEX {</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        uintptr_t handle;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;};</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_MUTEX RT_MUTEX;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="structRT__MUTEX__INFO.html">   43</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a> {</div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">   49</a></span>&#160;        RT_TASK <a class="code" href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">owner</a>;</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">   53</a></span>&#160;        <span class="keywordtype">char</span> <a class="code" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">name</a>[XNOBJECT_NAME_LEN];</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;};</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a> <a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a>;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gac89c13a781e4636acf9e66f02d9feb83">rt_mutex_create</a>(RT_MUTEX *mutex,</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">name</a>);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gad0c2342227f821bd09f580b6a9684179">rt_mutex_delete</a>(RT_MUTEX *mutex);</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a>(RT_MUTEX *mutex,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                           <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">   71</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">rt_mutex_acquire_until</a>(RT_MUTEX *mutex, RTIME timeout)</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;{</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a>(mutex,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                                      alchemy_abs_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;}</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">   79</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a>(RT_MUTEX *mutex, RTIME timeout)</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;{</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a>(mutex,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                                      alchemy_rel_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;}</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a>(RT_MUTEX *mutex);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a>(RT_MUTEX *mutex,</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                     <a class="code" href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a> *info);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga39b3a0e7f6f6ee41b8068ed59e25d1d1">rt_mutex_bind</a>(RT_MUTEX *mutex,</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__mutex.html#ga3f308046a8fb83442d5d97e33d0516a4">rt_mutex_unbind</a>(RT_MUTEX *mutex);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_MUTEX_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__alchemy__mutex_html_gad0c2342227f821bd09f580b6a9684179"><div class="ttname"><a href="group__alchemy__mutex.html#gad0c2342227f821bd09f580b6a9684179">rt_mutex_delete</a></div><div class="ttdeci">int rt_mutex_delete(RT_MUTEX *mutex)</div><div class="ttdoc">Delete a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:188</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_ga3f308046a8fb83442d5d97e33d0516a4"><div class="ttname"><a href="group__alchemy__mutex.html#ga3f308046a8fb83442d5d97e33d0516a4">rt_mutex_unbind</a></div><div class="ttdeci">int rt_mutex_unbind(RT_MUTEX *mutex)</div><div class="ttdoc">Unbind from a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:511</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_ga8f7db304bb5a839d81614f00c4cde145"><div class="ttname"><a href="group__alchemy__mutex.html#ga8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a></div><div class="ttdeci">int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)</div><div class="ttdoc">Query mutex status. </div><div class="ttdef"><b>Definition:</b> mutex.c:416</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_ga8a087d5bfeaaf10b6f0a924b272d72c9"><div class="ttname"><a href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a></div><div class="ttdeci">static int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Acquire/lock a mutex (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> mutex.h:79</div></div>
+<div class="ttc" id="structRT__MUTEX__INFO_html_afc07033ecd5df60683b72edc1c4d3de4"><div class="ttname"><a href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">RT_MUTEX_INFO::owner</a></div><div class="ttdeci">RT_TASK owner</div><div class="ttdoc">Current mutex owner, or null if unlocked. </div><div class="ttdef"><b>Definition:</b> mutex.h:49</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_gad6c91e42bdbf7b7b6e9e2235e98efdf7"><div class="ttname"><a href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a></div><div class="ttdeci">int rt_mutex_acquire_timed(RT_MUTEX *mutex, const struct timespec *abs_timeout)</div><div class="ttdoc">Acquire/lock a mutex (with absolute timeout date). </div><div class="ttdef"><b>Definition:</b> mutex.c:294</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_ga1d7ee706d0f898f940d5c1139fa38194"><div class="ttname"><a href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">rt_mutex_acquire_until</a></div><div class="ttdeci">static int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Acquire/lock a mutex (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> mutex.h:71</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_gac89c13a781e4636acf9e66f02d9feb83"><div class="ttname"><a href="group__alchemy__mutex.html#gac89c13a781e4636acf9e66f02d9feb83">rt_mutex_create</a></div><div class="ttdeci">int rt_mutex_create(RT_MUTEX *mutex, const char *name)</div><div class="ttdoc">Create a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:106</div></div>
+<div class="ttc" id="structRT__MUTEX__INFO_html_a81d7495c2c822fe5b21498ff5bead3d4"><div class="ttname"><a href="structRT__MUTEX__INFO.html#a81d7495c2c822fe5b21498ff5bead3d4">RT_MUTEX_INFO::name</a></div><div class="ttdeci">char name[XNOBJECT_NAME_LEN]</div><div class="ttdoc">Name of mutex. </div><div class="ttdef"><b>Definition:</b> mutex.h:53</div></div>
+<div class="ttc" id="structRT__MUTEX__INFO_html"><div class="ttname"><a href="structRT__MUTEX__INFO.html">RT_MUTEX_INFO</a></div><div class="ttdoc">Mutex status descriptor. </div><div class="ttdef"><b>Definition:</b> mutex.h:43</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_gac87911b7279f55ef2f5f9aefe36ff070"><div class="ttname"><a href="group__alchemy__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a></div><div class="ttdeci">int rt_mutex_release(RT_MUTEX *mutex)</div><div class="ttdoc">Release/unlock a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:381</div></div>
+<div class="ttc" id="group__alchemy__mutex_html_ga39b3a0e7f6f6ee41b8068ed59e25d1d1"><div class="ttname"><a href="group__alchemy__mutex.html#ga39b3a0e7f6f6ee41b8068ed59e25d1d1">rt_mutex_bind</a></div><div class="ttdeci">int rt_mutex_bind(RT_MUTEX *mutex, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:491</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

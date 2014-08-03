@@ -110,99 +110,98 @@ $(document).ready(function(){initNavTree('include_2alchemy_2timer_8h_source.html
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> * License along with this library; if not, write to the Free Software</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#ifndef _XENOMAI_ALCHEMY_TIMER_H</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_TIMER_H</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;stddef.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;copperplate/clockobj.h&gt;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keyword">typedef</span> ticks_t RTIME;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">typedef</span> sticks_t SRTIME;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define TM_INFINITE  0</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TM_NOW       0</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TM_NONBLOCK  ((RTIME)-1ULL)</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="structrt__timer__info.html">   45</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrt__timer__info.html">rt_timer_info</a> {</div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">   49</a></span>&#160;        RTIME <a class="code" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">period</a>;</div>
-<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">   61</a></span>&#160;        RTIME <a class="code" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">tsc</a>;</div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">   68</a></span>&#160;        RTIME <a class="code" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">date</a>;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;} <a class="code" href="group__alchemy__timer.html#ga36af8698cba5da05f9dca2d644c1a6df">RT_TIMER_INFO</a>;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>clockobj alchemy_clock;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">#define alchemy_abs_timeout(__t, __ts)                                  \</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">        ({                                                              \</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">                (__t) == TM_INFINITE ? NULL :                           \</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">                (__t) == TM_NONBLOCK ?                                  \</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">                ({ (__ts)-&gt;tv_sec = (__ts)-&gt;tv_nsec = 0; (__ts); }) :   \</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">                ({ clockobj_ticks_to_timespec(&amp;alchemy_clock, (__t), (__ts)); \</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">                        (__ts); });                                     \</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">        })</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">#define alchemy_rel_timeout(__t, __ts)                                  \</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">        ({                                                              \</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">                (__t) == TM_INFINITE ? NULL :                           \</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">                (__t) == TM_NONBLOCK ?                                  \</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">                ({ (__ts)-&gt;tv_sec = (__ts)-&gt;tv_nsec = 0; (__ts); }) :   \</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">                ({ clockobj_ticks_to_timeout(&amp;alchemy_clock, (__t), (__ts)); \</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">                        (__ts); });                                     \</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor">        })</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keywordtype">int</span> alchemy_poll_mode(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout)</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;{</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        <span class="keywordflow">return</span> abs_timeout &amp;&amp;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                abs_timeout-&gt;tv_sec == 0 &amp;&amp;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                abs_timeout-&gt;tv_nsec == 0;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;}</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> RTIME rt_timer_tsc(<span class="keywordtype">void</span>)</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;{</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        <span class="keywordflow">return</span> clockobj_get_tsc();</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;}</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> SRTIME rt_timer_ns2tsc(SRTIME ns)</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;{</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        <span class="keywordflow">return</span> clockobj_ns_to_tsc(ns);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;}</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> SRTIME rt_timer_tsc2ns(SRTIME tsc)</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;{</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keywordflow">return</span> clockobj_tsc_to_ns(tsc);</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;}</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;SRTIME <a class="code" href="group__alchemy__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a>(SRTIME ns);</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;SRTIME <a class="code" href="group__alchemy__timer.html#gaa41e1976c4df9929c1a1238cc1195f48">rt_timer_ticks2ns</a>(SRTIME ticks);</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;RTIME <a class="code" href="group__alchemy__timer.html#ga9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire</a>(<a class="code" href="structrt__timer__info.html">RT_TIMER_INFO</a> *info);</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__alchemy__timer.html#ga7d3f782ce7b642a2759c62649777d2c7">rt_timer_spin</a>(RTIME ns);</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _ALCHEMY_TIMER_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__alchemy__timer_html_ga7d3f782ce7b642a2759c62649777d2c7"><div class="ttname"><a href="group__alchemy__timer.html#ga7d3f782ce7b642a2759c62649777d2c7">rt_timer_spin</a></div><div class="ttdeci">void rt_timer_spin(RTIME ns)</div><div class="ttdoc">Busy wait burning CPU cycles. </div><div class="ttdef"><b>Definition:</b> timer.c:150</div></div>
-<div class="ttc" id="structrt__timer__info_html_ae0b40e3f54176cb6eaff19a0a42ecd3e"><div class="ttname"><a href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">rt_timer_info::date</a></div><div class="ttdeci">RTIME date</div><div class="ttdoc">Current monotonic date, based on the time stamp counter value. </div><div class="ttdef"><b>Definition:</b> timer.h:68</div></div>
-<div class="ttc" id="group__alchemy__timer_html_ga9665d6947e29d1a19dafb5401b0f6285"><div class="ttname"><a href="group__alchemy__timer.html#ga9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a></div><div class="ttdeci">RTIME rt_timer_read(void)</div><div class="ttdoc">Return the current system time. </div><div class="ttdef"><b>Definition:</b> timer.c:50</div></div>
-<div class="ttc" id="structrt__timer__info_html"><div class="ttname"><a href="structrt__timer__info.html">rt_timer_info</a></div><div class="ttdoc">Timer status descriptor. </div><div class="ttdef"><b>Definition:</b> timer.h:45</div></div>
-<div class="ttc" id="structrt__timer__info_html_a02f413497af5105ef5df396c378dbbf2"><div class="ttname"><a href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">rt_timer_info::period</a></div><div class="ttdeci">RTIME period</div><div class="ttdoc">Clock resolution in nanoseconds. </div><div class="ttdef"><b>Definition:</b> timer.h:49</div></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#ifndef _XENOMAI_ALCHEMY_TIMER_H</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_TIMER_H</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;stddef.h&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;copperplate/clockobj.h&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="keyword">typedef</span> ticks_t RTIME;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">typedef</span> sticks_t SRTIME;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#define TM_INFINITE  0</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TM_NOW       0</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TM_NONBLOCK  ((RTIME)-1ULL)</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="structrt__timer__info.html">   44</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structrt__timer__info.html">rt_timer_info</a> {</div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">   48</a></span>&#160;        RTIME <a class="code" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">period</a>;</div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">   60</a></span>&#160;        RTIME <a class="code" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">tsc</a>;</div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">   67</a></span>&#160;        RTIME <a class="code" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">date</a>;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;} <a class="code" href="group__alchemy__timer.html#ga36af8698cba5da05f9dca2d644c1a6df">RT_TIMER_INFO</a>;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>clockobj alchemy_clock;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">#define alchemy_abs_timeout(__t, __ts)                                  \</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">        ({                                                              \</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">                (__t) == TM_INFINITE ? NULL :                           \</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">                (__t) == TM_NONBLOCK ?                                  \</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">                ({ (__ts)-&gt;tv_sec = (__ts)-&gt;tv_nsec = 0; (__ts); }) :   \</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">                ({ clockobj_ticks_to_timespec(&amp;alchemy_clock, (__t), (__ts)); \</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">                        (__ts); });                                     \</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">        })</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor">#define alchemy_rel_timeout(__t, __ts)                                  \</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">        ({                                                              \</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">                (__t) == TM_INFINITE ? NULL :                           \</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">                (__t) == TM_NONBLOCK ?                                  \</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">                ({ (__ts)-&gt;tv_sec = (__ts)-&gt;tv_nsec = 0; (__ts); }) :   \</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">                ({ clockobj_ticks_to_timeout(&amp;alchemy_clock, (__t), (__ts)); \</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">                        (__ts); });                                     \</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">        })</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keywordtype">int</span> alchemy_poll_mode(<span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout)</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;{</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordflow">return</span> abs_timeout &amp;&amp;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                abs_timeout-&gt;tv_sec == 0 &amp;&amp;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                abs_timeout-&gt;tv_nsec == 0;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> RTIME rt_timer_tsc(<span class="keywordtype">void</span>)</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;{</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="keywordflow">return</span> clockobj_get_tsc();</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;}</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> SRTIME rt_timer_ns2tsc(SRTIME ns)</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;{</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <span class="keywordflow">return</span> clockobj_ns_to_tsc(ns);</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;}</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> SRTIME rt_timer_tsc2ns(SRTIME tsc)</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;{</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keywordflow">return</span> clockobj_tsc_to_ns(tsc);</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;}</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;SRTIME <a class="code" href="group__alchemy__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a>(SRTIME ns);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;SRTIME <a class="code" href="group__alchemy__timer.html#gaa41e1976c4df9929c1a1238cc1195f48">rt_timer_ticks2ns</a>(SRTIME ticks);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;RTIME <a class="code" href="group__alchemy__timer.html#ga9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire</a>(<a class="code" href="structrt__timer__info.html">RT_TIMER_INFO</a> *info);</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__alchemy__timer.html#ga7d3f782ce7b642a2759c62649777d2c7">rt_timer_spin</a>(RTIME ns);</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _ALCHEMY_TIMER_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__alchemy__timer_html_ga7d3f782ce7b642a2759c62649777d2c7"><div class="ttname"><a href="group__alchemy__timer.html#ga7d3f782ce7b642a2759c62649777d2c7">rt_timer_spin</a></div><div class="ttdeci">void rt_timer_spin(RTIME ns)</div><div class="ttdoc">Busy wait burning CPU cycles. </div><div class="ttdef"><b>Definition:</b> timer.c:135</div></div>
+<div class="ttc" id="structrt__timer__info_html_ae0b40e3f54176cb6eaff19a0a42ecd3e"><div class="ttname"><a href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">rt_timer_info::date</a></div><div class="ttdeci">RTIME date</div><div class="ttdoc">Current monotonic date, based on the time stamp counter value. </div><div class="ttdef"><b>Definition:</b> timer.h:67</div></div>
+<div class="ttc" id="group__alchemy__timer_html_ga9665d6947e29d1a19dafb5401b0f6285"><div class="ttname"><a href="group__alchemy__timer.html#ga9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a></div><div class="ttdeci">RTIME rt_timer_read(void)</div><div class="ttdoc">Return the current system time. </div><div class="ttdef"><b>Definition:</b> timer.c:47</div></div>
+<div class="ttc" id="structrt__timer__info_html"><div class="ttname"><a href="structrt__timer__info.html">rt_timer_info</a></div><div class="ttdoc">Timer status descriptor. </div><div class="ttdef"><b>Definition:</b> timer.h:44</div></div>
+<div class="ttc" id="structrt__timer__info_html_a02f413497af5105ef5df396c378dbbf2"><div class="ttname"><a href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">rt_timer_info::period</a></div><div class="ttdeci">RTIME period</div><div class="ttdoc">Clock resolution in nanoseconds. </div><div class="ttdef"><b>Definition:</b> timer.h:48</div></div>
 <div class="ttc" id="group__alchemy__timer_html_ga36af8698cba5da05f9dca2d644c1a6df"><div class="ttname"><a href="group__alchemy__timer.html#ga36af8698cba5da05f9dca2d644c1a6df">RT_TIMER_INFO</a></div><div class="ttdeci">struct rt_timer_info RT_TIMER_INFO</div><div class="ttdoc">Timer status descriptor. </div></div>
-<div class="ttc" id="group__alchemy__timer_html_gaa41e1976c4df9929c1a1238cc1195f48"><div class="ttname"><a href="group__alchemy__timer.html#gaa41e1976c4df9929c1a1238cc1195f48">rt_timer_ticks2ns</a></div><div class="ttdeci">SRTIME rt_timer_ticks2ns(SRTIME ticks)</div><div class="ttdoc">Convert Alchemy clock ticks to nanoseconds. </div><div class="ttdef"><b>Definition:</b> timer.c:104</div></div>
-<div class="ttc" id="structrt__timer__info_html_a1a7d07f1d0ece5618812826d1f28c9d2"><div class="ttname"><a href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">rt_timer_info::tsc</a></div><div class="ttdeci">RTIME tsc</div><div class="ttdoc">Current time stamp counter value. </div><div class="ttdef"><b>Definition:</b> timer.h:61</div></div>
-<div class="ttc" id="group__alchemy__timer_html_ga66f026b0ac68ef3acde0e6d1bdb6baaf"><div class="ttname"><a href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire</a></div><div class="ttdeci">int rt_timer_inquire(RT_TIMER_INFO *info)</div><div class="ttdoc">Inquire about the Xenomai core timer. </div><div class="ttdef"><b>Definition:</b> timer.c:125</div></div>
-<div class="ttc" id="group__alchemy__timer_html_gaad812d18e51f398fbb0e5392b2acdf2f"><div class="ttname"><a href="group__alchemy__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a></div><div class="ttdeci">SRTIME rt_timer_ns2ticks(SRTIME ns)</div><div class="ttdoc">Convert nanoseconds to Alchemy clock ticks. </div><div class="ttdef"><b>Definition:</b> timer.c:79</div></div>
+<div class="ttc" id="group__alchemy__timer_html_gaa41e1976c4df9929c1a1238cc1195f48"><div class="ttname"><a href="group__alchemy__timer.html#gaa41e1976c4df9929c1a1238cc1195f48">rt_timer_ticks2ns</a></div><div class="ttdeci">SRTIME rt_timer_ticks2ns(SRTIME ticks)</div><div class="ttdoc">Convert Alchemy clock ticks to nanoseconds. </div><div class="ttdef"><b>Definition:</b> timer.c:95</div></div>
+<div class="ttc" id="structrt__timer__info_html_a1a7d07f1d0ece5618812826d1f28c9d2"><div class="ttname"><a href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">rt_timer_info::tsc</a></div><div class="ttdeci">RTIME tsc</div><div class="ttdoc">Current time stamp counter value. </div><div class="ttdef"><b>Definition:</b> timer.h:60</div></div>
+<div class="ttc" id="group__alchemy__timer_html_ga66f026b0ac68ef3acde0e6d1bdb6baaf"><div class="ttname"><a href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire</a></div><div class="ttdeci">int rt_timer_inquire(RT_TIMER_INFO *info)</div><div class="ttdoc">Inquire about the Xenomai core timer. </div><div class="ttdef"><b>Definition:</b> timer.c:113</div></div>
+<div class="ttc" id="group__alchemy__timer_html_gaad812d18e51f398fbb0e5392b2acdf2f"><div class="ttname"><a href="group__alchemy__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a></div><div class="ttdeci">SRTIME rt_timer_ns2ticks(SRTIME ns)</div><div class="ttdoc">Convert nanoseconds to Alchemy clock ticks. </div><div class="ttdef"><b>Definition:</b> timer.c:73</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -114,9 +114,6 @@ Macros</h2></td></tr>
 <tr class="memitem:ga6184fd1b608179ebfe57a86d45555846"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__queue.html#ga6184fd1b608179ebfe57a86d45555846">Q_PRIO</a>&#160;&#160;&#160;0x1	/* Pend by task priority order. */</td></tr>
 <tr class="memdesc:ga6184fd1b608179ebfe57a86d45555846"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creation flags.  <a href="#ga6184fd1b608179ebfe57a86d45555846">More...</a><br/></td></tr>
 <tr class="separator:ga6184fd1b608179ebfe57a86d45555846"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga45aeba7addddd57e056334f7091f7695"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__queue.html#ga45aeba7addddd57e056334f7091f7695">Q_SHARED</a>&#160;&#160;&#160;0x0</td></tr>
-<tr class="memdesc:ga45aeba7addddd57e056334f7091f7695"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated, compat only.  <a href="#ga45aeba7addddd57e056334f7091f7695">More...</a><br/></td></tr>
-<tr class="separator:ga45aeba7addddd57e056334f7091f7695"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -186,20 +183,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga45aeba7addddd57e056334f7091f7695"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define Q_SHARED&#160;&#160;&#160;0x0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Deprecated, compat only. </p>
-
-</div>
-</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ga1f2d9dd0be6cb739ebfe97a7ce158302"></a>
 <div class="memitem">
@@ -229,13 +212,13 @@ Functions</h2></td></tr>
 <p>This service allocates a message buffer from the queue's internal pool. This buffer can be filled in with payload information, prior enqueuing it by a call to <a class="el" href="group__alchemy__queue.html#ga1f667487f19b7611a999481a9eb56757" title="Send a message to a queue. ">rt_queue_send()</a>. When used in pair, these services provide a zero-copy interface for sending messages.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the queue to allocate a buffer from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">size</td><td>The requested size in bytes of the buffer. Zero is an acceptable value, which means that the message conveys no payload; in this case, the receiver will get a zero-sized message.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The address of the allocated buffer upon success, or NULL if the call fails.</dd></dl>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -286,11 +269,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned if the object cannot be retrieved within the specified amount of time.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>timeout</em> equals TM_NONBLOCK.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -361,11 +340,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered queue.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Queues can be shared by multiple processes which belong to the same Xenomai session.</dd>
 <dd>
 Each message pending into the queue consumes four long words plus the actual payload size, aligned to the next long word boundary. e.g. a 6 byte message on a 32 bit platform would require 24 bytes of storage into the pool.</dd></dl>
@@ -393,7 +368,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine deletes a queue object previously created by a call to <a class="el" href="group__alchemy__queue.html#gafcca092449615e243e02050d9fe9cedb" title="Create a message queue. ">rt_queue_create()</a>. All resources attached to that queue are automatically released, including all pending messages.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the deleted queue.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -402,11 +377,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <li>-EINVAL is returned if <em>q</em> is not a valid queue descriptor.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -428,7 +399,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine flushes all messages currently pending in a queue, releasing all message buffers appropriately.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the queue to flush.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -436,7 +407,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <ul>
 <li>-EINVAL is returned if <em>q</em> is not a valid queue descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -468,13 +439,13 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This service releases a message buffer to the queue's internal pool.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the queue to release a buffer to.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>The address of the message buffer to free. Even zero-sized messages carrying no payload data must be freed, since they are assigned a valid memory space to store internal information.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success, or -EINVAL if <em>buf</em> is not a valid message buffer previously allocated by the <a class="el" href="group__alchemy__queue.html#ga1f2d9dd0be6cb739ebfe97a7ce158302" title="Allocate a message buffer. ">rt_queue_alloc()</a> service, or the caller did not get ownership of the message through a successful return from <a class="el" href="group__alchemy__queue.html#ga53f06e6c79aad6996e3c98103e06e464" title="Receive from a queue (with relative scalar timeout). ">rt_queue_receive()</a>.</dd></dl>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -506,7 +477,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine returns the status information about the specified queue.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the queue to get the status of.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">info</td><td>A pointer to the <a class="el" href="structRT__SEM__INFO.html#RT_QUEUE_INFO">return</a>buffer" to copy the information to.</td></tr>
   </table>
   </dd>
@@ -515,7 +486,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <ul>
 <li>-EINVAL is returned if <em>q</em> is not a valid queue descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="structRT__QUEUE__INFO.html#a81c53102b3b42deb57e1a6ccffdba5b9">RT_QUEUE_INFO::mode</a>, <a class="el" href="structRT__QUEUE__INFO.html#afd5e97a2c5e83451dab949b6f43b9f1b">RT_QUEUE_INFO::name</a>, <a class="el" href="structRT__QUEUE__INFO.html#a280258c4d2ad599d6e38c84c1d295bd2">RT_QUEUE_INFO::nmessages</a>, <a class="el" href="structRT__QUEUE__INFO.html#aec41dd74c0002db14f8da88b4df73d52">RT_QUEUE_INFO::nwaiters</a>, <a class="el" href="structRT__QUEUE__INFO.html#a5a91d7436be72dc6ac4900e759709a35">RT_QUEUE_INFO::poolsize</a>, <a class="el" href="structRT__QUEUE__INFO.html#a3f82152fe946a24ff4feae8b14fc45ac">RT_QUEUE_INFO::qlimit</a>, and <a class="el" href="structRT__QUEUE__INFO.html#acf2095e8a9c0e1f7da197123bb324a21">RT_QUEUE_INFO::usedmem</a>.</p>
 
@@ -569,13 +540,14 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine is a variant of <a class="el" href="group__alchemy__queue.html#gaa804ad003381fa7d6c67ca3fcc5851a3" title="Read from a queue. ">rt_queue_read_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to read from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>A pointer to a memory area which will be written upon success with the received message payload.</td></tr>
     <tr><td class="paramname">size</td><td>The length in bytes of the memory area pointed to by <em>buf</em>.</td></tr>
-    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__queue.html#gaa804ad003381fa7d6c67ca3fcc5851a3">rt_queue_read_timed()</a>.</p>
 
@@ -621,7 +593,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This service reads the next available message from a given queue.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to read from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>A pointer to a memory area which will be written upon success with the received message payload. The internal message buffer conveying the data is automatically freed by this call.</td></tr>
     <tr><td class="paramname">size</td><td>The length in bytes of the memory area pointed to by <em>buf</em>. Messages larger than <em>size</em> are truncated appropriately.</td></tr>
     <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks, specifying a time limit to wait for a message to be available from the queue (see note). Passing NULL causes the caller to block indefinitely until a message is available. Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service to return immediately without blocking in case no message is available.</td></tr>
@@ -637,11 +609,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <li>-EIDRM is returned if <em>q</em> is deleted while the caller was waiting for a message. In such event, <em>q</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>abs_timeout</em> is { .tv_sec = 0, .tv_nsec = 0 }.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__queue.html#ga7baca65c1d6abfc51f170f7f9b5e6d31">rt_queue_read()</a>, and <a class="el" href="group__alchemy__queue.html#ga0d29fcc0592c5da196df9f6cb6fd84d3">rt_queue_read_until()</a>.</p>
@@ -696,13 +664,14 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine is a variant of <a class="el" href="group__alchemy__queue.html#gaa804ad003381fa7d6c67ca3fcc5851a3" title="Read from a queue. ">rt_queue_read_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to read from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>A pointer to a memory area which will be written upon success with the received message payload.</td></tr>
     <tr><td class="paramname">size</td><td>The length in bytes of the memory area pointed to by <em>buf</em>.</td></tr>
-    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__queue.html#gaa804ad003381fa7d6c67ca3fcc5851a3">rt_queue_read_timed()</a>.</p>
 
@@ -750,12 +719,13 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine is a variant of <a class="el" href="group__alchemy__queue.html#ga23257e3a6ad962b5e02a54b2e252bbca" title="Receive a message from a queue (with absolute timeout date). ">rt_queue_receive_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to receive from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">bufp</td><td>A pointer to a memory location which will be written with the address of the received message.</td></tr>
-    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__queue.html#ga23257e3a6ad962b5e02a54b2e252bbca">rt_queue_receive_timed()</a>.</p>
 
@@ -795,7 +765,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This service receives the next available message from a given queue.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to receive from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">bufp</td><td>A pointer to a memory location which will be written with the address of the received message, upon success. Once consumed, the message space should be freed using <a class="el" href="group__alchemy__queue.html#ga7dde50ae5c62445b781bd6087f5b58c0" title="Free a message buffer. ">rt_queue_free()</a>.</td></tr>
     <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks, specifying a time limit to wait for a message to be available from the queue (see note). Passing NULL causes the caller to block indefinitely until a message is available. Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service to return immediately without blocking in case no message is available.</td></tr>
   </table>
@@ -810,11 +780,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <li>-EIDRM is returned if <em>q</em> is deleted while the caller was waiting for a message. In such event, <em>q</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>abs_timeout</em> is { .tv_sec = 0, .tv_nsec = 0 } .</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__queue.html#ga53f06e6c79aad6996e3c98103e06e464">rt_queue_receive()</a>, and <a class="el" href="group__alchemy__queue.html#gaf6bc941d00c44d2ed4302aec747f9e09">rt_queue_receive_until()</a>.</p>
@@ -863,12 +829,13 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This routine is a variant of <a class="el" href="group__alchemy__queue.html#ga23257e3a6ad962b5e02a54b2e252bbca" title="Receive a message from a queue (with absolute timeout date). ">rt_queue_receive_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to receive from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">bufp</td><td>A pointer to a memory location which will be written with the address of the received message.</td></tr>
-    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__queue.html#ga23257e3a6ad962b5e02a54b2e252bbca">rt_queue_receive_timed()</a>.</p>
 
@@ -914,7 +881,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>This service sends a complete message to a given queue. The message must have been allocated by a previous call to <a class="el" href="group__alchemy__queue.html#ga1f2d9dd0be6cb739ebfe97a7ce158302" title="Allocate a message buffer. ">rt_queue_alloc()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the message queue to send to.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
     <tr><td class="paramname">buf</td><td>The address of the message buffer to be sent. The message buffer must have been allocated using the <a class="el" href="group__alchemy__queue.html#ga1f2d9dd0be6cb739ebfe97a7ce158302" title="Allocate a message buffer. ">rt_queue_alloc()</a> service. Once passed to <a class="el" href="group__alchemy__queue.html#ga1f667487f19b7611a999481a9eb56757" title="Send a message to a queue. ">rt_queue_send()</a>, the memory pointed to by <em>buf</em> is no more under the control of the sender and thus should not be referenced by it anymore; deallocation of this memory must be handled on the receiving side.</td></tr>
     <tr><td class="paramname">size</td><td>The actual size in bytes of the message, which may be lower than the allocated size for the buffer obtained from <a class="el" href="group__alchemy__queue.html#ga1f2d9dd0be6cb739ebfe97a7ce158302" title="Allocate a message buffer. ">rt_queue_alloc()</a>. Zero is a valid value, in which case an empty message will be sent.</td></tr>
     <tr><td class="paramname">mode</td><td>A set of flags affecting the operation:</td></tr>
@@ -931,7 +898,7 @@ Each message pending into the queue consumes four long words plus the actual pay
 <li>-EINVAL is returned if <em>q</em> is not a message queue descriptor, <em>mode</em> is invalid, or <em>buf</em> is NULL.</li>
 <li>-ENOMEM is returned if queuing the message would exceed the limit defined for the queue at creation.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -952,11 +919,12 @@ Each message pending into the queue consumes four long words plus the actual pay
 <p>Unbind from a message queue. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">q</td><td>The descriptor address of the queue to unbind from.</td></tr>
+    <tr><td class="paramname">q</td><td>The queue descriptor.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This routine releases a previous binding to a message queue. After this call has returned, the descriptor is no more valid for referencing this object. </p>
+<p>This routine releases a previous binding to a message queue. After this call has returned, the descriptor is no more valid for referencing this object.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>

@@ -8,6 +8,7 @@ var group__alchemy__pipe =
     [ "rt_pipe_read", "group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e", null ],
     [ "rt_pipe_read_timed", "group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8", null ],
     [ "rt_pipe_read_until", "group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e", null ],
+    [ "rt_pipe_stream", "group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd", null ],
     [ "rt_pipe_unbind", "group__alchemy__pipe.html#ga77722465437c7d65241cc6823b5b6793", null ],
     [ "rt_pipe_write", "group__alchemy__pipe.html#ga12f801963d0db6aa60bc6cf92f65697a", null ]
 ];

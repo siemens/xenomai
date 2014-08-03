@@ -95,7 +95,7 @@ Collaboration diagram for Thread services:</div>
 <div class="dyncontent">
 <center><table><tr><td><img src="group__cobalt__core__thread.png" border="0" alt="" usemap="#group____cobalt____core____thread"/>
 <map name="group____cobalt____core____thread" id="group____cobalt____core____thread">
-<area shape="rect" id="node1" href="group__cobalt__core__thread__states.html" title="Bits reporting permanent or transient states of threads. " alt="" coords="317,5,443,32"/><area shape="rect" id="node2" href="group__cobalt__core__thread__info.html" title="Bits reporting events notified to threads. " alt="" coords="315,57,445,98"/><area shape="rect" id="node4" href="group__cobalt__core.html" title="The Cobalt kernel implements generic RTOS building blocks. " alt="" coords="5,35,104,61"/></map>
+<area shape="rect" id="node1" href="group__cobalt__core__thread__states.html" title="Bits reporting permanent or transient states of threads. " alt="" coords="317,5,443,32"/><area shape="rect" id="node2" href="group__cobalt__core__thread__info.html" title="Bits reporting events notified to threads. " alt="" coords="315,57,445,98"/><area shape="rect" id="node4" href="group__cobalt__core.html" title="The Cobalt core is a co&#45;kernel which supplements the Linux kernel for delivering real&#45;time services w..." alt="" coords="5,35,104,61"/></map>
 </td></tr></table></center>
 </div>
 <table class="memberdecls">
@@ -610,7 +610,7 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>0 is returned upon success. Otherwise, -EINVAL is returned if <em>quantum</em> is not XN_INFINITE and:</dd></dl>
 <ul>
 <li>the base scheduling class of the target thread does not support time-slicing,</li>
-<li><em>quantum</em> is smaller than the master clock gravity, which denotes a spurious value.</li>
+<li><em>quantum</em> is smaller than the master clock gravity for a user thread, which denotes a spurious value.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
 

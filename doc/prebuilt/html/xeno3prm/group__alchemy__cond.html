@@ -193,11 +193,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned if the object cannot be retrieved within the specified amount of time.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-<li>Any other context if <em>timeout</em> equals TM_NONBLOCK.</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>timeout</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>
@@ -220,7 +216,7 @@ Functions</h2></td></tr>
 <p>All tasks currently waiting on the condition variable are immediately unblocked.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to broadcast.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -228,7 +224,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>cond</em> is not a valid condition variable descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#gafc4b19aa8ea2dce0956579ce878b4998">pthread_cond_broadcast()</a>.</p>
 
@@ -273,11 +269,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered condition variable.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Condition variables can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy()</a>, <a class="el" href="group__cobalt__api__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init()</a>, <a class="el" href="group__cobalt__api__cond.html#ga066f082e4a085641043714e3bc4d70d7">pthread_condattr_destroy()</a>, <a class="el" href="group__cobalt__api__cond.html#ga34083fe1cd54d5d67599b4cca593ffa4">pthread_condattr_init()</a>, <a class="el" href="group__cobalt__api__cond.html#ga68d1e544c6bbf3cedeee5455b14c642d">pthread_condattr_setclock()</a>, and <a class="el" href="group__cobalt__api__cond.html#ga1a026d48926e804fed515bb01b0cbb45">pthread_condattr_setpshared()</a>.</p>
@@ -302,7 +294,7 @@ Functions</h2></td></tr>
 <p>This routine deletes a condition variable object previously created by a call to <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855" title="Create a condition variable. ">rt_cond_create()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the deleted condition variable.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -312,11 +304,7 @@ Functions</h2></td></tr>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 <li>-EBUSY is returned upon an attempt to destroy the object referenced by <em>cond</em> while it is referenced (for example, while being used in a <a class="el" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8" title="Wait on a condition variable (with relative scalar timeout). ">rt_cond_wait()</a>, <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388" title="Wait on a condition variable. ">rt_cond_wait_timed()</a> or <a class="el" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c" title="Wait on a condition variable (with absolute scalar timeout). ">rt_cond_wait_until()</a> by another task).</li>
 </ul>
-<p>Valid calling context:</p>
-<ul>
-<li>Regular POSIX threads</li>
-<li>Xenomai threads </li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy()</a>.</p>
 
@@ -350,7 +338,7 @@ Functions</h2></td></tr>
 <p>This routine returns the status information about the specified condition variable.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to get the status of.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
     <tr><td class="paramname">info</td><td>A pointer to the <a class="el" href="structRT__COND__INFO.html">return</a>buffer" to copy the information to.</td></tr>
   </table>
   </dd>
@@ -359,7 +347,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>cond</em> is not a valid condition variable descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="structRT__COND__INFO.html#aa7e2c2d2972771e651d6327c9192c425">RT_COND_INFO::name</a>.</p>
 
@@ -383,7 +371,7 @@ Functions</h2></td></tr>
 <p>If the condition variable <em>cond</em> is pended, this routine immediately unblocks the first waiting task (by queuing priority order).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to signal.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -391,7 +379,7 @@ Functions</h2></td></tr>
 <ul>
 <li>-EINVAL is returned if <em>cond</em> is not a valid condition variable descriptor.</li>
 </ul>
-<p>Valid calling context: any. </p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#ga20f98235b024efb10e5c76a64f0d94e5">pthread_cond_signal()</a>.</p>
 
@@ -414,11 +402,12 @@ Functions</h2></td></tr>
 <p>Unbind from a condition variable. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to unbind from.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This routine releases a previous binding to a condition variable. After this call has returned, the descriptor is no more valid for referencing this object. </p>
+<p>This routine releases a previous binding to a condition variable. After this call has returned, the descriptor is no more valid for referencing this object.</p>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -464,12 +453,13 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388" title="Wait on a condition variable. ">rt_cond_wait_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to wait on.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
     <tr><td class="paramname">mutex</td><td>The address of the mutex serializing the access to the shared data.</td></tr>
-    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">timeout</td><td>A delay expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed()</a>.</p>
 
@@ -509,7 +499,7 @@ Functions</h2></td></tr>
 <p>This service atomically releases the mutex and blocks the calling task, until the condition variable <em>cond</em> is signaled or a timeout occurs, whichever comes first. The mutex is re-acquired before returning from this service.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to wait on.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
     <tr><td class="paramname">mutex</td><td>The address of the mutex serializing the access to the shared data.</td></tr>
     <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks, specifying a time limit to wait for the condition variable to be signaled (see note). Passing NULL causes the caller to block indefinitely.</td></tr>
   </table>
@@ -524,10 +514,7 @@ Functions</h2></td></tr>
 <li>-EIDRM is returned if <em>cond</em> is deleted while the caller was waiting on the condition variable. In such event, <em>cond</em> is no more valid upon return of this service.</li>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
-<p>Valid calling contexts:</p>
-<ul>
-<li>Xenomai threads</li>
-</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40">pthread_cond_timedwait()</a>, and <a class="el" href="group__cobalt__api__cond.html#ga907ae104b6dfd8fc12e23e84952aa7ca">pthread_cond_wait()</a>.</p>
@@ -578,12 +565,13 @@ Functions</h2></td></tr>
 <p>This routine is a variant of <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388" title="Wait on a condition variable. ">rt_cond_wait_timed()</a> accepting an abs_timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cond</td><td>The descriptor address of the condition variable to wait on.</td></tr>
+    <tr><td class="paramname">cond</td><td>The condition variable descriptor.</td></tr>
     <tr><td class="paramname">mutex</td><td>The address of the mutex serializing the access to the shared data.</td></tr>
-    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks. </td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>An absolute date expressed in clock ticks.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed()</a>.</p>
 
