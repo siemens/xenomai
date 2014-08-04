@@ -61,7 +61,7 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
-	ret = __bt(-pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta));
+	ret = -pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta);
 	pthread_attr_destroy_ex(&attr_ex);
 	if (ret)
 		return __bt(ret);
@@ -72,7 +72,7 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 int copperplate_renice_local_thread(pthread_t ptid, int policy,
 				    const struct sched_param_ex *param_ex)
 {
-	return __bt(-pthread_setschedparam_ex(ptid, policy, param_ex));
+	return -pthread_setschedparam_ex(ptid, policy, param_ex);
 }
 
 static inline void prepare_wait_corespec(void)
@@ -128,7 +128,7 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setstacksize(&attr, stacksize);
 	pthread_attr_setdetachstate(&attr, cta->detachstate);
-	ret = __bt(-pthread_create(ptid_r, &attr, thread_trampoline, cta));
+	ret = -pthread_create(ptid_r, &attr, thread_trampoline, cta);
 	pthread_attr_destroy(&attr);
 
 	if (ret)
@@ -144,7 +144,7 @@ int copperplate_renice_local_thread(pthread_t ptid, int policy,
 		.sched_priority = param_ex->sched_priority,
 	};
 
-	return __bt(-__RT(pthread_setschedparam(ptid, policy, &param)));
+	return -__RT(pthread_setschedparam(ptid, policy, &param));
 }
 
 static inline void prepare_wait_corespec(void)
@@ -195,9 +195,9 @@ static void *thread_trampoline(void *arg)
 	 */
 	_cta = *cta;
 
-	ret = __bt(-__RT(sem_init(&released, 0, 0)));
+	ret = __RT(sem_init(&released, 0, 0));
 	if (ret) {
-		ret = -errno;
+		ret = __bt(-errno);
 		cta->__reserved.status = ret;
 		warning("lack of resources for core thread, %s", symerror(ret));
 		goto fail;
