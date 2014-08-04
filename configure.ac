@@ -240,9 +240,9 @@ AC_ARG_ENABLE(assert,
 	esac])
 AC_MSG_RESULT(${use_assert:-no})
 
-dnl Enable asynchronous cancellation (default: on)
+dnl Enable asynchronous cancellation (default: off)
 
-async_cancel=y
+async_cancel=
 AC_MSG_CHECKING(whether asynchronous cancellation of threads is enabled)
 AC_ARG_ENABLE(async-cancel,
 	AS_HELP_STRING([--enable-async-cancel], [Enable asynchronous cancellation]),

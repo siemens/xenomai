@@ -12977,7 +12977,7 @@ fi
 $as_echo "${use_assert:-no}" >&6; }
 
 
-async_cancel=y
+async_cancel=
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether asynchronous cancellation of threads is enabled" >&5
 $as_echo_n "checking whether asynchronous cancellation of threads is enabled... " >&6; }
 # Check whether --enable-async-cancel was given.
