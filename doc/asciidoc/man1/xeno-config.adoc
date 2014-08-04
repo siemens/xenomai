@@ -2,6 +2,7 @@
 // Man page for xeno-config
 //
 // Copyright (C) 2005, 2006 Romain Lenglet <rlenglet@users.forge.objectweb.org>
+// Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>
 //
 // You may distribute under the terms of the GNU General Public
 // License as specified in the file COPYING that comes with the
@@ -11,112 +12,166 @@
 XENO-CONFIG(1)
 ==============
 :doctype: manpage
-:revdate: 2006/03/27
+:revdate: 2014/08/03
 :man source: Xenomai
 :man version: {xenover}
 :man manual: Xenomai Manual
 
 NAME
 -----
-xeno-config - Display Xenomai libraries configuration
+xeno-config - Retrieve Xenomai build flags and configuration
 
 SYNOPSIS
 ---------
-// The general command line
 *xeno-config*
 
 *xeno-config* *--v* | *--verbose*
 
-*xeno-config --help*::
+*xeno-config* *--help*
 
-*xeno-config* [*--version*] [*--cc*] [*--arch*] [*--prefix*] [*--skin native|posix|psos|rtdm|uitron|vrtx|vxworks*] [*--cflags*] [*--ldflags*] [*--lib***-dir*|*--library-dir*|*--libdir*|*--user-libdir*]
+*xeno-config* *--info*
+
+*xeno-config* *--core*
+
+*xeno-config* *--version*
+
+*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--cflags*] [*--kcflags*] [*--ldflags*] [*--library-dir*|*--libdir*|*--user-libdir*]
 
 DESCRIPTION
 ------------
-*xeno-config* is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai.
-Any combination of options can be chosen (except *--verbose* and *--help*) to display configuration information, and options can be given in any order.
-The command output one line for each option, in the same order as the options.
+*xeno-config* is a shell script which is aimed at retrieving the
+Xenomai build configuration data, such as the compiler and linker
+flags required for building applications. For this reason,
+*xeno-config* is typically used in Makefiles.
 
-When *xeno-config --verbose* is executed, all configuration information is displayed in a different, more human-readable format.
+*xeno-config --verbose* dumps the build configuration data in a
+human-readable format.
 
-When *xeno-config* is executed without any options, the output is equivalent to than when executing *xeno-config --verbose* then *xeno-config --help*.
-
-// ********************************************************************
+Invoking *xeno-config* without any options is equivalent to running
+*xeno-config --verbose --help*.
 
 OPTIONS
 --------
-
 *--v, --verbose*::
-Outputs all configuration information, in a human-readable format.
+Output all configuration information in a human-readable format.
 
-*--help*::
-Outputs the list of available command-line options.
+*--help*:: Output the list of available command-line options. The
+command exits immediately after completion.
 
 *--version*::
-Outputs one line with the installed Xenomai version.
+Output the Xenomai version.
 
 *--cc*::
-Outputs one line with the path to the C compiler command that was used to compiled Xenomai.
+Output the path to the C compiler command used to build the Xenomai
+libraries and utilities, which is therefore suitable for compiling a
+Xenomai application.
+
+*--ccld*::
+Output a C compiler command suitable for linking a Xenomai
+application.
 
 *--arch*::
-Outputs one line with the architecture to compile to, e.g. i386.
-May be different from the architecture of the currently running system, if cross-compiling.
+Output the target CPU architecture Xenomai was compiled for, e.g. arm,
+x86, powerpc etc.  This may differ from the CPU architecture of the
+current system, if cross-compiling.
 
 *--prefix*::
-Outputs one line with the absolute path to the base Xenomai installation directory.
+Output the absolute path to the Xenomai installation directory.
 
-*--skin*::
-Choose the skin for which xeno-config should print the compilation flags.
+*--[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey}*::
+Select the API/skin for which *xeno-config* should print the
+information required. The *skin=* prefix is optional and may be
+omitted, e.g. *--posix* is equivalent to *--skin=posix*, selecting the
+POSIX API.
+
+[NOTE]
+*--native* and *--skin=native* are accepted for backward compatibility
+purpose. They are stricly equivalent as passing *--alchemy --compat*.
 
 *--cflags*::
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai skin passed to the *--skin* option.
+Output the C compiler command-line options (_CFLAGS_) which are required
+to compile applications based on the selected Xenomai API/skin.
+
+*--kcflags*::
+Output the C compiler command-line options (_CFLAGS_) which are
+required to compile a kernel driver based on the RTDM
+interface. *--rtdm* must appear on the command line before
+*--kcflags*.
 
 *--ldflags*::
-Outputs one line with the C compiler command-line options that are necessary to link applications that use the Xenomai skin passed to the *--skin* option with the necessary libraries.
+Output the C compiler command-line options (_LDFLAGS_) which are
+required to link applications based on the selected Xenomai API/skin.
 
+*--library-dir, --libdir, --user-libdir*::
+These switches are synonyms, for retrieving the absolute path to the
+Xenomai libraries.
 
-*--lib***-dir, --library-dir, --libdir, --user-libdir*::
-Outputs one line with the absolute path to Xenomai's libraries.
-In the --lib*-dir option name, the *** is meant as a wildcard: *--lib-dir*, *--libfoo-dir* and *--libbar-dir* are all valid and synonymous options.
+*--auto-init*::
+*--no-auto-init*::
 
-DEPRECATED OPTIONS
-------------------
+All Xenomai APIs but POSIX are based on the Copperplate library, which
+automatically initializes when the application process
+starts. *--no-auto-init* can be passed to disable such
+initialization. In such a case, the application code shall call the
++copperplate_init()+ routine manually, as part of its initialization
+chores on behalf on the +main()+ routine, *before* any real-time
+service is invoked.
 
-*--xeno-cflags*::
-This option is deprecated, please use *--skin* and *--cflags* instead. 
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin.
+*xeno-config* enables the Copperplate auto-init feature by default.
 
-*--xeno-ldflags*::
-This option is deprecated, please use *--skin* and *--ldflags* instead. 
-Outputs one line with the C compiler command-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries. Note that the particular *-llibskin* flag should be added to the flags returned by this option.
+*--core*::
+Output the name of the real-time core the current Xenomai installation
+was built for. The possible values are _cobalt_ or _mercury_,
+depending on the configuration switch *--with-core* used for building
+the Xenomai libraries and utilities.
 
-*--posix-cflags*::
-This option is deprecated, please use *--skin posix --cflags* instead. 
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use Xenomai's Posix-compatible layer library.
+*--compat*::
+Enable the Xenomai 2.x compatibility mode for the API/skin
+selected. This switch affects the _Alchemy_ and POSIX APIs, turning on
+a set of source-level compatibility wrappers when present.
 
-*--posix-ldflags*::
-This option is deprecated, please use *--skin posix --ldflags* instead. 
-Outputs one line with the C compiler command-line options that are necessary to link applications against Xenomai's Posix-compatible layer library.
+*--info*::
+Dump information about the running Xenomai-enabled system. Unlike most
+other options, *--info* is aimed at being used on the target system
+running Xenomai, for retrieving the current setup information. The
+output of such command is a valuable information when reporting any
+runtime issue to mailto:xenomai@xenomai.org[the Xenomai mailing
+list]. The command exits immediately after completion.
 
 ENVIRONMENT VARIABLES
 ---------------------
 
 *DESTDIR*::
-If the *DESTDIR* variable is set, its content is prepended to the Xenomai installed directories and files names output by the
-*--prefix* and *--library-dir* options, and to the Xenomai installation directories in the flags output by the
-*--xeno-cflags*, *--xeno-ldflags*, *--posix-cflags*, *--posix-ldflags*
-options.
 
-If *DESTDIR* was set when compiling and installing Xenomai, e.g. for cross-compilation, *DESTDIR* must be set to the same value before calling *xeno-config*, in order to output valid directory and file names.
+Xenomai's handling of *DESTDIR* is conformant to the GNU coding and
+installation standards, for generating pathnames rooted at some
+staging area on the build system. Such staging area is commonly
+NFS-mounted from the target system running Xenomai.
 
-RETURN CODES
-------------
+If the *DESTDIR* variable is set in the environment of *xeno-config*,
+its contents is prepended to all directory and file names based on the
+Xenomai installation root which may be output by the command.
 
-*0*::
-Successful script execution.
+If *DESTDIR* was set when installing Xenomai - typically after
+cross-compiling - *DESTDIR* must be set to the same value before
+calling *xeno-config* for accessing the target-based directories and
+files from the build system.
 
-*1*::
-The
-*--posix-ldflags*
-option has been given but Posix support is not available in Xenomai;
-or an invalid argument has been given on the command-line.
+e.g.
+
+----------------------------------------------------------------------------
+$ configure --prefix=/usr --includedir=/usr/include/xenomai
+$ make install DESTDIR=/nfsroot/target
+$ DESTDIR=/nfsroot/target /nfsroot/target/bin/xeno-config --alchemy --cflags
+-I/nfsroot/target/usr/include/xenomai/cobalt
+-I/nfsroot/target/usr/include/xenomai -D_GNU_SOURCE
+-D_REENTRANT -D__COBALT__
+-I/nfsroot/target/usr/include/xenomai/alchemy
+----------------------------------------------------------------------------
+
+EXIT STATUS
+-----------
+
+*0*:: Success.
+
+*non-zero*:: Error.
