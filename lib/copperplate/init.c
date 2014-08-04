@@ -496,6 +496,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	struct option *options;
 	static int init_done;
 	char **uargv = NULL;
+	struct service svc;
 
 	if (init_done) {
 		warning("duplicate call to %s() ignored", __func__);
@@ -604,12 +605,19 @@ void copperplate_init(int *argcp, char *const **argvp)
 
 	free(options);
 
+	CANCEL_DEFER(svc);
+
 	pvlist_for_each_entry(skin, &skins, __reserved.next) {
 		ret = skin->init();
-		if (ret) {
-			warning("skin %s won't initialize", skin->name);
-			goto fail;
-		}
+		if (ret)
+			break;
+	}
+
+	CANCEL_RESTORE(svc);
+
+	if (ret) {
+		warning("skin %s won't initialize", skin->name);
+		goto fail;
 	}
 
 #ifdef CONFIG_XENO_DEBUG

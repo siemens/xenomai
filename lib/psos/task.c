@@ -186,9 +186,7 @@ static void *task_trampoline(void *arg)
 	struct service svc;
 
 	CANCEL_DEFER(svc);
-
 	threadobj_wait_start();
-
 	threadobj_lock(&task->thobj);
 
 	if (task->mode & T_TSLICE) {
@@ -201,14 +199,16 @@ static void *task_trampoline(void *arg)
 		__threadobj_lock_sched(&task->thobj);
 
 	threadobj_unlock(&task->thobj);
-
+	threadobj_notify_entry();
 	CANCEL_RESTORE(svc);
 
-	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3);
+
+	CANCEL_DEFER(svc);
 	threadobj_lock(&task->thobj);
 	threadobj_set_magic(&task->thobj, ~task_magic);
 	threadobj_unlock(&task->thobj);
+	CANCEL_RESTORE(svc);
 
 	return NULL;
 }
@@ -365,11 +365,14 @@ u_long t_start(u_long tid,
 	       u_long args[])
 {
 	struct psos_task *task;
+	struct service svc;
 	int ret;
+
+	CANCEL_DEFER(svc);
 
 	task = get_psos_task(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
 	task->args.entry = entry;
 	if (args) {
@@ -385,10 +388,19 @@ u_long t_start(u_long tid,
 	}
 	task->mode = mode;
 	ret = threadobj_start(&task->thobj);
-	if (ret != -EIDRM)
+	switch (ret) {
+	case -EIDRM:
+		ret = SUCCESS;
+		break;
+	default:
+		ret = ERR_OBJDEL;
+	case 0:	/* == SUCCESS */
 		put_psos_task(task);
+	}
+ out:
+	CANCEL_RESTORE(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long t_suspend(u_long tid)
@@ -397,19 +409,21 @@ u_long t_suspend(u_long tid)
 	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
-	CANCEL_DEFER(svc);
 	ret = threadobj_suspend(&task->thobj);
-	CANCEL_RESTORE(svc);
-	put_psos_task(task);
-
 	if (ret)
-		return ERR_OBJDEL;
+		ret = ERR_OBJDEL;
 
-	return SUCCESS;
+	put_psos_task(task);
+out:
+	CANCEL_RESTORE(svc);
+
+	return ret;
 }
 
 u_long t_resume(u_long tid)
@@ -418,52 +432,65 @@ u_long t_resume(u_long tid)
 	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	task = get_psos_task(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
-	CANCEL_DEFER(svc);
 	ret = threadobj_resume(&task->thobj);
-	CANCEL_RESTORE(svc);
-	put_psos_task(task);
-
 	if (ret)
-		return ERR_OBJDEL;
+		ret = ERR_OBJDEL;
 
-	return SUCCESS;
+	put_psos_task(task);
+out:
+	CANCEL_RESTORE(svc);
+
+	return ret;
 }
 
 u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 {
+	int policy, ret = SUCCESS, cprio = 1;
 	struct sched_param_ex param_ex;
-	int policy, ret, cprio = 1;
 	struct psos_task *task;
+	struct service svc;
+
+	CANCEL_DEFER(svc);
 
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
 	*oldprio_r = psos_task_get_priority(task);
 
-	if (newprio == 0) { /* Only inquires for the task priority. */
-		put_psos_task(task);
-		return SUCCESS;
-	}
+	if (newprio == 0) /* Only inquires for the task priority. */
+		goto done;
 
 	ret = check_task_priority(newprio, &cprio);
 	if (ret) {
-		put_psos_task(task);
-		return ERR_SETPRI;
+		ret = ERR_SETPRI;
+		goto done;
 	}
 
 	policy = cprio ? SCHED_FIFO : SCHED_OTHER;
 	param_ex.sched_priority = cprio;
 	ret = threadobj_set_schedparam(&task->thobj, policy, &param_ex);
+	switch (ret) {
+	case -EIDRM:
+		ret = SUCCESS;
+		goto out;
+	default:
+		ret = ERR_OBJDEL;
+	case 0:	/* == SUCCESS */
+		break;
+	}
+done:
 	put_psos_task(task);
-	if (ret)
-		return ERR_OBJDEL;
+out:
+	CANCEL_RESTORE(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long t_delete(u_long tid)
@@ -472,17 +499,19 @@ u_long t_delete(u_long tid)
 	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
-	CANCEL_DEFER(svc);
 	ret = threadobj_cancel(&task->thobj);
-	CANCEL_RESTORE(svc);
 	if (ret)
-		return ERR_OBJDEL;
+		ret = ERR_OBJDEL;
+out:
+	CANCEL_RESTORE(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long t_ident(const char *name, u_long node, u_long *tid_r)
@@ -530,48 +559,61 @@ out:
 u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue_r)
 {
 	struct psos_task *task;
-	int ret;
+	struct service svc;
+	int ret = SUCCESS;
 
 	if (regnum >= PSOSTASK_NR_REGS)
 		return ERR_REGNUM;
 
+	CANCEL_DEFER(svc);
+
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
 	*regvalue_r = task->notepad[regnum];
 	put_psos_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
 {
 	struct psos_task *task;
-	int ret;
+	struct service svc;
+	int ret = SUCCESS;
 
 	if (regnum >= PSOSTASK_NR_REGS)
 		return ERR_REGNUM;
 
+	CANCEL_DEFER(svc);
+
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
 	task->notepad[regnum] = regvalue;
 	put_psos_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long t_mode(u_long mask, u_long newmask, u_long *oldmode_r)
 {
 	struct sched_param_ex param_ex;
+	int policy, ret = SUCCESS;
 	struct psos_task *task;
-	int policy, ret;
+	struct service svc;
+
+	CANCEL_DEFER(svc);
 
 	task = get_psos_task_or_self(0, &ret);
 	if (task == NULL)
-		return ret;
+		goto out;
 
 	*oldmode_r = task->mode;
 
@@ -597,11 +639,14 @@ u_long t_mode(u_long mask, u_long newmask, u_long *oldmode_r)
 	} else
 		policy = param_ex.sched_priority ? SCHED_FIFO : SCHED_OTHER;
 
+	/* Working on self, so -EIDRM can't happen. */
 	threadobj_set_schedparam(&task->thobj, policy, &param_ex);
 done:
 	put_psos_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 static int collect_events(struct psos_task *task,

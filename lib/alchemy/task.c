@@ -206,18 +206,12 @@ static int task_prologue_1(void *arg)
 
 static int task_prologue_2(struct alchemy_task *tcb)
 {
-	struct service svc;
 	int ret;
 
-	CANCEL_DEFER(svc);
-
 	threadobj_wait_start();
-
 	threadobj_lock(&tcb->thobj);
 	ret = threadobj_set_mode(0, tcb->mode, NULL);
 	threadobj_unlock(&tcb->thobj);
-
-	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -225,17 +219,28 @@ static int task_prologue_2(struct alchemy_task *tcb)
 static void *task_entry(void *arg)
 {
 	struct alchemy_task *tcb = arg;
+	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	ret = __bt(task_prologue_2(tcb));
-	if (ret)
+	if (ret) {
+		CANCEL_RESTORE(svc);
 		return (void *)(long)ret;
+	}
 
 	threadobj_notify_entry();
+
+	CANCEL_RESTORE(svc);
+
 	tcb->entry(tcb->arg);
+
+	CANCEL_DEFER(svc);
 	threadobj_lock(&tcb->thobj);
 	threadobj_set_magic(&tcb->thobj, ~task_magic);
 	threadobj_unlock(&tcb->thobj);
+	CANCEL_RESTORE(svc);
 
 	return NULL;
 }
@@ -740,11 +745,13 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (ret)
 		goto out;
 
-	threadobj_shadow(&tcb->thobj);	/* We won't wait in prologue. */
+	CANCEL_RESTORE(svc);
 
-	ret = threadobj_prologue(&tcb->thobj, tcb->name);
+	ret = threadobj_shadow(&tcb->thobj, tcb->name);
 	if (ret)
 		goto undo;
+
+	CANCEL_DEFER(svc);
 
 	ret = task_prologue_2(tcb);
 	if (ret)
@@ -1247,7 +1254,13 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 	policy = prio ? SCHED_FIFO : SCHED_OTHER;
 	param_ex.sched_priority = prio;
 	ret = threadobj_set_schedparam(&tcb->thobj, policy, &param_ex);
-	put_alchemy_task(tcb);
+	switch (ret) {
+	case -EIDRM:
+		ret = 0;
+		break;
+	default:
+		put_alchemy_task(tcb);
+	}
 out:
 	CANCEL_RESTORE(svc);
 
@@ -1376,7 +1389,13 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
 		policy = param_ex.sched_priority ? SCHED_FIFO : SCHED_OTHER;
 
 	ret = threadobj_set_schedparam(&tcb->thobj, policy, &param_ex);
-	put_alchemy_task(tcb);
+	switch (ret) {
+	case -EIDRM:
+		ret = 0;
+		break;
+	default:
+		put_alchemy_task(tcb);
+	}
 out:
 	CANCEL_RESTORE(svc);
 

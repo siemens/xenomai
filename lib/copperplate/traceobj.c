@@ -114,6 +114,9 @@ static void compare_marks(struct traceobj *trobj, int tseq[], int nr_seq) /* loc
 void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 {
 	int end_mark, mark, state;
+	struct service svc;
+
+	CANCEL_DEFER(svc);
 
 	read_lock_safe(&trobj->lock, state);
 
@@ -135,6 +138,9 @@ void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 	}
 out:
 	read_unlock_safe(&trobj->lock, state);
+
+	CANCEL_RESTORE(svc);
+
 	return;
 
 fail:
@@ -146,6 +152,9 @@ fail:
 	warning("mismatching execution sequence detected");
 	compare_marks(trobj, tseq, nr_seq);
 	read_unlock_safe(&trobj->lock, state);
+
+	CANCEL_RESTORE(svc);
+
 #ifdef CONFIG_XENO_MERCURY
 	/*
 	 * The Mercury core does not force any affinity, which may
@@ -189,11 +198,17 @@ static void dump_marks(struct traceobj *trobj) /* lock held */
 void __traceobj_assert_failed(struct traceobj *trobj,
 			      const char *file, int line, const char *cond)
 {
+	struct service svc;
+
+	CANCEL_DEFER(svc);
+
 	push_cleanup_lock(&trobj->lock);
 	read_lock(&trobj->lock);
 	dump_marks(trobj);
 	read_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);
+
+	CANCEL_RESTORE(svc);
 
 	panic("trace assertion failed:\n%s:%d => \"%s\"", file, line, cond);
 }
@@ -202,7 +217,10 @@ void __traceobj_mark(struct traceobj *trobj,
 		     const char *file, int line, int mark)
 {
 	struct tracemark *tmk;
+	struct service svc;
 	int cur_mark;
+
+	CANCEL_DEFER(svc);
 
 	pthread_testcancel();
 	push_cleanup_lock(&trobj->lock);
@@ -222,34 +240,37 @@ void __traceobj_mark(struct traceobj *trobj,
 
 	write_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);
+
+	CANCEL_RESTORE(svc);
 }
 
 void traceobj_enter(struct traceobj *trobj)
 {
 	struct threadobj *current = threadobj_current();
+	struct service svc;
 
-	if (current) {
-		threadobj_lock(current);
+	if (current)
 		current->tracer = trobj;
-		threadobj_unlock(current);
-	}
 
-	/*
-	 * Our caller is usually out of any protected section, so push
-	 * a cleanup routine.
-	 */
-	push_cleanup_lock(&trobj->lock);
-	write_lock(&trobj->lock);
+	CANCEL_DEFER(svc);
+
+	write_lock_nocancel(&trobj->lock);
+
 	if (++trobj->nr_threads == 0)
 		trobj->nr_threads = 1;
+
 	write_unlock(&trobj->lock);
-	pop_cleanup_lock(&trobj->lock);
+
+	CANCEL_RESTORE(svc);
 }
 
 /* May be directly called from finalizer. */
 void traceobj_unwind(struct traceobj *trobj)
 {
+	struct service svc;
 	int state;
+
+	CANCEL_DEFER(svc);
 
 	write_lock_safe(&trobj->lock, state);
 
@@ -257,6 +278,8 @@ void traceobj_unwind(struct traceobj *trobj)
 		__RT(pthread_cond_signal(&trobj->join));
 
 	write_unlock_safe(&trobj->lock, state);
+
+	CANCEL_RESTORE(svc);
 }
 
 void traceobj_exit(struct traceobj *trobj)
@@ -271,6 +294,10 @@ void traceobj_exit(struct traceobj *trobj)
 
 void traceobj_join(struct traceobj *trobj)
 {
+	struct service svc;
+
+	CANCEL_DEFER(svc);
+
 	push_cleanup_lock(&trobj->lock);
 	read_lock(&trobj->lock);
 
@@ -279,4 +306,6 @@ void traceobj_join(struct traceobj *trobj)
 
 	read_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);
+
+	CANCEL_RESTORE(svc);
 }

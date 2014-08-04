@@ -367,6 +367,7 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	struct regfs_data *p = regfs_get_context();
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
+	struct service svc;
 	int ret = 0;
 	void *priv;
 
@@ -395,8 +396,11 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 		priv = NULL;
 
 	fi->fh = (uintptr_t)priv;
-	if (fsobj->ops->open)
+	if (fsobj->ops->open) {
+		CANCEL_DEFER(svc);
 		ret = __bt(fsobj->ops->open(fsobj, priv));
+		CANCEL_RESTORE(svc);
+	}
 done:
 	read_unlock(&p->lock);
 	pop_cleanup_lock(&p->lock);
@@ -409,6 +413,7 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 	struct regfs_data *p = regfs_get_context();
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
+	struct service svc;
 	int ret = 0;
 	void *priv;
 
@@ -423,8 +428,11 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
 	priv = (void *)(uintptr_t)fi->fh;
-	if (fsobj->ops->release)
+	if (fsobj->ops->release) {
+		CANCEL_DEFER(svc);
 		ret = __bt(fsobj->ops->release(fsobj, priv));
+		CANCEL_RESTORE(svc);
+	}
 	if (priv)
 		__STD(free(priv));
 done:
@@ -440,6 +448,7 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	struct regfs_data *p = regfs_get_context();
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
+	struct service svc;
 	void *priv;
 	int ret;
 
@@ -461,7 +470,9 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	read_lock(&fsobj->lock);
 	read_unlock(&p->lock);
 	priv = (void *)(uintptr_t)fi->fh;
+	CANCEL_DEFER(svc);
 	ret = fsobj->ops->read(fsobj, buf, size, offset, priv);
+	CANCEL_RESTORE(svc);
 	read_unlock(&fsobj->lock);
 	pop_cleanup_lock(&fsobj->lock);
 
@@ -474,6 +485,7 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	struct regfs_data *p = regfs_get_context();
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
+	struct service svc;
 	void *priv;
 	int ret;
 
@@ -495,7 +507,9 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	read_lock(&fsobj->lock);
 	read_unlock(&p->lock);
 	priv = (void *)(uintptr_t)fi->fh;
+	CANCEL_DEFER(svc);
 	ret = fsobj->ops->write(fsobj, buf, size, offset, priv);
+	CANCEL_RESTORE(svc);
 	read_unlock(&fsobj->lock);
 	pop_cleanup_lock(&fsobj->lock);
 
@@ -902,10 +916,12 @@ static int collect_wait_list(struct fsobstack *o,
 	struct threadobj *thobj;
 	struct syncstate syns;
 	struct obstack cache;
+	struct service svc;
 	int count, ret;
 	void *p, *e;
 
 	obstack_init(&cache);
+	CANCEL_DEFER(svc);
 redo:
 	smp_rmb();
 	count = *wait_count;
@@ -919,8 +935,8 @@ redo:
 
 	ret = syncobj_lock(sobj, &syns);
 	if (ret) {
-		obstack_free(&cache, NULL);
-		return ret;
+		count = ret;
+		goto out;
 	}
 
 	/* Re-validate the previous item count under lock. */
@@ -955,6 +971,7 @@ redo:
 		p += ops->format_data(o, p);
 	while (p < e);
 out:
+	CANCEL_RESTORE(svc);
 	obstack_free(&cache, NULL);
 
 	return count;

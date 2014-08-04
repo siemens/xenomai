@@ -173,6 +173,7 @@ int rt_alarm_wait(RT_ALARM *alarm)
 	prio = threadobj_get_priority(current);
 	if (prio != threadobj_irq_prio) {
 		param_ex.sched_priority = threadobj_irq_prio;
+		/* Working on self, so -EIDRM can't happen. */
 		threadobj_set_schedparam(current, SCHED_FIFO, &param_ex);
 	}
 	threadobj_unlock(current);

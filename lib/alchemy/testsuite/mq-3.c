@@ -82,6 +82,7 @@ static void peer_task(void *arg)
 
 	traceobj_mark(&trobj, 9);
 
+	/* Valgrind will bark at this one, this is expected. */
 	ret = rt_queue_read(&q, &msg, sizeof(msg), TM_INFINITE);
 	traceobj_assert(&trobj, ret == -EINVAL);
 

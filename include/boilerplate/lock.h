@@ -105,8 +105,8 @@ int __check_cancel_type(const char *locktype);
 
 #define __do_lock_nocancel(__lock, __type, __op)			\
 	({								\
-		int __ret = __bt(__check_cancel_type(#__type));		\
-		__ret ?: __do_lock(__lock, __op);			\
+		__bt(__check_cancel_type(#__op "_nocancel"));		\
+		__do_lock(__lock, __op);				\
 	})
 
 #define __do_unlock(__lock)					\
@@ -167,6 +167,7 @@ int __check_cancel_type(const char *locktype);
 #define __do_lock_safe(__lock, __state, __op)				\
 	({								\
 		int __ret, __oldstate;					\
+		__bt(__check_cancel_type(#__op "_safe"));		\
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &__oldstate); \
 		__ret = -__RT(pthread_mutex_##__op(__lock));		\
 		if (__ret)						\

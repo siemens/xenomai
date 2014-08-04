@@ -295,7 +295,8 @@ int threadobj_init(struct threadobj *thobj,
 
 int threadobj_start(struct threadobj *thobj) __must_check;
 
-void threadobj_shadow(struct threadobj *thobj);
+int threadobj_shadow(struct threadobj *thobj,
+		     const char *name);
 
 int threadobj_prologue(struct threadobj *thobj,
 		       const char *name);

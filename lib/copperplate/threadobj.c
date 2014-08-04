@@ -698,7 +698,7 @@ int __threadobj_lock_sched(struct threadobj *current) /* current->lock held */
 	current->core.schedparam_unlocked = current->schedparam;
 	current->core.policy_unlocked = current->policy;
 	param_ex.sched_priority = threadobj_lock_prio;
-	ret = __bt(threadobj_set_schedparam(current, SCHED_FIFO, &param_ex));
+	ret = threadobj_set_schedparam(current, SCHED_FIFO, &param_ex);
 	if (ret)
 		return __bt(ret);
 done:
@@ -868,10 +868,15 @@ static int request_setschedparam(struct threadobj *thobj, int policy,
 	 * operation, as libcobalt may switch us to secondary mode
 	 * when doing so (i.e. libc call to reflect the new priority
 	 * on the linux side).
+	 *
+	 * If we can't relock the target thread, this must mean that
+	 * it vanished in the meantime: return -EIDRM for the caller
+	 * to handle this case specifically.
 	 */
 	threadobj_unlock(thobj);
-	ret = __bt(copperplate_renice_local_thread(thobj->ptid, policy, param_ex));
-	threadobj_lock(thobj);
+	ret = copperplate_renice_local_thread(thobj->ptid, policy, param_ex);
+	if (threadobj_lock(thobj))
+		ret = -EIDRM;
 
 	return ret;
 }
@@ -1097,14 +1102,6 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	return ret;
 }
 
-void threadobj_shadow(struct threadobj *thobj)
-{
-	assert(thobj != threadobj_current());
-	threadobj_lock(thobj);
-	thobj->status |= __THREAD_S_STARTED|__THREAD_S_ACTIVE;
-	threadobj_unlock(thobj);
-}
-
 void threadobj_wait_start(void) /* current->lock free. */
 {
 	struct threadobj *current = threadobj_current();
@@ -1135,11 +1132,13 @@ void threadobj_notify_entry(void) /* current->lock free. */
 	threadobj_unlock(current);
 }
 
-/* thobj->lock free, cancellation disabled. */
+/* thobj->lock free. */
 int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
 	struct threadobj *current = threadobj_current();
 	int ret;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
 	/*
 	 * Check whether we overlay the default main TCB we set in
@@ -1154,8 +1153,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		assert(current->magic == 0);
 		sysgroup_remove(thread, &current->memspec);
 		finalize_thread(current);
-	} else
-		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	}
 
 	if (name)
 		namecpy(thobj->name, name);
@@ -1194,6 +1192,17 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	threadobj_run_corespec(thobj);
 
 	return 0;
+}
+
+int threadobj_shadow(struct threadobj *thobj, const char *name)
+{
+	assert(thobj != threadobj_current());
+	threadobj_lock(thobj);
+	assert((thobj->status & (__THREAD_S_STARTED|__THREAD_S_ACTIVE)) == 0);
+	thobj->status |= __THREAD_S_STARTED|__THREAD_S_ACTIVE;
+	threadobj_unlock(thobj);
+
+	return __bt(threadobj_prologue(thobj, name));
 }
 
 /*
@@ -1498,7 +1507,7 @@ int threadobj_set_schedparam(struct threadobj *thobj, int policy,
 	 */
 	ret = request_setschedparam(thobj, _policy, param_ex);
 	if (ret)
-		return __bt(ret);
+		return ret;
 
 	/*
 	 * XXX: only local threads may switch to SCHED_RR since both
@@ -1527,7 +1536,7 @@ int threadobj_set_schedparam(struct threadobj *thobj, int policy,
 int threadobj_set_schedprio(struct threadobj *thobj, int priority)
 {				/* thobj->lock held */
 	struct sched_param_ex param_ex;
-	int policy, ret;
+	int policy;
 
 	__threadobj_check_locked(thobj);
 
@@ -1538,9 +1547,7 @@ int threadobj_set_schedprio(struct threadobj *thobj, int priority)
 	if (policy == SCHED_RR)
 		param_ex.sched_rr_quantum = thobj->tslice;
 
-	ret = __bt(threadobj_set_schedparam(thobj, policy, &param_ex));
-
-	return ret;
+	return threadobj_set_schedparam(thobj, policy, &param_ex);
 }
 
 static inline int main_overlay(void)

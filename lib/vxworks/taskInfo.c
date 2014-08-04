@@ -26,18 +26,24 @@
 const char *taskName(TASK_ID task_id)
 {
 	struct wind_task *task;
+	struct service svc;
 	const char *name;
 
+	CANCEL_DEFER(svc);
+
 	task = get_wind_task_or_self(task_id);
-	if (task == NULL)
-		return NULL;
+	if (task == NULL) {
+		name = NULL;
+		goto out;
+	}
 
 	name = task->name;
 	put_wind_task(task);
-
+out:
+	CANCEL_RESTORE(svc);
 	/*
-	 * This is unsafe, but this service is terminally flawed by
-	 * design anyway.
+	 * This is racy and unsafe, but this service is terminally
+	 * flawed by design anyway.
 	 */
 	return name;
 }
@@ -72,14 +78,19 @@ TASK_ID taskNameToId(const char *name)
 BOOL taskIsReady(TASK_ID task_id)
 {
 	struct wind_task *task;
-	int status;
+	struct service svc;
+	int status = 0;
+
+	CANCEL_DEFER(svc);
 
 	task = get_wind_task(task_id);
 	if (task == NULL)
-		return 0;
+		goto out;
 
 	status = get_task_status(task);
 	put_wind_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
 	return status == WIND_READY;
 }
@@ -87,15 +98,19 @@ BOOL taskIsReady(TASK_ID task_id)
 BOOL taskIsSuspended(TASK_ID task_id)
 {
 	struct wind_task *task;
-	int status;
+	struct service svc;
+	int status = 0;
+
+	CANCEL_DEFER(svc);
 
 	task = get_wind_task(task_id);
 	if (task == NULL)
-		return 0;
+		goto out;
 
 	status = threadobj_get_status(&task->thobj);
-
 	put_wind_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
 	return (status & __THREAD_S_SUSPENDED) != 0;
 }
@@ -106,13 +121,18 @@ STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 	struct wind_task *task;
 	struct WIND_TCB *tcb;
 	pthread_attr_t attr;
+	STATUS status = OK;
+	struct service svc;
 	size_t stacksize;
 	void *stackbase;
+
+	CANCEL_DEFER(svc);
 
 	task = get_wind_task(task_id);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
+		status = ERROR;
+		goto out;
 	}
 
 	tcb = task->tcb;
@@ -147,6 +167,8 @@ STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 			/* Stack grows downward. */
 			desc->td_pStackEnd = (caddr_t)stackbase - stacksize;
 	}
+out:
+	CANCEL_RESTORE(svc);
 
-	return OK;
+	return status;
 }

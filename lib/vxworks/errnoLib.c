@@ -91,28 +91,43 @@ void printErrno(int status)
 STATUS errnoOfTaskSet(TASK_ID task_id, int status)
 {
 	struct wind_task *task;
+	struct service svc;
+	STATUS ret = OK;
+
+	CANCEL_DEFER(svc);
 
 	task = get_wind_task_or_self(task_id);
-	if (task == NULL)
-		return ERROR;
+	if (task == NULL) {
+		ret = ERROR;
+		goto out;
+	}
 
 	*task->thobj.errno_pointer = status;
 	put_wind_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
-	return OK;
+	return ret;
 }
 
 STATUS errnoOfTaskGet(TASK_ID task_id)
 {
 	struct wind_task *task;
-	STATUS status;
+	struct service svc;
+	STATUS status = OK;
+
+	CANCEL_DEFER(svc);
 
 	task = get_wind_task_or_self(task_id);
-	if (task == NULL)
-		return ERROR;
+	if (task == NULL) {
+		status = ERROR;
+		goto out;
+	}
 
 	status = *task->thobj.errno_pointer;
 	put_wind_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
 	return status;
 }

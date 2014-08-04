@@ -34,7 +34,7 @@ static int switch_slicing(struct threadobj *thobj, struct timespec *quantum)
 	} else
 		policy = param_ex.sched_priority ? SCHED_FIFO : SCHED_OTHER;
 
-	return __bt(threadobj_set_schedparam(thobj, policy, &param_ex));
+	return threadobj_set_schedparam(thobj, policy, &param_ex);
 }
 
 STATUS kernelTimeSlice(int ticks)

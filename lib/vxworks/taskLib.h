@@ -59,7 +59,9 @@ struct wind_task {
 		if (!pvlist_empty(&wind_task_list))			\
 			pvlist_for_each_entry(__task, &wind_task_list, next) { \
 				threadobj_lock(&(__task)->thobj);	\
-				__ret = __action;			\
+				__ret = (__action);			\
+				if (__ret == -EIDRM)			\
+					continue;			\
 				threadobj_unlock(&(__task)->thobj);	\
 				if (__ret)				\
 					goto out;			\

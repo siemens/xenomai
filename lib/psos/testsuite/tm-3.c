@@ -45,6 +45,7 @@ static void task(u_long a0, u_long a1, u_long a2, u_long a3)
 	traceobj_assert(&trobj, ret == ERR_TIMEOUT);
 	traceobj_mark(&trobj, 6);
 
+	/* Valgrind will bark at this one, this is expected. */
 	ret = tm_cancel(timer_id);
 	traceobj_assert(&trobj, ret == ERR_BADTMID);
 

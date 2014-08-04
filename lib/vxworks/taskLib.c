@@ -268,16 +268,19 @@ static void *task_trampoline(void *arg)
 		threadobj_unlock(&task->thobj);
 	}
 
+	threadobj_notify_entry();
+
 	CANCEL_RESTORE(svc);
 
-	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
 		    args->arg4, args->arg5, args->arg6, args->arg7,
 		    args->arg8, args->arg9);
 
+	CANCEL_DEFER(svc);
 	threadobj_lock(&task->thobj);
 	threadobj_set_magic(&task->thobj, ~task_magic);
 	threadobj_unlock(&task->thobj);
+	CANCEL_RESTORE(svc);
 
 	return NULL;
 }
@@ -461,18 +464,32 @@ out:
 STATUS taskActivate(TASK_ID tid)
 {
 	struct wind_task *task;
+	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	task = get_wind_task(tid);
-	if (task == NULL)
-		return ERROR;
+	if (task == NULL) {
+		ret = ERROR;
+		goto out;
+	}
 
 	task->tcb->status &= ~WIND_SUSPEND;
 	ret = threadobj_start(&task->thobj);
-	if (ret != -EIDRM)
+	switch (ret) {
+	case -EIDRM:
+		ret = OK;
+		break;
+	default:
+		ret = ERROR;
+	case 0:	/* == OK */
 		put_wind_task(task);
+	}
+out:
+	CANCEL_RESTORE(svc);
 
-	return OK;
+	return ret;
 }
 
 TASK_ID taskSpawn(const char *name,
@@ -531,6 +548,7 @@ TASK_ID taskSpawn(const char *name,
 static STATUS __taskDelete(TASK_ID tid, int force)
 {
 	struct wind_task *task;
+	struct service svc;
 	int ret;
 
 	if (threadobj_irq_p()) {
@@ -545,6 +563,8 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 		return ERROR;
 	}
 
+	CANCEL_DEFER(svc);
+
 	/*
 	 * We always attempt to grab the thread safe lock first, then
 	 * make sure nobody (including the target task itself) will be
@@ -557,10 +577,6 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 	 * object lock afterwards, therefore, _never_ call
 	 * __taskDelete() directly or indirectly while holding the
 	 * thread object lock. You have been warned.
-	 *
-	 * We traverse no cancellation point below until
-	 * threadobj_cancel() is invoked, so we don't need any
-	 * CANCEL_DEFER() section.
 	 */
 	if (force)	/* Best effort only. */
 		force = __RT(pthread_mutex_trylock(&task->safelock));
@@ -574,6 +590,8 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 
 	if (ret == 0)
 		ret = threadobj_cancel(&task->thobj);
+
+	CANCEL_RESTORE(svc);
 
 	if (ret)
 		goto objid_error;
@@ -628,22 +646,24 @@ STATUS taskSuspend(TASK_ID tid)
 	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
-	CANCEL_DEFER(svc);
 	ret = threadobj_suspend(&task->thobj);
-	CANCEL_RESTORE(svc);
 	put_wind_task(task);
 
 	if (ret) {
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
+		ret = ERROR;
 	}
 
-	return OK;
+	CANCEL_RESTORE(svc);
+
+	return ret;
 }
 
 STATUS taskResume(TASK_ID tid)
@@ -652,22 +672,24 @@ STATUS taskResume(TASK_ID tid)
 	struct service svc;
 	int ret;
 
+	CANCEL_DEFER(svc);
+
 	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
-	CANCEL_DEFER(svc);
 	ret = threadobj_resume(&task->thobj);
-	CANCEL_RESTORE(svc);
 	put_wind_task(task);
 
 	if (ret) {
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
+		ret = ERROR;
 	}
 
-	return OK;
+	CANCEL_RESTORE(svc);
+
+	return ret;
 }
 
 STATUS taskSafe(void)
@@ -743,6 +765,8 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 	int ret, policy, cprio;
 	struct service svc;
 
+	CANCEL_DEFER(svc);
+
 	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
@@ -751,24 +775,25 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 	if (ret) {
 		put_wind_task(task);
 		errno = ret;
-		return ERROR;
+		ret = ERROR;
+		goto out;
 	}
 
-	CANCEL_DEFER(svc);
 	policy = cprio ? SCHED_FIFO : SCHED_OTHER;
 	param_ex.sched_priority = cprio;
 	ret = threadobj_set_schedparam(&task->thobj, policy, &param_ex);
-	CANCEL_RESTORE(svc);
-
-	put_wind_task(task);
+	if (ret != -EIDRM)
+		put_wind_task(task);
 
 	if (ret) {
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
+		ret = ERROR;
 	}
+out:
+	CANCEL_RESTORE(svc);
 
-	return OK;
+	return ret;
 }
 
 int wind_task_get_priority(struct wind_task *task)
@@ -781,17 +806,24 @@ int wind_task_get_priority(struct wind_task *task)
 STATUS taskPriorityGet(TASK_ID tid, int *priop)
 {
 	struct wind_task *task;
+	struct service svc;
+	int ret = OK;
+
+	CANCEL_DEFER(svc);
 
 	task = get_wind_task(tid);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
+		ret = ERROR;
+		goto out;
 	}
 
 	*priop = wind_task_get_priority(task);
 	put_wind_task(task);
+out:
+	CANCEL_RESTORE(svc);
 
-	return OK;
+	return ret;
 }
 
 STATUS taskLock(void)

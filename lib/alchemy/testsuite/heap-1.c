@@ -90,13 +90,13 @@ int main(int argc, char *const argv[])
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
+	ret = rt_task_create(&t_fgnd, "FGND", 0,  21, 0);
+	traceobj_assert(&trobj, ret == 0);
+
 	ret = rt_task_create(&t_bgnd, "BGND", 0,  20, 0);
 	traceobj_assert(&trobj, ret == 0);
 
 	ret = rt_task_start(&t_bgnd, background_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
-
-	ret = rt_task_create(&t_fgnd, "FGND", 0,  21, 0);
 	traceobj_assert(&trobj, ret == 0);
 
 	ret = rt_task_start(&t_fgnd, foreground_task, NULL);
