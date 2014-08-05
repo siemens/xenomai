@@ -121,10 +121,9 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		goto out;
 	}
 
-
 	/*
-	 * XXX: we can't obtain priority inheritance with syncobj, so
-	 * we have to base this code directly over the POSIX layer.
+	 * XXX: we can't have priority inheritance with syncobj, so we
+	 * have to base this code directly over the POSIX layer.
 	 */
 	generate_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = NO_ALCHEMY_TASK;
@@ -138,24 +137,23 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	__RT(pthread_mutex_init(&mcb->lock, &mattr));
 	pthread_mutexattr_destroy(&mattr);
 
-	registry_init_file(&mcb->fsobj, &registry_ops, 0);
-
 	mcb->magic = mutex_magic;
+
+	registry_init_file(&mcb->fsobj, &registry_ops, 0);
+	ret = __bt(registry_add_file(&mcb->fsobj, O_RDONLY,
+				     "/alchemy/mutexes/%s", mcb->name));
+	if (ret) {
+		warning("failed to export mutex %s to registry, %s",
+			mcb->name, symerror(ret));
+		ret = 0;
+	}
 
 	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
 		registry_destroy_file(&mcb->fsobj);
 		xnfree(mcb);
 		ret = -EEXIST;
-	} else {
+	} else
 		mutex->handle = mainheap_ref(mcb, uintptr_t);
-		ret = __bt(registry_add_file(&mcb->fsobj, O_RDONLY,
-					     "/alchemy/mutexes/%s", mcb->name));
-		if (ret) {
-			warning("failed to export mutex %s to registry, %s",
-				mcb->name, symerror(ret));
-			ret = 0;
-		}
-	}
 out:
 	CANCEL_RESTORE(svc);
 

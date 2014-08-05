@@ -252,9 +252,14 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	if (ret)
 		goto fail_syncinit;
 
-	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
-
 	bcb->magic = buffer_magic;
+
+	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&bcb->fsobj, O_RDONLY,
+				     "/alchemy/buffers/%s", bcb->name));
+	if (ret)
+		warning("failed to export buffer %s to registry, %s",
+			bcb->name, symerror(ret));
 
 	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {
 		ret = -EEXIST;
@@ -262,12 +267,6 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	}
 
 	bf->handle = mainheap_ref(bcb, uintptr_t);
-
-	ret = __bt(registry_add_file(&bcb->fsobj, O_RDONLY,
-				     "/alchemy/buffers/%s", bcb->name));
-	if (ret)
-		warning("failed to export buffer %s to registry, %s",
-			bcb->name, symerror(ret));
 
 	CANCEL_RESTORE(svc);
 

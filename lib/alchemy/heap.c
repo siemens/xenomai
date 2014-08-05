@@ -255,9 +255,14 @@ int rt_heap_create(RT_HEAP *heap,
 	if (ret)
 		goto fail_syncinit;
 
-	registry_init_file_obstack(&hcb->fsobj, &registry_ops);
-
 	hcb->magic = heap_magic;
+
+	registry_init_file_obstack(&hcb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&hcb->fsobj, O_RDONLY,
+				     "/alchemy/heaps/%s", hcb->name));
+	if (ret)
+		warning("failed to export heap %s to registry, %s",
+			hcb->name, symerror(ret));
 
 	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
 		ret = -EEXIST;
@@ -265,11 +270,6 @@ int rt_heap_create(RT_HEAP *heap,
 	}
 
 	heap->handle = mainheap_ref(hcb, uintptr_t);
-	ret = __bt(registry_add_file(&hcb->fsobj, O_RDONLY,
-				     "/alchemy/heaps/%s", hcb->name));
-	if (ret)
-		warning("failed to export heap %s to registry, %s",
-			hcb->name, symerror(ret));
 
 	CANCEL_RESTORE(svc);
 

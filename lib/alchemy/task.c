@@ -304,6 +304,11 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	tcb->self.handle = mainheap_ref(tcb, uintptr_t);
 
 	registry_init_file_obstack(&tcb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&tcb->fsobj, O_RDONLY,
+				     "/alchemy/tasks/%s", tcb->name));
+	if (ret)
+		warning("failed to export task %s to registry, %s",
+			tcb->name, symerror(ret));
 
 	if (syncluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
 		ret = -EEXIST;
@@ -313,16 +318,11 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	if (task)
 		task->handle = tcb->self.handle;
 
-	ret = __bt(registry_add_file(&tcb->fsobj, O_RDONLY,
-				     "/alchemy/tasks/%s", tcb->name));
-	if (ret)
-		warning("failed to export task %s to registry, %s",
-			tcb->name, symerror(ret));
 	return 0;
 
 fail_register:
-	threadobj_uninit(&tcb->thobj);
 	registry_destroy_file(&tcb->fsobj);
+	threadobj_uninit(&tcb->thobj);
 fail_threadinit:
 	syncobj_uninit(&tcb->sobj_msg);
 fail_syncinit:

@@ -131,26 +131,24 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	__RT(pthread_cond_init(&ccb->cond, &cattr));
 	pthread_condattr_destroy(&cattr);
+	ccb->magic = cond_magic;
 
 	registry_init_file(&ccb->fsobj, &registry_ops, 0);
-
-	ccb->magic = cond_magic;
+	ret = __bt(registry_add_file(&ccb->fsobj, O_RDONLY,
+				     "/alchemy/condvars/%s", ccb->name));
+	if (ret) {
+		warning("failed to export condvar %s to registry, %s",
+			ccb->name, symerror(ret));
+		ret = 0;
+	}
 
 	if (syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
 		registry_destroy_file(&ccb->fsobj);
 		__RT(pthread_cond_destroy(&ccb->cond));
 		xnfree(ccb);
 		ret = -EEXIST;
-	} else {
+	} else
 		cond->handle = mainheap_ref(ccb, uintptr_t);
-		ret = __bt(registry_add_file(&ccb->fsobj, O_RDONLY,
-					     "/alchemy/condvars/%s", ccb->name));
-		if (ret) {
-			warning("failed to export condvar %s to registry, %s",
-				ccb->name, symerror(ret));
-			ret = 0;
-		}
-	}
 out:
 	CANCEL_RESTORE(svc);
 

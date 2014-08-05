@@ -257,9 +257,14 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (ret)
 		goto fail_syncinit;
 
-	registry_init_file_obstack(&qcb->fsobj, &registry_ops);
-
 	qcb->magic = queue_magic;
+
+	registry_init_file_obstack(&qcb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&qcb->fsobj, O_RDONLY,
+				     "/alchemy/queues/%s", qcb->name));
+	if (ret)
+		warning("failed to export queue %s to registry, %s",
+			qcb->name, symerror(ret));
 
 	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
 		ret = -EEXIST;
@@ -267,11 +272,6 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	}
 
 	queue->handle = mainheap_ref(qcb, uintptr_t);
-	ret = __bt(registry_add_file(&qcb->fsobj, O_RDONLY,
-				     "/alchemy/queues/%s", qcb->name));
-	if (ret)
-		warning("failed to export queue %s to registry, %s",
-			qcb->name, symerror(ret));
 
 	CANCEL_RESTORE(svc);
 
