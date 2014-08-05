@@ -307,6 +307,24 @@ AC_ARG_ENABLE(smp,
 	esac])
 AC_MSG_RESULT(${CONFIG_SMP:-no})
 
+dnl Runtime sanity checks (default: on)
+
+CONFIG_XENO_SANITY=y
+AC_MSG_CHECKING(whether to enable sanity checks)
+AC_ARG_ENABLE(sanity,
+	AS_HELP_STRING([--enable-sanity], [Enable sanity checks at runtime]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_SANITY=y ;;
+	*) unset CONFIG_XENO_SANITY= ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_SANITY:-no})
+
+if test x$CONFIG_XENO_SANITY = xy; then
+  AC_DEFINE(CONFIG_XENO_SANITY,1,[config])
+else
+  AC_DEFINE(CONFIG_XENO_SANITY,0,[config])
+fi
+
 dnl VSYSCALL (default: enabled) for x86
 
 CONFIG_XENO_X86_VSYSCALL=y

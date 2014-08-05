@@ -44,6 +44,7 @@ struct coppernode __node_info = {
 	.registry_root = "/mnt/xenomai",
 	.no_mlock = 0,
 	.no_registry = 0,
+	.no_sanity = !CONFIG_XENO_SANITY,
 	.reset_session = 0,
 	.silent_mode = 0,
 };
@@ -135,6 +136,20 @@ static const struct option base_options[] = {
 		.val = 0
 	},
 	{
+#define no_sanity_opt	11
+		.name = "no-sanity",
+		.has_arg = 0,
+		.flag = &__node_info.no_sanity,
+		.val = 1
+	},
+	{
+#define sanity_opt	12
+		.name = "sanity",
+		.has_arg = 0,
+		.flag = &__node_info.no_sanity,
+		.val = 0
+	},
+	{
 		.name = NULL,
 		.has_arg = 0,
 		.flag = NULL,
@@ -169,6 +184,7 @@ static void usage(void)
         fprintf(stderr, "--session=<label>                label of shared multi-processing session\n");
         fprintf(stderr, "--reset                          remove any older session\n");
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>    set CPU affinity of threads\n");
+        fprintf(stderr, "--[no-]sanity                    disable/enable sanity checks\n");
         fprintf(stderr, "--silent                         tame down verbosity\n");
         fprintf(stderr, "--version                        get version information\n");
         fprintf(stderr, "--dump-config                    dump configuration settings\n");
@@ -368,8 +384,10 @@ static int parse_base_options(int *argcp, char *const **argvp,
 				return ret;
 			break;
 		case no_mlock_opt:
+		case no_sanity_opt:
 		case no_registry_opt:
 		case reset_session_opt:
+		case sanity_opt:
 		case silent_opt:
 			break;
 		case version_opt:
@@ -504,11 +522,6 @@ void copperplate_init(int *argcp, char *const **argvp)
 		return;
 	}
 
-#if defined(CONFIG_MERCURY) && !defined(CONFIG_SMP)
-	ret = get_static_cpu_count();
-	if (ret > 0)
-		early_panic("running non-SMP libraries on SMP kernel?");
-#endif
 	boilerplate_init();
 
 	threadobj_init_key();
@@ -546,6 +559,15 @@ void copperplate_init(int *argcp, char *const **argvp)
 				 options, base_opt_start);
 	if (ret)
 		goto fail;
+
+#ifndef CONFIG_SMP
+	if (__node_info.no_sanity == 0) {
+		ret = get_static_cpu_count();
+		if (ret > 0)
+			early_panic("running non-SMP libraries on SMP kernel?\n"
+	    "              build with --enable-smp or disable check with --no-sanity");
+	}
+#endif
 
 	ret = debug_init();
 	if (ret) {

@@ -851,6 +851,7 @@ enable_async_cancel
 enable_pshared
 enable_registry
 enable_smp
+enable_sanity
 enable_x86_vsyscall
 enable_arm_quirks
 enable_doc_build
@@ -1521,6 +1522,7 @@ Optional Features:
   --enable-pshared        Enable shared multi-processing for capable skins
   --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
+  --enable-sanity         Enable sanity checks at runtime
   --enable-x86-vsyscall   Assume VSYSCALL enabled for issuing syscalls
   --enable-arm-quirks     Enable quirks for specific systems. Currently
                           supported quirks are for sa1100 and xscale3.
@@ -13284,6 +13286,31 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_SMP:-no}" >&5
 $as_echo "${CONFIG_SMP:-no}" >&6; }
+
+
+CONFIG_XENO_SANITY=y
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable sanity checks" >&5
+$as_echo_n "checking whether to enable sanity checks... " >&6; }
+# Check whether --enable-sanity was given.
+if test "${enable_sanity+set}" = set; then :
+  enableval=$enable_sanity; case "$enableval" in
+	y | yes) CONFIG_XENO_SANITY=y ;;
+	*) unset CONFIG_XENO_SANITY= ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_SANITY:-no}" >&5
+$as_echo "${CONFIG_XENO_SANITY:-no}" >&6; }
+
+if test x$CONFIG_XENO_SANITY = xy; then
+
+$as_echo "#define CONFIG_XENO_SANITY 1" >>confdefs.h
+
+else
+
+$as_echo "#define CONFIG_XENO_SANITY 0" >>confdefs.h
+
+fi
 
 
 CONFIG_XENO_X86_VSYSCALL=y
