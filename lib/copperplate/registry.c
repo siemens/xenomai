@@ -212,11 +212,11 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	dir = basename == path ? "/" : path;
 	hobj = pvhash_search(&p->dirs, dir, strlen(dir));
 	if (hobj == NULL) {
+		ret = -ENOENT;
 	fail:
 		pvhash_remove(&p->files, &fsobj->hobj);
 		pvfree(fsobj->path);
 		fsobj->path = NULL;
-		ret = -ENOENT;
 		goto done;
 	}
 
