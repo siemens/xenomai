@@ -236,12 +236,6 @@ static void *task_entry(void *arg)
 
 	tcb->entry(tcb->arg);
 
-	CANCEL_DEFER(svc);
-	threadobj_lock(&tcb->thobj);
-	threadobj_set_magic(&tcb->thobj, ~task_magic);
-	threadobj_unlock(&tcb->thobj);
-	CANCEL_RESTORE(svc);
-
 	return NULL;
 }
 

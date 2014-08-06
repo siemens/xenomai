@@ -204,12 +204,6 @@ static void *task_trampoline(void *arg)
 
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3);
 
-	CANCEL_DEFER(svc);
-	threadobj_lock(&task->thobj);
-	threadobj_set_magic(&task->thobj, ~task_magic);
-	threadobj_unlock(&task->thobj);
-	CANCEL_RESTORE(svc);
-
 	return NULL;
 }
 

@@ -1318,6 +1318,7 @@ static void finalize_thread(void *p) /* thobj->lock free */
 	if (thobj == NULL || thobj == THREADOBJ_IRQCONTEXT)
 		return;
 
+	thobj->magic = ~thobj->magic;
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	threadobj_set_current(p);
 	thobj->pid = 0;
