@@ -1435,7 +1435,7 @@ static int xnshadow_sys_trace(int op, unsigned long a1,
 }
 
 static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
-				 unsigned int heap_nr)
+				  unsigned int heap_nr)
 {
 	struct xnheap_desc hd;
 	struct xnheap *heap;
@@ -1746,6 +1746,9 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  * process for the personality whose muxid is @a muxid. It must be
  * called with nklock locked, irqs off.
  *
+ * The per-process data was obtained from the ->attach_process()
+ * handler defined for the personality @a muxid refers to.
+ *
  * See xnshadow_register_personality() documentation for information
  * on the way to attach a per-process data to a process.
  *
@@ -1754,11 +1757,18 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  * @return the per-process data if the current context is a user-space
  * process; @return NULL otherwise.
  *
- * @coretags{task-unrestricted, atomic-entry}
+ * @coretags{task-unrestricted}
  */
 void *xnshadow_get_context(unsigned int muxid)
 {
-	return private_lookup(muxid);
+	void *p;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	p = private_lookup(muxid);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return p;
 }
 EXPORT_SYMBOL_GPL(xnshadow_get_context);
 
