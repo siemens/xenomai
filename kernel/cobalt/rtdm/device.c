@@ -33,18 +33,18 @@
 
 #define RTDM_DEVICE_MAGIC	0x82846877
 
-#define SET_DEFAULT_OP(device, operation)				\
-	(device).operation##_rt  = (void *)rtdm_no_support;		\
-	(device).operation##_nrt = (void *)rtdm_no_support
+#define SET_DEFAULT_DUAL_OP_IF_NULL(device, operation, handler)		\
+	if ((device).operation##_rt == NULL)				\
+		(device).operation##_rt =				\
+		(__typeof__((device).operation##_rt))handler;		\
+	if ((device).operation##_nrt == NULL)				\
+		(device).operation##_nrt =				\
+		(__typeof__((device).operation##_nrt))handler;
 
-#define SET_DEFAULT_OP_IF_NULL(device, operation)			\
-	if (!(device).operation##_rt)					\
-		(device).operation##_rt = (void *)rtdm_no_support;	\
-	if (!(device).operation##_nrt)					\
-		(device).operation##_nrt = (void *)rtdm_no_support
-
-#define ANY_HANDLER(device, operation)					\
-	((device).operation##_rt || (device).operation##_nrt)
+#define SET_DEFAULT_OP_IF_NULL(device, operation, handler)		\
+	if ((device).operation == NULL)					\
+		(device).operation =					\
+		(__typeof__((device).operation))handler;
 
 struct list_head rtdm_named_devices;	/* hash table */
 struct rb_root rtdm_protocol_devices;
@@ -56,16 +56,19 @@ int rtdm_initialised = 0;
 
 extern void __rt_dev_close(struct rtdm_fd *fd);
 
-int rtdm_no_support(void)
+static int enosys(void)
 {
 	return -ENOSYS;
 }
 
-int rtdm_select_bind_no_support(struct rtdm_fd *fd,
-				struct xnselector *selector,
-				unsigned int type, unsigned int index)
+static int ebadf(void)
 {
 	return -EBADF;
+}
+
+static int enodev(void)
+{
+	return -ENODEV;
 }
 
 static inline unsigned long long get_proto_id(int pf, int type)
@@ -186,7 +189,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 			printk(XENO_ERR "missing open handler for RTDM device\n");
 			return -EINVAL;
 		}
-		device->socket = (typeof(device->socket))rtdm_no_support;
+		device->socket = (typeof(device->socket))enosys;
 		break;
 
 	case RTDM_PROTOCOL_DEVICE:
@@ -195,7 +198,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 			printk(XENO_ERR "missing socket handler for RTDM device\n");
 			return -EINVAL;
 		}
-		device->open = (typeof(device->open))rtdm_no_support;
+		device->open = (typeof(device->open))enosys;
 		break;
 
 	default:
@@ -204,20 +207,20 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	/* Sanity check: non-RT close handler?
 	 * (Always required for forced cleanup) */
-	if (!device->ops.close) {
+	if (device->ops.close == NULL) {
 		printk(XENO_ERR "missing close handler for RTDM device\n");
 		return -EINVAL;
 	}
 	device->reserved.close = device->ops.close;
 	device->ops.close = __rt_dev_close;
 
-	SET_DEFAULT_OP_IF_NULL(device->ops, ioctl);
-	SET_DEFAULT_OP_IF_NULL(device->ops, read);
-	SET_DEFAULT_OP_IF_NULL(device->ops, write);
-	SET_DEFAULT_OP_IF_NULL(device->ops, recvmsg);
-	SET_DEFAULT_OP_IF_NULL(device->ops, sendmsg);
-	if (!device->ops.select_bind)
-		device->ops.select_bind = rtdm_select_bind_no_support;
+	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, ioctl, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, read, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, write, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, recvmsg, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, sendmsg, enosys);
+	SET_DEFAULT_OP_IF_NULL(device->ops, select_bind, ebadf);
+	SET_DEFAULT_OP_IF_NULL(device->ops, mmap, enodev);
 
 	atomic_set(&device->reserved.refcount, 0);
 	device->reserved.exclusive_context = NULL;

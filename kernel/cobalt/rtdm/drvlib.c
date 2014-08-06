@@ -1438,96 +1438,160 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
  * @{
  */
 
-struct rtdm_mmap_data {
+struct mmap_tramp_data {
+	struct rtdm_fd *fd;
+	int (*mmap_handler)(struct rtdm_fd *fd,
+			    struct vm_area_struct *vma);
+	unsigned long
+	(*unmapped_area_handler)(struct file *filp,
+				 struct mmap_tramp_data *tramp_data,
+				 unsigned long addr, unsigned long len,
+				 unsigned long pgoff, unsigned long flags);
+};
+
+struct mmap_helper_data {
 	void *src_vaddr;
 	phys_addr_t src_paddr;
 	struct vm_operations_struct *vm_ops;
 	void *vm_private_data;
+	struct mmap_tramp_data tramp_data;
 };
 
-static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
+static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 {
-	struct rtdm_mmap_data *mmap_data = filp->private_data;
-	unsigned long vaddr, maddr, size;
+	unsigned long vaddr, maddr, len;
 	phys_addr_t paddr;
 	int ret;
 
-	vma->vm_ops = mmap_data->vm_ops;
-	vma->vm_private_data = mmap_data->vm_private_data;
-
-	vaddr = (unsigned long)mmap_data->src_vaddr;
-	paddr = mmap_data->src_paddr;
-	if (paddr == 0)	/* kmalloc memory? */
-		paddr = __pa(vaddr);
-
+	vaddr = (unsigned long)va;
+	paddr = __pa(vaddr);
 	maddr = vma->vm_start;
-	size = vma->vm_end - vma->vm_start;
+	len = vma->vm_end - vma->vm_start;
+
+	if (!XENO_ASSERT(RTDM, vaddr == PAGE_ALIGN(vaddr)))
+		return -EINVAL;
 
 #ifdef CONFIG_MMU
-	/* Catch vmalloc memory (vaddr is 0 for I/O mapping) */
-	if ((vaddr >= VMALLOC_START) && (vaddr < VMALLOC_END)) {
-		unsigned long mapped_size = 0;
-
-		if (!XENO_ASSERT(RTDM, vaddr == PAGE_ALIGN(vaddr)))
-			return -EINVAL;
-		if (!XENO_ASSERT(RTDM, (size % PAGE_SIZE) == 0))
+	/* Catch vmalloc memory */
+	if (vaddr >= VMALLOC_START && vaddr < VMALLOC_END) {
+		if (!XENO_ASSERT(RTDM, (len & ~PAGE_MASK) == 0))
 			return -EINVAL;
 
-		while (mapped_size < size) {
+		while (len >= PAGE_SIZE) {
 			if (xnheap_remap_vm_page(vma, maddr, vaddr))
 				return -EAGAIN;
-
 			maddr += PAGE_SIZE;
 			vaddr += PAGE_SIZE;
-			mapped_size += PAGE_SIZE;
+			len -= PAGE_SIZE;
 		}
+
 		if (xnarch_machdesc.prefault)
 			xnarch_machdesc.prefault(vma);
-		ret = 0;
-	} else
+
+		return 0;
+	}
 #else
 	vma->vm_pgoff = paddr >> PAGE_SHIFT;
 #endif /* CONFIG_MMU */
-	if (mmap_data->src_paddr)
-		ret = xnheap_remap_io_page_range(filp, vma, maddr, paddr,
-						 size, PAGE_SHARED);
-	else
-		ret = xnheap_remap_kmem_page_range(vma, maddr, paddr,
-						   size, PAGE_SHARED);
-	if (xnarch_machdesc.prefault && ret == 0)
+
+	ret = xnheap_remap_kmem_page_range(vma, maddr, paddr,
+					   len, PAGE_SHARED);
+	if (ret)
+		return ret;
+
+	if (xnarch_machdesc.prefault)
 		xnarch_machdesc.prefault(vma);
+
+	return 0;
+}
+
+static int mmap_iomem_helper(struct vm_area_struct *vma, phys_addr_t pa)
+{
+	unsigned long maddr, len;
+
+	maddr = vma->vm_start;
+	len = vma->vm_end - vma->vm_start;
+#ifndef CONFIG_MMU
+	vma->vm_pgoff = pa >> PAGE_SHIFT;
+#endif /* CONFIG_MMU */
+
+	return xnheap_remap_io_page_range(vma, maddr, pa,
+					  len, PAGE_SHARED);
+}
+
+static int mmap_buffer_helper(struct rtdm_fd *fd, struct vm_area_struct *vma)
+{
+	struct mmap_tramp_data *tramp_data = vma->vm_private_data;
+	struct mmap_helper_data *helper_data;
+	int ret;
+
+	helper_data = container_of(tramp_data, struct mmap_helper_data, tramp_data);
+	vma->vm_ops = helper_data->vm_ops;
+	vma->vm_private_data = helper_data->vm_private_data;
+
+	if (helper_data->src_paddr)
+		ret = mmap_iomem_helper(vma, helper_data->src_paddr);
+	else
+		ret = mmap_kmem_helper(vma, helper_data->src_vaddr);
 
 	return ret;
 }
 
-#ifndef CONFIG_MMU
-static unsigned long rtdm_unmapped_area(struct file *file,
-					unsigned long addr,
-					unsigned long len,
-					unsigned long pgoff,
-					unsigned long flags)
+static int mmap_trampoline(struct file *filp, struct vm_area_struct *vma)
 {
-	struct rtdm_mmap_data *mmap_data = file->private_data;
+	struct mmap_tramp_data *tramp_data = filp->private_data;
+
+	vma->vm_private_data = tramp_data;
+
+	return tramp_data->mmap_handler(tramp_data->fd, vma);
+}
+
+#ifndef CONFIG_MMU
+
+static
+unsigned long unmapped_area_helper(struct file *filp,
+				   struct mmap_tramp_data *tramp_data,
+				   unsigned long addr, unsigned long len,
+				   unsigned long pgoff, unsigned long flags)
+{
+	struct mmap_helper_data *helper_data;
 	unsigned long pa;
 
-	pa = mmap_data->src_paddr;
-	if (pa == 0)
-		pa = __pa(mmap_data->src_vaddr);
+	helper_data = container_of(tramp_data, struct mmap_helper_data, tramp_data);
+	pa = helper_data->src_paddr;
+	if (pa)
+		return (unsigned long)__va(pa);
 
-	return pa;
+	return (unsigned long)mmap_data->src_vaddr;
 }
+
+static unsigned long
+unmapped_area_trampoline(struct file *filp,
+			 unsigned long addr, unsigned long len,
+			 unsigned long pgoff, unsigned long flags)
+{
+	struct mmap_tramp_data *tramp_data = filp->private_data;
+
+	if (tramp_data->unmapped_area_handler == NULL)
+		return -ENOSYS;	/* We don't know. */
+
+	return tramp_data->unmapped_area_handler(filp, tramp_data, addr,
+						 len, pgoff, flags);
+}
+
 #else
-#define rtdm_unmapped_area  NULL
+#define unmapped_area_helper      NULL
+#define unmapped_area_trampoline  NULL
 #endif
 
-static struct file_operations rtdm_mmap_fops = {
-	.mmap = rtdm_mmap_buffer,
-	.get_unmapped_area = rtdm_unmapped_area
+static struct file_operations mmap_fops = {
+	.mmap = mmap_trampoline,
+	.get_unmapped_area = unmapped_area_trampoline
 };
 
-static int rtdm_do_mmap(struct rtdm_fd *fd,
-			struct rtdm_mmap_data *mmap_data,
-			size_t len, int prot, void **pptr)
+static int rtdm_mmap(struct mmap_tramp_data *tramp_data,
+		     size_t len, off_t offset, int prot, int flags,
+		     void **pptr)
 {
 	const struct file_operations *old_fops;
 	unsigned long u_addr;
@@ -1542,14 +1606,10 @@ static int rtdm_do_mmap(struct rtdm_fd *fd,
 		return PTR_ERR(filp);
 
 	old_fops = filp->f_op;
-	filp->f_op = &rtdm_mmap_fops;
-
+	filp->f_op = &mmap_fops;
 	old_priv_data = filp->private_data;
-	filp->private_data = mmap_data;
-
-	u_addr = vm_mmap(filp, (unsigned long)*pptr, len, prot,
- 			 MAP_SHARED, 0);
-
+	filp->private_data = tramp_data;
+	u_addr = vm_mmap(filp, (unsigned long)*pptr, len, prot, flags, offset);
 	filp->f_op = (typeof(filp->f_op))old_fops;
 	filp->private_data = old_priv_data;
 
@@ -1563,6 +1623,18 @@ static int rtdm_do_mmap(struct rtdm_fd *fd,
 	return 0;
 }
 
+int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
+			  int prot, int flags, void *__user *pptr)
+{
+	struct mmap_tramp_data tramp_data = {
+		.fd = fd,
+		.mmap_handler = fd->ops->mmap,
+		.unmapped_area_handler = NULL,
+	};
+
+	return rtdm_mmap(&tramp_data, len, offset, prot, flags, pptr);
+}
+
 /**
  * Map a kernel memory range into the address space of the user.
  *
@@ -1574,9 +1646,9 @@ static int rtdm_do_mmap(struct rtdm_fd *fd,
  * either PROT_READ or PROT_READ|PROT_WRITE
  * @param[in,out] pptr Address of a pointer containing the desired user
  * address or NULL on entry and the finally assigned address on return
- * @param[in] vm_ops vm_operations to be executed on the vma_area of the
+ * @param[in] vm_ops vm_operations to be executed on the vm_area of the
  * user memory range or NULL
- * @param[in] vm_private_data Private data to be stored in the vma_area,
+ * @param[in] vm_private_data Private data to be stored in the vm_area,
  * primarily useful for vm_operation handlers
  *
  * @return 0 on success, otherwise (most common values):
@@ -1597,16 +1669,17 @@ static int rtdm_do_mmap(struct rtdm_fd *fd,
  * vmalloc(). To map physical I/O memory to user-space use
  * rtdm_iomap_to_user() instead.
  *
- * @note RTDM supports two models for unmapping the user memory range again.
- * One is explicit unmapping via rtdm_munmap(), either performed when the
- * user requests it via an IOCTL etc. or when the related device is closed.
- * The other is automatic unmapping, triggered by the user invoking standard
- * munmap() or by the termination of the related process. To track release of
- * the mapping and therefore relinquishment of the referenced physical memory,
- * the caller of rtdm_mmap_to_user() can pass a vm_operations_struct on
- * invocation, defining a close handler for the vm_area. See Linux
- * documentaion (e.g. Linux Device Drivers book) on virtual memory management
- * for details.
+ * @note RTDM supports two models for unmapping the memory area:
+ * - manual unmapping via rtdm_munmap(), which may be issued from a
+ * driver in response to an IOCTL call, or by a call to the regular
+ * munmap() call from the application.
+ * - automatic unmapping, triggered by the termination of the process
+ *   which owns the mapping.
+ * To track the number of references pending on the resource mapped,
+ * the driver can pass the address of a close handler for the vm_area
+ * considered, in the @a vm_ops descriptor. See the relevant Linux
+ * kernel programming documentation (e.g. Linux Device Drivers book)
+ * on virtual memory management for details.
  *
  * @coretags{secondary-only}
  */
@@ -1616,16 +1689,20 @@ int rtdm_mmap_to_user(struct rtdm_fd *fd,
 		      struct vm_operations_struct *vm_ops,
 		      void *vm_private_data)
 {
-	struct rtdm_mmap_data mmap_data = {
+	struct mmap_helper_data helper_data = {
+		.tramp_data = {
+			.fd = fd,
+			.mmap_handler = mmap_buffer_helper,
+			.unmapped_area_handler = unmapped_area_helper,
+		},
 		.src_vaddr = src_addr,
 		.src_paddr = 0,
 		.vm_ops = vm_ops,
 		.vm_private_data = vm_private_data
 	};
 
-	return rtdm_do_mmap(fd, &mmap_data, len, prot, pptr);
+	return rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
 }
-
 EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
 
 /**
@@ -1639,9 +1716,9 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
  * either PROT_READ or PROT_READ|PROT_WRITE
  * @param[in,out] pptr Address of a pointer containing the desired user
  * address or NULL on entry and the finally assigned address on return
- * @param[in] vm_ops vm_operations to be executed on the vma_area of the
+ * @param[in] vm_ops vm_operations to be executed on the vm_area of the
  * user memory range or NULL
- * @param[in] vm_private_data Private data to be stored in the vma_area,
+ * @param[in] vm_private_data Private data to be stored in the vm_area,
  * primarily useful for vm_operation handlers
  *
  * @return 0 on success, otherwise (most common values):
@@ -1658,16 +1735,17 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * @note RTDM supports two models for unmapping the user memory range again.
- * One is explicit unmapping via rtdm_munmap(), either performed when the
- * user requests it via an IOCTL etc. or when the related device is closed.
- * The other is automatic unmapping, triggered by the user invoking standard
- * munmap() or by the termination of the related process. To track release of
- * the mapping and therefore relinquishment of the referenced physical memory,
- * the caller of rtdm_iomap_to_user() can pass a vm_operations_struct on
- * invocation, defining a close handler for the vm_area. See Linux
- * documentaion (e.g. Linux Device Drivers book) on virtual memory management
- * for details.
+ * @note RTDM supports two models for unmapping the memory area:
+ * - manual unmapping via rtdm_munmap(), which may be issued from a
+ * driver in response to an IOCTL call, or by a call to the regular
+ * munmap() call from the application.
+ * - automatic unmapping, triggered by the termination of the process
+ *   which owns the mapping.
+ * To track the number of references pending on the resource mapped,
+ * the driver can pass the address of a close handler for the vm_area
+ * considered, in the @a vm_ops descriptor. See the relevant Linux
+ * kernel programming documentation (e.g. Linux Device Drivers book)
+ * on virtual memory management for details.
  *
  * @coretags{secondary-only}
  */
@@ -1677,23 +1755,72 @@ int rtdm_iomap_to_user(struct rtdm_fd *fd,
 		       struct vm_operations_struct *vm_ops,
 		       void *vm_private_data)
 {
-	struct rtdm_mmap_data mmap_data = {
+	struct mmap_helper_data helper_data = {
+		.tramp_data = {
+			.fd = fd,
+			.mmap_handler = mmap_buffer_helper,
+			.unmapped_area_handler = unmapped_area_helper,
+		},
 		.src_vaddr = NULL,
 		.src_paddr = src_addr,
 		.vm_ops = vm_ops,
 		.vm_private_data = vm_private_data
 	};
 
-	return rtdm_do_mmap(fd, &mmap_data, len, prot, pptr);
+	return rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
 }
-
 EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
+
+/**
+ * Map a kernel memory range to a virtual memory area.
+ *
+ * This routine is commonly used from a ->mmap() handler of a RTDM
+ * driver, for mapping a kernel memory area over the user address
+ * space referred to by @a vma.
+ *
+ * @param[in] vma The VMA descriptor to receive the mapping.
+ * @param[in] va The kernel virtual address to be mapped.
+ *
+ * @return 0 on success, otherwise a negated error code is returned.
+ *
+ * @note This service only works on memory regions allocated via
+ * kmalloc() or vmalloc(). To map a chunk of physical I/O memory to a
+ * VMA, call rtdm_mmap_iomem() instead.
+ *
+ * @coretags{secondary-only}
+ */
+int rtdm_mmap_kmem(struct vm_area_struct *vma, void *va)
+{
+	return mmap_kmem_helper(vma, va);
+}
+EXPORT_SYMBOL_GPL(rtdm_mmap_kmem);
+
+/**
+ * Map an I/O memory range to a virtual memory area.
+ *
+ * This routine is commonly used from a ->mmap() handler of a RTDM
+ * driver, for mapping an I/O memory area over the user address space
+ * referred to by @a vma.
+ *
+ * @param[in] vma The VMA descriptor to receive the mapping.
+ * @param[in] pa The physical I/O address to be mapped.
+ *
+ * @return 0 on success, otherwise a negated error code is returned.
+ *
+ * @note To map a chunk of kernel virtual memory to a VMA, call
+ * rtdm_mmap_kmem() instead.
+ *
+ * @coretags{secondary-only}
+ */
+int rtdm_mmap_iomem(struct vm_area_struct *vma, phys_addr_t pa)
+{
+	return mmap_iomem_helper(vma, pa);
+}
+EXPORT_SYMBOL_GPL(rtdm_mmap_iomem);
 
 /**
  * Unmap a user memory range.
  *
- * @param[in] fd RTDM file descriptor as passed to 
- * rtdm_mmap_to_user() when requesting to map the memory range
  * @param[in] ptr User address or the memory range
  * @param[in] len Length of the memory range
  *
@@ -1706,18 +1833,12 @@ EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
  *
  * @coretags{secondary-only}
  */
-int rtdm_munmap(struct rtdm_fd *fd, void *ptr, size_t len)
+int rtdm_munmap(void *ptr, size_t len)
 {
-	int err;
-
 	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
 		return -EPERM;
 
-	down_write(&current->mm->mmap_sem);
-	err = do_munmap(current->mm, (unsigned long)ptr, len);
-	up_write(&current->mm->mmap_sem);
-
-	return err;
+	return vm_munmap((unsigned long)ptr, len);
 }
 EXPORT_SYMBOL_GPL(rtdm_munmap);
 

@@ -87,7 +87,7 @@ enum rtdm_selecttype;
  * @{
  */
 /** Version of struct rtdm_device */
-#define RTDM_DEVICE_STRUCT_VER		6
+#define RTDM_DEVICE_STRUCT_VER		7
 
 /** Version of struct rtdm_dev_context */
 #define RTDM_CONTEXT_STRUCT_VER		4
@@ -414,13 +414,19 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  * variable updated by the real-time core will hold the information
  * required to leave the atomic section properly.
  *
- * @note Atomic sections may be nested.
+ * @note Atomic sections may be nested. The caller is allowed to sleep
+ * on a blocking Xenomai service from primary mode within an atomic
+ * section delimited by cobalt_atomic_enter/cobalt_atomic_leave calls.
+ * On the contrary, sleeping on a regular Linux kernel service while
+ * holding such lock is NOT valid.
  *
  * @note Since the strongest lock is acquired by this service, it can
  * be used to synchronize real-time and non-real-time contexts.
  *
  * @warning This service is not portable to the Mercury core, and
- * should be restricted to Cobalt-specific use cases.
+ * should be restricted to Cobalt-specific use cases, mainly for the
+ * purpose of porting existing dual-kernel drivers which still depend
+ * on the obsolete RTDM_EXECUTE_ATOMICALLY() construct.
  */
 #define cobalt_atomic_enter(context)			\
 	do {						\
@@ -471,6 +477,8 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  *
  * @deprecated This construct will be phased out in Xenomai
  * 3.0. Please use rtdm_waitqueue services instead.
+ *
+ * @see cobalt_atomic_enter().
  */
 #ifdef DOXYGEN_CPP /* Beautify doxygen output */
 #define RTDM_EXECUTE_ATOMICALLY(code_block)	\
@@ -1160,12 +1168,18 @@ int rtdm_mmap_to_user(struct rtdm_fd *fd,
 		      int prot, void **pptr,
 		      struct vm_operations_struct *vm_ops,
 		      void *vm_private_data);
+
 int rtdm_iomap_to_user(struct rtdm_fd *fd,
 		       phys_addr_t src_addr, size_t len,
 		       int prot, void **pptr,
 		       struct vm_operations_struct *vm_ops,
 		       void *vm_private_data);
-int rtdm_munmap(struct rtdm_fd *fd, void *ptr, size_t len);
+
+int rtdm_mmap_kmem(struct vm_area_struct *vma, void *va);
+
+int rtdm_mmap_iomem(struct vm_area_struct *vma, phys_addr_t pa);
+
+int rtdm_munmap(void *ptr, size_t len);
 
 static inline int rtdm_read_user_ok(struct rtdm_fd *fd,
 				    const void __user *ptr, size_t size)

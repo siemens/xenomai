@@ -22,6 +22,7 @@
 
 #include <linux/list.h>
 #include <linux/sem.h>
+#include <linux/mutex.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/tree.h>
 #include <rtdm/driver.h>
@@ -30,6 +31,8 @@
 
 #define DEF_DEVNAME_HASHTAB_SIZE	256	/* entries in name hash table */
 #define DEF_PROTO_HASHTAB_SIZE		256	/* entries in protocol hash table */
+
+struct rtdm_fd;
 
 struct rtdm_process {
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -77,7 +80,13 @@ static inline void
 rtdm_proc_unregister_device(struct rtdm_device *device) { }
 #endif
 
-void rtdm_apc_handler(void *cookie);
+int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
+			    unsigned int request, void __user *arg);
+
+void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx);
+
+int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
+			  int prot, int flags, void *__user *pptr);
 
 int rtdm_init(void);
 

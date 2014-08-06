@@ -28,15 +28,11 @@
 #include <cobalt/kernel/ppd.h>
 #include <trace/events/cobalt-rtdm.h>
 #include <rtdm/fd.h>
+#include "internal.h"
 
 DEFINE_PRIVATE_XNLOCK(__rtdm_fd_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
 static struct semaphore rtdm_fd_cleanup_sem;
-
-int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
-			    unsigned int request, void __user *arg);
-
-void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx);
 
 static int enosys(void)
 {
@@ -46,6 +42,11 @@ static int enosys(void)
 static int ebadf(void)
 {
 	return -EBADF;
+}
+
+static int enodev(void)
+{
+	return -ENODEV;
 }
 
 static void nop_close(struct rtdm_fd *fd)
@@ -138,6 +139,9 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 
 	if (ops->select_bind == NULL)
 		ops->select_bind = (typeof(ops->select_bind))ebadf;
+
+	if (ops->mmap == NULL)
+		ops->mmap = (typeof(ops->mmap))enodev;
 
 	if (ops->close == NULL)
 		ops->close = nop_close;
@@ -421,7 +425,7 @@ rtdm_fd_read(struct xnsys_ppd *p, int ufd, void __user *buf, size_t size)
 EXPORT_SYMBOL_GPL(rtdm_fd_read);
 
 ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
-		const void __user *buf, size_t size)
+		      const void __user *buf, size_t size)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;
@@ -551,6 +555,37 @@ int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned int magic)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_close);
+
+int rtdm_fd_mmap(struct xnsys_ppd *p, int ufd,
+		 struct _rtdm_mmap_request *rma,
+		 void * __user *u_addrp)
+{
+	struct rtdm_fd *fd;
+	int ret;
+
+	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
+
+	trace_cobalt_fd_mmap(current, fd, ufd, rma);
+
+	if (rma->flags & (MAP_FIXED|MAP_ANONYMOUS)) {
+		ret = -ENODEV;
+		goto unlock;
+	}
+
+	ret = __rtdm_mmap_from_fdop(fd, rma->length, rma->offset,
+				    rma->prot, rma->flags, u_addrp);
+unlock:
+	rtdm_fd_put(fd);
+out:
+	if (ret)
+		trace_cobalt_fd_mmap_status(current, fd, ufd, ret);
+
+	return ret;
+}
 
 int rtdm_fd_valid_p(int ufd)
 {

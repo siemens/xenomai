@@ -92,6 +92,26 @@ int sys_rtdm_close(int fd)
 	return rtdm_fd_close(xnsys_ppd_get(0), fd, XNFD_MAGIC_ANY);
 }
 
+int sys_rtdm_mmap(int fd, struct _rtdm_mmap_request __user *u_rma,
+                  void __user **u_addrp)
+{
+	struct _rtdm_mmap_request rma;
+	void *u_addr;
+	int ret;
+
+	if (__xn_copy_from_user(&rma, u_rma, sizeof(rma)))
+		return -EFAULT;
+
+	ret = rtdm_fd_mmap(xnsys_ppd_get(0), fd, &rma, &u_addr);
+	if (ret)
+		return ret;
+
+	if (__xn_copy_to_user(u_addrp, &u_addr, sizeof(u_addr)))
+		return -EFAULT;
+
+	return 0;
+}
+
 static void *rtdm_process_attach(void)
 {
 	struct rtdm_process *process;
@@ -119,6 +139,7 @@ static struct xnsyscall rtdm_syscalls[] = {
 	SKINCALL_DEF(sc_rtdm_open, sys_rtdm_open, lostage),
 	SKINCALL_DEF(sc_rtdm_socket, sys_rtdm_socket, lostage),
 	SKINCALL_DEF(sc_rtdm_close, sys_rtdm_close, lostage),
+	SKINCALL_DEF(sc_rtdm_mmap, sys_rtdm_mmap, lostage),
 	SKINCALL_DEF(sc_rtdm_ioctl, sys_rtdm_ioctl, probing),
 	SKINCALL_DEF(sc_rtdm_read, sys_rtdm_read, probing),
 	SKINCALL_DEF(sc_rtdm_write, sys_rtdm_write, probing),

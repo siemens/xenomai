@@ -25,7 +25,9 @@
 #include <linux/socket.h>
 #include <cobalt/kernel/tree.h>
 
+struct vm_area_struct;
 struct rtdm_fd;
+struct _rtdm_mmap_request;
 struct xnselector;
 struct xnsys_ppd;
 
@@ -124,9 +126,13 @@ struct rtdm_fd_ops {
 	rtdm_fd_recvmsg_t *recvmsg_nrt;
 	rtdm_fd_sendmsg_t *sendmsg_rt;
 	rtdm_fd_sendmsg_t *sendmsg_nrt;
-	int (*select_bind)(struct rtdm_fd *fd, struct xnselector *selector,
-			unsigned int type, unsigned int index);
+	int (*select_bind)(struct rtdm_fd *fd,
+			   struct xnselector *selector,
+			   unsigned int type,
+			   unsigned int index);
 	void (*close)(struct rtdm_fd *fd);
+	int (*mmap)(struct rtdm_fd *fd,
+		    struct vm_area_struct *vma);
 };
 
 struct rtdm_fd {
@@ -161,21 +167,25 @@ void rtdm_fd_put(struct rtdm_fd *fd);
 
 void rtdm_fd_unlock(struct rtdm_fd *fd);
 
-int rtdm_fd_ioctl(struct xnsys_ppd *p, int fd, unsigned int request, ...);
+int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...);
 
-ssize_t rtdm_fd_read(struct xnsys_ppd *p, int fd,
+ssize_t rtdm_fd_read(struct xnsys_ppd *p, int ufd,
 		     void __user *buf, size_t size);
 
-ssize_t rtdm_fd_write(struct xnsys_ppd *p, int fd,
+ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
 		      const void __user *buf, size_t size);
 
-int rtdm_fd_close(struct xnsys_ppd *p, int fd, unsigned int magic);
+int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned int magic);
 
-ssize_t rtdm_fd_recvmsg(struct xnsys_ppd *p, int fd,
+ssize_t rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd,
 			struct msghdr *msg, int flags);
 
-ssize_t rtdm_fd_sendmsg(struct xnsys_ppd *p, int fd,
+ssize_t rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd,
 			const struct msghdr *msg, int flags);
+
+int rtdm_fd_mmap(struct xnsys_ppd *p, int ufd,
+		 struct _rtdm_mmap_request *rma,
+		 void * __user *u_addrp);
 
 int rtdm_fd_valid_p(int ufd);
 

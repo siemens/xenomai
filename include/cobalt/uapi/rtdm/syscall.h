@@ -29,5 +29,6 @@
 #define sc_rtdm_write		5
 #define sc_rtdm_recvmsg         6
 #define sc_rtdm_sendmsg         7
+#define sc_rtdm_mmap            8
 
 #endif /* !_COBALT_UAPI_RTDM_SYSCALL_H */

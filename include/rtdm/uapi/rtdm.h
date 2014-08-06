@@ -192,6 +192,14 @@ struct _rtdm_setsockaddr_args {
 #define _RTIOC_SHUTDOWN		_IOW(RTIOC_TYPE_COMMON, 0x28,		\
 				     int)
 
+/* Internally used for mmap() */
+struct _rtdm_mmap_request {
+	size_t length;
+	off_t offset;
+	int prot;
+	int flags;
+};
+
 #ifndef RTDM_NO_DEFAULT_USER_API
 
 static inline ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags)

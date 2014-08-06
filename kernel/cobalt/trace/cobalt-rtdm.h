@@ -5,6 +5,7 @@
 #define _TRACE_COBALT_RTDM_H
 
 #include <linux/tracepoint.h>
+#include <linux/mman.h>
 
 struct rtdm_event;
 struct rtdm_sem;
@@ -255,6 +256,60 @@ DEFINE_EVENT(fd_request, cobalt_fd_recvmsg,
 	TP_ARGS(task, fd, ufd, flags)
 );
 
+#define cobalt_print_protbits(__prot)		\
+	__print_flags(__prot,  "|", 		\
+		      {PROT_EXEC, "exec"},	\
+		      {PROT_READ, "read"},	\
+		      {PROT_WRITE, "write"})
+
+#define cobalt_print_mapbits(__flags)		\
+	__print_flags(__flags,  "|", 		\
+		      {MAP_SHARED, "shared"},	\
+		      {MAP_PRIVATE, "private"},	\
+		      {MAP_ANONYMOUS, "anon"},	\
+		      {MAP_FIXED, "fixed"},	\
+		      {MAP_HUGETLB, "huge"},	\
+		      {MAP_NONBLOCK, "nonblock"},	\
+		      {MAP_NORESERVE, "noreserve"},	\
+		      {MAP_POPULATE, "populate"},	\
+		      {MAP_UNINITIALIZED, "uninit"})
+
+TRACE_EVENT(cobalt_fd_mmap,
+	TP_PROTO(struct task_struct *task,
+		 struct rtdm_fd *fd, int ufd, struct _rtdm_mmap_request *rma),
+        TP_ARGS(task, fd, ufd, rma),
+
+	TP_STRUCT__entry(
+		__array(char, comm, TASK_COMM_LEN)
+		__field(pid_t, pid)
+		__field(struct rtdm_device *, device)
+		__field(int, ufd)
+		__field(size_t, length)
+		__field(off_t, offset)
+		__field(int, prot)
+		__field(int, flags)
+	),
+
+	TP_fast_assign(
+		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
+		__entry->pid = task->pid;
+		__entry->device = rtdm_fd_to_context(fd)->device;
+		__entry->ufd = ufd;
+		__entry->length = rma->length;
+		__entry->offset = rma->offset;
+		__entry->prot = rma->prot;
+		__entry->flags = rma->flags;
+	),
+
+	TP_printk("device=%p fd=%d area={ len:%Zu, off:%Lu }"
+		  " prot=%#x(%s) flags=%#x(%s) pid=%d comm=%s",
+		  __entry->device, __entry->ufd, __entry->length,
+		  (unsigned long long)__entry->offset,
+		  __entry->prot, cobalt_print_protbits(__entry->prot),
+		  __entry->flags, cobalt_print_mapbits(__entry->flags),
+		  __entry->pid, __entry->comm)
+);
+
 DEFINE_EVENT(fd_request_status, cobalt_fd_ioctl_status,
 	TP_PROTO(struct task_struct *task,
 		 struct rtdm_fd *fd, int ufd,
@@ -284,6 +339,13 @@ DEFINE_EVENT(fd_request_status, cobalt_fd_recvmsg_status,
 );
 
 DEFINE_EVENT(fd_request_status, cobalt_fd_sendmsg_status,
+	TP_PROTO(struct task_struct *task,
+		 struct rtdm_fd *fd, int ufd,
+		 int status),
+	TP_ARGS(task, fd, ufd, status)
+);
+
+DEFINE_EVENT(fd_request_status, cobalt_fd_mmap_status,
 	TP_PROTO(struct task_struct *task,
 		 struct rtdm_fd *fd, int ufd,
 		 int status),

@@ -182,7 +182,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
-	struct rtdm_process owner;
+	struct rtdm_process *owner;
 	int close_lock_count, i;
 	struct rtdm_fd *fd;
 
@@ -200,15 +200,14 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	context = rtdm_fd_to_context(fd);
 	close_lock_count = fd->refs;
 	device = context->device;
-
-	strcpy(owner.name, "<kernel>");
-	owner.pid = -1;
+	owner = context->reserved.owner;
 
 	xnvfile_printf(it, "%d\t%d\t%-31s %s [%d]\n", i,
 		       close_lock_count,
 		       (device->device_flags & RTDM_NAMED_DEVICE) ?
 		       device->device_name : device->proc_name,
-		       owner.name, owner.pid);
+		       owner ? owner->name : "<kernel>",
+		       owner ? owner->pid : 0);
 
 	rtdm_fd_put(fd);
 
