@@ -23,7 +23,7 @@ OUTPUT_DOCS = 						\
 	doc/asciidoc/TROUBLESHOOTING.MERCURY.adoc
 
 all-local: git-src-check
-	@if test \! x$(XENO_DOC_GIT) = x; then	\
+	@set -e; if test \! x$(XENO_DOC_GIT) = x; then	\
 		if test -d doc.git; then \
 			(cd doc.git && git pull --quiet --force); \
 		else \
