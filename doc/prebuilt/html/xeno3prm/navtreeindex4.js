@@ -249,5 +249,5 @@ var NAVTREEINDEX4 =
 "group__rtdm__user__api.html#gaf6072f0befa5df3fc1ab89529756fa6f":[2,0,0,1],
 "group__rtdm__user__api.html#gaf8820904f66c985fff36ab16f2d88c0d":[2,0,0,5],
 "group__rtdm__util.html":[2,0,1,8],
-"group__rtdm__util.html#ga0af76dc0e9718b977c9c5cf3227bc568":[2,0,1,8,11]
+"group__rtdm__util.html#ga086b839d1584bd839258b554ea8f2b78":[2,0,1,8,9]
 };

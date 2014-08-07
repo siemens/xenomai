@@ -1,5 +1,8 @@
 var NAVTREEINDEX7 =
 {
+"sem__heap_8h_source.html":[4,0,2,2,4],
+"semaphore_8h_source.html":[4,0,0,2,9],
+"semobj_8h_source.html":[4,0,0,3,9],
 "sh_2include_2asm_2xenomai_2calibration_8h_source.html":[4,0,1,0,0,4,0,0,0,1],
 "sh_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,4,0,0,0,3],
 "sh_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,4,0,0,0,0,2],
@@ -7,7 +10,7 @@ var NAVTREEINDEX7 =
 "shared-list_8h_source.html":[4,0,0,1,9],
 "smi_8h_source.html":[4,0,1,0,0,5,0,0,0,6],
 "smokey_8h_source.html":[4,0,0,8,0],
-"socket_8h_source.html":[4,0,0,2,2,3],
+"socket_8h_source.html":[4,0,0,2,2,4],
 "stat_8h_source.html":[4,0,0,2,1,28],
 "stdio_8h_source.html":[4,0,0,2,11],
 "stdlib_8h_source.html":[4,0,0,2,12],
@@ -246,8 +249,5 @@ var NAVTREEINDEX7 =
 "structxnvfile__snapshot__iterator.html#a0c4b28f5a183309699984d859dca9dca":[2,1,0,16,6,1],
 "structxnvfile__snapshot__iterator.html#a3fb6b2e509206595af45a84926479b5f":[2,1,0,16,6,5],
 "structxnvfile__snapshot__iterator.html#a62573366edd906816759fbdd16930522":[2,1,0,16,6,2],
-"structxnvfile__snapshot__iterator.html#a7b01ca175907f4159dfb5201be85df0a":[2,1,0,16,6,3],
-"structxnvfile__snapshot__iterator.html#a84d702d0ea1489dca8b4e86e06a856a0":[2,1,0,16,6,4],
-"structxnvfile__snapshot__iterator.html#ab3d26fd9ee1e14af1e5d345f589c2f3c":[2,1,0,16,6,0],
-"structxnvfile__snapshot__ops.html":[2,1,0,16,3]
+"structxnvfile__snapshot__iterator.html#a7b01ca175907f4159dfb5201be85df0a":[2,1,0,16,6,3]
 };

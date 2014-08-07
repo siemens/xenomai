@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.5</span>
+   &#160;<span id="projectnumber">2.99.6</span>
    </div>
   </td>
  </tr>
@@ -138,10 +138,10 @@ Macros</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>Atomic sections may be nested.</dd>
+<dl class="section note"><dt>Note</dt><dd>Atomic sections may be nested. The caller is allowed to sleep on a blocking Xenomai service from primary mode within an atomic section delimited by cobalt_atomic_enter/cobalt_atomic_leave calls. On the contrary, sleeping on a regular Linux kernel service while holding such lock is NOT valid.</dd>
 <dd>
 Since the strongest lock is acquired by this service, it can be used to synchronize real-time and non-real-time contexts.</dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>This service is not portable to the Mercury core, and should be restricted to Cobalt-specific use cases. </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>This service is not portable to the Mercury core, and should be restricted to Cobalt-specific use cases, mainly for the purpose of porting existing dual-kernel drivers which still depend on the obsolete <a class="el" href="group__rtdm__sync__biglock.html#gabbaf52632d5dde7fa66e0b70d887493b" title="Execute code block atomically (DEPRECATED) ">RTDM_EXECUTE_ATOMICALLY()</a> construct. </dd></dl>
 
 </div>
 </div>
@@ -204,7 +204,8 @@ Since the strongest lock is acquired by this service, it can be used to synchron
 </dl>
 <dl class="section note"><dt>Note</dt><dd>It is not allowed to leave the code block explicitly by using <code>break</code>, <code>return</code>, <code>goto</code>, etc. This would leave the global lock held during the code block execution in an inconsistent state. Moreover, do not embed complex operations into the code bock. Consider that they will be executed under preemption lock with interrupts switched-off. Also note that invocation of rescheduling calls may break the atomicity until the task gains the CPU again.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a></dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>This construct will be phased out in Xenomai 3.0. Please use rtdm_waitqueue services instead. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>This construct will be phased out in Xenomai 3.0. Please use rtdm_waitqueue services instead.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__rtdm__sync__biglock.html#ga632e377a9ec9f08e191dcd86f567925b" title="Enter atomic section (dual kernel only) ">cobalt_atomic_enter()</a>. </dd></dl>
 
 </div>
 </div>

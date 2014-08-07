@@ -1,5 +1,8 @@
 var NAVTREEINDEX8 =
 {
+"structxnvfile__snapshot__iterator.html#a84d702d0ea1489dca8b4e86e06a856a0":[2,1,0,16,6,4],
+"structxnvfile__snapshot__iterator.html#ab3d26fd9ee1e14af1e5d345f589c2f3c":[2,1,0,16,6,0],
+"structxnvfile__snapshot__ops.html":[2,1,0,16,3],
 "structxnvfile__snapshot__ops.html#a0a509977acecc8bee5c00dabbfcc56d5":[2,1,0,16,3,5],
 "structxnvfile__snapshot__ops.html#a2bb1150c2a0f60c6eb979781cbc451c1":[2,1,0,16,3,3],
 "structxnvfile__snapshot__ops.html#a37a216b44ddfa5c895b7de05da0acd10":[2,1,0,16,3,2],

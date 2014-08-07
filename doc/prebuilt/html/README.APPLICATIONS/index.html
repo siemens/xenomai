@@ -839,6 +839,31 @@ switch is a nop over <em>Cobalt</em>.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+<strong>--no-sanity</strong>
+</dt>
+<dt class="hdlist1">
+<strong>--sanity</strong>
+</dt>
+<dd>
+<p>
+        Turns off/on the sanity checks performed at application
+        startup by the Xenomai libraries. This option overrides the
+        --enable/disable-sanity options passed on the configuration
+        line when building the Xenomai libraries.
+</p>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">Passing <strong>--no-sanity</strong> allows running Xenomai libraries built
+for a single-processor system (i.e. --disable-smp) on a SMP
+system, assuming your application properly pins all threads
+to a single CPU.</td>
+</tr></table>
+</div>
+</dd>
+<dt class="hdlist1">
 <strong>--session=&lt;label&gt;</strong>
 </dt>
 <dd>
@@ -972,7 +997,7 @@ package is called <em>valgrind-devel</em> on Fedora.</td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-03 10:56:12 CEST
+Last updated 2014-08-07 16:39:31 CEST
 </div>
 </div>
 </body>

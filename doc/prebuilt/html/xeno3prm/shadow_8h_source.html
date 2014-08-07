@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.5</span>
+   &#160;<span id="projectnumber">2.99.6</span>
    </div>
   </td>
  </tr>
@@ -226,8 +226,8 @@ $(document).ready(function(){initNavTree('shadow_8h_source.html','');});
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>xnpersonality xenomai_personality;</div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div>
 <div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_SHADOW_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__cobalt__core__shadow_html_ga6b3f7f5d5c96bb4dd27614aeb785cae5"><div class="ttname"><a href="group__cobalt__core__shadow.html#ga6b3f7f5d5c96bb4dd27614aeb785cae5">xnshadow_push_personality</a></div><div class="ttdeci">struct xnpersonality * xnshadow_push_personality(int muxid)</div><div class="ttdoc">Stack a new personality over the current thread. </div><div class="ttdef"><b>Definition:</b> shadow.c:1782</div></div>
-<div class="ttc" id="group__cobalt__core__shadow_html_gad59536b179e4c94a61e348f2a848f220"><div class="ttname"><a href="group__cobalt__core__shadow.html#gad59536b179e4c94a61e348f2a848f220">xnshadow_pop_personality</a></div><div class="ttdeci">void xnshadow_pop_personality(struct xnpersonality *prev)</div><div class="ttdoc">Pop the topmost personality from the current thread. </div><div class="ttdef"><b>Definition:</b> shadow.c:1823</div></div>
+<div class="ttc" id="group__cobalt__core__shadow_html_ga6b3f7f5d5c96bb4dd27614aeb785cae5"><div class="ttname"><a href="group__cobalt__core__shadow.html#ga6b3f7f5d5c96bb4dd27614aeb785cae5">xnshadow_push_personality</a></div><div class="ttdeci">struct xnpersonality * xnshadow_push_personality(int muxid)</div><div class="ttdoc">Stack a new personality over the current thread. </div><div class="ttdef"><b>Definition:</b> shadow.c:1792</div></div>
+<div class="ttc" id="group__cobalt__core__shadow_html_gad59536b179e4c94a61e348f2a848f220"><div class="ttname"><a href="group__cobalt__core__shadow.html#gad59536b179e4c94a61e348f2a848f220">xnshadow_pop_personality</a></div><div class="ttdeci">void xnshadow_pop_personality(struct xnpersonality *prev)</div><div class="ttdoc">Pop the topmost personality from the current thread. </div><div class="ttdef"><b>Definition:</b> shadow.c:1833</div></div>
 <div class="ttc" id="group__cobalt__core__shadow_html_gaf2600cb0433d0fd7b02fa5e610ab43b3"><div class="ttname"><a href="group__cobalt__core__shadow.html#gaf2600cb0433d0fd7b02fa5e610ab43b3">xnshadow_register_personality</a></div><div class="ttdeci">int xnshadow_register_personality(struct xnpersonality *personality)</div><div class="ttdoc">Register a new interface personality. </div><div class="ttdef"><b>Definition:</b> shadow.c:1692</div></div>
 <div class="ttc" id="group__cobalt__core__shadow_html_gaa5406a4aa8f22383274b72e7b97a95db"><div class="ttname"><a href="group__cobalt__core__shadow.html#gaa5406a4aa8f22383274b72e7b97a95db">xnshadow_map_user</a></div><div class="ttdeci">int xnshadow_map_user(struct xnthread *thread, unsigned long __user *u_window_offset)</div><div class="ttdoc">Create a shadow thread context over a user task. </div><div class="ttdef"><b>Definition:</b> shadow.c:884</div></div>
 <div class="ttc" id="group__cobalt__core__shadow_html_gaeba63f9344c05367feec840a3189d274"><div class="ttname"><a href="group__cobalt__core__shadow.html#gaeba63f9344c05367feec840a3189d274">xnshadow_map_kernel</a></div><div class="ttdeci">int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)</div><div class="ttdoc">Create a shadow thread context over a kernel task. </div><div class="ttdef"><b>Definition:</b> shadow.c:1026</div></div>

@@ -88,7 +88,7 @@ var NAVTREEINDEX0 =
 "cobalt_2kernel_2rtdm_2testing_8h_source.html":[4,0,0,2,1,0,9],
 "cobalt_2kernel_2trace_8h_source.html":[4,0,0,2,1,32],
 "cobalt_2pthread_8h_source.html":[4,0,0,2,7],
-"cobalt_2sys_2time_8h_source.html":[4,0,0,2,2,4],
+"cobalt_2sys_2time_8h_source.html":[4,0,0,2,2,5],
 "cobalt_2time_8h_source.html":[4,0,0,2,15],
 "cobalt_2trace_8h_source.html":[4,0,0,2,16],
 "cobalt_2uapi_2kernel_2limits_8h_source.html":[4,0,0,2,3,1,1],

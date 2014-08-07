@@ -2,12 +2,12 @@
 .\"     Title: xeno-config
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 2006/03/27
+.\"      Date: 2014/08/03
 .\"    Manual: Xenomai Manual
-.\"    Source: Xenomai 2.99.5
+.\"    Source: Xenomai 2.99.6
 .\"  Language: English
 .\"
-.TH "XENO\-CONFIG" "1" "2006/03/27" "Xenomai 2\&.99\&.5" "Xenomai Manual"
+.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 2\&.99\&.6" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,151 +28,194 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-xeno-config \- Display Xenomai libraries configuration
+xeno-config \- Retrieve Xenomai build flags and configuration
 .SH "SYNOPSIS"
 .sp
 \fBxeno\-config\fR
 .sp
 \fBxeno\-config\fR \fB\-\-v\fR | \fB\-\-verbose\fR
-.PP
-\fBxeno\-config \-\-help\fR
-.RS 4
-\fBxeno\-config\fR
-[\fB\-\-version\fR] [\fB\-\-cc\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-skin native|posix|psos|rtdm|uitron|vrtx|vxworks\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-lib\fR*\fB\-dir\fR|\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
-.RE
+.sp
+\fBxeno\-config\fR \fB\-\-help\fR
+.sp
+\fBxeno\-config\fR \fB\-\-info\fR
+.sp
+\fBxeno\-config\fR \fB\-\-core\fR
+.sp
+\fBxeno\-config\fR \fB\-\-version\fR
+.sp
+\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-cflags\fR] [\fB\-\-kcflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
 .SH "DESCRIPTION"
 .sp
-\fBxeno\-config\fR is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai\&. Any combination of options can be chosen (except \fB\-\-verbose\fR and \fB\-\-help\fR) to display configuration information, and options can be given in any order\&. The command output one line for each option, in the same order as the options\&.
+\fBxeno\-config\fR is a shell script which is aimed at retrieving the Xenomai build configuration data, such as the compiler and linker flags required for building applications\&. For this reason, \fBxeno\-config\fR is typically used in Makefiles\&.
 .sp
-When \fBxeno\-config \-\-verbose\fR is executed, all configuration information is displayed in a different, more human\-readable format\&.
+\fBxeno\-config \-\-verbose\fR dumps the build configuration data in a human\-readable format\&.
 .sp
-When \fBxeno\-config\fR is executed without any options, the output is equivalent to than when executing \fBxeno\-config \-\-verbose\fR then \fBxeno\-config \-\-help\fR\&.
+Invoking \fBxeno\-config\fR without any options is equivalent to running \fBxeno\-config \-\-verbose \-\-help\fR\&.
 .SH "OPTIONS"
 .PP
 \fB\-\-v, \-\-verbose\fR
 .RS 4
-Outputs all configuration information, in a human\-readable format\&.
+Output all configuration information in a human\-readable format\&.
 .RE
 .PP
 \fB\-\-help\fR
 .RS 4
-Outputs the list of available command\-line options\&.
+Output the list of available command\-line options\&. The command exits immediately after completion\&.
 .RE
 .PP
 \fB\-\-version\fR
 .RS 4
-Outputs one line with the installed Xenomai version\&.
+Output the Xenomai version\&.
 .RE
 .PP
 \fB\-\-cc\fR
 .RS 4
-Outputs one line with the path to the C compiler command that was used to compiled Xenomai\&.
+Output the path to the C compiler command used to build the Xenomai libraries and utilities, which is therefore suitable for compiling a Xenomai application\&.
+.RE
+.PP
+\fB\-\-ccld\fR
+.RS 4
+Output a C compiler command suitable for linking a Xenomai application\&.
 .RE
 .PP
 \fB\-\-arch\fR
 .RS 4
-Outputs one line with the architecture to compile to, e\&.g\&. i386\&. May be different from the architecture of the currently running system, if cross\-compiling\&.
+Output the target CPU architecture Xenomai was compiled for, e\&.g\&. arm, x86, powerpc etc\&. This may differ from the CPU architecture of the current system, if cross\-compiling\&.
 .RE
 .PP
 \fB\-\-prefix\fR
 .RS 4
-Outputs one line with the absolute path to the base Xenomai installation directory\&.
+Output the absolute path to the Xenomai installation directory\&.
 .RE
 .PP
-\fB\-\-skin\fR
+\fB\-\-[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey}\fR
 .RS 4
-Choose the skin for which xeno\-config should print the compilation flags\&.
+Select the API/skin for which
+\fBxeno\-config\fR
+should print the information required\&. The
+\fBskin=\fR
+prefix is optional and may be omitted, e\&.g\&.
+\fB\-\-posix\fR
+is equivalent to
+\fB\-\-skin=posix\fR, selecting the POSIX API\&.
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+\fB\-\-native\fR and \fB\-\-skin=native\fR are accepted for backward compatibility purpose\&. They are stricly equivalent as passing \fB\-\-alchemy \-\-compat\fR\&.
+.sp .5v
 .RE
 .PP
 \fB\-\-cflags\fR
 .RS 4
-Outputs one line with the C compiler command\-line options that are necessary to compile applications that use the Xenomai skin passed to the
-\fB\-\-skin\fR
-option\&.
+Output the C compiler command\-line options (\fICFLAGS\fR) which are required to compile applications based on the selected Xenomai API/skin\&.
+.RE
+.PP
+\fB\-\-kcflags\fR
+.RS 4
+Output the C compiler command\-line options (\fICFLAGS\fR) which are required to compile a kernel driver based on the RTDM interface\&.
+\fB\-\-rtdm\fR
+must appear on the command line before
+\fB\-\-kcflags\fR\&.
 .RE
 .PP
 \fB\-\-ldflags\fR
 .RS 4
-Outputs one line with the C compiler command\-line options that are necessary to link applications that use the Xenomai skin passed to the
-\fB\-\-skin\fR
-option with the necessary libraries\&.
+Output the C compiler command\-line options (\fILDFLAGS\fR) which are required to link applications based on the selected Xenomai API/skin\&.
 .RE
 .PP
-\fB\-\-lib\fR*\fB\-dir, \-\-library\-dir, \-\-libdir, \-\-user\-libdir\fR
+\fB\-\-library\-dir, \-\-libdir, \-\-user\-libdir\fR
 .RS 4
-Outputs one line with the absolute path to Xenomai\(cqs libraries\&. In the \-\-lib*\-dir option name, the
-\fB*\fR
-is meant as a wildcard:
-\fB\-\-lib\-dir\fR,
-\fB\-\-libfoo\-dir\fR
-and
-\fB\-\-libbar\-dir\fR
-are all valid and synonymous options\&.
-.RE
-.SH "DEPRECATED OPTIONS"
-.PP
-\fB\-\-xeno\-cflags\fR
-.RS 4
-This option is deprecated, please use
-\fB\-\-skin\fR
-and
-\fB\-\-cflags\fR
-instead\&. Outputs one line with the C compiler command\-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin\&.
+These switches are synonyms, for retrieving the absolute path to the Xenomai libraries\&.
 .RE
 .PP
-\fB\-\-xeno\-ldflags\fR
+\fB\-\-auto\-init\fR, \fB\-\-no\-auto\-init\fR
 .RS 4
-This option is deprecated, please use
-\fB\-\-skin\fR
-and
-\fB\-\-ldflags\fR
-instead\&. Outputs one line with the C compiler command\-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries\&. Note that the particular
-\fB\-llibskin\fR
-flag should be added to the flags returned by this option\&.
+All Xenomai APIs but POSIX are based on the Copperplate library, which automatically initializes when the application process starts\&.
+\fB\-\-no\-auto\-init\fR
+can be passed to disable such initialization\&. In such a case, the application code shall call the
+copperplate_init()
+routine manually, as part of its initialization chores on behalf on the
+main()
+routine,
+\fBbefore\fR
+any real\-time service is invoked\&.
+.RE
+.sp
+\fBxeno\-config\fR enables the Copperplate auto\-init feature by default\&.
+.PP
+\fB\-\-core\fR
+.RS 4
+Output the name of the real\-time core the current Xenomai installation was built for\&. The possible values are
+\fIcobalt\fR
+or
+\fImercury\fR, depending on the configuration switch
+\fB\-\-with\-core\fR
+used for building the Xenomai libraries and utilities\&.
 .RE
 .PP
-\fB\-\-posix\-cflags\fR
+\fB\-\-compat\fR
 .RS 4
-This option is deprecated, please use
-\fB\-\-skin posix \-\-cflags\fR
-instead\&. Outputs one line with the C compiler command\-line options that are necessary to compile applications that use Xenomai\(cqs Posix\-compatible layer library\&.
+Enable the Xenomai 2\&.x compatibility mode for the API/skin selected\&. This switch affects the
+\fIAlchemy\fR
+and POSIX APIs, turning on a set of source\-level compatibility wrappers when present\&.
 .RE
 .PP
-\fB\-\-posix\-ldflags\fR
+\fB\-\-info\fR
 .RS 4
-This option is deprecated, please use
-\fB\-\-skin posix \-\-ldflags\fR
-instead\&. Outputs one line with the C compiler command\-line options that are necessary to link applications against Xenomai\(cqs Posix\-compatible layer library\&.
+Dump information about the running Xenomai\-enabled system\&. Unlike most other options,
+\fB\-\-info\fR
+is aimed at being used on the target system running Xenomai, for retrieving the current setup information\&. The output of such command is a valuable information when reporting any runtime issue to
+the Xenomai mailing list\&. The command exits immediately after completion\&.
 .RE
 .SH "ENVIRONMENT VARIABLES"
 .PP
 \fBDESTDIR\fR
 .RS 4
-If the
+Xenomai\(cqs handling of
 \fBDESTDIR\fR
-variable is set, its content is prepended to the Xenomai installed directories and files names output by the
-\fB\-\-prefix\fR
-and
-\fB\-\-library\-dir\fR
-options, and to the Xenomai installation directories in the flags output by the
-\fB\-\-xeno\-cflags\fR,
-\fB\-\-xeno\-ldflags\fR,
-\fB\-\-posix\-cflags\fR,
-\fB\-\-posix\-ldflags\fR
-options\&.
+is conformant to the GNU coding and installation standards, for generating pathnames rooted at some staging area on the build system\&. Such staging area is commonly NFS\-mounted from the target system running Xenomai\&.
 .RE
 .sp
-If \fBDESTDIR\fR was set when compiling and installing Xenomai, e\&.g\&. for cross\-compilation, \fBDESTDIR\fR must be set to the same value before calling \fBxeno\-config\fR, in order to output valid directory and file names\&.
-.SH "RETURN CODES"
+If the \fBDESTDIR\fR variable is set in the environment of \fBxeno\-config\fR, its contents is prepended to all directory and file names based on the Xenomai installation root which may be output by the command\&.
+.sp
+If \fBDESTDIR\fR was set when installing Xenomai \- typically after cross\-compiling \- \fBDESTDIR\fR must be set to the same value before calling \fBxeno\-config\fR for accessing the target\-based directories and files from the build system\&.
+.sp
+e\&.g\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ configure \-\-prefix=/usr \-\-includedir=/usr/include/xenomai
+$ make install DESTDIR=/nfsroot/target
+$ DESTDIR=/nfsroot/target /nfsroot/target/bin/xeno\-config \-\-alchemy \-\-cflags
+\-I/nfsroot/target/usr/include/xenomai/cobalt
+\-I/nfsroot/target/usr/include/xenomai \-D_GNU_SOURCE
+\-D_REENTRANT \-D__COBALT__
+\-I/nfsroot/target/usr/include/xenomai/alchemy
+.fi
+.if n \{\
+.RE
+.\}
+.SH "EXIT STATUS"
 .PP
 \fB0\fR
 .RS 4
-Successful script execution\&.
+Success\&.
 .RE
 .PP
-\fB1\fR
+\fBnon\-zero\fR
 .RS 4
-The
-\fB\-\-posix\-ldflags\fR
-option has been given but Posix support is not available in Xenomai; or an invalid argument has been given on the command\-line\&.
+Error\&.
 .RE

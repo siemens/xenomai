@@ -1,0 +1,153 @@
+'\" t
+.\"     Title: autotune
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2014/08/03
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.99.6
+.\"  Language: English
+.\"
+.TH "AUTOTUNE" "1" "2014/08/03" "Xenomai 2\&.99\&.6" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+autotune \- Calibrate the Xenomai core clock timer
+.SH "SYNOPSIS"
+.sp
+\fBautotune\fR [ options ]
+.SH "DESCRIPTION"
+.sp
+\fBautotune\fR is a utility to determine the best calibration values (aka \fIgravity triplet\fR) for the core clock timer\&.
+.sp
+The time spent traversing the kernel code from the low\-level Xenomai timer handler until the kernel\-based client handler is invoked, is shorter than the time required to schedule in a kernel thread instead\&. It takes even more time to switch in a user\-space thread, which entails changing the current memory address space, performing potentially time\-consuming MMU\-related operations\&.
+.sp
+For this reason, Xenomai differentiates timers on the target context they activate, among IRQ(handler), kernel and user threads, anticipating the next timer shot accordingly, so that such context is activated as close as possible to the ideal time\&. This anticipation is called the \fIgravity\fR of the clock serving the timer, which is actually a triplet representing the three possible types of contexts the timer can activate\&.
+.sp
+Therefore, the gravity is a static adjustment value to account for the basic latency of the target system for responding to timer events, as perceived by the client code waiting for the wake up events\&. Such latency is increased by additional factors, such as:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+bus or CPU cache latency,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+delay required to program the timer chip for the next shot,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+code running with interrupts disabled on the CPU to receive the IRQ,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+inter\-processor serialization (\fIspinlocks\fR)\&.
+.RE
+.sp
+\fBautotune\fR runs a series of internal calibration tests for estimating the most appropriate gravity values for its real\-time clock timer, retaining the final values\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBImportant\fR
+.ps -1
+.br
+.sp
+\fBautotune\fR requires the \fBCONFIG_XENO_OPT_AUTOTUNE\fR option to be enabled in the kernel configuration\&.
+.sp .5v
+.RE
+.SH "OPTIONS"
+.sp
+\fBautotune\fR accepts the following options:
+.PP
+\fB\-\-irq\fR
+.RS 4
+Estimate the IRQ gravity value, which is the shortest time the platform needs to deliver an IRQ to a Xenomai interrupt handler in kernel space\&.
+.RE
+.PP
+\fB\-\-kernel\fR
+.RS 4
+Estimate the kernel gravity value, which is the shortest time the platform needs to deliver an IRQ to a RTDM task running in kernel space\&. This delay includes the context switching time\&.
+.RE
+.PP
+\fB\-\-user\fR
+.RS 4
+Estimate the user gravity value, which is the shortest time the platform needs to deliver an IRQ to a user\-space task/thread running in a Xenomai application process\&. This delay includes the context switching time\&.
+.RE
+.PP
+\fB\-\-reset\fR
+.RS 4
+Reset the gravity values to their factory defaults\&. These defaults are statically defined by the Xenomai platform code\&.
+.RE
+.PP
+\fB\-\-nohog\fR
+.RS 4
+Disable load generation while auto\-tuning\&.
+\fBautotune\fR
+runs a simple load generator internally in parallel to estimating the latency, in order to eliminate irregular delays which tend to appear on fully idle systems\&. Therefore, keeping the load generation enabled most often leads to a more accurate estimation\&.
+.RE
+.PP
+\fB\-\-quiet\fR
+.RS 4
+Tame down verbosity of the auto\-tuner\&.
+.RE
+.PP
+\fB\-\-help\fR
+.RS 4
+Display a short help\&.
+.RE
+.sp
+If none of \-\-irq, \-\-kernel or \-\-user is given, an estimation is done for each of them in sequence\&.
+.SH "VERSIONS"
+.sp
+\fBautotune\fR appeared in Xenomai 3\&.0 for the \fICobalt\fR real\-time core\&.
+.SH "AUTHOR"
+.sp
+\fBautotune\fR was written by Philippe Gerum <rpm@xenomai\&.org>\&.

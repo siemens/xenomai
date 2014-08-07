@@ -1,5 +1,8 @@
 var NAVTREEINDEX6 =
 {
+"powerpc_2include_2asm_2xenomai_2calibration_8h_source.html":[4,0,1,0,0,3,0,0,0,1],
+"powerpc_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,3,0,0,0,3],
+"powerpc_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,3,0,0,0,0,2],
 "ppd_8h_source.html":[4,0,0,2,1,15],
 "private-list_8h_source.html":[4,0,0,1,7],
 "proc_8h_source.html":[4,0,1,1,0,2],
@@ -246,8 +249,5 @@ var NAVTREEINDEX6 =
 "sched-weak_8h_source.html":[4,0,0,2,1,22],
 "schedparam_8h_source.html":[4,0,0,2,1,24],
 "schedqueue_8h_source.html":[4,0,0,2,1,25],
-"scope_8h_source.html":[4,0,0,1,8],
-"sem__heap_8h_source.html":[4,0,2,2,4],
-"semaphore_8h_source.html":[4,0,0,2,9],
-"semobj_8h_source.html":[4,0,0,3,9]
+"scope_8h_source.html":[4,0,0,1,8]
 };

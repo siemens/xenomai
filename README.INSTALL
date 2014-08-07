@@ -480,13 +480,20 @@ You may override the default root of the registry hierarchy by using the
 
 --enable-async-cancel
 
-    Enables asynchronous cancellation of Xenomai threads created by the
+    Enables fully asynchronous cancellation of Xenomai threads created by the
     real-time APIs, making provision to protect the Xenomai implementation code
     accordingly.
 
     When disabled, Xenomai assumes that threads may exit due to cancellation
     requests only when they reach cancellation points (like system calls).
-    Asynchronous cancellation is enabled by default.
+    Asynchronous cancellation is disabled by default.
+
+[Caution] Caution
+          Fully asynchronous cancellation can easily lead to resource leakage,
+          silent corruption, safety issues and all sorts of rampant bugs. The
+          only reason to turn this feature on would be aimed at cancelling
+          threads which run significantly long, syscall-less busy loops with no
+          explicit exit condition, which should probably be revisited anyway.
 
 --enable-smp
     Turns on SMP support for Xenomai libraries.
@@ -495,6 +502,11 @@ You may override the default root of the registry hierarchy by using the
           SMP support must be enabled in Xenomai libraries when the client
           applications are running over a SMP-capable kernel.
 
+--disable-sanity
+    Turns off the sanity checks performed at application startup by the Xenomai
+    libraries. This option sets a default, which can later be overriden using
+    the --[no-]sanity options passed to a Copperplate-based Xenomai
+    application. Sanity checks are enabled by default when configuring.
 --enable-fortify
     Enables support for applications compiled in _FORTIFY_SOURCE mode.
 --disable-valgrind-client

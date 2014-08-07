@@ -24,6 +24,9 @@ indifferently.
   for which +xeno-config+ was generated. Possible output values are
   +cobalt+ and +mercury+.
 
+ * +--ccld+ retrieves a C compiler command suitable for linking a
+   Xenomai 3.x application.
+
 [[auto-init]]
  * +--no-auto-init+ can be passed to disable automatic initialization
   of the Copperplate library when the application process enters the
@@ -32,8 +35,7 @@ indifferently.
   routine manually, as part of its initialization process, _before_
   any real-time service is invoked.
 
-  +xeno-config+ enables the auto-init feature by default for all
-  applications using APIs based on the Copperplate library.
+  +xeno-config+ enables the Copperplate auto-init feature by default.
 
 - +--enable-x86-sep+ was renamed to +--enable-x86-vsyscall+ to fix a
   misnomer. This option should be left enabled (default), unless
@@ -163,13 +165,13 @@ obtained by reading +timer/coreclk.
 
 - Core clock gravity
 
-The gravity value for a Xenomai clock gives the amount of time
-expressed in clock ticks, by which the next shot should be
-anticipated.
+The gravity value for a Xenomai clock gives the amount of time by
+which the next timer shot should be anticipated.
 
-This is a static adjustment value, to take into account the basic
-latency of the system for responding to an external event
-(hardware-wise, and software-wise).
+This is a static adjustment value, to account for the basic latency of
+the target system for responding to external events. Such latency may
+be introduced by hardware effects (e.g. bus or cache latency), or
+software issues (e.g. code running with interrupts disabled).
 
 The clock gravity management departs from Xenomai 2.x as follows:
 
@@ -180,14 +182,40 @@ The clock gravity management departs from Xenomai 2.x as follows:
   applying a global gravity value regardless of the activated context.
 
 - in addition to the legacy +latency+ file which now reports the
-  _user_ timer gravity, i.e. used for timers activating user-space
-  threads, the full gravity triplet applied to timers running on the
-  core clock can be accessed by reading clock/coreclk.
+  _user_ timer gravity (in nanoseconds), i.e. used for timers
+  activating user-space threads, the full gravity triplet applied to
+  timers running on the core clock can be accessed by reading
+  clock/coreclk (also in nanoseconds).
 
 - at reset, the _user_ gravity for the core clock now represents the
-sum of the scheduling *and* hardware timer reprogramming time. This
-departs from Xenomai 2.x for which only the former was accounted for
-in the global gravity value.
+sum of the scheduling *and* hardware timer reprogramming time as a
+count of nanoseconds. This departs from Xenomai 2.x for which only the
+former was accounted for as a global gravity value, regardless of the
+target context for the timer.
+
+The following command reports the current gravity triplet for the
+target system, along with the setup information for the core timer:
+
+--------------------------------------------
+# cat xenomai/clock/coreclk
+gravity: irq=848 kernel=8272 user=35303
+devices: timer=decrementer, clock=timebase
+ status: on+watchdog
+  setup: 151
+  ticks: 220862243033
+--------------------------------------------
+    
+Conversely, writing to this file manually changes the gravity values
+of the Xenomai core clock:
+    
+------------------------------------------------------
+    /* change the user gravity (default) */
+# echo 3000 > /proc/xenomai/clock/coreclck
+    /* change the IRQ gravity */
+# echo 1000i > /proc/xenomai/clock/coreclck
+    /* change the user and kernel gravities */
+# echo "2000u 1000k" > /proc/xenomai/clock/coreclck
+------------------------------------------------------
 
 - +interfaces+ was removed
 

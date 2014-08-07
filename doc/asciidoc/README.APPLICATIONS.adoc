@@ -81,6 +81,20 @@ link:installing-xenomai-3-x[configuration switch]).
 	objects will be exported to +/mnt/xenomai/<session>.<pid>+,
 	despite the registry code was compiled in.
 
+*--no-sanity*::
+*--sanity*::
+
+	Turns off/on the sanity checks performed at application
+	startup by the Xenomai libraries. This option overrides the
+	--enable/disable-sanity options passed on the configuration
+	line when building the Xenomai libraries.
+
+[TIP]
+	Passing *--no-sanity* allows running Xenomai libraries built
+	for a single-processor system (i.e. --disable-smp) on a SMP
+	system, assuming your application properly pins all threads
+	to a single CPU.
+
 *--session=<label>*::
 
 	Name of the session the new process will be part of (or create

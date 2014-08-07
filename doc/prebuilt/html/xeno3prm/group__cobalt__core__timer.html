@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.5</span>
+   &#160;<span id="projectnumber">2.99.6</span>
    </div>
   </td>
  </tr>
@@ -121,9 +121,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop</a> (struct xntimer *timer)</td></tr>
 <tr class="memdesc:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disarm a timer.  <a href="#ga9aaa5a0dcfeb46e0e322fa7464fdb997">More...</a><br/></td></tr>
 <tr class="separator:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga78acf0c1a448654388fb480a287e4269"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga78acf0c1a448654388fb480a287e4269">xntimer_init</a> (struct xntimer *timer, struct xnclock *clock, void(*handler)(struct xntimer *timer), struct xnthread *thread, int flags)</td></tr>
-<tr class="memdesc:ga78acf0c1a448654388fb480a287e4269"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga78acf0c1a448654388fb480a287e4269">More...</a><br/></td></tr>
-<tr class="separator:ga78acf0c1a448654388fb480a287e4269"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga189c3dfeb6047ad3eddc41c45ad176d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga189c3dfeb6047ad3eddc41c45ad176d6">xntimer_init</a> (struct xntimer *timer, struct xnclock *clock, void(*handler)(struct xntimer *timer), struct <a class="el" href="structxnsched.html">xnsched</a> *sched, int flags)</td></tr>
+<tr class="memdesc:ga189c3dfeb6047ad3eddc41c45ad176d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga189c3dfeb6047ad3eddc41c45ad176d6">More...</a><br/></td></tr>
+<tr class="separator:ga189c3dfeb6047ad3eddc41c45ad176d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabcea9e49706bb130bb63ada53ec4bd87"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gabcea9e49706bb130bb63ada53ec4bd87">__xntimer_migrate</a> (struct xntimer *timer, struct <a class="el" href="structxnsched.html">xnsched</a> *sched)</td></tr>
 <tr class="memdesc:gabcea9e49706bb130bb63ada53ec4bd87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Migrate a timer.  <a href="#gabcea9e49706bb130bb63ada53ec4bd87">More...</a><br/></td></tr>
 <tr class="separator:gabcea9e49706bb130bb63ada53ec4bd87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -455,7 +455,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga78acf0c1a448654388fb480a287e4269"></a>
+<a class="anchor" id="ga189c3dfeb6047ad3eddc41c45ad176d6"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -480,8 +480,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">struct xnthread *&#160;</td>
-          <td class="paramname"><em>thread</em>, </td>
+          <td class="paramtype">struct <a class="el" href="structxnsched.html">xnsched</a> *&#160;</td>
+          <td class="paramname"><em>sched</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -504,7 +504,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">timer</td><td>The address of a timer descriptor the nucleus will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
     <tr><td class="paramname">clock</td><td>The clock the timer relates to. Xenomai defines a monotonic system clock, with nanosecond resolution, named nkclock. In addition, external clocks driven by other tick sources may be created dynamically if CONFIG_XENO_OPT_EXTCLOCK is defined.</td></tr>
     <tr><td class="paramname">handler</td><td>The routine to call upon expiration of the timer.</td></tr>
-    <tr><td class="paramname">thread</td><td>The optional thread object the new timer is affine to. If non-NULL, the timer will fire on the same CPU <em>thread</em> currently runs on by default, otherwise it will fire on the CPU which initialized it.</td></tr>
+    <tr><td class="paramname">sched</td><td>An optional pointer to the per-CPU scheduler slot the new timer is affine to. If non-NULL, the timer will fire on the CPU <em>sched</em> is bound to, otherwise it will fire either on the current CPU if real-time, or on the first real-time CPU.</td></tr>
     <tr><td class="paramname">flags</td><td>A set of flags describing the timer. The valid flags are:</td></tr>
   </table>
   </dd>
@@ -622,7 +622,7 @@ Functions</h2></td></tr>
 
 <p>Arm a timer. </p>
 <p>Activates a timer so that the associated timeout handler will be fired after each expiration time. A timer can be either periodic or one-shot, depending on the reload value passed to this routine. The given timer must have been previously initialized.</p>
-<p>A timer is attached to the clock specified in <a class="el" href="group__cobalt__core__timer.html#ga78acf0c1a448654388fb480a287e4269" title="Initialize a timer object. ">xntimer_init()</a>.</p>
+<p>A timer is attached to the clock specified in <a class="el" href="group__cobalt__core__timer.html#ga189c3dfeb6047ad3eddc41c45ad176d6" title="Initialize a timer object. ">xntimer_init()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timer</td><td>The address of a valid timer descriptor.</td></tr>

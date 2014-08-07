@@ -507,21 +507,37 @@ does exist on the target kernel.
 
 *--enable-async-cancel*::
 
-	Enables asynchronous cancellation of Xenomai threads created
-	by the real-time APIs, making provision to protect the Xenomai
-	implementation code accordingly.
+	Enables fully asynchronous cancellation of Xenomai threads
+	created by the real-time APIs, making provision to protect the
+	Xenomai implementation code accordingly.
 [normal]
 	When disabled, Xenomai assumes that threads may exit due to
 	cancellation requests only when they reach cancellation points
-	(like system calls). Asynchronous cancellation is enabled by
-	default.
+	(like system calls). Asynchronous cancellation is disabled
+	by default.
+
+[CAUTION]
+Fully asynchronous cancellation can easily lead to resource leakage,
+silent corruption, safety issues and all sorts of rampant bugs. The
+only reason to turn this feature on would be aimed at cancelling
+threads which run significantly long, syscall-less busy loops with no
+explicit exit condition, which should probably be revisited anyway.
 
 *--enable-smp*::
 
 	Turns on SMP support for Xenomai libraries.
 
-CAUTION: SMP support must be enabled in Xenomai libraries when the
+[CAUTION]
+SMP support must be enabled in Xenomai libraries when the
 client applications are running over a SMP-capable kernel.
+
+*--disable-sanity*::
+
+	Turns off the sanity checks performed at application startup
+	by the Xenomai libraries. This option sets a default, which
+	can later be overriden using the --[no-]sanity options passed
+	to a Copperplate-based Xenomai application. Sanity checks are
+	enabled by default when configuring.
 
 *--enable-fortify*::
 

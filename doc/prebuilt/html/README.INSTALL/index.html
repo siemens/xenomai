@@ -1354,15 +1354,29 @@ default.</p></div>
 </dt>
 <dd>
 <p>
-        Enables asynchronous cancellation of Xenomai threads created
-        by the real-time APIs, making provision to protect the Xenomai
-        implementation code accordingly.
+        Enables fully asynchronous cancellation of Xenomai threads
+        created by the real-time APIs, making provision to protect the
+        Xenomai implementation code accordingly.
 </p>
 <div class="paragraph"><p>When disabled, Xenomai assumes that threads may exit due to
 cancellation requests only when they reach cancellation points
-(like system calls). Asynchronous cancellation is enabled by
-default.</p></div>
+(like system calls). Asynchronous cancellation is disabled
+by default.</p></div>
 </dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">Fully asynchronous cancellation can easily lead to resource leakage,
+silent corruption, safety issues and all sorts of rampant bugs. The
+only reason to turn this feature on would be aimed at cancelling
+threads which run significantly long, syscall-less busy loops with no
+explicit exit condition, which should probably be revisited anyway.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
 <dt class="hdlist1">
 <strong>--enable-smp</strong>
 </dt>
@@ -1382,6 +1396,18 @@ client applications are running over a SMP-capable kernel.</td>
 </tr></table>
 </div>
 <div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--disable-sanity</strong>
+</dt>
+<dd>
+<p>
+        Turns off the sanity checks performed at application startup
+        by the Xenomai libraries. This option sets a default, which
+        can later be overriden using the --[no-]sanity options passed
+        to a Copperplate-based Xenomai application. Sanity checks are
+        enabled by default when configuring.
+</p>
+</dd>
 <dt class="hdlist1">
 <strong>--enable-fortify</strong>
 </dt>
@@ -1843,7 +1869,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-03 10:56:12 CEST
+Last updated 2014-08-07 16:39:31 CEST
 </div>
 </div>
 </body>

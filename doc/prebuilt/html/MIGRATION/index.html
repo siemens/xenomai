@@ -780,6 +780,12 @@ Specifying <code>--[skin=]cobalt</code> or <code>--[skin=]posix</code> on the co
 </li>
 <li>
 <p>
+<code>--ccld</code> retrieves a C compiler command suitable for linking a
+   Xenomai 3.x application.
+</p>
+</li>
+<li>
+<p>
 <code>--no-auto-init</code> can be passed to disable automatic initialization
   of the Copperplate library when the application process enters the
   <code>main()</code> routine. In such a case, the application code using any API
@@ -789,8 +795,7 @@ Specifying <code>--[skin=]cobalt</code> or <code>--[skin=]posix</code> on the co
 </p>
 <div class="literalblock" id="auto-init">
 <div class="content">
-<pre><code>+xeno-config+ enables the auto-init feature by default for all
-applications using APIs based on the Copperplate library.</code></pre>
+<pre><code>+xeno-config+ enables the Copperplate auto-init feature by default.</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -908,10 +913,10 @@ Clocks
 core, the <code>clock/</code> hierarchy was added, to reflect the current state
 of all timers from the registered Xenomai clocks.</p></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-2.99.5. Functionally speaking, only the former <em>master</em> time base
+2.99.6. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 2.99.5 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 2.99.6 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -937,12 +942,12 @@ Core clock gravity
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>The gravity value for a Xenomai clock gives the amount of time
-expressed in clock ticks, by which the next shot should be
-anticipated.</p></div>
-<div class="paragraph"><p>This is a static adjustment value, to take into account the basic
-latency of the system for responding to an external event
-(hardware-wise, and software-wise).</p></div>
+<div class="paragraph"><p>The gravity value for a Xenomai clock gives the amount of time by
+which the next timer shot should be anticipated.</p></div>
+<div class="paragraph"><p>This is a static adjustment value, to account for the basic latency of
+the target system for responding to external events. Such latency may
+be introduced by hardware effects (e.g. bus or cache latency), or
+software issues (e.g. code running with interrupts disabled).</p></div>
 <div class="paragraph"><p>The clock gravity management departs from Xenomai 2.x as follows:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -957,19 +962,45 @@ different gravity values are applied, depending on which context a
 <li>
 <p>
 in addition to the legacy <code>latency</code> file which now reports the
-  <em>user</em> timer gravity, i.e. used for timers activating user-space
-  threads, the full gravity triplet applied to timers running on the
-  core clock can be accessed by reading clock/coreclk.
+  <em>user</em> timer gravity (in nanoseconds), i.e. used for timers
+  activating user-space threads, the full gravity triplet applied to
+  timers running on the core clock can be accessed by reading
+  clock/coreclk (also in nanoseconds).
 </p>
 </li>
 <li>
 <p>
 at reset, the <em>user</em> gravity for the core clock now represents the
-sum of the scheduling <strong>and</strong> hardware timer reprogramming time. This
-departs from Xenomai 2.x for which only the former was accounted for
-in the global gravity value.
+sum of the scheduling <strong>and</strong> hardware timer reprogramming time as a
+count of nanoseconds. This departs from Xenomai 2.x for which only the
+former was accounted for as a global gravity value, regardless of the
+target context for the timer.
 </p>
 </li>
+</ul></div>
+<div class="paragraph"><p>The following command reports the current gravity triplet for the
+target system, along with the setup information for the core timer:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code># cat xenomai/clock/coreclk
+gravity: irq=848 kernel=8272 user=35303
+devices: timer=decrementer, clock=timebase
+ status: on+watchdog
+  setup: 151
+  ticks: 220862243033</code></pre>
+</div></div>
+<div class="paragraph"><p>Conversely, writing to this file manually changes the gravity values
+of the Xenomai core clock:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>    /* change the user gravity (default) */
+# echo 3000 &gt; /proc/xenomai/clock/coreclck
+    /* change the IRQ gravity */
+# echo 1000i &gt; /proc/xenomai/clock/coreclck
+    /* change the user and kernel gravities */
+# echo "2000u 1000k" &gt; /proc/xenomai/clock/coreclck</code></pre>
+</div></div>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>interfaces</code> was removed
@@ -2394,7 +2425,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-03 10:56:12 CEST
+Last updated 2014-08-07 16:39:31 CEST
 </div>
 </div>
 </body>

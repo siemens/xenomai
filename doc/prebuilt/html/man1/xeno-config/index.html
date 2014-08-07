@@ -741,7 +741,7 @@ XENO-CONFIG(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>xeno-config -
-   Display Xenomai libraries configuration
+   Retrieve Xenomai build flags and configuration
 </p>
 </div>
 </div>
@@ -751,26 +751,24 @@ XENO-CONFIG(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p><strong>xeno-config</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--v</strong> | <strong>--verbose</strong></p></div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-<strong>xeno-config --help</strong>
-</dt>
-<dd>
-<p>
-<strong>xeno-config</strong> [<strong>--version</strong>] [<strong>--cc</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--skin native|posix|psos|rtdm|uitron|vrtx|vxworks</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--lib</strong>*<strong>-dir</strong>|<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p><strong>xeno-config</strong> <strong>--help</strong></p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> <strong>--info</strong></p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> <strong>--core</strong></p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> <strong>--version</strong></p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--cflags</strong>] [<strong>--kcflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_description">2. DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p><strong>xeno-config</strong> is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai.
-Any combination of options can be chosen (except <strong>--verbose</strong> and <strong>--help</strong>) to display configuration information, and options can be given in any order.
-The command output one line for each option, in the same order as the options.</p></div>
-<div class="paragraph"><p>When <strong>xeno-config --verbose</strong> is executed, all configuration information is displayed in a different, more human-readable format.</p></div>
-<div class="paragraph"><p>When <strong>xeno-config</strong> is executed without any options, the output is equivalent to than when executing <strong>xeno-config --verbose</strong> then <strong>xeno-config --help</strong>.</p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> is a shell script which is aimed at retrieving the
+Xenomai build configuration data, such as the compiler and linker
+flags required for building applications. For this reason,
+<strong>xeno-config</strong> is typically used in Makefiles.</p></div>
+<div class="paragraph"><p><strong>xeno-config --verbose</strong> dumps the build configuration data in a
+human-readable format.</p></div>
+<div class="paragraph"><p>Invoking <strong>xeno-config</strong> without any options is equivalent to running
+<strong>xeno-config --verbose --help</strong>.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -782,7 +780,7 @@ The command output one line for each option, in the same order as the options.</
 </dt>
 <dd>
 <p>
-Outputs all configuration information, in a human-readable format.
+Output all configuration information in a human-readable format.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -790,7 +788,8 @@ Outputs all configuration information, in a human-readable format.
 </dt>
 <dd>
 <p>
-Outputs the list of available command-line options.
+Output the list of available command-line options. The
+command exits immediately after completion.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -798,7 +797,7 @@ Outputs the list of available command-line options.
 </dt>
 <dd>
 <p>
-Outputs one line with the installed Xenomai version.
+Output the Xenomai version.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -806,7 +805,18 @@ Outputs one line with the installed Xenomai version.
 </dt>
 <dd>
 <p>
-Outputs one line with the path to the C compiler command that was used to compiled Xenomai.
+Output the path to the C compiler command used to build the Xenomai
+libraries and utilities, which is therefore suitable for compiling a
+Xenomai application.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--ccld</strong>
+</dt>
+<dd>
+<p>
+Output a C compiler command suitable for linking a Xenomai
+application.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -814,8 +824,9 @@ Outputs one line with the path to the C compiler command that was used to compil
 </dt>
 <dd>
 <p>
-Outputs one line with the architecture to compile to, e.g. i386.
-May be different from the architecture of the currently running system, if cross-compiling.
+Output the target CPU architecture Xenomai was compiled for, e.g. arm,
+x86, powerpc etc.  This may differ from the CPU architecture of the
+current system, if cross-compiling.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -823,23 +834,49 @@ May be different from the architecture of the currently running system, if cross
 </dt>
 <dd>
 <p>
-Outputs one line with the absolute path to the base Xenomai installation directory.
+Output the absolute path to the Xenomai installation directory.
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>--skin</strong>
+<strong>--[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey}</strong>
 </dt>
 <dd>
 <p>
-Choose the skin for which xeno-config should print the compilation flags.
+Select the API/skin for which <strong>xeno-config</strong> should print the
+information required. The <strong>skin=</strong> prefix is optional and may be
+omitted, e.g. <strong>--posix</strong> is equivalent to <strong>--skin=posix</strong>, selecting the
+POSIX API.
 </p>
 </dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content"><strong>--native</strong> and <strong>--skin=native</strong> are accepted for backward compatibility
+purpose. They are stricly equivalent as passing <strong>--alchemy --compat</strong>.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
 <dt class="hdlist1">
 <strong>--cflags</strong>
 </dt>
 <dd>
 <p>
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai skin passed to the <strong>--skin</strong> option.
+Output the C compiler command-line options (<em>CFLAGS</em>) which are required
+to compile applications based on the selected Xenomai API/skin.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--kcflags</strong>
+</dt>
+<dd>
+<p>
+Output the C compiler command-line options (<em>CFLAGS</em>) which are
+required to compile a kernel driver based on the RTDM
+interface. <strong>--rtdm</strong> must appear on the command line before
+<strong>--kcflags</strong>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -847,66 +884,78 @@ Outputs one line with the C compiler command-line options that are necessary to 
 </dt>
 <dd>
 <p>
-Outputs one line with the C compiler command-line options that are necessary to link applications that use the Xenomai skin passed to the <strong>--skin</strong> option with the necessary libraries.
+Output the C compiler command-line options (<em>LDFLAGS</em>) which are
+required to link applications based on the selected Xenomai API/skin.
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>--lib</strong>*<strong>-dir, --library-dir, --libdir, --user-libdir</strong>
+<strong>--library-dir, --libdir, --user-libdir</strong>
 </dt>
 <dd>
 <p>
-Outputs one line with the absolute path to Xenomai&#8217;s libraries.
-In the --lib*-dir option name, the <strong>*</strong> is meant as a wildcard: <strong>--lib-dir</strong>, <strong>--libfoo-dir</strong> and <strong>--libbar-dir</strong> are all valid and synonymous options.
+These switches are synonyms, for retrieving the absolute path to the
+Xenomai libraries.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--auto-init</strong>
+</dt>
+<dt class="hdlist1">
+<strong>--no-auto-init</strong>
+</dt>
+<dd>
+<p>
+All Xenomai APIs but POSIX are based on the Copperplate library, which
+automatically initializes when the application process
+starts. <strong>--no-auto-init</strong> can be passed to disable such
+initialization. In such a case, the application code shall call the
+<code>copperplate_init()</code> routine manually, as part of its initialization
+chores on behalf on the <code>main()</code> routine, <strong>before</strong> any real-time
+service is invoked.
 </p>
 </dd>
 </dl></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_deprecated_options">4. DEPRECATED OPTIONS</h2>
-<div class="sectionbody">
+<div class="paragraph"><p><strong>xeno-config</strong> enables the Copperplate auto-init feature by default.</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
-<strong>--xeno-cflags</strong>
+<strong>--core</strong>
 </dt>
 <dd>
 <p>
-This option is deprecated, please use <strong>--skin</strong> and <strong>--cflags</strong> instead.
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin.
+Output the name of the real-time core the current Xenomai installation
+was built for. The possible values are <em>cobalt</em> or <em>mercury</em>,
+depending on the configuration switch <strong>--with-core</strong> used for building
+the Xenomai libraries and utilities.
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>--xeno-ldflags</strong>
+<strong>--compat</strong>
 </dt>
 <dd>
 <p>
-This option is deprecated, please use <strong>--skin</strong> and <strong>--ldflags</strong> instead.
-Outputs one line with the C compiler command-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries. Note that the particular <strong>-llibskin</strong> flag should be added to the flags returned by this option.
+Enable the Xenomai 2.x compatibility mode for the API/skin
+selected. This switch affects the <em>Alchemy</em> and POSIX APIs, turning on
+a set of source-level compatibility wrappers when present.
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>--posix-cflags</strong>
+<strong>--info</strong>
 </dt>
 <dd>
 <p>
-This option is deprecated, please use <strong>--skin posix --cflags</strong> instead.
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use Xenomai&#8217;s Posix-compatible layer library.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--posix-ldflags</strong>
-</dt>
-<dd>
-<p>
-This option is deprecated, please use <strong>--skin posix --ldflags</strong> instead.
-Outputs one line with the C compiler command-line options that are necessary to link applications against Xenomai&#8217;s Posix-compatible layer library.
+Dump information about the running Xenomai-enabled system. Unlike most
+other options, <strong>--info</strong> is aimed at being used on the target system
+running Xenomai, for retrieving the current setup information. The
+output of such command is a valuable information when reporting any
+runtime issue to <a href="mailto:xenomai@xenomai.org">the Xenomai mailing
+list</a>. The command exits immediately after completion.
 </p>
 </dd>
 </dl></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_environment_variables">5. ENVIRONMENT VARIABLES</h2>
+<h2 id="_environment_variables">4. ENVIRONMENT VARIABLES</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -914,18 +963,35 @@ Outputs one line with the C compiler command-line options that are necessary to 
 </dt>
 <dd>
 <p>
-If the <strong>DESTDIR</strong> variable is set, its content is prepended to the Xenomai installed directories and files names output by the
-<strong>--prefix</strong> and <strong>--library-dir</strong> options, and to the Xenomai installation directories in the flags output by the
-<strong>--xeno-cflags</strong>, <strong>--xeno-ldflags</strong>, <strong>--posix-cflags</strong>, <strong>--posix-ldflags</strong>
-options.
+Xenomai&#8217;s handling of <strong>DESTDIR</strong> is conformant to the GNU coding and
+installation standards, for generating pathnames rooted at some
+staging area on the build system. Such staging area is commonly
+NFS-mounted from the target system running Xenomai.
 </p>
 </dd>
 </dl></div>
-<div class="paragraph"><p>If <strong>DESTDIR</strong> was set when compiling and installing Xenomai, e.g. for cross-compilation, <strong>DESTDIR</strong> must be set to the same value before calling <strong>xeno-config</strong>, in order to output valid directory and file names.</p></div>
+<div class="paragraph"><p>If the <strong>DESTDIR</strong> variable is set in the environment of <strong>xeno-config</strong>,
+its contents is prepended to all directory and file names based on the
+Xenomai installation root which may be output by the command.</p></div>
+<div class="paragraph"><p>If <strong>DESTDIR</strong> was set when installing Xenomai - typically after
+cross-compiling - <strong>DESTDIR</strong> must be set to the same value before
+calling <strong>xeno-config</strong> for accessing the target-based directories and
+files from the build system.</p></div>
+<div class="paragraph"><p>e.g.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ configure --prefix=/usr --includedir=/usr/include/xenomai
+$ make install DESTDIR=/nfsroot/target
+$ DESTDIR=/nfsroot/target /nfsroot/target/bin/xeno-config --alchemy --cflags
+-I/nfsroot/target/usr/include/xenomai/cobalt
+-I/nfsroot/target/usr/include/xenomai -D_GNU_SOURCE
+-D_REENTRANT -D__COBALT__
+-I/nfsroot/target/usr/include/xenomai/alchemy</code></pre>
+</div></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_return_codes">6. RETURN CODES</h2>
+<h2 id="_exit_status">5. EXIT STATUS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -933,18 +999,15 @@ options.
 </dt>
 <dd>
 <p>
-Successful script execution.
+Success.
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>1</strong>
+<strong>non-zero</strong>
 </dt>
 <dd>
 <p>
-The
-<strong>--posix-ldflags</strong>
-option has been given but Posix support is not available in Xenomai;
-or an invalid argument has been given on the command-line.
+Error.
 </p>
 </dd>
 </dl></div>
@@ -954,7 +1017,7 @@ or an invalid argument has been given on the command-line.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-07-31 17:44:39 CEST
+Last updated 2014-08-04 10:04:06 CEST
 </div>
 </div>
 </body>

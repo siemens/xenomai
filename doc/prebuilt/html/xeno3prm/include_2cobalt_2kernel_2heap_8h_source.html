@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.5</span>
+   &#160;<span id="projectnumber">2.99.6</span>
    </div>
   </td>
  </tr>
@@ -313,16 +313,15 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2heap_8h_sourc
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="keyword">struct </span>file;</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="keyword">struct </span>vm_area_struct;</div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="keywordtype">int</span> xnheap_remap_io_page_range(<span class="keyword">struct</span> file *filp,</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;                               <span class="keyword">struct</span> vm_area_struct *vma,</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                               <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> from, phys_addr_t to,</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                               <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size, pgprot_t prot);</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="keywordtype">int</span> xnheap_remap_kmem_page_range(<span class="keyword">struct</span> vm_area_struct *vma,</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> from, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> to,</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size, pgprot_t prot);</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_HEAP_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="keywordtype">int</span> xnheap_remap_io_page_range(<span class="keyword">struct</span> vm_area_struct *vma,</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;                               <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> from, phys_addr_t to,</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                               <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size, pgprot_t prot);</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="keywordtype">int</span> xnheap_remap_kmem_page_range(<span class="keyword">struct</span> vm_area_struct *vma,</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> from, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> to,</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size, pgprot_t prot);</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_HEAP_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="group__cobalt__core__heap_html_ga485ed258772616fd14c0103a6a878bad"><div class="ttname"><a href="group__cobalt__core__heap.html#ga485ed258772616fd14c0103a6a878bad">xnheap_set_label</a></div><div class="ttdeci">void xnheap_set_label(struct xnheap *heap, const char *name,...)</div><div class="ttdoc">Set the heap&#39;s label string. </div><div class="ttdef"><b>Definition:</b> heap.c:359</div></div>
 <div class="ttc" id="group__cobalt__core__heap_html_ga3f8f9ad974282669efcfe4e71d859173"><div class="ttname"><a href="group__cobalt__core__heap.html#ga3f8f9ad974282669efcfe4e71d859173">xnheap_free</a></div><div class="ttdeci">int xnheap_free(struct xnheap *heap, void *block)</div><div class="ttdoc">Release a memory block to a memory heap. </div><div class="ttdef"><b>Definition:</b> heap.c:878</div></div>
 <div class="ttc" id="group__cobalt__core__heap_html_gaa7f31608030ac6a38b2e8840903293f2"><div class="ttname"><a href="group__cobalt__core__heap.html#gaa7f31608030ac6a38b2e8840903293f2">xnheap_test_and_free</a></div><div class="ttdeci">int xnheap_test_and_free(struct xnheap *heap, void *block, int(*ckfn)(void *block))</div><div class="ttdoc">Test and release a memory block to a memory heap. </div><div class="ttdef"><b>Definition:</b> heap.c:676</div></div>
