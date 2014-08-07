@@ -1882,11 +1882,12 @@ static unsigned long rtdm_unmapped_area(struct file *file,
 	unsigned long pa;
 
 	pa = mmap_data->src_paddr;
-	if (pa == 0)
-		pa = __pa(mmap_data->src_vaddr);
+	if (pa)
+		return (unsigned long)__va(pa);
 
-	return pa;
+	return (unsigned long)mmap_data->src_vaddr;
 }
+
 #else
 #define rtdm_unmapped_area  NULL
 #endif
