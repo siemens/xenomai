@@ -1154,7 +1154,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 			vaddr += PAGE_SIZE;
 			size -= PAGE_SIZE;
 		}
-	} else if (xnheap_remap_io_page_range(file,vma,
+	} else if (xnheap_remap_io_page_range(vma,
 					      vma->vm_start,
 					      __pa(vaddr),
 					      size, vma->vm_page_prot))
@@ -1334,13 +1334,13 @@ int xnheap_remap_vm_page(struct vm_area_struct *vma,
 #endif
 }
 
-int xnheap_remap_io_page_range(struct file *filp,
-			       struct vm_area_struct *vma,
+int xnheap_remap_io_page_range(struct vm_area_struct *vma,
 			       unsigned long from, phys_addr_t to,
 			       unsigned long size, pgprot_t prot)
 {
 #ifdef __HAVE_PHYS_MEM_ACCESS_PROT
-	prot = phys_mem_access_prot(filp, to >> PAGE_SHIFT, size, prot);
+	if (vma->vm_file)
+		prot = phys_mem_access_prot(vma->vm_file, to >> PAGE_SHIFT, size, prot);
 #endif
 	vma->vm_page_prot = pgprot_noncached(prot);
 	/* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */

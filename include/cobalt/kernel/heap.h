@@ -248,8 +248,7 @@ int xnheap_remap_vm_page(struct vm_area_struct *vma,
 struct file;
 struct vm_area_struct;
 
-int xnheap_remap_io_page_range(struct file *filp,
-			       struct vm_area_struct *vma,
+int xnheap_remap_io_page_range(struct vm_area_struct *vma,
 			       unsigned long from, phys_addr_t to,
 			       unsigned long size, pgprot_t prot);
 
