@@ -61,8 +61,8 @@ void *cobalt_map_heap(struct xnheap_desc *hd)
 		return MAP_FAILED;
 	}
 
-	addr = mmap(NULL, hd->size, PROT_READ|PROT_WRITE,
-		    MAP_SHARED, fd, hd->area);
+	addr = __STD(mmap(NULL, hd->size, PROT_READ|PROT_WRITE,
+			  MAP_SHARED, fd, hd->area));
 
 	close(fd);
 
@@ -88,24 +88,26 @@ static void *map_sem_heap(unsigned int shared)
 
 static void unmap_on_fork(void)
 {
+	void *addr;
+
 	/*
-	   Remapping the private heap must be done after the process has been
-	   bound again, in order for it to have a new private heap,
-	   Otherwise the global heap would be used instead, which
-	   leads to unwanted effects.
-
-	   On machines without an MMU, there is no such thing as fork.
-
-	   As a protection against access to the heaps by the fastsync
-	   code, we set up an inaccessible mapping where the heap was, so
-	   that access to these addresses will cause a segmentation
-	   fault.
-	*/
-	void *addr = mmap((void *)cobalt_sem_heap[PRIVATE],
+	 * Remapping the private heap must be done after the process
+	 * has re-attached to the Cobalt core, in order to reinstate a
+	 * proper private heap, Otherwise the global heap would be
+	 * used instead, leading to unwanted effects.
+	 *
+	 * On machines without an MMU, there is no such thing as fork.
+	 *
+	 * We replace former mappings with an invalid one, to detect
+	 * any spuriously late access from the fastsync code.
+	 */
+	addr = __STD(mmap((void *)cobalt_sem_heap[PRIVATE],
 			  private_hdesc.size, PROT_NONE,
-			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0));
+
 	if (addr != (void *)cobalt_sem_heap[PRIVATE])
 		munmap((void *)cobalt_sem_heap[PRIVATE], private_hdesc.size);
+
 	cobalt_sem_heap[PRIVATE] = 0UL;
 	init_private_heap = PTHREAD_ONCE_INIT;
 }

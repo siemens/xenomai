@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/mman.h>
 #include <rtdm/rtdm.h>
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/uapi/syscall.h>
@@ -402,4 +403,32 @@ COBALT_IMPL(int, shutdown, (int fd, int how))
 		return set_errno(ret);
 
 	return __STD(shutdown(fd, how));
+}
+
+COBALT_IMPL(void *, mmap, (void *addr, size_t length, int prot, int flags,
+			   int fd, off_t offset))
+{
+	struct _rtdm_mmap_request rma;
+	int ret;
+
+	if (fd < 0) /* We don't do anonymous mappings. */
+		goto regular;
+
+	/* RTDM ignores the address hint, and rejects MAP_FIXED. */
+	rma.length = length;
+	rma.offset = offset;
+	rma.prot = prot;
+	rma.flags = flags;
+
+	ret = XENOMAI_SKINCALL3(__rtdm_muxid, sc_rtdm_mmap, fd, &rma, &addr);
+	if (ret != -EBADF && ret != -ENOSYS) {
+		ret = set_errno(ret);
+		if (ret)
+			return MAP_FAILED;
+
+		return addr;
+	}
+
+regular:
+	return __STD(mmap(addr, length, prot, flags, fd, offset));
 }

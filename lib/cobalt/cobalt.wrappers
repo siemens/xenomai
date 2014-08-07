@@ -103,3 +103,5 @@
 --wrap sigqueue
 --wrap kill
 --wrap sleep
+--wrap mmap
+--wrap munmap

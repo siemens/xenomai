@@ -70,8 +70,8 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 
 	phys_addr = (unsigned long)__xn_tscinfo.kinfo.counter;
 
-	addr = mmap(NULL, page_size, PROT_READ, MAP_SHARED,
-		    fd, phys_addr & ~(page_size - 1));
+	addr = __STD(mmap(NULL, page_size, PROT_READ, MAP_SHARED,
+			  fd, phys_addr & ~(page_size - 1)));
 	if (addr == MAP_FAILED) {
 		report_error("mmap(/dev/mem): %s", strerror(errno));
 		exit(EXIT_FAILURE);

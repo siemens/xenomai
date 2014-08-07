@@ -45,8 +45,8 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 	}
 
 	pagesz = sysconf(_SC_PAGESIZE);
-	p = mmap(NULL, pagesz, PROT_READ | PROT_WRITE, MAP_SHARED,
-		 fd, pa & ~(pagesz - 1));
+	p = __STD(mmap(NULL, pagesz, PROT_READ | PROT_WRITE, MAP_SHARED,
+		       fd, pa & ~(pagesz - 1)));
 	if (p == MAP_FAILED) {
 		report_error("mmap(/dev/mem): %s", strerror(errno));
 		exit(EXIT_FAILURE);

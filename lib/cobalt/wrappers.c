@@ -28,6 +28,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -276,6 +277,13 @@ int __real_select (int __nfds, fd_set *__restrict __readfds,
 		   struct timeval *__restrict __timeout)
 {
 	return select(__nfds, __readfds, __writefds, __exceptfds, __timeout);
+}
+
+__weak
+void *__real_mmap(void *addr, size_t length, int prot, int flags,
+		  int fd, off_t offset)
+{
+	return mmap(addr, length, prot, flags, fd, offset);
 }
 
 __weak

@@ -643,7 +643,7 @@ static int create_main_heap(void)
 		goto errno_fail;
 
 	if (sbuf.st_size > 0) {
-		m_heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+		m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
 		if (m_heap == MAP_FAILED)
 			goto errno_fail;
 		if (m_heap->cpid && kill(m_heap->cpid, 0) == 0) {
@@ -668,7 +668,7 @@ static int create_main_heap(void)
 	if (ret)
 		goto unlink_fail;
 
-	m_heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
 	if (m_heap == MAP_FAILED)
 		goto unlink_fail;
 
@@ -736,7 +736,7 @@ static int bind_main_heap(const char *session)
 		goto fail;
 	}
 
-	m_heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
 	if (m_heap == MAP_FAILED)
 		goto errno_fail;
 

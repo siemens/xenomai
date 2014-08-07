@@ -46,8 +46,8 @@ static volatile void *map_kmem(unsigned long pa, unsigned int pagesz)
 		exit(EXIT_FAILURE);
 	}
 
-	p = mmap(NULL, pagesz, PROT_READ | PROT_WRITE, MAP_SHARED,
-		 fd, pa & ~(pagesz - 1));
+	p = __STD(mmap(NULL, pagesz, PROT_READ | PROT_WRITE, MAP_SHARED,
+		       fd, pa & ~(pagesz - 1)));
 	if (p == MAP_FAILED) {
 		report_error("mmap(/dev/mem): %s", strerror(errno));
 		exit(EXIT_FAILURE);
