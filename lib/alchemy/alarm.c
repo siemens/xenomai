@@ -164,9 +164,15 @@ static void alarm_handler(struct timerobj *tmobj)
  * by multiple processes, even if they belong to the same Xenomai
  * session.
  */
+#ifndef DOXYGEN_CPP
 CURRENT_IMPL(int, rt_alarm_create, (RT_ALARM *alarm, const char *name,
 				    void (*handler)(void *arg),
 				    void *arg))
+#else
+int rt_alarm_create(RT_ALARM *alarm, const char *name,
+		    void (*handler)(void *arg),
+		    void *arg)
+#endif
 {
 	struct alchemy_alarm *acb;
 	struct service svc;
@@ -236,7 +242,11 @@ out:
  *
  * @apitags{thread-unrestricted, switch-secondary}
  */
+#ifndef DOXYGEN_CPP
 CURRENT_IMPL(int, rt_alarm_delete, (RT_ALARM *alarm))
+#else
+int rt_alarm_delete(RT_ALARM *alarm)
+#endif
 {
 	struct alchemy_alarm *acb;
 	struct service svc;
@@ -260,8 +270,7 @@ out:
 }
 
 /**
- * @fn int rt_alarm_start(RT_ALARM *alarm,RTIME value,RTIME interval)
- * @brief Start an alarm.
+ * Start an alarm.
  *
  * This routine programs the trigger date of an alarm object. An alarm
  * can be either periodic or oneshot, depending on the @a interval
@@ -292,14 +301,13 @@ out:
  * - -EPERM is returned if this service was called from an invalid
  * context.
  *
- * @apitags{xnthread-only, switch-primary}
+ * @apitags{xthread-only, switch-primary}
  *
  * @note Each of the initial @a value and @a interval is interpreted
  * as a multiple of the Alchemy clock resolution (see
  * --alchemy-clock-resolution option, defaults to 1 nanosecond).
  */
-int rt_alarm_start(RT_ALARM *alarm,
-		   RTIME value, RTIME interval)
+int rt_alarm_start(RT_ALARM *alarm, RTIME value, RTIME interval)
 {
 	struct alchemy_alarm *acb;
 	struct itimerspec it;
