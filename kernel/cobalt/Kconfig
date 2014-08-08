@@ -5,29 +5,15 @@ config XENO_OPT_SCHED_CLASSES
 	default n
 	help
 
-	Xenomai implements a set of scheduling classes.  Each
-	scheduling class defines its own set of rules for determining
-	when and how to select a new thread to run.
+	The Cobalt kernel implements a set of scheduling classes.
+	Each scheduling class defines its own set of rules for
+	determining when and how to select a new thread to run.
 
-	The Xenomai core has a built-in real-time class, which
-	supports both preemptive fixed-priority FIFO, and round-robin
-	scheduling.
+	Cobalt has a built-in real-time class, which supports both
+	preemptive fixed-priority FIFO, and round-robin scheduling.
 
-	When CONFIG_XENO_OPT_SCHED_WEAK is disabled, Xenomai's
-	real-time class also supports threads from the SCHED_OTHER
-	class at FIFO priority level 0. Such threads can access
-	Xenomai resources, wait on Xenomai synchronization objects,
-	without competing for the CPU with members of other scheduling
-	classes.
-
-	NOTE: Xenomai assumes no real-time requirement for SCHED_OTHER
-	threads. Therefore, they are automatically moved back to
-	secondary mode upon return from a Xenomai syscall, unless they
-	hold a mutex, which would defer the transition until the mutex
-	is released.
-
-	Enabling CONFIG_XENO_OPT_SCHED_CLASSES will allow you to
-	select additional scheduling classes to compile in.
+	Enabling CONFIG_XENO_OPT_SCHED_CLASSES allows you to select
+	additional scheduling classes to enable in the Cobalt kernel.
 
 	If in doubt, say N.
 
@@ -37,32 +23,27 @@ config XENO_OPT_SCHED_WEAK
 	depends on XENO_OPT_SCHED_CLASSES
 	help
 
-	This option enables support for binding threads from the Linux
-	SCHED_FIFO/RR scheduling classes to the Xenomai domain as
-	members of the SCHED_WEAK class, with up to 100 priority
-	levels from [0..99] included.  When enabled, SCHED_WEAK is the
-	low priority class of the Xenomai system, providing no
-	real-time guarantee.
+	This option creates a Cobalt scheduling class for mapping
+	members of the regular POSIX SCHED_FIFO/RR policies to a low
+	priority class of the Cobalt kernel, providing no real-time
+	guarantee. Therefore, up to a hundred non real-time priority
+	levels are available from the SCHED_WEAK policy.
 
-	Members from the SCHED_WEAK class are weakly scheduled by
-	Xenomai, only for the purpose of synchronizing with real-time
-	threads from other scheduling classes.  However, they cannot
-	compete for CPU resources with real-time threads, and leave
-	the primary domain upon return from Xenomai syscalls
-	automatically (*).
+	When CONFIG_XENO_OPT_SCHED_WEAK is disabled, Cobalt still
+	supports a single non real-time priority level (i.e. zero
+	priority), assigned to members of the SCHED_OTHER class.
 
-	This feature is an extension of Xenomai's special handling of
-	SCHED_OTHER threads, to the SCHED_FIFO/RR POSIX classes from a
-	regular Linux kernel. If disabled, SCHED_WEAK is interpreted
-	as an alias to SCHED_OTHER by the Xenomai scheduler,
-	restricted to priority 0. Conversely, SCHED_OTHER threads are
-	eventually members of Xenomai's SCHED_WEAK class at priority
-	0, when this feature is enabled.
+	SCHED_WEAK/SCHED_OTHER threads can access Cobalt resources,
+	wait on Cobalt synchronization objects, but cannot compete for
+	the CPU with members of the real-time Cobalt classes.
+
+	Since Cobalt assumes no real-time requirement for
+	SCHED_WEAK/SCHED_OTHER threads, they are automatically moved
+	back to secondary mode upon return from any Cobalt syscall if
+	necessary, unless they hold a Cobalt mutex, which would defer
+	the transition until such mutex is released.
 
 	If in doubt, say N.
-
-	(*) With a special exception when a mutex is held. See NOTE
-	from CONFIG_XENO_OPT_SCHED_CLASSES.
 
 config XENO_OPT_SCHED_TP
 	bool "Temporal partitioning"
@@ -91,8 +72,8 @@ config XENO_OPT_SCHED_SPORADIC
 	help
 
 	This option enables support for the sporadic scheduling policy
-	in Xenomai (SCHED_SPORADIC), also known as POSIX sporadic
-	server.
+	in the Cobalt kernel (SCHED_SPORADIC), also known as POSIX
+	sporadic server.
 
 	It can be used to enforce a capped limit on the execution time
 	of a thread within a given period of time.
@@ -118,8 +99,8 @@ config XENO_OPT_SCHED_QUOTA
 	depends on XENO_OPT_SCHED_CLASSES
 	help
 
-	This option enables the SCHED_QUOTA scheduling policy for
-	Xenomai.
+	This option enables the SCHED_QUOTA scheduling policy in the
+	Cobalt kernel.
 
 	This policy enforces a limitation on the CPU consumption of
 	threads over a globally defined period, known as the quota
@@ -160,7 +141,7 @@ config XENO_OPT_STATS
 	default y
 	help
 
-	This option causes the real-time nucleus to collect various
+	This option causes the Cobalt kernel to collect various
 	per-thread runtime statistics, which are accessible through
 	the /proc/xenomai/sched/stat interface.
 
@@ -180,7 +161,7 @@ config XENO_OPT_RR_QUANTUM
 
 	This parameter defines the duration of the default round-robin
 	time quantum expressed as a count of micro-seconds. This value
-	may be overriden internally by Xenomai services which do
+	may be overriden internally by Cobalt services which do
 	provide a round-robin interval.
 
 config XENO_OPT_AUTOTUNE
@@ -188,14 +169,12 @@ config XENO_OPT_AUTOTUNE
         default y if XENO_HW_AUTOTUNE
 	select XENO_DRIVERS_AUTOTUNE
         help
-	Enable auto-tuning capabilities. Currently, Xenomai runs an
-	auto-tuning procedure once at system bootup, for adjusting the
-	core timing services to the intrinsic latency of the platform.
+	Enable auto-tuning capabilities. Auto-tuning is used for
+	adjusting the core timing services to the intrinsic latency of
+	the platform.
 
 	The calibration method is conservative, in order to never
-	cause early shots. You can set your own estimation of the
-	intrinsic latency with CONFIG_XENO_OPT_TIMING_SCHEDLAT, or use
-	our pre-calibrated value instead.
+	cause early shots.
 
 if XENO_OPT_AUTOTUNE
 config XENO_OPT_TIMING_SCHEDLAT
@@ -218,11 +197,11 @@ config XENO_OPT_SCALABLE_SCHED
 	bool "O(1) scheduler"
 	help
 
-	This option causes a multi-level priority queue to be
-	used in the real-time thread scheduler, so that it operates
-	in constant-time regardless of the number of _concurrently
-	runnable_ threads (which might be much lower than the total
-	number of active threads).
+	This option causes a multi-level priority queue to be used in
+	the real-time scheduler, so that it operates in constant-time
+	regardless of the number of _concurrently runnable_ threads
+	(which might be much lower than the total number of active
+	threads).
 
 	Its use is recommended for large multi-threaded systems
 	involving more than 10 of such threads; otherwise, the default
@@ -236,7 +215,7 @@ choice
 
 	This option allows to select the underlying data structure
 	which is going to be used for ordering the outstanding
-	software timers managed by the nucleus.
+	software timers managed by the Cobalt kernel.
 
 config XENO_OPT_TIMER_LIST
 	bool "Linear"
@@ -295,11 +274,11 @@ config XENO_OPT_PIPE_NRDEV
 	default 32
 	help
 
-	Message pipes are bi-directional FIFO communication
-	channels allowing data exchange between real-time kernel
-	threads and regular user-space processes. Pipes natively
-	preserve message boundaries, but can also be used in byte
-	streaming mode from kernel to user-space.
+	Message pipes are bi-directional FIFO communication channels
+	allowing data exchange between Cobalt threads and regular
+	POSIX threads. Pipes natively preserve message boundaries, but
+	can also be used in byte streaming mode from kernel to
+	user-space.
 
 	This option sets the maximum number of pipe devices supported
 	in the system. Pipe devices are named /dev/rtpN where N is a
@@ -310,15 +289,10 @@ config XENO_OPT_REGISTRY_NRSLOTS
 	default 512
 	help
 
-	The registry is used by Xenomai-based APIs to bind real-time
-	objects they create to symbolic names, so that these objects
-	can be further retrieved and shared by real-time applications
-	regardless of their runtime space (i.e. kernel or user). Each
-	named object occupies a registry slot.
-
-	This option sets the maximum number of real-time objects the
-	registry can handle. All APIs using the registry share this
-	storage.
+	The registry is used by the Cobalt kernel to export named
+	resources to user-space programs via the /proc interface.
+	Each named resource occupies a registry slot. This option sets
+	the maximum number of resources the registry can handle.
 
 config XENO_OPT_SYS_HEAPSZ
 	int "Size of the system heap (Kb)"
@@ -326,35 +300,32 @@ config XENO_OPT_SYS_HEAPSZ
 	help
 
 	The system heap is used for various internal allocations by
-	the nucleus and the real-time APIs. The size is expressed in
-	Kilobytes.
+	the Cobalt kernel. The size is expressed in Kilobytes.
 
 config XENO_OPT_SEM_HEAPSZ
-	int "Size of private semaphores heap (Kb)"
+	int "Size of private heap (Kb)"
 	default 32
 	help
 
-	Xenomai implementation of user-space semaphores relies on heaps
-	shared between kernel and user-space. This configuration entry
-	allow to set the size of the heap used for private semaphores.
+	The Cobalt kernel implements fast IPC mechanisms within the
+	scope of a process which require a private memory heap to be
+	shared internally between the kernel and each Xenomai
+	application process. This option can be used to set the size
+	of this per-process heap.
 
-	Note that each semaphore will allocate 4 bytes on 32 bits
-	architectures or 8 bytes on 64 bits architectures of memory,
-	so, the default of 32 Kb allows creating many semaphores.
+	32k is considered a large enough size for common use cases.
 
 config XENO_OPT_GLOBAL_SEM_HEAPSZ
-	int "Size of global semaphores heap (Kb)"
+	int "Size of global heap (Kb)"
 	default 32
 	help
 
-	Xenomai implementation of user-space semaphores relies on heaps
-	shared between kernel and user-space. This configuration entry
-	allow to set the size of the heap used for semaphores shared
-	between several processes.
+	The Cobalt kernel implements fast IPC mechanisms between
+	processes which require a global memory heap to be shared
+	between the kernel and all Xenomai application processes. This
+	option can be used to set the size of this system-wide heap.
 
-	Note that each semaphore will allocate 4 bytes on 32 bits
-	architectures or 8 bytes on 64 bits architectures of memory,
-	so, the default of 32 Kb allows creating many semaphores.
+	32k is considered a large enough size for common use cases.
 
 config XENO_OPT_NRTIMERS
        int "Maximum number of POSIX timers per process"
@@ -362,7 +333,7 @@ config XENO_OPT_NRTIMERS
        help
 
        This tunable controls how many POSIX timers can exist at any
-       given time for each Xenomai process (a timer is created by a
+       given time for each Cobalt process (a timer is created by a
        call to the timer_create() service of the Cobalt/POSIX API).
 
 config XENO_OPT_RTDM_FILDES
@@ -370,9 +341,10 @@ config XENO_OPT_RTDM_FILDES
 	default 128
 	help
 
-	This option defines the maximum number of kernel-space RTDM
-	file descriptors which can be opened at the same time. RTDM
-	kernel-space file descriptors are a global resource.
+	This option defines the system-wide maximum number of RTDM
+	file descriptors which can be opened at the same time (a file
+	descriptor is created by each successful call to the open()
+	service of the Cobalt/POSIX API).
 
 endmenu
 
@@ -383,25 +355,25 @@ menuconfig XENO_OPT_DEBUG
 
 	When enabled, various debugging features can be switched
 	on. They can help to find problems in applications, drivers,
-	and the Xenomai core. XENO_OPT_DEBUG by itself does not have
-	any impact on generated code.
+	and the Cobalt kernel. XENO_OPT_DEBUG by itself does not have
+	any impact on the generated code.
 
 if XENO_OPT_DEBUG
 
 config XENO_OPT_DEBUG_NUCLEUS
-	bool "Nucleus runtime assertions"
+	bool "Cobalt runtime assertions"
 	help
 
-	This option activates various assertions inside the core
-	system. This option has limited overhead.
+	This option activates various assertions inside the Cobalt
+	kernel. This option has limited overhead.
 
 config XENO_OPT_DEBUG_CONTEXT
        bool "Check for calling context"
        help
 
        This option enables checks for the calling context in the
-       Xenomai code, aimed at detecting when regular linux code is
-       entered from a real-time context, and conversely.
+       Cobalt kernel, aimed at detecting when regular Linux routines
+       are entered from a real-time context, and conversely.
 
 config XENO_OPT_DEBUG_LOCKING
 	bool "Spinlock debugging support"
@@ -409,35 +381,32 @@ config XENO_OPT_DEBUG_LOCKING
 	help
 
 	This option activates runtime assertions, and measurements of
-	Xenomai spinlocks spinning time and duration. It should have a
-	low overhead, and helps finding latency spots due to masking
-	sections. Statistics about the longest masking section may be
-	found in /proc/xenomai/lock.
+	spinlocks spinning time and duration in the Cobalt kernel. It
+	normally has a low overhead, and helps finding latency spots
+	due to interrupt masked sections. Statistics about the longest
+	masked section can be found in /proc/xenomai/lock.
 
 config XENO_OPT_DEBUG_SYNCH_RELAX
 	bool "Detect mutexes held in relaxed sections"
 	default y
 	help
 
-	This option detects situations where a real-time thread
-	attempts to sleep on a Xenomai mutex object, that is owned by
-	another thread currently running in secondary mode (i.e. plain
-	Linux execution mode). The SIGDEBUG signal may be sent in such
-	a case to the sleeper, provided the WARNSW flag is enabled for
-	it, as set by e.g. rt_task_set_mode() or pthread_setmode_np().
+	This option detects when a Cobalt thread attempts to sleep on
+	a Cobalt mutex, which is owned by another thread currently
+	running in secondary mode (i.e. plain Linux execution
+	mode). If the WARNSW flag is enabled for the sleeper when this
+	situation arises, it immediately receives the SIGDEBUG signal
+	(see pthread_setmode_np(), rt_task_set_mode() depending on
+	your API).
 
 	This particular situation is a possible source of unwanted
 	latency, since the current mutex owner may be unexpectedly
 	delayed as a result of using non-deterministic Linux services,
-	thus deferring the release of the mutex object for too long.
+	thus deferring the release of the Cobalt mutex for too long.
 
 	This option may introduce some overhead in case mutexes are
 	highly contended. Use this feature for debugging purposes
 	only.
-
-	NOTE: only Xenomai synchronization objects that may be
-	actually "owned" by a single thread at a time, can be
-	monitored this way (typically, mutexes).
 
 config XENO_OPT_DEBUG_TRACE_RELAX
 	bool "Trace relax requests"
@@ -455,13 +424,15 @@ config XENO_OPT_WATCHDOG
 	help
 
 	This option activates a watchdog aimed at detecting runaway
-	real-time threads. If enabled, the watchdog triggers after
-	a given period of uninterrupted real-time activity has elapsed
-	without Linux interaction in the meantime; in such event, the
-	current real-time thread is killed. The built-in watchdog
-	support operates on behalf of the timer tick handler,
-	thus is only active after the timer has been started. The
-	timeout value of the watchdog can be set using the
+	Cobalt threads. If enabled, the watchdog triggers after a
+	given period of uninterrupted real-time activity has elapsed
+	without Linux interaction in the meantime.
+
+	In such an event, the current thread is moved out the
+	real-time domain, receiving a SIGDEBUG signal from the Linux
+	kernel immediately after.
+
+	The timeout value of the watchdog can be set using the
 	XENO_OPT_WATCHDOG_TIMEOUT parameter.
 
 config XENO_OPT_WATCHDOG_TIMEOUT
@@ -478,9 +449,9 @@ config XENO_OPT_DEBUG_COBALT
 	default n
 	help
 
-	This option activates various checks inside the Cobalt API,
-	mainly to help debugging applications. This option has no
-	significant overhead.
+	This option activates various checks inside the POSIX API
+	implementation in the Cobalt kernel, mainly to help debugging
+	applications. This option has no significant overhead.
 
 config XENO_OPT_DEBUG_RTDM
 	bool "RTDM debugging checks"
@@ -489,7 +460,7 @@ config XENO_OPT_DEBUG_RTDM
 
 	This option activates debugging checks for the RTDM subsystem.
 	It is a recommended option for analysing potential issues in
-	RTDM drivers. A minor runtime overhead is added.
+	RTDM drivers. A marginal runtime overhead is added.
 
 config XENO_OPT_DEBUG_RTDM_APPL
 	bool "RTDM application cleanup checks"
