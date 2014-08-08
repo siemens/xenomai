@@ -192,6 +192,11 @@ static void run_tuner(int fd, int op, int period, const char *type)
 	pthread_t sampler;
 	int ret;
 
+	if (!quiet) {
+		printf("%s gravity... ", type);
+		fflush(stdout);
+	}
+
 	ret = ioctl(fd, op, &period);
 	if (ret)
 		error(1, errno, "setup failed (%s)", type);
@@ -207,7 +212,7 @@ static void run_tuner(int fd, int op, int period, const char *type)
 		pthread_cancel(sampler);
 
 	if (!quiet)
-		printf("%s gravity = %lu ns\n", type, gravity);
+		printf("%lu ns\n", gravity);
 }
 
 int main(int argc, char *const argv[])
@@ -261,6 +266,9 @@ int main(int argc, char *const argv[])
 		create_hog(&hog);
 
 	period = CONFIG_XENO_DEFAULT_PERIOD;
+
+	if (tune_irqlat || tune_kernlat || tune_userlat)
+		printf("Auto-tuning started (may take some time)\n");
 
 	if (tune_irqlat)
 		run_tuner(fd, AUTOTUNE_RTIOC_IRQ, period, "irq");
