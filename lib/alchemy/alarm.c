@@ -289,7 +289,10 @@ out:
  *
  * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
  *
- * @apitags{unrestricted, switch-primary}
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * @apitags{xnthread-only, switch-primary}
  *
  * @note Each of the initial @a value and @a interval is interpreted
  * as a multiple of the Alchemy clock resolution (see
