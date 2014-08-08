@@ -79,4 +79,5 @@ void rthal_c1e_disable(void)
 	}
 }
 
+EXPORT_SYMBOL_GPL(rthal_c1e_disable);
 #endif
