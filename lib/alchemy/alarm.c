@@ -164,9 +164,9 @@ static void alarm_handler(struct timerobj *tmobj)
  * by multiple processes, even if they belong to the same Xenomai
  * session.
  */
-int rt_alarm_create(RT_ALARM *alarm, const char *name,
-		    void (*handler)(void *arg),
-		    void *arg)
+CURRENT_IMPL(int, rt_alarm_create, (RT_ALARM *alarm, const char *name,
+				    void (*handler)(void *arg),
+				    void *arg))
 {
 	struct alchemy_alarm *acb;
 	struct service svc;
@@ -236,7 +236,7 @@ out:
  *
  * @apitags{thread-unrestricted, switch-secondary}
  */
-int rt_alarm_delete(RT_ALARM *alarm)
+CURRENT_IMPL(int, rt_alarm_delete, (RT_ALARM *alarm))
 {
 	struct alchemy_alarm *acb;
 	struct service svc;
