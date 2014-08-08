@@ -21,13 +21,14 @@
 #include <trank/native/alarm.h>
 #include "../alchemy/alarm.h"
 
+#ifdef DOXYGEN_CPP
+
 /**
  * @ingroup trank
  * @{
- */
-
-/**
- * Create a real-time task (compatibility service).
+ *
+ * @fn int COMPAT__rt_task_create(RT_TASK *task, const char *name, int stksize, int prio, int mode)
+ * @brief Create a real-time task (compatibility service).
  *
  * This service creates a task with access to the full set of Xenomai
  * real-time services.
@@ -115,51 +116,13 @@
  * @deprecated This is a compatibility service from the Transition
  * Kit.
  */
-int rt_task_create(RT_TASK *task, const char *name,
-		   int stksize, int prio, int mode)
-{
-	int ret, susp, cpus, cpu;
-	cpu_set_t cpuset;
 
-	susp = mode & T_SUSP;
-	cpus = mode & T_CPUMASK;
-	ret = __CURRENT(rt_task_create(task, name, stksize, prio,
-				       mode & ~(T_SUSP|T_CPUMASK|T_LOCK)));
-	if (ret)
-		return ret;
-
-	if (cpus) {
-		CPU_ZERO(&cpuset);
-		for (cpu = 0, cpus >>= 24;
-		     cpus && cpu < 8; cpu++, cpus >>= 1) {
-			if (cpus & 1)
-				CPU_SET(cpu, &cpuset);
-		}
-		ret = rt_task_set_affinity(task, &cpuset);
-		if (ret) {
-			rt_task_delete(task);
-			return ret;
-		}
-	}
-
-	return susp ? rt_task_suspend(task) : 0;
-}
-
-int rt_task_spawn(RT_TASK *task, const char *name,
-		  int stksize, int prio, int mode,
-		  void (*entry)(void *arg), void *arg)
-{
-	int ret;
-
-	ret = rt_task_create(task, name, stksize, prio, mode);
-	if (ret)
-		return ret;
-
-	return rt_task_start(task, entry, arg);
-}
+int COMPAT__rt_task_create(RT_TASK *task, const char *name,
+			   int stksize, int prio, int mode);
 
 /**
- * Make a real-time task periodic (compatibility service).
+ * @fn int COMPAT__rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
+ * @brief Make a real-time task periodic (compatibility service).
  *
  * Make a task periodic by programing its first release point and its
  * period in the processor time line.  @a task should then call
@@ -208,42 +171,12 @@ int rt_task_spawn(RT_TASK *task, const char *name,
  * @deprecated This is a compatibility service from the Transition
  * Kit.
  */
-int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
-{
-	int ret;
 
-	ret = __CURRENT(rt_task_set_periodic(task, idate, period));
-	if (ret)
-		return ret;
-
-	if (idate != TM_NOW) {
-		if (task == NULL || task == rt_task_self())
-			ret = rt_task_wait_period(NULL);
-		else
-			trank_warning("task won't wait for start time");
-	}
-
-	return ret;
-}
-
-struct trank_alarm_wait {
-	pthread_mutex_t lock;
-	pthread_cond_t event;
-	int alarm_pulses;
-};
-
-static void trank_alarm_handler(void *arg)
-{
-	struct trank_alarm_wait *aw = arg;
-
-	__RT(pthread_mutex_lock(&aw->lock));
-	aw->alarm_pulses++;
-	__RT(pthread_cond_broadcast(&aw->event));
-	__RT(pthread_mutex_unlock(&aw->lock));
-}
+int COMPAT__rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period);
 
 /**
- * Create an alarm object (compatibility service).
+ * @fn int COMPAT__rt_alarm_create(RT_ALARM *alarm, const char *name)
+ * @brief Create an alarm object (compatibility service).
  *
  * This routine creates an object triggering an alarm routine at a
  * specified time in the future. Alarms can be periodic or oneshot,
@@ -278,6 +211,121 @@ static void trank_alarm_handler(void *arg)
  * @deprecated This is a compatibility service from the Transition
  * Kit.
  */
+
+int COMPAT__rt_alarm_create(RT_ALARM *alarm, const char *name);
+
+/**
+ * @fn int rt_alarm_wait(RT_ALARM *alarm)
+ * @brief Wait for the next alarm shot (compatibility service).
+ *
+ * This service allows the current task to suspend execution until the
+ * specified alarm triggers. The priority of the current task is
+ * raised above all other tasks - except those also undergoing an
+ * alarm wait.
+ *
+ * @return Zero is returned upon success, after the alarm timed
+ * out. Otherwise:
+ *
+ * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the request is satisfied.
+ *
+ * - -EIDRM is returned if @a alarm is deleted while the caller was
+ * sleeping on it. In such a case, @a alarm is no more valid upon
+ * return of this service.
+ *
+ * @apitags{xthread-only, switch-primary}
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ *
+ */
+
+int rt_alarm_wait(RT_ALARM *alarm);
+
+#else /* !DOXYGEN_CPP */
+
+int rt_task_create(RT_TASK *task, const char *name,
+		   int stksize, int prio, int mode)
+{
+	int ret, susp, cpus, cpu;
+	cpu_set_t cpuset;
+
+	susp = mode & T_SUSP;
+	cpus = mode & T_CPUMASK;
+	ret = __CURRENT(rt_task_create(task, name, stksize, prio,
+				       mode & ~(T_SUSP|T_CPUMASK|T_LOCK)));
+	if (ret)
+		return ret;
+
+	if (cpus) {
+		CPU_ZERO(&cpuset);
+		for (cpu = 0, cpus >>= 24;
+		     cpus && cpu < 8; cpu++, cpus >>= 1) {
+			if (cpus & 1)
+				CPU_SET(cpu, &cpuset);
+		}
+		ret = rt_task_set_affinity(task, &cpuset);
+		if (ret) {
+			rt_task_delete(task);
+			return ret;
+		}
+	}
+
+	return susp ? rt_task_suspend(task) : 0;
+}
+
+int rt_task_spawn(RT_TASK *task, const char *name,
+		  int stksize, int prio, int mode,
+		  void (*entry)(void *arg), void *arg)
+{
+	int ret;
+
+	ret = rt_task_create(task, name, stksize, prio, mode);
+	if (ret)
+		return ret;
+
+	return rt_task_start(task, entry, arg);
+}
+
+int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
+{
+	int ret;
+
+	ret = __CURRENT(rt_task_set_periodic(task, idate, period));
+	if (ret)
+		return ret;
+
+	if (idate != TM_NOW) {
+		if (task == NULL || task == rt_task_self())
+			ret = rt_task_wait_period(NULL);
+		else
+			trank_warning("task won't wait for start time");
+	}
+
+	return ret;
+}
+
+struct trank_alarm_wait {
+	pthread_mutex_t lock;
+	pthread_cond_t event;
+	int alarm_pulses;
+};
+
+static void trank_alarm_handler(void *arg)
+{
+	struct trank_alarm_wait *aw = arg;
+
+	__RT(pthread_mutex_lock(&aw->lock));
+	aw->alarm_pulses++;
+	__RT(pthread_cond_broadcast(&aw->event));
+	__RT(pthread_mutex_unlock(&aw->lock));
+}
+
 int rt_alarm_create(RT_ALARM *alarm, const char *name)
 {
 	struct trank_alarm_wait *aw;
@@ -337,34 +385,6 @@ static struct alchemy_alarm *find_alarm(RT_ALARM *alarm)
 	return acb;
 }
 
-/**
- * Wait for the next alarm shot (compatibility service).
- *
- * This service allows the current task to suspend execution until the
- * specified alarm triggers. The priority of the current task is
- * raised above all other tasks - except those also undergoing an
- * alarm wait.
- *
- * @return Zero is returned upon success, after the alarm timed
- * out. Otherwise:
- *
- * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
- *
- * - -EPERM is returned if this service was called from an invalid
- * context.
- *
- * - -EINTR is returned if rt_task_unblock() was called for the
- * current task before the request is satisfied.
- *
- * - -EIDRM is returned if @a alarm is deleted while the caller was
- * sleeping on it. In such a case, @a alarm is no more valid upon
- * return of this service.
- *
- * @apitags{xthread-only, switch-primary}
- *
- * @deprecated This is a compatibility service from the Transition
- * Kit.
- */
 int rt_alarm_wait(RT_ALARM *alarm)
 {
 	struct threadobj *current = threadobj_current();
@@ -429,5 +449,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 
 	return 0;
 }
+
+#endif	/* !DOXYGEN_CPP */
 
 /** @} */
