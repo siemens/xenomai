@@ -21,6 +21,100 @@
 #include <trank/native/alarm.h>
 #include "../alchemy/alarm.h"
 
+/**
+ * @ingroup trank
+ * @{
+ */
+
+/**
+ * Create a real-time task (compatibility service).
+ *
+ * This service creates a task with access to the full set of Xenomai
+ * real-time services.
+ *
+ * This service creates a task with access to the full set of Xenomai
+ * real-time services. If @a prio is non-zero, the new task belongs to
+ * Xenomai's real-time FIFO scheduling class, aka SCHED_FIFO. If @a
+ * prio is zero, the task belongs to the regular SCHED_OTHER class.
+ *
+ * Creating tasks with zero priority is useful for running non
+ * real-time processes which may invoke blocking real-time services,
+ * such as pending on a semaphore, reading from a message queue or a
+ * buffer, and so on.
+ *
+ * Once created, the task is left dormant until it is actually started
+ * by rt_task_start().
+ *
+ * @param task The address of a task descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * task. When non-NULL and non-empty, a copy of this string is
+ * used for indexing the created task into the object registry.
+ *
+ * @param stksize The size of the stack (in bytes) for the new
+ * task. If zero is passed, a system-dependent default size will be
+ * substituted.
+ *
+ * @param prio The base priority of the new task. This value must be
+ * in the [0 .. 99] range, where 0 is the lowest effective priority. 
+ *
+ * @param mode The task creation mode. The following flags can be
+ * OR'ed into this bitmask:
+ *
+ * - T_FPU allows the task to use the FPU whenever available on the
+ * platform. This flag may be omitted, as it is automatically set when
+ * a FPU is present on the platform, cleared otherwise.
+ *
+ * - T_SUSP causes the task to start in suspended mode. In such a
+ * case, the thread will have to be explicitly resumed using the
+ * rt_task_resume() service for its execution to actually begin.
+ *
+ * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
+ * identifiers range from 0 to 7 (inclusive).
+ *
+ * - T_JOINABLE allows another task to wait on the termination of the
+ * new task. rt_task_join() shall be called for this task to clean up
+ * any resources after its termination.
+ *
+ * Passing T_FPU|T_CPU(1) in the @a mode parameter thus creates a task
+ * with FPU support enabled and which will be affine to CPU #1.
+ *
+ * - When running over the Cobalt core, T_WARNSW causes the SIGDEBUG
+ * signal to be sent to the current task whenever it switches to the
+ * secondary mode. This feature is useful to detect unwanted
+ * migrations to the Linux domain. This flag has no effect over the
+ * Mercury core.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if either @a prio, @a mode or @a stksize are
+ * invalid.
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the task.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered task.
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
+ *
+ * @sideeffect
+ *
+ *   - calling rt_task_create() causes SCHED_FIFO tasks to switch to
+ * secondary mode.
+ *
+ *   - members of Xenomai's SCHED_FIFO class running in the primary
+ * domain have utmost priority over all Linux activities in the
+ * system, including Linux interrupt handlers.
+ *
+ * @note Tasks can be referred to from multiple processes which all
+ * belong to the same Xenomai session.
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
 int rt_task_create(RT_TASK *task, const char *name,
 		   int stksize, int prio, int mode)
 {
@@ -30,7 +124,7 @@ int rt_task_create(RT_TASK *task, const char *name,
 	susp = mode & T_SUSP;
 	cpus = mode & T_CPUMASK;
 	ret = __CURRENT(rt_task_create(task, name, stksize, prio,
-				       mode & ~(T_SUSP|T_CPUMASK)));
+				       mode & ~(T_SUSP|T_CPUMASK|T_LOCK)));
 	if (ret)
 		return ret;
 
@@ -64,6 +158,56 @@ int rt_task_spawn(RT_TASK *task, const char *name,
 	return rt_task_start(task, entry, arg);
 }
 
+/**
+ * Make a real-time task periodic (compatibility service).
+ *
+ * Make a task periodic by programing its first release point and its
+ * period in the processor time line.  @a task should then call
+ * rt_task_wait_period() to sleep until the next periodic release
+ * point in the processor timeline is reached.
+ *
+ * @param task The task descriptor.  If @a task is NULL, the current
+ * task is made periodic. @a task must belong the current process.
+ *
+ * @param idate The initial (absolute) date of the first release
+ * point, expressed in clock ticks (see note).  If @a idate is equal
+ * to TM_NOW, the current system date is used.  Otherwise, if @a task
+ * is NULL or equal to @a rt_task_self(), the caller is delayed until
+ * @a idate has elapsed.
+ *
+ * @param period The period of the task, expressed in clock ticks (see
+ * note). Passing TM_INFINITE stops the task's periodic timer if
+ * enabled, then returns successfully.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is NULL but the caller is not a
+ * Xenomai task, or if @a task is non-NULL but not a valid task
+ * descriptor.
+ *
+ * - -ETIMEDOUT is returned if @a idate is different from TM_INFINITE
+ * and represents a date in the past.
+ *
+ * @apitags{thread-unrestricted, switch-primary}
+ *
+ * @note The caller must be an Alchemy task if @a task is NULL.
+ *
+ * @note Unlike the original Xenomai 2.x call, this emulation delays
+ * the caller until @a idate has elapsed only if @a task is NULL or
+ * equal to rt_task_self().
+ *
+ * @sideeffect Over Cobalt, -EINVAL is returned if @a period is
+ * different from TM_INFINITE but shorter than the user scheduling
+ * latency value for the target system, as displayed by
+ * /proc/xenomai/latency.
+ *
+ * @note The @a idate and @a period values are interpreted as a
+ * multiple of the Alchemy clock resolution (see
+ * --alchemy-clock-resolution option, defaults to 1 nanosecond).
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
 int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 {
 	int ret;
@@ -98,6 +242,42 @@ static void trank_alarm_handler(void *arg)
 	__RT(pthread_mutex_unlock(&aw->lock));
 }
 
+/**
+ * Create an alarm object (compatibility service).
+ *
+ * This routine creates an object triggering an alarm routine at a
+ * specified time in the future. Alarms can be periodic or oneshot,
+ * depending on the reload interval value passed to rt_alarm_start().
+ * A task can wait for timeouts using the rt_alarm_wait() service.
+ *
+ * @param alarm The address of an alarm descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * alarm. When non-NULL and non-empty, a copy of this string is used
+ * for indexing the created alarm into the object registry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * local pool in order to create the alarm.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered alarm.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
+ *
+ * @note Alarms are process-private objects and thus cannot be shared
+ * by multiple processes, even if they belong to the same Xenomai
+ * session.
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
 int rt_alarm_create(RT_ALARM *alarm, const char *name)
 {
 	struct trank_alarm_wait *aw;
@@ -157,6 +337,34 @@ static struct alchemy_alarm *find_alarm(RT_ALARM *alarm)
 	return acb;
 }
 
+/**
+ * Wait for the next alarm shot (compatibility service).
+ *
+ * This service allows the current task to suspend execution until the
+ * specified alarm triggers. The priority of the current task is
+ * raised above all other tasks - except those also undergoing an
+ * alarm wait.
+ *
+ * @return Zero is returned upon success, after the alarm timed
+ * out. Otherwise:
+ *
+ * - -EINVAL is returned if @a alarm is not a valid alarm descriptor.
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the request is satisfied.
+ *
+ * - -EIDRM is returned if @a alarm is deleted while the caller was
+ * sleeping on it. In such a case, @a alarm is no more valid upon
+ * return of this service.
+ *
+ * @apitags{xthread-only, switch-primary}
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
 int rt_alarm_wait(RT_ALARM *alarm)
 {
 	struct threadobj *current = threadobj_current();
@@ -221,3 +429,5 @@ int rt_alarm_delete(RT_ALARM *alarm)
 
 	return 0;
 }
+
+/** @} */
