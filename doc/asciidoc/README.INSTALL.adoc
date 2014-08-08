@@ -389,7 +389,7 @@ Generic configuration options (both cores)
 	A number of debug assertion statements are present into the
 	Xenomai libraries, checking the internal consistency of the
 	runtime system dynamically (see _man assert(3)_). Passing
-	`--disable-assert` to the configure script disables built-in
+	`--disable-assert` to the _configure_ script disables built-in
 	assertions unconditionally. By default, assertions are enabled
 	in partial or full debug modes, disabled otherwise.
 
@@ -474,7 +474,7 @@ does exist on the target kernel.
 	default is a per-architecture decision. Currently, this
 	feature is enabled for x86 and powerpc by default, other
 	architectures will require `--enable-tls` to be passed to the
-	configure script explicitly.
+	_configure_ script explicitly.
 
 [normal]
 	Unless `--enable-dlopen-libs` is present, the _initial-exec_
@@ -573,9 +573,6 @@ _Cobalt_-specific configuration options
 [options="header",grid="cols",frame="topbot",cols="m,2*d"]
 |============================================================================
 ^|NAME              ^|DESCRIPTION                    ^|DEFAULT
-footnoteref:[disable,Each option enabled by default can be forcibly
-disabled by passing `--disable-<option>` to the configure script.]
-
 |--enable-x86-vsyscall |Use the x86/vsyscall interface
 		        for issuing syscalls. If disabled,
 			the legacy 0x80 vector will be used.
@@ -596,16 +593,18 @@ disabled by passing `--disable-<option>` to the configure script.]
 		        xscale3 are supported.	              |disabled
 |============================================================================
 
+footnoteref:[disable,Each option enabled by default can be forcibly
+disabled by passing `--disable-<option>` to the _configure_ script]
 
 Cross-compilation
 ~~~~~~~~~~~~~~~~~
 
 In order to cross-compile the Xenomai libraries and programs, you will
-need to pass a `--host` and `--build` option to the configure
+need to pass a `--host` and `--build` option to the _configure_
 script. The `--host` option allow to select the architecture for which
 the libraries and programs are built. The `--build` option allows to
 choose the architecture on which the compilation tools are run,
-i.e. the system running the configure script.
+i.e. the system running the _configure_ script.
 
 Since cross-compiling requires specific tools, such tools are
 generally prefixed with the host architecture name; for example, a
@@ -655,7 +654,7 @@ The examples in following sections use the following conventions:
  programs and libraries.
 
 CAUTION: In the examples below, make sure to add `--enable-smp` to the
-configure script options if building for a SMP-enabled kernel.
+_configure_ script options if building for a SMP-enabled kernel.
 
 Building the x86 libraries (32/64bit)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -140,6 +140,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga1763346568d041f9c66d68224816d15b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#ga1763346568d041f9c66d68224816d15b">rtdm_task_sleep_abs</a> (<a class="el" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> wakeup_time, enum <a class="el" href="group__rtdm__timer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)</td></tr>
 <tr class="memdesc:ga1763346568d041f9c66d68224816d15b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="#ga1763346568d041f9c66d68224816d15b">More...</a><br/></td></tr>
 <tr class="separator:ga1763346568d041f9c66d68224816d15b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa288d5cf336a98cace8b47eaacb4c629"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#gaa288d5cf336a98cace8b47eaacb4c629">rtdm_task_busy_wait</a> (bool condition, <a class="el" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> spin_ns, <a class="el" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> sleep_ns)</td></tr>
+<tr class="memdesc:gaa288d5cf336a98cace8b47eaacb4c629"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safe busy waiting.  <a href="#gaa288d5cf336a98cace8b47eaacb4c629">More...</a><br/></td></tr>
+<tr class="separator:gaa288d5cf336a98cace8b47eaacb4c629"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3a3e4c00605861403c0ea4ec87b31a7b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#ga3a3e4c00605861403c0ea4ec87b31a7b">rtdm_task_join</a> (rtdm_task_t *task)</td></tr>
 <tr class="memdesc:ga3a3e4c00605861403c0ea4ec87b31a7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="#ga3a3e4c00605861403c0ea4ec87b31a7b">More...</a><br/></td></tr>
 <tr class="separator:ga3a3e4c00605861403c0ea4ec87b31a7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -216,6 +219,56 @@ Task Priority Modification</h2></td></tr>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must not be migratable to different CPUs while executing this service. Otherwise, the actual delay will be undefined.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaa288d5cf336a98cace8b47eaacb4c629"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_task_busy_wait </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>condition</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a>&#160;</td>
+          <td class="paramname"><em>spin_ns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a>&#160;</td>
+          <td class="paramname"><em>sleep_ns</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Safe busy waiting. </p>
+<p>This service alternates active spinning and sleeping within a wait loop, until a condition is satisfied. While sleeping, a task is scheduled out and does not consume any CPU time.</p>
+<p><a class="el" href="group__rtdm__task.html#gaa288d5cf336a98cace8b47eaacb4c629" title="Safe busy waiting. ">rtdm_task_busy_wait()</a> is particularly useful for waiting for a state change reading an I/O register, which usually happens shortly after the wait starts, without incurring the adverse effects of long busy waiting if it doesn't.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">condition</td><td>The C expression to be tested for detecting completion. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">spin_ns</td><td>The time to spin on <em>condition</em> before sleeping, expressed as a count of nanoseconds. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sleep_ns</td><td>The time to sleep for before spinning again, expressed as a count of nanoseconds.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success if <em>condition</em> is satisfied, otherwise:</dd></dl>
+<ul>
+<li>-EINTR is returned if the calling task has been unblocked by a Linux signal or explicitly via <a class="el" href="group__rtdm__task.html#gae52cca97ebaf78eec2e31553a4dacd5e" title="Activate a blocked real-time task. ">rtdm_task_unblock()</a>.</li>
+<li>-EPERM may be returned if an illegal invocation environment is detected.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">primary-only, might-switch</a> </dd></dl>
 
 </div>
 </div>

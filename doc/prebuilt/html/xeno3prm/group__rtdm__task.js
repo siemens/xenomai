@@ -2,6 +2,7 @@ var group__rtdm__task =
 [
     [ "rtdm_task_proc_t", "group__rtdm__task.html#gaa3cb481ab12462f5e54ff6fee12813e5", null ],
     [ "rtdm_task_busy_sleep", "group__rtdm__task.html#gaa3940cfff7cc72d7bc064a3e279d74ac", null ],
+    [ "rtdm_task_busy_wait", "group__rtdm__task.html#gaa288d5cf336a98cace8b47eaacb4c629", null ],
     [ "rtdm_task_current", "group__rtdm__task.html#gafd58b762de7269549d1e54699ceebc0d", null ],
     [ "rtdm_task_destroy", "group__rtdm__task.html#ga7b5581febb2732127736817ca44e86e3", null ],
     [ "rtdm_task_init", "group__rtdm__task.html#ga44b0701b6c28fa8035711f800fdcd371", null ],

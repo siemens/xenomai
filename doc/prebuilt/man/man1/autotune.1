@@ -148,6 +148,26 @@ If none of \-\-irq, \-\-kernel or \-\-user is given, an estimation is done for e
 .SH "VERSIONS"
 .sp
 \fBautotune\fR appeared in Xenomai 3\&.0 for the \fICobalt\fR real\-time core\&.
+.SH "NOTES"
+.sp
+The auto\-tuning process may take some time for completing the estimation\&. Although this delay may vary across hardware platforms, running for 30 seconds is common\&.
+.sp
+Once the gravity values are known for a particular hardware, one may write them to /proc/xenomai/clock/coreclck from some system init script to set up the Xenomai core clock accordingly, e\&.g:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    /* change the user gravity to 1728 ns (default) */
+# echo 1728 > /proc/xenomai/clock/coreclck
+    /* change the IRQ gravity to 129 ns */
+# echo 129i > /proc/xenomai/clock/coreclck
+    /* change the user and kernel gravities to 1728 and 907 ns resp\&. */
+# echo "1728u 907k" > /proc/xenomai/clock/coreclck
+.fi
+.if n \{\
+.RE
+.\}
 .SH "AUTHOR"
 .sp
 \fBautotune\fR was written by Philippe Gerum <rpm@xenomai\&.org>\&.

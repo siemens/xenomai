@@ -895,7 +895,27 @@ done for each of them in sequence.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_author">5. AUTHOR</h2>
+<h2 id="_notes">5. NOTES</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The auto-tuning process may take some time for completing the
+estimation. Although this delay may vary across hardware platforms,
+running for 30 seconds is common.</p></div>
+<div class="paragraph"><p>Once the gravity values are known for a particular hardware, one may
+write them to <code>/proc/xenomai/clock/coreclck</code> from some system init
+script to set up the Xenomai core clock accordingly, e.g:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>    /* change the user gravity to 1728 ns (default) */
+# echo 1728 &gt; /proc/xenomai/clock/coreclck
+    /* change the IRQ gravity to 129 ns */
+# echo 129i &gt; /proc/xenomai/clock/coreclck
+    /* change the user and kernel gravities to 1728 and 907 ns resp. */
+# echo "1728u 907k" &gt; /proc/xenomai/clock/coreclck</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_author">6. AUTHOR</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><strong>autotune</strong> was written by Philippe Gerum &lt;<a href="mailto:rpm@xenomai.org">rpm@xenomai.org</a>&gt;.</p></div>
 </div>
@@ -904,7 +924,7 @@ done for each of them in sequence.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-03 16:37:09 CEST
+Last updated 2014-08-08 14:39:38 CEST
 </div>
 </div>
 </body>

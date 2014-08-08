@@ -796,6 +796,20 @@ CONFIG_KGDB
 This option should not be enabled, except with x86.
 </p>
 </dd>
+<dt class="hdlist1">
+CONFIG_CONTEXT_TRACKING_FORCE
+</dt>
+<dd>
+<p>
+This option which appeared in kernel
+3.8 is forced off by I-pipe patches since 3.14 onward, as it is
+incompatible with interrupt pipelining, and has no upside for regular
+users. However, you have to manually disable it for older kernels when
+present. Common effects observed with this feature enabled include
+RCU-related kernel warnings during real-time activities, and
+pathologically high latencies.
+</p>
+</dd>
 </dl></div>
 </div>
 <div class="sect2">
@@ -1438,7 +1452,7 @@ rebuilding the kernel.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-08 11:36:19 CEST
+Last updated 2014-08-08 18:39:47 CEST
 </div>
 </div>
 </body>

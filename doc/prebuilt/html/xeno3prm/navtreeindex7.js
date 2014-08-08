@@ -1,5 +1,6 @@
 var NAVTREEINDEX7 =
 {
+"sched-tp_8h_source.html":[4,0,0,2,1,21],
 "sched-weak_8h_source.html":[4,0,0,2,1,22],
 "schedparam_8h_source.html":[4,0,0,2,1,24],
 "schedqueue_8h_source.html":[4,0,0,2,1,25],
@@ -248,6 +249,5 @@ var NAVTREEINDEX7 =
 "structxnvfile__regular__ops.html#aeb55d4c32cc11813068a0fc055996462":[2,1,0,16,1,2],
 "structxnvfile__rev__tag.html":[2,1,0,16,4],
 "structxnvfile__rev__tag.html#aa15b64f33679db24160d3c893268437e":[2,1,0,16,4,0],
-"structxnvfile__snapshot.html":[2,1,0,16,5],
-"structxnvfile__snapshot__iterator.html":[2,1,0,16,6]
+"structxnvfile__snapshot.html":[2,1,0,16,5]
 };

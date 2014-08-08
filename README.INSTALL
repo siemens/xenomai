@@ -453,7 +453,7 @@ You may override the default root of the registry hierarchy by using the
     Due to GCC bugs regarding this feature with some release,architecture
     combinations, whether TLS is turned on by default is a per-architecture
     decision. Currently, this feature is enabled for x86 and powerpc by
-    default, other architectures will require --enable-tls to be passed to the
+    default, other architectures will require --enable-tls to be passed to the 
     configure script explicitly.
 
     Unless --enable-dlopen-libs is present, the initial-exec TLS model is
@@ -529,24 +529,22 @@ You may override the default root of the registry hierarchy by using the
 Cobalt-specific configuration options
 
         NAME                            DESCRIPTION                    DEFAULT
-                                                                         ^[a]
 
 --enable-x86-vsyscall  Use the x86/vsyscall interface for issuing      enabled
                        syscalls. If disabled, the legacy 0x80 vector
                        will be used. Turning on this option requires
                        NPTL.
 
---enable-arm-tsc       Enable ARM TSC emulation. ^[b]                  kuser
+--enable-arm-tsc       Enable ARM TSC emulation. ^[a]                  kuser
 
 --enable-arm-quirks    Enable quirks for specific ARM SOCs Currently   disabled
                        sa1100 and xscale3 are supported.
 
-^[a] Each option enabled by default can be forcibly disabled by passing
---disable-<option> to the configure script.
-
-^[b] In the unusual situation where Xenomai does not support the kuser generic
+^[a] In the unusual situation where Xenomai does not support the kuser generic
 emulation for the target SOC, use this option to specify another tsc emulation
 method. See --help for a list of valid values.
+
+^[1]
 
 
 5.3. Cross-compilation
@@ -800,4 +798,10 @@ If you plan to port an existing application based on Xenomai 2.x to Xenomai
 
 3.x, you should have a look at this migration guide.
 ----------------------------------------------------
+
+
+-------------------------------------------------------------------------------
+
+^[1] Each option enabled by default can be forcibly disabled by passing
+--disable-<option> to the configure script
 

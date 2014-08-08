@@ -33,6 +33,14 @@ sleep states causes the timers used by Xenomai to stop functioning.
 
 CONFIG_KGDB:: This option should not be enabled, except with x86.
 
+CONFIG_CONTEXT_TRACKING_FORCE:: This option which appeared in kernel
+3.8 is forced off by I-pipe patches since 3.14 onward, as it is
+incompatible with interrupt pipelining, and has no upside for regular
+users. However, you have to manually disable it for older kernels when
+present. Common effects observed with this feature enabled include
+RCU-related kernel warnings during real-time activities, and
+pathologically high latencies.
+
 === Kernel hangs after "Uncompressing Linux... done, booting the kernel."
 
 This means that the kernel crashes before the console is enabled. You

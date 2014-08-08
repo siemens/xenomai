@@ -1196,7 +1196,7 @@ allows debugging memory-related issues with the help of
         A number of debug assertion statements are present into the
         Xenomai libraries, checking the internal consistency of the
         runtime system dynamically (see <em>man assert(3)</em>). Passing
-        <code>--disable-assert</code> to the configure script disables built-in
+        <code>--disable-assert</code> to the <em>configure</em> script disables built-in
         assertions unconditionally. By default, assertions are enabled
         in partial or full debug modes, disabled otherwise.
 </p>
@@ -1324,7 +1324,7 @@ release,architecture combinations, whether TLS is turned on by
 default is a per-architecture decision. Currently, this
 feature is enabled for x86 and powerpc by default, other
 architectures will require <code>--enable-tls</code> to be passed to the
-configure script explicitly.</p></div>
+<em>configure</em> script explicitly.</p></div>
 <div class="paragraph"><p>Unless <code>--enable-dlopen-libs</code> is present, the <em>initial-exec</em>
 TLS model is selected.</p></div>
 <div class="paragraph"><p>When TLS is disabled, POSIX&#8217;s thread-specific data management
@@ -1466,8 +1466,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <th align="center" valign="top">NAME              </th>
 <th align="center" valign="top">DESCRIPTION                    </th>
-<th align="center" valign="top">DEFAULT
-<span class="footnote" id="_footnote_disable"><br />[Each option enabled by default can be forcibly disabled by passing <code>--disable-&lt;option&gt;</code> to the configure script.]<br /></span></th>
+<th align="center" valign="top">DEFAULT</th>
 </tr>
 </thead>
 <tbody>
@@ -1502,16 +1501,17 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
+<div class="paragraph"><p><span class="footnote" id="_footnote_disable"><br />[Each option enabled by default can be forcibly disabled by passing <code>--disable-&lt;option&gt;</code> to the <em>configure</em> script]<br /></span></p></div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_cross_compilation">5.3. Cross-compilation</h3>
 <div class="paragraph"><p>In order to cross-compile the Xenomai libraries and programs, you will
-need to pass a <code>--host</code> and <code>--build</code> option to the configure
+need to pass a <code>--host</code> and <code>--build</code> option to the <em>configure</em>
 script. The <code>--host</code> option allow to select the architecture for which
 the libraries and programs are built. The <code>--build</code> option allows to
 choose the architecture on which the compilation tools are run,
-i.e. the system running the configure script.</p></div>
+i.e. the system running the <em>configure</em> script.</p></div>
 <div class="paragraph"><p>Since cross-compiling requires specific tools, such tools are
 generally prefixed with the host architecture name; for example, a
 compiler for the PowerPC architecture may be named
@@ -1591,7 +1591,7 @@ path to a directory that will hold the installed file
 <img src="../asciidoc-icons/caution.png" alt="Caution" />
 </td>
 <td class="content">In the examples below, make sure to add <code>--enable-smp</code> to the
-configure script options if building for a SMP-enabled kernel.</td>
+<em>configure</em> script options if building for a SMP-enabled kernel.</td>
 </tr></table>
 </div>
 <div class="sect2">
@@ -1869,7 +1869,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-08 11:36:19 CEST
+Last updated 2014-08-08 18:39:47 CEST
 </div>
 </div>
 </body>
