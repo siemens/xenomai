@@ -35,9 +35,9 @@ var NAVTREEINDEX =
 "group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95",
 "group__rtdm__can.html#gab46d1dddb458203ca07e0c351275c549",
 "group__rtdm__util.html#ga0af76dc0e9718b977c9c5cf3227bc568",
-"powerpc_2include_2asm_2xenomai_2calibration_8h_source.html",
-"sem__heap_8h_source.html",
-"structxnvfile__snapshot__iterator.html#a84d702d0ea1489dca8b4e86e06a856a0"
+"nios2_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html",
+"sched-weak_8h_source.html",
+"structxnvfile__snapshot__iterator.html#a0c4b28f5a183309699984d859dca9dca"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

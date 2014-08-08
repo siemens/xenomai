@@ -1300,6 +1300,27 @@ interrupts is most commonly done from driver initialization/cleanup
 context already, the Cobalt core has simply inherited those
 requirements from the Linux kernel.</p></div>
 </div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+The leading <em>user_info</em> argument to rtdm_munmap() has been
+  removed.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>With the introduction of RTDM file descriptors (see below) replacing
+all <em>user_info</em> context pointers, this argument has become irrelevant,
+since this operation is not related to any file descriptor, but rather
+to the current address space.</p></div>
+</div></div>
+<div class="paragraph"><p>The new prototype for this routine is therefore</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>int rtdm_munmap(void *ptr, size_t len);</code></pre>
+</div></div>
 </div>
 <div class="sect2">
 <h3 id="_file_descriptors">5.3. File descriptors</h3>
@@ -2425,7 +2446,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-07 16:39:31 CEST
+Last updated 2014-08-08 11:36:19 CEST
 </div>
 </div>
 </body>

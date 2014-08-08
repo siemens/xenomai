@@ -1,5 +1,9 @@
 var NAVTREEINDEX7 =
 {
+"sched-weak_8h_source.html":[4,0,0,2,1,22],
+"schedparam_8h_source.html":[4,0,0,2,1,24],
+"schedqueue_8h_source.html":[4,0,0,2,1,25],
+"scope_8h_source.html":[4,0,0,1,8],
 "sem__heap_8h_source.html":[4,0,2,2,4],
 "semaphore_8h_source.html":[4,0,0,2,9],
 "semobj_8h_source.html":[4,0,0,3,9],
@@ -245,9 +249,5 @@ var NAVTREEINDEX7 =
 "structxnvfile__rev__tag.html":[2,1,0,16,4],
 "structxnvfile__rev__tag.html#aa15b64f33679db24160d3c893268437e":[2,1,0,16,4,0],
 "structxnvfile__snapshot.html":[2,1,0,16,5],
-"structxnvfile__snapshot__iterator.html":[2,1,0,16,6],
-"structxnvfile__snapshot__iterator.html#a0c4b28f5a183309699984d859dca9dca":[2,1,0,16,6,1],
-"structxnvfile__snapshot__iterator.html#a3fb6b2e509206595af45a84926479b5f":[2,1,0,16,6,5],
-"structxnvfile__snapshot__iterator.html#a62573366edd906816759fbdd16930522":[2,1,0,16,6,2],
-"structxnvfile__snapshot__iterator.html#a7b01ca175907f4159dfb5201be85df0a":[2,1,0,16,6,3]
+"structxnvfile__snapshot__iterator.html":[2,1,0,16,6]
 };

@@ -21,8 +21,12 @@ var NAVTREEINDEX5 =
 "group__sched__quota.html":[2,1,0,10,0],
 "group__smokey.html":[2,2],
 "group__trank.html":[2,6],
-"group__trank.html#ga1f18e6e7dd5342463ca8546ef3a36c34":[2,6,1],
-"group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473":[2,6,0],
+"group__trank.html#ga1f18e6e7dd5342463ca8546ef3a36c34":[2,6,4],
+"group__trank.html#ga2d7b013823582c3374f6cbd7aabf155b":[2,6,1],
+"group__trank.html#ga6c0caadae03541db8a46751d290c0d76":[2,6,5],
+"group__trank.html#ga77e5158909dc88b778fd1d22c4aa2597":[2,6,2],
+"group__trank.html#ga7b0812d15689d60089ea2364495a4df8":[2,6,0],
+"group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473":[2,6,3],
 "group__vxworks.html":[2,4],
 "hash_8h_source.html":[4,0,0,1,3],
 "heapobj_8h_source.html":[4,0,0,3,4],
@@ -245,9 +249,5 @@ var NAVTREEINDEX5 =
 "ni__stc_8h_source.html":[4,0,1,1,0,1,2],
 "ni__tio_8h_source.html":[4,0,1,1,0,1,3],
 "nios2_2include_2asm_2xenomai_2calibration_8h_source.html":[4,0,1,0,0,2,0,0,0,1],
-"nios2_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,3],
-"nios2_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,0,2],
-"obstack_8h_source.html":[4,0,0,1,6],
-"pages.html":[],
-"pci__ids_8h_source.html":[4,0,1,0,1,0,0,2]
+"nios2_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,3]
 };

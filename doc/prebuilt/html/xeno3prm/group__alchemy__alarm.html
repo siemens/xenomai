@@ -307,8 +307,9 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>alarm</em> is not a valid alarm descriptor.</li>
+<li>-EPERM is returned if this service was called from an invalid context.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Each of the initial <em>value</em> and <em>interval</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 </div>

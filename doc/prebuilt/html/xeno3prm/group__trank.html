@@ -91,6 +91,18 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <p>A set of wrappers and services easing the transition from Xenomai 2.x to 3.x.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="memitem:ga2d7b013823582c3374f6cbd7aabf155b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga2d7b013823582c3374f6cbd7aabf155b">COMPAT__rt_task_create</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode)</td></tr>
+<tr class="memdesc:ga2d7b013823582c3374f6cbd7aabf155b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a real-time task (compatibility service).  <a href="#ga2d7b013823582c3374f6cbd7aabf155b">More...</a><br/></td></tr>
+<tr class="separator:ga2d7b013823582c3374f6cbd7aabf155b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga77e5158909dc88b778fd1d22c4aa2597"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga77e5158909dc88b778fd1d22c4aa2597">COMPAT__rt_task_set_periodic</a> (RT_TASK *task, RTIME idate, RTIME period)</td></tr>
+<tr class="memdesc:ga77e5158909dc88b778fd1d22c4aa2597"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a real-time task periodic (compatibility service).  <a href="#ga77e5158909dc88b778fd1d22c4aa2597">More...</a><br/></td></tr>
+<tr class="separator:ga77e5158909dc88b778fd1d22c4aa2597"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7b0812d15689d60089ea2364495a4df8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga7b0812d15689d60089ea2364495a4df8">COMPAT__rt_alarm_create</a> (RT_ALARM *alarm, const char *name)</td></tr>
+<tr class="memdesc:ga7b0812d15689d60089ea2364495a4df8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an alarm object (compatibility service).  <a href="#ga7b0812d15689d60089ea2364495a4df8">More...</a><br/></td></tr>
+<tr class="separator:ga7b0812d15689d60089ea2364495a4df8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6c0caadae03541db8a46751d290c0d76"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a> (RT_ALARM *alarm)</td></tr>
+<tr class="memdesc:ga6c0caadae03541db8a46751d290c0d76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for the next alarm shot (compatibility service).  <a href="#ga6c0caadae03541db8a46751d290c0d76">More...</a><br/></td></tr>
+<tr class="separator:ga6c0caadae03541db8a46751d290c0d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gafe8deaa3c89e0a07e59f0e58f9ec1473"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np</a> (pthread_t thread, struct timespec *starttp, struct timespec *periodtp)</td></tr>
 <tr class="memdesc:gafe8deaa3c89e0a07e59f0e58f9ec1473"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a thread periodic (compatibility service).  <a href="#gafe8deaa3c89e0a07e59f0e58f9ec1473">More...</a><br/></td></tr>
 <tr class="separator:gafe8deaa3c89e0a07e59f0e58f9ec1473"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -102,6 +114,190 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <p>A set of wrappers and services easing the transition from Xenomai 2.x to 3.x. </p>
 <p>This interface provides a source compatibility layer for building applications based on the Xenomai 2.x <em>posix</em> and <em>native</em> APIs over Xenomai 3.x. </p>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ga7b0812d15689d60089ea2364495a4df8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int COMPAT__rt_alarm_create </td>
+          <td>(</td>
+          <td class="paramtype">RT_ALARM *&#160;</td>
+          <td class="paramname"><em>alarm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create an alarm object (compatibility service). </p>
+<p>This routine creates an object triggering an alarm routine at a specified time in the future. Alarms can be periodic or oneshot, depending on the reload interval value passed to <a class="el" href="group__alchemy__alarm.html#ga0d9cb8ae623be0f7224ac47b10a0b542" title="Start an alarm. ">rt_alarm_start()</a>. A task can wait for timeouts using the <a class="el" href="group__trank.html#ga6c0caadae03541db8a46751d290c0d76" title="Wait for the next alarm shot (compatibility service). ">rt_alarm_wait()</a> service.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">alarm</td><td>The address of an alarm descriptor which can be later used to identify uniquely the created object, upon success of this call.</td></tr>
+    <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the alarm. When non-NULL and non-empty, a copy of this string is used for indexing the created alarm into the object registry.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-ENOMEM is returned if the system fails to get memory from the local pool in order to create the alarm.</li>
+<li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered alarm.</li>
+<li>-EPERM is returned if this service was called from an asynchronous context.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Alarms are process-private objects and thus cannot be shared by multiple processes, even if they belong to the same Xenomai session.</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000007">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga2d7b013823582c3374f6cbd7aabf155b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int COMPAT__rt_task_create </td>
+          <td>(</td>
+          <td class="paramtype">RT_TASK *&#160;</td>
+          <td class="paramname"><em>task</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>stksize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>prio</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>mode</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a real-time task (compatibility service). </p>
+<p>This service creates a task with access to the full set of Xenomai real-time services.</p>
+<p>This service creates a task with access to the full set of Xenomai real-time services. If <em>prio</em> is non-zero, the new task belongs to Xenomai's real-time FIFO scheduling class, aka SCHED_FIFO. If <em>prio</em> is zero, the task belongs to the regular SCHED_OTHER class.</p>
+<p>Creating tasks with zero priority is useful for running non real-time processes which may invoke blocking real-time services, such as pending on a semaphore, reading from a message queue or a buffer, and so on.</p>
+<p>Once created, the task is left dormant until it is actually started by <a class="el" href="group__alchemy__task.html#ga3ee3863a29497e2181d49d5b3ecfd855" title="Start a real-time task. ">rt_task_start()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">task</td><td>The address of a task descriptor which can be later used to identify uniquely the created object, upon success of this call.</td></tr>
+    <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, a copy of this string is used for indexing the created task into the object registry.</td></tr>
+    <tr><td class="paramname">stksize</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a system-dependent default size will be substituted.</td></tr>
+    <tr><td class="paramname">prio</td><td>The base priority of the new task. This value must be in the [0 .. 99] range, where 0 is the lowest effective priority.</td></tr>
+    <tr><td class="paramname">mode</td><td>The task creation mode. The following flags can be OR'ed into this bitmask:</td></tr>
+  </table>
+  </dd>
+</dl>
+<ul>
+<li>T_FPU allows the task to use the FPU whenever available on the platform. This flag may be omitted, as it is automatically set when a FPU is present on the platform, cleared otherwise.</li>
+<li>T_SUSP causes the task to start in suspended mode. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__alchemy__task.html#ga1fab1aa24ef6f199546fd9669ae711be" title="Resume a real-time task. ">rt_task_resume()</a> service for its execution to actually begin.</li>
+<li>T_CPU(cpuid) makes the new task affine to CPU # <b>cpuid</b>. CPU identifiers range from 0 to 7 (inclusive).</li>
+<li>T_JOINABLE allows another task to wait on the termination of the new task. <a class="el" href="group__alchemy__task.html#ga8c77d57638578a126812e29429f61fe7" title="Wait on the termination of a real-time task. ">rt_task_join()</a> shall be called for this task to clean up any resources after its termination.</li>
+</ul>
+<p>Passing T_FPU|T_CPU(1) in the <em>mode</em> parameter thus creates a task with FPU support enabled and which will be affine to CPU #1.</p>
+<ul>
+<li>When running over the Cobalt core, T_WARNSW causes the SIGDEBUG signal to be sent to the current task whenever it switches to the secondary mode. This feature is useful to detect unwanted migrations to the Linux domain. This flag has no effect over the Mercury core.</li>
+</ul>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if either <em>prio</em>, <em>mode</em> or <em>stksize</em> are invalid.</li>
+<li>-ENOMEM is returned if the system fails to get memory from the main heap in order to create the task.</li>
+<li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered task.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section user"><dt>Side effects</dt><dd></dd></dl>
+<ul>
+<li>calling <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a> causes SCHED_FIFO tasks to switch to secondary mode.</li>
+<li>members of Xenomai's SCHED_FIFO class running in the primary domain have utmost priority over all Linux activities in the system, including Linux interrupt handlers.</li>
+</ul>
+<dl class="section note"><dt>Note</dt><dd>Tasks can be referred to from multiple processes which all belong to the same Xenomai session.</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga77e5158909dc88b778fd1d22c4aa2597"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int COMPAT__rt_task_set_periodic </td>
+          <td>(</td>
+          <td class="paramtype">RT_TASK *&#160;</td>
+          <td class="paramname"><em>task</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">RTIME&#160;</td>
+          <td class="paramname"><em>idate</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">RTIME&#160;</td>
+          <td class="paramname"><em>period</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Make a real-time task periodic (compatibility service). </p>
+<p>Make a task periodic by programing its first release point and its period in the processor time line. <em>task</em> should then call <a class="el" href="group__alchemy__task.html#ga1645d3a072ef3cefeed3bcbb27dcf108" title="Wait for the next periodic release point. ">rt_task_wait_period()</a> to sleep until the next periodic release point in the processor timeline is reached.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">task</td><td>The task descriptor. If <em>task</em> is NULL, the current task is made periodic. <em>task</em> must belong the current process.</td></tr>
+    <tr><td class="paramname">idate</td><td>The initial (absolute) date of the first release point, expressed in clock ticks (see note). If <em>idate</em> is equal to TM_NOW, the current system date is used. Otherwise, if <em>task</em> is NULL or equal to <em><a class="el" href="group__alchemy__task.html#ga8a17935f049171be2ac8945abc68da6a" title="Retrieve the current task descriptor. ">rt_task_self()</a></em>, the caller is delayed until <em>idate</em> has elapsed.</td></tr>
+    <tr><td class="paramname">period</td><td>The period of the task, expressed in clock ticks (see note). Passing TM_INFINITE stops the task's periodic timer if enabled, then returns successfully.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>task</em> is NULL but the caller is not a Xenomai task, or if <em>task</em> is non-NULL but not a valid task descriptor.</li>
+<li>-ETIMEDOUT is returned if <em>idate</em> is different from TM_INFINITE and represents a date in the past.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd>
+<dd>
+Unlike the original Xenomai 2.x call, this emulation delays the caller until <em>idate</em> has elapsed only if <em>task</em> is NULL or equal to <a class="el" href="group__alchemy__task.html#ga8a17935f049171be2ac8945abc68da6a" title="Retrieve the current task descriptor. ">rt_task_self()</a>.</dd></dl>
+<dl class="section user"><dt>Side effects</dt><dd>Over Cobalt, -EINVAL is returned if <em>period</em> is different from TM_INFINITE but shorter than the user scheduling latency value for the target system, as displayed by /proc/xenomai/latency.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The <em>idate</em> and <em>period</em> values are interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond).</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="gafe8deaa3c89e0a07e59f0e58f9ec1473"></a>
 <div class="memitem">
 <div class="memproto">
@@ -152,7 +348,7 @@ an error number if:<ul>
 </ul>
 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Unlike the original Xenomai 2.x call, this emulation does not delay the caller waiting for the first periodic release point. In addition, <em>thread</em> must be equal to pthread_self().</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create()</a>, and <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime()</a>.</p>
 
@@ -188,7 +384,35 @@ an error number if:<ul>
 <li>EPERM is returned if this service was called from an invalid context.</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>If the current release point has already been reached at the time of the call, the current thread immediately returns from this service with no delay.</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6c0caadae03541db8a46751d290c0d76"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rt_alarm_wait </td>
+          <td>(</td>
+          <td class="paramtype">RT_ALARM *&#160;</td>
+          <td class="paramname"><em>alarm</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Wait for the next alarm shot (compatibility service). </p>
+<p>This service allows the current task to suspend execution until the specified alarm triggers. The priority of the current task is raised above all other tasks - except those also undergoing an alarm wait.</p>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success, after the alarm timed out. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>alarm</em> is not a valid alarm descriptor.</li>
+<li>-EPERM is returned if this service was called from an invalid context.</li>
+<li>-EINTR is returned if <a class="el" href="group__alchemy__task.html#ga770281eeca009c0a08a7c4a9fd849ac1" title="Unblock a real-time task. ">rt_task_unblock()</a> was called for the current task before the request is satisfied.</li>
+<li>-EIDRM is returned if <em>alarm</em> is deleted while the caller was sleeping on it. In such a case, <em>alarm</em> is no more valid upon return of this service.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a></dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000008">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit.</dd></dl>
 
 </div>
 </div>

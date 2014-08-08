@@ -466,6 +466,23 @@ context already, the Cobalt core has simply inherited those
 requirements from the Linux kernel.
 *******************************************************************
 
+- The leading _user_info_ argument to rtdm_munmap() has been
+  removed.
+
+.Rationale
+*********************************************************************
+With the introduction of RTDM file descriptors (see below) replacing
+all _user_info_ context pointers, this argument has become irrelevant,
+since this operation is not related to any file descriptor, but rather
+to the current address space.
+*********************************************************************
+
+The new prototype for this routine is therefore
+
+---------------------------------------
+int rtdm_munmap(void *ptr, size_t len);
+---------------------------------------
+
 === File descriptors ===
 
 Xenomai 3 introduces a file descriptor abstraction for RTDM

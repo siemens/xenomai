@@ -230,7 +230,7 @@ Functions</h2></td></tr>
 
 <p>Task mode bits. </p>
 
-<p>Referenced by <a class="el" href="group__alchemy__task.html#ga915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode()</a>, and <a class="el" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>, <a class="el" href="group__alchemy__task.html#ga915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode()</a>, and <a class="el" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow()</a>.</p>
 
 </div>
 </div>
@@ -260,7 +260,7 @@ Functions</h2></td></tr>
 
 <p>Cobalt only, nop over Mercury. </p>
 
-<p>Referenced by <a class="el" href="group__alchemy__task.html#ga915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode()</a>, and <a class="el" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>, <a class="el" href="group__alchemy__task.html#ga915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode()</a>, and <a class="el" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow()</a>.</p>
 
 </div>
 </div>
@@ -397,7 +397,7 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>Tasks can be referred to from multiple processes which all belong to the same Xenomai session. </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a17">cross-link.c</a>.</dd>
 </dl>
-<p>References <a class="el" href="group__alchemy__task.html#gab6e0d411830710e8cc82d77b9df19510">rt_task_delete()</a>, <a class="el" href="group__alchemy__task.html#gad92ea8c9fed3c5a3789538c9c8362c28">rt_task_set_affinity()</a>, and <a class="el" href="group__alchemy__task.html#ga926a4b10e3631f76c5f38910e6eea24c">rt_task_suspend()</a>.</p>
+<p>References <a class="el" href="group__alchemy__task.html#ga2ac6cf9677bae1012ecbcb6037d14fcb">T_LOCK</a>, and <a class="el" href="group__alchemy__task.html#ga725324cb26d8b5835c0818acb738bfe6">T_WARNSW</a>.</p>
 
 <p>Referenced by <a class="el" href="group__alchemy__task.html#gaa4f9fa3cb09d7f774ebff7585994dffb">rt_task_spawn()</a>.</p>
 
@@ -435,8 +435,6 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL. </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a5">cross-link.c</a>.</dd>
 </dl>
-<p>Referenced by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="ga53bad6acf5496f8008e594954507dce8"></a>
@@ -813,8 +811,6 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>The address of the task descriptor referring to the current Alchemy task is returned upon success, or NULL if not called from a valid Alchemy task context.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only</a> </dd></dl>
 
-<p>Referenced by <a class="el" href="group__alchemy__task.html#gababee94264156693cd4f5b9b70d3c5a1">rt_task_set_periodic()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="ga99a89c21c9866e2784860e100a444b49"></a>
@@ -1064,8 +1060,6 @@ Functions</h2></td></tr>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL. </dd></dl>
 
-<p>Referenced by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="ga915e7edfb0aaddb643794d7abc7093bf"></a>
@@ -1183,7 +1177,7 @@ Forcing the task mode using the T_CONFORMING bit from user code is almost always
 <dl class="section note"><dt>Note</dt><dd>The <em>idate</em> and <em>period</em> values are interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a6">cross-link.c</a>.</dd>
 </dl>
-<p>References <a class="el" href="group__alchemy__task.html#ga8a17935f049171be2ac8945abc68da6a">rt_task_self()</a>, and <a class="el" href="group__alchemy__task.html#ga1645d3a072ef3cefeed3bcbb27dcf108">rt_task_wait_period()</a>.</p>
+<p>References <a class="el" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime()</a>.</p>
 
 </div>
 </div>
@@ -1577,8 +1571,6 @@ The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock res
 <dd>
 Blocked and suspended task states are cumulative. Therefore, suspending a task currently waiting on a synchronization object (e.g. semaphore, queue) holds its execution until it is resumed, despite the awaited resource may have been acquired, or a timeout has elapsed in the meantime. </dd></dl>
 
-<p>Referenced by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="ga2038cbe2350a8e2558330a3f45953865"></a>
@@ -1671,8 +1663,6 @@ Blocked and suspended task states are cumulative. Therefore, suspending a task c
 <dl class="section note"><dt>Note</dt><dd>If the current release point has already been reached at the time of the call, the current task immediately returns from this service with no delay. </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a8">cross-link.c</a>.</dd>
 </dl>
-<p>Referenced by <a class="el" href="group__alchemy__task.html#gababee94264156693cd4f5b9b70d3c5a1">rt_task_set_periodic()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="ga31e44b069b2486c2d2bdfb8a0a3557c8"></a>

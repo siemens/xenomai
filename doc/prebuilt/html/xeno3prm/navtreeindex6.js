@@ -1,5 +1,9 @@
 var NAVTREEINDEX6 =
 {
+"nios2_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,0,2],
+"obstack_8h_source.html":[4,0,0,1,6],
+"pages.html":[],
+"pci__ids_8h_source.html":[4,0,1,0,1,0,0,2],
 "powerpc_2include_2asm_2xenomai_2calibration_8h_source.html":[4,0,1,0,0,3,0,0,0,1],
 "powerpc_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,3,0,0,0,3],
 "powerpc_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,3,0,0,0,0,2],
@@ -245,9 +249,5 @@ var NAVTREEINDEX6 =
 "sched-quota_8h_source.html":[4,0,0,2,1,18],
 "sched-rt_8h_source.html":[4,0,0,2,1,19],
 "sched-sporadic_8h_source.html":[4,0,0,2,1,20],
-"sched-tp_8h_source.html":[4,0,0,2,1,21],
-"sched-weak_8h_source.html":[4,0,0,2,1,22],
-"schedparam_8h_source.html":[4,0,0,2,1,24],
-"schedqueue_8h_source.html":[4,0,0,2,1,25],
-"scope_8h_source.html":[4,0,0,1,8]
+"sched-tp_8h_source.html":[4,0,0,2,1,21]
 };

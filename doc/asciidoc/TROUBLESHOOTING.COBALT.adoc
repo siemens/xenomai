@@ -71,7 +71,7 @@ The most probable reason is that no hardware timer chip is available
 for Xenomai timing operations.
 
 Check that you did not enable some of the conflicting options listed
-in the <<kconf,Kernel configuration>> section.
+in the <<kconf,"Kernel configuration">> section.
 
 With AMD x86_64 CPUs:: You will most likely also see the following
 message:
@@ -150,6 +150,7 @@ more information about this parameter.
 [[vsyscall]]
 === --enable-x86-sep needs NPTL and Linux 2.6.x or higher
 or,
+
 === --enable-x86-vsyscall requires NPTL ...
 
 This message may happen when starting a Xenomai 2.x or 3.x application
@@ -214,20 +215,19 @@ are available from link:installing-xenomai-3-x[this page] for Xenomai
 
 ==== feature mismatch: missing="smp/nosmp"
 
-On some SMP-capable architectures, for kernel-space and user-space
-supports to be compatible, both should be compiled with the same
-setting for SMP.
+On SMP-capable architectures, both kernel and user-space components
+(i.e. Xenomai libraries) must be compiled with the same setting with
+respect to SMP support.
 
-SMP support in kernel-space is enabled with the +CONFIG_SMP+ option.
+SMP support in the kernel is controlled via the +CONFIG_SMP+ option.
+The +--enable-smp+ configuration switch enables this feature for the
+Xenomai libraries (conversely, +--disable-smp+ disables it).
 
-For these architectures, SMP support in user-space is enabled by
-passing +--enable-smp+ to the configure script, and disabled by passing
-+--disable-smp+ (SMP is enabled by default on some platforms).
-
-Other SMP-capable architectures may run userland code built with
-+--enable-smp+ or +--disable-smp+ over the same kernel indifferently, at
-no noticeable performance cost. These architectures never receive such
-SMP-related error.
+[CAUTION]
+Using Xenomai libraries built for a single-processor configuration
+(i.e. +--disable-smp+) over a SMP kernel (i.e. +CONFIG_SMP=y+) is
+*NOT* valid. On the other hand, using Xenomai libraries built with SMP
+support enabled over a single-processor kernel is fine.
 
 === Application-level issues specific to the Xenomai 2.x series
 
@@ -246,7 +246,7 @@ architecture.
 
 This error is specific to the x86 architecture on Xenomai 2.x, for
 pre-Pentium CPUs which do not provide the _sysenter/sysexit_
-instruction pair. See <<vsyscall, "this section">>.
+instruction pair. See <<vsyscall, this section>>.
 
 [NOTE]
 This issue does not affect Xenomai 3.x as the latter does not
@@ -347,8 +347,10 @@ should recompile Xenomai user-space support passing the
 
 ==== hardware tsc is not a fast wrapping one
 or,
+
 ==== kernel/user tsc emulation mismatch
 or,
+
 ==== board/configuration does not allow tsc emulation
 
 See the <<arm-tsc, "ARM tsc emulation issues">> section.
