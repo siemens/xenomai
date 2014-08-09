@@ -84,6 +84,7 @@ typedef int64_t nanosecs_rel_t;
 #define RTDM_CLASS_PROFIBUS		?
 #define ...
 */
+#define RTDM_CLASS_MISC			223
 #define RTDM_CLASS_EXPERIMENTAL		224
 #define RTDM_CLASS_MAX			255
 /** @} RTDM_CLASS_xxx */
