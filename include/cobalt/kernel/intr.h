@@ -19,6 +19,7 @@
 #ifndef _COBALT_KERNEL_INTR_H
 #define _COBALT_KERNEL_INTR_H
 
+#include <linux/spinlock.h>
 #include <cobalt/kernel/stat.h>
 
 /**
@@ -26,20 +27,22 @@
  * @{
  */
 
-/* Possible return values of ISR. */
-#define XN_ISR_NONE	 0x1
-#define XN_ISR_HANDLED	 0x2
-/* Additional bits. */
-#define XN_ISR_PROPAGATE 0x100
-#define XN_ISR_NOENABLE  0x200
-#define XN_ISR_BITMASK	 (~0xff)
+/* Possible return values of a handler. */
+#define XN_IRQ_NONE	 0x1
+#define XN_IRQ_HANDLED	 0x2
+#define XN_IRQ_STATMASK	 (XN_IRQ_NONE|XN_IRQ_HANDLED)
+#define XN_IRQ_PROPAGATE 0x100
+#define XN_IRQ_DISABLE   0x200
 
-/* Creation flags. */
-#define XN_ISR_SHARED	 0x1
-#define XN_ISR_EDGE	 0x2
+/* Init flags. */
+#define XN_IRQTYPE_SHARED  0x1
+#define XN_IRQTYPE_EDGE    0x2
 
-/* Operational flags. */
-#define XN_ISR_ATTACHED	 0x10000
+/* Status bits. */
+#define XN_IRQSTAT_ATTACHED   0
+#define _XN_IRQSTAT_ATTACHED  (1 << XN_IRQSTAT_ATTACHED)
+#define XN_IRQSTAT_DISABLED   1
+#define _XN_IRQSTAT_DISABLED  (1 << XN_IRQSTAT_DISABLED)
 
 struct xnintr;
 struct xnsched;
@@ -49,47 +52,51 @@ typedef int (*xnisr_t)(struct xnintr *intr);
 typedef void (*xniack_t)(unsigned irq, void *arg);
 
 struct xnirqstat {
-	/* !< Number of handled receipts since attachment. */
+	/** Number of handled receipts since attachment. */
 	xnstat_counter_t hits;
-	/* !< Runtime accounting entity */
+	/** Runtime accounting entity */
 	xnstat_exectime_t account;
-	/* !< Accumulated accounting entity */
+	/** Accumulated accounting entity */
 	xnstat_exectime_t sum;
 };
 
 struct xnintr {
 #ifdef CONFIG_XENO_OPT_SHIRQ
-	/* !< Next object in the IRQ-sharing chain. */
+	/** Next object in the IRQ-sharing chain. */
 	struct xnintr *next;
 #endif
-	/* !< Number of consequent unhandled interrupts */
+	/** Number of consequent unhandled interrupts */
 	unsigned int unhandled;
-	/* !< Interrupt service routine. */
+	/** Interrupt service routine. */
 	xnisr_t isr;
-	/* !< User-defined cookie value. */
+	/** User-defined cookie value. */
 	void *cookie;
-	/* !< Creation flags. */
+	/** runtime status */
+	unsigned long status;
+	/** Creation flags. */
 	int flags;
-	/* !< IRQ number. */
+	/** IRQ number. */
 	unsigned int irq;
-	/* !< Interrupt acknowledge routine. */
+	/** Interrupt acknowledge routine. */
 	xniack_t iack;
-	/* !< Symbolic name. */
+	/** Symbolic name. */
 	const char *name;
+	/** Descriptor maintenance lock. */
+	raw_spinlock_t lock;
 #ifdef CONFIG_XENO_OPT_STATS
-	/* !< Statistics. */
+	/** Statistics. */
 	struct xnirqstat *stats;
 #endif
 };
 
 struct xnintr_iterator {
-    int cpu;		/* !< Current CPU in iteration. */
-    unsigned long hits;	/* !< Current hit counter. */
-    xnticks_t exectime_period;	/* !< Used CPU time in current accounting period. */
-    xnticks_t account_period; /* !< Length of accounting period. */
-    xnticks_t exectime_total;	/* !< Overall CPU time consumed. */
-    int list_rev;	/* !< System-wide xnintr list revision (internal use). */
-    struct xnintr *prev;	/* !< Previously visited xnintr object (internal use). */
+    int cpu;		/** Current CPU in iteration. */
+    unsigned long hits;	/** Current hit counter. */
+    xnticks_t exectime_period;	/** Used CPU time in current accounting period. */
+    xnticks_t account_period; /** Length of accounting period. */
+    xnticks_t exectime_total;	/** Overall CPU time consumed. */
+    int list_rev;	/** System-wide xnintr list revision (internal use). */
+    struct xnintr *prev;	/** Previously visited xnintr object (internal use). */
 };
 
 extern struct xnintr nktimer;

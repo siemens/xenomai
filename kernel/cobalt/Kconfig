@@ -382,9 +382,12 @@ config XENO_OPT_DEBUG_LOCKING
 
 	This option activates runtime assertions, and measurements of
 	spinlocks spinning time and duration in the Cobalt kernel. It
-	normally has a low overhead, and helps finding latency spots
-	due to interrupt masked sections. Statistics about the longest
-	masked section can be found in /proc/xenomai/lock.
+	helps finding latency spots due to interrupt masked
+	sections. Statistics about the longest masked section can be
+	found in /proc/xenomai/lock.
+
+	This option may induce a measurable overhead on low end
+	machines.
 
 config XENO_OPT_DEBUG_SYNCH_RELAX
 	bool "Detect mutexes held in relaxed sections"

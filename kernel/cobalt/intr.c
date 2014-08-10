@@ -229,36 +229,77 @@ void xnintr_core_clock_handler(void)
 		xnintr_host_tick(sched);
 }
 
+struct irqdisable_work {
+	struct ipipe_work_header work; /* Must be first. */
+	int irq;
+};
+
+static void lostage_irqdisable_line(struct ipipe_work_header *work)
+{
+	struct irqdisable_work *rq;
+
+	rq = container_of(work, struct irqdisable_work, work);
+	ipipe_disable_irq(rq->irq);
+}
+
+static void disable_irq_line(int irq)
+{
+	struct irqdisable_work diswork = {
+		.work = {
+			.size = sizeof(diswork),
+			.handler = lostage_irqdisable_line,
+		},
+		.irq = irq,
+	};
+
+	ipipe_post_work_root(&diswork, work);
+}
+
 /* Optional support for shared interrupts. */
 
 #ifdef CONFIG_XENO_OPT_SHIRQ
 
-struct xnintr_irq {
+struct xnintr_vector {
 	DECLARE_XNLOCK(lock);
 	struct xnintr *handlers;
 	int unhandled;
 } ____cacheline_aligned_in_smp;
 
-static struct xnintr_irq xnirqs[IPIPE_NR_IRQS];
+static struct xnintr_vector vectors[IPIPE_NR_IRQS];
 
-static inline struct xnintr *xnintr_shirq_first(unsigned int irq)
+static inline struct xnintr *xnintr_vec_first(unsigned int irq)
 {
-	return xnirqs[irq].handlers;
+	return vectors[irq].handlers;
 }
 
-static inline struct xnintr *xnintr_shirq_next(struct xnintr *prev)
+static inline struct xnintr *xnintr_vec_next(struct xnintr *prev)
 {
 	return prev->next;
+}
+
+static void disable_shared_irq_line(struct xnintr_vector *vec)
+{
+	int irq = vec - vectors;
+	struct xnintr *intr;
+
+	xnlock_get(&vec->lock);
+	intr = vec->handlers;
+	while (intr) {
+		set_bit(XN_IRQSTAT_DISABLED, &intr->status);
+		intr = intr->next;
+	}
+	xnlock_put(&vec->lock);
+	disable_irq_line(irq);
 }
 
 /*
  * Low-level interrupt handler dispatching the user-defined ISRs for
  * shared interrupts -- Called with interrupts off.
  */
-static void xnintr_shirq_handler(unsigned int irq, void *cookie)
+static void xnintr_vec_handler(unsigned int irq, void *cookie)
 {
 	struct xnsched *sched = xnsched_current();
-	struct xnintr_irq *shirq = &xnirqs[irq];
+	struct xnintr_vector *vec = vectors + irq;
 	xnstat_exectime_t *prev;
 	struct xnintr *intr;
 	xnticks_t start;
@@ -271,41 +312,46 @@ static void xnintr_shirq_handler(unsigned int irq, void *cookie)
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
 
-	xnlock_get(&shirq->lock);
-	intr = shirq->handlers;
+	xnlock_get(&vec->lock);
+	intr = vec->handlers;
+	if (unlikely(test_bit(XN_IRQSTAT_DISABLED, &intr->status))) {
+		/* irqdisable_work is on its way, ignore. */
+		xnlock_put(&vec->lock);
+		goto out;
+	}
 
 	while (intr) {
 		/*
-		 * NOTE: We assume that no CPU migration will occur
+		 * NOTE: We assume that no CPU migration can occur
 		 * while running the interrupt service routine.
 		 */
 		ret = intr->isr(intr);
 		s |= ret;
-
-		if (ret & XN_ISR_HANDLED) {
+		if (ret & XN_IRQ_HANDLED) {
 			inc_irqstats(intr, sched, start);
 			start = xnstat_exectime_now();
 		}
-
 		intr = intr->next;
 	}
 
-	xnlock_put(&shirq->lock);
+	xnlock_put(&vec->lock);
 
-	if (unlikely(s == XN_ISR_NONE)) {
-		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
+	if (unlikely(s & XN_IRQ_NONE)) {
+		if (++vec->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
-			s |= XN_ISR_NOENABLE;
+			s |= XN_IRQ_DISABLE;
 		}
 	} else
-		shirq->unhandled = 0;
+		vec->unhandled = 0;
 
-	if (s & XN_ISR_PROPAGATE)
+	if (s & XN_IRQ_PROPAGATE)
 		ipipe_post_irq_root(irq);
-	else if (!(s & XN_ISR_NOENABLE))
+	else if (s & XN_IRQ_DISABLE)
+		disable_shared_irq_line(vec);
+	else
 		ipipe_end_irq(irq);
-
+out:
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
@@ -320,13 +366,13 @@ static void xnintr_shirq_handler(unsigned int irq, void *cookie)
  * Low-level interrupt handler dispatching the user-defined ISRs for
  * shared edge-triggered interrupts -- Called with interrupts off.
  */
-static void xnintr_edge_shirq_handler(unsigned int irq, void *cookie)
+static void xnintr_edge_vec_handler(unsigned int irq, void *cookie)
 {
 	const int MAX_EDGEIRQ_COUNTER = 128;
 	struct xnsched *sched = xnsched_current();
-	struct xnintr_irq *shirq = &xnirqs[irq];
-	int s = 0, counter = 0, ret, code;
+	struct xnintr_vector *vec = vectors + irq;
 	struct xnintr *intr, *end = NULL;
+	int s = 0, counter = 0, ret;
 	xnstat_exectime_t *prev;
 	xnticks_t start;
 
@@ -337,8 +383,13 @@ static void xnintr_edge_shirq_handler(unsigned int irq, void *cookie)
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
 
-	xnlock_get(&shirq->lock);
-	intr = shirq->handlers;
+	xnlock_get(&vec->lock);
+	intr = vec->handlers;
+	if (unlikely(test_bit(XN_IRQSTAT_DISABLED, &intr->status))) {
+		/* irqdisable_work is on its way, ignore. */
+		xnlock_put(&vec->lock);
+		goto out;
+	}
 
 	while (intr != end) {
 		switch_irqstats(intr, sched);
@@ -347,10 +398,9 @@ static void xnintr_edge_shirq_handler(unsigned int irq, void *cookie)
 		 * while running the interrupt service routine.
 		 */
 		ret = intr->isr(intr);
-		code = ret & ~XN_ISR_BITMASK;
 		s |= ret;
 
-		if (code == XN_ISR_HANDLED) {
+		if (ret & XN_IRQ_HANDLED) {
 			end = NULL;
 			inc_irqstats(intr, sched, start);
 			start = xnstat_exectime_now();
@@ -360,30 +410,33 @@ static void xnintr_edge_shirq_handler(unsigned int irq, void *cookie)
 		if (counter++ > MAX_EDGEIRQ_COUNTER)
 			break;
 
-		if (!(intr = intr->next))
-			intr = shirq->handlers;
+		intr = intr->next;
+		if (intr  == NULL)
+			intr = vec->handlers;
 	}
 
-	xnlock_put(&shirq->lock);
+	xnlock_put(&vec->lock);
 
 	if (counter > MAX_EDGEIRQ_COUNTER)
 		printk(XENO_ERR "%s: failed to get the IRQ%d line free\n",
 		       __FUNCTION__, irq);
 
-	if (unlikely(s == XN_ISR_NONE)) {
-		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
+	if (unlikely(s & XN_IRQ_NONE)) {
+		if (++vec->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
-			s |= XN_ISR_NOENABLE;
+			s |= XN_IRQ_DISABLE;
 		}
 	} else
-		shirq->unhandled = 0;
+		vec->unhandled = 0;
 
-	if (s & XN_ISR_PROPAGATE)
+	if (s & XN_IRQ_PROPAGATE)
 		ipipe_post_irq_root(irq);
-	else if (!(s & XN_ISR_NOENABLE))
+	else if (s & XN_IRQ_DISABLE)
+		disable_shared_irq_line(vec);
+	else
 		ipipe_end_irq(irq);
-
+out:
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
@@ -396,46 +449,52 @@ static void xnintr_edge_shirq_handler(unsigned int irq, void *cookie)
 
 static inline int xnintr_irq_attach(struct xnintr *intr)
 {
-	struct xnintr_irq *shirq = &xnirqs[intr->irq];
-	struct xnintr *prev, **p = &shirq->handlers;
+	struct xnintr_vector *vec = vectors + intr->irq;
+	struct xnintr *prev, **p = &vec->handlers;
 	int ret;
 
-	if ((prev = *p) != NULL) {
+	prev = *p;
+	if (prev) {
 		/* Check on whether the shared mode is allowed. */
-		if (!(prev->flags & intr->flags & XN_ISR_SHARED) ||
+		if ((prev->flags & intr->flags & XN_IRQTYPE_SHARED) == 0 ||
 		    (prev->iack != intr->iack)
-		    || ((prev->flags & XN_ISR_EDGE) !=
-			(intr->flags & XN_ISR_EDGE)))
+		    || ((prev->flags & XN_IRQTYPE_EDGE) !=
+			(intr->flags & XN_IRQTYPE_EDGE)))
 			return -EBUSY;
 
-		/* Get a position at the end of the list to insert the new element. */
+		/*
+		 * Get a position at the end of the list to insert the
+		 * new element.
+		 */
 		while (prev) {
 			p = &prev->next;
 			prev = *p;
 		}
 	} else {
 		/* Initialize the corresponding interrupt channel */
-		void (*handler) (unsigned, void *) = &xnintr_irq_handler;
+		void (*handler) (unsigned, void *) = xnintr_irq_handler;
 
-		if (intr->flags & XN_ISR_SHARED) {
-			if (intr->flags & XN_ISR_EDGE)
-				handler = &xnintr_edge_shirq_handler;
+		if (intr->flags & XN_IRQTYPE_SHARED) {
+			if (intr->flags & XN_IRQTYPE_EDGE)
+				handler = xnintr_edge_vec_handler;
 			else
-				handler = &xnintr_shirq_handler;
+				handler = xnintr_vec_handler;
 
 		}
-		shirq->unhandled = 0;
+		vec->unhandled = 0;
 
 		ret = ipipe_request_irq(&xnsched_realtime_domain,
-					intr->irq, handler, intr, (ipipe_irq_ackfn_t)intr->iack);
+					intr->irq, handler, intr,
+					(ipipe_irq_ackfn_t)intr->iack);
 		if (ret)
 			return ret;
 	}
 
 	intr->next = NULL;
-
-	/* Add the given interrupt object. No need to synchronise with the IRQ
-	   handler, we are only extending the chain. */
+	/*
+	 * Add the given interrupt object. No need to synchronise with
+	 * the IRQ handler, we are only extending the chain.
+	 */
 	*p = intr;
 
 	return 0;
@@ -443,20 +502,20 @@ static inline int xnintr_irq_attach(struct xnintr *intr)
 
 static inline void xnintr_irq_detach(struct xnintr *intr)
 {
-	struct xnintr_irq *shirq = &xnirqs[intr->irq];
-	struct xnintr *e, **p = &shirq->handlers;
+	struct xnintr_vector *vec = vectors + intr->irq;
+	struct xnintr *e, **p = &vec->handlers;
 
 	while ((e = *p) != NULL) {
 		if (e == intr) {
 			/* Remove the given interrupt object from the list. */
-			xnlock_get(&shirq->lock);
+			xnlock_get(&vec->lock);
 			*p = e->next;
-			xnlock_put(&shirq->lock);
+			xnlock_put(&vec->lock);
 
 			sync_stat_references(intr);
 
 			/* Release the IRQ line if this was the last user */
-			if (shirq->handlers == NULL)
+			if (vec->handlers == NULL)
 				ipipe_free_irq(&xnsched_realtime_domain, intr->irq);
 
 			return;
@@ -464,26 +523,25 @@ static inline void xnintr_irq_detach(struct xnintr *intr)
 		p = &e->next;
 	}
 
-	printk(XENO_ERR "attempted to detach a non previously attached interrupt "
-	       "object\n");
+	printk(XENO_ERR "attempted to detach an unregistered interrupt descriptor\n");
 }
 
 #else /* !CONFIG_XENO_OPT_SHIRQ */
 
+struct xnintr_vector {
 #if defined(CONFIG_SMP) || XENO_DEBUG(LOCKING)
-struct xnintr_irq {
 	DECLARE_XNLOCK(lock);
+#endif /* CONFIG_SMP || XENO_DEBUG(LOCKING) */
 } ____cacheline_aligned_in_smp;
 
-static struct xnintr_irq xnirqs[IPIPE_NR_IRQS];
-#endif /* CONFIG_SMP || XENO_DEBUG(LOCKING) */
+static struct xnintr_vector vectors[IPIPE_NR_IRQS];
 
-static inline struct xnintr *xnintr_shirq_first(unsigned int irq)
+static inline struct xnintr *xnintr_vec_first(unsigned int irq)
 {
 	return __ipipe_irq_cookie(&xnsched_realtime_domain, irq);
 }
 
-static inline struct xnintr *xnintr_shirq_next(struct xnintr *prev)
+static inline struct xnintr *xnintr_vec_next(struct xnintr *prev)
 {
 	return NULL;
 }
@@ -499,9 +557,9 @@ static inline void xnintr_irq_detach(struct xnintr *intr)
 {
 	int irq = intr->irq;
 
-	xnlock_get(&xnirqs[irq].lock);
+	xnlock_get(&vectors[irq].lock);
 	ipipe_free_irq(&xnsched_realtime_domain, irq);
-	xnlock_put(&xnirqs[irq].lock);
+	xnlock_put(&vectors[irq].lock);
 
 	sync_stat_references(intr);
 }
@@ -514,11 +572,12 @@ static inline void xnintr_irq_detach(struct xnintr *intr)
  */
 static void xnintr_irq_handler(unsigned int irq, void *cookie)
 {
+	struct xnintr_vector __maybe_unused *vec = vectors + irq;
 	struct xnsched *sched = xnsched_current();
 	xnstat_exectime_t *prev;
 	struct xnintr *intr;
 	xnticks_t start;
-	int s;
+	int s = 0;
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
@@ -527,7 +586,7 @@ static void xnintr_irq_handler(unsigned int irq, void *cookie)
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
 
-	xnlock_get(&xnirqs[irq].lock);
+	xnlock_get(&vec->lock);
 
 #ifdef CONFIG_SMP
 	/*
@@ -538,36 +597,43 @@ static void xnintr_irq_handler(unsigned int irq, void *cookie)
 	 * remain valid throughout this function.
 	 */
 	intr = __ipipe_irq_cookie(&xnsched_realtime_domain, irq);
-	if (unlikely(!intr)) {
-		s = 0;
-		goto unlock_and_exit;
-	}
+	if (unlikely(intr == NULL))
+		goto done;
 #else
-	/* cookie always valid, attach/detach happens with IRQs disabled */
 	intr = cookie;
 #endif
+	if (unlikely(test_bit(XN_IRQSTAT_DISABLED, &intr->status))) {
+		/* irqdisable_work is on its way, ignore. */
+		xnlock_put(&vec->lock);
+		goto out;
+	}
+
 	s = intr->isr(intr);
-	if (unlikely(s == XN_ISR_NONE)) {
+	if (unlikely(s & XN_IRQ_NONE)) {
 		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
-			s |= XN_ISR_NOENABLE;
+			s |= XN_IRQ_DISABLE;
 		}
 	} else {
 		inc_irqstats(intr, sched, start);
 		intr->unhandled = 0;
 	}
 
+	if (s & XN_IRQ_DISABLE)
+		set_bit(XN_IRQSTAT_DISABLED, &intr->status);
 #ifdef CONFIG_SMP
-unlock_and_exit:
+done:
 #endif
-	xnlock_put(&xnirqs[irq].lock);
+	xnlock_put(&vec->lock);
 
-	if (s & XN_ISR_PROPAGATE)
+	if (s & XN_IRQ_DISABLE)
+		disable_irq_line(irq);
+	else if (s & XN_IRQ_PROPAGATE)
 		ipipe_post_irq_root(irq);
-	else if (!(s & XN_ISR_NOENABLE))
+	else
 		ipipe_end_irq(irq);
-
+out:
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
@@ -582,74 +648,64 @@ int __init xnintr_mount(void)
 {
 	int i;
 	for (i = 0; i < IPIPE_NR_IRQS; ++i)
-		xnlock_init(&xnirqs[i].lock);
+		xnlock_init(&vectors[i].lock);
 	return 0;
 }
 
 /**
  * @fn int xnintr_init(struct xnintr *intr,const char *name,unsigned int irq,xnisr_t isr,xniack_t iack,int flags)
- * @brief Initialize an interrupt object.
+ * @brief Initialize an interrupt descriptor.
  *
- * Associates an interrupt object with an IRQ line.
+ * When an interrupt occurs on the given @a irq line, the interrupt
+ * service routine @a isr is fired in order to deal with the hardware
+ * event. The interrupt handler may call any non-blocking service from
+ * the Cobalt core.
  *
- * When an interrupt occurs on the given @a irq line, the ISR is fired
- * in order to deal with the hardware event. The interrupt service
- * code may call any non-blocking service from the nucleus.
+ * Upon receipt of an IRQ, the interrupt handler @a isr is immediately
+ * called on behalf of the interrupted stack context, the rescheduling
+ * procedure is locked, and the interrupt line is masked in the system
+ * interrupt controller chip.  Upon return, the status of the
+ * interrupt handler is checked for the following bits:
  *
- * Upon receipt of an IRQ, the ISR is immediately called on behalf of
- * the interrupted stack context, the rescheduling procedure is
- * locked, and the interrupt source is masked at hardware level. The
- * status value returned by the ISR is then checked for the following
- * values:
+ * - XN_IRQ_HANDLED indicates that the interrupt request was
+ * successfully handled.
  *
- * - XN_ISR_HANDLED indicates that the interrupt request has been fulfilled
- * by the ISR.
+ * - XN_IRQ_NONE indicates the opposite to XN_IRQ_HANDLED, meaning
+ * that no interrupt source could be identified for the ongoing
+ * request by the handler.
  *
- * - XN_ISR_NONE indicates the opposite to XN_ISR_HANDLED. The ISR must always
- * return this value when it determines that the interrupt request has not been
- * issued by the dedicated hardware device.
+ * In addition, one of the following bits may be present in the
+ * status:
  *
- * In addition, one of the following bits may be set by the ISR :
+ * - XN_IRQ_DISABLE tells the Cobalt core to disable the interrupt
+ * line before returning from the interrupt context.
  *
- * @warning Use these bits with care and only when you do understand
- * their effect on the system.  The ISR is not encouraged to use these
- * bits in case it shares the IRQ line with other ISRs in the
- * real-time domain.
+ * - XN_IRQ_PROPAGATE propagates the IRQ event down the interrupt
+ * pipeline to Linux. Using this flag is strongly discouraged, unless
+ * you fully understand the implications of such propagation.
  *
- * - XN_ISR_NOENABLE prevents the IRQ line from being re-enabled after
- * the ISR has returned.
- *
- * - XN_ISR_PROPAGATE causes the IRQ event to be propagated down the
- * pipeline to Linux. This is the regular way to share interrupts
- * between the nucleus and the regular Linux kernel. In effect,
- * XN_ISR_PROPAGATE implies XN_ISR_NOENABLE since it would make no
- * sense to re-enable the IRQ line before the Linux kernel had a
- * chance to process the propagated interrupt.
+ * @warning The handler should not use these bits if it shares the
+ * interrupt line with other handlers in the real-time domain. When
+ * any of these bits is detected, the interrupt line is left masked.
  *
  * A count of interrupt receipts is tracked into the interrupt
- * descriptor, and reset to zero each time the interrupt object is
+ * descriptor, and reset to zero each time such descriptor is
  * attached. Since this count could wrap around, it should be used as
  * an indication of interrupt activity only.
  *
- * @param intr The address of a interrupt object descriptor the
- * nucleus will use to store the object-specific data.  This
- * descriptor must always be valid while the object is active
- * therefore it must be allocated in permanent memory.
+ * @param intr The address of a descriptor the Cobalt core will use to
+ * store the interrupt-specific data.
  *
  * @param name An ASCII string standing for the symbolic name of the
- * interrupt object or NULL.
+ * interrupt or NULL.
  *
- * @param irq The hardware interrupt channel associated with the
- * interrupt object. This value is architecture-dependent. An
- * interrupt object must then be attached to the hardware interrupt
- * vector using the xnintr_attach() service for the associated IRQs
- * to be directed to this object.
+ * @param irq The IRQ line number associated with the interrupt
+ * descriptor. This value is architecture-dependent. An interrupt
+ * descriptor must be attached to the system by a call to
+ * xnintr_attach() before @a irq events can be received.
  *
- * @param isr The address of a valid low-level interrupt service
- * routine if this parameter is non-zero. This handler will be called
- * each time the corresponding IRQ is delivered on behalf of an
- * interrupt context.  When called, the ISR is passed the descriptor
- * address of the interrupt object.
+ * @param isr The address of an interrupt handler, which is passed the
+ * address of the interrupt descriptor receiving the IRQ.
  *
  * @param iack The address of an optional interrupt acknowledge
  * routine, aimed at replacing the default one. Only very specific
@@ -662,10 +718,12 @@ int __init xnintr_mount(void)
  * @param flags A set of creation flags affecting the operation. The
  * valid flags are:
  *
- * - XN_ISR_SHARED enables IRQ-sharing with other interrupt objects.
+ * - XN_IRQTYPE_SHARED enables IRQ-sharing with other interrupt
+ * objects.
  *
- * - XN_ISR_EDGE is an additional flag need to be set together with
- * XN_ISR_SHARED to enable IRQ-sharing of edge-triggered interrupts.
+ * - XN_IRQTYPE_EDGE is an additional flag need to be set together
+ * with XN_IRQTYPE_SHARED to enable IRQ-sharing of edge-triggered
+ * interrupts.
  *
  * @return 0 is returned on success. Otherwise, -EINVAL is returned if
  * @a irq is not a valid interrupt number.
@@ -687,7 +745,9 @@ int xnintr_init(struct xnintr *intr, const char *name,
 	intr->cookie = NULL;
 	intr->name = name ? : "<unknown>";
 	intr->flags = flags;
+	intr->status = 0;
 	intr->unhandled = 0;
+	raw_spin_lock_init(&intr->lock);
 #ifdef CONFIG_XENO_OPT_SHIRQ
 	intr->next = NULL;
 #endif
@@ -699,15 +759,14 @@ EXPORT_SYMBOL_GPL(xnintr_init);
 
 /**
  * @fn void xnintr_destroy(struct xnintr *intr)
- * @brief Destroy an interrupt object.
+ * @brief Destroy an interrupt descriptor.
  *
- * Destroys an interrupt object previously initialized by
- * xnintr_init(). The interrupt object is automatically detached by a
- * call to xnintr_detach(). No more IRQs will be dispatched by this
- * object after this service has returned.
+ * Destroys an interrupt descriptor previously initialized by
+ * xnintr_init(). The descriptor is automatically detached by a call
+ * to xnintr_detach(). No more IRQs will be received through this
+ * descriptor after this service has returned.
  *
- * @param intr The descriptor address of the interrupt object to
- * destroy.
+ * @param intr The address of the interrupt descriptor to destroy.
  *
  * @coretags{secondary-only}
  */
@@ -721,40 +780,40 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
 
 /**
  * @fn int xnintr_attach(struct xnintr *intr, void *cookie)
- * @brief Attach an interrupt object.
+ * @brief Attach an interrupt descriptor.
  *
- * Attach an interrupt object previously initialized by
- * xnintr_init(). After this operation is completed, all IRQs received
- * from the corresponding interrupt channel are directed to the
- * object's ISR.
+ * Attach an interrupt descriptor previously initialized by
+ * xnintr_init(). This operation registers the descriptor at the
+ * interrupt pipeline, but does not enable the interrupt line yet. A
+ * call to xnintr_enable() is required to start receiving IRQs from
+ * the interrupt line associated to the descriptor.
  *
- * @param intr The descriptor address of the interrupt object to
- * attach.
+ * @param intr The address of the interrupt descriptor to attach.
  *
  * @param cookie A user-defined opaque value which is stored into the
- * interrupt object descriptor for further retrieval by the ISR/ISR
- * handlers.
+ * descriptor for further retrieval by the interrupt handler.
  *
  * @return 0 is returned on success. Otherwise:
  *
- * - -EINVAL is returned if a low-level error occurred while attaching
- * the interrupt.
+ * - -EINVAL is returned if an error occurred while attaching the
+ * descriptor.
  *
- * - -EBUSY is returned if the interrupt object was already attached.
+ * - -EBUSY is returned if the descriptor was already attached.
  *
  * @note The caller <b>must not</b> hold nklock when invoking this service,
  * this would cause deadlocks.
  *
  * @coretags{secondary-only}
  *
- * @note Attaching an interrupt resets the tracked number of receipts
- * to zero.
+ * @note Attaching an interrupt descriptor resets the tracked number
+ * of IRQ receipts to zero.
  */
 int xnintr_attach(struct xnintr *intr, void *cookie)
 {
 	int ret;
 
 	secondary_mode_only();
+	trace_cobalt_irq_attach(intr->irq);
 
 	intr->cookie = cookie;
 	clear_irqstats(intr);
@@ -763,21 +822,22 @@ int xnintr_attach(struct xnintr *intr, void *cookie)
 	ipipe_set_irq_affinity(intr->irq, nkaffinity);
 #endif /* CONFIG_SMP */
 
-	mutex_lock(&intrlock);
+	raw_spin_lock(&intr->lock);
 
-	if (intr->flags & XN_ISR_ATTACHED) {
+	if (test_and_set_bit(XN_IRQSTAT_ATTACHED, &intr->status)) {
 		ret = -EBUSY;
 		goto out;
 	}
 
 	ret = xnintr_irq_attach(intr);
-	if (ret)
+	if (ret) {
+		clear_bit(XN_IRQSTAT_ATTACHED, &intr->status);
 		goto out;
+	}
 
-	intr->flags |= XN_ISR_ATTACHED;
 	stat_counter_inc();
 out:
-	mutex_unlock(&intrlock);
+	raw_spin_unlock(&intr->lock);
 
 	return ret;
 }
@@ -785,16 +845,15 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
 
 /**
  * @fn int xnintr_detach(struct xnintr *intr)
- * @brief Detach an interrupt object.
+ * @brief Detach an interrupt descriptor.
  *
- * Detach an interrupt object previously attached by
- * xnintr_attach(). After this operation is completed, no more IRQs
- * are directed to the object's ISR, but the interrupt object itself
- * remains valid. A detached interrupt object can be attached again by
- * a subsequent call to xnintr_attach().
+ * This call unregisters an interrupt descriptor previously attached
+ * by xnintr_attach() from the interrupt pipeline. Once detached, the
+ * associated interrupt line is disabled, but the descriptor remains
+ * valid. The descriptor can be attached anew by a call to
+ * xnintr_attach().
  *
- * @param intr The descriptor address of the interrupt object to
- * detach.
+ * @param intr The address of the interrupt descriptor to detach.
  *
  * @note The caller <b>must not</b> hold nklock when invoking this
  * service, this would cause deadlocks.
@@ -804,71 +863,94 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
 void xnintr_detach(struct xnintr *intr)
 {
 	secondary_mode_only();
+	trace_cobalt_irq_detach(intr->irq);
 
-	mutex_lock(&intrlock);
+	raw_spin_lock(&intr->lock);
 
-	if (intr->flags & XN_ISR_ATTACHED) {
-		intr->flags &= ~XN_ISR_ATTACHED;
+	if (test_and_clear_bit(XN_IRQSTAT_ATTACHED, &intr->status)) {
 		xnintr_irq_detach(intr);
 		stat_counter_dec();
 	}
 
-	mutex_unlock(&intrlock);
+	raw_spin_unlock(&intr->lock);
 }
 EXPORT_SYMBOL_GPL(xnintr_detach);
 
 /**
  * @fn void xnintr_enable(struct xnintr *intr)
- * @brief Enable an interrupt object.
+ * @brief Enable an interrupt line.
  *
- * Enables the hardware interrupt line associated with an interrupt
- * object.
+ * Enables the interrupt line associated with an interrupt descriptor.
  *
- * @param intr The descriptor address of the interrupt object to
- * enable.
+ * @param intr The address of the interrupt descriptor.
  *
  * @coretags{secondary-only}
  */
 void xnintr_enable(struct xnintr *intr)
 {
+	unsigned long flags;
+
 	secondary_mode_only();
 	trace_cobalt_irq_enable(intr->irq);
-	ipipe_enable_irq(intr->irq);
+
+	raw_spin_lock_irqsave(&intr->lock, flags);
+
+	/*
+	 * If disabled on entry, there is no way we could race with
+	 * disable_irq_line().
+	 */
+	if (test_and_clear_bit(XN_IRQSTAT_DISABLED, &intr->status))
+		ipipe_enable_irq(intr->irq);
+
+	raw_spin_unlock_irqrestore(&intr->lock, flags);
 }
 EXPORT_SYMBOL_GPL(xnintr_enable);
 
 /**
  * @fn void xnintr_disable(struct xnintr *intr)
- * @brief Disable an interrupt object.
+ * @brief Disable an interrupt line.
  *
- * Disables the hardware interrupt line associated with an interrupt
- * object. This operation invalidates further interrupt requests from
- * the given source until the IRQ line is re-enabled anew.
+ * Disables the interrupt line associated with an interrupt
+ * descriptor.
  *
- * @param intr The descriptor address of the interrupt object to
- * disable.
+ * @param intr The address of the interrupt descriptor.
  *
  * @coretags{secondary-only}
  */
 void xnintr_disable(struct xnintr *intr)
 {
+	unsigned long flags;
+
 	secondary_mode_only();
 	trace_cobalt_irq_disable(intr->irq);
-	ipipe_disable_irq(intr->irq);
+
+	/* We only need a virtual masking. */
+	raw_spin_lock_irqsave(&intr->lock, flags);
+
+	/*
+	 * Racing with disable_irq_line() is innocuous, the pipeline
+	 * would serialize calls to ipipe_disable_irq() across CPUs,
+	 * and the descriptor status would still properly match the
+	 * line status in the end.
+	 */
+	if (!test_and_set_bit(XN_IRQSTAT_DISABLED, &intr->status))
+		ipipe_disable_irq(intr->irq);
+
+	raw_spin_unlock_irqrestore(&intr->lock, flags);
 }
 EXPORT_SYMBOL_GPL(xnintr_disable);
 
 /**
  * @fn void xnintr_affinity(struct xnintr *intr, cpumask_t cpumask)
- * @brief Set interrupt's processor affinity.
+ * @brief Set processor affinity of interrupt.
  *
- * Restricts the IRQ associated with the interrupt object @a intr to
- * be received only on processors which bits are set in @a cpumask.
+ * Restricts the IRQ line associated with the interrupt descriptor @a
+ * intr to be received only on processors which bits are set in @a
+ * cpumask.
  *
- * @param intr The descriptor address of the interrupt object which
- * affinity is to be changed.
+ * @param intr The address of the interrupt descriptor.
  *
- * @param cpumask The new processor affinity of the interrupt object.
+ * @param cpumask The new processor affinity.
  *
  * @note Depending on architectures, setting more than one bit in @a
  * cpumask could be meaningless.
@@ -930,14 +1012,14 @@ int xnintr_query_init(struct xnintr_iterator *iterator)
 int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
 		      char *name_buf)
 {
+	int cpu, nr_cpus = num_present_cpus();
 	struct xnintr *intr;
-	int cpu;
 
-	for (cpu = iterator->cpu + 1; cpu < num_present_cpus(); ++cpu) {
+	for (cpu = iterator->cpu + 1; cpu < nr_cpus; ++cpu) {
 		if (cpu_online(cpu))
 			break;
 	}
-	if (cpu == num_present_cpus())
+	if (cpu == nr_cpus)
 		cpu = 0;
 	iterator->cpu = cpu;
 
@@ -948,9 +1030,9 @@ int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
 		if (xnintr_is_timer_irq(irq))
 			intr = &nktimer;
 		else
-			intr = xnintr_shirq_first(irq);
+			intr = xnintr_vec_first(irq);
 	} else
-		intr = xnintr_shirq_next(iterator->prev);
+		intr = xnintr_vec_next(iterator->prev);
 
 	if (intr == NULL) {
 		cpu = -1;
@@ -966,7 +1048,7 @@ int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
 	 * Proceed to next entry in shared IRQ chain when all CPUs
 	 * have been visited for this one.
 	 */
-	if (cpu + 1 == num_present_cpus())
+	if (cpu + 1 == nr_cpus)
 		iterator->prev = intr;
 
 	return 0;
@@ -1015,14 +1097,14 @@ static inline int format_irq_proc(unsigned int irq,
 
 	mutex_lock(&intrlock);
 
-	intr = xnintr_shirq_first(irq);
+	intr = xnintr_vec_first(irq);
 	if (intr) {
 		xnvfile_puts(it, "        ");
 
 		do {
 			xnvfile_putc(it, ' ');
 			xnvfile_puts(it, intr->name);
-			intr = xnintr_shirq_next(intr);
+			intr = xnintr_vec_next(intr);
 		} while (intr);
 	}
 

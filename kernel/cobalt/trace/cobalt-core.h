@@ -512,6 +512,16 @@ DEFINE_EVENT(irq_event, cobalt_irq_exit,
 	TP_ARGS(irq)
 );
 
+DEFINE_EVENT(irq_event, cobalt_irq_attach,
+	TP_PROTO(unsigned int irq),
+	TP_ARGS(irq)
+);
+
+DEFINE_EVENT(irq_event, cobalt_irq_detach,
+	TP_PROTO(unsigned int irq),
+	TP_ARGS(irq)
+);
+
 DEFINE_EVENT(irq_event, cobalt_irq_enable,
 	TP_PROTO(unsigned int irq),
 	TP_ARGS(irq)

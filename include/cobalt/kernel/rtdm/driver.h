@@ -765,10 +765,10 @@ typedef struct xnintr rtdm_irq_t;
  * @{
  */
 /** Enable IRQ-sharing with other real-time drivers */
-#define RTDM_IRQTYPE_SHARED		XN_ISR_SHARED
+#define RTDM_IRQTYPE_SHARED		XN_IRQTYPE_SHARED
 /** Mark IRQ as edge-triggered, relevant for correct handling of shared
  *  edge-triggered IRQs */
-#define RTDM_IRQTYPE_EDGE		XN_ISR_EDGE
+#define RTDM_IRQTYPE_EDGE		XN_IRQTYPE_EDGE
 /** @} RTDM_IRQTYPE_xxx */
 
 /**
@@ -786,9 +786,11 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
  * @{
  */
 /** Unhandled interrupt */
-#define RTDM_IRQ_NONE			XN_ISR_NONE
+#define RTDM_IRQ_NONE			XN_IRQ_NONE
 /** Denote handled interrupt */
-#define RTDM_IRQ_HANDLED		XN_ISR_HANDLED
+#define RTDM_IRQ_HANDLED		XN_IRQ_HANDLED
+/** Request interrupt disabling on exit */
+#define RTDM_IRQ_DISABLE		XN_IRQ_DISABLE
 /** @} RTDM_IRQ_xxx */
 
 /**
