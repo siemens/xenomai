@@ -77,6 +77,8 @@ typedef int64_t nanosecs_rel_t;
 #define RTDM_CLASS_TESTING		6
 #define RTDM_CLASS_RTIPC		7
 #define RTDM_CLASS_COBALT		8
+#define RTDM_CLASS_UDD			9
+#define RTDM_CLASS_MEMORY		10
 /*
 #define RTDM_CLASS_USB			?
 #define RTDM_CLASS_FIREWIRE		?

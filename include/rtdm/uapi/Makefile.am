@@ -7,4 +7,5 @@ includesub_HEADERS =	\
 	ipc.h		\
 	rtdm.h		\
 	serial.h	\
-	testing.h
+	testing.h	\
+	udd.h
