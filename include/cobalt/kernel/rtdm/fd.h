@@ -140,6 +140,7 @@ struct rtdm_fd {
 	struct rtdm_fd_ops *ops;
 	struct xnsys_ppd *cont;
 	unsigned int refs;
+	int minor;
 	struct list_head cleanup;
 };
 
@@ -153,6 +154,11 @@ struct rtdm_fd_index {
 static inline struct xnsys_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
 {
 	return fd->cont;
+}
+
+static inline int rtdm_fd_minor(struct rtdm_fd *fd)
+{
+	return fd->minor;
 }
 
 int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *rtdm_fd, int ufd,

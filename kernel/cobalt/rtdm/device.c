@@ -82,25 +82,51 @@ static inline void rtdm_reference_device(struct rtdm_device *device)
 	atomic_inc(&device->reserved.refcount);
 }
 
-struct rtdm_device *get_named_device(const char *name)
+struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 {
 	struct rtdm_device *device;
+	const char *p = NULL;
+	int ret, minor = -1;
 	xnhandle_t handle;
-	int err;
+	char *base = NULL;
 	spl_t s;
 
-	err = xnregistry_bind(name, XN_NONBLOCK, XN_RELATIVE, &handle);
-	if (err == -EWOULDBLOCK)
-		return NULL;
+	/*
+	 * First we look for an exact match. If this fails, we look
+	 * for a device minor specification. If we find one, we redo
+	 * the search only looking for the device base name. The
+	 * default minor value is zero.
+	 */
+	for (;;) {
+		ret = xnregistry_bind(name, XN_NONBLOCK, XN_RELATIVE, &handle);
+		if (base)
+			kfree(base);
+		if (ret != -EWOULDBLOCK)
+			break;
+		if (p)	/* Look for minor only once. */
+			return NULL;
+		p = strrchr(name, '@');
+		if (p == NULL || p[1] == '\0')
+			return NULL;
+		ret = kstrtoint(p + 1, 10, &minor);
+		if (ret || minor < 0)
+			return NULL;
+		base = kstrdup(name, GFP_KERNEL);
+		if (base == NULL)
+			return NULL;
+		base[p - name] = '\0';
+		name = base;
+	}
 
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
 	device = xnregistry_lookup(handle, NULL);
 	if (device) {
-		if (device->reserved.magic != RTDM_DEVICE_MAGIC)
-			device = NULL;
-		else
+		if (device->reserved.magic == RTDM_DEVICE_MAGIC) {
 			rtdm_reference_device(device);
+			*minor_r = minor;
+		} else
+			device = NULL;
 	}
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
@@ -108,7 +134,8 @@ struct rtdm_device *get_named_device(const char *name)
 	return device;
 }
 
-struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
+struct rtdm_device *
+__rtdm_get_protocol_device(int protocol_family, int socket_type)
 {
 	struct rtdm_device *device;
 	unsigned long long id;

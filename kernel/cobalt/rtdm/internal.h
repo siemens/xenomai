@@ -55,8 +55,8 @@ extern int rtdm_initialised;
 
 void cleanup_process_files(struct rtdm_process *owner);
 int rtdm_no_support(void);
-struct rtdm_device *get_named_device(const char *name);
-struct rtdm_device *get_protocol_device(int protocol_family, int socket_type);
+struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r);
+struct rtdm_device *__rtdm_get_protocol_device(int protocol_family, int socket_type);
 
 static inline void rtdm_dereference_device(struct rtdm_device *device)
 {
