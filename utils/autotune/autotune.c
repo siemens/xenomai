@@ -192,14 +192,14 @@ static void run_tuner(int fd, int op, int period, const char *type)
 	pthread_t sampler;
 	int ret;
 
+	ret = ioctl(fd, op, &period);
+	if (ret)
+		error(1, errno, "setup failed (%s)", type);
+
 	if (!quiet) {
 		printf("%s gravity... ", type);
 		fflush(stdout);
 	}
-
-	ret = ioctl(fd, op, &period);
-	if (ret)
-		error(1, errno, "setup failed (%s)", type);
 
 	if (op == AUTOTUNE_RTIOC_USER)
 		create_sampler(&sampler, fd);
