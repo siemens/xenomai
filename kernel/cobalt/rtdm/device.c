@@ -306,16 +306,13 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -ENODEV is returned if the device was not registered.
- *
- * - -EAGAIN is returned if the device is busy with open instances and 0 has
- * been passed for @a poll_delay.
+ * - -EAGAIN is returned if the device is busy with open instances and
+ * 0 has been passed for @a poll_delay.
  *
  * @coretags{secondary-only}
  */
 int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 {
-	struct rtdm_device *reg_dev;
 	unsigned long warned = 0;
 	xnhandle_t handle = 0;
 	spl_t s;
@@ -323,31 +320,25 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 	if (!rtdm_initialised)
 		return -ENOSYS;
 
-	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) == RTDM_NAMED_DEVICE)
-		reg_dev = get_named_device(device->device_name);
-	else
-		reg_dev = get_protocol_device(device->protocol_family,
-					      device->socket_type);
-	if (!reg_dev)
-		return -ENODEV;
+	rtdm_reference_device(device);
 
 	trace_cobalt_device_unregister(device, poll_delay);
 
 	down(&nrt_dev_lock);
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	while (atomic_read(&reg_dev->reserved.refcount) > 1) {
+	while (atomic_read(&device->reserved.refcount) > 1) {
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 		up(&nrt_dev_lock);
 
 		if (!poll_delay) {
-			rtdm_dereference_device(reg_dev);
+			rtdm_dereference_device(device);
 			return -EAGAIN;
 		}
 
 		if (!__test_and_set_bit(0, &warned))
 			printk(XENO_WARN "RTDM device %s still in use - waiting for"
-			       " release...\n", reg_dev->device_name);
+			       " release...\n", device->device_name);
 		msleep(poll_delay);
 		down(&nrt_dev_lock);
 		xnlock_get_irqsave(&rt_dev_lock, s);
@@ -355,10 +346,10 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 
 	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) ==
 		RTDM_NAMED_DEVICE) {
-		handle = reg_dev->reserved.handle;
-		list_del(&reg_dev->reserved.entry);
+		handle = device->reserved.handle;
+		list_del(&device->reserved.entry);
 	} else
-		xnid_remove(&rtdm_protocol_devices, &reg_dev->reserved.id);
+		xnid_remove(&rtdm_protocol_devices, &device->reserved.id);
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
@@ -369,7 +360,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 
 	up(&nrt_dev_lock);
 
-	if (reg_dev->reserved.exclusive_context)
+	if (device->reserved.exclusive_context)
 		kfree(device->reserved.exclusive_context);
 
 	return 0;
