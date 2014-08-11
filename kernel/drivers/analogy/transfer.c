@@ -192,7 +192,7 @@ int a4l_free_irq(struct a4l_device * dev, unsigned int irq)
 	if (ret == 0)
 		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 
-	return 0;
+	return ret;
 }
 
 unsigned int a4l_get_irq(struct a4l_device * dev)
