@@ -465,6 +465,7 @@ cleanup_mach:
 cleanup_proc:
 	xnprocfs_cleanup_tree();
 fail:
+	__xnsys_disabled = 1;
 	printk(XENO_ERR "init failed, code %d\n", ret);
 
 	return ret;
