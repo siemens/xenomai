@@ -36,6 +36,7 @@
 static int xnpipe_asyncsig = SIGIO;
 
 struct xnpipe_state xnpipe_states[XNPIPE_NDEVS];
+EXPORT_SYMBOL_GPL(xnpipe_states);
 
 #define XNPIPE_BITMAP_SIZE	((XNPIPE_NDEVS + BITS_PER_LONG - 1) / BITS_PER_LONG)
 
@@ -631,6 +632,32 @@ int xnpipe_flush(int minor, int mode)
 }
 EXPORT_SYMBOL_GPL(xnpipe_flush);
 
+int xnpipe_pollstate(int minor, unsigned int *mask_r)
+{
+	struct xnpipe_state *state;
+	int ret = 0;
+	spl_t s;
+
+	if (minor < 0 || minor >= XNPIPE_NDEVS)
+		return -ENODEV;
+
+	state = xnpipe_states + minor;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (state->status & XNPIPE_KERN_CONN) {
+		*mask_r = POLLOUT;
+		if (!list_empty(&state->inq))
+			*mask_r |= POLLIN;
+	} else
+		ret = -EIO;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnpipe_pollstate);
+
 /* Must be entered with nklock held, interrupts off. */
 #define xnpipe_cleanup_user_conn(__state, __s)				\
 	do {								\
@@ -1056,17 +1083,11 @@ static unsigned xnpipe_poll(struct file *file, poll_table *pt)
 		 * Procs which have issued a timed out poll req will
 		 * remain linked to the sleepers queue, and will be
 		 * silently unlinked the next time the Xenomai side
-		 * kicks xnpipe_wakeup_proc.
+		 * kicks xnpipe_wakeup_proc().
 		 */
 		xnpipe_enqueue_wait(state, XNPIPE_USER_WREAD);
 
 	xnlock_put_irqrestore(&nklock, s);
-
-	/*
-	 * A descriptor is always ready for writing with the current
-	 * implementation, so there is no need to have/handle the
-	 * writeq queue so far.
-	 */
 
 	return r_mask | w_mask;
 }

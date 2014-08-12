@@ -124,6 +124,19 @@ ssize_t xnpipe_recv(int minor,
 
 int xnpipe_flush(int minor, int mode);
 
+int xnpipe_pollstate(int minor, unsigned int *mask_r);
+
+static inline unsigned int __xnpipe_pollstate(int minor)
+{
+	struct xnpipe_state *state = xnpipe_states + minor;
+	unsigned int mask = POLLOUT;
+
+	if (!list_empty(&state->inq))
+		mask |= POLLIN;
+
+	return mask;
+}
+
 static inline char *xnpipe_m_data(struct xnpipe_mh *mh)
 {
 	return (char *)(mh + 1);
