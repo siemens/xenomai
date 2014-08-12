@@ -23,9 +23,14 @@
 #define RTDM_CLASS_AUTOTUNE		RTDM_CLASS_MISC
 #define RTDM_SUBCLASS_AUTOTUNE		0
 
-#define AUTOTUNE_RTIOC_IRQ		_IOW(RTDM_CLASS_AUTOTUNE, 0, int)
-#define AUTOTUNE_RTIOC_KERN		_IOW(RTDM_CLASS_AUTOTUNE, 1, int)
-#define AUTOTUNE_RTIOC_USER		_IOW(RTDM_CLASS_AUTOTUNE, 2, int)
+struct autotune_setup {
+	int period;
+	int quiet;
+};
+
+#define AUTOTUNE_RTIOC_IRQ		_IOW(RTDM_CLASS_AUTOTUNE, 0, struct autotune_setup)
+#define AUTOTUNE_RTIOC_KERN		_IOW(RTDM_CLASS_AUTOTUNE, 1, struct autotune_setup)
+#define AUTOTUNE_RTIOC_USER		_IOW(RTDM_CLASS_AUTOTUNE, 2, struct autotune_setup)
 #define AUTOTUNE_RTIOC_PULSE		_IOW(RTDM_CLASS_AUTOTUNE, 3, nanosecs_abs_t)
 #define AUTOTUNE_RTIOC_RUN		_IOR(RTDM_CLASS_AUTOTUNE, 4, unsigned long)
 #define AUTOTUNE_RTIOC_RESET		_IO(RTDM_CLASS_AUTOTUNE, 5)

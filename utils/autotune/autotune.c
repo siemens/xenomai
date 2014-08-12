@@ -188,11 +188,14 @@ static void usage(void)
 
 static void run_tuner(int fd, int op, int period, const char *type)
 {
+	struct autotune_setup setup;
 	unsigned long gravity;
 	pthread_t sampler;
 	int ret;
 
-	ret = ioctl(fd, op, &period);
+	setup.period = period;
+	setup.quiet = quiet;
+	ret = ioctl(fd, op, &setup);
 	if (ret)
 		error(1, errno, "setup failed (%s)", type);
 
@@ -262,13 +265,15 @@ int main(int argc, char *const argv[])
 			error(1, errno, "reset failed");
 	}
 
-	if (!nohog)
-		create_hog(&hog);
-
 	period = CONFIG_XENO_DEFAULT_PERIOD;
 
-	if (tune_irqlat || tune_kernlat || tune_userlat)
-		printf("Auto-tuning started (may take some time)\n");
+	if (tune_irqlat || tune_kernlat || tune_userlat) {
+		if (!nohog)
+			create_hog(&hog);
+		if (!quiet)
+			printf("Auto-tuning started (may take a while)\n");
+	} else
+		nohog = 1;
 
 	if (tune_irqlat)
 		run_tuner(fd, AUTOTUNE_RTIOC_IRQ, period, "irq");

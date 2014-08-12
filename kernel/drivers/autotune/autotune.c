@@ -73,7 +73,7 @@ struct uthread_gravity_tuner {
 
 struct autotune_context {
 	struct gravity_tuner *tuner;
-	int period;
+	struct autotune_setup setup;
 };
 
 static inline void init_tuner(struct gravity_tuner *tuner)
@@ -382,7 +382,7 @@ struct uthread_gravity_tuner uthread_tuner = {
 	},
 };
 
-static int tune_gravity(struct gravity_tuner *tuner, int period)
+static int tune_gravity(struct gravity_tuner *tuner, int period, int quiet)
 {
 	unsigned long old_gravity, gravity;
 	struct tuner_state *state;
@@ -428,7 +428,8 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 			goto fail;
 
 		if (state->min_lat <= 0) {
-			printk(XENO_WARN
+			if (!quiet)
+				printk(XENO_WARN
 			       "auto-tuning[%s]: early shot by %Ld ns"
 			       ": disabling gravity\n",
 			       tuner->name,
@@ -446,12 +447,14 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 		 */
 		if (state->min_lat > minlat) {
 #ifdef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-			printk(XENO_INFO "autotune[%s]: "
-			       "at wedge (min_ns %Ld => %Ld), gravity reset to %Ld ns\n",
-			       tuner->name,
-			       xnclock_ticks_to_ns(&nkclock, minlat),
-			       xnclock_ticks_to_ns(&nkclock, state->min_lat),
-			       xnclock_ticks_to_ns(&nkclock, gravity));
+			if (!quiet)
+				printk(XENO_INFO "autotune[%s]: "
+				       "at wedge (min_ns %Ld => %Ld), "
+				       "gravity reset to %Ld ns\n",
+				       tuner->name,
+				       xnclock_ticks_to_ns(&nkclock, minlat),
+				       xnclock_ticks_to_ns(&nkclock, state->min_lat),
+				       xnclock_ticks_to_ns(&nkclock, gravity));
 #endif
 			if (++wedge >= 5)
 				goto done;
@@ -472,27 +475,32 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 		gravity = tuner->get_gravity(tuner);
 		tuner->adjust_gravity(tuner, adjust);
 #ifdef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-		printk(XENO_INFO "autotune[%s]: min=%Ld | max=%Ld | avg=%Ld | gravity(%lut + adj=%ldt)\n",
-		       tuner->name,
-		       xnclock_ticks_to_ns(&nkclock, minlat),
-		       xnclock_ticks_to_ns(&nkclock, state->max_lat),
-		       xnclock_ticks_to_ns(&nkclock,
-			   xnarch_llimd(state->sum_lat, 1, (state->cur_samples ?: 1))),
+		if (!quiet)
+			printk(XENO_INFO "autotune[%s]: min=%Ld | max=%Ld |"
+			       "avg=%Ld | gravity(%lut + adj=%ldt)\n",
+			       tuner->name,
+			       xnclock_ticks_to_ns(&nkclock, minlat),
+			       xnclock_ticks_to_ns(&nkclock, state->max_lat),
+			       xnclock_ticks_to_ns(&nkclock,
+				   xnarch_llimd(state->sum_lat, 1,
+						(state->cur_samples ?: 1))),
 		       gravity, adjust);
 #endif
 	}
 
-	printk(XENO_INFO "could not auto-tune (%s) after %ds\n",
+	printk(XENO_ERR "could not auto-tune (%s) after %ds\n",
 	       tuner->name, AUTOTUNE_STEPS);
 
 	return -EINVAL;
 done:
 	tuner->set_gravity(tuner, H2G2_FACTOR(gravity));
 
-	printk(XENO_INFO "auto-tuning[%s]: gravity_ns=%Ld, min_ns=%Ld\n",
-	       tuner->name,
-	       xnclock_ticks_to_ns(&nkclock, tuner->get_gravity(tuner)),
-	       step > 1 ? xnclock_ticks_to_ns(&nkclock, minlat) : 0);
+	if (!quiet)
+		printk(XENO_INFO
+		       "auto-tuning[%s]: gravity_ns=%Ld, min_ns=%Ld\n",
+		       tuner->name,
+		       xnclock_ticks_to_ns(&nkclock, tuner->get_gravity(tuner)),
+		       step > 1 ? xnclock_ticks_to_ns(&nkclock, minlat) : 0);
 
 	return 0;
 fail:
@@ -504,8 +512,13 @@ fail:
 static int autotune_ioctl_nrt(struct rtdm_fd *fd, unsigned int request, void *arg)
 {
 	struct autotune_context *context;
+	struct autotune_setup setup;
 	struct gravity_tuner *tuner;
 	int period, ret;
+
+	ret = rtdm_copy_from_user(fd, &setup, arg, sizeof(setup));
+	if (ret)
+		return ret;
 
 	context = rtdm_fd_to_private(fd);
 
@@ -542,8 +555,11 @@ static int autotune_ioctl_nrt(struct rtdm_fd *fd, unsigned int request, void *ar
 		return ret;
 
 	context->tuner = tuner;
-	context->period = period;
-	printk(XENO_INFO "auto-tuning core clock gravity, %s\n", tuner->name);
+	context->setup = setup;
+
+	if (!setup.quiet)
+		printk(XENO_INFO "auto-tuning core clock gravity, %s\n",
+		       tuner->name);
 
 	return ret;
 }
@@ -554,18 +570,18 @@ static int autotune_ioctl_rt(struct rtdm_fd *fd, unsigned int request, void *arg
 	struct gravity_tuner *tuner;
 	nanosecs_abs_t timestamp;
 	unsigned long gravity;
-	int period, ret;
+	int ret;
 
 	context = rtdm_fd_to_private(fd);
 	tuner = context->tuner;
 	if (tuner == NULL)
 		return -ENOSYS;
 
-	period = context->period;
-
 	switch (request) {
 	case AUTOTUNE_RTIOC_RUN:
-		ret = tune_gravity(tuner, period);
+		ret = tune_gravity(tuner,
+				   context->setup.period,
+				   context->setup.quiet);
 		if (ret)
 			break;
 		gravity = xnclock_ticks_to_ns(&nkclock,
