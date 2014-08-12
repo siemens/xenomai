@@ -51,8 +51,6 @@ extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
 extern struct xnpersonality rtdm_personality;
 
-extern int rtdm_initialised;
-
 void cleanup_process_files(struct rtdm_process *owner);
 int rtdm_no_support(void);
 struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r);

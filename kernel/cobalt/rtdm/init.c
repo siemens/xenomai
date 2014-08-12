@@ -62,8 +62,6 @@ int __init rtdm_init(void)
 	if (ret)
 		goto cleanup_proc;
 
-	rtdm_initialised = 1;
-
 	return 0;
 
 cleanup_proc:

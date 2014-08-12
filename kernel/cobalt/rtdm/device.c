@@ -52,8 +52,6 @@ struct rb_root rtdm_protocol_devices;
 struct semaphore nrt_dev_lock;
 DEFINE_XNLOCK(rt_dev_lock);
 
-int rtdm_initialised = 0;
-
 extern void __rt_dev_close(struct rtdm_fd *fd);
 
 static int enosys(void)
@@ -191,8 +189,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 	spl_t s;
 	int ret;
 
-	/* Catch unsuccessful initialisation */
-	if (!rtdm_initialised)
+	if (!realtime_core_enabled())
 		return -ENOSYS;
 
 	/* Sanity check: structure version */
@@ -344,7 +341,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 	xnhandle_t handle = 0;
 	spl_t s;
 
-	if (!rtdm_initialised)
+	if (!realtime_core_enabled())
 		return -ENOSYS;
 
 	rtdm_reference_device(device);
