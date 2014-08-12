@@ -328,7 +328,6 @@ static ssize_t __iddp_recvmsg(struct rtdm_fd *fd,
 static ssize_t iddp_recvmsg(struct rtdm_fd *fd,
 			    struct msghdr *msg, int flags)
 {
-	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc saddr;
 	ssize_t ret;
@@ -628,13 +627,15 @@ fail:
 static int __iddp_connect_socket(struct iddp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
+	struct sockaddr_ipc _sa;
 	struct iddp_socket *rsk;
 	int ret, resched = 0;
 	rtdm_lockctx_t s;
 	xnhandle_t h;
 
 	if (sa == NULL) {
-		sa = &nullsa;
+		_sa = nullsa;
+		sa = &_sa;
 		goto set_assoc;
 	}
 
@@ -679,8 +680,8 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 		cobalt_atomic_leave(s);
 		if (ret)
 			return ret;
-	}
-
+	} else if (sa->sipc_port < 0)
+		sa = &nullsa;
 set_assoc:
 	cobalt_atomic_enter(s);
 	if (!test_bit(_IDDP_BOUND, &sk->status))

@@ -748,13 +748,15 @@ fail:
 static int __bufp_connect_socket(struct bufp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
+	struct sockaddr_ipc _sa;
 	struct bufp_socket *rsk;
 	int ret, resched = 0;
 	rtdm_lockctx_t s;
 	xnhandle_t h;
 
 	if (sa == NULL) {
-		sa = &nullsa;
+		_sa = nullsa;
+		sa = &_sa;
 		goto set_assoc;
 	}
 
@@ -799,8 +801,8 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 		cobalt_atomic_leave(s);
 		if (ret)
 			return ret;
-	}
-
+	} else if (sa->sipc_port < 0)
+		sa = &nullsa;
 set_assoc:
 	cobalt_atomic_enter(s);
 	if (!test_bit(_BUFP_BOUND, &sk->status))

@@ -777,13 +777,15 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 static int __xddp_connect_socket(struct xddp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
+	struct sockaddr_ipc _sa;
 	struct xddp_socket *rsk;
 	int ret, resched = 0;
 	rtdm_lockctx_t s;
 	xnhandle_t h;
 
 	if (sa == NULL) {
-		sa = &nullsa;
+		_sa = nullsa;
+		sa = &_sa;
 		goto set_assoc;
 	}
 
@@ -828,8 +830,8 @@ static int __xddp_connect_socket(struct xddp_socket *sk,
 		cobalt_atomic_leave(s);
 		if (ret)
 			return ret;
-	}
-
+	} else if (sa->sipc_port < 0)
+		sa = &nullsa;
 set_assoc:
 	cobalt_atomic_enter(s);
 	if (!test_bit(_XDDP_BOUND, &sk->status))
