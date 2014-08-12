@@ -17,7 +17,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/module.h>
 #include <linux/list.h>
 #include <linux/kernel.h>
@@ -26,6 +25,7 @@
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/map.h>
 #include <cobalt/kernel/bufd.h>
+#include <linux/poll.h>
 #include <rtdm/ipc.h>
 #include "internal.h"
 
@@ -69,8 +69,9 @@ static struct sockaddr_ipc nullsa = {
 
 static struct xnmap *portmap;
 
-#define _BUFP_BINDING  0
-#define _BUFP_BOUND    1
+#define _BUFP_BINDING   0
+#define _BUFP_BOUND     1
+#define _BUFP_CONNECTED 2
 
 #ifdef CONFIG_XENO_OPT_VFILE
 
@@ -102,9 +103,9 @@ static struct xnpnode_link __bufp_pnode = {
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-static int bufp_socket(struct rtipc_private *priv,
-		       struct rtdm_fd *fd)
+static int bufp_socket(struct rtdm_fd *fd)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct bufp_socket *sk = priv->state;
 
 	sk->magic = BUFP_SOCKET_MAGIC;
@@ -129,9 +130,9 @@ static int bufp_socket(struct rtipc_private *priv,
 	return 0;
 }
 
-static void bufp_close(struct rtipc_private *priv,
-		struct rtdm_fd *fd)
+static void bufp_close(struct rtdm_fd *fd)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct bufp_socket *sk = priv->state;
 	rtdm_lockctx_t s;
 
@@ -166,6 +167,7 @@ static ssize_t __bufp_readbuf(struct bufp_socket *sk,
 	rtdm_lockctx_t s;
 	u_long rdtoken;
 	off_t rdoff;
+	int resched;
 
 	len = bufd->b_len;
 
@@ -224,6 +226,13 @@ redo:
 		sk->rdoff = rdoff;
 		ret = len;
 
+		resched = 0;
+		if (sk->fillsz + len == sk->bufsz) /* -> writable */
+			resched |= xnselect_signal(&sk->priv->send_block, POLLOUT);
+
+		if (sk->fillsz == 0) /* -> non-readable */
+			resched |= xnselect_signal(&sk->priv->recv_block, 0);
+
 		/*
 		 * Wake up all threads pending on the output wait
 		 * queue, if we freed enough room for the leading one
@@ -237,7 +246,10 @@ redo:
 		XENO_BUGON(NUCLEUS, wc == NULL);
 		bufwc = container_of(wc, struct bufp_wait_context, wc);
 		if (bufwc->len + sk->fillsz <= sk->bufsz)
+			/* This call rescheds internally. */
 			rtdm_event_pulse(&sk->o_event);
+		else if (resched)
+			xnsched_run();
 		/*
 		 * We cannot fail anymore once some data has been
 		 * copied via the buffer descriptor, so no need to
@@ -281,11 +293,11 @@ out:
 	return ret;
 }
 
-static ssize_t __bufp_recvmsg(struct rtipc_private *priv,
-			      struct rtdm_fd *fd,
+static ssize_t __bufp_recvmsg(struct rtdm_fd *fd,
 			      struct iovec *iov, int iovlen, int flags,
 			      struct sockaddr_ipc *saddr)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct bufp_socket *sk = priv->state;
 	ssize_t len, wrlen, vlen, ret;
 	struct xnbufd bufd;
@@ -343,8 +355,7 @@ static ssize_t __bufp_recvmsg(struct rtipc_private *priv,
 	return len - wrlen;
 }
 
-static ssize_t bufp_recvmsg(struct rtipc_private *priv,
-			    struct rtdm_fd *fd,
+static ssize_t bufp_recvmsg(struct rtdm_fd *fd,
 			    struct msghdr *msg, int flags)
 {
 	struct iovec iov[RTIPC_IOV_MAX];
@@ -368,8 +379,7 @@ static ssize_t bufp_recvmsg(struct rtipc_private *priv,
 			  sizeof(iov[0]) * msg->msg_iovlen))
 		return -EFAULT;
 
-	ret = __bufp_recvmsg(priv, fd,
-			     iov, msg->msg_iovlen, flags, &saddr);
+	ret = __bufp_recvmsg(fd, iov, msg->msg_iovlen, flags, &saddr);
 	if (ret <= 0)
 		return ret;
 
@@ -389,12 +399,11 @@ static ssize_t bufp_recvmsg(struct rtipc_private *priv,
 	return ret;
 }
 
-static ssize_t bufp_read(struct rtipc_private *priv,
-			 struct rtdm_fd *fd,
-			 void *buf, size_t len)
+static ssize_t bufp_read(struct rtdm_fd *fd, void *buf, size_t len)
 {
 	struct iovec iov = { .iov_base = buf, .iov_len = len };
-	return __bufp_recvmsg(priv, fd, &iov, 1, 0, NULL);
+
+	return __bufp_recvmsg(fd, &iov, 1, 0, NULL);
 }
 
 static ssize_t __bufp_writebuf(struct bufp_socket *rsk,
@@ -411,6 +420,7 @@ static ssize_t __bufp_writebuf(struct bufp_socket *rsk,
 	size_t wbytes, n;
 	u_long wrtoken;
 	off_t wroff;
+	int resched;
 
 	len = bufd->b_len;
 
@@ -467,7 +477,13 @@ redo:
 		rsk->fillsz += len;
 		rsk->wroff = wroff;
 		ret = len;
+		resched = 0;
 
+		if (rsk->fillsz == len) /* -> readable */
+			resched |= xnselect_signal(&rsk->priv->recv_block, POLLIN);
+
+		if (rsk->fillsz == rsk->bufsz) /* non-writable */
+			resched |= xnselect_signal(&rsk->priv->send_block, 0);
 		/*
 		 * Wake up all threads pending on the input wait
 		 * queue, if we accumulated enough data to feed the
@@ -482,13 +498,14 @@ redo:
 		bufwc = container_of(wc, struct bufp_wait_context, wc);
 		if (bufwc->len <= rsk->fillsz)
 			rtdm_event_pulse(&rsk->i_event);
+		else if (resched)
+			xnsched_run();
 		/*
 		 * We cannot fail anymore once some data has been
 		 * copied via the buffer descriptor, so no need to
 		 * check for any reason to invalidate the latter.
 		 */
 		goto out;
-
 	wait:
 		if (flags & MSG_DONTWAIT) {
 			ret = -EWOULDBLOCK;
@@ -513,11 +530,11 @@ out:
 	return ret;
 }
 
-static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
-			      struct rtdm_fd *fd,
+static ssize_t __bufp_sendmsg(struct rtdm_fd *fd,
 			      struct iovec *iov, int iovlen, int flags,
 			      const struct sockaddr_ipc *daddr)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct bufp_socket *sk = priv->state, *rsk;
 	ssize_t len, rdlen, vlen, ret = 0;
 	struct rtdm_fd *rfd;
@@ -586,10 +603,10 @@ fail:
 	return ret;
 }
 
-static ssize_t bufp_sendmsg(struct rtipc_private *priv,
-			    struct rtdm_fd *fd,
+static ssize_t bufp_sendmsg(struct rtdm_fd *fd,
 			    const struct msghdr *msg, int flags)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct bufp_socket *sk = priv->state;
 	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc daddr;
@@ -626,8 +643,7 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 			  sizeof(iov[0]) * msg->msg_iovlen))
 		return -EFAULT;
 
-	ret = __bufp_sendmsg(priv, fd, iov,
-			     msg->msg_iovlen, flags, &daddr);
+	ret = __bufp_sendmsg(fd, iov, msg->msg_iovlen, flags, &daddr);
 	if (ret <= 0)
 		return ret;
 
@@ -639,17 +655,17 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 	return ret;
 }
 
-static ssize_t bufp_write(struct rtipc_private *priv,
-			  struct rtdm_fd *fd,
+static ssize_t bufp_write(struct rtdm_fd *fd,
 			  const void *buf, size_t len)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct iovec iov = { .iov_base = (void *)buf, .iov_len = len };
 	struct bufp_socket *sk = priv->state;
 
 	if (sk->peer.sipc_port < 0)
 		return -EDESTADDRREQ;
 
-	return __bufp_sendmsg(priv, fd, &iov, 1, 0, &sk->peer);
+	return __bufp_sendmsg(fd, &iov, 1, 0, &sk->peer);
 }
 
 static int __bufp_bind_socket(struct rtipc_private *priv,
@@ -717,6 +733,8 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	cobalt_atomic_enter(s);
 	__clear_bit(_BUFP_BINDING, &sk->status);
 	__set_bit(_BUFP_BOUND, &sk->status);
+	if (xnselect_signal(&priv->send_block, POLLOUT))
+		xnsched_run();
 	cobalt_atomic_leave(s);
 
 	return 0;
@@ -731,9 +749,9 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
 	struct bufp_socket *rsk;
+	int ret, resched = 0;
 	rtdm_lockctx_t s;
 	xnhandle_t h;
-	int ret;
 
 	if (sa == NULL) {
 		sa = &nullsa;
@@ -773,9 +791,11 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 		rsk = xnregistry_lookup(h, NULL);
 		if (rsk == NULL || rsk->magic != BUFP_SOCKET_MAGIC)
 			ret = -EINVAL;
-		else
+		else {
 			/* Fetch labeled port number. */
 			sa->sipc_port = rsk->name.sipc_port;
+			resched = xnselect_signal(&sk->priv->send_block, POLLOUT);
+		}
 		cobalt_atomic_leave(s);
 		if (ret)
 			return ret;
@@ -788,6 +808,12 @@ set_assoc:
 		sk->name = *sa;
 	/* Set default destination. */
 	sk->peer = *sa;
+	if (sa->sipc_port < 0)
+		__clear_bit(_BUFP_CONNECTED, &sk->status);
+	else
+		__set_bit(_BUFP_CONNECTED, &sk->status);
+	if (resched)
+		xnsched_run();
 	cobalt_atomic_leave(s);
 
 	return 0;
@@ -956,10 +982,10 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 	return ret;
 }
 
-static int __bufp_ioctl(struct rtipc_private *priv,
-			struct rtdm_fd *fd,
+static int __bufp_ioctl(struct rtdm_fd *fd,
 			unsigned int request, void *arg)
 {
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct sockaddr_ipc saddr, *saddrp = &saddr;
 	struct bufp_socket *sk = priv->state;
 	int ret = 0;
@@ -1014,14 +1040,47 @@ static int __bufp_ioctl(struct rtipc_private *priv,
 	return ret;
 }
 
-static int bufp_ioctl(struct rtipc_private *priv,
-		      struct rtdm_fd *fd,
+static int bufp_ioctl(struct rtdm_fd *fd,
 		      unsigned int request, void *arg)
 {
 	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
 		return -ENOSYS;	/* Try downgrading to NRT */
 
-	return __bufp_ioctl(priv, fd, request, arg);
+	return __bufp_ioctl(fd, request, arg);
+}
+
+static unsigned int bufp_pollstate(struct rtdm_fd *fd)
+{
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	struct bufp_socket *sk = priv->state, *rsk;
+	unsigned int mask = 0;
+	struct rtdm_fd *rfd;
+	spl_t s;
+
+	cobalt_atomic_enter(s);
+
+	if (test_bit(_BUFP_BOUND, &sk->status) && sk->fillsz > 0)
+		mask |= POLLIN;
+
+	/*
+	 * If the socket is connected, POLLOUT means that the peer
+	 * exists, is bound and can receive data. Otherwise POLLOUT is
+	 * always set, assuming the client is likely to use explicit
+	 * addressing in send operations.
+	 */
+	if (test_bit(_BUFP_CONNECTED, &sk->status)) {
+		rfd = xnmap_fetch_nocheck(portmap, sk->peer.sipc_port);
+		if (rfd) {
+			rsk = rtipc_fd_to_state(rfd);
+			if (rsk->fillsz < rsk->bufsz)
+				mask |= POLLOUT;
+		}
+	} else
+		mask |= POLLOUT;
+
+	cobalt_atomic_leave(s);
+
+	return mask;
 }
 
 static int bufp_init(void)
@@ -1051,5 +1110,6 @@ struct rtipc_protocol bufp_proto_driver = {
 		.read = bufp_read,
 		.write = bufp_write,
 		.ioctl = bufp_ioctl,
+		.pollstate = bufp_pollstate,
 	}
 };

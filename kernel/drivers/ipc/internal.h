@@ -17,12 +17,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #ifndef _RTIPC_INTERNAL_H
 #define _RTIPC_INTERNAL_H
 
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/clock.h>
+#include <cobalt/kernel/select.h>
 #include <rtdm/rtdm.h>
 #include <rtdm/driver.h>
 
@@ -32,6 +32,8 @@ struct rtipc_protocol;
 
 struct rtipc_private {
 	struct rtipc_protocol *proto;
+	DECLARE_XNSELECT(send_block);
+	DECLARE_XNSELECT(recv_block);
 	void *state;
 };
 
@@ -41,25 +43,19 @@ struct rtipc_protocol {
 	int (*proto_init)(void);
 	void (*proto_exit)(void);
 	struct {
-		int (*socket)(struct rtipc_private *priv,
-			      struct rtdm_fd *fd);
-		void (*close)(struct rtipc_private *priv,
-			struct rtdm_fd *fd);
-		ssize_t (*recvmsg)(struct rtipc_private *priv,
-				   struct rtdm_fd *fd,
+		int (*socket)(struct rtdm_fd *fd);
+		void (*close)(struct rtdm_fd *fd);
+		ssize_t (*recvmsg)(struct rtdm_fd *fd,
 				   struct msghdr *msg, int flags);
-		ssize_t (*sendmsg)(struct rtipc_private *priv,
-				   struct rtdm_fd *fd,
+		ssize_t (*sendmsg)(struct rtdm_fd *fd,
 				   const struct msghdr *msg, int flags);
-		ssize_t (*read)(struct rtipc_private *priv,
-				struct rtdm_fd *fd,
+		ssize_t (*read)(struct rtdm_fd *fd,
 				void *buf, size_t len);
-		ssize_t (*write)(struct rtipc_private *priv,
-				 struct rtdm_fd *fd,
+		ssize_t (*write)(struct rtdm_fd *fd,
 				 const void *buf, size_t len);
-		int (*ioctl)(struct rtipc_private *priv,
-			     struct rtdm_fd *fd,
+		int (*ioctl)(struct rtdm_fd *fd,
 			     unsigned int request, void *arg);
+		unsigned int (*pollstate)(struct rtdm_fd *fd);
 	} proto_ops;
 };
 

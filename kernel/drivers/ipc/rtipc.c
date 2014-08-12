@@ -17,10 +17,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/slab.h>
+#include <linux/poll.h>
 #include <rtdm/ipc.h>
 #include "internal.h"
 
@@ -135,7 +135,7 @@ ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen)
 static int rtipc_socket(struct rtdm_fd *fd, int protocol)
 {
 	struct rtipc_protocol *proto;
-	struct rtipc_private *p;
+	struct rtipc_private *priv;
 	int ret;
 
 	if (protocol < 0 || protocol >= IPCPROTO_MAX)
@@ -149,65 +149,107 @@ static int rtipc_socket(struct rtdm_fd *fd, int protocol)
 	if (proto == NULL)	/* Not compiled in? */
 		return -ENOPROTOOPT;
 
-	p = rtdm_fd_to_private(fd);
-	p->proto = proto;
-	p->state = kmalloc(proto->proto_statesz, GFP_KERNEL);
-	if (p->state == NULL)
+	priv = rtdm_fd_to_private(fd);
+	priv->proto = proto;
+	priv->state = kmalloc(proto->proto_statesz, GFP_KERNEL);
+	if (priv->state == NULL)
 		return -ENOMEM;
 
-	ret = proto->proto_ops.socket(p, fd);
+	xnselect_init(&priv->send_block);
+	xnselect_init(&priv->recv_block);
+
+	ret = proto->proto_ops.socket(fd);
 	if (ret)
-		kfree(p->state);
+		kfree(priv->state);
 
 	return ret;
 }
 
 static void rtipc_close(struct rtdm_fd *fd)
 {
-	struct rtipc_private *p;
-
-	p = rtdm_fd_to_private(fd);
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	/*
-	 * CAUTION: p->state shall be released by the
+	 * CAUTION: priv->state shall be released by the
 	 * proto_ops.close() handler when appropriate (which may be
 	 * done asynchronously later, see XDDP).
 	 */
-	p->proto->proto_ops.close(p, fd);
+	priv->proto->proto_ops.close(fd);
+	xnselect_destroy(&priv->recv_block);
+	xnselect_destroy(&priv->send_block);
 }
 
 static ssize_t rtipc_recvmsg(struct rtdm_fd *fd,
 			     struct msghdr *msg, int flags)
 {
-	struct rtipc_private *p = rtdm_fd_to_private(fd);
-	return p->proto->proto_ops.recvmsg(p, fd, msg, flags);
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	return priv->proto->proto_ops.recvmsg(fd, msg, flags);
 }
 
 static ssize_t rtipc_sendmsg(struct rtdm_fd *fd,
 			     const struct msghdr *msg, int flags)
 {
-	struct rtipc_private *p = rtdm_fd_to_private(fd);
-	return p->proto->proto_ops.sendmsg(p, fd, msg, flags);
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	return priv->proto->proto_ops.sendmsg(fd, msg, flags);
 }
 
 static ssize_t rtipc_read(struct rtdm_fd *fd,
 			  void *buf, size_t len)
 {
-	struct rtipc_private *p = rtdm_fd_to_private(fd);
-	return p->proto->proto_ops.read(p, fd, buf, len);
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	return priv->proto->proto_ops.read(fd, buf, len);
 }
 
 static ssize_t rtipc_write(struct rtdm_fd *fd,
 			   const void *buf, size_t len)
 {
-	struct rtipc_private *p = rtdm_fd_to_private(fd);
-	return p->proto->proto_ops.write(p, fd, buf, len);
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	return priv->proto->proto_ops.write(fd, buf, len);
 }
 
 static int rtipc_ioctl(struct rtdm_fd *fd,
 		       unsigned int request, void *arg)
 {
-	struct rtipc_private *p = rtdm_fd_to_private(fd);
-	return p->proto->proto_ops.ioctl(p, fd, request, arg);
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	return priv->proto->proto_ops.ioctl(fd, request, arg);
+}
+
+static int rtipc_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
+			     unsigned int type, unsigned int index)
+{
+	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	struct xnselect_binding *binding;
+	unsigned int pollstate, mask;
+	struct xnselect *block;
+	spl_t s;
+	int ret;
+	
+	pollstate = priv->proto->proto_ops.pollstate(fd);
+
+	switch (type) {
+	case XNSELECT_READ:
+		mask = pollstate & POLLIN;
+		block = &priv->recv_block;
+		break;
+	case XNSELECT_WRITE:
+		mask = pollstate & POLLOUT;
+		block = &priv->send_block;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	binding = xnmalloc(sizeof(*binding));
+	if (binding == NULL)
+		return -ENOMEM;
+
+	xnlock_get_irqsave(&nklock, s);
+	ret = xnselect_bind(block, binding, selector, type, index, mask);
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (ret)
+		xnfree(binding);
+
+	return ret;
 }
 
 static struct rtdm_device device = {
@@ -230,6 +272,7 @@ static struct rtdm_device device = {
 		.read_nrt	=	NULL,
 		.write_rt	=	rtipc_write,
 		.write_nrt	=	NULL,
+		.select_bind	=	rtipc_select_bind,
 	},
 	.device_class		=	RTDM_CLASS_RTIPC,
 	.device_sub_class	=	RTDM_SUBCLASS_GENERIC,
