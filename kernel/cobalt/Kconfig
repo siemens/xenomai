@@ -241,7 +241,7 @@ config XENO_OPT_TIMER_HEAP_CAPACITY
 	default 256
 	help
 
-	Set the maximum number of timers in the nucleus timers list.
+	Set the maximum number of timers the binary heap can index.
 
 config XENO_OPT_HOSTRT
        depends on IPIPE_HAVE_HOSTRT
