@@ -41,13 +41,7 @@
  *   =>  open /dev/rtp0                                            |  ^
  *   =>  read traffic from RT domain via read()                    |  |
  *   =>  echo traffic back to RT domain via write()                +--+
- *
- * See Makefile in this directory for build directives.
- *
- * NOTE: XDDP is a replacement for the legacy RT_PIPE interface
- * available from the native skin until Xenomai 3.
  */
-#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -64,22 +58,22 @@ pthread_t rt, nrt;
 #define XDDP_PORT 0	/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
 
 static const char *msg[] = {
-    "Surfing With The Alien",
-    "Lords of Karma",
-    "Banana Mango",
-    "Psycho Monkey",
-    "Luminous Flesh Giants",
-    "Moroccan Sunset",
-    "Satch Boogie",
-    "Flying In A Blue Dream",
-    "Ride",
-    "Summer Song",
-    "Speed Of Light",
-    "Crystal Planet",
-    "Raspberry Jam Delta-V",
-    "Champagne?",
-    "Clouds Race Across The Sky",
-    "Engines Of Creation"
+	"Surfing With The Alien",
+	"Lords of Karma",
+	"Banana Mango",
+	"Psycho Monkey",
+	"Luminous Flesh Giants",
+	"Moroccan Sunset",
+	"Satch Boogie",
+	"Flying In A Blue Dream",
+	"Ride",
+	"Summer Song",
+	"Speed Of Light",
+	"Crystal Planet",
+	"Raspberry Jam Delta-V",
+	"Champagne?",
+	"Clouds Race Across The Sky",
+	"Engines Of Creation"
 };
 
 static void fail(const char *reason)
@@ -149,15 +143,15 @@ static void *realtime_thread(void *arg)
 				fail("sendto");
 		}
 
-		rt_printf("%s: sent (scattered) %d-bytes message, \"%.*s\"\n",
-			  __FUNCTION__, len, len, msg[n]);
+		printf("%s: sent (scattered) %d-bytes message, \"%.*s\"\n",
+		       __FUNCTION__, len, len, msg[n]);
 
 		/* Read back packets echoed by the regular thread */
 		ret = recvfrom(s, buf, sizeof(buf), 0, NULL, 0);
 		if (ret <= 0)
 			fail("recvfrom");
 
-		rt_printf("   => \"%.*s\" echoed by peer\n", ret, buf);
+		printf("   => \"%.*s\" echoed by peer\n", ret, buf);
 
 		n = (n + 1) % (sizeof(msg) / sizeof(msg[0]));
 		/*
@@ -201,39 +195,18 @@ static void *regular_thread(void *arg)
 	return NULL;
 }
 
-static void cleanup_upon_sig(int sig)
-{
-	pthread_cancel(rt);
-	pthread_cancel(nrt);
-	signal(sig, SIG_DFL);
-	pthread_join(rt, NULL);
-	pthread_join(nrt, NULL);
-}
-
 int main(int argc, char **argv)
 {
 	struct sched_param rtparam = { .sched_priority = 42 };
 	pthread_attr_t rtattr, regattr;
-	sigset_t mask, oldmask;
+	sigset_t set;
+	int sig;
 
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGINT);
-	signal(SIGINT, cleanup_upon_sig);
-	sigaddset(&mask, SIGTERM);
-	signal(SIGTERM, cleanup_upon_sig);
-	sigaddset(&mask, SIGHUP);
-	signal(SIGHUP, cleanup_upon_sig);
-	pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
-
-	/*
-	 * This is a real-time compatible printf() package from
-	 * Xenomai's RT Development Kit (RTDK), that does NOT cause
-	 * any transition to secondary (i.e. non real-time) mode when
-	 * writing output.
-	 */
-	rt_print_auto_init(1);
+	sigemptyset(&set);
+	sigaddset(&set, SIGINT);
+	sigaddset(&set, SIGTERM);
+	sigaddset(&set, SIGHUP);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 	pthread_attr_init(&rtattr);
 	pthread_attr_setdetachstate(&rtattr, PTHREAD_CREATE_JOINABLE);
@@ -254,7 +227,11 @@ int main(int argc, char **argv)
 	if (errno)
 		fail("pthread_create");
 
-	sigsuspend(&oldmask);
+	sigwait(&set, &sig);
+	pthread_cancel(rt);
+	pthread_cancel(nrt);
+	pthread_join(rt, NULL);
+	pthread_join(nrt, NULL);
 
 	return 0;
 }

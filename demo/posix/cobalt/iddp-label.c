@@ -12,10 +12,7 @@
  * ASCII labels can be attached to bound ports, in order to connect
  * sockets to them in a more descriptive way than using plain numeric
  * port values.
- *
- * See Makefile in this directory for build directives.
  */
-#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -107,7 +104,7 @@ static void *server(void *arg)
 			close(s);
 			fail("recvfrom");
 		}
-		rt_printf("%s: received %d bytes, \"%.*s\" from port %d\n",
+		printf("%s: received %d bytes, \"%.*s\" from port %d\n",
 			  __FUNCTION__, ret, ret, buf, claddr.sipc_port);
 	}
 
@@ -164,8 +161,8 @@ static void *client(void *arg)
 			close(s);
 			fail("sendto");
 		}
-		rt_printf("%s: sent %d bytes, \"%.*s\"\n",
-			  __FUNCTION__, ret, ret, msg[n]);
+		printf("%s: sent %d bytes, \"%.*s\"\n",
+		       __FUNCTION__, ret, ret, msg[n]);
 		n = (n + 1) % (sizeof(msg) / sizeof(msg[0]));
 		/*
 		 * We run in full real-time mode (i.e. primary mode),
@@ -180,39 +177,19 @@ static void *client(void *arg)
 	return NULL;
 }
 
-static void cleanup_upon_sig(int sig)
-{
-	pthread_cancel(svtid);
-	pthread_cancel(cltid);
-	signal(sig, SIG_DFL);
-	pthread_join(svtid, NULL);
-	pthread_join(cltid, NULL);
-}
-
 int main(int argc, char **argv)
 {
 	struct sched_param svparam = {.sched_priority = 71 };
 	struct sched_param clparam = {.sched_priority = 70 };
 	pthread_attr_t svattr, clattr;
-	sigset_t mask, oldmask;
+	sigset_t set;
+	int sig;
 
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGINT);
-	signal(SIGINT, cleanup_upon_sig);
-	sigaddset(&mask, SIGTERM);
-	signal(SIGTERM, cleanup_upon_sig);
-	sigaddset(&mask, SIGHUP);
-	signal(SIGHUP, cleanup_upon_sig);
-	pthread_sigmask(SIG_BLOCK, &mask, &oldmask);
-
-	/*
-	 * This is a real-time compatible printf() package from
-	 * Xenomai's RT Development Kit (RTDK), that does NOT cause
-	 * any transition to secondary mode.
-	 */
-	rt_print_auto_init(1);
+	sigemptyset(&set);
+	sigaddset(&set, SIGINT);
+	sigaddset(&set, SIGTERM);
+	sigaddset(&set, SIGHUP);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 	pthread_attr_init(&svattr);
 	pthread_attr_setdetachstate(&svattr, PTHREAD_CREATE_JOINABLE);
@@ -234,7 +211,11 @@ int main(int argc, char **argv)
 	if (errno)
 		fail("pthread_create");
 
-	sigsuspend(&oldmask);
+	sigwait(&set, &sig);
+	pthread_cancel(svtid);
+	pthread_cancel(cltid);
+	pthread_join(svtid, NULL);
+	pthread_join(cltid, NULL);
 
 	return 0;
 }
