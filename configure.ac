@@ -850,6 +850,9 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/vdso-access/Makefile \
 	testsuite/smokey/cond-torture/Makefile \
 	testsuite/smokey/mutex-torture/Makefile \
+	testsuite/smokey/xddp/Makefile \
+	testsuite/smokey/iddp/Makefile \
+	testsuite/smokey/bufp/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
 	testsuite/regression/Makefile \

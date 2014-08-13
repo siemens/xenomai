@@ -9,7 +9,17 @@ core_libs =
 if XENO_COBALT
 core_libs += ../../lib/cobalt/libcobalt.la
 wrappers = $(XENO_POSIX_WRAPPERS)
-SUBDIRS = arith sched-quota sched-tp cond-torture mutex-torture rtdm vdso-access
+SUBDIRS = 		\
+	arith 		\
+	bufp		\
+	cond-torture 	\
+	iddp		\
+	mutex-torture 	\
+	rtdm 		\
+	sched-quota 	\
+	sched-tp 	\
+	vdso-access 	\
+	xddp
 else
 SUBDIRS =
 wrappers =
@@ -36,4 +46,14 @@ smokey_LDADD = 					\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt
 
-DIST_SUBDIRS = arith sched-quota sched-tp cond-torture mutex-torture rtdm vdso-access
+DIST_SUBDIRS = 		\
+	arith 		\
+	bufp		\
+	cond-torture 	\
+	iddp		\
+	mutex-torture 	\
+	rtdm 		\
+	sched-quota 	\
+	sched-tp 	\
+	vdso-access 	\
+	xddp
