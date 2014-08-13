@@ -760,12 +760,14 @@ fail:
 static int __bufp_connect_socket(struct bufp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
+	struct sockaddr_ipc _sa;
 	struct bufp_socket *rsk;
 	xnhandle_t h;
 	int ret;
 
 	if (sa == NULL) {
-		sa = &nullsa;
+		_sa = nullsa;
+		sa = &_sa;
 		goto set_assoc;
 	}
 
@@ -808,8 +810,8 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 		);
 		if (ret)
 			return ret;
-	}
-
+	} else if (sa->sipc_port < 0)
+		sa = &nullsa;
 set_assoc:
 	RTDM_EXECUTE_ATOMICALLY(
 		if (!test_bit(_BUFP_BOUND, &sk->status))
