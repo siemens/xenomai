@@ -183,6 +183,10 @@
  *   failure code from a smoke test should not abort the test loop.
  *   This flag is not otherwise interpreted by the Smokey API.
  *
+ * - --quiet sets the boolean flag @a smokey_quiet_mode to a non-zero
+ *   value, which is should be interpreted by all parties as an
+ *   indication to tame down verbosity.
+ *
  * @par Writing a test driver based on the Smokey API
  *
  * A test driver provides the main() entry point, which should iterate
@@ -235,6 +239,8 @@ static int test_count;
 
 static int do_list;
 
+int smokey_quiet_mode = 0;
+
 static const struct option smokey_options[] = {
 	{
 #define keep_going_opt	0
@@ -254,15 +260,22 @@ static const struct option smokey_options[] = {
 		.val = 1,
 	},
 	{
+#define quiet_opt	3
+		.name = "quiet",
+		.flag = &smokey_quiet_mode,
+		.val = 1,
+	},
+	{
 		.name = NULL,
 	}
 };
 
 static void smokey_help(void)
 {
-        fprintf(stderr, "--keep-going                      don't stop upon test error\n");
-	fprintf(stderr, "--list                            list all tests\n");
-	fprintf(stderr, "--run[=<id[,id...]>]]             run [portion of] test list\n");
+        fprintf(stderr, "--keep-going               don't stop upon test error\n");
+        fprintf(stderr, "--quiet                    require tests to tame down verbosity\n");
+	fprintf(stderr, "--list                     list all tests\n");
+	fprintf(stderr, "--run[=<id[,id...]>]]      run [portion of] test list\n");
 }
 
 static inline void pick_test_range(int start, int end)
@@ -378,6 +391,7 @@ static int smokey_parse_option(int optnum, const char *optarg)
 
 	switch (optnum) {
 	case keep_going_opt:
+	case quiet_opt:
 		break;
 	case run_opt:
 		if (pvlist_empty(&register_list)) {

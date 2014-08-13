@@ -22,7 +22,7 @@
 int main(int argc, char *const argv[])
 {
 	struct smokey_test *t;
-	int ret;
+	int ret, fails = 0;
 
 	if (pvlist_empty(&smokey_test_list))
 		return 0;
@@ -30,12 +30,14 @@ int main(int argc, char *const argv[])
 	for_each_smokey_test(t) {
 		ret = t->run(t, argc, argv);
 		if (ret) {
+			fails++;
 			if (smokey_keep_going)
 				continue;
-			error(1, -ret, "test %s failed", t->name);
+			if (!smokey_quiet_mode)
+				error(1, -ret, "test %s failed", t->name);
 		}
-		printf("%s OK\n", t->name);
+		smokey_note("%s OK\n", t->name);
 	}
 
-	return 0;
+	return fails != 0;
 }
