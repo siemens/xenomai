@@ -146,9 +146,37 @@ enum rtdm_selecttype {
  * @param[in] fd File descriptor structure associated with opened device instance
  * @param[in] oflag Open flags as passed by the user
  *
- * @return 0 on success. On failure return either -ENOSYS, to request that
- * this handler be called again from the opposite realtime/non-realtime
- * context, or another negative error code.
+ * The file descriptor carries a device minor information which can be
+ * retrieved by a call to rtdm_fd_minor(fd). The minor number can be
+ * used for distinguishing several instances of the same rtdm_device
+ * type. Prior to entering this handler, the device minor information
+ * may have been extracted from the pathname passed to the @a open()
+ * call, according to the following rules:
+ *
+ * - RTDM first attempts to match the pathname exactly as passed by
+ * the application, against the registered rtdm_device descriptors. On
+ * success, the special minor -1 is assigned to @a fd and this handler
+ * is called.
+ *
+ * - if the original pathname does not match any device descriptor, it
+ * is scanned for the \@\<minor> suffix. If present, a second lookup is
+ * performed only looking for the radix portion of the pathname
+ * (i.e. stripping the suffix), and the file descriptor is assigned
+ * the minor value retrieved earlier on success, at which point this
+ * handler is called. When present, \<minor> must be a positive or null
+ * decimal value, otherwise the open() call fails.
+ *
+ * For instance:
+ *
+ * @code
+ *    fd = open("/dev/foo@0", ...); // rtdm_fd_minor(fd) == 0
+ *    fd = open("/dev/foo@7", ...); // rtdm_fd_minor(fd) == 7
+ *    fd = open("/dev/foo", ...);   // rtdm_fd_minor(fd) == -1
+ * @endcode
+ *
+ * @note the device minor scheme is not supported by Xenomai 2.x.
+ *
+ * @return 0 on success. On failure, a negative error code is returned.
  *
  * @see @c open() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -160,9 +188,7 @@ typedef int (*rtdm_open_handler_t)(struct rtdm_fd *fd, int oflag);
  * @param[in] fd File descriptor structure associated with opened device instance
  * @param[in] protocol Protocol number as passed by the user
  *
- * @return 0 on success. On failure return either -ENOSYS, to request that
- * this handler be called again from the opposite realtime/non-realtime
- * context, or another negative error code.
+ * @return 0 on success. On failure, a negative error code is returned.
  *
  * @see @c socket() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
