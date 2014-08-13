@@ -632,7 +632,7 @@ static ssize_t bufp_sendmsg(struct rtdm_fd *fd,
 			return -EINVAL;
 		daddr = sk->peer;
 		if (daddr.sipc_port < 0)
-			return -ENOTCONN;
+			return -EDESTADDRREQ;
 	}
 
 	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
