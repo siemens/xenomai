@@ -13,6 +13,7 @@ var driver_8h =
     [ "RTDM_DRIVER_VER", "driver_8h.html#gaeddd03e63cdce1692edcc497a44756c2", null ],
     [ "RTDM_EXCLUSIVE", "driver_8h.html#ga7c66ec8f269c701237437177af0704e8", null ],
     [ "RTDM_EXECUTE_ATOMICALLY", "driver_8h.html#gabbaf52632d5dde7fa66e0b70d887493b", null ],
+    [ "RTDM_IRQ_DISABLE", "driver_8h.html#ga9eb37d265d4c1b81e94b16c412dff4b4", null ],
     [ "rtdm_irq_get_arg", "driver_8h.html#gac99789fe8b6b48e032ee6c22544968e4", null ],
     [ "RTDM_IRQ_HANDLED", "driver_8h.html#ga56a2e243364bc9ff0e38c031c4c8ad57", null ],
     [ "RTDM_IRQ_NONE", "driver_8h.html#gad7b7593bdac7e1595635f2b372110d22", null ],

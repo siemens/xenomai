@@ -130,13 +130,7 @@ $(document).ready(function(){initNavTree('xddp-stream_8c-example.html','');});
 <div class="line"><span class="comment"> *   =&gt;  open /dev/rtp0                                            |  ^</span></div>
 <div class="line"><span class="comment"> *   =&gt;  read traffic from RT domain via read()                    |  |</span></div>
 <div class="line"><span class="comment"> *   =&gt;  echo traffic back to RT domain via write()                +--+</span></div>
-<div class="line"><span class="comment"> *</span></div>
-<div class="line"><span class="comment"> * See Makefile in this directory for build directives.</span></div>
-<div class="line"><span class="comment"> *</span></div>
-<div class="line"><span class="comment"> * NOTE: XDDP is a replacement for the legacy RT_PIPE interface</span></div>
-<div class="line"><span class="comment"> * available from the native skin until Xenomai 3.</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line"><span class="preprocessor">#include &lt;sys/mman.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
@@ -153,22 +147,22 @@ $(document).ready(function(){initNavTree('xddp-stream_8c-example.html','');});
 <div class="line"><span class="preprocessor">#define XDDP_PORT 0     </span><span class="comment">/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */</span><span class="preprocessor"></span></div>
 <div class="line"><span class="preprocessor"></span></div>
 <div class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *msg[] = {</div>
-<div class="line">    <span class="stringliteral">&quot;Surfing With The Alien&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Lords of Karma&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Banana Mango&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Psycho Monkey&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Luminous Flesh Giants&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Moroccan Sunset&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Satch Boogie&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Flying In A Blue Dream&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Ride&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Summer Song&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Speed Of Light&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Crystal Planet&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Raspberry Jam Delta-V&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Champagne?&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Clouds Race Across The Sky&quot;</span>,</div>
-<div class="line">    <span class="stringliteral">&quot;Engines Of Creation&quot;</span></div>
+<div class="line">        <span class="stringliteral">&quot;Surfing With The Alien&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Lords of Karma&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Banana Mango&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Psycho Monkey&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Luminous Flesh Giants&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Moroccan Sunset&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Satch Boogie&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Flying In A Blue Dream&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Ride&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Summer Song&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Speed Of Light&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Crystal Planet&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Raspberry Jam Delta-V&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Champagne?&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Clouds Race Across The Sky&quot;</span>,</div>
+<div class="line">        <span class="stringliteral">&quot;Engines Of Creation&quot;</span></div>
 <div class="line">};</div>
 <div class="line"></div>
 <div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> fail(<span class="keyword">const</span> <span class="keywordtype">char</span> *reason)</div>
@@ -238,15 +232,15 @@ $(document).ready(function(){initNavTree('xddp-stream_8c-example.html','');});
 <div class="line">                                fail(<span class="stringliteral">&quot;sendto&quot;</span>);</div>
 <div class="line">                }</div>
 <div class="line"></div>
-<div class="line">                rt_printf(<span class="stringliteral">&quot;%s: sent (scattered) %d-bytes message, \&quot;%.*s\&quot;\n&quot;</span>,</div>
-<div class="line">                          __FUNCTION__, len, len, msg[n]);</div>
+<div class="line">                printf(<span class="stringliteral">&quot;%s: sent (scattered) %d-bytes message, \&quot;%.*s\&quot;\n&quot;</span>,</div>
+<div class="line">                       __FUNCTION__, len, len, msg[n]);</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">/* Read back packets echoed by the regular thread */</span></div>
 <div class="line">                ret = recvfrom(s, buf, <span class="keyword">sizeof</span>(buf), 0, NULL, 0);</div>
 <div class="line">                <span class="keywordflow">if</span> (ret &lt;= 0)</div>
 <div class="line">                        fail(<span class="stringliteral">&quot;recvfrom&quot;</span>);</div>
 <div class="line"></div>
-<div class="line">                rt_printf(<span class="stringliteral">&quot;   =&gt; \&quot;%.*s\&quot; echoed by peer\n&quot;</span>, ret, buf);</div>
+<div class="line">                printf(<span class="stringliteral">&quot;   =&gt; \&quot;%.*s\&quot; echoed by peer\n&quot;</span>, ret, buf);</div>
 <div class="line"></div>
 <div class="line">                n = (n + 1) % (<span class="keyword">sizeof</span>(msg) / <span class="keyword">sizeof</span>(msg[0]));</div>
 <div class="line">                <span class="comment">/*</span></div>
@@ -290,39 +284,18 @@ $(document).ready(function(){initNavTree('xddp-stream_8c-example.html','');});
 <div class="line">        <span class="keywordflow">return</span> NULL;</div>
 <div class="line">}</div>
 <div class="line"></div>
-<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> cleanup_upon_sig(<span class="keywordtype">int</span> sig)</div>
-<div class="line">{</div>
-<div class="line">        pthread_cancel(rt);</div>
-<div class="line">        pthread_cancel(nrt);</div>
-<div class="line">        signal(sig, SIG_DFL);</div>
-<div class="line">        <a name="a4"></a><a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(rt, NULL);</div>
-<div class="line">        <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(nrt, NULL);</div>
-<div class="line">}</div>
-<div class="line"></div>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
 <div class="line">{</div>
 <div class="line">        <span class="keyword">struct </span>sched_param rtparam = { .sched_priority = 42 };</div>
 <div class="line">        pthread_attr_t rtattr, regattr;</div>
-<div class="line">        sigset_t mask, oldmask;</div>
+<div class="line">        sigset_t set;</div>
+<div class="line">        <span class="keywordtype">int</span> sig;</div>
 <div class="line"></div>
-<div class="line">        mlockall(MCL_CURRENT | MCL_FUTURE);</div>
-<div class="line"></div>
-<div class="line">        sigemptyset(&amp;mask);</div>
-<div class="line">        sigaddset(&amp;mask, SIGINT);</div>
-<div class="line">        signal(SIGINT, cleanup_upon_sig);</div>
-<div class="line">        sigaddset(&amp;mask, SIGTERM);</div>
-<div class="line">        signal(SIGTERM, cleanup_upon_sig);</div>
-<div class="line">        sigaddset(&amp;mask, SIGHUP);</div>
-<div class="line">        signal(SIGHUP, cleanup_upon_sig);</div>
-<div class="line">        pthread_sigmask(SIG_BLOCK, &amp;mask, &amp;oldmask);</div>
-<div class="line"></div>
-<div class="line">        <span class="comment">/*</span></div>
-<div class="line"><span class="comment">         * This is a real-time compatible printf() package from</span></div>
-<div class="line"><span class="comment">         * Xenomai&#39;s RT Development Kit (RTDK), that does NOT cause</span></div>
-<div class="line"><span class="comment">         * any transition to secondary (i.e. non real-time) mode when</span></div>
-<div class="line"><span class="comment">         * writing output.</span></div>
-<div class="line"><span class="comment">         */</span></div>
-<div class="line">        rt_print_auto_init(1);</div>
+<div class="line">        sigemptyset(&amp;set);</div>
+<div class="line">        sigaddset(&amp;set, SIGINT);</div>
+<div class="line">        sigaddset(&amp;set, SIGTERM);</div>
+<div class="line">        sigaddset(&amp;set, SIGHUP);</div>
+<div class="line">        pthread_sigmask(SIG_BLOCK, &amp;set, NULL);</div>
 <div class="line"></div>
 <div class="line">        pthread_attr_init(&amp;rtattr);</div>
 <div class="line">        pthread_attr_setdetachstate(&amp;rtattr, PTHREAD_CREATE_JOINABLE);</div>
@@ -330,7 +303,7 @@ $(document).ready(function(){initNavTree('xddp-stream_8c-example.html','');});
 <div class="line">        pthread_attr_setschedpolicy(&amp;rtattr, SCHED_FIFO);</div>
 <div class="line">        pthread_attr_setschedparam(&amp;rtattr, &amp;rtparam);</div>
 <div class="line"></div>
-<div class="line">        errno = <a name="a5"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rt, &amp;rtattr, &amp;realtime_thread, NULL);</div>
+<div class="line">        errno = <a name="a4"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rt, &amp;rtattr, &amp;realtime_thread, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
@@ -343,7 +316,11 @@ $(document).ready(function(){initNavTree('xddp-stream_8c-example.html','');});
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
-<div class="line">        sigsuspend(&amp;oldmask);</div>
+<div class="line">        sigwait(&amp;set, &amp;sig);</div>
+<div class="line">        pthread_cancel(rt);</div>
+<div class="line">        pthread_cancel(nrt);</div>
+<div class="line">        <a name="a5"></a><a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(rt, NULL);</div>
+<div class="line">        <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(nrt, NULL);</div>
 <div class="line"></div>
 <div class="line">        <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>

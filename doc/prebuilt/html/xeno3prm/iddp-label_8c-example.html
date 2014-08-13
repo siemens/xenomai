@@ -101,10 +101,7 @@ $(document).ready(function(){initNavTree('iddp-label_8c-example.html','');});
 <div class="line"><span class="comment"> * ASCII labels can be attached to bound ports, in order to connect</span></div>
 <div class="line"><span class="comment"> * sockets to them in a more descriptive way than using plain numeric</span></div>
 <div class="line"><span class="comment"> * port values.</span></div>
-<div class="line"><span class="comment"> *</span></div>
-<div class="line"><span class="comment"> * See Makefile in this directory for build directives.</span></div>
 <div class="line"><span class="comment"> */</span></div>
-<div class="line"><span class="preprocessor">#include &lt;sys/mman.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
@@ -196,7 +193,7 @@ $(document).ready(function(){initNavTree('iddp-label_8c-example.html','');});
 <div class="line">                        close(s);</div>
 <div class="line">                        fail(<span class="stringliteral">&quot;recvfrom&quot;</span>);</div>
 <div class="line">                }</div>
-<div class="line">                rt_printf(<span class="stringliteral">&quot;%s: received %d bytes, \&quot;%.*s\&quot; from port %d\n&quot;</span>,</div>
+<div class="line">                printf(<span class="stringliteral">&quot;%s: received %d bytes, \&quot;%.*s\&quot; from port %d\n&quot;</span>,</div>
 <div class="line">                          __FUNCTION__, ret, ret, buf, claddr.sipc_port);</div>
 <div class="line">        }</div>
 <div class="line"></div>
@@ -253,8 +250,8 @@ $(document).ready(function(){initNavTree('iddp-label_8c-example.html','');});
 <div class="line">                        close(s);</div>
 <div class="line">                        fail(<span class="stringliteral">&quot;sendto&quot;</span>);</div>
 <div class="line">                }</div>
-<div class="line">                rt_printf(<span class="stringliteral">&quot;%s: sent %d bytes, \&quot;%.*s\&quot;\n&quot;</span>,</div>
-<div class="line">                          __FUNCTION__, ret, ret, msg[n]);</div>
+<div class="line">                printf(<span class="stringliteral">&quot;%s: sent %d bytes, \&quot;%.*s\&quot;\n&quot;</span>,</div>
+<div class="line">                       __FUNCTION__, ret, ret, msg[n]);</div>
 <div class="line">                n = (n + 1) % (<span class="keyword">sizeof</span>(msg) / <span class="keyword">sizeof</span>(msg[0]));</div>
 <div class="line">                <span class="comment">/*</span></div>
 <div class="line"><span class="comment">                 * We run in full real-time mode (i.e. primary mode),</span></div>
@@ -269,39 +266,19 @@ $(document).ready(function(){initNavTree('iddp-label_8c-example.html','');});
 <div class="line">        <span class="keywordflow">return</span> NULL;</div>
 <div class="line">}</div>
 <div class="line"></div>
-<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> cleanup_upon_sig(<span class="keywordtype">int</span> sig)</div>
-<div class="line">{</div>
-<div class="line">        pthread_cancel(svtid);</div>
-<div class="line">        pthread_cancel(cltid);</div>
-<div class="line">        signal(sig, SIG_DFL);</div>
-<div class="line">        <a name="a5"></a><a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(svtid, NULL);</div>
-<div class="line">        <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(cltid, NULL);</div>
-<div class="line">}</div>
-<div class="line"></div>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
 <div class="line">{</div>
 <div class="line">        <span class="keyword">struct </span>sched_param svparam = {.sched_priority = 71 };</div>
 <div class="line">        <span class="keyword">struct </span>sched_param clparam = {.sched_priority = 70 };</div>
 <div class="line">        pthread_attr_t svattr, clattr;</div>
-<div class="line">        sigset_t mask, oldmask;</div>
+<div class="line">        sigset_t set;</div>
+<div class="line">        <span class="keywordtype">int</span> sig;</div>
 <div class="line"></div>
-<div class="line">        mlockall(MCL_CURRENT | MCL_FUTURE);</div>
-<div class="line"></div>
-<div class="line">        sigemptyset(&amp;mask);</div>
-<div class="line">        sigaddset(&amp;mask, SIGINT);</div>
-<div class="line">        signal(SIGINT, cleanup_upon_sig);</div>
-<div class="line">        sigaddset(&amp;mask, SIGTERM);</div>
-<div class="line">        signal(SIGTERM, cleanup_upon_sig);</div>
-<div class="line">        sigaddset(&amp;mask, SIGHUP);</div>
-<div class="line">        signal(SIGHUP, cleanup_upon_sig);</div>
-<div class="line">        pthread_sigmask(SIG_BLOCK, &amp;mask, &amp;oldmask);</div>
-<div class="line"></div>
-<div class="line">        <span class="comment">/*</span></div>
-<div class="line"><span class="comment">         * This is a real-time compatible printf() package from</span></div>
-<div class="line"><span class="comment">         * Xenomai&#39;s RT Development Kit (RTDK), that does NOT cause</span></div>
-<div class="line"><span class="comment">         * any transition to secondary mode.</span></div>
-<div class="line"><span class="comment">         */</span></div>
-<div class="line">        rt_print_auto_init(1);</div>
+<div class="line">        sigemptyset(&amp;set);</div>
+<div class="line">        sigaddset(&amp;set, SIGINT);</div>
+<div class="line">        sigaddset(&amp;set, SIGTERM);</div>
+<div class="line">        sigaddset(&amp;set, SIGHUP);</div>
+<div class="line">        pthread_sigmask(SIG_BLOCK, &amp;set, NULL);</div>
 <div class="line"></div>
 <div class="line">        pthread_attr_init(&amp;svattr);</div>
 <div class="line">        pthread_attr_setdetachstate(&amp;svattr, PTHREAD_CREATE_JOINABLE);</div>
@@ -309,7 +286,7 @@ $(document).ready(function(){initNavTree('iddp-label_8c-example.html','');});
 <div class="line">        pthread_attr_setschedpolicy(&amp;svattr, SCHED_FIFO);</div>
 <div class="line">        pthread_attr_setschedparam(&amp;svattr, &amp;svparam);</div>
 <div class="line"></div>
-<div class="line">        errno = <a name="a6"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;svtid, &amp;svattr, &amp;server, NULL);</div>
+<div class="line">        errno = <a name="a5"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;svtid, &amp;svattr, &amp;server, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
@@ -323,7 +300,11 @@ $(document).ready(function(){initNavTree('iddp-label_8c-example.html','');});
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
-<div class="line">        sigsuspend(&amp;oldmask);</div>
+<div class="line">        sigwait(&amp;set, &amp;sig);</div>
+<div class="line">        pthread_cancel(svtid);</div>
+<div class="line">        pthread_cancel(cltid);</div>
+<div class="line">        <a name="a6"></a><a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(svtid, NULL);</div>
+<div class="line">        <a class="code" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join</a>(cltid, NULL);</div>
 <div class="line"></div>
 <div class="line">        <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>

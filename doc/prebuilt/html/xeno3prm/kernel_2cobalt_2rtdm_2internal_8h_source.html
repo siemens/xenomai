@@ -146,53 +146,51 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2rtdm_2internal_8h_sour
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>rb_root rtdm_protocol_devices;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>xnpersonality rtdm_personality;</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">int</span> rtdm_initialised;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">void</span> cleanup_process_files(<span class="keyword">struct</span> rtdm_process *owner);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keywordtype">int</span> rtdm_no_support(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_named_device(<span class="keyword">const</span> <span class="keywordtype">char</span> *name);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *get_protocol_device(<span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">protocol_family</a>, <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">socket_type</a>);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dereference_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device)</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;{</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        atomic_dec(&amp;device-&gt;<a class="code" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">reserved</a>.refcount);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;}</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_OPT_VFILE</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor"></span><span class="keywordtype">int</span> rtdm_proc_init(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">void</span> rtdm_proc_cleanup(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keywordtype">int</span> rtdm_proc_register_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keywordtype">void</span> rtdm_proc_unregister_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_proc_init(<span class="keywordtype">void</span>) { <span class="keywordflow">return</span> 0; }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> <span class="keyword">inline</span> rtdm_proc_cleanup(<span class="keywordtype">void</span>) { }</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;rtdm_proc_register_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device) { <span class="keywordflow">return</span> 0; }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;rtdm_proc_unregister_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device) { }</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="keywordtype">int</span> __rt_dev_ioctl_fallback(<span class="keyword">struct</span> rtdm_fd *fd,</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                            <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> request, <span class="keywordtype">void</span> __user *arg);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">void</span> cleanup_process_files(<span class="keyword">struct</span> rtdm_process *owner);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keywordtype">int</span> rtdm_no_support(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *__rtdm_get_named_device(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> *minor_r);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">struct </span><a class="code" href="structrtdm__device.html">rtdm_device</a> *__rtdm_get_protocol_device(<span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">protocol_family</a>, <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">socket_type</a>);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dereference_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device)</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;{</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        atomic_dec(&amp;device-&gt;<a class="code" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">reserved</a>.refcount);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;}</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_OPT_VFILE</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor"></span><span class="keywordtype">int</span> rtdm_proc_init(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keywordtype">void</span> rtdm_proc_cleanup(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keywordtype">int</span> rtdm_proc_register_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">void</span> rtdm_proc_unregister_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_proc_init(<span class="keywordtype">void</span>) { <span class="keywordflow">return</span> 0; }</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">static</span> <span class="keywordtype">void</span> <span class="keyword">inline</span> rtdm_proc_cleanup(<span class="keywordtype">void</span>) { }</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;rtdm_proc_register_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device) { <span class="keywordflow">return</span> 0; }</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;rtdm_proc_unregister_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device) { }</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keywordtype">int</span> __rt_dev_ioctl_fallback(<span class="keyword">struct</span> rtdm_fd *fd,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                            <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> request, <span class="keywordtype">void</span> __user *arg);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">void</span> __rt_dev_unref(<span class="keyword">struct</span> rtdm_fd *fd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx);</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">void</span> __rt_dev_unref(<span class="keyword">struct</span> rtdm_fd *fd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keywordtype">int</span> __rtdm_mmap_from_fdop(<span class="keyword">struct</span> rtdm_fd *fd, <span class="keywordtype">size_t</span> len, off_t offset,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                          <span class="keywordtype">int</span> prot, <span class="keywordtype">int</span> flags, <span class="keywordtype">void</span> *__user *pptr);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">int</span> __rtdm_mmap_from_fdop(<span class="keyword">struct</span> rtdm_fd *fd, <span class="keywordtype">size_t</span> len, off_t offset,</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                          <span class="keywordtype">int</span> prot, <span class="keywordtype">int</span> flags, <span class="keywordtype">void</span> *__user *pptr);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keywordtype">int</span> rtdm_init(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keywordtype">int</span> rtdm_init(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keywordtype">void</span> rtdm_cleanup(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">void</span> rtdm_cleanup(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _RTDM_INTERNAL_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _RTDM_INTERNAL_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="driver_8h_html"><div class="ttname"><a href="driver_8h.html">driver.h</a></div><div class="ttdoc">Real-Time Driver Model for Xenomai, driver API header. </div></div>
-<div class="ttc" id="structrtdm__device_html_a02552f2d91052bd801576b3a132ba3f9"><div class="ttname"><a href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">rtdm_device::socket_type</a></div><div class="ttdeci">int socket_type</div><div class="ttdoc">Protocol device identification: socket type (SOCK_xxx) </div><div class="ttdef"><b>Definition:</b> driver.h:305</div></div>
-<div class="ttc" id="structrtdm__device_html_a548f89224ffc7146fd46c53a0eb48040"><div class="ttname"><a href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a></div><div class="ttdeci">struct rtdm_dev_reserved reserved</div><div class="ttdoc">Data stored by RTDM inside a registered device (internal use only) </div><div class="ttdef"><b>Definition:</b> driver.h:288</div></div>
-<div class="ttc" id="structrtdm__device_html"><div class="ttname"><a href="structrtdm__device.html">rtdm_device</a></div><div class="ttdoc">RTDM device. </div><div class="ttdef"><b>Definition:</b> driver.h:286</div></div>
-<div class="ttc" id="structrtdm__device_html_ae58c050e09a79b277f718d796eda2072"><div class="ttname"><a href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">rtdm_device::protocol_family</a></div><div class="ttdeci">int protocol_family</div><div class="ttdoc">Protocol device identification: protocol family (PF_xxx) </div><div class="ttdef"><b>Definition:</b> driver.h:303</div></div>
+<div class="ttc" id="structrtdm__device_html_a02552f2d91052bd801576b3a132ba3f9"><div class="ttname"><a href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">rtdm_device::socket_type</a></div><div class="ttdeci">int socket_type</div><div class="ttdoc">Protocol device identification: socket type (SOCK_xxx) </div><div class="ttdef"><b>Definition:</b> driver.h:331</div></div>
+<div class="ttc" id="structrtdm__device_html_a548f89224ffc7146fd46c53a0eb48040"><div class="ttname"><a href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a></div><div class="ttdeci">struct rtdm_dev_reserved reserved</div><div class="ttdoc">Data stored by RTDM inside a registered device (internal use only) </div><div class="ttdef"><b>Definition:</b> driver.h:314</div></div>
+<div class="ttc" id="structrtdm__device_html"><div class="ttname"><a href="structrtdm__device.html">rtdm_device</a></div><div class="ttdoc">RTDM device. </div><div class="ttdef"><b>Definition:</b> driver.h:312</div></div>
+<div class="ttc" id="structrtdm__device_html_ae58c050e09a79b277f718d796eda2072"><div class="ttname"><a href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">rtdm_device::protocol_family</a></div><div class="ttdeci">int protocol_family</div><div class="ttdoc">Protocol device identification: protocol family (PF_xxx) </div><div class="ttdef"><b>Definition:</b> driver.h:329</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

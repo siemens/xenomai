@@ -1,5 +1,7 @@
 var NAVTREEINDEX6 =
 {
+"ni__tio_8h_source.html":[4,0,1,1,0,1,3],
+"nios2_2include_2asm_2xenomai_2calibration_8h_source.html":[4,0,1,0,0,2,0,0,0,1],
 "nios2_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,3],
 "nios2_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,0,2],
 "obstack_8h_source.html":[4,0,0,1,6],
@@ -247,7 +249,5 @@ var NAVTREEINDEX6 =
 "rtserial_8h_source.html":[4,0,0,9,2,2],
 "rttesting_8h_source.html":[4,0,0,9,2,3],
 "sched-idle_8h_source.html":[4,0,0,2,1,17],
-"sched-quota_8h_source.html":[4,0,0,2,1,18],
-"sched-rt_8h_source.html":[4,0,0,2,1,19],
-"sched-sporadic_8h_source.html":[4,0,0,2,1,20]
+"sched-quota_8h_source.html":[4,0,0,2,1,18]
 };

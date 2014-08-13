@@ -132,11 +132,11 @@ RTDM_IRQTYPE_xxx</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrpb40f3fc6900a5e6be96e288e1ff0a042"></a><a class="anchor" id="RTDM_IRQTYPE_xxx"></a>Interrupt registrations flags </p>
 </td></tr>
 <tr class="memitem:gab26458b2383dd59b4977cd77c948cdfc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gab26458b2383dd59b4977cd77c948cdfc"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#gab26458b2383dd59b4977cd77c948cdfc">RTDM_IRQTYPE_SHARED</a>&#160;&#160;&#160;XN_ISR_SHARED</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#gab26458b2383dd59b4977cd77c948cdfc">RTDM_IRQTYPE_SHARED</a>&#160;&#160;&#160;XN_IRQTYPE_SHARED</td></tr>
 <tr class="memdesc:gab26458b2383dd59b4977cd77c948cdfc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable IRQ-sharing with other real-time drivers. <br/></td></tr>
 <tr class="separator:gab26458b2383dd59b4977cd77c948cdfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf4e76db13d7f7aac4be2cae59e0097bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaf4e76db13d7f7aac4be2cae59e0097bc"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#gaf4e76db13d7f7aac4be2cae59e0097bc">RTDM_IRQTYPE_EDGE</a>&#160;&#160;&#160;XN_ISR_EDGE</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#gaf4e76db13d7f7aac4be2cae59e0097bc">RTDM_IRQTYPE_EDGE</a>&#160;&#160;&#160;XN_IRQTYPE_EDGE</td></tr>
 <tr class="memdesc:gaf4e76db13d7f7aac4be2cae59e0097bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark IRQ as edge-triggered, relevant for correct handling of shared edge-triggered IRQs. <br/></td></tr>
 <tr class="separator:gaf4e76db13d7f7aac4be2cae59e0097bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -145,13 +145,17 @@ RTDM_IRQ_xxx</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrpe555ee13ceceddc5283bdc9a274b3648"></a><a class="anchor" id="RTDM_IRQ_xxx"></a>Return flags of interrupt handlers </p>
 </td></tr>
 <tr class="memitem:gad7b7593bdac7e1595635f2b372110d22"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gad7b7593bdac7e1595635f2b372110d22"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#gad7b7593bdac7e1595635f2b372110d22">RTDM_IRQ_NONE</a>&#160;&#160;&#160;XN_ISR_NONE</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#gad7b7593bdac7e1595635f2b372110d22">RTDM_IRQ_NONE</a>&#160;&#160;&#160;XN_IRQ_NONE</td></tr>
 <tr class="memdesc:gad7b7593bdac7e1595635f2b372110d22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unhandled interrupt. <br/></td></tr>
 <tr class="separator:gad7b7593bdac7e1595635f2b372110d22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga56a2e243364bc9ff0e38c031c4c8ad57"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga56a2e243364bc9ff0e38c031c4c8ad57"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#ga56a2e243364bc9ff0e38c031c4c8ad57">RTDM_IRQ_HANDLED</a>&#160;&#160;&#160;XN_ISR_HANDLED</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#ga56a2e243364bc9ff0e38c031c4c8ad57">RTDM_IRQ_HANDLED</a>&#160;&#160;&#160;XN_IRQ_HANDLED</td></tr>
 <tr class="memdesc:ga56a2e243364bc9ff0e38c031c4c8ad57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Denote handled interrupt. <br/></td></tr>
 <tr class="separator:ga56a2e243364bc9ff0e38c031c4c8ad57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9eb37d265d4c1b81e94b16c412dff4b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga9eb37d265d4c1b81e94b16c412dff4b4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__irq.html#ga9eb37d265d4c1b81e94b16c412dff4b4">RTDM_IRQ_DISABLE</a>&#160;&#160;&#160;XN_IRQ_DISABLE</td></tr>
+<tr class="memdesc:ga9eb37d265d4c1b81e94b16c412dff4b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request interrupt disabling on exit. <br/></td></tr>
+<tr class="separator:ga9eb37d265d4c1b81e94b16c412dff4b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Macro Definition Documentation</h2>

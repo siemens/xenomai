@@ -1,5 +1,6 @@
 var group__rtdm__irq =
 [
+    [ "RTDM_IRQ_DISABLE", "group__rtdm__irq.html#ga9eb37d265d4c1b81e94b16c412dff4b4", null ],
     [ "rtdm_irq_get_arg", "group__rtdm__irq.html#gac99789fe8b6b48e032ee6c22544968e4", null ],
     [ "RTDM_IRQ_HANDLED", "group__rtdm__irq.html#ga56a2e243364bc9ff0e38c031c4c8ad57", null ],
     [ "RTDM_IRQ_NONE", "group__rtdm__irq.html#gad7b7593bdac7e1595635f2b372110d22", null ],

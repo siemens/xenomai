@@ -101,25 +101,25 @@ Collaboration diagram for Interrupt management:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ga2f4d355b8f1e30ac47eb6cdf5b15052a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#ga2f4d355b8f1e30ac47eb6cdf5b15052a">xnintr_destroy</a> (struct xnintr *intr)</td></tr>
-<tr class="memdesc:ga2f4d355b8f1e30ac47eb6cdf5b15052a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an interrupt object.  <a href="#ga2f4d355b8f1e30ac47eb6cdf5b15052a">More...</a><br/></td></tr>
+<tr class="memdesc:ga2f4d355b8f1e30ac47eb6cdf5b15052a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an interrupt descriptor.  <a href="#ga2f4d355b8f1e30ac47eb6cdf5b15052a">More...</a><br/></td></tr>
 <tr class="separator:ga2f4d355b8f1e30ac47eb6cdf5b15052a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3daaec8f96ae24a57e390c2bb52a7dd8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8">xnintr_attach</a> (struct xnintr *intr, void *cookie)</td></tr>
-<tr class="memdesc:ga3daaec8f96ae24a57e390c2bb52a7dd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attach an interrupt object.  <a href="#ga3daaec8f96ae24a57e390c2bb52a7dd8">More...</a><br/></td></tr>
+<tr class="memdesc:ga3daaec8f96ae24a57e390c2bb52a7dd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attach an interrupt descriptor.  <a href="#ga3daaec8f96ae24a57e390c2bb52a7dd8">More...</a><br/></td></tr>
 <tr class="separator:ga3daaec8f96ae24a57e390c2bb52a7dd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga40d82d8a287980c1075d70b8e5df6a77"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#ga40d82d8a287980c1075d70b8e5df6a77">xnintr_detach</a> (struct xnintr *intr)</td></tr>
-<tr class="memdesc:ga40d82d8a287980c1075d70b8e5df6a77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detach an interrupt object.  <a href="#ga40d82d8a287980c1075d70b8e5df6a77">More...</a><br/></td></tr>
+<tr class="memdesc:ga40d82d8a287980c1075d70b8e5df6a77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detach an interrupt descriptor.  <a href="#ga40d82d8a287980c1075d70b8e5df6a77">More...</a><br/></td></tr>
 <tr class="separator:ga40d82d8a287980c1075d70b8e5df6a77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacb629c2fda5f3400a86c7139100eebff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#gacb629c2fda5f3400a86c7139100eebff">xnintr_enable</a> (struct xnintr *intr)</td></tr>
-<tr class="memdesc:gacb629c2fda5f3400a86c7139100eebff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable an interrupt object.  <a href="#gacb629c2fda5f3400a86c7139100eebff">More...</a><br/></td></tr>
+<tr class="memdesc:gacb629c2fda5f3400a86c7139100eebff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable an interrupt line.  <a href="#gacb629c2fda5f3400a86c7139100eebff">More...</a><br/></td></tr>
 <tr class="separator:gacb629c2fda5f3400a86c7139100eebff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gadd483fe4979b3250d2f4ef830ec704ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#gadd483fe4979b3250d2f4ef830ec704ac">xnintr_disable</a> (struct xnintr *intr)</td></tr>
-<tr class="memdesc:gadd483fe4979b3250d2f4ef830ec704ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable an interrupt object.  <a href="#gadd483fe4979b3250d2f4ef830ec704ac">More...</a><br/></td></tr>
+<tr class="memdesc:gadd483fe4979b3250d2f4ef830ec704ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable an interrupt line.  <a href="#gadd483fe4979b3250d2f4ef830ec704ac">More...</a><br/></td></tr>
 <tr class="separator:gadd483fe4979b3250d2f4ef830ec704ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1f60c3d81107d58d52e3c44d9f8e8a97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#ga1f60c3d81107d58d52e3c44d9f8e8a97">xnintr_affinity</a> (struct xnintr *intr, cpumask_t cpumask)</td></tr>
-<tr class="memdesc:ga1f60c3d81107d58d52e3c44d9f8e8a97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set interrupt's processor affinity.  <a href="#ga1f60c3d81107d58d52e3c44d9f8e8a97">More...</a><br/></td></tr>
+<tr class="memdesc:ga1f60c3d81107d58d52e3c44d9f8e8a97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set processor affinity of interrupt.  <a href="#ga1f60c3d81107d58d52e3c44d9f8e8a97">More...</a><br/></td></tr>
 <tr class="separator:ga1f60c3d81107d58d52e3c44d9f8e8a97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2bcb3882ee1fc8f5580db7f66b2730b9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9">xnintr_init</a> (struct xnintr *intr, const char *name, unsigned int irq, xnisr_t isr, xniack_t iack, int flags)</td></tr>
-<tr class="memdesc:ga2bcb3882ee1fc8f5580db7f66b2730b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize an interrupt object.  <a href="#ga2bcb3882ee1fc8f5580db7f66b2730b9">More...</a><br/></td></tr>
+<tr class="memdesc:ga2bcb3882ee1fc8f5580db7f66b2730b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize an interrupt descriptor.  <a href="#ga2bcb3882ee1fc8f5580db7f66b2730b9">More...</a><br/></td></tr>
 <tr class="separator:ga2bcb3882ee1fc8f5580db7f66b2730b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -148,12 +148,12 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Set interrupt's processor affinity. </p>
-<p>Restricts the IRQ associated with the interrupt object <em>intr</em> to be received only on processors which bits are set in <em>cpumask</em>.</p>
+<p>Set processor affinity of interrupt. </p>
+<p>Restricts the IRQ line associated with the interrupt descriptor <em>intr</em> to be received only on processors which bits are set in <em>cpumask</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The descriptor address of the interrupt object which affinity is to be changed.</td></tr>
-    <tr><td class="paramname">cpumask</td><td>The new processor affinity of the interrupt object.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of the interrupt descriptor.</td></tr>
+    <tr><td class="paramname">cpumask</td><td>The new processor affinity.</td></tr>
   </table>
   </dd>
 </dl>
@@ -186,23 +186,23 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Attach an interrupt object. </p>
-<p>Attach an interrupt object previously initialized by <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9" title="Initialize an interrupt object. ">xnintr_init()</a>. After this operation is completed, all IRQs received from the corresponding interrupt channel are directed to the object's ISR.</p>
+<p>Attach an interrupt descriptor. </p>
+<p>Attach an interrupt descriptor previously initialized by <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9" title="Initialize an interrupt descriptor. ">xnintr_init()</a>. This operation registers the descriptor at the interrupt pipeline, but does not enable the interrupt line yet. A call to <a class="el" href="group__cobalt__core__irq.html#gacb629c2fda5f3400a86c7139100eebff" title="Enable an interrupt line. ">xnintr_enable()</a> is required to start receiving IRQs from the interrupt line associated to the descriptor.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The descriptor address of the interrupt object to attach.</td></tr>
-    <tr><td class="paramname">cookie</td><td>A user-defined opaque value which is stored into the interrupt object descriptor for further retrieval by the ISR/ISR handlers.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of the interrupt descriptor to attach.</td></tr>
+    <tr><td class="paramname">cookie</td><td>A user-defined opaque value which is stored into the descriptor for further retrieval by the interrupt handler.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if a low-level error occurred while attaching the interrupt.</li>
-<li>-EBUSY is returned if the interrupt object was already attached.</li>
+<li>-EINVAL is returned if an error occurred while attaching the descriptor.</li>
+<li>-EBUSY is returned if the descriptor was already attached.</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>The caller <b>must not</b> hold nklock when invoking this service, this would cause deadlocks.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a></dd></dl>
-<dl class="section note"><dt>Note</dt><dd>Attaching an interrupt resets the tracked number of receipts to zero. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Attaching an interrupt descriptor resets the tracked number of IRQ receipts to zero. </dd></dl>
 
 <p>Referenced by <a class="el" href="group__rtdm__irq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>.</p>
 
@@ -222,11 +222,11 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Destroy an interrupt object. </p>
-<p>Destroys an interrupt object previously initialized by <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9" title="Initialize an interrupt object. ">xnintr_init()</a>. The interrupt object is automatically detached by a call to <a class="el" href="group__cobalt__core__irq.html#ga40d82d8a287980c1075d70b8e5df6a77" title="Detach an interrupt object. ">xnintr_detach()</a>. No more IRQs will be dispatched by this object after this service has returned.</p>
+<p>Destroy an interrupt descriptor. </p>
+<p>Destroys an interrupt descriptor previously initialized by <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9" title="Initialize an interrupt descriptor. ">xnintr_init()</a>. The descriptor is automatically detached by a call to <a class="el" href="group__cobalt__core__irq.html#ga40d82d8a287980c1075d70b8e5df6a77" title="Detach an interrupt descriptor. ">xnintr_detach()</a>. No more IRQs will be received through this descriptor after this service has returned.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The descriptor address of the interrupt object to destroy.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of the interrupt descriptor to destroy.</td></tr>
   </table>
   </dd>
 </dl>
@@ -250,11 +250,11 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Detach an interrupt object. </p>
-<p>Detach an interrupt object previously attached by <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8" title="Attach an interrupt object. ">xnintr_attach()</a>. After this operation is completed, no more IRQs are directed to the object's ISR, but the interrupt object itself remains valid. A detached interrupt object can be attached again by a subsequent call to <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8" title="Attach an interrupt object. ">xnintr_attach()</a>.</p>
+<p>Detach an interrupt descriptor. </p>
+<p>This call unregisters an interrupt descriptor previously attached by <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8" title="Attach an interrupt descriptor. ">xnintr_attach()</a> from the interrupt pipeline. Once detached, the associated interrupt line is disabled, but the descriptor remains valid. The descriptor can be attached anew by a call to <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8" title="Attach an interrupt descriptor. ">xnintr_attach()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The descriptor address of the interrupt object to detach.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of the interrupt descriptor to detach.</td></tr>
   </table>
   </dd>
 </dl>
@@ -279,11 +279,11 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Disable an interrupt object. </p>
-<p>Disables the hardware interrupt line associated with an interrupt object. This operation invalidates further interrupt requests from the given source until the IRQ line is re-enabled anew.</p>
+<p>Disable an interrupt line. </p>
+<p>Disables the interrupt line associated with an interrupt descriptor.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The descriptor address of the interrupt object to disable.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of the interrupt descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -305,11 +305,11 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Enable an interrupt object. </p>
-<p>Enables the hardware interrupt line associated with an interrupt object.</p>
+<p>Enable an interrupt line. </p>
+<p>Enables the interrupt line associated with an interrupt descriptor.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The descriptor address of the interrupt object to enable.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of the interrupt descriptor.</td></tr>
   </table>
   </dd>
 </dl>
@@ -367,35 +367,34 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Initialize an interrupt object. </p>
-<p>Associates an interrupt object with an IRQ line.</p>
-<p>When an interrupt occurs on the given <em>irq</em> line, the ISR is fired in order to deal with the hardware event. The interrupt service code may call any non-blocking service from the nucleus.</p>
-<p>Upon receipt of an IRQ, the ISR is immediately called on behalf of the interrupted stack context, the rescheduling procedure is locked, and the interrupt source is masked at hardware level. The status value returned by the ISR is then checked for the following values:</p>
+<p>Initialize an interrupt descriptor. </p>
+<p>When an interrupt occurs on the given <em>irq</em> line, the interrupt service routine <em>isr</em> is fired in order to deal with the hardware event. The interrupt handler may call any non-blocking service from the Cobalt core.</p>
+<p>Upon receipt of an IRQ, the interrupt handler <em>isr</em> is immediately called on behalf of the interrupted stack context, the rescheduling procedure is locked, and the interrupt line is masked in the system interrupt controller chip. Upon return, the status of the interrupt handler is checked for the following bits:</p>
 <ul>
-<li>XN_ISR_HANDLED indicates that the interrupt request has been fulfilled by the ISR.</li>
-<li>XN_ISR_NONE indicates the opposite to XN_ISR_HANDLED. The ISR must always return this value when it determines that the interrupt request has not been issued by the dedicated hardware device.</li>
+<li>XN_IRQ_HANDLED indicates that the interrupt request was successfully handled.</li>
+<li>XN_IRQ_NONE indicates the opposite to XN_IRQ_HANDLED, meaning that no interrupt source could be identified for the ongoing request by the handler.</li>
 </ul>
-<p>In addition, one of the following bits may be set by the ISR :</p>
-<dl class="section warning"><dt>Warning</dt><dd>Use these bits with care and only when you do understand their effect on the system. The ISR is not encouraged to use these bits in case it shares the IRQ line with other ISRs in the real-time domain.</dd></dl>
+<p>In addition, one of the following bits may be present in the status:</p>
 <ul>
-<li>XN_ISR_NOENABLE prevents the IRQ line from being re-enabled after the ISR has returned.</li>
-<li>XN_ISR_PROPAGATE causes the IRQ event to be propagated down the pipeline to Linux. This is the regular way to share interrupts between the nucleus and the regular Linux kernel. In effect, XN_ISR_PROPAGATE implies XN_ISR_NOENABLE since it would make no sense to re-enable the IRQ line before the Linux kernel had a chance to process the propagated interrupt.</li>
+<li>XN_IRQ_DISABLE tells the Cobalt core to disable the interrupt line before returning from the interrupt context.</li>
+<li>XN_IRQ_PROPAGATE propagates the IRQ event down the interrupt pipeline to Linux. Using this flag is strongly discouraged, unless you fully understand the implications of such propagation.</li>
 </ul>
-<p>A count of interrupt receipts is tracked into the interrupt descriptor, and reset to zero each time the interrupt object is attached. Since this count could wrap around, it should be used as an indication of interrupt activity only.</p>
+<dl class="section warning"><dt>Warning</dt><dd>The handler should not use these bits if it shares the interrupt line with other handlers in the real-time domain. When any of these bits is detected, the interrupt line is left masked.</dd></dl>
+<p>A count of interrupt receipts is tracked into the interrupt descriptor, and reset to zero each time such descriptor is attached. Since this count could wrap around, it should be used as an indication of interrupt activity only.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">intr</td><td>The address of a interrupt object descriptor the nucleus will use to store the object-specific data. This descriptor must always be valid while the object is active therefore it must be allocated in permanent memory.</td></tr>
-    <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the interrupt object or NULL.</td></tr>
-    <tr><td class="paramname">irq</td><td>The hardware interrupt channel associated with the interrupt object. This value is architecture-dependent. An interrupt object must then be attached to the hardware interrupt vector using the <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8" title="Attach an interrupt object. ">xnintr_attach()</a> service for the associated IRQs to be directed to this object.</td></tr>
-    <tr><td class="paramname">isr</td><td>The address of a valid low-level interrupt service routine if this parameter is non-zero. This handler will be called each time the corresponding IRQ is delivered on behalf of an interrupt context. When called, the ISR is passed the descriptor address of the interrupt object.</td></tr>
+    <tr><td class="paramname">intr</td><td>The address of a descriptor the Cobalt core will use to store the interrupt-specific data.</td></tr>
+    <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the interrupt or NULL.</td></tr>
+    <tr><td class="paramname">irq</td><td>The IRQ line number associated with the interrupt descriptor. This value is architecture-dependent. An interrupt descriptor must be attached to the system by a call to <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8" title="Attach an interrupt descriptor. ">xnintr_attach()</a> before <em>irq</em> events can be received.</td></tr>
+    <tr><td class="paramname">isr</td><td>The address of an interrupt handler, which is passed the address of the interrupt descriptor receiving the IRQ.</td></tr>
     <tr><td class="paramname">iack</td><td>The address of an optional interrupt acknowledge routine, aimed at replacing the default one. Only very specific situations actually require to override the default setting for this parameter, like having to acknowledge non-standard PIC hardware. <em>iack</em> should return a non-zero value to indicate that the interrupt has been properly acknowledged. If <em>iack</em> is NULL, the default routine will be used instead.</td></tr>
     <tr><td class="paramname">flags</td><td>A set of creation flags affecting the operation. The valid flags are:</td></tr>
   </table>
   </dd>
 </dl>
 <ul>
-<li>XN_ISR_SHARED enables IRQ-sharing with other interrupt objects.</li>
-<li>XN_ISR_EDGE is an additional flag need to be set together with XN_ISR_SHARED to enable IRQ-sharing of edge-triggered interrupts.</li>
+<li>XN_IRQTYPE_SHARED enables IRQ-sharing with other interrupt objects.</li>
+<li>XN_IRQTYPE_EDGE is an additional flag need to be set together with XN_IRQTYPE_SHARED to enable IRQ-sharing of edge-triggered interrupts.</li>
 </ul>
 <dl class="section return"><dt>Returns</dt><dd>0 is returned on success. Otherwise, -EINVAL is returned if <em>irq</em> is not a valid interrupt number.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>

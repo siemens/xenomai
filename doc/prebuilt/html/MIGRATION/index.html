@@ -743,8 +743,11 @@ asciidoc.install(3);
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_user_programs_and_libraries">1.1. User programs and libraries</h3>
-<div class="ulist"><ul>
-<li>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Changes in <code>xeno-config</code>
+</dt>
+<dd>
 <p>
 As with Xenomai 2.x, <code>xeno-config</code> is available for retrieving the
 compilation and link flags for building Xenomai 3.x applications. This
@@ -786,61 +789,120 @@ Specifying <code>--[skin=]cobalt</code> or <code>--[skin=]posix</code> on the co
 </li>
 <li>
 <p>
-<code>--no-auto-init</code> can be passed to disable automatic initialization
-  of the Copperplate library when the application process enters the
-  <code>main()</code> routine. In such a case, the application code using any API
-  based on the Copperplate layer, shall call the <code>copperplate_init()</code>
-  routine manually, as part of its initialization process, <em>before</em>
-  any real-time service is invoked.
+<code>--info</code> retrieves the current system information, including the
+   Xenomai release detected on the platform.
 </p>
-<div class="literalblock" id="auto-init">
-<div class="content">
-<pre><code>+xeno-config+ enables the Copperplate auto-init feature by default.</code></pre>
-</div></div>
 </li>
 </ul></div>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+Auto-initialization
+</dt>
+<dd>
 <p>
-<code>--enable-x86-sep</code> was renamed to <code>--enable-x86-vsyscall</code> to fix a
-  misnomer. This option should be left enabled (default), unless
-  <strong>linuxthreads</strong> are used instead of <strong>NPTL</strong>.
+<code>--no-auto-init</code> can be passed to disable automatic initialization of
+the Copperplate library when the application process enters the
+<code>main()</code> routine.
 </p>
-</li>
-</ul></div>
+</dd>
+</dl></div>
+<div class="paragraph" id="auto-init"><p>In such a case, the application code using any API based on the
+Copperplate layer, shall call the <code>copperplate_init(int *argcp, char
+*const **argvp)</code> routine manually, as part of its initialization
+process, <em>before</em> any real-time service is invoked.</p></div>
+<div class="paragraph"><p>This routine takes the addresses of the argument count and vector
+passed to the main() routine respectively. copperplate_init() handles
+the Xenomai options present in the argument vector, stripping them
+out, leaving only unprocessed options on return in the vector,
+updating the count accordingly.</p></div>
+<div class="paragraph"><p><code>xeno-config</code> enables the Copperplate auto-init feature by default.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+x86 vsyscall support
+</dt>
+<dd>
+<p>
+The <code>--enable-x86-sep</code> configuration switch was renamed to
+<code>--enable-x86-vsyscall</code> to fix a misnomer. This option should be left
+enabled (default), unless <strong>linuxthreads</strong> are used instead of <strong>NPTL</strong>.
+</p>
+</dd>
+</dl></div>
 </div>
 <div class="sect2">
 <h3 id="_kernel_parameters_cobalt">1.2. Kernel parameters (Cobalt)</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+System parameters renamed
+</dt>
+<dd>
 <div class="ulist"><ul>
 <li>
 <p>
-System parameters have been renamed:
+xeno_hal.supported_cpus &#8594; xenomai.supported_cpus
 </p>
 </li>
-</ul></div>
-<div class="paragraph"><p>xeno_hal.supported_cpus &#8594; xenomai.supported_cpus</p></div>
-<div class="paragraph"><p>xeno_hal.clockfreq &#8594; xenomai.clockfreq</p></div>
-<div class="paragraph"><p>xeno_hal.disable &#8594; xenomai.disable</p></div>
-<div class="paragraph"><p>xeno_hal.timerfreq &#8594; xenomai.timerfreq</p></div>
-<div class="paragraph"><p>xeno_hal.cpufreq &#8594; xenomai.cpufreq</p></div>
-<div class="paragraph"><p>xeno_nucleus.watchdog_timeout &#8594; xenomai.watchdog_timeout</p></div>
-<div class="paragraph"><p>xeno_nucleus.xenomai_gid &#8594; xenomai.xenomai_gid</p></div>
-<div class="paragraph"><p>xeno_nucleus.sysheap_size &#8594; xenomai.sysheap_size</p></div>
-<div class="paragraph"><p>xeno_hal.smi (x86 only) &#8594; xeno_machine.smi</p></div>
-<div class="paragraph"><p>xeno_hal.smi_mask (x86 only) &#8594; xeno_machine.smi_mask</p></div>
-<div class="paragraph"><p>xeno_rtdm.devname_hashtab_size &#8594; rtdm.devname_hashtab_size</p></div>
-<div class="paragraph"><p>xeno_rtdm.protocol_hashtab_size &#8594; rtdm.protocol_hashtab_size</p></div>
-<div class="ulist"><ul>
 <li>
 <p>
-The following parameters have been dropped
+xeno_hal.clockfreq &#8594; xenomai.clockfreq
+</p>
+</li>
+<li>
+<p>
+xeno_hal.disable &#8594; xenomai.disable
+</p>
+</li>
+<li>
+<p>
+xeno_hal.timerfreq &#8594; xenomai.timerfreq
+</p>
+</li>
+<li>
+<p>
+xeno_hal.cpufreq &#8594; xenomai.cpufreq
+</p>
+</li>
+<li>
+<p>
+xeno_nucleus.watchdog_timeout &#8594; xenomai.watchdog_timeout
+</p>
+</li>
+<li>
+<p>
+xeno_nucleus.xenomai_gid &#8594; xenomai.allowed_group
+</p>
+</li>
+<li>
+<p>
+xeno_nucleus.sysheap_size &#8594; xenomai.sysheap_size
+</p>
+</li>
+<li>
+<p>
+xeno_hal.smi (x86 only) &#8594; xeno_machine.smi
+</p>
+</li>
+<li>
+<p>
+xeno_hal.smi_mask (x86 only) &#8594; xeno_machine.smi_mask
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>xeno_rtdm.tick_arg.
-.Rationale</p></div>
+</dd>
+<dt class="hdlist1">
+Obsolete parameters dropped
+</dt>
+<dd>
+<p>
+xeno_rtdm.tick_arg
+rtdm.devname_hashtab_size
+rtdm.protocol_hashtab_size
+</p>
+</dd>
+</dl></div>
 <div class="sidebarblock">
 <div class="content">
+<div class="title">Rationale</div>
 <div class="paragraph"><p>Periodic timing is directly handled from the API layer in
 user-space. Cobalt kernel timing is tickless.</p></div>
 </div></div>
@@ -850,7 +912,8 @@ user-space. Cobalt kernel timing is tickless.</p></div>
 <div class="sect1">
 <h2 id="_getting_the_system_state">2. Getting the system state</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Querying the state of the real-time system should be done via the new
+<div class="paragraph"><p>When running Copperplate-based APIs (i.e. all but pure POSIX),
+querying the state of the real-time system should be done via the new
 Xenomai registery interface available with Xenomai 3.x, which is
 turned on when <code>--enable-registry</code> is passed to the configuration
 script for building the Xenomai libraries and programs.</p></div>
@@ -888,30 +951,34 @@ code as required. There is normally no action required from users for
 managing it.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_legacy_proc_xenomai_interface">2.2. Legacy /proc/xenomai interface</h3>
-<div class="paragraph"><p>The legacy /proc/xenomai interface is still available when running
-over the Cobalt core. The following changes compared to Xenomai 2.x
-took place though:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
+<h3 id="_proc_xenomai_interface">2.2. /proc/xenomai interface</h3>
+<div class="paragraph"><p>The /proc/xenomai interface is still available when running over the
+Cobalt core, mainly for pure POSIX-based applications. The following
+changes took place:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
 Thread status
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>All pseudo-files reporting the various thread states moved under the
-new <code>sched/</code> hierarchy, i.e.</p></div>
-<div class="paragraph"><p><code>{sched, stat, acct}</code> &#8594; <code>sched/{threads, stat, acct}</code></p></div>
-<div class="ulist"><ul>
-<li>
+</dt>
+<dd>
 <p>
-Clocks
+All pseudo-files reporting the various thread states moved under the
+new <code>sched/</code> hierarchy, i.e.
 </p>
-</li>
-</ul></div>
-<div class="paragraph"><p>With the introduction of dynamic clock registration in the Cobalt
+</dd>
+</dl></div>
+<div class="paragraph"><p><code>{sched, stat, acct}</code> &#8594; <code>sched/{threads, stat, acct}</code></p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Clocks
+</dt>
+<dd>
+<p>
+With the introduction of dynamic clock registration in the Cobalt
 core, the <code>clock/</code> hierarchy was added, to reflect the current state
-of all timers from the registered Xenomai clocks.</p></div>
+of all timers from the registered Xenomai clocks.
+</p>
+</dd>
+</dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
 2.99.6. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
@@ -921,7 +988,7 @@ the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
 clock/ hierarchy. Active timers for each clock can be read from
-entries under the new timer/ hierarchy.</p></div>
+entries under the new <code>timer/</code> hierarchy.</p></div>
 <div class="paragraph"><p>As a consequence of these changes:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -933,21 +1000,25 @@ obtained by reading <code>clock/coreclk</code>.
 <li>
 <p>
 the information previously available from <code>timerstat/master</code> is now
-obtained by reading +timer/coreclk.
-</p>
-</li>
-<li>
-<p>
-Core clock gravity
+obtained by reading <code>timer/coreclk</code>.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>The gravity value for a Xenomai clock gives the amount of time by
-which the next timer shot should be anticipated.</p></div>
-<div class="paragraph"><p>This is a static adjustment value, to account for the basic latency of
-the target system for responding to external events. Such latency may
-be introduced by hardware effects (e.g. bus or cache latency), or
-software issues (e.g. code running with interrupts disabled).</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Core clock gravity
+</dt>
+<dd>
+<p>
+The gravity value for a Xenomai clock gives the amount of time by
+which the next timer shot should be anticipated. This is a static
+adjustment value, to account for the basic latency of the target
+system for responding to external events. Such latency may be
+introduced by hardware effects (e.g. bus or cache latency), or
+software issues (e.g. code running with interrupts disabled).
+</p>
+</dd>
+</dl></div>
 <div class="paragraph"><p>The clock gravity management departs from Xenomai 2.x as follows:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -961,11 +1032,11 @@ different gravity values are applied, depending on which context a
 </li>
 <li>
 <p>
-in addition to the legacy <code>latency</code> file which now reports the
-  <em>user</em> timer gravity (in nanoseconds), i.e. used for timers
+in addition to the legacy <code>latency</code> file which now reports
+  the <em>user</em> timer gravity (in nanoseconds), i.e. used for timers
   activating user-space threads, the full gravity triplet applied to
   timers running on the core clock can be accessed by reading
-  clock/coreclk (also in nanoseconds).
+  <code>clock/coreclk</code> (also in nanoseconds).
 </p>
 </li>
 <li>
@@ -1000,28 +1071,30 @@ of the Xenomai core clock:</p></div>
     /* change the user and kernel gravities */
 # echo "2000u 1000k" &gt; /proc/xenomai/clock/coreclck</code></pre>
 </div></div>
-<div class="ulist"><ul>
-<li>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<code>interfaces</code> removed
+</dt>
+<dd>
 <p>
-<code>interfaces</code> was removed
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Only the POSIX and RTDM APIs remain implemented directly in kernel
+Only the POSIX and RTDM APIs remain implemented directly in kernel
 space, and are always present when the Cobalt core enabled in the
 configuration. All other APIs are implemented in user-space over the
 Copperplate layer. This makes the former <code>interfaces</code> contents
 basically useless, since the corresponding information for the
 POSIX/RTDM interfaces can be obtained via <code>sched/threads</code>
-unconditionally.</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<code>registry/usage</code> changed format
+unconditionally.
 </p>
-</li>
-</ul></div>
-<div class="paragraph"><p>The new print out is %&lt;used slot count&gt;/%&lt;total slot count&gt;.</p></div>
+</dd>
+<dt class="hdlist1">
+<code>registry/usage</code> changed format
+</dt>
+<dd>
+<p>
+The new print out is &lt;used slot count&gt;/&lt;total slot count&gt;.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 </div>
@@ -1140,6 +1213,23 @@ Redundant prefixes were removed from the following files:
 </div>
 <div class="sect2">
 <h3 id="_driver_api">5.2. Driver API</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+rtdm_dev_unregister() won&#8217;t return -ENODEV.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>The RTDM core (rightfully) assumes that object descriptors passed by
+client drivers to all other services shall be valid, so checking the
+device descriptor only for rtdm_dev_unregister() brings no actual
+safety. Besides, the former implementation for detecting unregistered
+device structures was wrong, assuming valid memory for the device
+structure, which is in essence at odds with the purpose of this check.</p></div>
+</div></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1333,14 +1423,32 @@ descriptor for the operation.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-The rtdm_context_get/put() call pair has been replaced by
-  rtdm_fd_get/put().
+The <code>rtdm_context_get/put()</code> call pair has been replaced by
+  <code>rtdm_fd_get/put()</code>.
 </p>
 </li>
 <li>
 <p>
-Likewise, the rtdm_context_lock/unlock() call pair has been replaced
-  by rtdm_fd_lock/unlock().
+Likewise, the <code>rtdm_context_lock/unlock()</code> call pair has been
+  replaced by <code>rtdm_fd_lock/unlock()</code>.
+</p>
+</li>
+<li>
+<p>
+<code>rtdm_fd_to_private()</code> is available to fetch the context-private
+  memory allocated by the driver for a particular RTDM file
+  descriptor. Conversely, <code>rtdm_private_to_fd()</code> returns the file
+  descriptor owning a particular context-private memory area.
+</p>
+</li>
+<li>
+<p>
+<code>xenomai/rtdm/open_files</code> and <code>xenomai/rtdm/fildes</code> now solely
+  report file descriptors obtained using the driver-to-driver API.
+  RTDM file descriptors obtained from applications appear under the
+  regular /proc/&lt;pid&gt;/fd hierarchy as connections to <code>/dev/null</code>. All
+  RTDM file descriptors obtained by an application are automatically
+  released when the latter exits.
 </p>
 </li>
 </ul></div>
@@ -1358,16 +1466,18 @@ the driver. Therefore, make sure to always carefully check the return
 value of these services.</td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-rtdm_fd_to_private() is available to fetch the context-private
-  memory allocated by the driver for a particular RTDM file
-  descriptor. Conversely, rtdm_private_to_fd() returns the file
-  descriptor owning a particular context-private memory area.
-</p>
-</li>
-</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">Unlike Xenomai 2.x, RTDM file descriptors returned to Xenomai 3
+applications fall within the regular Linux range. Each open RTDM
+connection is actually mapped over a regular file descriptor obtained
+on <code>/dev/null</code>, which RTDM services from <em>libcobalt</em> recognize and
+handle.</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_adaptive_syscalls">5.4. Adaptive syscalls</h3>
@@ -1407,6 +1517,45 @@ handler. The <code>ioctl_nrt()</code> should then implement all requests which
 may be valid from the regular Linux domain exclusively.</td>
 </tr></table>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_device_minor_specification">5.5. Device minor specification</h3>
+<div class="paragraph"><p>Xenomai 3 introduces a simple fully dynamic naming convention by which
+an application can request to open() a particular device unit managed
+by a RTDM driver, using the form:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>open("device-name@&lt;minor&gt;", ...);</code></pre>
+</div></div>
+<div class="paragraph"><p>The open() call first attempts to match the full name verbatim, then
+checks for any minor specification, only looking for the device name
+in a second attempt to retrieve the <code>rtdm_device</code> descriptor.</p></div>
+<div class="paragraph"><p>Upon success, the minor is stored into the <code>rtdm_fd</code> descriptor
+representing the new connection, and made available to the driver code
+by the <code>rtdm_fd_minor()</code> accessor. When specified, a valid minor value
+shall be positive or zero, otherwise the match fails. The default
+minor value is -1, which the driver may safely ignore, or choose to
+interpret as a special device master/control channel.</p></div>
+<div class="paragraph"><p>e.g.:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>    open("/dev/foo@0", ...) =&gt; connect to unit #0 of device type "foo"
+    open("/dev/foo@7", ...) =&gt; connect to unit #7 of device type "foo"
+    open("/dev/foo", ...) =&gt; connect to control channel of device "foo"</code></pre>
+</div></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>As RTDM named device drivers have no actual entry in any file system,
+Xenomai 2.x lacked the device minor information normally available
+from i-nodes to regular Linux character-mode drivers.  Therefore a
+<code>rtdm_device</code> descriptor in Xenomai 2.x used to represent a device
+unit in practice, although it should represent a device type, within a
+larger class. This model did not allow for straightforward management
+of multiple units of the same device type dynamically in a driver,
+with a single <code>rtdm_device</code> description matching all the units
+available onboard.</p></div>
+</div></div>
 </div>
 </div>
 </div>
@@ -1499,13 +1648,21 @@ kernel space.</p></div>
 <img src="../asciidoc-icons/tip.png" alt="Tip" />
 </td>
 <td class="content">For receiving interrupt notifications within your application, you
-should create a small RTDM driver handling the corresponding IRQ
-(see <code>rtdm_irq_request()</code>). The IRQ handler should wake a thread up
-in your application by posting some event (see <code>rtdm_sem_up()</code>,
-<code>rtdm_sem_timeddown()</code>). The application should sleep on this event
-by calling into the RTDM driver, either via a <code>read(2)</code> or
-<code>ioctl(2)</code> request, handled by a dedicated operation handler (see
+should create a small RTDM driver handling the corresponding IRQ (see
+<code>rtdm_irq_request()</code>). The IRQ handler should wake a thread up in your
+application by posting some event (see <code>rtdm_sem_up()</code>,
+<code>rtdm_sem_timeddown()</code>). The application should sleep on this event by
+calling into the RTDM driver, either via a <code>read(2)</code> or <code>ioctl(2)</code>
+request, handled by a dedicated operation handler (see
 <code>rtdm_dev_register()</code>).</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">A RTDM-based uio-like driver is planned for Xenomai 3.0.</td>
 </tr></table>
 </div>
 </div>
@@ -2446,7 +2603,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-08 18:39:47 CEST
+Last updated 2014-08-13 21:05:36 CEST
 </div>
 </div>
 </body>

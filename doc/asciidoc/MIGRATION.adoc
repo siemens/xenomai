@@ -5,7 +5,9 @@ Migrating from Xenomai 2.x to 3.x
 
 === User programs and libraries ===
 
-- As with Xenomai 2.x, +xeno-config+ is available for retrieving the
+Changes in +xeno-config+::
+
+As with Xenomai 2.x, +xeno-config+ is available for retrieving the
 compilation and link flags for building Xenomai 3.x applications. This
 script will work for both the Cobalt and Mercury environments
 indifferently.
@@ -27,52 +29,56 @@ indifferently.
  * +--ccld+ retrieves a C compiler command suitable for linking a
    Xenomai 3.x application.
 
+ * +--info+ retrieves the current system information, including the
+   Xenomai release detected on the platform.
+
 [[auto-init]]
- * +--no-auto-init+ can be passed to disable automatic initialization
-  of the Copperplate library when the application process enters the
-  +main()+ routine. In such a case, the application code using any API
-  based on the Copperplate layer, shall call the +copperplate_init()+
-  routine manually, as part of its initialization process, _before_
-  any real-time service is invoked.
+Auto-initialization::
 
-  +xeno-config+ enables the Copperplate auto-init feature by default.
++--no-auto-init+ can be passed to disable automatic initialization of
+the Copperplate library when the application process enters the
++main()+ routine.
 
-- +--enable-x86-sep+ was renamed to +--enable-x86-vsyscall+ to fix a
-  misnomer. This option should be left enabled (default), unless
-  *linuxthreads* are used instead of *NPTL*.
+In such a case, the application code using any API based on the
+Copperplate layer, shall call the +copperplate_init(int *argcp, char
+*const **argvp)+ routine manually, as part of its initialization
+process, _before_ any real-time service is invoked.
+
+This routine takes the addresses of the argument count and vector
+passed to the main() routine respectively. copperplate_init() handles
+the Xenomai options present in the argument vector, stripping them
+out, leaving only unprocessed options on return in the vector,
+updating the count accordingly.
+
++xeno-config+ enables the Copperplate auto-init feature by default.
+
+x86 vsyscall support::
+
+The +--enable-x86-sep+ configuration switch was renamed to
++--enable-x86-vsyscall+ to fix a misnomer. This option should be left
+enabled (default), unless *linuxthreads* are used instead of *NPTL*.
 
 === Kernel parameters (Cobalt) ===
 
-- System parameters have been renamed:
+System parameters renamed::
 
-[normal]
-xeno_hal.supported_cpus -> xenomai.supported_cpus
-[normal]
-xeno_hal.clockfreq -> xenomai.clockfreq
-[normal]
-xeno_hal.disable -> xenomai.disable
-[normal]
-xeno_hal.timerfreq -> xenomai.timerfreq
-[normal]
-xeno_hal.cpufreq -> xenomai.cpufreq
-[normal]
-xeno_nucleus.watchdog_timeout -> xenomai.watchdog_timeout
-[normal]
-xeno_nucleus.xenomai_gid -> xenomai.xenomai_gid
-[normal]
-xeno_nucleus.sysheap_size -> xenomai.sysheap_size
-[normal]
-xeno_hal.smi (x86 only) -> xeno_machine.smi
-[normal]
-xeno_hal.smi_mask (x86 only) -> xeno_machine.smi_mask
-[normal]
-xeno_rtdm.devname_hashtab_size -> rtdm.devname_hashtab_size
-[normal]
-xeno_rtdm.protocol_hashtab_size -> rtdm.protocol_hashtab_size
+* xeno_hal.supported_cpus -> xenomai.supported_cpus
+* xeno_hal.clockfreq -> xenomai.clockfreq
+* xeno_hal.disable -> xenomai.disable
+* xeno_hal.timerfreq -> xenomai.timerfreq
+* xeno_hal.cpufreq -> xenomai.cpufreq
+* xeno_nucleus.watchdog_timeout -> xenomai.watchdog_timeout
+* xeno_nucleus.xenomai_gid -> xenomai.allowed_group
+* xeno_nucleus.sysheap_size -> xenomai.sysheap_size
+* xeno_hal.smi (x86 only) -> xeno_machine.smi
+* xeno_hal.smi_mask (x86 only) -> xeno_machine.smi_mask
 
-- The following parameters have been dropped
+Obsolete parameters dropped::
 
-xeno_rtdm.tick_arg.
+xeno_rtdm.tick_arg
+rtdm.devname_hashtab_size
+rtdm.protocol_hashtab_size
+
 .Rationale
 **********************************************************************
 Periodic timing is directly handled from the API layer in
@@ -81,7 +87,8 @@ user-space. Cobalt kernel timing is tickless.
 
 == Getting the system state ==
 
-Querying the state of the real-time system should be done via the new
+When running Copperplate-based APIs (i.e. all but pure POSIX),
+querying the state of the real-time system should be done via the new
 Xenomai registery interface available with Xenomai 3.x, which is
 turned on when +--enable-registry+ is passed to the configuration
 script for building the Xenomai libraries and programs.
@@ -123,20 +130,20 @@ line. This daemon is automatically spawned by the registry support
 code as required. There is normally no action required from users for
 managing it.
     
-=== Legacy /proc/xenomai interface ===
+=== /proc/xenomai interface ===
 
-The legacy /proc/xenomai interface is still available when running
-over the Cobalt core. The following changes compared to Xenomai 2.x
-took place though:
+The /proc/xenomai interface is still available when running over the
+Cobalt core, mainly for pure POSIX-based applications. The following
+changes took place:
 
-- Thread status
+Thread status::
 
 All pseudo-files reporting the various thread states moved under the
 new +sched/+ hierarchy, i.e.
 
 +{sched, stat, acct}+ -> +sched/{threads, stat, acct}+
 
-- Clocks
+Clocks::
 
 With the introduction of dynamic clock registration in the Cobalt
 core, the +clock/+ hierarchy was added, to reflect the current state
@@ -153,41 +160,41 @@ Xenomai 2.x (i.e. tickless with nanosecond resolution).
 
 The settings of existing clocks can be read from entries under the new
 clock/ hierarchy. Active timers for each clock can be read from
-entries under the new timer/ hierarchy.
+entries under the new +timer/+ hierarchy.
 
 As a consequence of these changes:
 
-- the information previously available from the +timer+ entry is now
+  * the information previously available from the +timer+ entry is now
 obtained by reading +clock/coreclk+.
 
-- the information previously available from +timerstat/master+ is now
-obtained by reading +timer/coreclk.
+  * the information previously available from +timerstat/master+ is now
+obtained by reading +timer/coreclk+.
 
-- Core clock gravity
+// break list
+Core clock gravity::
 
 The gravity value for a Xenomai clock gives the amount of time by
-which the next timer shot should be anticipated.
-
-This is a static adjustment value, to account for the basic latency of
-the target system for responding to external events. Such latency may
-be introduced by hardware effects (e.g. bus or cache latency), or
+which the next timer shot should be anticipated. This is a static
+adjustment value, to account for the basic latency of the target
+system for responding to external events. Such latency may be
+introduced by hardware effects (e.g. bus or cache latency), or
 software issues (e.g. code running with interrupts disabled).
 
 The clock gravity management departs from Xenomai 2.x as follows:
 
-- different gravity values are applied, depending on which context a
+  * different gravity values are applied, depending on which context a
   timer activates. This may be a real-time IRQ handler (_irq_), a RTDM
   driver task (_kernel_), or a Xenomai application thread running in
   user-space (_user_). Xenomai 2.x does not differentiate, only
   applying a global gravity value regardless of the activated context.
 
-- in addition to the legacy +latency+ file which now reports the
-  _user_ timer gravity (in nanoseconds), i.e. used for timers
+  * in addition to the legacy +latency+ file which now reports
+  the _user_ timer gravity (in nanoseconds), i.e. used for timers
   activating user-space threads, the full gravity triplet applied to
   timers running on the core clock can be accessed by reading
-  clock/coreclk (also in nanoseconds).
+  +clock/coreclk+ (also in nanoseconds).
 
-- at reset, the _user_ gravity for the core clock now represents the
+  * at reset, the _user_ gravity for the core clock now represents the
 sum of the scheduling *and* hardware timer reprogramming time as a
 count of nanoseconds. This departs from Xenomai 2.x for which only the
 former was accounted for as a global gravity value, regardless of the
@@ -217,7 +224,7 @@ of the Xenomai core clock:
 # echo "2000u 1000k" > /proc/xenomai/clock/coreclck
 ------------------------------------------------------
 
-- +interfaces+ was removed
++interfaces+ removed::
 
 Only the POSIX and RTDM APIs remain implemented directly in kernel
 space, and are always present when the Cobalt core enabled in the
@@ -227,9 +234,9 @@ basically useless, since the corresponding information for the
 POSIX/RTDM interfaces can be obtained via +sched/threads+
 unconditionally.
 
-- +registry/usage+ changed format
++registry/usage+ changed format::
 
-The new print out is %<used slot count>/%<total slot count>.
+The new print out is <used slot count>/<total slot count>.
 
 == Binary object features ==
 
@@ -352,6 +359,18 @@ rtdm/rttesting.h -> rtdm/testing.h
 rtdm/rtipc.h -> rtdm/ipc.h
 
 === Driver API ===
+
+- rtdm_dev_unregister() won't return -ENODEV.
+
+.Rationale
+**********************************************************************
+The RTDM core (rightfully) assumes that object descriptors passed by
+client drivers to all other services shall be valid, so checking the
+device descriptor only for rtdm_dev_unregister() brings no actual
+safety. Besides, the former implementation for detecting unregistered
+device structures was wrong, assuming valid memory for the device
+structure, which is in essence at odds with the purpose of this check.
+**********************************************************************
 
 - rtdm_task_init() shall be called from secondary mode.
 
@@ -493,11 +512,23 @@ descriptor for the operation.
 
 As a consequence of this:
 
-- The rtdm_context_get/put() call pair has been replaced by
-  rtdm_fd_get/put().
+- The +rtdm_context_get/put()+ call pair has been replaced by
+  +rtdm_fd_get/put()+.
 
-- Likewise, the rtdm_context_lock/unlock() call pair has been replaced
-  by rtdm_fd_lock/unlock().
+- Likewise, the +rtdm_context_lock/unlock()+ call pair has been
+  replaced by +rtdm_fd_lock/unlock()+.
+
+- +rtdm_fd_to_private()+ is available to fetch the context-private
+  memory allocated by the driver for a particular RTDM file
+  descriptor. Conversely, +rtdm_private_to_fd()+ returns the file
+  descriptor owning a particular context-private memory area.
+
+- +xenomai/rtdm/open_files+ and +xenomai/rtdm/fildes+ now solely
+  report file descriptors obtained using the driver-to-driver API.
+  RTDM file descriptors obtained from applications appear under the
+  regular /proc/<pid>/fd hierarchy as connections to +/dev/null+. All
+  RTDM file descriptors obtained by an application are automatically
+  released when the latter exits.
 
 [CAUTION]
 Because RTDM file descriptors may be released and destroyed
@@ -508,10 +539,12 @@ the descriptor is released from the ->close() handler implemented by
 the driver. Therefore, make sure to always carefully check the return
 value of these services.
 
-- rtdm_fd_to_private() is available to fetch the context-private
-  memory allocated by the driver for a particular RTDM file
-  descriptor. Conversely, rtdm_private_to_fd() returns the file
-  descriptor owning a particular context-private memory area.
+[NOTE]
+Unlike Xenomai 2.x, RTDM file descriptors returned to Xenomai 3
+applications fall within the regular Linux range. Each open RTDM
+connection is actually mapped over a regular file descriptor obtained
+on +/dev/null+, which RTDM services from _libcobalt_ recognize and
+handle.
 
 === Adaptive syscalls ===
 
@@ -541,6 +574,47 @@ returning +-ENOSYS+ for any unrecognized request, which will cause the
 adaptive switch to take place automatically to the +ioctl_nrt()+
 handler. The +ioctl_nrt()+ should then implement all requests which
 may be valid from the regular Linux domain exclusively.
+
+=== Device minor specification
+
+Xenomai 3 introduces a simple fully dynamic naming convention by which
+an application can request to open() a particular device unit managed
+by a RTDM driver, using the form:
+
+---------------------------------    
+open("device-name@<minor>", ...);
+---------------------------------    
+    
+The open() call first attempts to match the full name verbatim, then
+checks for any minor specification, only looking for the device name
+in a second attempt to retrieve the +rtdm_device+ descriptor.
+    
+Upon success, the minor is stored into the +rtdm_fd+ descriptor
+representing the new connection, and made available to the driver code
+by the +rtdm_fd_minor()+ accessor. When specified, a valid minor value
+shall be positive or zero, otherwise the match fails. The default
+minor value is -1, which the driver may safely ignore, or choose to
+interpret as a special device master/control channel.
+    
+e.g.:
+----------------------------------------------------------------------    
+    open("/dev/foo@0", ...) => connect to unit #0 of device type "foo"
+    open("/dev/foo@7", ...) => connect to unit #7 of device type "foo"
+    open("/dev/foo", ...) => connect to control channel of device "foo"
+----------------------------------------------------------------------    
+
+.Rationale
+**********************************************************************
+As RTDM named device drivers have no actual entry in any file system,
+Xenomai 2.x lacked the device minor information normally available
+from i-nodes to regular Linux character-mode drivers.  Therefore a
++rtdm_device+ descriptor in Xenomai 2.x used to represent a device
+unit in practice, although it should represent a device type, within a
+larger class. This model did not allow for straightforward management
+of multiple units of the same device type dynamically in a driver,
+with a single +rtdm_device+ description matching all the units
+available onboard.
+**********************************************************************
 
 == Analogy interface changes ==
 
@@ -618,14 +692,17 @@ kernel space.
 
 [TIP]
 [[userirqtip]]
-  For receiving interrupt notifications within your application, you
-  should create a small RTDM driver handling the corresponding IRQ
-  (see +rtdm_irq_request()+). The IRQ handler should wake a thread up
-  in your application by posting some event (see +rtdm_sem_up()+,
-  +rtdm_sem_timeddown()+). The application should sleep on this event
-  by calling into the RTDM driver, either via a +read(2)+ or
-  +ioctl(2)+ request, handled by a dedicated operation handler (see
-  +rtdm_dev_register()+).
+For receiving interrupt notifications within your application, you
+should create a small RTDM driver handling the corresponding IRQ (see
++rtdm_irq_request()+). The IRQ handler should wake a thread up in your
+application by posting some event (see +rtdm_sem_up()+,
++rtdm_sem_timeddown()+). The application should sleep on this event by
+calling into the RTDM driver, either via a +read(2)+ or +ioctl(2)+
+request, handled by a dedicated operation handler (see
++rtdm_dev_register()+).
+
+[NOTE]
+A RTDM-based uio-like driver is planned for Xenomai 3.0.
 
 === Scheduling ===
 
