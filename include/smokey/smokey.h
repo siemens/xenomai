@@ -115,6 +115,8 @@ struct smokey_arg *smokey_lookup_arg(struct smokey_test *t,
 int smokey_parse_args(struct smokey_test *t,
 		      int argc, char *const argv[]);
 
+void smokey_note(const char *fmt, ...);
+
 #ifdef __cplusplus
 }
 #endif

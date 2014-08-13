@@ -198,6 +198,12 @@
  * including the test detection and the active test selection have
  * been performed by the Smokey API already.
  *
+ * @par Issuing progress messages
+ *
+ * The printf-like @a smokey_note() routine is available for issuing
+ * progress messages to the output device (currently stdout), unless
+ * --quiet was detected on the command line.
+ *
  * Therefore, a possible implementation of a test driver could be as
  * basic as:
  *
@@ -221,7 +227,7 @@
  *				continue;
  *			error(1, -ret, "test %s failed", t->name);
  *		}
- *		printf("%s OK\n", t->name);
+ *		smokey_note("%s OK\n", t->name);
  *	}
  *
  *	return 0;

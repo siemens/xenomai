@@ -16,9 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 #include <stdio.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <string.h>
 #include <errno.h>
 #include <boilerplate/ancillaries.h>
@@ -116,4 +116,16 @@ struct smokey_arg *smokey_lookup_arg(struct smokey_test *t,
 	/* Assume this is fatal. */
 	panic("test %s has no argument \"%s\"",
 	      t->name, name);
+}
+
+void smokey_note(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	if (!smokey_quiet_mode)
+		vprintf(fmt, ap);
+
+	va_end(ap);
 }
