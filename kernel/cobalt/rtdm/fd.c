@@ -39,11 +39,6 @@ static int enosys(void)
 	return -ENOSYS;
 }
 
-static int ebadf(void)
-{
-	return -EBADF;
-}
-
 static int enodev(void)
 {
 	return -ENODEV;
@@ -72,6 +67,47 @@ static struct rtdm_fd *rtdm_fd_fetch(struct xnsys_ppd *p, int ufd)
 	return idx->fd;
 }
 
+#define assign_invalid_handler(__handler)				\
+	do								\
+		(__handler) = (typeof(__handler))enodev;		\
+	while (0)
+
+/* Calling this handler should beget ENODEV if not implemented. */
+#define assign_invalid_default_handler(__handler)			\
+	do								\
+		if ((__handler) == NULL)				\
+			(__handler) = (typeof(__handler))enodev;	\
+	while (0)
+
+#define __assign_default_handler(__handler, __placeholder)		\
+	do								\
+		if ((__handler) == NULL)				\
+			(__handler) = (typeof(__handler))__placeholder;	\
+	while (0)
+
+/* Calling this handler should beget ENOSYS if not implemented. */
+#define assign_default_handler(__handler)				\
+	__assign_default_handler(__handler, enosys)
+
+#define __rt(__handler)		__handler ## _rt
+#define __nrt(__handler)	__handler ## _nrt
+
+/*
+ * Install a placeholder returning ENODEV if none of the dual handlers
+ * are implemented, ENOSYS otherwise for NULL handlers to trigger the
+ * adaptive switch.
+ */
+#define assign_default_dual_handlers(__handler)				\
+	do								\
+		if (__rt(__handler) || __nrt(__handler)) {		\
+			assign_default_handler(__rt(__handler));	\
+			assign_default_handler(__nrt(__handler));	\
+		} else {						\
+			assign_invalid_handler(__rt(__handler));	\
+			assign_invalid_handler(__nrt(__handler));	\
+		}							\
+	while (0)
+
 int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 	unsigned int magic, struct rtdm_fd_ops *ops)
 {
@@ -92,59 +128,14 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 		goto err;
 	}
 
-	if (ops->ioctl_rt == NULL && ops->ioctl_nrt == NULL)
-		ops->ioctl_rt = ops->ioctl_nrt = (rtdm_fd_ioctl_t *)ebadf;
-	else {
-		if (ops->ioctl_rt == NULL)
-			ops->ioctl_rt = (rtdm_fd_ioctl_t *)enosys;
-		if (ops->ioctl_nrt == NULL)
-			ops->ioctl_nrt = (rtdm_fd_ioctl_t *)enosys;
-	}
-
-	if (ops->read_rt == NULL && ops->read_nrt == NULL)
-		ops->read_rt = ops->read_nrt = (rtdm_fd_read_t *)ebadf;
-	else {
-		if (ops->read_rt == NULL)
-			ops->read_rt = (rtdm_fd_read_t *)enosys;
-		if (ops->read_nrt == NULL)
-			ops->read_nrt = (rtdm_fd_read_t *)enosys;
-	}
-
-	if (ops->write_rt == NULL && ops->write_nrt == NULL)
-		ops->write_rt = ops->write_nrt = (rtdm_fd_write_t *)ebadf;
-	else {
-		if (ops->write_rt == NULL)
-			ops->write_rt = (rtdm_fd_write_t *)enosys;
-		if (ops->write_nrt == NULL)
-			ops->write_nrt = (rtdm_fd_write_t *)enosys;
-	}
-
-	if (ops->recvmsg_rt == NULL && ops->recvmsg_nrt == NULL)
-		ops->recvmsg_rt = ops->recvmsg_nrt = (rtdm_fd_recvmsg_t *)ebadf;
-	else {
-		if (ops->recvmsg_rt == NULL)
-			ops->recvmsg_rt = (rtdm_fd_recvmsg_t *)enosys;
-		if (ops->recvmsg_nrt == NULL)
-			ops->recvmsg_nrt = (rtdm_fd_recvmsg_t *)enosys;
-	}
-
-	if (ops->sendmsg_rt == NULL && ops->sendmsg_nrt == NULL)
-		ops->sendmsg_rt = ops->sendmsg_nrt = (rtdm_fd_sendmsg_t *)ebadf;
-	else {
-		if (ops->sendmsg_rt == NULL)
-			ops->sendmsg_rt = (rtdm_fd_sendmsg_t *)enosys;
-		if (ops->sendmsg_nrt == NULL)
-			ops->sendmsg_nrt = (rtdm_fd_sendmsg_t *)enosys;
-	}
-
-	if (ops->select_bind == NULL)
-		ops->select_bind = (typeof(ops->select_bind))ebadf;
-
-	if (ops->mmap == NULL)
-		ops->mmap = (typeof(ops->mmap))enodev;
-
-	if (ops->close == NULL)
-		ops->close = nop_close;
+	assign_default_dual_handlers(ops->ioctl);
+	assign_default_dual_handlers(ops->read);
+	assign_default_dual_handlers(ops->write);
+	assign_default_dual_handlers(ops->recvmsg);
+	assign_default_dual_handlers(ops->sendmsg);
+	assign_invalid_default_handler(ops->select_bind);
+	assign_invalid_default_handler(ops->mmap);
+	__assign_default_handler(ops->close, nop_close);
 
 	fd->magic = magic;
 	fd->ops = ops;
