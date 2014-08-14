@@ -158,7 +158,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
-	ret = device->open(&context->fd, oflag);
+	ret = device->ops.open(&context->fd, oflag);
 
 	if (!XENO_ASSERT(RTDM, !spltest()))
 		splnone();
@@ -197,7 +197,7 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 
 	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
 
-	ret = device->socket(&context->fd, protocol);
+	ret = device->ops.socket(&context->fd, protocol);
 
 	if (!XENO_ASSERT(RTDM, !spltest()))
 		splnone();

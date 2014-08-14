@@ -219,22 +219,17 @@ static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
 		.device_flags =		RTDM_NAMED_DEVICE,
 		.context_size =		sizeof(struct a4l_device_context),
 		.device_name =		"",
-
-		.open =			a4l_open,
-
 		.ops = {
+			.open =		a4l_open,
+			.close =	a4l_close,
 			.ioctl_rt =	a4l_ioctl,
 			.read_rt =	a4l_read,
 			.write_rt =	a4l_write,
-
-			.close =	a4l_close,
 			.ioctl_nrt =	a4l_ioctl,
 			.read_nrt =	a4l_read,
 			.write_nrt =	a4l_write,
-
 			.select_bind =	a4l_rt_select,
 		},
-
 		.device_class =		RTDM_CLASS_EXPERIMENTAL,
 		.device_sub_class =	RTDM_SUBCLASS_ANALOGY,
 		.driver_name =		"rtdm_analogy",

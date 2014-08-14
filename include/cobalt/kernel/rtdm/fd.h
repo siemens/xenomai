@@ -116,21 +116,32 @@ typedef ssize_t rtdm_fd_recvmsg_t(struct rtdm_fd *fd, struct msghdr *msg, int fl
 typedef ssize_t rtdm_fd_sendmsg_t(struct rtdm_fd *fd, const struct msghdr *msg, int flags);
 
 struct rtdm_fd_ops {
-	rtdm_fd_ioctl_t *ioctl_rt;
-	rtdm_fd_ioctl_t *ioctl_nrt;
-	rtdm_fd_read_t *read_rt;
-	rtdm_fd_read_t *read_nrt;
-	rtdm_fd_write_t *write_rt;
-	rtdm_fd_write_t *write_nrt;
-	rtdm_fd_recvmsg_t *recvmsg_rt;
-	rtdm_fd_recvmsg_t *recvmsg_nrt;
-	rtdm_fd_sendmsg_t *sendmsg_rt;
-	rtdm_fd_sendmsg_t *sendmsg_nrt;
+	int (*open)(struct rtdm_fd *fd, int oflag);
+	int (*socket)(struct rtdm_fd *fd, int protocol);
+	void (*close)(struct rtdm_fd *fd);
+	int (*ioctl_rt)(struct rtdm_fd *fd,
+			unsigned int request, void __user *arg);
+	int (*ioctl_nrt)(struct rtdm_fd *fd,
+			 unsigned int request, void __user *arg);
+	ssize_t (*read_rt)(struct rtdm_fd *fd,
+			   void __user *buf, size_t size);
+	ssize_t (*read_nrt)(struct rtdm_fd *fd,
+			    void __user *buf, size_t size);
+	ssize_t (*write_rt)(struct rtdm_fd *fd,
+			    const void __user *buf, size_t size);
+	ssize_t (*write_nrt)(struct rtdm_fd *fd,
+			     const void __user *buf, size_t size);
+	ssize_t (*recvmsg_rt)(struct rtdm_fd *fd,
+			      struct msghdr *msg, int flags);
+	ssize_t (*recvmsg_nrt)(struct rtdm_fd *fd,
+			       struct msghdr *msg, int flags);
+	ssize_t (*sendmsg_rt)(struct rtdm_fd *fd,
+			      const struct msghdr *msg, int flags);
+	ssize_t (*sendmsg_nrt)(struct rtdm_fd *fd,
+			       const struct msghdr *msg, int flags);
 	int (*select_bind)(struct rtdm_fd *fd,
 			   struct xnselector *selector,
-			   unsigned int type,
-			   unsigned int index);
-	void (*close)(struct rtdm_fd *fd);
+			   unsigned int type, unsigned int index);
 	int (*mmap)(struct rtdm_fd *fd,
 		    struct vm_area_struct *vma);
 };

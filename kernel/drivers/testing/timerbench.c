@@ -455,20 +455,15 @@ static int rt_tmbench_ioctl_rt(struct rtdm_fd *fd,
 
 static struct rtdm_device device = {
 	.struct_version		= RTDM_DEVICE_STRUCT_VER,
-
 	.device_flags		= RTDM_NAMED_DEVICE,
 	.context_size		= sizeof(struct rt_tmbench_context),
 	.device_name		= "",
-
-	.open			= rt_tmbench_open,
-
 	.ops = {
+		.open		= rt_tmbench_open,
 		.close		= rt_tmbench_close,
-
 		.ioctl_rt	= rt_tmbench_ioctl_rt,
 		.ioctl_nrt	= rt_tmbench_ioctl_nrt,
 	},
-
 	.device_class		= RTDM_CLASS_TESTING,
 	.device_sub_class	= RTDM_SUBCLASS_TIMERBENCH,
 	.profile_version	= RTTST_PROFILE_VER,

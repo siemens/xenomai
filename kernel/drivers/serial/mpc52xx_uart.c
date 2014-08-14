@@ -1234,24 +1234,17 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_fd *fd,
 
 static const struct rtdm_device device_tmpl = {
 	.struct_version		= RTDM_DEVICE_STRUCT_VER,
-
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
 	.context_size		= sizeof(struct rt_mpc52xx_uart_ctx),
 	.device_name		= "",
-
-	.open			= rt_mpc52xx_uart_open,
-
 	.ops = {
+		.open		= rt_mpc52xx_uart_open,
 		.close		= rt_mpc52xx_uart_close,
-
 		.ioctl_rt	= rt_mpc52xx_uart_ioctl,
 		.ioctl_nrt	= rt_mpc52xx_uart_ioctl,
-
 		.read_rt	= rt_mpc52xx_uart_read,
-
 		.write_rt	= rt_mpc52xx_uart_write,
 	},
-
 	.device_class		= RTDM_CLASS_SERIAL,
 	.device_sub_class	= RTDM_SUBCLASS_16550A,
 	.profile_version	= RTSER_PROFILE_VER,

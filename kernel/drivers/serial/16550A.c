@@ -1070,24 +1070,17 @@ ssize_t rt_16550_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
 
 static const struct rtdm_device __initdata device_tmpl = {
 	.struct_version		= RTDM_DEVICE_STRUCT_VER,
-
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
 	.context_size		= sizeof(struct rt_16550_context),
 	.device_name		= "",
-
-	.open			= rt_16550_open,
-
 	.ops = {
+		.open		= rt_16550_open,
 		.close		= rt_16550_close,
-
 		.ioctl_rt	= rt_16550_ioctl,
 		.ioctl_nrt	= rt_16550_ioctl,
-
 		.read_rt	= rt_16550_read,
-
 		.write_rt	= rt_16550_write,
 	},
-
 	.device_class		= RTDM_CLASS_SERIAL,
 	.device_sub_class	= RTDM_SUBCLASS_16550A,
 	.profile_version	= RTSER_PROFILE_VER,

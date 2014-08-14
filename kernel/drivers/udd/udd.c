@@ -302,8 +302,8 @@ static inline int register_mapper(struct udd_device *udd)
 	dev->struct_version = RTDM_DEVICE_STRUCT_VER;
 	dev->device_flags = RTDM_NAMED_DEVICE;
 	dev->context_size = 0;
-	dev->open = mapper_open;
 	dev->ops = (struct rtdm_fd_ops){
+		.open = mapper_open,
 		.close = mapper_close,
 		.mmap = mapper_mmap,
 	};
@@ -341,8 +341,8 @@ int udd_register_device(struct udd_device *udd)
 	dev->struct_version = RTDM_DEVICE_STRUCT_VER;
 	dev->device_flags = RTDM_NAMED_DEVICE;
 	dev->context_size = sizeof(struct udd_context);
-	dev->open = udd_open;
 	dev->ops = (struct rtdm_fd_ops){
+		.open = udd_open,
 		.ioctl_rt = udd_ioctl_rt,
 		.read_rt = udd_read_rt,
 		.write_rt = udd_write_rt,

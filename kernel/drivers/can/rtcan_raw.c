@@ -977,47 +977,29 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 
 
 static struct rtdm_device rtcan_proto_raw_dev = {
-    struct_version:     RTDM_DEVICE_STRUCT_VER,
-
-    device_flags:       RTDM_PROTOCOL_DEVICE,
-    context_size:       sizeof(struct rtcan_socket),
-
-    protocol_family:    PF_CAN,
-    socket_type:        SOCK_RAW,
-
-    socket:		rtcan_raw_socket,
-
-    ops: {
-	close:		rtcan_raw_close,
-
-	ioctl_rt:       rtcan_raw_ioctl,
-	ioctl_nrt:      rtcan_raw_ioctl,
-
-	read_rt:        NULL,
-	read_nrt:       NULL,
-
-	write_rt:       NULL,
-	write_nrt:      NULL,
-
-	recvmsg_rt:     rtcan_raw_recvmsg,
-	recvmsg_nrt:    NULL,
-
-	sendmsg_rt:     rtcan_raw_sendmsg,
-	sendmsg_nrt:    NULL,
-    },
-
-    device_class:       RTDM_CLASS_CAN,
-    device_sub_class:   RTDM_SUBCLASS_GENERIC,
-    profile_version:    RTCAN_PROFILE_VER,
-
-    driver_name:        "xeno_can",
-    driver_version:     RTDM_DRIVER_VER(RTCAN_MAJOR_VER,
-					RTCAN_MINOR_VER,
-					RTCAN_BUGFIX_VER),
-    peripheral_name:    "Real-Time CAN Raw Socket Interface",
-    provider_name:      "RT-Socket-CAN development team",
-
-    proc_name:          "rtcan"
+	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+	.device_flags		= RTDM_PROTOCOL_DEVICE,
+	.context_size		= sizeof(struct rtcan_socket),
+	.protocol_family	= PF_CAN,
+	.socket_type		= SOCK_RAW,
+	.ops = {
+		.socket		= rtcan_raw_socket,
+		.close		= rtcan_raw_close,
+		.ioctl_rt	= rtcan_raw_ioctl,
+		.ioctl_nrt	= rtcan_raw_ioctl,
+		.recvmsg_rt	= rtcan_raw_recvmsg,
+		.sendmsg_rt	= rtcan_raw_sendmsg,
+	},
+	.device_class		= RTDM_CLASS_CAN,
+	.device_sub_class	= RTDM_SUBCLASS_GENERIC,
+	.profile_version	= RTCAN_PROFILE_VER,
+	.driver_name		= "rtcan",
+	.driver_version		= RTDM_DRIVER_VER(RTCAN_MAJOR_VER,
+						  RTCAN_MINOR_VER,
+						  RTCAN_BUGFIX_VER),
+	.peripheral_name	= "Real-Time CAN Raw Socket Interface",
+	.provider_name		= "RT-Socket-CAN development team",
+	.proc_name		= "rtcan"
 };
 
 

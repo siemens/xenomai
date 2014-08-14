@@ -107,20 +107,15 @@ rtdm_test_ioctl(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 
 static struct rtdm_device device[2] = { [0 ... 1] = {
 	.struct_version		= RTDM_DEVICE_STRUCT_VER,
-
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
 	.context_size		= sizeof(struct rtdm_test_context),
 	.device_name		= "",
-
-	.open			= rtdm_test_open,
-
 	.ops = {
+		.open		= rtdm_test_open,
 		.close		= rtdm_test_close,
-
 		.ioctl_rt	= rtdm_test_ioctl,
 		.ioctl_nrt	= rtdm_test_ioctl,
 	},
-
 	.device_class		= RTDM_CLASS_TESTING,
 	.device_sub_class	= RTDM_SUBCLASS_RTDMTEST,
 	.profile_version	= RTTST_PROFILE_VER,

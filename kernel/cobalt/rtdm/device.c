@@ -34,17 +34,17 @@
 #define RTDM_DEVICE_MAGIC	0x82846877
 
 #define SET_DEFAULT_DUAL_OP_IF_NULL(device, operation, handler)		\
-	if ((device).operation##_rt == NULL)				\
-		(device).operation##_rt =				\
-		(__typeof__((device).operation##_rt))handler;		\
-	if ((device).operation##_nrt == NULL)				\
-		(device).operation##_nrt =				\
-		(__typeof__((device).operation##_nrt))handler;
+	if ((device)->ops.operation##_rt == NULL)			\
+		(device)->ops.operation##_rt =				\
+		(__typeof__((device)->ops.operation##_rt))handler;	\
+	if ((device)->ops.operation##_nrt == NULL)			\
+		(device)->ops.operation##_nrt =				\
+		(__typeof__((device)->ops.operation##_nrt))handler;
 
 #define SET_DEFAULT_OP_IF_NULL(device, operation, handler)		\
-	if ((device).operation == NULL)					\
-		(device).operation =					\
-		(__typeof__((device).operation))handler;
+	if ((device)->ops.operation == NULL)				\
+		(device)->ops.operation =				\
+		(__typeof__((device)->ops.operation))handler;
 
 struct list_head rtdm_named_devices;	/* hash table */
 struct rb_root rtdm_protocol_devices;
@@ -209,27 +209,27 @@ int rtdm_dev_register(struct rtdm_device *device)
 	switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
 		/* Sanity check: any open handler? */
-		if (device->open == NULL) {
+		if (device->ops.open == NULL) {
 			printk(XENO_ERR "missing open handler for RTDM device\n");
 			return -EINVAL;
 		}
-		device->socket = (typeof(device->socket))enosys;
+		device->ops.socket = (typeof(device->ops.socket))enosys;
 		break;
 
 	case RTDM_PROTOCOL_DEVICE:
 		/* Sanity check: any socket handler? */
-		if (device->socket == NULL) {
+		if (device->ops.socket == NULL) {
 			printk(XENO_ERR "missing socket handler for RTDM device\n");
 			return -EINVAL;
 		}
-		device->open = (typeof(device->open))enosys;
+		device->ops.open = (typeof(device->ops.open))enosys;
 		break;
 
 	default:
 		return -EINVAL;
 	}
 
-	/* Sanity check: non-RT close handler?
+	/* Sanity check: driver-defined close handler?
 	 * (Always required for forced cleanup) */
 	if (device->ops.close == NULL) {
 		printk(XENO_ERR "missing close handler for RTDM device\n");
@@ -238,13 +238,13 @@ int rtdm_dev_register(struct rtdm_device *device)
 	device->reserved.close = device->ops.close;
 	device->ops.close = __rt_dev_close;
 
-	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, ioctl, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, read, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, write, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, recvmsg, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device->ops, sendmsg, enosys);
-	SET_DEFAULT_OP_IF_NULL(device->ops, select_bind, ebadf);
-	SET_DEFAULT_OP_IF_NULL(device->ops, mmap, enodev);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device, ioctl, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device, read, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device, write, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device, recvmsg, enosys);
+	SET_DEFAULT_DUAL_OP_IF_NULL(device, sendmsg, enosys);
+	SET_DEFAULT_OP_IF_NULL(device, select_bind, ebadf);
+	SET_DEFAULT_OP_IF_NULL(device, mmap, enodev);
 
 	atomic_set(&device->reserved.refcount, 0);
 	device->reserved.exclusive_context = NULL;

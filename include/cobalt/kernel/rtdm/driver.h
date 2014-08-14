@@ -305,40 +305,28 @@ struct rtdm_dev_reserved {
 /**
  * @brief RTDM device
  *
- * This structure specifies a RTDM device. As some fields, especially the
- * reserved area, will be modified by RTDM during runtime, the structure must
- * not reside in write-protected memory.
+ * This structure specifies a RTDM device. As some fields, especially
+ * the reserved area, will be modified by RTDM during runtime, the
+ * structure must not reside in write-protected memory.
  */
 struct rtdm_device {
 	/** Data stored by RTDM inside a registered device (internal use only) */
 	struct rtdm_dev_reserved reserved;
-
 	/** Revision number of this structure, see
 	 *  @ref drv_versioning "Driver Versioning" defines */
 	int struct_version;
-
 	/** Device flags, see @ref dev_flags "Device Flags" for details */
 	int device_flags;
 	/** Size of driver defined appendix to struct rtdm_dev_context */
 	size_t context_size;
-
 	/** Named device identification (orthogonal to Linux device name space) */
 	char device_name[RTDM_MAX_DEVNAME_LEN + 1];
-
 	/** Protocol device identification: protocol family (PF_xxx) */
 	int protocol_family;
 	/** Protocol device identification: socket type (SOCK_xxx) */
 	int socket_type;
-
-	/** Named device instance creation for real-time contexts. */
-	rtdm_open_handler_t open;
-
-	/** Protocol socket creation for real-time contexts. */
-	rtdm_socket_handler_t socket;
-
-	/** Default operations on newly opened device instance */
+	/** I/O operation handlers */
 	struct rtdm_fd_ops ops;
-
 	/** Device class ID, see @ref RTDM_CLASS_xxx */
 	int device_class;
 	/** Device sub-class, see RTDM_SUBCLASS_xxx definition in the
@@ -355,7 +343,6 @@ struct rtdm_device {
 	const char *peripheral_name;
 	/** Informational driver provider name (reported via /proc) */
 	const char *provider_name;
-
 	/** Name of /proc entry for the device, must not be NULL */
 	const char *proc_name;
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -363,7 +350,6 @@ struct rtdm_device {
 	struct xnvfile_directory vfroot;
 	struct xnvfile_regular info_vfile;
 #endif
-
 	/** Driver definable device ID */
 	int device_id;
 	/** Driver definable device data */

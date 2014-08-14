@@ -722,20 +722,15 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 
 static struct rtdm_device device = {
 	.struct_version = RTDM_DEVICE_STRUCT_VER,
-
 	.device_flags = RTDM_NAMED_DEVICE,
 	.context_size = sizeof(struct rtswitch_context),
 	.device_name = "",
-
-	.open = rtswitch_open,
-
 	.ops = {
+		.open = rtswitch_open,
 		.close = rtswitch_close,
-
 		.ioctl_rt = rtswitch_ioctl_rt,
 		.ioctl_nrt = rtswitch_ioctl_nrt,
 	},
-
 	.device_class = RTDM_CLASS_TESTING,
 	.device_sub_class = RTDM_SUBCLASS_SWITCHTEST,
 	.profile_version = RTTST_PROFILE_VER,
