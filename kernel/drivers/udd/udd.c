@@ -26,7 +26,6 @@
 #include <rtdm/udd.h>
 
 struct udd_context {
-	struct udd_device *device;
 	u32 event_count;
 };
 
@@ -44,7 +43,6 @@ static int udd_open(struct rtdm_fd *fd, int oflags)
 	}
 
 	context = rtdm_fd_to_private(fd);
-	context->device = udd;
 	context->event_count = 0;
 
 	return 0;
