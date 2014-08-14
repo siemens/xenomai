@@ -516,6 +516,11 @@ static int autotune_ioctl_nrt(struct rtdm_fd *fd, unsigned int request, void *ar
 	struct gravity_tuner *tuner;
 	int period, ret;
 
+	if (request == AUTOTUNE_RTIOC_RESET) {
+		xnclock_reset_gravity(&nkclock);
+		return 0;
+	}
+
 	ret = rtdm_copy_from_user(fd, &setup, arg, sizeof(setup));
 	if (ret)
 		return ret;
@@ -539,9 +544,6 @@ static int autotune_ioctl_nrt(struct rtdm_fd *fd, unsigned int request, void *ar
 	case AUTOTUNE_RTIOC_USER:
 		tuner = &uthread_tuner.tuner;
 		break;
-	case AUTOTUNE_RTIOC_RESET:
-		xnclock_reset_gravity(&nkclock);
-		return 0;
 	default:
 		return -EINVAL;
 	}
