@@ -17,7 +17,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_FD_H
 #define _COBALT_KERNEL_FD_H
 
@@ -32,9 +31,83 @@ struct xnselector;
 struct xnsys_ppd;
 
 /**
+ * @file
+ * @anchor File operation handlers
+ * @addtogroup rtdm_device_register
+ * @{
+ */
+
+/**
+ * Open handler for named devices
+ *
+ * @param[in] fd File descriptor associated with opened device instance
+ * @param[in] oflags Open flags as passed by the user
+ *
+ * The file descriptor carries a device minor information which can be
+ * retrieved by a call to rtdm_fd_minor(fd). The minor number can be
+ * used for distinguishing several instances of the same rtdm_device
+ * type. Prior to entering this handler, the device minor information
+ * may have been extracted from the pathname passed to the @a open()
+ * call, according to the following rules:
+ *
+ * - RTDM first attempts to match the pathname exactly as passed by
+ * the application, against the registered rtdm_device descriptors. On
+ * success, the special minor -1 is assigned to @a fd and this handler
+ * is called.
+ *
+ * - if the original pathname does not match any device descriptor, it
+ * is scanned for the \@\<minor> suffix. If present, a second lookup is
+ * performed only looking for the radix portion of the pathname
+ * (i.e. stripping the suffix), and the file descriptor is assigned
+ * the minor value retrieved earlier on success, at which point this
+ * handler is called. When present, \<minor> must be a positive or null
+ * decimal value, otherwise the open() call fails.
+ *
+ * For instance:
+ *
+ * @code
+ *    fd = open("/dev/foo@0", ...); // rtdm_fd_minor(fd) == 0
+ *    fd = open("/dev/foo@7", ...); // rtdm_fd_minor(fd) == 7
+ *    fd = open("/dev/foo", ...);   // rtdm_fd_minor(fd) == -1
+ * @endcode
+ *
+ * @note the device minor scheme is not supported by Xenomai 2.x.
+ *
+ * @return 0 on success. On failure, a negative error code is returned.
+ *
+ * @see @c open() in IEEE Std 1003.1,
+ * http://www.opengroup.org/onlinepubs/009695399
+ */
+int rtdm_open_handler(struct rtdm_fd *fd, int oflags);
+
+/**
+ * Socket creation handler for protocol devices
+ *
+ * @param[in] fd File descriptor associated with opened device instance
+ * @param[in] protocol Protocol number as passed by the user
+ *
+ * @return 0 on success. On failure, a negative error code is returned.
+ *
+ * @see @c socket() in IEEE Std 1003.1,
+ * http://www.opengroup.org/onlinepubs/009695399
+ */
+int rtdm_socket_handler(struct rtdm_fd *fd, int protocol);
+
+/**
+ * Close handler
+ *
+ * @param[in] fd File descriptor associated with opened
+ * device instance.
+ *
+ * @see @c close() in IEEE Std 1003.1,
+ * http://www.opengroup.org/onlinepubs/009695399
+ */
+void rtdm_close_handler(struct rtdm_fd *fd);
+
+/**
  * IOCTL handler
  *
- * @param[in] fd File descriptor structure
+ * @param[in] fd File descriptor
  * @param[in] request Request number as passed by the user
  * @param[in,out] arg Request argument as passed by the user
  *
@@ -45,12 +118,12 @@ struct xnsys_ppd;
  * @see @c ioctl() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-typedef int rtdm_fd_ioctl_t(struct rtdm_fd *fd, unsigned int request, void __user *arg);
+int rtdm_ioctl_handler(struct rtdm_fd *fd, unsigned int request, void __user *arg);
 
 /**
  * Read handler
  *
- * @param[in] fd File descriptor structure
+ * @param[in] fd File descriptor
  * @param[out] buf Input buffer as passed by the user
  * @param[in] size Number of bytes the user requests to read
  *
@@ -61,12 +134,12 @@ typedef int rtdm_fd_ioctl_t(struct rtdm_fd *fd, unsigned int request, void __use
  * @see @c read() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-typedef ssize_t rtdm_fd_read_t(struct rtdm_fd *fd, void __user *buf, size_t size);
+ssize_t rtdm_read_handler(struct rtdm_fd *fd, void __user *buf, size_t size);
 
 /**
  * Write handler
  *
- * @param[in] fd File descriptor structure
+ * @param[in] fd File descriptor
  * @param[in] buf Output buffer as passed by the user
  * @param[in] size Number of bytes the user requests to write
  *
@@ -77,12 +150,12 @@ typedef ssize_t rtdm_fd_read_t(struct rtdm_fd *fd, void __user *buf, size_t size
  * @see @c write() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-typedef ssize_t rtdm_fd_write_t(struct rtdm_fd *fd, const void __user *buf, size_t size);
+ssize_t rtdm_write_handler(struct rtdm_fd *fd, const void __user *buf, size_t size);
 
 /**
  * Receive message handler
  *
- * @param[in] fd File descriptor structure
+ * @param[in] fd File descriptor
  * @param[in,out] msg Message descriptor as passed by the user, automatically
  * mirrored to safe kernel memory in case of user mode call
  * @param[in] flags Message flags as passed by the user
@@ -94,14 +167,12 @@ typedef ssize_t rtdm_fd_write_t(struct rtdm_fd *fd, const void __user *buf, size
  * @see @c recvmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-typedef ssize_t rtdm_fd_recvmsg_t(struct rtdm_fd *fd, struct msghdr *msg, int flags);
+ssize_t rtdm_recvmsg_handler(struct rtdm_fd *fd, struct msghdr *msg, int flags);
 
 /**
  * Transmit message handler
  *
- * @param[in] fd File descriptor structure
- * @param[in] user_info Opaque pointer to information about user mode caller,
- * NULL if kernel mode call
+ * @param[in] fd File descriptor
  * @param[in] msg Message descriptor as passed by the user, automatically
  * mirrored to safe kernel memory in case of user mode call
  * @param[in] flags Message flags as passed by the user
@@ -113,38 +184,95 @@ typedef ssize_t rtdm_fd_recvmsg_t(struct rtdm_fd *fd, struct msghdr *msg, int fl
  * @see @c sendmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-typedef ssize_t rtdm_fd_sendmsg_t(struct rtdm_fd *fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_sendmsg_handler(struct rtdm_fd *fd, const struct msghdr *msg, int flags);
 
+/**
+ * Select handler
+ *
+ * @param[in] fd File descriptor
+ * @param selector Pointer to the selector structure
+ * @param type Type of events (@a XNSELECT_READ, @a XNSELECT_WRITE, or @a
+ * XNSELECT_EXCEPT)
+ * @param index Index of the file descriptor
+ *
+ * @return 0 on success. On failure, a negative error code is
+ * returned.
+ *
+ * @see @c select() in POSIX.1-2001,
+ * http://pubs.opengroup.org/onlinepubs/007908799/xsh/select.html
+ */
+int rtdm_select_bind_handler(struct rtdm_fd *fd, struct xnselector *selector,
+			     unsigned int type, unsigned int index);
+
+/**
+ * Memory mapping handler
+ *
+ * @param[in] fd File descriptor
+ * @param[in] vma Virtual memory area descriptor
+ *
+ * @return 0 on success. On failure, a negative error code is
+ * returned.
+ *
+ * @see @c mmap() in POSIX.1-2001,
+ * http://pubs.opengroup.org/onlinepubs/7908799/xsh/mmap.html
+ */
+int rtdm_mmap_handler(struct rtdm_fd *fd, struct vm_area_struct *vma);
+
+/**
+ * @anchor rtdm_fd_ops
+ * @brief RTDM file operation descriptor.
+ *
+ * This structure describes the operations available with a RTDM
+ * device, defining handlers for submitting I/O requests. Those
+ * handlers are implemented by RTDM device drivers.
+ */
 struct rtdm_fd_ops {
-	int (*open)(struct rtdm_fd *fd, int oflag);
+	/** See rtdm_open_handler(). */
+	int (*open)(struct rtdm_fd *fd, int oflags);
+	/** See rtdm_socket_handler(). */
 	int (*socket)(struct rtdm_fd *fd, int protocol);
+	/** See rtdm_close_handler(). */
 	void (*close)(struct rtdm_fd *fd);
+	/** See rtdm_ioctl_handler(). */
 	int (*ioctl_rt)(struct rtdm_fd *fd,
 			unsigned int request, void __user *arg);
+	/** See rtdm_ioctl_handler(). */
 	int (*ioctl_nrt)(struct rtdm_fd *fd,
 			 unsigned int request, void __user *arg);
+	/** See rtdm_read_handler(). */
 	ssize_t (*read_rt)(struct rtdm_fd *fd,
 			   void __user *buf, size_t size);
+	/** See rtdm_read_handler(). */
 	ssize_t (*read_nrt)(struct rtdm_fd *fd,
 			    void __user *buf, size_t size);
+	/** See rtdm_write_handler(). */
 	ssize_t (*write_rt)(struct rtdm_fd *fd,
 			    const void __user *buf, size_t size);
+	/** See rtdm_write_handler(). */
 	ssize_t (*write_nrt)(struct rtdm_fd *fd,
 			     const void __user *buf, size_t size);
+	/** See rtdm_recvmsg_handler(). */
 	ssize_t (*recvmsg_rt)(struct rtdm_fd *fd,
 			      struct msghdr *msg, int flags);
+	/** See rtdm_recvmsg_handler(). */
 	ssize_t (*recvmsg_nrt)(struct rtdm_fd *fd,
 			       struct msghdr *msg, int flags);
+	/** See rtdm_sendmsg_handler(). */
 	ssize_t (*sendmsg_rt)(struct rtdm_fd *fd,
 			      const struct msghdr *msg, int flags);
+	/** See rtdm_sendmsg_handler(). */
 	ssize_t (*sendmsg_nrt)(struct rtdm_fd *fd,
 			       const struct msghdr *msg, int flags);
+	/** See rtdm_select_handler(). */
 	int (*select_bind)(struct rtdm_fd *fd,
 			   struct xnselector *selector,
 			   unsigned int type, unsigned int index);
+	/** See rtdm_mmap_handler(). */
 	int (*mmap)(struct rtdm_fd *fd,
 		    struct vm_area_struct *vma);
 };
+
+/** @} File operation handlers */
 
 struct rtdm_fd {
 	unsigned int magic;

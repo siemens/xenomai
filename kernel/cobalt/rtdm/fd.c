@@ -166,7 +166,9 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 /**
  * @brief Retrieve and lock a RTDM file descriptor
  *
+ * @param[in] p PPD descriptor of the calling process
  * @param[in] ufd User-side file descriptor
+ * @param[in] magic Magic word for lookup validation
  *
  * @return Pointer to the RTDM file descriptor matching @a ufd, or
  * ERR_PTR(-EBADF).
@@ -597,17 +599,15 @@ int rtdm_fd_valid_p(int ufd)
  * This function is invoked by higher RTOS layers implementing select-like
  * services. It shall not be called directly by RTDM drivers.
  *
- * @param[in] fd File descriptor to bind to
+ * @param[in] ufd User-side file descriptor to bind to
  * @param[in,out] selector Selector object that shall be bound to the given
  * event
  * @param[in] type Event type the caller is interested in
- * @param[in] fd_index Index in the file descriptor set of the caller
  *
  * @return 0 on success, otherwise:
  *
- * - -EBADF is returned if the file descriptor @a fd cannot be resolved.
- *
- * - -EINVAL is returned if @a type or @a fd_index are invalid.
+ * - -EBADF is returned if the file descriptor @a ufd cannot be resolved.
+ * - -EINVAL is returned if @a type is invalid.
  *
  * @coretags{task-unrestricted}
  */

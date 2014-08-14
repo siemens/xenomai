@@ -86,9 +86,10 @@ static inline int xnselect_wakeup(struct xnselector *selector)
  * @param type type of events (@a XNSELECT_READ, @a XNSELECT_WRITE, or @a
  * XNSELECT_EXCEPT);
  *
- * @param index index of the file descriptor (represented by @a select_block) in the bit fields used by the @a selector structure;
+ * @param index index of the file descriptor (represented by @a
+ * select_block) in the bit fields used by the @a selector structure;
  *
- * @param state current state of the file descriptor>.
+ * @param state current state of the file descriptor.
  *
  * @a select_block must have been initialized with xnselect_init(),
  * the @a xnselector structure must have been initialized with
