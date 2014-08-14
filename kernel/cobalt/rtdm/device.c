@@ -33,40 +33,15 @@
 
 #define RTDM_DEVICE_MAGIC	0x82846877
 
-#define SET_DEFAULT_DUAL_OP_IF_NULL(device, operation, handler)		\
-	if ((device)->ops.operation##_rt == NULL)			\
-		(device)->ops.operation##_rt =				\
-		(__typeof__((device)->ops.operation##_rt))handler;	\
-	if ((device)->ops.operation##_nrt == NULL)			\
-		(device)->ops.operation##_nrt =				\
-		(__typeof__((device)->ops.operation##_nrt))handler;
-
-#define SET_DEFAULT_OP_IF_NULL(device, operation, handler)		\
-	if ((device)->ops.operation == NULL)				\
-		(device)->ops.operation =				\
-		(__typeof__((device)->ops.operation))handler;
-
 struct list_head rtdm_named_devices;	/* hash table */
 struct rb_root rtdm_protocol_devices;
 
 struct semaphore nrt_dev_lock;
 DEFINE_XNLOCK(rt_dev_lock);
 
-extern void __rt_dev_close(struct rtdm_fd *fd);
-
 static int enosys(void)
 {
 	return -ENOSYS;
-}
-
-static int ebadf(void)
-{
-	return -EBADF;
-}
-
-static int enodev(void)
-{
-	return -ENODEV;
 }
 
 static inline unsigned long long get_proto_id(int pf, int type)
@@ -237,15 +212,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 	}
 	device->reserved.close = device->ops.close;
 	device->ops.close = __rt_dev_close;
-
-	SET_DEFAULT_DUAL_OP_IF_NULL(device, ioctl, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device, read, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device, write, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device, recvmsg, enosys);
-	SET_DEFAULT_DUAL_OP_IF_NULL(device, sendmsg, enosys);
-	SET_DEFAULT_OP_IF_NULL(device, select_bind, ebadf);
-	SET_DEFAULT_OP_IF_NULL(device, mmap, enodev);
-
 	atomic_set(&device->reserved.refcount, 0);
 	device->reserved.exclusive_context = NULL;
 

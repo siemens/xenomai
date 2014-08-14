@@ -78,6 +78,8 @@ static inline void
 rtdm_proc_unregister_device(struct rtdm_device *device) { }
 #endif
 
+void __rt_dev_close(struct rtdm_fd *fd);
+
 int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
 			    unsigned int request, void __user *arg);
 
