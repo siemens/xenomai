@@ -5,9 +5,10 @@ var dir_6fb3c96f30c05412f9e8266f1a1cbdee =
     [ "can.h", "cobalt_2kernel_2rtdm_2can_8h.html", null ],
     [ "cobalt.h", "kernel_2rtdm_2cobalt_8h.html", null ],
     [ "driver.h", "driver_8h.html", "driver_8h" ],
-    [ "fd.h", "fd_8h_source.html", null ],
+    [ "fd.h", "fd_8h.html", "fd_8h" ],
     [ "ipc.h", "cobalt_2kernel_2rtdm_2ipc_8h.html", null ],
     [ "rtdm.h", "cobalt_2kernel_2rtdm_2rtdm_8h.html", null ],
     [ "serial.h", "cobalt_2kernel_2rtdm_2serial_8h.html", null ],
-    [ "testing.h", "cobalt_2kernel_2rtdm_2testing_8h.html", null ]
+    [ "testing.h", "cobalt_2kernel_2rtdm_2testing_8h.html", null ],
+    [ "udd.h", "cobalt_2kernel_2rtdm_2udd_8h_source.html", null ]
 ];

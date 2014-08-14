@@ -9,7 +9,6 @@ var structrtdm__device =
     [ "device_sub_class", "structrtdm__device.html#aece6c5135a6256dbb3636f66eb97cb40", null ],
     [ "driver_name", "structrtdm__device.html#a55d676531831124ae7e8051addde3cdc", null ],
     [ "driver_version", "structrtdm__device.html#aebcb235c789d0698fd821124817e2330", null ],
-    [ "open", "structrtdm__device.html#a9948dab1af477147046c73b5bd09bd9d", null ],
     [ "ops", "structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83", null ],
     [ "peripheral_name", "structrtdm__device.html#aed46d0d1567069de23a7400ff987610b", null ],
     [ "proc_name", "structrtdm__device.html#a0df5612d6bfcf6421509345384467392", null ],
@@ -17,7 +16,6 @@ var structrtdm__device =
     [ "protocol_family", "structrtdm__device.html#ae58c050e09a79b277f718d796eda2072", null ],
     [ "provider_name", "structrtdm__device.html#aaacffe6b5bcea62396bf09d6ae2650ba", null ],
     [ "reserved", "structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040", null ],
-    [ "socket", "structrtdm__device.html#a0681cbbfa79a38497abf360bc500ed87", null ],
     [ "socket_type", "structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9", null ],
     [ "struct_version", "structrtdm__device.html#aaa2844f98d874f16d802b4e0b693e4e2", null ]
 ];

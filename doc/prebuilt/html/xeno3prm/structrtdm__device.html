@@ -98,6 +98,13 @@ $(document).ready(function(){initNavTree('structrtdm__device.html','');});
 
 <p>RTDM device.  
  <a href="structrtdm__device.html#details">More...</a></p>
+<div class="dynheader">
+Collaboration diagram for rtdm_device:</div>
+<div class="dyncontent">
+<div class="center"><img src="structrtdm__device__coll__graph.png" border="0" usemap="#rtdm__device_coll__map" alt="Collaboration graph"/></div>
+<map name="rtdm__device_coll__map" id="rtdm__device_coll__map">
+<area shape="rect" id="node2" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="5,5,99,32"/></map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
@@ -129,15 +136,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">socket_type</a></td></tr>
 <tr class="memdesc:a02552f2d91052bd801576b3a132ba3f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol device identification: socket type (SOCK_xxx) <br/></td></tr>
 <tr class="separator:a02552f2d91052bd801576b3a132ba3f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9948dab1af477147046c73b5bd09bd9d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="driver_8h.html#a3b9c7a2b5e30952e13070333fafb6157">rtdm_open_handler_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a9948dab1af477147046c73b5bd09bd9d">open</a></td></tr>
-<tr class="memdesc:a9948dab1af477147046c73b5bd09bd9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Named device instance creation for real-time contexts.  <a href="#a9948dab1af477147046c73b5bd09bd9d">More...</a><br/></td></tr>
-<tr class="separator:a9948dab1af477147046c73b5bd09bd9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0681cbbfa79a38497abf360bc500ed87"><td class="memItemLeft" align="right" valign="top"><a class="el" href="driver_8h.html#a981114b2b2c5fa18437e7d194017307a">rtdm_socket_handler_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a0681cbbfa79a38497abf360bc500ed87">socket</a></td></tr>
-<tr class="memdesc:a0681cbbfa79a38497abf360bc500ed87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol socket creation for real-time contexts.  <a href="#a0681cbbfa79a38497abf360bc500ed87">More...</a><br/></td></tr>
-<tr class="separator:a0681cbbfa79a38497abf360bc500ed87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7307b2b415abae0747c6580ab00cfa83"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7307b2b415abae0747c6580ab00cfa83"></a>
-struct rtdm_fd_ops&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83">ops</a></td></tr>
-<tr class="memdesc:a7307b2b415abae0747c6580ab00cfa83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default operations on newly opened device instance. <br/></td></tr>
+struct <a class="el" href="structrtdm__fd__ops.html">rtdm_fd_ops</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83">ops</a></td></tr>
+<tr class="memdesc:a7307b2b415abae0747c6580ab00cfa83"><td class="mdescLeft">&#160;</td><td class="mdescRight">I/O operation handlers. <br/></td></tr>
 <tr class="separator:a7307b2b415abae0747c6580ab00cfa83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94aa3100258b43c812c5240b55777f07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94aa3100258b43c812c5240b55777f07"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a94aa3100258b43c812c5240b55777f07">device_class</a></td></tr>
@@ -183,40 +184,7 @@ void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>RTDM device. </p>
 <p>This structure specifies a RTDM device. As some fields, especially the reserved area, will be modified by RTDM during runtime, the structure must not reside in write-protected memory. </p>
-</div><h2 class="groupheader">Field Documentation</h2>
-<a class="anchor" id="a9948dab1af477147046c73b5bd09bd9d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="driver_8h.html#a3b9c7a2b5e30952e13070333fafb6157">rtdm_open_handler_t</a> rtdm_device::open</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Named device instance creation for real-time contexts. </p>
-
-<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga6a191b3d206680c48cad2047adb9fc98">rtdm_dev_register()</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a0681cbbfa79a38497abf360bc500ed87"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="driver_8h.html#a981114b2b2c5fa18437e7d194017307a">rtdm_socket_handler_t</a> rtdm_device::socket</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Protocol socket creation for real-time contexts. </p>
-
-<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga6a191b3d206680c48cad2047adb9fc98">rtdm_dev_register()</a>.</p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/cobalt/kernel/rtdm/<a class="el" href="driver_8h_source.html">driver.h</a></li>
 </ul>
 </div><!-- contents -->

@@ -160,6 +160,9 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 <li>RTDM_API_VER
 : <a class="el" href="group__rtdm.html#gadd2020d36782ebb916b065d6554f2631">rtdm.h</a>
 </li>
+<li>rtdm_close_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga4c1849624a5c3358a3b9cbab3f6468a7">fd.h</a>
+</li>
 <li>RTDM_CONTEXT_STRUCT_VER
 : <a class="el" href="group__rtdm__device__register.html#gab127a755cab544c5b318d4f4a3578e9f">driver.h</a>
 </li>
@@ -220,11 +223,29 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 <li>rtdm_fd_device()
 : <a class="el" href="driver_8h.html#ab0378feca734478fb704060e216e65db">driver.h</a>
 </li>
+<li>rtdm_fd_get()
+: <a class="el" href="fd_8h.html#a0a8fc8420cd4fbf355b89c627d38eb8e">fd.h</a>
+</li>
 <li>rtdm_fd_is_user()
 : <a class="el" href="driver_8h.html#a70cf4378c42b9ebd9dd7c9b081aed35c">driver.h</a>
 </li>
+<li>rtdm_fd_lock()
+: <a class="el" href="fd_8h.html#a4cb9270d8f0153a2903f55004b9a0e2a">fd.h</a>
+</li>
+<li>rtdm_fd_put()
+: <a class="el" href="fd_8h.html#a998aa7dd77e8a9784ae713b486c4d494">fd.h</a>
+</li>
+<li>rtdm_fd_select()
+: <a class="el" href="fd_8h.html#a3feba2db3d6f8619ce4720f24d84bfe8">fd.h</a>
+</li>
 <li>rtdm_fd_to_private()
 : <a class="el" href="driver_8h.html#aa1aec6568a871126146498a32549c609">driver.h</a>
+</li>
+<li>rtdm_fd_unlock()
+: <a class="el" href="fd_8h.html#a4bba9f5f7c0ebf230c088d2135c83164">fd.h</a>
+</li>
+<li>rtdm_ioctl_handler()
+: <a class="el" href="group__rtdm__device__register.html#gab188dd6270100e4252ecefb9553ae659">fd.h</a>
 </li>
 <li>RTDM_IRQ_DISABLE
 : <a class="el" href="group__rtdm__irq.html#ga9eb37d265d4c1b81e94b16c412dff4b4">driver.h</a>
@@ -277,6 +298,9 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 <li>rtdm_lockctx_t
 : <a class="el" href="group__rtdm__sync__spinlock.html#ga7584217487c323356414e21200a57e63">driver.h</a>
 </li>
+<li>rtdm_mmap_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga4d376f88ed220a34961d8390edb20c0e">fd.h</a>
+</li>
 <li>rtdm_mutex_destroy()
 : <a class="el" href="group__rtdm__sync__mutex.html#gad13170b569d0a4cdb46072e1e3a45527">driver.h</a>
 </li>
@@ -298,8 +322,8 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 <li>rtdm_nrtsig_handler_t
 : <a class="el" href="group__rtdm__nrtsignal.html#ga3c72df92865ad7decadab7c94fa75d0a">driver.h</a>
 </li>
-<li>rtdm_open_handler_t
-: <a class="el" href="driver_8h.html#a3b9c7a2b5e30952e13070333fafb6157">driver.h</a>
+<li>rtdm_open_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga0ef51b797df99c754eed7581f7868d44">fd.h</a>
 </li>
 <li>rtdm_private_to_fd()
 : <a class="el" href="driver_8h.html#ae435e0c93c5972d0fddbd2d055b43660">driver.h</a>
@@ -310,8 +334,17 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 <li>rtdm_ratelimit()
 : <a class="el" href="group__rtdm__util.html#gab0b2db892afe1bd77a80f6b8367eb0c9">driver.h</a>
 </li>
+<li>rtdm_read_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga5a444bfce838ce7eb0a44b328b935682">fd.h</a>
+</li>
+<li>rtdm_recvmsg_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga178b1bdc29395a7530abaf7df052cdf2">fd.h</a>
+</li>
 <li>RTDM_SECURE_DEVICE
 : <a class="el" href="group__rtdm__device__register.html#gadea320d3993937f37edc6fa39a29d379">driver.h</a>
+</li>
+<li>rtdm_select_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga4a225724822b506bb2ed036ef141e428">fd.h</a>
 </li>
 <li>rtdm_selecttype
 : <a class="el" href="group__rtdm__sync.html#gae18228df8c70c9da1f90f61b01e92501">driver.h</a>
@@ -340,8 +373,11 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 <li>rtdm_sem_up()
 : <a class="el" href="group__rtdm__sync__sem.html#ga829dbd8c5709d798ed06947b27001fed">driver.h</a>
 </li>
-<li>rtdm_socket_handler_t
-: <a class="el" href="driver_8h.html#a981114b2b2c5fa18437e7d194017307a">driver.h</a>
+<li>rtdm_sendmsg_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga53afc70c849817555a0b7bedeaed4f12">fd.h</a>
+</li>
+<li>rtdm_socket_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga15ae98f00745983239ee64b95f6cabfe">fd.h</a>
 </li>
 <li>RTDM_SUBCLASS_IRQBENCH
 : <a class="el" href="rtdm_2uapi_2testing_8h.html#a337782a702b89987fdd7e9f903e2ba75">testing.h</a>
@@ -396,6 +432,9 @@ $(document).ready(function(){initNavTree('globals_r.html','');});
 </li>
 <li>rtdm_toseq_init()
 : <a class="el" href="group__rtdm__sync.html#ga531ddf80690059302409f760bd7f14d4">driver.h</a>
+</li>
+<li>rtdm_write_handler()
+: <a class="el" href="group__rtdm__device__register.html#ga9814f54c9195aa50fc4a5da4b0524138">fd.h</a>
 </li>
 <li>RTIOC_DEVICE_INFO
 : <a class="el" href="group__rtdm__profiles.html#gaae7eb728c73b844eed0ee612940c19ae">rtdm.h</a>

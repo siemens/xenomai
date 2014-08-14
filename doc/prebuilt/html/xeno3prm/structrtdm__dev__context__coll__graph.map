@@ -1,3 +1,4 @@
 <map id="rtdm_dev_context" name="rtdm_dev_context">
-<area shape="rect" id="node2" href="$structrtdm__device.html" title="RTDM device. " alt="" coords="21,5,115,32"/>
+<area shape="rect" id="node2" href="$structrtdm__device.html" title="RTDM device. " alt="" coords="21,96,115,123"/>
+<area shape="rect" id="node3" href="$structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="21,5,115,32"/>
 </map>

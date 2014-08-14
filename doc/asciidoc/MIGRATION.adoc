@@ -70,8 +70,8 @@ System parameters renamed::
 * xeno_nucleus.watchdog_timeout -> xenomai.watchdog_timeout
 * xeno_nucleus.xenomai_gid -> xenomai.allowed_group
 * xeno_nucleus.sysheap_size -> xenomai.sysheap_size
-* xeno_hal.smi (x86 only) -> xeno_machine.smi
-* xeno_hal.smi_mask (x86 only) -> xeno_machine.smi_mask
+* xeno_hal.smi (x86 only) -> xenomai.smi
+* xeno_hal.smi_mask (x86 only) -> xenomai.smi_mask
 
 Obsolete parameters dropped::
 
@@ -359,6 +359,35 @@ rtdm/rttesting.h -> rtdm/testing.h
 rtdm/rtipc.h -> rtdm/ipc.h
 
 === Driver API ===
+
+- Changes in the +rtdm_device+ descriptor
+
+The following changes have taken place in the device description
+passed to +rtdm_dev_register()+ (i.e. +struct rtdm_device+):
+
+* +.open_rt+ was dropped, and +.open_nrt+ renamed as +.open+. Opening
+  a named device instance always happens from secondary mode.
+
+.Rationale
+**********************************************************************
+Opening a device instance most often requires allocating resources
+managed by the Linux kernel (memory mappings, DMA etc), which is only
+available to regular calling contexts.
+**********************************************************************
+
+* Likewise, +.socket_rt+ was dropped, and +.socket_nrt+ renamed as
+  +.socket+. Opening a protocol device instance always happens from
+  secondary mode.
+
+* As a consequence of the previous changes, +.close_rt+ was dropped,
+  and +.close_nrt+ renamed as +.close+. Closing a device instance
+  always happens from secondary mode.
+
+[[rtdm-mmap]]
+* The +.ops+ operation descriptor shows a new member, namely +.mmap+
+  for handling memory mapping requests to the RTDM driver. This
+  handler always operates from secondary mode on behalf of the calling
+  task context, so that it may invoke regular kernel services safely.
 
 - rtdm_dev_unregister() won't return -ENODEV.
 
@@ -985,6 +1014,11 @@ call.
   (32768).
 
 === POSIX I/O services ===
+
+- A Cobalt replacement for mmap(2) has been introduced. The
+  implementation invokes the <<rtdm-mmap, +.mmap+ operation handler>>
+  from the appropriate RTDM driver the file descriptor is connected
+  to.
 
 - Cobalt's select(2) service is not automatically restarted anymore
   upon Linux signal receipt, conforming to the POSIX standard (see man

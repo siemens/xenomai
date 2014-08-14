@@ -29,8 +29,6 @@ var driver_8h =
     [ "rtdm_lock_t", "driver_8h.html#gacbc89e880b42154cb65aa8317195dc03", null ],
     [ "rtdm_lockctx_t", "driver_8h.html#ga7584217487c323356414e21200a57e63", null ],
     [ "rtdm_nrtsig_handler_t", "driver_8h.html#ga3c72df92865ad7decadab7c94fa75d0a", null ],
-    [ "rtdm_open_handler_t", "driver_8h.html#a3b9c7a2b5e30952e13070333fafb6157", null ],
-    [ "rtdm_socket_handler_t", "driver_8h.html#a981114b2b2c5fa18437e7d194017307a", null ],
     [ "rtdm_task_proc_t", "driver_8h.html#gaa3cb481ab12462f5e54ff6fee12813e5", null ],
     [ "rtdm_timer_handler_t", "driver_8h.html#ga31b7b9a042260702a110bfe2c9bcac61", null ],
     [ "rtdm_selecttype", "driver_8h.html#gae18228df8c70c9da1f90f61b01e92501", [

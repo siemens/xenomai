@@ -879,12 +879,12 @@ xeno_nucleus.sysheap_size &#8594; xenomai.sysheap_size
 </li>
 <li>
 <p>
-xeno_hal.smi (x86 only) &#8594; xeno_machine.smi
+xeno_hal.smi (x86 only) &#8594; xenomai.smi
 </p>
 </li>
 <li>
 <p>
-xeno_hal.smi_mask (x86 only) &#8594; xeno_machine.smi_mask
+xeno_hal.smi_mask (x86 only) &#8594; xenomai.smi_mask
 </p>
 </li>
 </ul></div>
@@ -1216,8 +1216,56 @@ Redundant prefixes were removed from the following files:
 <div class="ulist"><ul>
 <li>
 <p>
+Changes in the <code>rtdm_device</code> descriptor
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>The following changes have taken place in the device description
+passed to <code>rtdm_dev_register()</code> (i.e. <code>struct rtdm_device</code>):</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<code>.open_rt</code> was dropped, and <code>.open_nrt</code> renamed as <code>.open</code>. Opening
+  a named device instance always happens from secondary mode.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Opening a device instance most often requires allocating resources
+managed by the Linux kernel (memory mappings, DMA etc), which is only
+available to regular calling contexts.</p></div>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Likewise, <code>.socket_rt</code> was dropped, and <code>.socket_nrt</code> renamed as
+  <code>.socket</code>. Opening a protocol device instance always happens from
+  secondary mode.
+</p>
+</li>
+<li>
+<p>
+As a consequence of the previous changes, <code>.close_rt</code> was dropped,
+  and <code>.close_nrt</code> renamed as <code>.close</code>. Closing a device instance
+  always happens from secondary mode.
+</p>
+</li>
+<li>
+<p>
+The <code>.ops</code> operation descriptor shows a new member, namely <code>.mmap</code>
+  for handling memory mapping requests to the RTDM driver. This
+  handler always operates from secondary mode on behalf of the calling
+  task context, so that it may invoke regular kernel services safely.
+</p>
+<div class="ulist" id="rtdm-mmap"><ul>
+<li>
+<p>
 rtdm_dev_unregister() won&#8217;t return -ENODEV.
 </p>
+</li>
+</ul></div>
 </li>
 </ul></div>
 <div class="sidebarblock">
@@ -2008,6 +2056,14 @@ call.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
+A Cobalt replacement for mmap(2) has been introduced. The
+  implementation invokes the <a href="#rtdm-mmap"><code>.mmap</code> operation handler</a>
+  from the appropriate RTDM driver the file descriptor is connected
+  to.
+</p>
+</li>
+<li>
+<p>
 Cobalt&#8217;s select(2) service is not automatically restarted anymore
   upon Linux signal receipt, conforming to the POSIX standard (see man
   signal(7)). In such an event, -1 is returned and errno is set to
@@ -2603,7 +2659,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-13 21:05:36 CEST
+Last updated 2014-08-14 17:35:04 CEST
 </div>
 </div>
 </body>

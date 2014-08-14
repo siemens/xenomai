@@ -84,6 +84,7 @@ $(document).ready(function(){initNavTree('group__rtdm__device__register.html',''
 <div id="doc-content">
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Device Registration Services<div class="ingroups"><a class="el" href="group__rtdm__driver__interface.html">Driver programming interface</a></div></div>  </div>
@@ -98,8 +99,44 @@ Collaboration diagram for Device Registration Services:</div>
 </td></tr></table></center>
 </div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__fd__ops.html">rtdm_fd_ops</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">RTDM file operation descriptor.  <a href="structrtdm__fd__ops.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ga0ef51b797df99c754eed7581f7868d44"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga0ef51b797df99c754eed7581f7868d44">rtdm_open_handler</a> (struct rtdm_fd *fd, int oflags)</td></tr>
+<tr class="memdesc:ga0ef51b797df99c754eed7581f7868d44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open handler for named devices.  <a href="#ga0ef51b797df99c754eed7581f7868d44">More...</a><br/></td></tr>
+<tr class="separator:ga0ef51b797df99c754eed7581f7868d44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga15ae98f00745983239ee64b95f6cabfe"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga15ae98f00745983239ee64b95f6cabfe">rtdm_socket_handler</a> (struct rtdm_fd *fd, int protocol)</td></tr>
+<tr class="memdesc:ga15ae98f00745983239ee64b95f6cabfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Socket creation handler for protocol devices.  <a href="#ga15ae98f00745983239ee64b95f6cabfe">More...</a><br/></td></tr>
+<tr class="separator:ga15ae98f00745983239ee64b95f6cabfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4c1849624a5c3358a3b9cbab3f6468a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga4c1849624a5c3358a3b9cbab3f6468a7">rtdm_close_handler</a> (struct rtdm_fd *fd)</td></tr>
+<tr class="memdesc:ga4c1849624a5c3358a3b9cbab3f6468a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close handler.  <a href="#ga4c1849624a5c3358a3b9cbab3f6468a7">More...</a><br/></td></tr>
+<tr class="separator:ga4c1849624a5c3358a3b9cbab3f6468a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab188dd6270100e4252ecefb9553ae659"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#gab188dd6270100e4252ecefb9553ae659">rtdm_ioctl_handler</a> (struct rtdm_fd *fd, unsigned int request, void __user *arg)</td></tr>
+<tr class="memdesc:gab188dd6270100e4252ecefb9553ae659"><td class="mdescLeft">&#160;</td><td class="mdescRight">IOCTL handler.  <a href="#gab188dd6270100e4252ecefb9553ae659">More...</a><br/></td></tr>
+<tr class="separator:gab188dd6270100e4252ecefb9553ae659"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5a444bfce838ce7eb0a44b328b935682"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga5a444bfce838ce7eb0a44b328b935682">rtdm_read_handler</a> (struct rtdm_fd *fd, void __user *buf, size_t size)</td></tr>
+<tr class="memdesc:ga5a444bfce838ce7eb0a44b328b935682"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read handler.  <a href="#ga5a444bfce838ce7eb0a44b328b935682">More...</a><br/></td></tr>
+<tr class="separator:ga5a444bfce838ce7eb0a44b328b935682"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9814f54c9195aa50fc4a5da4b0524138"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga9814f54c9195aa50fc4a5da4b0524138">rtdm_write_handler</a> (struct rtdm_fd *fd, const void __user *buf, size_t size)</td></tr>
+<tr class="memdesc:ga9814f54c9195aa50fc4a5da4b0524138"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write handler.  <a href="#ga9814f54c9195aa50fc4a5da4b0524138">More...</a><br/></td></tr>
+<tr class="separator:ga9814f54c9195aa50fc4a5da4b0524138"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga178b1bdc29395a7530abaf7df052cdf2"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga178b1bdc29395a7530abaf7df052cdf2">rtdm_recvmsg_handler</a> (struct rtdm_fd *fd, struct msghdr *msg, int flags)</td></tr>
+<tr class="memdesc:ga178b1bdc29395a7530abaf7df052cdf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Receive message handler.  <a href="#ga178b1bdc29395a7530abaf7df052cdf2">More...</a><br/></td></tr>
+<tr class="separator:ga178b1bdc29395a7530abaf7df052cdf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga53afc70c849817555a0b7bedeaed4f12"><td class="memItemLeft" align="right" valign="top">ssize_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga53afc70c849817555a0b7bedeaed4f12">rtdm_sendmsg_handler</a> (struct rtdm_fd *fd, const struct msghdr *msg, int flags)</td></tr>
+<tr class="memdesc:ga53afc70c849817555a0b7bedeaed4f12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transmit message handler.  <a href="#ga53afc70c849817555a0b7bedeaed4f12">More...</a><br/></td></tr>
+<tr class="separator:ga53afc70c849817555a0b7bedeaed4f12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4a225724822b506bb2ed036ef141e428"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga4a225724822b506bb2ed036ef141e428">rtdm_select_handler</a> (struct rtdm_fd *fd, struct xnselector *selector, unsigned int type, unsigned int index)</td></tr>
+<tr class="memdesc:ga4a225724822b506bb2ed036ef141e428"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select handler.  <a href="#ga4a225724822b506bb2ed036ef141e428">More...</a><br/></td></tr>
+<tr class="separator:ga4a225724822b506bb2ed036ef141e428"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4d376f88ed220a34961d8390edb20c0e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga4d376f88ed220a34961d8390edb20c0e">rtdm_mmap_handler</a> (struct rtdm_fd *fd, struct vm_area_struct *vma)</td></tr>
+<tr class="memdesc:ga4d376f88ed220a34961d8390edb20c0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Memory mapping handler.  <a href="#ga4d376f88ed220a34961d8390edb20c0e">More...</a><br/></td></tr>
+<tr class="separator:ga4d376f88ed220a34961d8390edb20c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6a191b3d206680c48cad2047adb9fc98"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#ga6a191b3d206680c48cad2047adb9fc98">rtdm_dev_register</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device)</td></tr>
 <tr class="memdesc:ga6a191b3d206680c48cad2047adb9fc98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register a RTDM device.  <a href="#ga6a191b3d206680c48cad2047adb9fc98">More...</a><br/></td></tr>
 <tr class="separator:ga6a191b3d206680c48cad2047adb9fc98"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -224,6 +261,31 @@ Driver Versioning</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ga4c1849624a5c3358a3b9cbab3f6468a7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rtdm_close_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Close handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor associated with opened device instance.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><code>close()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga6a191b3d206680c48cad2047adb9fc98"></a>
 <div class="memitem">
 <div class="memproto">
@@ -254,7 +316,7 @@ Driver Versioning</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
-<p>References <a class="el" href="structrtdm__device.html#a48d67f835c341c5d27bc5886920a11da">rtdm_device::context_size</a>, <a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">rtdm_device::device_flags</a>, <a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">rtdm_device::device_name</a>, <a class="el" href="structrtdm__device.html#a9948dab1af477147046c73b5bd09bd9d">rtdm_device::open</a>, <a class="el" href="structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83">rtdm_device::ops</a>, <a class="el" href="structrtdm__device.html#a0df5612d6bfcf6421509345384467392">rtdm_device::proc_name</a>, <a class="el" href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">rtdm_device::protocol_family</a>, <a class="el" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a>, <a class="el" href="group__rtdm__device__register.html#gab0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>, <a class="el" href="group__rtdm__device__register.html#gafdb542eb46679916b0100969e1033bfc">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="group__rtdm__device__register.html#ga7c66ec8f269c701237437177af0704e8">RTDM_EXCLUSIVE</a>, <a class="el" href="group__rtdm__device__register.html#ga7651188ca1c05f7e68b36517874138b7">RTDM_NAMED_DEVICE</a>, <a class="el" href="group__rtdm__device__register.html#ga43ced044106ae9c1f5500d0041307d8f">RTDM_PROTOCOL_DEVICE</a>, <a class="el" href="structrtdm__device.html#a0681cbbfa79a38497abf360bc500ed87">rtdm_device::socket</a>, <a class="el" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">rtdm_device::socket_type</a>, <a class="el" href="structrtdm__device.html#aaa2844f98d874f16d802b4e0b693e4e2">rtdm_device::struct_version</a>, and <a class="el" href="group__cobalt__core__registry.html#ga28aefd9be7367aa495753142005e1d5a">xnregistry_enter()</a>.</p>
+<p>References <a class="el" href="structrtdm__fd__ops.html#a2b27945be840f51ad42201e60d91e9d7">rtdm_fd_ops::close</a>, <a class="el" href="structrtdm__device.html#a48d67f835c341c5d27bc5886920a11da">rtdm_device::context_size</a>, <a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">rtdm_device::device_flags</a>, <a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">rtdm_device::device_name</a>, <a class="el" href="structrtdm__fd__ops.html#abe5c7052709b7654b3c8f8c25459f9b1">rtdm_fd_ops::open</a>, <a class="el" href="structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83">rtdm_device::ops</a>, <a class="el" href="structrtdm__device.html#a0df5612d6bfcf6421509345384467392">rtdm_device::proc_name</a>, <a class="el" href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">rtdm_device::protocol_family</a>, <a class="el" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a>, <a class="el" href="group__rtdm__device__register.html#gab0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>, <a class="el" href="group__rtdm__device__register.html#gafdb542eb46679916b0100969e1033bfc">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="group__rtdm__device__register.html#ga7c66ec8f269c701237437177af0704e8">RTDM_EXCLUSIVE</a>, <a class="el" href="group__rtdm__device__register.html#ga7651188ca1c05f7e68b36517874138b7">RTDM_NAMED_DEVICE</a>, <a class="el" href="group__rtdm__device__register.html#ga43ced044106ae9c1f5500d0041307d8f">RTDM_PROTOCOL_DEVICE</a>, <a class="el" href="structrtdm__fd__ops.html#a116e15405e46ba98c2720879f889f520">rtdm_fd_ops::socket</a>, <a class="el" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">rtdm_device::socket_type</a>, <a class="el" href="structrtdm__device.html#aaa2844f98d874f16d802b4e0b693e4e2">rtdm_device::struct_version</a>, and <a class="el" href="group__cobalt__core__registry.html#ga28aefd9be7367aa495753142005e1d5a">xnregistry_enter()</a>.</p>
 
 </div>
 </div>
@@ -297,6 +359,398 @@ Driver Versioning</h2></td></tr>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 <p>References <a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">rtdm_device::device_flags</a>, <a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">rtdm_device::device_name</a>, <a class="el" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a>, <a class="el" href="group__rtdm__device__register.html#gafdb542eb46679916b0100969e1033bfc">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="group__rtdm__device__register.html#ga7651188ca1c05f7e68b36517874138b7">RTDM_NAMED_DEVICE</a>, and <a class="el" href="group__cobalt__core__registry.html#ga477bb20ccb4bcf87c343aca8e58f9ef9">xnregistry_remove()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gab188dd6270100e4252ecefb9553ae659"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_ioctl_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>request</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void __user *&#160;</td>
+          <td class="paramname"><em>arg</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>IOCTL handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">request</td><td>Request number as passed by the user </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Request argument as passed by the user</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A positive value or 0 on success. On failure return either -ENOSYS, to request that the function be called again from the opposite realtime/non-realtime context, or another negative error code.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>ioctl()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga4d376f88ed220a34961d8390edb20c0e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_mmap_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct vm_area_struct *&#160;</td>
+          <td class="paramname"><em>vma</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Memory mapping handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vma</td><td>Virtual memory area descriptor</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success. On failure, a negative error code is returned.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>mmap()</code> in POSIX.1-2001, <a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/mmap.html">http://pubs.opengroup.org/onlinepubs/7908799/xsh/mmap.html</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga0ef51b797df99c754eed7581f7868d44"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_open_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>oflags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Open handler for named devices. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor associated with opened device instance </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">oflags</td><td>Open flags as passed by the user</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The file descriptor carries a device minor information which can be retrieved by a call to rtdm_fd_minor(fd). The minor number can be used for distinguishing several instances of the same <a class="el" href="structrtdm__device.html" title="RTDM device. ">rtdm_device</a> type. Prior to entering this handler, the device minor information may have been extracted from the pathname passed to the <em>open()</em> call, according to the following rules:</p>
+<ul>
+<li>RTDM first attempts to match the pathname exactly as passed by the application, against the registered <a class="el" href="structrtdm__device.html" title="RTDM device. ">rtdm_device</a> descriptors. On success, the special minor -1 is assigned to <em>fd</em> and this handler is called.</li>
+<li>if the original pathname does not match any device descriptor, it is scanned for the @&lt;minor&gt; suffix. If present, a second lookup is performed only looking for the radix portion of the pathname (i.e. stripping the suffix), and the file descriptor is assigned the minor value retrieved earlier on success, at which point this handler is called. When present, &lt;minor&gt; must be a positive or null decimal value, otherwise the open() call fails.</li>
+</ul>
+<p>For instance:</p>
+<div class="fragment"><div class="line">fd = open(<span class="stringliteral">&quot;/dev/foo@0&quot;</span>, ...); <span class="comment">// rtdm_fd_minor(fd) == 0</span></div>
+<div class="line">fd = open(<span class="stringliteral">&quot;/dev/foo@7&quot;</span>, ...); <span class="comment">// rtdm_fd_minor(fd) == 7</span></div>
+<div class="line">fd = open(<span class="stringliteral">&quot;/dev/foo&quot;</span>, ...);   <span class="comment">// rtdm_fd_minor(fd) == -1</span></div>
+</div><!-- fragment --><dl class="section note"><dt>Note</dt><dd>the device minor scheme is not supported by Xenomai 2.x.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success. On failure, a negative error code is returned.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>open()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga5a444bfce838ce7eb0a44b328b935682"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t rtdm_read_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void __user *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">buf</td><td>Input buffer as passed by the user </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of bytes the user requests to read</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>On success, the number of bytes read. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, or another negative error code.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>read()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga178b1bdc29395a7530abaf7df052cdf2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t rtdm_recvmsg_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct msghdr *&#160;</td>
+          <td class="paramname"><em>msg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Receive message handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">msg</td><td>Message descriptor as passed by the user, automatically mirrored to safe kernel memory in case of user mode call </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Message flags as passed by the user</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>On success, the number of bytes received. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, or another negative error code.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>recvmsg()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga4a225724822b506bb2ed036ef141e428"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_select_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct xnselector *&#160;</td>
+          <td class="paramname"><em>selector</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>index</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Select handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">selector</td><td>Pointer to the selector structure </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">type</td><td>Type of events (<em>XNSELECT_READ</em>, <em>XNSELECT_WRITE</em>, or <em>XNSELECT_EXCEPT</em>) </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">index</td><td>Index of the file descriptor</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success. On failure, a negative error code is returned.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>select()</code> in POSIX.1-2001, <a href="http://pubs.opengroup.org/onlinepubs/007908799/xsh/select.html">http://pubs.opengroup.org/onlinepubs/007908799/xsh/select.html</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga53afc70c849817555a0b7bedeaed4f12"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t rtdm_sendmsg_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct msghdr *&#160;</td>
+          <td class="paramname"><em>msg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Transmit message handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">msg</td><td>Message descriptor as passed by the user, automatically mirrored to safe kernel memory in case of user mode call </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Message flags as passed by the user</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>On success, the number of bytes transmitted. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, or another negative error code.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>sendmsg()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga15ae98f00745983239ee64b95f6cabfe"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_socket_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>protocol</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Socket creation handler for protocol devices. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor associated with opened device instance </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">protocol</td><td>Protocol number as passed by the user</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success. On failure, a negative error code is returned.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>socket()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga9814f54c9195aa50fc4a5da4b0524138"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ssize_t rtdm_write_handler </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_fd *&#160;</td>
+          <td class="paramname"><em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void __user *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Write handler. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">fd</td><td>File descriptor </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>Output buffer as passed by the user </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Number of bytes the user requests to write</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>On success, the number of bytes written. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, or another negative error code.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><code>write()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
 
 </div>
 </div>
