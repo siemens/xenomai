@@ -79,7 +79,7 @@ int a4l_rdproc_devs(struct seq_file *p, void *data)
 			name = "No driver";
 		} else if (test_bit(A4L_DEV_ATTACHED_NR, &a4l_devs[i].flags)) {
 			status = "Linked";
-			name = a4l_devs[i].driver->board_name;
+			name = a4l_devs[i].driver->driver_name;
 		} else {
 			status = "Broken";
 			name = "Unknown";
@@ -440,6 +440,12 @@ int a4l_ioctl_devinfo(struct a4l_device_context * cxt, void *arg)
 		    A4L_NAMELEN : strlen(dev->driver->board_name);
 
 		memcpy(info.board_name, dev->driver->board_name, len);
+
+		len = (strlen(dev->driver->driver_name) > A4L_NAMELEN) ?
+		    A4L_NAMELEN : strlen(dev->driver->driver_name);
+
+		memcpy(info.driver_name, dev->driver->driver_name, len);
+
 		info.nb_subd = dev->transfer.nb_subd;
 		/* TODO: for API compatibility issue, find the first
 		   read subdevice and write subdevice */

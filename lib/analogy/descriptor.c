@@ -291,7 +291,7 @@ out_a4l_sys_desc:
  * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
-int a4l_open(a4l_desc_t * dsc, const char *fname)
+int a4l_open(a4l_desc_t *dsc, const char *fname)
 {
 	int ret;
 

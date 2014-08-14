@@ -236,6 +236,7 @@ static int ni_670x_detach(struct a4l_device *dev);
 static struct a4l_driver ni_670x_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_ni_670x",
+	.driver_name = "ni_670x",
 	.attach = ni_670x_attach,
 	.detach = ni_670x_detach,
 	.privdata_size = sizeof(struct ni_670x_private),

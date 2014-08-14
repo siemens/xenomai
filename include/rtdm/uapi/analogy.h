@@ -94,6 +94,7 @@ typedef struct a4l_link_desc a4l_lnkdesc_t;
 /* DEVINFO ioctl argument structure */
 struct a4l_dev_info {
 	char board_name[A4L_NAMELEN];
+	char driver_name[A4L_NAMELEN];
 	int nb_subd;
 	int idx_read_subd;
 	int idx_write_subd;

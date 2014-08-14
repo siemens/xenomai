@@ -513,6 +513,7 @@ static void ni_660x_select_pfi_output(struct a4l_device *dev,
 
 static struct a4l_driver ni_660x_drv = {
 	.board_name = "analogy_ni_660x",
+	.driver_name = "ni_660x",
 	.owner = THIS_MODULE,
 	.attach = ni_660x_attach,
 	.detach = ni_660x_detach,

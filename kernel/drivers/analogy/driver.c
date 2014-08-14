@@ -58,7 +58,7 @@ int a4l_register_drv(struct a4l_driver * drv)
 	if (!realtime_core_enabled())
 		return 0;
 
-	__a4l_dbg(1, core_dbg, "name=%s\n", drv->board_name);
+	__a4l_dbg(1, core_dbg, "board name=%s\n", drv->board_name);
 
 	if (a4l_lct_drv(drv->board_name, NULL) != 0) {
 		list_add(&drv->list, &a4l_drvs);
@@ -72,7 +72,7 @@ int a4l_unregister_drv(struct a4l_driver * drv)
 	if (!realtime_core_enabled())
 		return 0;
 
-	__a4l_dbg(1, core_dbg, "name=%s\n", drv->board_name);
+	__a4l_dbg(1, core_dbg, "board name=%s\n", drv->board_name);
 
 	if (a4l_lct_drv(drv->board_name, NULL) == 0) {
 		/* Here, we consider the argument is pointing
@@ -94,12 +94,12 @@ int a4l_rdproc_drvs(struct seq_file *p, void *data)
 	struct list_head *this;
 
 	seq_printf(p, "--  Analogy drivers --\n\n");
-	seq_printf(p, "| idx | driver name\n");
+
+	seq_printf(p, "| idx | board name \n");
 
 	list_for_each(this, &a4l_drvs) {
 		struct a4l_driver *drv = list_entry(this, struct a4l_driver, list);
-
-		seq_printf(p, "|  %02d | %s\n", i++, drv->board_name);
+		seq_printf(p, "|  %02d | %s \n", i++, drv->board_name);
 	}
 	return 0;
 }

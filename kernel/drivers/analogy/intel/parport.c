@@ -434,6 +434,7 @@ static int dev_parport_detach(struct a4l_device *dev)
 static struct a4l_driver drv_parport = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_parport",
+	.driver_name = "parport",
 	.attach = dev_parport_attach,
 	.detach = dev_parport_detach,
 	.privdata_size = sizeof(parport_priv_t),

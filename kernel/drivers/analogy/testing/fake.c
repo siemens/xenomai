@@ -663,6 +663,7 @@ int test_detach(struct a4l_device *dev)
 static struct a4l_driver test_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_fake",
+	.driver_name = "fake",
 	.attach = test_attach,
 	.detach = test_detach,
 	.privdata_size = sizeof(struct fake_priv),

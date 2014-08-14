@@ -44,11 +44,13 @@ struct a4l_driver {
 
 	/* Visible description stuff */
 	struct module *owner;
-			  /**< Pointer to module containing the code */
+	               /**< Pointer to module containing the code */
 	unsigned int flags;
-			/**< Type / status driver's flags */
+	               /**< Type / status driver's flags */
 	char *board_name;
 		       /**< Board name */
+	char *driver_name;
+	               /**< driver name */
 	int privdata_size;
 		       /**< Size of the driver's private data */
 

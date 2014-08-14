@@ -59,6 +59,8 @@
 struct a4l_descriptor {
 	char board_name[A4L_NAMELEN];
 				     /**< Board name. */
+	char driver_name[A4L_NAMELEN];
+				     /**< Driver name. */
 	int nb_subd;
 		 /**< Subdevices count. */
 	int idx_read_subd;

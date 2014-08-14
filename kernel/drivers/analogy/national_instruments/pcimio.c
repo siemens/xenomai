@@ -1469,7 +1469,7 @@ static int pcimio_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	int ret, bus, slot, i, irq;
 	struct mite_struct *mite = NULL;
-	struct ni_board_struct * board = NULL;
+	struct ni_board_struct *board = NULL;
 
 	if(arg->opts == NULL || arg->opts_size == 0)
 		bus = slot = 0;
@@ -1552,6 +1552,8 @@ static int pcimio_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	if(ret < 0)
 		return ret;
 
+	dev->driver->driver_name = devpriv->board_ptr->name;
+
 	return ret;
 }
 
@@ -1570,12 +1572,15 @@ static int pcimio_detach(struct a4l_device *dev)
 		a4l_mite_unsetup(devpriv->mite);
 	}
 
+	dev->driver->driver_name = NULL;
+
 	return 0;
 }
 
 static struct a4l_driver pcimio_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_ni_pcimio",
+	.driver_name = NULL,
 	.attach = pcimio_attach,
 	.detach = pcimio_detach,
 	.privdata_size = sizeof(ni_private),

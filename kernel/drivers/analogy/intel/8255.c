@@ -309,6 +309,7 @@ static int dev_8255_detach(struct a4l_device *dev)
 static struct a4l_driver drv_8255 = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_8255",
+	.driver_name = "8255",
 	.attach = dev_8255_attach,
 	.detach = dev_8255_detach,
 	.privdata_size = 0,
