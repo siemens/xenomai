@@ -1,5 +1,5 @@
-obj-$(CONFIG_XENOMAI) += bfin_hal.o
+obj-$(CONFIG_XENOMAI) += xenomai.o
 
-bfin_hal-y := machine.o mayday.o thread.o switch.o syscall.o
+xenomai-y := machine.o mayday.o thread.o switch.o syscall.o
 
 ccflags-y := -Iarch/blackfin/xenomai/include -Iinclude/xenomai

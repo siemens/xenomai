@@ -1,6 +1,6 @@
 
-obj-$(CONFIG_XENOMAI) += sh_hal.o
+obj-$(CONFIG_XENOMAI) += xenomai.o
 
-sh_hal-y := machine.o mayday.o thread.o trampoline.o
+xenomai-y := machine.o mayday.o thread.o trampoline.o
 
 ccflags-y := -Iarch/sh/xenomai/include -Iinclude/xenomai
