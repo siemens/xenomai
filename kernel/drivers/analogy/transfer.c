@@ -154,25 +154,16 @@ int a4l_request_irq(struct a4l_device * dev,
 		    unsigned long flags, void *cookie)
 {
 	int ret;
-	unsigned long __flags;
 
 	if (dev->transfer.irq_desc.irq != A4L_IRQ_UNUSED)
 		return -EBUSY;
 
-	/* A spinlock is used so as to prevent race conditions
-	   on the field "irq" of the IRQ descriptor
-	   (even if such a case is bound not to happen) */
-	rtdm_lock_get_irqsave(&dev->lock, __flags);
-
-	ret = __a4l_request_irq(&dev->transfer.irq_desc,
-				irq, handler, flags, cookie);
-
+	ret = __a4l_request_irq(&dev->transfer.irq_desc, irq, handler, flags,
+		cookie);
 	if (ret != 0) {
 		__a4l_err("a4l_request_irq: IRQ registration failed\n");
 		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 	}
-
-	rtdm_lock_put_irqrestore(&dev->lock, __flags);
 
 	return ret;
 }
