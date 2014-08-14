@@ -228,7 +228,7 @@ static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
 			.ioctl_nrt =	a4l_ioctl,
 			.read_nrt =	a4l_read,
 			.write_nrt =	a4l_write,
-			.select_bind =	a4l_rt_select,
+			.select =	a4l_rt_select,
 		},
 		.device_class =		RTDM_CLASS_EXPERIMENTAL,
 		.device_sub_class =	RTDM_SUBCLASS_ANALOGY,

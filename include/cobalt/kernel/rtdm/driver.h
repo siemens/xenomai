@@ -1047,8 +1047,8 @@ typedef struct rtdm_event {
 #define RTDM_EVENT_PENDING		XNSYNCH_SPARE1
 
 void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
-int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
-			   enum rtdm_selecttype type, unsigned fd_index);
+int rtdm_event_select(rtdm_event_t *event, rtdm_selector_t *selector,
+		      enum rtdm_selecttype type, unsigned fd_index);
 int rtdm_event_wait(rtdm_event_t *event);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq);
@@ -1069,8 +1069,8 @@ typedef struct rtdm_sem {
 } rtdm_sem_t;
 
 void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
-int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
-			 enum rtdm_selecttype type, unsigned fd_index);
+int rtdm_sem_select(rtdm_sem_t *sem, rtdm_selector_t *selector,
+		    enum rtdm_selecttype type, unsigned fd_index);
 int rtdm_sem_down(rtdm_sem_t *sem);
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq);

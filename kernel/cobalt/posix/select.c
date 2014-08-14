@@ -44,7 +44,7 @@ static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
 	int rc;
 
-	rc = rtdm_fd_select_bind(fd, selector, type);
+	rc = rtdm_fd_select(fd, selector, type);
 	if (rc != -ENOENT)
 		return rc;
 

@@ -867,8 +867,8 @@ EXPORT_SYMBOL_GPL(rtdm_event_clear);
  *
  * @coretags{task-unrestricted}
  */
-int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
-			   enum rtdm_selecttype type, unsigned int fd_index)
+int rtdm_event_select(rtdm_event_t *event, rtdm_selector_t *selector,
+		      enum rtdm_selecttype type, unsigned int fd_index)
 {
 	struct xnselect_binding *binding;
 	int err;
@@ -890,7 +890,7 @@ int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 
 	return err;
 }
-EXPORT_SYMBOL_GPL(rtdm_event_select_bind);
+EXPORT_SYMBOL_GPL(rtdm_event_select);
 
 /** @} */
 
@@ -1100,8 +1100,8 @@ EXPORT_SYMBOL_GPL(rtdm_sem_up);
  *
  * @coretags{task-unrestricted}
  */
-int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
-			 enum rtdm_selecttype type, unsigned int fd_index)
+int rtdm_sem_select(rtdm_sem_t *sem, rtdm_selector_t *selector,
+		    enum rtdm_selecttype type, unsigned int fd_index)
 {
 	struct xnselect_binding *binding;
 	int err;
@@ -1123,7 +1123,7 @@ int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 
 	return err;
 }
-EXPORT_SYMBOL_GPL(rtdm_sem_select_bind);
+EXPORT_SYMBOL_GPL(rtdm_sem_select);
 
 /** @} */
 

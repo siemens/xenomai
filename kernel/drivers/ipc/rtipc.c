@@ -213,8 +213,8 @@ static int rtipc_ioctl(struct rtdm_fd *fd,
 	return priv->proto->proto_ops.ioctl(fd, request, arg);
 }
 
-static int rtipc_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
-			     unsigned int type, unsigned int index)
+static int rtipc_select(struct rtdm_fd *fd, struct xnselector *selector,
+			unsigned int type, unsigned int index)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct xnselect_binding *binding;
@@ -272,7 +272,7 @@ static struct rtdm_device device = {
 		.read_nrt	=	NULL,
 		.write_rt	=	rtipc_write,
 		.write_nrt	=	NULL,
-		.select_bind	=	rtipc_select_bind,
+		.select		=	rtipc_select,
 	},
 	.device_class		=	RTDM_CLASS_RTIPC,
 	.device_sub_class	=	RTDM_SUBCLASS_GENERIC,

@@ -153,8 +153,8 @@ static ssize_t udd_write_rt(struct rtdm_fd *fd,
 	return ret ?: len;
 }
 
-static int udd_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
-			   unsigned int type, unsigned int index)
+static int udd_select(struct rtdm_fd *fd, struct xnselector *selector,
+		      unsigned int type, unsigned int index)
 {
 	struct udd_device *udd;
 
@@ -162,8 +162,8 @@ static int udd_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
 	if (udd->irq == UDD_IRQ_NONE)
 		return -EIO;
 
-	return rtdm_event_select_bind(&udd->__reserved.pulse,
-				      selector, type, index);
+	return rtdm_event_select(&udd->__reserved.pulse,
+				 selector, type, index);
 }
 
 static int udd_irq_handler(rtdm_irq_t *irqh)
@@ -345,7 +345,7 @@ int udd_register_device(struct udd_device *udd)
 		.read_rt = udd_read_rt,
 		.write_rt = udd_write_rt,
 		.close = udd_close,
-		.select_bind = udd_select_bind,
+		.select = udd_select,
 	};
 	dev->device_class = RTDM_CLASS_UDD;
 	dev->device_sub_class = udd->device_subclass;

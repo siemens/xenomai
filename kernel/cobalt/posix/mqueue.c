@@ -207,8 +207,8 @@ static void mqd_close(struct rtdm_fd *fd)
 }
 
 int
-mqd_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
-		unsigned type, unsigned index)
+mqd_select(struct rtdm_fd *fd, struct xnselector *selector,
+	   unsigned type, unsigned index)
 {
 	struct cobalt_mqd *mqd = container_of(fd, struct cobalt_mqd, fd);
 	struct xnselect_binding *binding;
@@ -261,8 +261,8 @@ mqd_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
 }
 
 static struct rtdm_fd_ops mqd_ops = {
-	.close = &mqd_close,
-	.select_bind = &mqd_select_bind,
+	.close = mqd_close,
+	.select = mqd_select,
 };
 
 static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)

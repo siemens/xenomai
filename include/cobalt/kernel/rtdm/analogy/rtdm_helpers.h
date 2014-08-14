@@ -131,7 +131,7 @@ struct a4l_sync {
 };
 
 #define a4l_select_sync(snc, slr, type, fd) \
-	rtdm_event_select_bind(&((snc)->rtdm_evt), slr, type, fd)
+	rtdm_event_select(&((snc)->rtdm_evt), slr, type, fd)
 
 int a4l_init_sync(struct a4l_sync * snc);
 void a4l_cleanup_sync(struct a4l_sync * snc);

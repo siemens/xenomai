@@ -201,8 +201,8 @@ ssize_t rtdm_sendmsg_handler(struct rtdm_fd *fd, const struct msghdr *msg, int f
  * @see @c select() in POSIX.1-2001,
  * http://pubs.opengroup.org/onlinepubs/007908799/xsh/select.html
  */
-int rtdm_select_bind_handler(struct rtdm_fd *fd, struct xnselector *selector,
-			     unsigned int type, unsigned int index);
+int rtdm_select_handler(struct rtdm_fd *fd, struct xnselector *selector,
+			unsigned int type, unsigned int index);
 
 /**
  * Memory mapping handler
@@ -264,9 +264,9 @@ struct rtdm_fd_ops {
 	ssize_t (*sendmsg_nrt)(struct rtdm_fd *fd,
 			       const struct msghdr *msg, int flags);
 	/** See rtdm_select_handler(). */
-	int (*select_bind)(struct rtdm_fd *fd,
-			   struct xnselector *selector,
-			   unsigned int type, unsigned int index);
+	int (*select)(struct rtdm_fd *fd,
+		      struct xnselector *selector,
+		      unsigned int type, unsigned int index);
 	/** See rtdm_mmap_handler(). */
 	int (*mmap)(struct rtdm_fd *fd,
 		    struct vm_area_struct *vma);
@@ -334,8 +334,8 @@ int rtdm_fd_mmap(struct xnsys_ppd *p, int ufd,
 
 int rtdm_fd_valid_p(int ufd);
 
-int rtdm_fd_select_bind(int ufd, struct xnselector *selector,
-			unsigned int type);
+int rtdm_fd_select(int ufd, struct xnselector *selector,
+		   unsigned int type);
 
 void rtdm_fd_cleanup(struct xnsys_ppd *p);
 

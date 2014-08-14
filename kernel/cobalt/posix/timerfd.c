@@ -102,8 +102,8 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 }
 
 static int
-timerfd_select_bind(struct rtdm_fd *fd, struct xnselector *selector,
-		    unsigned type, unsigned index)
+timerfd_select(struct rtdm_fd *fd, struct xnselector *selector,
+	       unsigned type, unsigned index)
 {
 	struct cobalt_tfd *tfd = container_of(fd, struct cobalt_tfd, fd);
 	struct xnselect_binding *binding;
@@ -145,7 +145,7 @@ static void timerfd_close(struct rtdm_fd *fd)
 
 static struct rtdm_fd_ops timerfd_ops = {
 	.read_rt = timerfd_read,
-	.select_bind = timerfd_select_bind,
+	.select = timerfd_select,
 	.close = timerfd_close,
 };
 

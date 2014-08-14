@@ -133,7 +133,7 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 	assign_default_dual_handlers(ops->write);
 	assign_default_dual_handlers(ops->recvmsg);
 	assign_default_dual_handlers(ops->sendmsg);
-	assign_invalid_default_handler(ops->select_bind);
+	assign_invalid_default_handler(ops->select);
 	assign_invalid_default_handler(ops->mmap);
 	__assign_default_handler(ops->close, nop_close);
 
@@ -611,8 +611,8 @@ int rtdm_fd_valid_p(int ufd)
  *
  * @coretags{task-unrestricted}
  */
-int rtdm_fd_select_bind(int ufd, struct xnselector *selector,
-			unsigned int type)
+int rtdm_fd_select(int ufd, struct xnselector *selector,
+		   unsigned int type)
 {
 	struct xnsys_ppd *p;
 	struct rtdm_fd *fd;
@@ -623,7 +623,7 @@ int rtdm_fd_select_bind(int ufd, struct xnselector *selector,
 	if (IS_ERR(fd))
 		return PTR_ERR(fd);
 
-	rc = fd->ops->select_bind(fd, selector, type, ufd);
+	rc = fd->ops->select(fd, selector, type, ufd);
 
 	if (!XENO_ASSERT(RTDM, !spltest()))
 		    splnone();
