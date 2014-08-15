@@ -394,13 +394,13 @@ int a4l_ioctl_devcfg(struct a4l_device_context * cxt, void *arg)
 			return ret;
 		/* Remove the related proc file */
 		a4l_proc_detach(cxt);
-		/* Free the transfer structure and its related data */
-		if ((ret = a4l_cleanup_transfer(cxt)) != 0)
-			return ret;
 		/* Free the device and the driver from each other */
 		if ((ret = a4l_device_detach(cxt)) == 0)
 			clear_bit(A4L_DEV_ATTACHED_NR,
 				  &(a4l_get_dev(cxt)->flags));
+		/* Free the transfer structure and its related data */
+		if ((ret = a4l_cleanup_transfer(cxt)) != 0)
+			return ret;
 	} else {
 		/* Basic checking */
 		if (test_bit
