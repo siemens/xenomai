@@ -145,6 +145,10 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 	struct rtdm_dev_context *context;
 	int ret, minor;
 
+	/* skip common /dev prefix */
+	if (strncmp(path, "/dev/", 5) == 0)
+		path += 5;
+
 	device = __rtdm_get_named_device(path, &minor);
 	ret = -ENODEV;
 	if (!device)

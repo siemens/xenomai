@@ -45,27 +45,21 @@ static inline int set_errno(int ret)
 COBALT_IMPL(int, open, (const char *path, int oflag, ...))
 {
 	int ret, fd, oldtype;
-	const char *rtdm_path = path;
 	va_list ap;
 
 	fd = __STD(open("/dev/null", O_RDONLY));
 	if (fd < 0)
 		return fd;
-
+	/*
+	 * Don't dereference path, as it might be invalid. Leave it to
+	 * the kernel service.
+	 */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-
-	/* skip path prefix for RTDM invocation */
-	if (strncmp(path, "/dev/", 5) == 0)
-		rtdm_path += 5;
-
-	ret = XENOMAI_SKINCALL3(__rtdm_muxid,
-				sc_rtdm_open,
-				fd, rtdm_path, oflag);
-
+	ret = XENOMAI_SKINCALL3(__rtdm_muxid, sc_rtdm_open, fd, path, oflag);
 	pthread_setcanceltype(oldtype, NULL);
-
 	if (ret == fd)
 		return fd;
+
 	__STD(close(fd));
 
 	if (ret != -ENODEV && ret != -ENOSYS)
