@@ -359,14 +359,9 @@ EXPORT_SYMBOL_GPL(xnheap_init);
 void xnheap_set_label(struct xnheap *heap, const char *label, ...)
 {
 	va_list args;
-	spl_t s;
 
 	va_start(args, label);
-
-	xnlock_get_irqsave(&nklock, s);
 	kvsformat(heap->label, sizeof(heap->label), label, args);
-	xnlock_put_irqrestore(&nklock, s);
-
 	va_end(args);
 }
 EXPORT_SYMBOL_GPL(xnheap_set_label);
