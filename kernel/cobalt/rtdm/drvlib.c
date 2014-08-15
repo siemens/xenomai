@@ -1342,7 +1342,9 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
 		return -EPERM;
 
-	xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
+	err = xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
+	if (err)
+		return err;
 
 	err = xnintr_attach(irq_handle, arg);
 	if (err)
