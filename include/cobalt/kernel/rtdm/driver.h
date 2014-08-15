@@ -1152,6 +1152,8 @@ int rtdm_iomap_to_user(struct rtdm_fd *fd,
 
 int rtdm_mmap_kmem(struct vm_area_struct *vma, void *va);
 
+int rtdm_mmap_vmem(struct vm_area_struct *vma, void *va);
+
 int rtdm_mmap_iomem(struct vm_area_struct *vma, phys_addr_t pa);
 
 int rtdm_munmap(void *ptr, size_t len);

@@ -1804,20 +1804,21 @@ int rtdm_iomap_to_user(struct rtdm_fd *fd,
 EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
 
 /**
- * Map a kernel memory range to a virtual memory area.
+ * Map a kernel logical memory range to a virtual user area.
  *
  * This routine is commonly used from a ->mmap() handler of a RTDM
- * driver, for mapping a kernel memory area over the user address
- * space referred to by @a vma.
+ * driver, for mapping a virtual memory area with no direct physical
+ * mapping over the user address space referred to by @a vma.
  *
  * @param[in] vma The VMA descriptor to receive the mapping.
- * @param[in] va The kernel virtual address to be mapped.
+ * @param[in] va The kernel logical address to be mapped.
  *
  * @return 0 on success, otherwise a negated error code is returned.
  *
- * @note This service only works on memory regions allocated via
- * kmalloc() or vmalloc(). To map a chunk of physical I/O memory to a
- * VMA, call rtdm_mmap_iomem() instead.
+ * @note This service works on memory regions allocated via
+ * kmalloc(). To map a chunk of virtual space with no direct physical
+ * mapping, or a physical I/O memory to a VMA, call rtdm_mmap_vmem()
+ * or rtdm_mmap_iomem() respectively instead.
  *
  * @coretags{secondary-only}
  */
@@ -1828,7 +1829,36 @@ int rtdm_mmap_kmem(struct vm_area_struct *vma, void *va)
 EXPORT_SYMBOL_GPL(rtdm_mmap_kmem);
 
 /**
- * Map an I/O memory range to a virtual memory area.
+ * Map a virtual memory range to a virtual user area.
+ *
+ * This routine is commonly used from a ->mmap() handler of a RTDM
+ * driver, for mapping a purely virtual memory area over the user
+ * address space referred to by @a vma.
+ *
+ * @param[in] vma The VMA descriptor to receive the mapping.
+ * @param[in] va The virtual address to be mapped.
+ *
+ * @return 0 on success, otherwise a negated error code is returned.
+ *
+ * @note This service works on memory regions allocated via
+ * vmalloc(). To map a chunk of logical space obtained from kmalloc(),
+ * or a physical I/O memory to a VMA, call rtdm_mmap_kmem() or
+ * rtdm_mmap_iomem() respectively instead.
+ *
+ * @coretags{secondary-only}
+ */
+int rtdm_mmap_vmem(struct vm_area_struct *vma, void *va)
+{
+	/*
+	 * Our helper handles both of directly mapped to physical and
+	 * purely virtual memory ranges.
+	 */
+	return mmap_kmem_helper(vma, va);
+}
+EXPORT_SYMBOL_GPL(rtdm_mmap_vmem);
+
+/**
+ * Map an I/O memory range to a virtual user area.
  *
  * This routine is commonly used from a ->mmap() handler of a RTDM
  * driver, for mapping an I/O memory area over the user address space
@@ -1839,8 +1869,9 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_kmem);
  *
  * @return 0 on success, otherwise a negated error code is returned.
  *
- * @note To map a chunk of kernel virtual memory to a VMA, call
- * rtdm_mmap_kmem() instead.
+ * @note To map a chunk of logical space obtained from kmalloc(), or a
+ * purely virtual area with no direct physical mapping to a VMA, call
+ * rtdm_mmap_kmem() or rtdm_mmap_vmem() respectively instead.
  *
  * @coretags{secondary-only}
  */

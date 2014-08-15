@@ -241,8 +241,10 @@ static int mapper_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 		ret = rtdm_mmap_iomem(vma, rn->addr);
 		break;
 	case UDD_MEM_LOGICAL:
-	case UDD_MEM_VIRTUAL:
 		ret = rtdm_mmap_kmem(vma, (void *)rn->addr);
+		break;
+	case UDD_MEM_VIRTUAL:
+		ret = rtdm_mmap_vmem(vma, (void *)rn->addr);
 		break;
 	default:
 		ret = -EINVAL;	/* Paranoid, can't happen. */
