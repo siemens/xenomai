@@ -79,12 +79,16 @@ static int udd_ioctl_rt(struct rtdm_fd *fd,
 		ret = rtdm_safe_copy_from_user(fd, &signfy, arg, sizeof(signfy));
 		if (ret)
 			return ret;
-		if (signfy.sig < SIGRTMIN || signfy.sig > SIGRTMAX)
-			return -EINVAL;
 		/* Early check, we'll redo at each signal issue. */
-		if (cobalt_thread_find_local(signfy.pid) == NULL)
-			return -EINVAL;
-		ur->signfy = signfy;
+		if (signfy.pid <= 0)
+			ur->signfy.pid = -1;
+		else {
+			if (signfy.sig < SIGRTMIN || signfy.sig > SIGRTMAX)
+				return -EINVAL;
+			if (cobalt_thread_find_local(signfy.pid) == NULL)
+				return -EINVAL;
+			ur->signfy = signfy;
+		}
 		break;
 	case UDD_RTIOC_IRQEN:
 		if (udd->irq == UDD_IRQ_NONE)
@@ -261,7 +265,7 @@ void udd_notify_event(struct udd_device *udd)
 	atomic_inc(&ur->event);
 	rtdm_event_signal(&ur->pulse);
 
-	if (ur->signfy.pid) {
+	if (ur->signfy.pid > 0) {
 		sival.sival_int = atomic_read(&ur->event);
 		cobalt_sigqueue(ur->signfy.pid, ur->signfy.sig, &sival);
 	}
@@ -367,7 +371,7 @@ int udd_register_device(struct udd_device *udd)
 
 	atomic_set(&ur->event, 0);
 	rtdm_event_init(&ur->pulse, 0);
-	ur->signfy.pid = 0;
+	ur->signfy.pid = -1;
 
 	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM) {
 		ret = rtdm_irq_request(&ur->irqh, udd->irq,
