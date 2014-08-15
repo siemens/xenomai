@@ -75,6 +75,11 @@ static const struct option base_options[] = {
 		.val = 1
 	},
 	{
+#define period_opt	7
+		.name = "period",
+		.has_arg = 1,
+	},
+	{
 		.name = NULL,
 	}
 };
@@ -179,11 +184,12 @@ static void usage(void)
 	fprintf(stderr, "   --irq		interrupt latency\n");
 	fprintf(stderr, "   --kernel		kernel scheduling latency\n");
 	fprintf(stderr, "   --user		user scheduling latency\n");
+	fprintf(stderr, "   --period		set the sampling period\n");
 	fprintf(stderr, "   --reset		reset core timer gravity to factory defaults\n");
 	fprintf(stderr, "   --nohog		disable load generation\n");
 	fprintf(stderr, "   --quiet		tame down verbosity\n");
 	fprintf(stderr, "   --help		print this help\n\n");
-	fprintf(stderr, "if no option is given, tune for all contexts\n");
+	fprintf(stderr, "if no option is given, tune for all contexts using the default period.\n");
 }
 
 static void run_tuner(int fd, int op, int period, const char *type)
@@ -223,6 +229,8 @@ int main(int argc, char *const argv[])
 	int fd, period, ret, c, lindex, tuned = 0;
 	pthread_t hog;
 
+	period = CONFIG_XENO_DEFAULT_PERIOD;
+
 	for (;;) {
 		c = getopt_long_only(argc, argv, "", base_options, &lindex);
 		if (c == EOF)
@@ -238,6 +246,12 @@ int main(int argc, char *const argv[])
 		case help_opt:
 			usage();
 			exit(0);
+		case period_opt:
+			period = atoi(optarg);
+			if (period <= 0)
+				error(1, EINVAL, "invalid sampling period (default %d)",
+				      CONFIG_XENO_DEFAULT_PERIOD);
+			break;
 		case nohog_opt:
 		case quiet_opt:
 			break;
@@ -265,13 +279,12 @@ int main(int argc, char *const argv[])
 			error(1, errno, "reset failed");
 	}
 
-	period = CONFIG_XENO_DEFAULT_PERIOD;
-
 	if (tune_irqlat || tune_kernlat || tune_userlat) {
 		if (!nohog)
 			create_hog(&hog);
 		if (!quiet)
-			printf("Auto-tuning started (may take a while)\n");
+			printf("Auto-tuning started, period=%dns (may take a while)\n",
+				period);
 	} else
 		nohog = 1;
 

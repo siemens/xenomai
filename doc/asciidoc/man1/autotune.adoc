@@ -82,6 +82,17 @@ platform needs to deliver an IRQ to a user-space task/thread running
 in a Xenomai application process. This delay includes the context
 switching time.
 
+**--period <ns>*::
+Set the sampling period to the given count of nanoseconds. The
+estimation is performed by measuring the jitter between the ideal time
+at which a timer tick should be received, and the actual time it is
+eventually received, for a series of ticks. This value expresses the
+delay between two of these ticks. If too short, a lockup might
+occur. A commonly observed result is: the larger the delay, the higher
+the latency, due to CPU cache effects (i.e. the real-time code/data is
+more likely to get evicted from the cachelines as the non real-time
+activity can slip in, treading over a larger address space).
+
 *--reset*::
 Reset the gravity values to their factory defaults. These defaults
 are statically defined by the Xenomai platform code.
