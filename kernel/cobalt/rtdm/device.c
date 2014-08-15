@@ -148,8 +148,8 @@ __rtdm_get_protocol_device(int protocol_family, int socket_type)
  * - -EINVAL is returned if the device structure contains invalid entries.
  * Check kernel log in this case.
  *
- * - -ENOMEM is returned if the context for an exclusive device cannot be
- * allocated.
+ * - -ENOMEM is returned if a memory allocation failed in the process
+ * of registering the device.
  *
  * - -EEXIST is returned if the specified device name of protocol ID is
  * already in use.

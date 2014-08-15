@@ -37,7 +37,7 @@ static int udd_open(struct rtdm_fd *fd, int oflags)
 
 	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.device);
 	if (udd->ops.open) {
-		ret = udd->ops.open(udd, oflags);
+		ret = udd->ops.open(fd, oflags);
 		if (ret)
 			return ret;
 	}
@@ -54,7 +54,7 @@ static void udd_close(struct rtdm_fd *fd)
 
 	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.device);
 	if (udd->ops.close)
-		udd->ops.close(udd);
+		udd->ops.close(fd);
 }
 
 static int udd_ioctl_rt(struct rtdm_fd *fd,
@@ -67,7 +67,7 @@ static int udd_ioctl_rt(struct rtdm_fd *fd,
 
 	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.device);
 	if (udd->ops.ioctl) {
-		ret = udd->ops.ioctl(udd, request, arg);
+		ret = udd->ops.ioctl(fd, request, arg);
 		if (ret != -ENOSYS)
 			return ret;
 	}
@@ -230,7 +230,7 @@ static int mapper_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.mapper);
 	if (udd->ops.mmap)
 		/* Offload to client driver if handler is present. */
-		return udd->ops.mmap(udd, vma);
+		return udd->ops.mmap(fd, vma);
 
 	/* Otherwise DIY using the RTDM helpers. */
 
@@ -256,21 +256,6 @@ static int mapper_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 
 	return ret;
 }
-
-void udd_notify_event(struct udd_device *udd)
-{
-	struct udd_reserved *ur = &udd->__reserved;
-	union sigval sival;
-
-	atomic_inc(&ur->event);
-	rtdm_event_signal(&ur->pulse);
-
-	if (ur->signfy.pid > 0) {
-		sival.sival_int = atomic_read(&ur->event);
-		cobalt_sigqueue(ur->signfy.pid, ur->signfy.sig, &sival);
-	}
-}
-EXPORT_SYMBOL_GPL(udd_notify_event);
 
 static inline int check_memregion(struct udd_device *udd,
 				  struct udd_memregion *rn)
@@ -323,6 +308,32 @@ static inline int register_mapper(struct udd_device *udd)
 	return rtdm_dev_register(dev);
 }
 
+/**
+ * @brief Register a UDD device
+ *
+ * This routine registers a mini-driver at the UDD core.
+ *
+ * @param udd The @ref udd_device "UDD device descriptor" which should
+ * describe the new device properties.
+ *
+ * @return Zero is returned upon success, otherwise a negative error
+ * code is received, from the set of error codes defined by
+ * rtdm_dev_register(). In addition, the following error codes can be
+ * returned:
+ *
+ * - -EINVAL, some of the memory regions declared in the
+ *   udd_device.mem_regions[] array have invalid properties, i.e. bad
+ *   type, NULL name, zero length or address. Any undeclared region
+ *   entry from the array must bear the UDD_MEM_NONE type.
+ *
+ * - -EINVAL, if udd_device.irq is different from UDD_IRQ_CUSTOM and
+ * UDD_IRQ_NONE but invalid, causing rtdm_irq_request() to fail.
+ *
+ * - -ENXIO can be received if this service is called while the Cobalt
+ * kernel is disabled.
+ *
+ * @coretags{secondary-only}
+ */
 int udd_register_device(struct udd_device *udd)
 {
 	struct rtdm_device *dev = &udd->__reserved.device;
@@ -397,6 +408,23 @@ fail_irq_request:
 }
 EXPORT_SYMBOL_GPL(udd_register_device);
 
+/**
+ * @brief Unregister a UDD device
+ *
+ * This routine unregisters a mini-driver from the UDD core.
+ *
+ * @param udd The UDD device descriptor
+ *
+ * @param poll_delay Polling delay in milliseconds to check repeatedly
+ * for open instances of @a udd, or 0 for non-blocking mode.
+ *
+ * @return Zero is returned upon success, otherwise a negative error
+ * code is received, from the set of error codes defined by
+ * rtdm_dev_unregister(). In addition, -ENXIO can be received if this
+ * service is called while the Cobalt kernel is disabled.
+ *
+ * @coretags{secondary-only}
+ */
 int udd_unregister_device(struct udd_device *udd,
 			  unsigned int poll_delay)
 {
@@ -418,6 +446,42 @@ int udd_unregister_device(struct udd_device *udd,
 	return rtdm_dev_unregister(&ur->device, poll_delay);
 }
 EXPORT_SYMBOL_GPL(udd_unregister_device);
+
+/**
+ * @brief Notify an IRQ event for an unmanaged interrupt
+ *
+ * When the UDD core shall hand over the interrupt management for a
+ * device to the mini-driver (see UDD_IRQ_CUSTOM), the latter should
+ * notify the UDD core when IRQ events are received by calling this
+ * service.
+ *
+ * As a result, the UDD core wakes up any Cobalt thread waiting for
+ * interrupts on the device via a read(2) or select(2) call.
+ *
+ * @param udd The UDD device descriptor receiving the IRQ.
+ *
+ * @coretags{coreirq-only}
+ *
+ * @note In case the ref udd_irq_handler "IRQ handler" from the
+ * mini-driver requested the UDD core not to re-enable the interrupt
+ * line, the application may later request the unmasking by issuing
+ * the UDD_RTIOC_IRQEN ioctl(2) command. Writing a non-zero integer to
+ * the device via the write(2) system call has the same effect.
+ */
+void udd_notify_event(struct udd_device *udd)
+{
+	struct udd_reserved *ur = &udd->__reserved;
+	union sigval sival;
+
+	atomic_inc(&ur->event);
+	rtdm_event_signal(&ur->pulse);
+
+	if (ur->signfy.pid > 0) {
+		sival.sival_int = atomic_read(&ur->event);
+		cobalt_sigqueue(ur->signfy.pid, ur->signfy.sig, &sival);
+	}
+}
+EXPORT_SYMBOL_GPL(udd_notify_event);
 
 struct irqswitch_work {
 	struct ipipe_work_header work; /* Must be first. */
@@ -460,16 +524,73 @@ static void switch_irq_line(int irq, int enable)
 	ipipe_post_work_root(&switchwork, work);
 }
 
+/**
+ * @brief Post a request for enabling an IRQ line
+ *
+ * This service issues a request to the regular kernel for enabling
+ * the IRQ line mentioned. If the caller runs in primary mode, the
+ * request is scheduled but deferred until the current CPU leaves the
+ * real-time domain. Otherwise, the request is immediately handled.
+ *
+ * @param irq The IRQ line to enable.
+ *
+ * @coretags{unrestricted}
+ *
+ * @note The deferral is required as some interrupt management code
+ * involved in enabling interrupt lines may not be safely executed
+ * from primary mode.
+ */
 void udd_post_irq_enable(int irq)
 {
 	switch_irq_line(irq, 1);
 }
 EXPORT_SYMBOL_GPL(udd_post_irq_enable);
 
+/**
+ * @brief Post a request for disabling an IRQ line
+ *
+ * This service issues a request to the regular kernel for disabling
+ * the IRQ line mentioned. If the caller runs in primary mode, the
+ * request is scheduled but deferred until the current CPU leaves the
+ * real-time domain. Otherwise, the request is immediately handled.
+ *
+ * @param irq The IRQ line to enable.
+ *
+ * @coretags{unrestricted}
+ *
+ * @note The deferral is required as some interrupt management code
+ * involved in disable interrupt lines may not be safely executed from
+ * primary mode.
+ */
 void udd_post_irq_disable(int irq)
 {
 	switch_irq_line(irq, 0);
 }
 EXPORT_SYMBOL_GPL(udd_post_irq_disable);
+
+/**
+ * @brief Retrieve the UDD device descriptor from a file descriptor
+ *
+ * @param fd The file descriptor received by an ancillary I/O handler
+ * from a mini-driver based on the UDD core.
+ *
+ * @return A pointer to the UDD device to which @a fd refers to.
+ *
+ * @note This service is intended for use by mini-drivers based on the
+ * UDD core exclusively. Passing file descriptors referring to other
+ * RTDM devices will certainly lead to invalid results.
+ *
+ * @coretags{mode-unrestricted}
+ */
+struct udd_device *udd_get_device(struct rtdm_fd *fd)
+{
+	struct rtdm_device *dev = rtdm_fd_device(fd);
+
+	if (dev->device_class == RTDM_CLASS_MEMORY)
+		return container_of(dev, struct udd_device, __reserved.mapper);
+
+	return container_of(dev, struct udd_device, __reserved.device);
+}
+EXPORT_SYMBOL_GPL(udd_get_device);
 
 MODULE_LICENSE("GPL");
