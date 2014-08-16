@@ -1347,8 +1347,10 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 		return err;
 
 	err = xnintr_attach(irq_handle, arg);
-	if (err)
+	if (err) {
+		xnintr_destroy(irq_handle);
 		return err;
+	}
 
 	xnintr_enable(irq_handle);
 
