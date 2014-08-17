@@ -18,7 +18,7 @@
 #ifndef _LIB_COBALT_BLACKFIN_TSC_H
 #define _LIB_COBALT_BLACKFIN_TSC_H
 
-static inline unsigned long long __xn_rdtsc (void)
+static inline unsigned long long cobalt_read_tsc(void)
 {
 	union {
 		struct {
