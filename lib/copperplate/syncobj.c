@@ -203,10 +203,14 @@ static inline int syncobj_init_corespec(struct syncobj *sobj,
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_condattr_setclock(&cattr, clk_id);
+	ret = __bt(pthread_condattr_setclock(&cattr, clk_id));
+	if (ret)
+		goto fail;
+
 	ret = __bt(-pthread_cond_init(&sobj->core.drain_sync, &cattr));
 	pthread_condattr_destroy(&cattr);
 	if (ret) {
+	fail:
 		pthread_mutex_destroy(&sobj->core.lock);
 		return ret;
 	}

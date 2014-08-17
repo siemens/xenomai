@@ -233,8 +233,15 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 
 ticks_t clockobj_get_tsc(void)
 {
+#ifdef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
+	/* Rare case with legacy uClibc+linuxthreads combo. */
+	struct timespec now;
+	__RT(clock_gettime(CLOCK_REALTIME, &now));
+	return xnarch_ullmul(now.tv_sec, 1000000000) + now.tv_nsec;
+#else
 	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
 	return cobalt_read_tsc();
+#endif
 }
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED

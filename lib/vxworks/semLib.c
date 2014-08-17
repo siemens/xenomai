@@ -411,9 +411,8 @@ SEM_ID semMCreate(int options)
 	 */
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-#ifdef CONFIG_XENO_MERCURY
+	/* pthread_mutexattr_setrobust_np() might not be implemented. */
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
-#endif
 	if (options & SEM_INVERSION_SAFE)
 		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
 	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);

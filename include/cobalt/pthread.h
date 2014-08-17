@@ -21,6 +21,7 @@
 #ifndef _COBALT_PTHREAD_H
 #define _COBALT_PTHREAD_H
 
+#include <boilerplate/libc.h>
 #include <cobalt/wrappers.h>
 #include <cobalt/uapi/thread.h>
 
@@ -58,10 +59,6 @@ COBALT_DECL(int, pthread_setschedparam(pthread_t thread,
 				       int policy,
 				       const struct sched_param *param));
 
-#ifndef pthread_yield	/* likely uClibc wrapping otherwise. */
-COBALT_DECL(int, pthread_yield(void));
-#endif
-
 COBALT_DECL(int, pthread_mutex_init(pthread_mutex_t *mutex,
 				    const pthread_mutexattr_t *attr));
 
@@ -96,11 +93,19 @@ COBALT_DECL(int, pthread_kill(pthread_t ptid, int sig));
 
 COBALT_DECL(int, pthread_join(pthread_t ptid, void **retval));
 
+#ifndef pthread_yield
+/*
+ * linuxthreads wraps pthread_yield() to sched_yield() via a
+ * preprocessor macro, which confuses the compiler with
+ * COBALT_DECL(). Since Cobalt also routes pthread_yield() to its own
+ * sched_yield() implementation internally, we can live with this
+ * wrapping.
+ */
+COBALT_DECL(int, pthread_yield(void));
+#endif
+
 int pthread_setmode_np(int clrmask, int setmask,
 		       int *mask_r);
-
-/* May be absent from outdated glibc releases. */
-int pthread_setname_np(pthread_t thread, const char *name);
 
 COBALT_DECL(int, pthread_setname_np(pthread_t thread, const char *name));
 
@@ -165,43 +170,6 @@ int pthread_attr_getpersonality_ex(const pthread_attr_ex_t *attr_ex,
 
 int pthread_attr_setpersonality_ex(pthread_attr_ex_t *attr_ex,
 				   int personality);
-
-#ifdef __UCLIBC__
-
-#include <errno.h>
-
-/*
- * Mutex PI and priority ceiling settings may not be available with
- * uClibc. Define the protocol values in the same terms as the
- * standard enum found in glibc to allow application code to enable
- * them.
- */
-enum {
-	PTHREAD_PRIO_NONE,
-	PTHREAD_PRIO_INHERIT,
-	PTHREAD_PRIO_PROTECT
-};
-
-/*
- * uClibc does not provide the following routines, so we define them
- * here. Note: let the compiler decides whether it wants to actually
- * inline these routines, i.e. do not force always_inline.
- */
-inline __attribute__ ((weak))
-int pthread_atfork(void (*prepare)(void), void (*parent)(void),
-		   void (*child)(void))
-{
-	return 0;
-}
-
-inline __attribute__ ((weak))
-int pthread_getattr_np(pthread_t th, pthread_attr_t *attr)
-{
-	return ENOSYS;
-}
-
-#endif /* __UCLIBC__ */
-
 #ifdef __cplusplus
 }
 #endif

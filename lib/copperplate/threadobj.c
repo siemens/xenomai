@@ -556,8 +556,9 @@ static inline int threadobj_init_corespec(struct threadobj *thobj)
 	 */
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
-	ret = __bt(-pthread_cond_init(&thobj->core.grant_sync, &cattr));
+	ret = __bt(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
+	if (ret == 0)
+		ret = __bt(-pthread_cond_init(&thobj->core.grant_sync, &cattr));
 	pthread_condattr_destroy(&cattr);
 
 	return ret;

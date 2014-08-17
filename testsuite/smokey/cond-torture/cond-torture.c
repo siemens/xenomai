@@ -74,22 +74,19 @@ static int mutex_init(pthread_mutex_t *mutex, int type, int pi)
 static int cond_init(pthread_cond_t *cond, int absolute)
 {
 	pthread_condattr_t cattr;
-	int err;
+	int ret;
 
 	pthread_condattr_init(&cattr);
-#ifdef HAVE_PTHREAD_CONDATTR_SETCLOCK
-	pthread_condattr_setclock(&cattr,
-				  absolute ? CLOCK_REALTIME : CLOCK_MONOTONIC);
-#else
-	if (!absolute) {
+	ret = pthread_condattr_setclock(&cattr,
+					absolute ? CLOCK_REALTIME : CLOCK_MONOTONIC);
+	if (ret) {
 		pthread_condattr_destroy(&cattr);
 		return ENOSYS;
 	}
-#endif
-	err = pthread_cond_init(cond, &cattr);
+	ret = pthread_cond_init(cond, &cattr);
 	pthread_condattr_destroy(&cattr);
 
-	return -err;
+	return -ret;
 }
 #define cond_signal(cond) (-pthread_cond_signal(cond))
 

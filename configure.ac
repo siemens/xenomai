@@ -498,8 +498,34 @@ AC_CHECK_HEADERS(mqueue.h)
 dnl Check for presence of some routines we need
 save_LIBS="$LIBS"
 LIBS="$LIBS -lrt -lpthread"
-AC_CHECK_FUNCS([pthread_mutexattr_setprotocol pthread_condattr_setclock pthread_spin_lock fork])
+AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
+		pthread_mutexattr_getprotocol	\
+		pthread_mutexattr_setrobust_np	\
+		pthread_condattr_getclock	\
+		pthread_condattr_setclock	\
+		pthread_spin_lock fork		\
+		pthread_attr_setaffinity_np	\
+		pthread_getattr_np		\
+		pthread_atfork			\
+		pthread_setname_np		\
+		sched_getcpu			\
+		clock_nanosleep])
 LIBS="$save_LIBS"
+
+dnl If we can't set the clock for condvar timeouts, then
+dnl we have to restrict the Copperplate clock to CLOCK_REALTIME.
+dnl In effect this means that updating the host system date may affect
+dnl wait times of blocking services. This is a provision for running
+dnl over legacy threading libraries such as linuxthreads.
+dnl
+dnl CAUTION: the CLOCK_COPPERPLATE value is part of the ABI between
+dnl the Xenomai core libraries and the applications. Therefore it shall
+dnl remain stable even if applications depend on a different libc
+dnl than Xenomai libraries were built against originally. Hence the
+dnl built-in CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED flag, which
+dnl won't vary for a given Xenomai installation.
+AC_CHECK_FUNC(pthread_condattr_setclock,,
+    [AC_DEFINE(CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED, 1,[config])])
 
 dnl
 dnl Produce the info needed to build xeno_config.h

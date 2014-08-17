@@ -46,4 +46,8 @@
 #define __weak		__attribute__((__weak__))
 #endif
 
+#ifndef __maybe_unused
+#define __maybe_unused	__attribute__((__unused__))
+#endif
+
 #endif /* _BOILERPLATE_COMPILER_H */

@@ -13745,7 +13745,18 @@ done
 
 save_LIBS="$LIBS"
 LIBS="$LIBS -lrt -lpthread"
-for ac_func in pthread_mutexattr_setprotocol pthread_condattr_setclock pthread_spin_lock fork
+for ac_func in pthread_mutexattr_setprotocol	\
+		pthread_mutexattr_getprotocol	\
+		pthread_mutexattr_setrobust_np	\
+		pthread_condattr_getclock	\
+		pthread_condattr_setclock	\
+		pthread_spin_lock fork		\
+		pthread_attr_setaffinity_np	\
+		pthread_getattr_np		\
+		pthread_atfork			\
+		pthread_setname_np		\
+		sched_getcpu			\
+		clock_nanosleep
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
@@ -13758,6 +13769,16 @@ fi
 done
 
 LIBS="$save_LIBS"
+
+ac_fn_c_check_func "$LINENO" "pthread_condattr_setclock" "ac_cv_func_pthread_condattr_setclock"
+if test "x$ac_cv_func_pthread_condattr_setclock" = xyes; then :
+
+else
+
+$as_echo "#define CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED 1" >>confdefs.h
+
+fi
+
 
 
 

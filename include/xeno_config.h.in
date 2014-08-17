@@ -25,6 +25,9 @@
 #undef CONFIG_XENO_COMPILER
 
 /* config */
+#undef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
+
+/* config */
 #undef CONFIG_XENO_CPU_XSC3
 
 /* config */
@@ -92,6 +95,9 @@
 
 #ifdef __IN_XENO__
 
+/* Define to 1 if you have the `clock_nanosleep' function. */
+#undef HAVE_CLOCK_NANOSLEEP
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -110,17 +116,41 @@
 /* config */
 #undef HAVE_OLD_SETAFFINITY
 
+/* Define to 1 if you have the `pthread_atfork' function. */
+#undef HAVE_PTHREAD_ATFORK
+
+/* Define to 1 if you have the `pthread_attr_setaffinity_np' function. */
+#undef HAVE_PTHREAD_ATTR_SETAFFINITY_NP
+
+/* Define to 1 if you have the `pthread_condattr_getclock' function. */
+#undef HAVE_PTHREAD_CONDATTR_GETCLOCK
+
 /* Define to 1 if you have the `pthread_condattr_setclock' function. */
 #undef HAVE_PTHREAD_CONDATTR_SETCLOCK
 
+/* Define to 1 if you have the `pthread_getattr_np' function. */
+#undef HAVE_PTHREAD_GETATTR_NP
+
+/* Define to 1 if you have the `pthread_mutexattr_getprotocol' function. */
+#undef HAVE_PTHREAD_MUTEXATTR_GETPROTOCOL
+
 /* Define to 1 if you have the `pthread_mutexattr_setprotocol' function. */
 #undef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+
+/* Define to 1 if you have the `pthread_mutexattr_setrobust_np' function. */
+#undef HAVE_PTHREAD_MUTEXATTR_SETROBUST_NP
+
+/* Define to 1 if you have the `pthread_setname_np' function. */
+#undef HAVE_PTHREAD_SETNAME_NP
 
 /* Define to 1 if you have the `pthread_spin_lock' function. */
 #undef HAVE_PTHREAD_SPIN_LOCK
 
 /* config */
 #undef HAVE_RECENT_SETAFFINITY
+
+/* Define to 1 if you have the `sched_getcpu' function. */
+#undef HAVE_SCHED_GETCPU
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H

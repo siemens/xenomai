@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <linux/unistd.h>
+#include <boilerplate/compiler.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <asm/xenomai/syscall.h>
 
@@ -53,7 +54,7 @@ static void *empty(void *cookie)
 	return cookie;
 }
 
-static void subprocess_leak(void)
+static inline void subprocess_leak(void)
 {
 	struct sigevent sevt;
 	pthread_mutex_t mutex;
@@ -85,7 +86,7 @@ int main(void)
 	pthread_t thread;
 	sem_t sem, *psem;
 	timer_t tm;
-	pid_t child;
+	__maybe_unused pid_t child;
 
 	mlockall(MCL_CURRENT|MCL_FUTURE);
 
@@ -132,6 +133,7 @@ int main(void)
 	check_unix(mq_unlink(MQ_NAME));
 	check_used("mq", before, failed);
 
+#ifdef HAVE_FORK
 	before = get_used();
 	check_unix(child = fork());
 	if (!child) {
@@ -144,6 +146,7 @@ int main(void)
 	check_unix(sem_unlink(SEM_NAME));
 	check_unix(mq_unlink(MQ_NAME));
 	check_used("fork", before, failed);
+#endif
 
 	return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
