@@ -981,7 +981,6 @@ int threadobj_init(struct threadobj *thobj,
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	ret = __bt(-__RT(pthread_cond_init(&thobj->barrier, &cattr)));
 	pthread_condattr_destroy(&cattr);
 	if (ret) {

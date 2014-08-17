@@ -59,7 +59,6 @@ int traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	ret = __bt(-__RT(pthread_cond_init(&trobj->join, &cattr)));
 	pthread_condattr_destroy(&cattr);
 	if (ret) {

@@ -350,7 +350,6 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name)
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	ret = __bt(-pthread_cond_init(&aw->event, &cattr));
 	pthread_condattr_destroy(&cattr);
 	if (ret)
