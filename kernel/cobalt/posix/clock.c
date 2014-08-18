@@ -90,7 +90,7 @@ static int do_clock_host_realtime(struct timespec *tp)
 	if (!__COBALT_CLOCK_EXT_P(__clock_id))			\
 		__val = -EINVAL;				\
 	else {							\
-		__nr = __COBALT_CLOCK_INDEX(__clock_id);	\
+		__nr = __COBALT_CLOCK_EXT_INDEX(__clock_id);	\
 		xnlock_get_irqsave(&nklock, __s);		\
 		if (!test_bit(__nr, cobalt_clock_extids)) {	\
 			xnlock_put_irqrestore(&nklock, __s);	\
@@ -280,7 +280,7 @@ int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
 		return ret;
 
 	clock->id = nr;
-	*clk_id = __COBALT_CLOCK_CODE(clock->id);
+	*clk_id = __COBALT_CLOCK_EXT(clock->id);
 
 	trace_cobalt_clock_register(clock->name, *clk_id);
 

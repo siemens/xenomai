@@ -32,7 +32,7 @@ struct cobalt_mutexattr {
 };
 
 struct cobalt_condattr {
-	int clock : 3;
+	int clock : 6;
 	int pshared : 2;
 };
 

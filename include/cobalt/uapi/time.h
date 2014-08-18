@@ -27,17 +27,19 @@
  * of the POSIX and Linux kernel definitions so that no ambiguities
  * arise when porting applications in both directions.
  *
- * The Cobalt API reserves the first 32 extended clock codes. for
- * dynamically registered clocks. Everything from
- * __COBALT_CLOCK_CODE(32) onward can be reserved statically for
- * whatever purpose.
+ * 0  .. 7   regular POSIX/linux clock ids.
+ * 8  .. 31  statically reserved Cobalt clocks
+ * 32 .. 63  dynamically registered Cobalt clocks (external)
  */
-#define COBALT_MAX_EXTCLOCKS  32
-#define __COBALT_CLOCK_CODE(num)  ((clockid_t)((1 << 16)|num))
-#define __COBALT_CLOCK_INDEX(id)  ((int)(id) & ~(1 << 16))
-#define __COBALT_CLOCK_EXT_P(id)  ((int)(id) & (1 << 16))
+#define __COBALT_CLOCK_STATIC(nr)	((clockid_t)(nr + 8))
 
-#define CLOCK_HOST_REALTIME  __COBALT_CLOCK_CODE(42)
+#define CLOCK_HOST_REALTIME  __COBALT_CLOCK_STATIC(0)
+
+#define COBALT_MAX_EXTCLOCKS  32
+
+#define __COBALT_CLOCK_EXT(nr)		((clockid_t)(nr) | (1 << 5))
+#define __COBALT_CLOCK_EXT_P(id)	((int)(id) & (1 << 5))
+#define __COBALT_CLOCK_EXT_INDEX(id)	((int)(id) & ~(1 << 5))
 
 /*
  * Additional timerfd defines

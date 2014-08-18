@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
 	init_lock(&lock);
 
 	if (ext)
-		clock_id = __COBALT_CLOCK_CODE(clock_id);
+		clock_id = __COBALT_CLOCK_EXT(clock_id);
 	if (d && clock_id == CLOCK_HOST_REALTIME)
 		show_hostrt_diagnostics();
 
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 	}
 
 	printf("== Tested %sclock: %d (", ext ? "extension " : "",
-	       __COBALT_CLOCK_INDEX(clock_id));
+	       __COBALT_CLOCK_EXT_INDEX(clock_id));
 	switch (clock_id) {
 	case CLOCK_REALTIME:
 		printf("CLOCK_REALTIME");
