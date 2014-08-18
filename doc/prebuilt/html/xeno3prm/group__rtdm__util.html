@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.6</span>
+   &#160;<span id="projectnumber">2.99.7</span>
    </div>
   </td>
  </tr>
@@ -107,10 +107,13 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga374220cb7e82c9bd09c83f0c6bf63dae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map an I/O memory range into the address space of the user.  <a href="#ga374220cb7e82c9bd09c83f0c6bf63dae">More...</a><br/></td></tr>
 <tr class="separator:ga374220cb7e82c9bd09c83f0c6bf63dae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3aee69f7a5fa8c0e2302c8b159b1915a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__util.html#ga3aee69f7a5fa8c0e2302c8b159b1915a">rtdm_mmap_kmem</a> (struct vm_area_struct *vma, void *va)</td></tr>
-<tr class="memdesc:ga3aee69f7a5fa8c0e2302c8b159b1915a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map a kernel memory range to a virtual memory area.  <a href="#ga3aee69f7a5fa8c0e2302c8b159b1915a">More...</a><br/></td></tr>
+<tr class="memdesc:ga3aee69f7a5fa8c0e2302c8b159b1915a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map a kernel logical memory range to a virtual user area.  <a href="#ga3aee69f7a5fa8c0e2302c8b159b1915a">More...</a><br/></td></tr>
 <tr class="separator:ga3aee69f7a5fa8c0e2302c8b159b1915a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacaad8fa06fc8607fc44bcc6314afeda1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__util.html#gacaad8fa06fc8607fc44bcc6314afeda1">rtdm_mmap_vmem</a> (struct vm_area_struct *vma, void *va)</td></tr>
+<tr class="memdesc:gacaad8fa06fc8607fc44bcc6314afeda1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map a virtual memory range to a virtual user area.  <a href="#gacaad8fa06fc8607fc44bcc6314afeda1">More...</a><br/></td></tr>
+<tr class="separator:gacaad8fa06fc8607fc44bcc6314afeda1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab5b1c69962cac7abf2db3ee04e1cc06b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__util.html#gab5b1c69962cac7abf2db3ee04e1cc06b">rtdm_mmap_iomem</a> (struct vm_area_struct *vma, phys_addr_t pa)</td></tr>
-<tr class="memdesc:gab5b1c69962cac7abf2db3ee04e1cc06b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map an I/O memory range to a virtual memory area.  <a href="#gab5b1c69962cac7abf2db3ee04e1cc06b">More...</a><br/></td></tr>
+<tr class="memdesc:gab5b1c69962cac7abf2db3ee04e1cc06b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map an I/O memory range to a virtual user area.  <a href="#gab5b1c69962cac7abf2db3ee04e1cc06b">More...</a><br/></td></tr>
 <tr class="separator:gab5b1c69962cac7abf2db3ee04e1cc06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga086b839d1584bd839258b554ea8f2b78"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__util.html#ga086b839d1584bd839258b554ea8f2b78">rtdm_munmap</a> (void *ptr, size_t len)</td></tr>
 <tr class="memdesc:ga086b839d1584bd839258b554ea8f2b78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unmap a user memory range.  <a href="#ga086b839d1584bd839258b554ea8f2b78">More...</a><br/></td></tr>
@@ -450,7 +453,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Map an I/O memory range to a virtual memory area. </p>
+<p>Map an I/O memory range to a virtual user area. </p>
 <p>This routine is commonly used from a -&gt;mmap() handler of a RTDM driver, for mapping an I/O memory area over the user address space referred to by <em>vma</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -460,7 +463,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise a negated error code is returned.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>To map a chunk of kernel virtual memory to a VMA, call <a class="el" href="group__rtdm__util.html#ga3aee69f7a5fa8c0e2302c8b159b1915a" title="Map a kernel memory range to a virtual memory area. ">rtdm_mmap_kmem()</a> instead.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>To map a chunk of logical space obtained from kmalloc(), or a purely virtual area with no direct physical mapping to a VMA, call <a class="el" href="group__rtdm__util.html#ga3aee69f7a5fa8c0e2302c8b159b1915a" title="Map a kernel logical memory range to a virtual user area. ">rtdm_mmap_kmem()</a> or <a class="el" href="group__rtdm__util.html#gacaad8fa06fc8607fc44bcc6314afeda1" title="Map a virtual memory range to a virtual user area. ">rtdm_mmap_vmem()</a> respectively instead.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 </div>
@@ -489,17 +492,17 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Map a kernel memory range to a virtual memory area. </p>
-<p>This routine is commonly used from a -&gt;mmap() handler of a RTDM driver, for mapping a kernel memory area over the user address space referred to by <em>vma</em>.</p>
+<p>Map a kernel logical memory range to a virtual user area. </p>
+<p>This routine is commonly used from a -&gt;mmap() handler of a RTDM driver, for mapping a virtual memory area with no direct physical mapping over the user address space referred to by <em>vma</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">vma</td><td>The VMA descriptor to receive the mapping. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">va</td><td>The kernel virtual address to be mapped.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">va</td><td>The kernel logical address to be mapped.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise a negated error code is returned.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>This service only works on memory regions allocated via kmalloc() or vmalloc(). To map a chunk of physical I/O memory to a VMA, call <a class="el" href="group__rtdm__util.html#gab5b1c69962cac7abf2db3ee04e1cc06b" title="Map an I/O memory range to a virtual memory area. ">rtdm_mmap_iomem()</a> instead.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This service works on memory regions allocated via kmalloc(). To map a chunk of virtual space with no direct physical mapping, or a physical I/O memory to a VMA, call <a class="el" href="group__rtdm__util.html#gacaad8fa06fc8607fc44bcc6314afeda1" title="Map a virtual memory range to a virtual user area. ">rtdm_mmap_vmem()</a> or <a class="el" href="group__rtdm__util.html#gab5b1c69962cac7abf2db3ee04e1cc06b" title="Map an I/O memory range to a virtual user area. ">rtdm_mmap_iomem()</a> respectively instead.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 </div>
@@ -585,6 +588,45 @@ RTDM supports two models for unmapping the memory area:<ul>
 <li>automatic unmapping, triggered by the termination of the process which owns the mapping. To track the number of references pending on the resource mapped, the driver can pass the address of a close handler for the vm_area considered, in the <em>vm_ops</em> descriptor. See the relevant Linux kernel programming documentation (e.g. Linux Device Drivers book) on virtual memory management for details.</li>
 </ul>
 </dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gacaad8fa06fc8607fc44bcc6314afeda1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_mmap_vmem </td>
+          <td>(</td>
+          <td class="paramtype">struct vm_area_struct *&#160;</td>
+          <td class="paramname"><em>vma</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>va</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Map a virtual memory range to a virtual user area. </p>
+<p>This routine is commonly used from a -&gt;mmap() handler of a RTDM driver, for mapping a purely virtual memory area over the user address space referred to by <em>vma</em>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vma</td><td>The VMA descriptor to receive the mapping. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">va</td><td>The virtual address to be mapped.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise a negated error code is returned.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This service works on memory regions allocated via vmalloc(). To map a chunk of logical space obtained from kmalloc(), or a physical I/O memory to a VMA, call <a class="el" href="group__rtdm__util.html#ga3aee69f7a5fa8c0e2302c8b159b1915a" title="Map a kernel logical memory range to a virtual user area. ">rtdm_mmap_kmem()</a> or <a class="el" href="group__rtdm__util.html#gab5b1c69962cac7abf2db3ee04e1cc06b" title="Map an I/O memory range to a virtual user area. ">rtdm_mmap_iomem()</a> respectively instead.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 </div>

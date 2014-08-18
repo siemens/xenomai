@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.6</span>
+   &#160;<span id="projectnumber">2.99.7</span>
    </div>
   </td>
  </tr>
@@ -240,7 +240,7 @@ Driver Versioning</h2></td></tr>
 
 <p>If set, the device is addressed via a clear-text name. </p>
 
-<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga6a191b3d206680c48cad2047adb9fc98">rtdm_dev_register()</a>, and <a class="el" href="group__rtdm__device__register.html#ga9cc04a9b6e1710d9ad3860de8d81bf14">rtdm_dev_unregister()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga6a191b3d206680c48cad2047adb9fc98">rtdm_dev_register()</a>, <a class="el" href="group__rtdm__device__register.html#ga9cc04a9b6e1710d9ad3860de8d81bf14">rtdm_dev_unregister()</a>, and <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
 
 </div>
 </div>
@@ -310,13 +310,15 @@ Driver Versioning</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
 <li>-EINVAL is returned if the device structure contains invalid entries. Check kernel log in this case.</li>
-<li>-ENOMEM is returned if the context for an exclusive device cannot be allocated.</li>
+<li>-ENOMEM is returned if a memory allocation failed in the process of registering the device.</li>
 <li>-EEXIST is returned if the specified device name of protocol ID is already in use.</li>
 <li>-EAGAIN is returned if some /proc entry cannot be created.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 <p>References <a class="el" href="structrtdm__fd__ops.html#a2b27945be840f51ad42201e60d91e9d7">rtdm_fd_ops::close</a>, <a class="el" href="structrtdm__device.html#a48d67f835c341c5d27bc5886920a11da">rtdm_device::context_size</a>, <a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">rtdm_device::device_flags</a>, <a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">rtdm_device::device_name</a>, <a class="el" href="structrtdm__fd__ops.html#abe5c7052709b7654b3c8f8c25459f9b1">rtdm_fd_ops::open</a>, <a class="el" href="structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83">rtdm_device::ops</a>, <a class="el" href="structrtdm__device.html#a0df5612d6bfcf6421509345384467392">rtdm_device::proc_name</a>, <a class="el" href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">rtdm_device::protocol_family</a>, <a class="el" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a>, <a class="el" href="group__rtdm__device__register.html#gab0f99b00be17869d5c9cd844825766f4">RTDM_DEVICE_STRUCT_VER</a>, <a class="el" href="group__rtdm__device__register.html#gafdb542eb46679916b0100969e1033bfc">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="group__rtdm__device__register.html#ga7c66ec8f269c701237437177af0704e8">RTDM_EXCLUSIVE</a>, <a class="el" href="group__rtdm__device__register.html#ga7651188ca1c05f7e68b36517874138b7">RTDM_NAMED_DEVICE</a>, <a class="el" href="group__rtdm__device__register.html#ga43ced044106ae9c1f5500d0041307d8f">RTDM_PROTOCOL_DEVICE</a>, <a class="el" href="structrtdm__fd__ops.html#a116e15405e46ba98c2720879f889f520">rtdm_fd_ops::socket</a>, <a class="el" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">rtdm_device::socket_type</a>, <a class="el" href="structrtdm__device.html#aaa2844f98d874f16d802b4e0b693e4e2">rtdm_device::struct_version</a>, and <a class="el" href="group__cobalt__core__registry.html#ga28aefd9be7367aa495753142005e1d5a">xnregistry_enter()</a>.</p>
+
+<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
 
 </div>
 </div>
@@ -359,6 +361,8 @@ Driver Versioning</h2></td></tr>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 <p>References <a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">rtdm_device::device_flags</a>, <a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">rtdm_device::device_name</a>, <a class="el" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">rtdm_device::reserved</a>, <a class="el" href="group__rtdm__device__register.html#gafdb542eb46679916b0100969e1033bfc">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="group__rtdm__device__register.html#ga7651188ca1c05f7e68b36517874138b7">RTDM_NAMED_DEVICE</a>, and <a class="el" href="group__cobalt__core__registry.html#ga477bb20ccb4bcf87c343aca8e58f9ef9">xnregistry_remove()</a>.</p>
+
+<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>, and <a class="el" href="group__rtdm__udd.html#ga7206665dd8c240e578a2925450697a40">udd_unregister_device()</a>.</p>
 
 </div>
 </div>

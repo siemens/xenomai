@@ -2,7 +2,7 @@
 <area shape="rect" id="node2" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="219,369,369,410"/>
 <area shape="rect" id="node10" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="119,97,277,138"/>
 <area shape="rect" id="node13" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="383,278,573,319"/>
-<area shape="rect" id="node14" href="$cobalt_2kernel_2rtdm_2udd_8h_source.html" title="include/cobalt/kernel\l/rtdm/udd.h" alt="" coords="433,97,574,138"/>
+<area shape="rect" id="node14" href="$cobalt_2kernel_2rtdm_2udd_8h.html" title="Copyright (C) 2014 Philippe Gerum rpm@xenomai.org " alt="" coords="433,97,574,138"/>
 <area shape="rect" id="node15" href="$kernel_2cobalt_2rtdm_2internal_8h_source.html" title="kernel/cobalt/rtdm\l/internal.h" alt="" coords="599,97,725,138"/>
 <area shape="rect" id="node16" href="$rtcan__internal_8h_source.html" title="kernel/drivers/can\l/rtcan_internal.h" alt="" coords="750,97,875,138"/>
 <area shape="rect" id="node17" href="$rtcan__socket_8h_source.html" title="kernel/drivers/can\l/rtcan_socket.h" alt="" coords="899,97,1025,138"/>

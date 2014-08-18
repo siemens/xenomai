@@ -1,0 +1,5 @@
+<map id="udd_device::udd_reserved" name="udd_device::udd_reserved">
+<area shape="rect" id="node2" href="$structudd__signotify.html" title="UDD event notification descriptor. " alt="" coords="5,96,104,123"/>
+<area shape="rect" id="node3" href="$structrtdm__device.html" title="RTDM device. " alt="" coords="128,96,221,123"/>
+<area shape="rect" id="node4" href="$structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="127,5,221,32"/>
+</map>

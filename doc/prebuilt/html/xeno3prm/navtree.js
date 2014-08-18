@@ -30,14 +30,14 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "16550A__io_8h_source.html",
-"driver_8h.html#ga7651188ca1c05f7e68b36517874138b7",
-"group__alchemy__sem.html#gac481c1f1a2184a998deb2110f2c5b04d",
-"group__cobalt__api__sched.html#gafaebd1698caeb9b9b9e614ad84edd609",
-"group__rtdm__can.html#ga853db0a1bf833caea89e3597a0123c11",
-"group__rtdm__timer.html#gad0bffecd0182d68967ebb5b47df0bcd0",
-"lib_2psos_2internal_8h_source.html",
-"rtdm_2uapi_2serial_8h.html#a39dbf3a90a086cfaedd467ae464fb8ad",
-"structrtser__config.html#af3d4c1078b145977f85ed4cec9dc5fe6"
+"driver_8h.html#ga43ced044106ae9c1f5500d0041307d8f",
+"group__alchemy__queue.html#ga7dde50ae5c62445b781bd6087f5b58c0",
+"group__cobalt__api__mutex.html#ga9c67ad95bb6cc0fb38dcc87b441b16b4",
+"group__rtdm__can.html#ga54583090d19940d761a224bc0801ec6a",
+"group__rtdm__task.html#ga7b5581febb2732127736817ca44e86e3",
+"lib_2alchemy_2internal_8h_source.html",
+"rtdm_2uapi_2ipc_8h.html#ga6a7b8aa43efe65c79ec692b716202666",
+"structrtdm__device.html#ae58c050e09a79b277f718d796eda2072"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

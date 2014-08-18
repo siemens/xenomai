@@ -10,5 +10,5 @@ var dir_6fb3c96f30c05412f9e8266f1a1cbdee =
     [ "rtdm.h", "cobalt_2kernel_2rtdm_2rtdm_8h.html", null ],
     [ "serial.h", "cobalt_2kernel_2rtdm_2serial_8h.html", null ],
     [ "testing.h", "cobalt_2kernel_2rtdm_2testing_8h.html", null ],
-    [ "udd.h", "cobalt_2kernel_2rtdm_2udd_8h_source.html", null ]
+    [ "udd.h", "cobalt_2kernel_2rtdm_2udd_8h.html", "cobalt_2kernel_2rtdm_2udd_8h" ]
 ];

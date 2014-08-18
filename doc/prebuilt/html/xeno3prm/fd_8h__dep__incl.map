@@ -8,7 +8,7 @@
 <area shape="rect" id="node8" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="403,459,552,501"/>
 <area shape="rect" id="node16" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="406,187,564,229"/>
 <area shape="rect" id="node19" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="137,369,327,410"/>
-<area shape="rect" id="node20" href="$cobalt_2kernel_2rtdm_2udd_8h_source.html" title="include/cobalt/kernel\l/rtdm/udd.h" alt="" coords="684,187,825,229"/>
+<area shape="rect" id="node20" href="$cobalt_2kernel_2rtdm_2udd_8h.html" title="Copyright (C) 2014 Philippe Gerum rpm@xenomai.org " alt="" coords="684,187,825,229"/>
 <area shape="rect" id="node21" href="$rtcan__internal_8h_source.html" title="kernel/drivers/can\l/rtcan_internal.h" alt="" coords="849,187,975,229"/>
 <area shape="rect" id="node22" href="$rtcan__socket_8h_source.html" title="kernel/drivers/can\l/rtcan_socket.h" alt="" coords="5,187,131,229"/>
 <area shape="rect" id="node24" href="$kernel_2drivers_2ipc_2internal_8h_source.html" title="kernel/drivers/ipc\l/internal.h" alt="" coords="155,187,276,229"/>

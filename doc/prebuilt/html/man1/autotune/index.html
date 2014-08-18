@@ -847,6 +847,22 @@ switching time.
 </p>
 </dd>
 <dt class="hdlist1">
+<strong>*--period &lt;ns&gt;</strong>
+</dt>
+<dd>
+<p>
+Set the sampling period to the given count of nanoseconds. The
+estimation is performed by measuring the jitter between the ideal time
+at which a timer tick should be received, and the actual time it is
+eventually received, for a series of ticks. This value expresses the
+delay between two of these ticks. If too short, a lockup might
+occur. A commonly observed result is: the larger the delay, the higher
+the latency, due to CPU cache effects (i.e. the real-time code/data is
+more likely to get evicted from the cachelines as the non real-time
+activity can slip in, treading over a larger address space).
+</p>
+</dd>
+<dt class="hdlist1">
 <strong>--reset</strong>
 </dt>
 <dd>
@@ -924,7 +940,7 @@ script to set up the Xenomai core clock accordingly, e.g:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-08 14:39:38 CEST
+Last updated 2014-08-18 12:31:34 CEST
 </div>
 </div>
 </body>

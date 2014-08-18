@@ -315,7 +315,8 @@ _Cobalt_-specific requirements
 _Mercury_-specific requirement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Only glibc-based platforms are currently supported.
+- There is no particular requirement for Mercury setups, although
+  using a NPTL-based glibc or uClibc is recommended.
 
 Configuring
 ~~~~~~~~~~~

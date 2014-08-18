@@ -1,0 +1,7 @@
+<map id="udd_device" name="udd_device">
+<area shape="rect" id="node2" href="$structudd__device_1_1udd__reserved.html" title="Reserved to the UDD core. " alt="" coords="5,200,179,227"/>
+<area shape="rect" id="node3" href="$structudd__signotify.html" title="UDD event notification descriptor. " alt="" coords="8,96,107,123"/>
+<area shape="rect" id="node4" href="$structrtdm__device.html" title="RTDM device. " alt="" coords="131,96,224,123"/>
+<area shape="rect" id="node5" href="$structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="130,5,224,32"/>
+<area shape="rect" id="node6" href="$structudd__memregion.html" title="udd_memregion" alt="" coords="204,200,319,227"/>
+</map>

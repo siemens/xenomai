@@ -329,7 +329,8 @@ services (e.g. _alchemy_, _psos_, _vxworks_).
 
 When Copperplate is built for running over the Cobalt core, it sits on
 top of the +libcobalt+ library. Conversely, it is directly stacked on
-top of the *glibc* when built for running over the Mercury core.
+top of the *glibc* or *uClibc* when built for running over the Mercury
+core.
 
 Normally, Copperplate should initialize from a call issued by the
 +main()+ application routine. To make this process transparent for the
@@ -715,23 +716,19 @@ Since the application should provide proper top-half code in a
 dedicated RTDM driver for synchronizing on IRQ receipt, the RTDM API
 available in user-space is sufficient.
 
-Removing the +pthread_intr+ API should be considered as a
-strong hint for keeping the top-half interrupt handling code in
-kernel space.
+Removing the +pthread_intr+ API should be considered as a strong hint
+for keeping driver code in kernel space, where it naturally belongs
+to.
 
 [TIP]
 [[userirqtip]]
-For receiving interrupt notifications within your application, you
-should create a small RTDM driver handling the corresponding IRQ (see
-+rtdm_irq_request()+). The IRQ handler should wake a thread up in your
-application by posting some event (see +rtdm_sem_up()+,
-+rtdm_sem_timeddown()+). The application should sleep on this event by
-calling into the RTDM driver, either via a +read(2)+ or +ioctl(2)+
-request, handled by a dedicated operation handler (see
-+rtdm_dev_register()+).
-
-[NOTE]
-A RTDM-based uio-like driver is planned for Xenomai 3.0.
+This said, in the seldom cases where running a device driver in
+user-space is the best option, one may rely on the RTDM-based UDD
+framework shipped with Xenomai 3. UDD stands for _User-space Device
+Driver_, enabling interrupt control and I/O memory access interfaces
+to applications in a safe manner. It is reminiscent of the UIO
+framework available with the Linux kernel, adapted to the dual
+kernel Cobalt environment.
 
 === Scheduling ===
 
@@ -760,15 +757,15 @@ A RTDM-based uio-like driver is planned for Xenomai 3.0.
 
 [normal]
   In the Xenomai 2.x implementation, the thread being set a new
-  priority would receive a SIGSHADOW signal, eventually handled as a
-  request to call *glibc*'s `pthread_setschedparam()` immediately.
+  priority would receive a SIGSHADOW signal, triggering a call to
+  `pthread_setschedparam()` immediately.
 
 .Rationale
 **********************************************************************
 The target Xenomai thread may hold a mutex or any resource which may
 only be held in primary mode, in which case switching to secondary
 mode for applying the priority change at any random location over a
-signal handler may create a pathological issue. In addition, *glibc*'s
+signal handler may create a pathological issue. In addition,
 `pthread_setschedparam()` is not async-safe, which makes the former
 method fragile.
 **********************************************************************

@@ -4,6 +4,7 @@ var dir_270cc1c74033f973657e8b8306f29fe4 =
     [ "compiler.h", "compiler_8h_source.html", null ],
     [ "debug.h", "include_2boilerplate_2debug_8h_source.html", null ],
     [ "hash.h", "hash_8h_source.html", null ],
+    [ "libc.h", "libc_8h_source.html", null ],
     [ "list.h", "boilerplate_2list_8h_source.html", null ],
     [ "lock.h", "boilerplate_2lock_8h_source.html", null ],
     [ "obstack.h", "obstack_8h_source.html", null ],

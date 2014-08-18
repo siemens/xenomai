@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.6</span>
+   &#160;<span id="projectnumber">2.99.7</span>
    </div>
   </td>
  </tr>
@@ -93,44 +93,31 @@ $(document).ready(function(){initNavTree('rtdm_2uapi_2udd_8h_source.html','');})
 <div class="title">udd.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * This file is part of the Xenomai project.</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Copyright (C) 2014 Philippe Gerum &lt;rpm@xenomai.org&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment"> * This library is free software; you can redistribute it and/or</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> * modify it under the terms of the GNU Lesser General Public</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> * License as published by the Free Software Foundation; either</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment"> * version 2 of the License, or (at your option) any later version.</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment"> * This library is distributed in the hope that it will be useful,</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment"> * but WITHOUT ANY WARRANTY; without even the implied warranty of</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment"> * Lesser General Public License for more details.</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment"> * You should have received a copy of the GNU Lesser General Public</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> * License along with this library; if not, write to the Free Software</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#ifndef _RTDM_UAPI_UDD_H</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _RTDM_UAPI_UDD_H</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">struct </span>udd_signotify {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        pid_t pid;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <span class="keywordtype">int</span> sig;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;};</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQEN         _IO(RTDM_CLASS_UDD, 0)</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define UDD_RTIOC_IRQDIS        _IO(RTDM_CLASS_UDD, 1)</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define UDD_RTIOC_IRQSIG        _IOW(RTDM_CLASS_UDD, 2, struct udd_signotify)</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_RTDM_UAPI_UDD_H */</span><span class="preprocessor"></span></div>
+<a href="rtdm_2uapi_2udd_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#ifndef _RTDM_UAPI_UDD_H</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _RTDM_UAPI_UDD_H</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="structudd__signotify.html">   44</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structudd__signotify.html">udd_signotify</a> {</div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="structudd__signotify.html#a5d6a5db2ec1fd071c8aefb9da3268f5e">   50</a></span>&#160;        pid_t <a class="code" href="structudd__signotify.html#a5d6a5db2ec1fd071c8aefb9da3268f5e">pid</a>;</div>
+<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6">   56</a></span>&#160;        <span class="keywordtype">int</span> <a class="code" href="structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6">sig</a>;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;};</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#ga3262c2cf44554d882cfe1fbcb8c5c06d">   71</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQEN         _IO(RTDM_CLASS_UDD, 0)</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#ga5e774aed523fce77d75ac2ba24e9aebc">   77</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQDIS        _IO(RTDM_CLASS_UDD, 1)</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#gad418ff50a125079ee342be1089adc081">   83</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQSIG        _IOW(RTDM_CLASS_UDD, 2, struct udd_signotify)</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_RTDM_UAPI_UDD_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="structudd__signotify_html_a5d6a5db2ec1fd071c8aefb9da3268f5e"><div class="ttname"><a href="structudd__signotify.html#a5d6a5db2ec1fd071c8aefb9da3268f5e">udd_signotify::pid</a></div><div class="ttdeci">pid_t pid</div><div class="ttdoc">PID of the Cobalt thread to notify upon interrupt receipt. </div><div class="ttdef"><b>Definition:</b> udd.h:50</div></div>
+<div class="ttc" id="structudd__signotify_html_a224ee47db9f20ccdd86ec931ccd63bb6"><div class="ttname"><a href="structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6">udd_signotify::sig</a></div><div class="ttdeci">int sig</div><div class="ttdoc">Signal number to send to PID for notifying, which must be in the range [SIGRTMIN . </div><div class="ttdef"><b>Definition:</b> udd.h:56</div></div>
+<div class="ttc" id="structudd__signotify_html"><div class="ttname"><a href="structudd__signotify.html">udd_signotify</a></div><div class="ttdoc">UDD event notification descriptor. </div><div class="ttdef"><b>Definition:</b> udd.h:44</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_03dba7e891ad9b6681428c00d78e5ff7.html">rtdm</a></li><li class="navelem"><a class="el" href="dir_e7ac2999b22d5b84dd0304695ca4b779.html">uapi</a></li><li class="navelem"><b>udd.h</b></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_03dba7e891ad9b6681428c00d78e5ff7.html">rtdm</a></li><li class="navelem"><a class="el" href="dir_e7ac2999b22d5b84dd0304695ca4b779.html">uapi</a></li><li class="navelem"><a class="el" href="rtdm_2uapi_2udd_8h.html">udd.h</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.6 </li>

@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.6</span>
+   &#160;<span id="projectnumber">2.99.7</span>
    </div>
   </td>
  </tr>
@@ -298,6 +298,8 @@ RTDM_IRQ_xxx</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>The caller is responsible for shutting down the IRQ source at device level before invoking this service. In turn, rtdm_irq_free ensures that any pending event on the given IRQ line is fully processed on return from this service.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
+<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>, and <a class="el" href="group__rtdm__udd.html#ga7206665dd8c240e578a2925450697a40">udd_unregister_device()</a>.</p>
+
 </div>
 </div>
 <a class="anchor" id="ga9bb3d95218ac5261e4033fb0bf695073"></a>
@@ -368,7 +370,9 @@ RTDM_IRQ_xxx</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8">xnintr_attach()</a>, <a class="el" href="group__cobalt__core__irq.html#gacb629c2fda5f3400a86c7139100eebff">xnintr_enable()</a>, and <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9">xnintr_init()</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__irq.html#ga3daaec8f96ae24a57e390c2bb52a7dd8">xnintr_attach()</a>, <a class="el" href="group__cobalt__core__irq.html#ga2f4d355b8f1e30ac47eb6cdf5b15052a">xnintr_destroy()</a>, <a class="el" href="group__cobalt__core__irq.html#gacb629c2fda5f3400a86c7139100eebff">xnintr_enable()</a>, and <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9">xnintr_init()</a>.</p>
+
+<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
 
 </div>
 </div>

@@ -980,10 +980,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-2.99.6. Functionally speaking, only the former <em>master</em> time base
+2.99.7. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 2.99.6 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 2.99.7 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -1181,7 +1181,8 @@ emulating real-time APIs. All non-POSIX APIs are based on Copperplate
 services (e.g. <em>alchemy</em>, <em>psos</em>, <em>vxworks</em>).</p></div>
 <div class="paragraph"><p>When Copperplate is built for running over the Cobalt core, it sits on
 top of the <code>libcobalt</code> library. Conversely, it is directly stacked on
-top of the <strong>glibc</strong> when built for running over the Mercury core.</p></div>
+top of the <strong>glibc</strong> or <strong>uClibc</strong> when built for running over the Mercury
+core.</p></div>
 <div class="paragraph"><p>Normally, Copperplate should initialize from a call issued by the
 <code>main()</code> application routine. To make this process transparent for the
 user, the <code>xeno-config</code> script emits link flags which temporarily
@@ -1687,30 +1688,21 @@ typically).</p></div>
 <div class="paragraph"><p>Since the application should provide proper top-half code in a
 dedicated RTDM driver for synchronizing on IRQ receipt, the RTDM API
 available in user-space is sufficient.</p></div>
-<div class="paragraph"><p>Removing the <code>pthread_intr</code> API should be considered as a
-strong hint for keeping the top-half interrupt handling code in
-kernel space.</p></div>
+<div class="paragraph"><p>Removing the <code>pthread_intr</code> API should be considered as a strong hint
+for keeping driver code in kernel space, where it naturally belongs
+to.</p></div>
 <div class="admonitionblock" id="userirqtip">
 <table><tr>
 <td class="icon">
 <img src="../asciidoc-icons/tip.png" alt="Tip" />
 </td>
-<td class="content">For receiving interrupt notifications within your application, you
-should create a small RTDM driver handling the corresponding IRQ (see
-<code>rtdm_irq_request()</code>). The IRQ handler should wake a thread up in your
-application by posting some event (see <code>rtdm_sem_up()</code>,
-<code>rtdm_sem_timeddown()</code>). The application should sleep on this event by
-calling into the RTDM driver, either via a <code>read(2)</code> or <code>ioctl(2)</code>
-request, handled by a dedicated operation handler (see
-<code>rtdm_dev_register()</code>).</td>
-</tr></table>
-</div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="../asciidoc-icons/note.png" alt="Note" />
-</td>
-<td class="content">A RTDM-based uio-like driver is planned for Xenomai 3.0.</td>
+<td class="content">This said, in the seldom cases where running a device driver in
+user-space is the best option, one may rely on the RTDM-based UDD
+framework shipped with Xenomai 3. UDD stands for <em>User-space Device
+Driver</em>, enabling interrupt control and I/O memory access interfaces
+to applications in a safe manner. It is reminiscent of the UIO
+framework available with the Linux kernel, adapted to the dual
+kernel Cobalt environment.</td>
 </tr></table>
 </div>
 </div>
@@ -1747,8 +1739,8 @@ it knows about. Therefore, an explicit call to the the regular
 <code>pthread_setschedparam()</code> shall be issued upon each priority change
 Xenomai-wise, for maintaining consistency.</p></div>
 <div class="paragraph"><p>In the Xenomai 2.x implementation, the thread being set a new
-priority would receive a SIGSHADOW signal, eventually handled as a
-request to call <strong>glibc</strong>'s <code>pthread_setschedparam()</code> immediately.</p></div>
+priority would receive a SIGSHADOW signal, triggering a call to
+<code>pthread_setschedparam()</code> immediately.</p></div>
 </li>
 </ul></div>
 <div class="sidebarblock">
@@ -1757,7 +1749,7 @@ request to call <strong>glibc</strong>'s <code>pthread_setschedparam()</code> im
 <div class="paragraph"><p>The target Xenomai thread may hold a mutex or any resource which may
 only be held in primary mode, in which case switching to secondary
 mode for applying the priority change at any random location over a
-signal handler may create a pathological issue. In addition, <strong>glibc</strong>'s
+signal handler may create a pathological issue. In addition,
 <code>pthread_setschedparam()</code> is not async-safe, which makes the former
 method fragile.</p></div>
 </div></div>
@@ -2659,7 +2651,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-14 17:35:04 CEST
+Last updated 2014-08-18 12:35:37 CEST
 </div>
 </div>
 </body>

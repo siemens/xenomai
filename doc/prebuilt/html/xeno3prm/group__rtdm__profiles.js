@@ -1,5 +1,6 @@
 var group__rtdm__profiles =
 [
+    [ "User-space driver core", "group__rtdm__udd.html", "group__rtdm__udd" ],
     [ "CAN Devices", "group__rtdm__can.html", "group__rtdm__can" ],
     [ "Serial Devices", "group__rtdm__serial.html", null ],
     [ "Testing Devices", "group__rtdm__testing.html", null ],
