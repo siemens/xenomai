@@ -197,7 +197,7 @@ static int mapper_open(struct rtdm_fd *fd, int oflags)
 	 * Check that we are opening a mapper instance pointing at a
 	 * valid memory region. e.g. UDD creates the companion device
 	 * "foo,mapper" on the fly when registering the main device
-	 * "foo". Userland may then open("/dev/foo,mapper@0", ...)
+	 * "foo". Userland may then open("/dev/foo,mapper0", ...)
 	 * followed by a call to mmap() for mapping the memory region
 	 * #0 as declared in the mem_regions[] array of the main
 	 * device.
@@ -289,7 +289,7 @@ static inline int register_mapper(struct udd_device *udd)
 
 	memset(dev, 0, sizeof(*dev));
 	dev->struct_version = RTDM_DEVICE_STRUCT_VER;
-	dev->device_flags = RTDM_NAMED_DEVICE;
+	dev->device_flags = RTDM_NAMED_DEVICE|RTDM_MINOR;
 	dev->context_size = 0;
 	dev->ops = (struct rtdm_fd_ops){
 		.open = mapper_open,

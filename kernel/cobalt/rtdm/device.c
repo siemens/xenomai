@@ -22,6 +22,7 @@
 #include <linux/delay.h>
 #include <linux/semaphore.h>
 #include <linux/slab.h>
+#include <linux/ctype.h>
 #include <cobalt/kernel/apc.h>
 #include "rtdm/internal.h"
 #include <trace/events/cobalt-rtdm.h>
@@ -68,7 +69,7 @@ struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 	 * First we look for an exact match. If this fails, we look
 	 * for a device minor specification. If we find one, we redo
 	 * the search only looking for the device base name. The
-	 * default minor value is zero.
+	 * default minor value if unspecified is -1.
 	 */
 	for (;;) {
 		ret = xnregistry_bind(name, XN_NONBLOCK, XN_RELATIVE, &handle);
@@ -78,8 +79,14 @@ struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 			break;
 		if (p)	/* Look for minor only once. */
 			return NULL;
-		p = strrchr(name, '@');
-		if (p == NULL || p[1] == '\0')
+		p = name + strlen(name);
+		while (--p >= name) {
+			if (!isdigit(*p))
+				break;
+		}
+		if (p < name)	/* no minor spec. */
+			return NULL;
+		if (p[1] == '\0')
 			return NULL;
 		ret = kstrtoint(p + 1, 10, &minor);
 		if (ret || minor < 0)
@@ -87,7 +94,10 @@ struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 		base = kstrdup(name, GFP_KERNEL);
 		if (base == NULL)
 			return NULL;
-		base[p - name] = '\0';
+		if (*p == '@')
+			base[p - name] = '\0';
+		else
+			base[p - name + 1] = '\0';
 		name = base;
 	}
 
@@ -95,7 +105,9 @@ struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 
 	device = xnregistry_lookup(handle, NULL);
 	if (device) {
-		if (device->reserved.magic == RTDM_DEVICE_MAGIC) {
+		if (device->reserved.magic == RTDM_DEVICE_MAGIC &&
+		    ((device->device_flags & RTDM_MINOR) != 0 ||
+		     minor < 0)) {
 			rtdm_reference_device(device);
 			*minor_r = minor;
 		} else

@@ -47,28 +47,39 @@ struct xnsys_ppd;
  * retrieved by a call to rtdm_fd_minor(fd). The minor number can be
  * used for distinguishing several instances of the same rtdm_device
  * type. Prior to entering this handler, the device minor information
- * may have been extracted from the pathname passed to the @a open()
+ * may have been extracted from the path name passed to the @a open()
  * call, according to the following rules:
  *
- * - RTDM first attempts to match the pathname exactly as passed by
+ * - RTDM first attempts to match the path name exactly as passed by
  * the application, against the registered rtdm_device descriptors. On
  * success, the special minor -1 is assigned to @a fd and this handler
  * is called.
  *
- * - if the original pathname does not match any device descriptor, it
- * is scanned for the \@\<minor> suffix. If present, a second lookup is
- * performed only looking for the radix portion of the pathname
- * (i.e. stripping the suffix), and the file descriptor is assigned
- * the minor value retrieved earlier on success, at which point this
- * handler is called. When present, \<minor> must be a positive or null
- * decimal value, otherwise the open() call fails.
+ * - if the original path name does not match any device descriptor,
+ * it is scanned backward for a \<minor> suffix, which starts after
+ * the first non-digit character found. If present, a second lookup is
+ * performed in the device registry for the radix portion of the path
+ * name (i.e. stripping the \<minor>), looking for a device bearing
+ * the RTDM_MINOR flag.  If found, the file descriptor is assigned the
+ * minor value retrieved earlier on success, at which point the
+ * binding succeeds and the open() handler is called.
  *
- * For instance:
+ * When present, \<minor> must be a positive or null decimal value,
+ * otherwise the open() call fails.
+ *
+ * For disambiguation, the special \@ character can be used as an
+ * explicit separator between the radix and the \<minor>, which is
+ * ignored in the final lookup for the path name.
+ *
+ * For instance, with two distinct registered devices bearing the
+ * RTDM_MINOR flag, namely "foo" and "foo42", lookups would resolve as
+ * follows:
  *
  * @code
- *    fd = open("/dev/foo@0", ...); // rtdm_fd_minor(fd) == 0
- *    fd = open("/dev/foo@7", ...); // rtdm_fd_minor(fd) == 7
- *    fd = open("/dev/foo", ...);   // rtdm_fd_minor(fd) == -1
+ *    fd = open("/dev/foo0", ...);    // dev = foo, rtdm_fd_minor(fd) = 0
+ *    fd = open("/dev/foo", ...);     // dev = foo, rtdm_fd_minor(fd) = -1
+ *    fd = open("/dev/foo42@7", ...); // dev = foo42, rtdm_fd_minor(fd) = 7
+ *    fd = open("/dev/foo42", ...);   // dev = foo42, rtdm_fd_minor(fd) = -1
  * @endcode
  *
  * @note the device minor scheme is not supported by Xenomai 2.x.

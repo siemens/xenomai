@@ -69,6 +69,9 @@ enum rtdm_selecttype;
  *  application. */
 #define RTDM_EXCLUSIVE			0x0001
 
+/** If set, the device supports minor specification. */
+#define RTDM_MINOR			0x0002
+
 /** If set, the device is addressed via a clear-text name. */
 #define RTDM_NAMED_DEVICE		0x0010
 
