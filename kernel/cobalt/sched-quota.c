@@ -531,7 +531,7 @@ int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
 {
 	struct xnsched_quota *qs = &tg->sched->quota;
 	union xnsched_policy_param param;
-	struct xnthread *thread;
+	struct xnthread *thread, *tmp;
 
 	atomic_only();
 
@@ -539,7 +539,7 @@ int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
 		if (!force)
 			return -EBUSY;
 		/* Move group members to the rt class. */
-		list_for_each_entry(thread, &tg->members, quota_next) {
+		list_for_each_entry_safe(thread, tmp, &tg->members, quota_next) {
 			param.rt.prio = thread->cprio;
 			xnsched_set_policy(thread, &xnsched_class_rt, &param);
 		}
