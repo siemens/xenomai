@@ -34,10 +34,20 @@ const char *xenomai_version_string = PACKAGE_NAME \
 #ifdef __PROGRAM__
 
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char *const argv[])
 {
-	return puts(xenomai_version_string) == EOF;
+	int ret = puts(xenomai_version_string) == EOF;
+
+	if (ret == 0 && argc > 1 &&
+	    (strcmp(argv[1], "-a") == 0 || strcmp(argv[1], "--all") == 0))
+		printf("Target: %s\nCompiler: %s\nBuild args: %s\n",
+		       CONFIG_XENO_HOST_STRING,
+		       CONFIG_XENO_COMPILER,
+		       CONFIG_XENO_BUILD_ARGS);
+
+	return ret;
 }
 
 #endif

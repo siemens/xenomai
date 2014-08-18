@@ -15,6 +15,9 @@
 /* config */
 #undef CONFIG_XENO_ASYNC_CANCEL
 
+/* config */
+#undef CONFIG_XENO_BUILD_ARGS
+
 /* Build system alias */
 #undef CONFIG_XENO_BUILD_STRING
 

@@ -90,6 +90,8 @@ AM_MAINTAINER_MODE
 AM_PROG_AS
 AM_PROG_LEX
 
+XENO_BUILD_ARGS="$ac_configure_args"
+
 AC_MSG_CHECKING([for target architecture])
 
 if test x$host_alias = x; then
@@ -536,6 +538,7 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[config]
 AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_UAPI_LEVEL,$CONFIG_XENO_UAPI_LEVEL,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_PREFIX,"$prefix",[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_BUILD_ARGS,"$XENO_BUILD_ARGS",[config])
 
 dnl
 dnl Features we enabled and likely want to find at kernel level.
@@ -791,8 +794,6 @@ if test x"$want_fortify" != xno; then
 	       fi])
 fi
 
-XENO_CONFIG_ARGS="$ac_configure_args"
-
 dnl
 dnl Build the Makefiles
 dnl
@@ -820,8 +821,7 @@ AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_FUSE_CFLAGS)
 AC_SUBST(XENO_TEST_DIR)
 AC_SUBST(XENO_DEMO_DIR)
-
-AC_SUBST(XENO_CONFIG_ARGS)
+AC_SUBST(XENO_BUILD_ARGS)
 
 AC_CONFIG_FILES([ \
 	Makefile \

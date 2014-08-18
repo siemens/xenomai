@@ -85,7 +85,7 @@ dump_info ()
     else
 	    echo "Cobalt core is NOT present on this system"
     fi
-    eval echo "Configure args: @XENO_CONFIG_ARGS@"
+    eval echo "Build args: @XENO_BUILD_ARGS@"
     exit 0
 }
 

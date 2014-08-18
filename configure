@@ -637,7 +637,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
-XENO_CONFIG_ARGS
+XENO_BUILD_ARGS
 XENO_DEMO_DIR
 XENO_TEST_DIR
 XENO_FUSE_CFLAGS
@@ -5378,6 +5378,8 @@ fi
 if test "$LEX" = :; then
   LEX=${am_missing_run}flex
 fi
+
+XENO_BUILD_ARGS="$ac_configure_args"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for target architecture" >&5
 $as_echo_n "checking for target architecture... " >&6; }
@@ -13807,6 +13809,11 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_BUILD_ARGS "$XENO_BUILD_ARGS"
+_ACEOF
+
+
 
 test x$CONFIG_XENO_X86_VSYSCALL = xy &&
 $as_echo "#define CONFIG_XENO_X86_VSYSCALL 1" >>confdefs.h
@@ -14218,9 +14225,6 @@ else
 fi
 
 fi
-
-XENO_CONFIG_ARGS="$ac_configure_args"
-
 
 
 
