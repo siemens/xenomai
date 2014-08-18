@@ -1811,7 +1811,7 @@ EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
  * Map a kernel logical memory range to a virtual user area.
  *
  * This routine is commonly used from a ->mmap() handler of a RTDM
- * driver, for mapping a virtual memory area with no direct physical
+ * driver, for mapping a virtual memory area with a direct physical
  * mapping over the user address space referred to by @a vma.
  *
  * @param[in] vma The VMA descriptor to receive the mapping.
