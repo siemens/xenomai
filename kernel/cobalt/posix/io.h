@@ -16,21 +16,27 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_POSIX_IO_H
+#define _COBALT_POSIX_IO_H
 
-#ifndef _RTDM_SYSCALL_H
-#define _RTDM_SYSCALL_H
+int cobalt_open(int fd, const char __user *u_path, int oflag);
 
-#include <asm/xenomai/syscall.h>
-#include <cobalt/kernel/shadow.h>
-#include <cobalt/uapi/rtdm/syscall.h>
+int cobalt_socket(int fd, int protocol_family,
+		  int socket_type, int protocol);
 
-extern int __rtdm_muxid;
+int cobalt_ioctl(int fd, unsigned int request, void __user *arg);
 
-int __init rtdm_syscall_init(void);
+ssize_t cobalt_read(int fd, void __user *buf, size_t size);
 
-static inline void rtdm_syscall_cleanup(void)
-{
-	xnshadow_unregister_personality(__rtdm_muxid);
-}
+ssize_t cobalt_write(int fd, const void __user *buf, size_t size);
 
-#endif /* _RTDM_SYSCALL_H */
+ssize_t cobalt_recvmsg(int fd, struct msghdr __user *umsg, int flags);
+
+ssize_t cobalt_sendmsg(int fd, struct msghdr __user *umsg, int flags);
+
+int cobalt_close(int fd);
+
+int cobalt_mmap(int fd, struct _rtdm_mmap_request __user *u_rma,
+		void __user **u_addrp);
+
+#endif /* !_COBALT_POSIX_IO_H */

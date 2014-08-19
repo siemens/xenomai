@@ -34,25 +34,14 @@
 
 struct rtdm_fd;
 
-struct rtdm_process {
-#ifdef CONFIG_XENO_OPT_VFILE
-	char name[32];
-	pid_t pid;
-#endif /* CONFIG_XENO_OPT_VFILE */
-};
-
 DECLARE_EXTERN_XNLOCK(rt_fildes_lock);
 DECLARE_EXTERN_XNLOCK(rt_dev_lock);
 
-extern int __rtdm_muxid;
 extern int open_fildes;
 extern struct semaphore nrt_dev_lock;
 extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
-extern struct xnpersonality rtdm_personality;
 
-void cleanup_process_files(struct rtdm_process *owner);
-int rtdm_no_support(void);
 struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r);
 struct rtdm_device *__rtdm_get_protocol_device(int protocol_family, int socket_type);
 

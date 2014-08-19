@@ -899,7 +899,6 @@ AC_CONFIG_FILES([ \
 	include/cobalt/uapi/Makefile \
 	include/cobalt/uapi/asm-generic/Makefile \
 	include/cobalt/uapi/kernel/Makefile \
-	include/cobalt/uapi/rtdm/Makefile \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \

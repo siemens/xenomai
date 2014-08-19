@@ -39,6 +39,7 @@
 #include "event.h"
 #include "select.h"
 #include "timerfd.h"
+#include "io.h"
 
 int cobalt_muxid;
 
@@ -164,6 +165,15 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_event_inquire, cobalt_event_inquire, current),
 	SKINCALL_DEF(sc_cobalt_sched_setconfig_np, cobalt_sched_setconfig_np, current),
 	SKINCALL_DEF(sc_cobalt_sched_getconfig_np, cobalt_sched_getconfig_np, current),
+	SKINCALL_DEF(sc_cobalt_open, cobalt_open, lostage),
+	SKINCALL_DEF(sc_cobalt_socket, cobalt_socket, lostage),
+	SKINCALL_DEF(sc_cobalt_close, cobalt_close, lostage),
+	SKINCALL_DEF(sc_cobalt_mmap, cobalt_mmap, lostage),
+	SKINCALL_DEF(sc_cobalt_ioctl, cobalt_ioctl, probing),
+	SKINCALL_DEF(sc_cobalt_read, cobalt_read, probing),
+	SKINCALL_DEF(sc_cobalt_write, cobalt_write, probing),
+	SKINCALL_DEF(sc_cobalt_recvmsg, cobalt_recvmsg, probing),
+	SKINCALL_DEF(sc_cobalt_sendmsg, cobalt_sendmsg, probing),
 };
 
 struct xnpersonality cobalt_personality = {

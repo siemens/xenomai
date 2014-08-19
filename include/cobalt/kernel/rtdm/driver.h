@@ -138,10 +138,7 @@ enum rtdm_selecttype {
 
 /** @} rtdm_sync */
 
-struct rtdm_process;
-
 struct rtdm_devctx_reserved {
-	struct rtdm_process *owner;
 	void (*close)(struct rtdm_fd *fd);
 };
 

@@ -81,7 +81,16 @@
 #define sc_cobalt_sem_inquire           58
 #define sc_cobalt_event_inquire         59
 #define sc_cobalt_sigqueue		60
-/* 61-74 unimplemented */
+#define sc_cobalt_open			61
+#define sc_cobalt_socket		62
+#define sc_cobalt_close			63
+#define sc_cobalt_ioctl			64
+#define sc_cobalt_read			65
+#define sc_cobalt_write			66
+#define sc_cobalt_recvmsg         	67
+#define sc_cobalt_sendmsg         	68
+#define sc_cobalt_mmap            	69
+/* 70-74 unimplemented */
 #define sc_cobalt_thread_join           75
 #define sc_cobalt_thread_kill           76
 #define sc_cobalt_select                77

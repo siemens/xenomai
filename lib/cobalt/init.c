@@ -28,7 +28,6 @@
 #include <semaphore.h>
 #include <boilerplate/ancillaries.h>
 #include <cobalt/uapi/kernel/heap.h>
-#include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/ticks.h>
 #include <asm/xenomai/syscall.h>
 #include "sem_heap.h"
@@ -53,8 +52,6 @@ int __cobalt_muxid = -1;
 struct sigaction __cobalt_orig_sigdebug;
 
 pthread_t __cobalt_main_ptid;
-
-int __rtdm_muxid = -1;
 
 static void sigill_handler(int sig)
 {
@@ -136,7 +133,6 @@ static void __init_cobalt(void);
 
 void __libcobalt_init(void)
 {
-	struct xnbindreq breq;
 	struct sigaction sa;
 	int muxid, ret;
 
@@ -146,18 +142,11 @@ void __libcobalt_init(void)
 		exit(EXIT_FAILURE);
 	}
 
+	__cobalt_muxid = __xn_mux_shifted_id(muxid);
 	sa.sa_sigaction = cobalt_sigdebug_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGDEBUG, &sa, &__cobalt_orig_sigdebug);
-
-	__cobalt_muxid = __xn_mux_shifted_id(muxid);
-
-	breq.feat_req = XENOMAI_FEAT_DEP;
-	breq.abi_rev = XENOMAI_ABI_REV;
-	muxid = XENOMAI_SYSBIND(RTDM_BINDING_MAGIC, &breq);
-	if (muxid > 0)
-		__rtdm_muxid = __xn_mux_shifted_id(muxid);
 
 	/*
 	 * Upon fork, in case the parent required init deferral, this

@@ -114,7 +114,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 
 	iattr.name = name;
 	iattr.flags = 0;
-	iattr.personality = &rtdm_personality;
+	iattr.personality = &xenomai_personality;
 	iattr.affinity = CPU_MASK_ALL;
 	param.rt.prio = priority;
 

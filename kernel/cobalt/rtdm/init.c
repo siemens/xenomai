@@ -20,7 +20,6 @@
  */
 #include <linux/init.h>
 #include <linux/module.h>
-#include "rtdm/syscall.h"
 #include "rtdm/internal.h"
 
 /**
@@ -41,7 +40,6 @@ MODULE_LICENSE("GPL");
 
 void rtdm_cleanup(void)
 {
-	rtdm_syscall_cleanup();
 	rtdm_proc_cleanup();
 	rtdm_dev_cleanup();
 }
@@ -55,20 +53,10 @@ int __init rtdm_init(void)
 		return ret;
 
 	ret = rtdm_proc_init();
-	if (ret)
-		goto cleanup_dev;
-
-	ret = rtdm_syscall_init();
-	if (ret)
-		goto cleanup_proc;
+	if (ret) {
+		rtdm_dev_cleanup();
+		return ret;
+	}
 
 	return 0;
-
-cleanup_proc:
-	rtdm_proc_cleanup();
-
-cleanup_dev:
-	rtdm_dev_cleanup();
-
-	return ret;
 }

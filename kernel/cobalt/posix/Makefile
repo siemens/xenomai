@@ -5,6 +5,7 @@ posix-y :=		\
 	cond.o		\
 	event.o		\
 	init.o		\
+	io.o		\
 	monitor.o	\
 	mqueue.o	\
 	mutex.o		\

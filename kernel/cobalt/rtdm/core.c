@@ -21,7 +21,6 @@
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/apc.h>
-#include "rtdm/syscall.h"
 #include "rtdm/internal.h"
 #define CREATE_TRACE_POINTS
 #include <trace/events/cobalt-rtdm.h>
@@ -125,10 +124,6 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 	}
 
 	context->reserved.close = device->reserved.close;
-	if (p == &__xnsys_global_ppd)
-		context->reserved.owner = NULL;
-	else
-		context->reserved.owner = xnshadow_get_context(__rtdm_muxid);
 
 	err = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
 	if (err < 0)
