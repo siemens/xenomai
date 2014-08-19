@@ -21,36 +21,23 @@
 #include <asm/xenomai/uapi/features.h>
 #include <asm/xenomai/uapi/syscall.h>
 
-/* Xenomai multiplexer syscall. */
-#define sc_nucleus_mux		555	/* Must fit within 15bit */
-/* Xenomai nucleus syscalls. */
-#define sc_nucleus_bind		 0	/* muxid = xnshadow_sys_bind(magic, &breq) */
-#define sc_nucleus_migrate	 1	/* switched = xnshadow_relax/harden() */
-#define sc_nucleus_info		 2	/* xnshadow_sys_info(&info) */
-#define sc_nucleus_arch		 3	/* r = xnarch_local_syscall(args) */
-#define sc_nucleus_trace	 4	/* r = xntrace_xxx(...) */
-#define sc_nucleus_heap_info	 5
-#define sc_nucleus_current	 6	/* threadh = xnthread_handle(cur) */
-#define sc_nucleus_mayday        7	/* request mayday fixup */
-#define sc_nucleus_backtrace     8	/* collect backtrace (relax tracing) */
-#define sc_nucleus_serialdbg     9	/* output to serial console (__ipipe_serial_debug()) */
+#define cobalt_syscall_tag	555	/* Must fit within 15bit */
 
-struct xnbindreq {
-	int feat_req;		/* Features userland requires. */
-	int abi_rev;		/* ABI revision userland uses. */
-	struct xnfeatinfo feat_ret; /* Features kernel space provides. */
+struct cobalt_bindreq {
+	/** Features userland requires. */
+	int feat_req;
+	/** ABI revision userland uses. */
+	int abi_rev;
+	/** Features the Cobalt core provides. */
+	struct cobalt_featinfo feat_ret;
 };
 
-#define XENOMAI_LINUX_DOMAIN  0
-#define XENOMAI_XENO_DOMAIN   1
+#define COBALT_SECONDARY  0
+#define COBALT_PRIMARY    1
 
-struct xnsysinfo {
+struct cobalt_sysinfo {
 	unsigned long long clockfreq;	/* Real-time clock frequency */
 	unsigned long vdso;		/* Offset of nkvdso in the sem heap */
 };
-
-#define SIGSHADOW_ACTION_HARDEN     1
-#define SIGSHADOW_ACTION_BACKTRACE  2
-#define SIGSHADOW_BACKTRACE_DEPTH   16
 
 #endif /* !_COBALT_UAPI_ASM_GENERIC_SYSCALL_H */

@@ -33,25 +33,28 @@
 #include "current.h"
 #include "internal.h"
 
+int cobalt_extend(unsigned int magic)
+{
+	return XENOMAI_SYSCALL1( sc_cobalt_extend, magic);
+}
+
 void cobalt_thread_harden(void)
 {
 	unsigned long status = cobalt_get_current_mode();
 
 	/* non-RT shadows are NOT allowed to force primary mode. */
 	if ((status & (XNRELAX|XNWEAK)) == XNRELAX)
-		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
+		XENOMAI_SYSCALL1(sc_cobalt_migrate, COBALT_PRIMARY);
 }
 
 int cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 {
-	return XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_thread_getstat, pid, stat);
+	return XENOMAI_SYSCALL2(sc_cobalt_thread_getstat, pid, stat);
 }
 
 pid_t cobalt_thread_pid(pthread_t thread)
 {
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_thread_getpid, thread);
+	return XENOMAI_SYSCALL1(sc_cobalt_thread_getpid, thread);
 }
 
 int cobalt_thread_join(pthread_t thread)
@@ -88,8 +91,7 @@ int cobalt_thread_join(pthread_t thread)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	do
-		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_thread_join, thread);
+		ret = XENOMAI_SYSCALL1(sc_cobalt_thread_join, thread);
 	while (ret == -EINTR);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -122,7 +124,7 @@ int cobalt_serial_debug(const char *fmt, ...)
 	 */
 	va_start(ap, fmt);
 	n = vsnprintf(msg, sizeof(msg), fmt, ap);
-	ret = XENOMAI_SYSCALL2(sc_nucleus_serialdbg, msg, n);
+	ret = XENOMAI_SYSCALL2(sc_cobalt_serialdbg, msg, n);
 	va_end(ap);
 
 	return ret;
@@ -158,9 +160,8 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 	struct cobalt_monitor_data *datp;
 	int ret;
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_monitor_init,
-				mon, clk_id, flags);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_monitor_init,
+			       mon, clk_id, flags);
 	if (ret)
 		return ret;
 
@@ -177,9 +178,7 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 
 int cobalt_monitor_destroy(cobalt_monitor_t *mon)
 {
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_monitor_destroy,
-				 mon);
+	return XENOMAI_SYSCALL1(sc_cobalt_monitor_destroy, mon);
 }
 
 int cobalt_monitor_enter(cobalt_monitor_t *mon)
@@ -215,9 +214,7 @@ syscall:
 	 * interrupt.
 	 */
 	do
-		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_monitor_enter,
-					mon);
+		ret = XENOMAI_SYSCALL1(sc_cobalt_monitor_enter,	mon);
 	while (ret == -EINTR);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -248,9 +245,7 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 		return 0;
 syscall:
 	do
-		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_monitor_exit,
-					mon);
+		ret = XENOMAI_SYSCALL1(sc_cobalt_monitor_exit, mon);
 	while (ret == -EINTR);
 
 	return ret;
@@ -263,9 +258,8 @@ int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL4(__cobalt_muxid,
-				sc_cobalt_monitor_wait,
-				mon, event, ts, &opret);
+	ret = XENOMAI_SYSCALL4(sc_cobalt_monitor_wait,
+			       mon, event, ts, &opret);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -302,9 +296,7 @@ int cobalt_monitor_grant_sync(cobalt_monitor_t *mon,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_monitor_sync,
-				mon);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_monitor_sync, mon);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -333,9 +325,7 @@ int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_monitor_sync,
-				mon);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_monitor_sync, mon);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -364,9 +354,7 @@ int cobalt_monitor_drain_sync(cobalt_monitor_t *mon)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_monitor_sync,
-				mon);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_monitor_sync, mon);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -395,9 +383,7 @@ int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_monitor_sync,
-				mon);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_monitor_sync, mon);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -452,9 +438,7 @@ int cobalt_event_init(cobalt_event_t *event, unsigned long value,
 	struct cobalt_event_data *datp;
 	int ret;
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_event_init,
-				event, value, flags);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_event_init, event, value, flags);
 	if (ret)
 		return ret;
 
@@ -471,9 +455,7 @@ int cobalt_event_init(cobalt_event_t *event, unsigned long value,
 
 int cobalt_event_destroy(cobalt_event_t *event)
 {
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_event_destroy,
-				 event);
+	return XENOMAI_SYSCALL1(sc_cobalt_event_destroy, event);
 }
 
 int cobalt_event_post(cobalt_event_t *event, unsigned long bits)
@@ -488,8 +470,7 @@ int cobalt_event_post(cobalt_event_t *event, unsigned long bits)
 	if ((datp->flags & COBALT_EVENT_PENDED) == 0)
 		return 0;
 
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_event_sync, event);
+	return XENOMAI_SYSCALL1(sc_cobalt_event_sync, event);
 }
 
 int cobalt_event_wait(cobalt_event_t *event,
@@ -500,9 +481,8 @@ int cobalt_event_wait(cobalt_event_t *event,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
-				sc_cobalt_event_wait,
-				event, bits, bits_r, mode, timeout);
+	ret = XENOMAI_SYSCALL5(sc_cobalt_event_wait,
+			       event, bits, bits_r, mode, timeout);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -521,9 +501,8 @@ int cobalt_event_inquire(cobalt_event_t *event,
 			 struct cobalt_event_info *info,
 			 pid_t *waitlist, size_t waitsz)
 {
-	return XENOMAI_SKINCALL4(__cobalt_muxid,
-				 sc_cobalt_event_inquire, event,
-				 info, waitlist, waitsz);
+	return XENOMAI_SYSCALL4(sc_cobalt_event_inquire, event,
+				info, waitlist, waitsz);
 }
 
 int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
@@ -531,15 +510,12 @@ int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	
-	return XENOMAI_SKINCALL4(__cobalt_muxid,
-				 sc_cobalt_sem_inquire, _sem,
-				 info, waitlist, waitsz);
+	return XENOMAI_SYSCALL4(sc_cobalt_sem_inquire, _sem,
+				info, waitlist, waitsz);
 }
 
 int cobalt_sched_weighted_prio(int policy,
 			       const struct sched_param_ex *param_ex)
 {
-	return XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_sched_weightprio, policy,
-				 param_ex);
+	return XENOMAI_SYSCALL2(sc_cobalt_sched_weightprio, policy, param_ex);
 }

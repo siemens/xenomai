@@ -22,7 +22,6 @@
 #include <linux/signal.h>
 #include <linux/jiffies.h>
 #include <linux/err.h>
-#include <cobalt/uapi/signal.h>
 #include "internal.h"
 #include "thread.h"
 #include "sched.h"
@@ -205,11 +204,11 @@ void cobalt_thread_map(struct xnthread *curr)
 	struct cobalt_thread *thread;
 
 	thread = container_of(curr, struct cobalt_thread, threadbase);
-	thread->process = cobalt_process_context();
+	thread->process = cobalt_current_process();
 	XENO_BUGON(NUCLEUS, thread->process == NULL);
 }
 
-struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
+struct xnthread_personality *cobalt_thread_exit(struct xnthread *curr)
 {
 	struct cobalt_thread *thread;
 	spl_t s;
@@ -231,7 +230,7 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	return NULL;
 }
 
-struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie)
+struct xnthread_personality *cobalt_thread_finalize(struct xnthread *zombie)
 {
 	struct cobalt_thread *thread;
 
@@ -420,7 +419,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
 	const int valid_flags = XNLOCK|XNWARN|XNTRAPLB;
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 	int old;
 
 	/*
@@ -519,14 +518,14 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 
 int cobalt_thread_create(unsigned long pth, int policy,
 			 struct sched_param_ex __user *u_param,
-			 int shifted_muxid,
+			 int xid,
 			 unsigned long __user *u_window_offset)
 {
 	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
 	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
-	int ret, muxid;
+	int ret;
 
 	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
@@ -545,7 +544,7 @@ int cobalt_thread_create(unsigned long pth, int policy,
 	if (ret)
 		return ret;
 
-	ret = xnshadow_map_user(&thread->threadbase, u_window_offset);
+	ret = cobalt_map_user(&thread->threadbase, u_window_offset);
 	if (ret)
 		goto fail;
 
@@ -556,13 +555,12 @@ int cobalt_thread_create(unsigned long pth, int policy,
 
 	thread->hkey = hkey;
 
-	muxid = __xn_mux_unshifted_id(shifted_muxid);
-	if (muxid > 0 && xnshadow_push_personality(muxid) == NULL) {
+	if (xid > 0 && cobalt_push_personality(xid) == NULL) {
 		ret = -EINVAL;
 		goto fail;
 	}
 
-	return xnshadow_harden();
+	return xnthread_harden();
 fail:
 	xnthread_cancel(&thread->threadbase);
 
@@ -584,7 +582,7 @@ cobalt_thread_shadow(struct task_struct *p,
 	if (ret)
 		return ERR_PTR(-ret);
 
-	ret = xnshadow_map_user(&thread->threadbase, u_window_offset);
+	ret = cobalt_map_user(&thread->threadbase, u_window_offset);
 	if (ret)
 		goto fail;
 
@@ -595,7 +593,7 @@ cobalt_thread_shadow(struct task_struct *p,
 
 	thread->hkey = *hkey;
 
-	xnshadow_harden();
+	xnthread_harden();
 
 	return thread;
 fail:
@@ -741,7 +739,7 @@ int cobalt_thread_stat(pid_t pid,
 	trace_cobalt_pthread_stat(pid);
 
 	if (pid == 0) {
-		thread = xnshadow_current();
+		thread = xnthread_current();
 		if (thread == NULL)
 			return -EPERM;
 		xnlock_get_irqsave(&nklock, s);
@@ -783,11 +781,11 @@ int cobalt_thread_extend(struct cobalt_extension *ext,
 			 void *priv)
 {
 	struct cobalt_thread *thread = cobalt_current_thread();
-	struct xnpersonality *prev;
+	struct xnthread_personality *prev;
 
 	trace_cobalt_pthread_extend(thread->hkey.u_pth, ext->core.name);
 
-	prev = xnshadow_push_personality(ext->core.muxid);
+	prev = cobalt_push_personality(ext->core.xid);
 	if (prev == NULL)
 		return -EINVAL;
 
@@ -804,7 +802,7 @@ void cobalt_thread_restrict(void)
 
 	trace_cobalt_pthread_restrict(thread->hkey.u_pth,
 		      xnthread_personality(&thread->threadbase)->name);
-	xnshadow_pop_personality(&cobalt_personality);
+	cobalt_pop_personality(&cobalt_personality);
 	cobalt_set_extref(&thread->extref, NULL, NULL);
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_restrict);

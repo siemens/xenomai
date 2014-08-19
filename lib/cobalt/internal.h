@@ -50,14 +50,12 @@ void cobalt_default_mutexattr_init(void);
 
 void cobalt_default_condattr_init(void);
 
-struct xnfeatinfo;
+struct cobalt_featinfo;
 
-void cobalt_check_features(struct xnfeatinfo *finfo);
+void cobalt_check_features(struct cobalt_featinfo *finfo);
 
 extern pthread_t __cobalt_main_ptid;
 
 extern struct sigaction __cobalt_orig_sigdebug;
-
-extern int __cobalt_muxid;
 
 #endif /* _LIB_COBALT_INTERNAL_H */

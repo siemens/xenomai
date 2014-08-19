@@ -98,9 +98,7 @@ COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
 	int ret;
 
-	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_clock_getres,
-				 clock_id, tp);
+	ret = -XENOMAI_SYSCALL2(sc_cobalt_clock_getres, clock_id, tp);
 	if (ret) {
 		errno = ret;
 		return -1;
@@ -198,10 +196,7 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 		tp->tv_nsec = rem;
 		return 0;
 	default:
-		ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-					 sc_cobalt_clock_gettime,
-					 clock_id,
-					 tp);
+		ret = -XENOMAI_SYSCALL2(sc_cobalt_clock_gettime, clock_id, tp);
 	}
 
 	if (ret) {
@@ -236,9 +231,7 @@ COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 {
 	int ret;
 
-	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_clock_settime,
-				 clock_id, tp);
+	ret = -XENOMAI_SYSCALL2(sc_cobalt_clock_settime, clock_id, tp);
 	if (ret) {
 		errno = ret;
 		return -1;
@@ -294,9 +287,8 @@ COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = -XENOMAI_SKINCALL4(__cobalt_muxid,
-				 sc_cobalt_clock_nanosleep,
-				 clock_id, flags, rqtp, rmtp);
+	ret = -XENOMAI_SYSCALL4(sc_cobalt_clock_nanosleep,
+				clock_id, flags, rqtp, rmtp);
 
 	pthread_setcanceltype(oldtype, NULL);
 

@@ -19,9 +19,9 @@
 #include <linux/types.h>
 #include <linux/ipipe.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
-#include <asm/xenomai/syscall.h>
 
 void xnarch_setup_mayday_page(void *page)
 {

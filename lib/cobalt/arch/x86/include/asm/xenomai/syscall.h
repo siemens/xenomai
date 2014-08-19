@@ -87,7 +87,7 @@ static inline void __xn_get_ebp(void **dest)
 	asm volatile("movl %%ebp, %0": "=m"(*dest));
 }
 
-#define XENOMAI_SYS_MUX(nr, op, args...)			\
+#define XENOMAI_DO_SYSCALL(nr, op, args...)			\
 ({								\
 	unsigned __resultvar;					\
 	asm volatile (						\
@@ -96,12 +96,12 @@ static inline void __xn_get_ebp(void **dest)
 		DOSYSCALL					\
 		RESTOREARGS_##nr				\
 		: "=a" (__resultvar)				\
-		: "i" (__xn_mux_code(0, op)) ASMFMT_##nr(args)	\
+		: "i" (__xn_syscode(op)) ASMFMT_##nr(args)	\
 		: "memory", "cc");				\
 	(int) __resultvar;					\
 })
 
-#define XENOMAI_SYS_MUX_SAFE(nr, op, args...)			\
+#define XENOMAI_DO_SYSCALL_SAFE(nr, op, args...)		\
 ({								\
 	unsigned __resultvar;					\
 	asm volatile (						\
@@ -110,22 +110,7 @@ static inline void __xn_get_ebp(void **dest)
 		DOSYSCALLSAFE					\
 		RESTOREARGS_##nr				\
 		: "=a" (__resultvar)				\
-		: "i" (__xn_mux_code(0, op)) ASMFMT_##nr(args)	\
-		: "memory", "cc");				\
-	(int) __resultvar;					\
-})
-
-#define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...)		\
-({								\
-	int __muxcode = __xn_mux_code(shifted_id, op);		\
-	unsigned __resultvar;					\
-	asm volatile (						\
-		LOADARGS_##nr					\
-		"movl %1, %%eax\n\t"				\
-		DOSYSCALL					\
-		RESTOREARGS_##nr				\
-		: "=a" (__resultvar)				\
-		: "m" (__muxcode) ASMFMT_##nr(args)		\
+		: "i" (__xn_syscode(op)) ASMFMT_##nr(args)	\
 		: "memory", "cc");				\
 	(int) __resultvar;					\
 })
@@ -159,8 +144,8 @@ static inline void __xn_get_ebp(void **dest)
 #define ASMFMT_5(arg1, arg2, arg3, arg4, arg5) \
 	, "a" (arg1), "c" (arg2), "d" (arg3), "S" (arg4), "D" (arg5)
 
-#define XENOMAI_SYSBIND(a1,a2) \
-	XENOMAI_SYS_MUX_SAFE(2,sc_nucleus_bind,a1,a2)
+#define XENOMAI_SYSBIND(breq) \
+	XENOMAI_DO_SYSCALL_SAFE(1,sc_cobalt_bind,breq)
 
 #else /* x86_64 */
 
@@ -225,29 +210,19 @@ static inline void __xn_get_ebp(void **dest)
 	(int) __resultvar;				\
 })
 
-#define XENOMAI_SYS_MUX(nr, op, args...) \
-	DO_SYSCALL(__xn_mux_code(0,op), nr, args)
+#define XENOMAI_DO_SYSCALL(nr, op, args...) \
+	DO_SYSCALL(__xn_syscode(op), nr, args)
 
-#define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...) \
-	DO_SYSCALL(__xn_mux_code(shifted_id,op), nr, args)
-
-#define XENOMAI_SYSBIND(a1,a2) \
-	XENOMAI_SYS_MUX(2,sc_nucleus_bind,a1,a2)
+#define XENOMAI_SYSBIND(breq) \
+	XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
 #endif /* x86_64 */
 
-#define XENOMAI_SYSCALL0(op)			XENOMAI_SYS_MUX(0,op)
-#define XENOMAI_SYSCALL1(op,a1)			XENOMAI_SYS_MUX(1,op,a1)
-#define XENOMAI_SYSCALL2(op,a1,a2)		XENOMAI_SYS_MUX(2,op,a1,a2)
-#define XENOMAI_SYSCALL3(op,a1,a2,a3)		XENOMAI_SYS_MUX(3,op,a1,a2,a3)
-#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)	XENOMAI_SYS_MUX(4,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5)	XENOMAI_SYS_MUX(5,op,a1,a2,a3,a4,a5)
-
-#define XENOMAI_SKINCALL0(id,op)		XENOMAI_SKIN_MUX(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)		XENOMAI_SKIN_MUX(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)		XENOMAI_SKIN_MUX(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)	XENOMAI_SKIN_MUX(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)	XENOMAI_SKIN_MUX(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)	XENOMAI_SKIN_MUX(5,id,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSCALL0(op)			XENOMAI_DO_SYSCALL(0,op)
+#define XENOMAI_SYSCALL1(op,a1)			XENOMAI_DO_SYSCALL(1,op,a1)
+#define XENOMAI_SYSCALL2(op,a1,a2)		XENOMAI_DO_SYSCALL(2,op,a1,a2)
+#define XENOMAI_SYSCALL3(op,a1,a2,a3)		XENOMAI_DO_SYSCALL(3,op,a1,a2,a3)
+#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)	XENOMAI_DO_SYSCALL(4,op,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5)	XENOMAI_DO_SYSCALL(5,op,a1,a2,a3,a4,a5)
 
 #endif /* !_LIB_COBALT_POWERPC_SYSCALL_H */

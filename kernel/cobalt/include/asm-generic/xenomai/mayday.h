@@ -19,6 +19,7 @@
 #ifndef _COBALT_ASM_GENERIC_MAYDAY_H
 #define _COBALT_ASM_GENERIC_MAYDAY_H
 
+struct xnarchtcb;
 struct task_struct;
 struct pt_regs;
 

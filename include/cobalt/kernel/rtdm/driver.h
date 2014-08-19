@@ -37,7 +37,6 @@
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/apc.h>
-#include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/init.h>
 #include <cobalt/kernel/ancillaries.h>
 #include <cobalt/kernel/tree.h>
@@ -50,6 +49,7 @@
 #ifdef CONFIG_PCI
 #include <asm-generic/xenomai/pci_ids.h>
 #endif /* CONFIG_PCI */
+#include <asm/xenomai/syscall.h>
 
 struct rtdm_dev_context;
 typedef struct xnselector rtdm_selector_t;
@@ -947,7 +947,7 @@ static inline void rtdm_task_destroy(rtdm_task_t *task)
 
 static inline int rtdm_task_should_stop(void)
 {
-	return xnthread_test_info(xnshadow_current(), XNCANCELD);
+	return xnthread_test_info(xnthread_current(), XNCANCELD);
 }
 
 void rtdm_task_join(rtdm_task_t *task);
@@ -984,7 +984,7 @@ static inline int rtdm_task_unblock(rtdm_task_t *task)
 
 static inline rtdm_task_t *rtdm_task_current(void)
 {
-	return xnshadow_current();
+	return xnthread_current();
 }
 
 static inline int rtdm_task_wait_period(void)
@@ -1217,7 +1217,7 @@ static inline int rtdm_rt_capable(struct rtdm_fd *fd)
 	if (!rtdm_fd_is_user(fd))
 		return !xnsched_root_p();
 
-	return xnshadow_thread(current) != NULL;
+	return xnthread_current() != NULL;
 }
 
 static inline int rtdm_in_rt_context(void)

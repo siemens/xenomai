@@ -43,7 +43,7 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
 	xnsynch_destroy(&cond->synchbase);
 	cobalt_mark_deleted(cond);
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,
+	xnheap_free(&cobalt_ppd_get(cond->attr.pshared)->sem_heap,
 		    cond->pending_signals);
 	xnfree(cond);
 }
@@ -61,7 +61,7 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 	if (cond == NULL)
 		return -ENOMEM;
 
-	sys_ppd = xnsys_ppd_get(attr->pshared);
+	sys_ppd = cobalt_ppd_get(attr->pshared);
 	cond->pending_signals = (unsigned long *)
 		xnheap_alloc(&sys_ppd->sem_heap,
 			     sizeof(*(cond->pending_signals)));
@@ -122,7 +122,7 @@ do_init:
 
   err_free_pending_signals:
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,
+	xnheap_free(&cobalt_ppd_get(cond->attr.pshared)->sem_heap,
 		    cond->pending_signals);
   err_free_cond:
 	xnfree(cond);
@@ -322,7 +322,7 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 			      unsigned int timed,
 			      struct timespec __user *u_ts)
 {
-	struct xnthread *cur = xnshadow_current();
+	struct xnthread *cur = xnthread_current();
 	struct cobalt_cond *cnd;
 	struct cobalt_mutex *mx;
 	struct mutex_dat *datp;
@@ -389,7 +389,7 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
 			      struct cobalt_mutex_shadow __user *u_mx)
 {
-	struct xnthread *cur = xnshadow_current();
+	struct xnthread *cur = xnthread_current();
 	struct cobalt_cond *cnd;
 	struct cobalt_mutex *mx;
 	xnhandle_t handle;

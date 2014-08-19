@@ -31,7 +31,7 @@
 #define XNARCH_HAVE_LLMULSHFT    1
 #define XNARCH_HAVE_NODIV_LLIMD  1
 
-struct xnfeatinfo_archdep { /* no arch-specific feature */ };
+struct cobalt_featinfo_archdep { /* no arch-specific feature */ };
 
 #include <cobalt/uapi/asm-generic/features.h>
 

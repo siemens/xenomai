@@ -91,10 +91,10 @@
 	register long int r7 asm ("%r7") = (long int) (_arg4);	\
 	register long int r0 asm ("%r0") = (long int) (_arg5)
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
+#define XENOMAI_DO_SYSCALL(nr, op, args...)				\
 	({								\
 		unsigned long int __ret;				\
-		register long int r3 asm ("%r3") = __xn_mux_code(shifted_id, op); \
+		register long int r3 asm ("%r3") = __xn_syscode(op);	\
 		SUBSTITUTE_ARGS_##nr(args);				\
 									\
 		asm volatile (SYSCALL_INST_STR##nr SYSCALL_INST_PAD	\
@@ -105,19 +105,12 @@
 		(int) __ret;						\
 	})
 
-#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
-#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
-#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
-#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
-#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2,a3,a4)        XENOMAI_DO_SYSCALL(4,0,sc_nucleus_bind,a1,a2,a3,a4)
-
-#define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)          XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,op)
+#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,op,a1)
+#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,op,a1,a2)
+#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,op,a1,a2,a3)
+#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,op,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSBIND(breq)        	    XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
 #endif /* !_LIB_COBALT_SH_SYSCALL_H */

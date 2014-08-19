@@ -37,7 +37,7 @@ struct __xn_full_tscinfo __xn_tscinfo = {
 	},
 };
 
-void cobalt_check_features(struct xnfeatinfo *finfo)
+void cobalt_check_features(struct cobalt_featinfo *finfo)
 {
 	unsigned long phys_addr;
 	unsigned page_size;
@@ -47,7 +47,7 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 	if (__xn_tscinfo.kinfo.counter != NULL)
 		return;
 
-	err = XENOMAI_SYSCALL2(sc_nucleus_arch,
+	err = XENOMAI_SYSCALL2(sc_cobalt_arch,
 			       XENOMAI_SYSARCH_TSCINFO, &__xn_tscinfo.kinfo);
 	if (err) {
 		report_error("Your board/configuration does not "

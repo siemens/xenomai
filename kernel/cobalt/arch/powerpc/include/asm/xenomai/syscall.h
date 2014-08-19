@@ -26,7 +26,7 @@
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_reg_mux(regs)    ((regs)->gpr[0])
+#define __xn_reg_sys(regs)    ((regs)->gpr[0])
 #define __xn_reg_rval(regs)   ((regs)->gpr[3])
 #define __xn_reg_arg1(regs)   ((regs)->gpr[3])
 #define __xn_reg_arg2(regs)   ((regs)->gpr[4])
@@ -36,11 +36,10 @@
 #define __xn_reg_pc(regs)     ((regs)->nip)
 #define __xn_reg_sp(regs)     ((regs)->gpr[1])
 
-#define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == sc_nucleus_mux)
-#define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 16) & 0xff)
-#define __xn_mux_op(regs)           ((__xn_reg_mux(regs) >> 24) & 0xff)
+#define __xn_syscall_p(regs)        ((__xn_reg_sys(regs) & 0xffff) == cobalt_syscall_tag)
+#define __xn_syscall(regs)           ((__xn_reg_sys(regs) >> 24) & 0xff)
 
-#define __xn_linux_mux_p(regs, nr)  (__xn_reg_mux(regs) == (nr))
+#define __xn_syslinux_p(regs, nr)  (__xn_reg_sys(regs) == (nr))
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {

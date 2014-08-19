@@ -40,9 +40,9 @@ struct xnvdso *vdso;
 unsigned long cobalt_sem_heap[2] = { 0, 0 };
 
 static pthread_once_t init_private_heap = PTHREAD_ONCE_INIT;
-static struct xnheap_desc private_hdesc;
+static struct cobalt_heapstat private_hdesc;
 
-void *cobalt_map_heap(struct xnheap_desc *hd)
+void *cobalt_map_heap(struct cobalt_heapstat *hd)
 {
 	int fd, ret;
 	void *addr;
@@ -71,11 +71,11 @@ void *cobalt_map_heap(struct xnheap_desc *hd)
 
 static void *map_sem_heap(unsigned int shared)
 {
-	struct xnheap_desc global_hdesc, *hdesc;
+	struct cobalt_heapstat global_hdesc, *hdesc;
 	int ret;
 
 	hdesc = shared ? &global_hdesc : &private_hdesc;
-	ret = XENOMAI_SYSCALL2(sc_nucleus_heap_info, hdesc, shared);
+	ret = XENOMAI_SYSCALL2(sc_cobalt_heap_getstat, hdesc, shared);
 	if (ret < 0) {
 		report_error("cannot locate %s heap: %s",
 			     shared ? "shared" : "private",
@@ -114,10 +114,10 @@ static void unmap_on_fork(void)
 
 static void cobalt_init_vdso(void)
 {
-	struct xnsysinfo sysinfo;
+	struct cobalt_sysinfo sysinfo;
 	int ret;
 
-	ret = XENOMAI_SYSCALL1(sc_nucleus_info, &sysinfo);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_info, &sysinfo);
 	if (ret < 0) {
 		report_error("sysinfo failed: %s", strerror(-ret));
 		exit(EXIT_FAILURE);

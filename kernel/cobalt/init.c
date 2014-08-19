@@ -130,7 +130,6 @@ static void sys_shutdown(void)
 	spl_t s;
 
 	disable_timesource();
-	xnshadow_release_events();
 #ifdef CONFIG_SMP
 	ipipe_free_irq(&xnsched_realtime_domain, IPIPE_RESCHEDULE_IPI);
 #endif
@@ -366,7 +365,6 @@ static __init int sys_init(void)
 
 	nkpanic = __xnsys_fatal;
 	smp_wmb();
-	xnshadow_grab_events();
 
 	ret = enable_timesource();
 	if (ret)
@@ -422,13 +420,9 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_pipe;
 
-	ret = xnshadow_mount();
-	if (ret)
-		goto cleanup_select;
-
 	ret = sys_init();
 	if (ret)
-		goto cleanup_shadow;
+		goto cleanup_select;
 
 	ret = rtdm_init();
 	if (ret)
@@ -452,8 +446,6 @@ cleanup_rtdm:
 	rtdm_cleanup();
 cleanup_sys:
 	sys_shutdown();
-cleanup_shadow:
-	xnshadow_cleanup();
 cleanup_select:
 	xnselect_umount();
 cleanup_pipe:

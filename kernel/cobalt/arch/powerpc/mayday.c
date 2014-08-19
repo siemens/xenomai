@@ -20,9 +20,9 @@
 #include <linux/types.h>
 #include <linux/ipipe.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
-#include <asm/xenomai/syscall.h>
 
 void xnarch_setup_mayday_page(void *page)
 {
@@ -39,7 +39,7 @@ void xnarch_setup_mayday_page(void *page)
 	 */
 	u32 mux, insn[4];
 
-	mux = __xn_mux_code(0, sc_nucleus_mayday);
+	mux = __xn_syscode(sc_cobalt_mayday);
 	insn[0] = 0x3c000000 | (mux >> 16);
 	insn[1] = 0x60000000 | (mux & 0xffff);
 	insn[2] = 0x44000002;

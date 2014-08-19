@@ -31,9 +31,7 @@ COBALT_IMPL(int, timerfd_create, (int clockid, int flags))
 	if (fd == -1)
 		return fd;
 
-	ret = -XENOMAI_SKINCALL3(__cobalt_muxid, 
-				sc_cobalt_timerfd_create,
-				fd, clockid, flags);
+	ret = -XENOMAI_SYSCALL3(sc_cobalt_timerfd_create, fd, clockid, flags);
 	if (ret == 0)
 		return fd;
 	
@@ -48,8 +46,7 @@ COBALT_IMPL(int, timerfd_settime, (int fd, int flags,
 {
 	int ret;
 	
-	ret = -XENOMAI_SKINCALL4(__cobalt_muxid,
-				sc_cobalt_timerfd_settime,
+	ret = -XENOMAI_SYSCALL4(sc_cobalt_timerfd_settime,
 				fd, flags, new_value, old_value);
 	if (ret == 0)
 		return ret;
@@ -62,9 +59,7 @@ COBALT_IMPL(int, timerfd_gettime, (int fd, struct itimerspec *curr_value))
 {
 	int ret;
 	
-	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				sc_cobalt_timerfd_gettime,
-				fd, curr_value);
+	ret = -XENOMAI_SYSCALL2(sc_cobalt_timerfd_gettime, fd, curr_value);
 	if (ret == 0)
 		return ret;
 	

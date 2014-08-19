@@ -20,7 +20,7 @@
 
 #define XNFEAT_STRING_LEN 64
 
-struct xnfeatinfo {
+struct cobalt_featinfo {
 	unsigned long feat_all;	/* Available feature set. */
 	char feat_all_s[XNFEAT_STRING_LEN];
 	unsigned long feat_man;	/* Mandatory features (when requested). */
@@ -29,7 +29,7 @@ struct xnfeatinfo {
 	char feat_req_s[XNFEAT_STRING_LEN];
 	unsigned long feat_mis;	/* Missing features. */
 	char feat_mis_s[XNFEAT_STRING_LEN];
-	struct xnfeatinfo_archdep feat_arch; /* Arch-dep extension. */
+	struct cobalt_featinfo_archdep feat_arch; /* Arch-dep extension. */
 	unsigned long feat_abirev; /* ABI revision level. */
 };
 

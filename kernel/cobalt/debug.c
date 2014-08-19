@@ -21,10 +21,14 @@
 #include <linux/ctype.h>
 #include <linux/jhash.h>
 #include <linux/mm.h>
+#include <linux/signal.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/ppd.h>
+#include <cobalt/uapi/signal.h>
+#include <asm/xenomai/syscall.h>
+#include "posix/process.h"
 #include "debug.h"
 
 /**
@@ -179,9 +183,9 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
  * Implementation-wise, xndebug_notify_relax and xndebug_trace_relax
  * routines are paired: first, xndebug_notify_relax sends a SIGSHADOW
  * request to userland when a relax spot is detected from
- * xnshadow_relax, which should then trigger a call back to
+ * xnthread_relax, which should then trigger a call back to
  * xndebug_trace_relax with the complete backtrace information, as
- * seen from userland (via the internal sc_nucleus_backtrace
+ * seen from userland (via the internal sc_cobalt_backtrace
  * syscall). All this runs on behalf of the relaxing thread, so we can
  * make a number of convenient assumptions (such as being able to scan
  * the current vma list to get detailed information about the
@@ -190,7 +194,7 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
 
 void xndebug_notify_relax(struct xnthread *thread, int reason)
 {
-	xnshadow_send_sig(thread, SIGSHADOW,
+	xnthread_signal(thread, SIGSHADOW,
 			  sigshadow_int(SIGSHADOW_ACTION_BACKTRACE, reason));
 }
 
@@ -210,7 +214,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 	char *tmp;
 	u32 hash;
 
-	thread = xnshadow_current();
+	thread = xnthread_current();
 	if (thread == NULL)
 		return;		/* Can't be, right? What a mess. */
 	/*
@@ -621,7 +625,7 @@ void xndebug_shadow_init(struct xnthread *thread)
 	struct xnsys_ppd *sys_ppd;
 	size_t len;
 
-	sys_ppd = xnsys_ppd_get(0);
+	sys_ppd = cobalt_ppd_get(0);
 	/*
 	 * The caller is current, so we know for sure that sys_ppd
 	 * will still be valid after we dropped the lock.

@@ -20,11 +20,13 @@
 #define _COBALT_IPIPE_THREAD_INFO_H
 
 struct xnthread;
-struct xnshadow_process;
+struct cobalt_process;
 
 struct ipipe_threadinfo {
+	/* Core thread backlink. */
 	struct xnthread *thread;
-	struct xnshadow_process *process;
+	/* User process backlink. NULL for core threads. */
+	struct cobalt_process *process;
 };
 
 static inline void __ipipe_init_threadinfo(struct ipipe_threadinfo *p)

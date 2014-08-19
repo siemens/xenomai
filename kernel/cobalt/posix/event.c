@@ -66,7 +66,7 @@ int cobalt_event_init(struct cobalt_event_shadow __user *u_event,
 		return -ENOMEM;
 
 	pshared = (flags & COBALT_EVENT_SHARED) != 0;
-	heap = &xnsys_ppd_get(pshared)->sem_heap;
+	heap = &cobalt_ppd_get(pshared)->sem_heap;
 	datp = xnheap_alloc(heap, sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(event);
@@ -256,7 +256,7 @@ static void cobalt_event_destroy_inner(struct cobalt_event *event,
 	pshared = (event->flags & COBALT_EVENT_SHARED) != 0;
 
 	xnlock_put_irqrestore(&nklock, s);
-	heap = &xnsys_ppd_get(pshared)->sem_heap;
+	heap = &cobalt_ppd_get(pshared)->sem_heap;
 	xnheap_free(heap, event->data);
 	xnfree(event);
 	xnlock_get_irqsave(&nklock, s);

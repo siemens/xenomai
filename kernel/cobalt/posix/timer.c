@@ -23,6 +23,7 @@
 #include "thread.h"
 #include "timer.h"
 #include "clock.h"
+#include "signal.h"
 
 void cobalt_timer_handler(struct xntimer *xntimer)
 {
@@ -131,7 +132,7 @@ static inline int timer_create(clockid_t clockid,
 	timer_t timer_id;
 	spl_t s;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	if (cc == NULL)
 		return -EPERM;
 
@@ -218,7 +219,7 @@ timer_delete(timer_t timerid)
 	int ret = 0;
 	spl_t s;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	if (cc == NULL)
 		return -EPERM;
 
@@ -380,7 +381,7 @@ timer_settime(timer_t timerid, int flags,
 	int ret;
 	spl_t s;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	XENO_BUGON(COBALT, cc == NULL);
 
 	xnlock_get_irqsave(&nklock, s);
@@ -418,7 +419,7 @@ static inline int timer_gettime(timer_t timerid, struct itimerspec *value)
 	struct cobalt_process *cc;
 	spl_t s;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	if (cc == NULL)
 		return -EPERM;
 
@@ -513,7 +514,7 @@ int cobalt_timer_getoverrun(timer_t timerid)
 	int overruns;
 	spl_t s;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	if (cc == NULL)
 		return -EPERM;
 
@@ -539,7 +540,7 @@ int cobalt_timer_deliver(timer_t timerid) /* nklocked, IRQs off. */
 	struct cobalt_timer *timer;
 	xnticks_t now;
 
-	timer = cobalt_timer_by_id(cobalt_process_context(), timerid);
+	timer = cobalt_timer_by_id(cobalt_current_process(), timerid);
 	if (timer == NULL)
 		/* Killed before ultimate delivery, who cares then? */
 		return 0;

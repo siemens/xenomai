@@ -21,7 +21,7 @@
 #include <cobalt/uapi/syscall.h>
 #include <errno.h>
 
-#define __emit_syscall0(muxcode)				\
+#define __emit_syscall0(syscode)				\
 	({							\
 		long __ret;					\
 								\
@@ -30,13 +30,13 @@
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode)				\
+			: "r"(syscode)				\
 			: "r2", "memory"			\
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall1(muxcode, a1)				\
+#define __emit_syscall1(syscode, a1)				\
 	({							\
 		long __ret;					\
 								\
@@ -46,14 +46,14 @@
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode),				\
+			: "r"(syscode),				\
 			  "r" ((long)a1)			\
 			: "r2", "r4", "memory"			\
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall2(muxcode, a1, a2)			\
+#define __emit_syscall2(syscode, a1, a2)			\
 	({							\
 		long __ret;					\
 								\
@@ -64,7 +64,7 @@
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode),				\
+			: "r"(syscode),				\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2)			\
 			: "r2", "r4", "r5", "memory"		\
@@ -72,7 +72,7 @@
 		__ret;						\
 	})
 
-#define __emit_syscall3(muxcode, a1, a2, a3)			\
+#define __emit_syscall3(syscode, a1, a2, a3)			\
 	({							\
 		long __ret;					\
 								\
@@ -84,7 +84,7 @@
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode),				\
+			: "r"(syscode),				\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3)			\
@@ -93,7 +93,7 @@
 		__ret;						\
 	})
 
-#define __emit_syscall4(muxcode, a1, a2, a3, a4)		\
+#define __emit_syscall4(syscode, a1, a2, a3, a4)		\
 	({							\
 		long __ret;					\
 								\
@@ -106,7 +106,7 @@
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode),				\
+			: "r"(syscode),				\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
@@ -116,7 +116,7 @@
 		__ret;						\
 	})
 
-#define __emit_syscall5(muxcode, a1, a2, a3, a4, a5)		\
+#define __emit_syscall5(syscode, a1, a2, a3, a4, a5)		\
 	({							\
 		long __ret;					\
 								\
@@ -130,7 +130,7 @@
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode),				\
+			: "r"(syscode),				\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
@@ -141,23 +141,16 @@
 		__ret;						\
 	})
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
-    __emit_syscall##nr(__xn_mux_code(shifted_id,op), ##args)
+#define XENOMAI_DO_SYSCALL(nr, op, args...)		\
+    __emit_syscall##nr(__xn_syscode(op), ##args)
 
-#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
-#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
-#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
-#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
-#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2)		    XENOMAI_DO_SYSCALL(2,0,sc_nucleus_bind,a1,a2)
-
-#define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)          XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,op)
+#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,op,a1)
+#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,op,a1,a2)
+#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,op,a1,a2,a3)
+#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,op,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSBIND(breq)		    XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
 /*
  * uClibc does not always provide the following symbols for this arch;

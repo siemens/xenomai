@@ -44,6 +44,11 @@
 #define sigshadow_arg(code)		(((code) >> 8) & 0xff)
 #define sigshadow_int(action, arg)	((action) | ((arg) << 8))
 
+/* SIGSHADOW action codes. */
+#define SIGSHADOW_ACTION_HARDEN		1
+#define SIGSHADOW_ACTION_BACKTRACE	2
+#define SIGSHADOW_BACKTRACE_DEPTH	16
+
 #define SIGDEBUG			SIGXCPU
 #define sigdebug_code(si)		((si)->si_value.sival_int)
 #define sigdebug_reason(si)		(sigdebug_code(si) & 0xff)

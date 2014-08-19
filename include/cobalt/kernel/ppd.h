@@ -19,18 +19,9 @@
 #ifndef _COBALT_KERNEL_PPD_H
 #define _COBALT_KERNEL_PPD_H
 
-#include <cobalt/kernel/list.h>
-#include <cobalt/kernel/shadow.h>
-#include <cobalt/kernel/lock.h>
+#include <linux/atomic.h>
+#include <linux/rbtree.h>
 #include <cobalt/kernel/heap.h>
-#include <rtdm/fd.h>
-
-#define NR_PERSONALITIES  4
-#if BITS_PER_LONG < NR_PERSONALITIES
-#error "NR_PERSONALITIES overflows internal bitmap"
-#endif
-
-void *xnshadow_get_context(unsigned int muxid);
 
 struct xnsys_ppd {
 	struct xnheap sem_heap;
@@ -40,24 +31,6 @@ struct xnsys_ppd {
 	struct rb_root fds;
 };
 
-struct xnshadow_process {
-	struct mm_struct *mm;
-	void *priv[NR_PERSONALITIES];
-	struct hlist_node hlink;
-	struct xnsys_ppd sys_ppd;
-	unsigned long permap;
-};
-
 extern struct xnsys_ppd __xnsys_global_ppd;
-
-static inline struct xnsys_ppd *xnsys_ppd_get(int global)
-{
-	struct xnshadow_process *ppd;
-
-	if (global || (ppd = xnshadow_get_context(0)) == NULL)
-		return &__xnsys_global_ppd;
-
-	return &ppd->sys_ppd;
-}
 
 #endif /* _COBALT_KERNEL_PPD_H */

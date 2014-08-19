@@ -21,6 +21,7 @@
 #include <linux/signal.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/list.h>
+#include <cobalt/uapi/signal.h>
 
 struct cobalt_thread;
 

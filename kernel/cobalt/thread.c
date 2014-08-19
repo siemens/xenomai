@@ -22,6 +22,7 @@
  */
 #include <linux/kthread.h>
 #include <linux/wait.h>
+#include <linux/signal.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/synch.h>
@@ -33,10 +34,12 @@
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/select.h>
-#include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/signal.h>
 #include <trace/events/cobalt-core.h>
+#include <asm-generic/xenomai/mayday.h>
+#include "debug.h"
 
 /**
  * @ingroup cobalt_core
@@ -101,7 +104,7 @@ static int kthread_trampoline(void *arg)
 	param.sched_priority = prio;
 	sched_setscheduler(current, policy, &param);
 
-	ret = xnshadow_map_kernel(thread, ka->done);
+	ret = xnthread_map(thread, ka->done);
 	if (ret) {
 		printk(XENO_WARN "failed to create kernel shadow %s\n",
 		       thread->name);
@@ -354,7 +357,7 @@ EXPORT_SYMBOL_GPL(xnthread_get_period);
 
 void xnthread_prepare_wait(struct xnthread_wait_context *wc)
 {
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 
 	wc->posted = 0;
 	curr->wcontext = wc;
@@ -479,7 +482,7 @@ void __xnthread_cleanup(struct xnthread *curr)
 	xnlock_put_irqrestore(&nklock, s);
 
 	/* Finalize last since this incurs releasing the TCB. */
-	xnshadow_finalize(curr);
+	xnthread_run_handler_stack(curr, finalize_thread);
 
 	wake_up(&nkjoinq);
 }
@@ -883,7 +886,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 
 	/*
 	 * If the current thread is being relaxed, we must have been
-	 * called from xnshadow_relax(), in which case we introduce an
+	 * called from xnthread_relax(), in which case we introduce an
 	 * opportunity for interrupt delivery right before switching
 	 * context, which shortens the uninterruptible code path.
 	 *
@@ -953,7 +956,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	 */
 	if (((oldstate & (XNTHREAD_BLOCK_BITS|XNUSER)) == (XNRELAX|XNUSER)) &&
 	    (mask & (XNDELAY | XNSUSP | XNHELD)) != 0)
-		xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
+		xnthread_signal(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 	return;
@@ -962,7 +965,7 @@ lock_break:
 	if (xnthread_test_state(thread, XNWARN) &&
 	    !xnthread_test_info(thread, XNLBALERT)) {
 		xnthread_set_info(thread, XNLBALERT);
-		xnshadow_send_sig(thread, SIGDEBUG, SIGDEBUG_LOCK_BREAK);
+		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_LOCK_BREAK);
 	}
 abort:
 	if (wchan) {
@@ -1312,7 +1315,7 @@ int xnthread_wait_period(unsigned long *overruns_r)
 	int ret = 0;
 	spl_t s;
 
-	thread = xnshadow_current();
+	thread = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1459,7 +1462,7 @@ void xnthread_cancel(struct xnthread *thread)
 	}
 
 check_self_cancel:
-	if (xnshadow_current() == thread) {
+	if (xnthread_current() == thread) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnthread_test_cancel();
 		/*
@@ -1469,7 +1472,7 @@ check_self_cancel:
 		return;
 	}
 
-	__xnshadow_demote(thread);
+	__xnthread_demote(thread);
 	xnsched_run();
 
 unlock_and_exit:
@@ -1554,7 +1557,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 		return 0;
 	}
 
-	if (thread == xnshadow_current())
+	if (thread == xnthread_current())
 		ret = -EDEADLK;
 	else if (xnsynch_pended_p(&thread->join_synch))
 		ret = -EBUSY;
@@ -1607,7 +1610,7 @@ int xnthread_migrate(int cpu)
 		goto unlock_and_exit;
 	}
 
-	thread = xnshadow_current();
+	thread = xnthread_current();
 	if (!cpu_isset(cpu, thread->affinity)) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
@@ -1637,7 +1640,7 @@ int xnthread_migrate(int cpu)
 	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
 
 	/*
-	 * So that xnshadow_relax() will pin the linux mate on the
+	 * So that xnthread_relax() will pin the linux mate on the
 	 * same CPU next time the thread switches to secondary mode.
 	 */
 	xnthread_set_info(thread, XNMOVED);
@@ -1800,12 +1803,625 @@ void __xnthread_test_cancel(struct xnthread *curr)
 		return;
 
 	if (!xnthread_test_state(curr, XNRELAX))
-		xnshadow_relax(0, 0);
+		xnthread_relax(0, 0);
 
 	do_exit(0);
 	/* ... won't return ... */
 	XENO_BUGON(NUCLEUS, 1);
 }
 EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
+
+/**
+ * @internal
+ * @fn int xnthread_harden(void);
+ * @brief Migrate a Linux task to the Xenomai domain.
+ *
+ * This service causes the transition of "current" from the Linux
+ * domain to Xenomai. The shadow will resume in the Xenomai domain as
+ * returning from schedule().
+ *
+ * @coretags{secondary-only, might-switch}
+ */
+int xnthread_harden(void)
+{
+	struct task_struct *p = current;
+	struct xnthread *thread;
+	struct xnsched *sched;
+	int ret;
+
+	secondary_mode_only();
+
+	thread = xnthread_current();
+	if (thread == NULL)
+		return -EPERM;
+
+	if (signal_pending(p))
+		return -ERESTARTSYS;
+
+	trace_cobalt_shadow_gohard(thread);
+
+	xnthread_clear_sync_window(thread, XNRELAX);
+
+	ret = __ipipe_migrate_head();
+	if (ret) {
+		xnthread_set_sync_window(thread, XNRELAX);
+		return ret;
+	}
+
+	/* "current" is now running into the Xenomai domain. */
+	sched = xnsched_finish_unlocked_switch(thread->sched);
+	xnthread_switch_fpu(sched);
+
+	xnlock_clear_irqon(&nklock);
+	xnsched_resched_after_unlocked_switch();
+	xnthread_test_cancel();
+
+	trace_cobalt_shadow_hardened(thread);
+
+	/*
+	 * Recheck pending signals once again. As we block task
+	 * wakeups during the migration and handle_sigwake_event()
+	 * ignores signals until XNRELAX is cleared, any signal
+	 * between entering TASK_HARDENING and starting the migration
+	 * is just silently queued up to here.
+	 */
+	if (signal_pending(p)) {
+		xnthread_relax(!xnthread_test_state(thread, XNDEBUG),
+			       SIGDEBUG_MIGRATE_SIGNAL);
+		return -ERESTARTSYS;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xnthread_harden);
+
+struct lostage_wakeup {
+	struct ipipe_work_header work; /* Must be first. */
+	struct task_struct *task;
+};
+
+static void lostage_task_wakeup(struct ipipe_work_header *work)
+{
+	struct lostage_wakeup *rq;
+	struct task_struct *p;
+
+	rq = container_of(work, struct lostage_wakeup, work);
+	p = rq->task;
+
+	trace_cobalt_lostage_wakeup(p);
+
+	wake_up_process(p);
+}
+
+static void post_wakeup(struct task_struct *p)
+{
+	struct lostage_wakeup wakework = {
+		.work = {
+			.size = sizeof(wakework),
+			.handler = lostage_task_wakeup,
+		},
+		.task = p,
+	};
+
+	trace_cobalt_lostage_request("wakeup", wakework.task);
+
+	ipipe_post_work_root(&wakework, work);
+}
+
+/**
+ * @internal
+ * @fn void xnthread_relax(int notify, int reason);
+ * @brief Switch a shadow thread back to the Linux domain.
+ *
+ * This service yields the control of the running shadow back to
+ * Linux. This is obtained by suspending the shadow and scheduling a
+ * wake up call for the mated user task inside the Linux domain. The
+ * Linux task will resume on return from xnthread_suspend() on behalf
+ * of the root thread.
+ *
+ * @param notify A boolean flag indicating whether threads monitored
+ * from secondary mode switches should be sent a SIGDEBUG signal. For
+ * instance, some internal operations like task exit should not
+ * trigger such signal.
+ *
+ * @param reason The reason to report along with the SIGDEBUG signal.
+ *
+ * @coretags{primary-only, might-switch}
+ *
+ * @note "current" is valid here since the shadow runs with the
+ * properties of the Linux task.
+ */
+void xnthread_relax(int notify, int reason)
+{
+	struct xnthread *thread = xnthread_current();
+	struct task_struct *p = current;
+	int cpu __maybe_unused;
+	siginfo_t si;
+
+	primary_mode_only();
+
+	/*
+	 * Enqueue the request to move the running shadow from the Xenomai
+	 * domain to the Linux domain.  This will cause the Linux task
+	 * to resume using the register state of the shadow thread.
+	 */
+	trace_cobalt_shadow_gorelax(thread);
+
+	/*
+	 * If you intend to change the following interrupt-free
+	 * sequence, /first/ make sure to check the special handling
+	 * of XNRELAX in xnthread_suspend() when switching out the
+	 * current thread, not to break basic assumptions we make
+	 * there.
+	 *
+	 * We disable interrupts during the migration sequence, but
+	 * xnthread_suspend() has an interrupts-on section built in.
+	 */
+	splmax();
+	post_wakeup(p);
+	/*
+	 * Grab the nklock to synchronize the Linux task state
+	 * manipulation with handle_sigwake_event. This lock will be
+	 * dropped by xnthread_suspend().
+	 */
+	xnlock_get(&nklock);
+	set_task_state(p, p->state & ~TASK_NOWAKEUP);
+	xnthread_run_handler_stack(thread, relax_thread);
+	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	splnone();
+
+	if (XENO_DEBUG(NUCLEUS) && !ipipe_root_p)
+		xnsys_fatal("xnthread_relax() failed for thread %s[%d]",
+			    thread->name, xnthread_host_pid(thread));
+
+	__ipipe_reenter_root();
+
+	/* Account for secondary mode switch. */
+	xnstat_counter_inc(&thread->stat.ssw);
+
+	if (xnthread_test_state(thread, XNUSER) && notify) {
+		xndebug_notify_relax(thread, reason);
+		if (xnthread_test_state(thread, XNWARN)) {
+			/* Help debugging spurious relaxes. */
+			memset(&si, 0, sizeof(si));
+			si.si_signo = SIGDEBUG;
+			si.si_code = SI_QUEUE;
+			si.si_int = reason | sigdebug_marker;
+			send_sig_info(SIGDEBUG, &si, p);
+		}
+		xnsynch_detect_claimed_relax(thread);
+	}
+
+	/*
+	 * "current" is now running into the Linux domain on behalf of
+	 * the root thread.
+	 */
+	xnthread_sync_window(thread);
+
+#ifdef CONFIG_SMP
+	if (xnthread_test_info(thread, XNMOVED)) {
+		xnthread_clear_info(thread, XNMOVED);
+		cpu = xnsched_cpu(thread->sched);
+		set_cpus_allowed(p, cpumask_of_cpu(cpu));
+	}
+#endif
+
+	trace_cobalt_shadow_relaxed(thread);
+}
+EXPORT_SYMBOL_GPL(xnthread_relax);
+
+struct lostage_signal {
+	struct ipipe_work_header work; /* Must be first. */
+	struct task_struct *task;
+	int signo, sigval;
+};
+
+static inline void do_kthread_signal(struct task_struct *p,
+				     struct xnthread *thread,
+				     struct lostage_signal *rq)
+{
+	printk(XENO_WARN
+	       "kernel shadow %s received unhandled signal %d (action=0x%x)\n",
+	       thread->name, rq->signo, rq->sigval);
+}
+
+static void lostage_task_signal(struct ipipe_work_header *work)
+{
+	struct lostage_signal *rq;
+	struct xnthread *thread;
+	struct task_struct *p;
+	siginfo_t si;
+	int signo;
+
+	rq = container_of(work, struct lostage_signal, work);
+	p = rq->task;
+
+	thread = xnthread_from_task(p);
+	if (thread && !xnthread_test_state(thread, XNUSER)) {
+		do_kthread_signal(p, thread, rq);
+		return;
+	}
+
+	signo = rq->signo;
+
+	trace_cobalt_lostage_signal(p, signo);
+
+	if (signo == SIGSHADOW || signo == SIGDEBUG) {
+		memset(&si, '\0', sizeof(si));
+		si.si_signo = signo;
+		si.si_code = SI_QUEUE;
+		si.si_int = rq->sigval;
+		send_sig_info(signo, &si, p);
+	} else
+		send_sig(signo, p, 1);
+}
+
+static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
+{
+	int ret = 0;
+
+	if (xnthread_test_info(thread, XNKICKED))
+		return 1;
+
+	if (xnthread_unblock(thread)) {
+		xnthread_set_info(thread, XNKICKED);
+		ret = 1;
+	}
+
+	/*
+	 * CAUTION: we must NOT raise XNBREAK when clearing a forcible
+	 * block state, such as XNSUSP, XNHELD. The caller of
+	 * xnthread_suspend() we unblock shall proceed as for a normal
+	 * return, until it traverses a cancellation point if
+	 * XNCANCELD was raised earlier, or calls xnthread_suspend()
+	 * which will detect XNKICKED and act accordingly.
+	 *
+	 * Rationale: callers of xnthread_suspend() may assume that
+	 * receiving XNBREAK means that the process that motivated the
+	 * blocking did not go to completion. E.g. the wait context
+	 * (see. xnthread_prepare_wait()) was NOT posted before
+	 * xnsynch_sleep_on() returned, leaving no useful data there.
+	 * Therefore, in case only XNSUSP remains set for the thread
+	 * on entry to force_wakeup(), after XNPEND was lifted earlier
+	 * when the wait went to successful completion (i.e. no
+	 * timeout), then we want the kicked thread to know that it
+	 * did receive the requested resource, not finding XNBREAK in
+	 * its state word.
+	 *
+	 * Callers of xnthread_suspend() may inquire for XNKICKED to
+	 * detect forcible unblocks from XNSUSP, XNHELD, if they
+	 * should act upon this case specifically.
+	 */
+	if (xnthread_test_state(thread, XNSUSP|XNHELD)) {
+		xnthread_resume(thread, XNSUSP|XNHELD);
+		xnthread_set_info(thread, XNKICKED);
+	}
+
+	/*
+	 * Tricky cases:
+	 *
+	 * - a thread which was ready on entry wasn't actually
+	 * running, but nevertheless waits for the CPU in primary
+	 * mode, so we have to make sure that it will be notified of
+	 * the pending break condition as soon as it enters
+	 * xnthread_suspend() from a blocking Xenomai syscall.
+	 *
+	 * - a ready/readied thread on exit may be prevented from
+	 * running by the scheduling policy module it belongs
+	 * to. Typically, policies enforcing a runtime budget do not
+	 * block threads with no budget, but rather keep them out of
+	 * their runnable queue, so that ->sched_pick() won't elect
+	 * them. We tell the policy handler about the fact that we do
+	 * want such thread to run until it relaxes, whatever this
+	 * means internally for the implementation.
+	 */
+	if (xnthread_test_state(thread, XNREADY))
+		xnsched_kick(thread);
+
+	return ret;
+}
+
+void __xnthread_kick(struct xnthread *thread) /* nklock locked, irqs off */
+{
+	struct task_struct *p = xnthread_host_task(thread);
+
+	/* Thread is already relaxed -- nop. */
+	if (xnthread_test_state(thread, XNRELAX))
+		return;
+
+	/*
+	 * First, try to kick the thread out of any blocking syscall
+	 * Xenomai-wise. If that succeeds, then the thread will relax
+	 * on its return path to user-space.
+	 */
+	if (force_wakeup(thread))
+		return;
+
+	/*
+	 * If that did not work out because the thread was not blocked
+	 * (i.e. XNPEND/XNDELAY) in a syscall, then force a mayday
+	 * trap. Note that we don't want to send that thread any linux
+	 * signal, we only want to force it to switch to secondary
+	 * mode asap.
+	 *
+	 * It could happen that a thread is relaxed on a syscall
+	 * return path after it was resumed from self-suspension
+	 * (e.g. XNSUSP) then also forced to run a mayday trap right
+	 * after: this is still correct, at worst we would get a
+	 * useless mayday syscall leading to a no-op, no big deal.
+	 */
+	xnthread_set_info(thread, XNKICKED);
+
+	/*
+	 * We may send mayday signals to userland threads only.
+	 * However, no need to run a mayday trap if the current thread
+	 * kicks itself out of primary mode: it will relax on its way
+	 * back to userland via the current syscall
+	 * epilogue. Otherwise, we want that thread to enter the
+	 * mayday trap asap, to call us back for relaxing.
+	 */
+	if (thread != xnsched_current_thread() &&
+	    xnthread_test_state(thread, XNUSER))
+		xnarch_call_mayday(p);
+}
+
+void xnthread_kick(struct xnthread *thread)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	__xnthread_kick(thread);
+	xnlock_put_irqrestore(&nklock, s);
+}
+EXPORT_SYMBOL_GPL(xnthread_kick);
+
+void __xnthread_demote(struct xnthread *thread) /* nklock locked, irqs off */
+{
+	struct xnsched_class *sched_class;
+	union xnsched_policy_param param;
+
+	/*
+	 * First we kick the thread out of primary mode, and have it
+	 * resume execution immediately over the regular linux
+	 * context.
+	 */
+	__xnthread_kick(thread);
+
+	/*
+	 * Then we demote it, turning that thread into a non real-time
+	 * Xenomai shadow, which still has access to Xenomai
+	 * resources, but won't compete for real-time scheduling
+	 * anymore. In effect, moving the thread to a weak scheduling
+	 * class/priority will prevent it from sticking back to
+	 * primary mode.
+	 */
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+	param.weak.prio = 0;
+	sched_class = &xnsched_class_weak;
+#else
+	param.rt.prio = 0;
+	sched_class = &xnsched_class_rt;
+#endif
+	__xnthread_set_schedparam(thread, sched_class, &param);
+}
+
+void xnthread_demote(struct xnthread *thread)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	__xnthread_demote(thread);
+	xnlock_put_irqrestore(&nklock, s);
+}
+EXPORT_SYMBOL_GPL(xnthread_demote);
+
+void xnthread_signal(struct xnthread *thread, int sig, int arg)
+{
+	struct lostage_signal sigwork = {
+		.work = {
+			.size = sizeof(sigwork),
+			.handler = lostage_task_signal,
+		},
+		.task = xnthread_host_task(thread),
+		.signo = sig,
+		.sigval = sig == SIGDEBUG ? arg | sigdebug_marker : arg,
+	};
+
+	trace_cobalt_lostage_request("signal", sigwork.task);
+
+	ipipe_post_work_root(&sigwork, work);
+}
+EXPORT_SYMBOL_GPL(xnthread_signal);
+
+void xnthread_pin_initial(struct xnthread *thread)
+{
+	struct task_struct *p = current;
+	struct xnsched *sched;
+	int cpu;
+	spl_t s;
+
+	/*
+	 * @thread is the Xenomai extension of the current kernel
+	 * task. If the current CPU is part of the affinity mask of
+	 * this thread, pin the latter on this CPU. Otherwise pin it
+	 * to the first CPU of that mask.
+	 */
+	cpu = task_cpu(p);
+	if (!cpu_isset(cpu, thread->affinity))
+		cpu = first_cpu(thread->affinity);
+
+	set_cpus_allowed(p, cpumask_of_cpu(cpu));
+	/*
+	 * @thread is still unstarted Xenomai-wise, we are precisely
+	 * in the process of mapping the current kernel task to
+	 * it. Therefore xnthread_migrate_passive() is the right way
+	 * to pin it on a real-time CPU.
+	 */
+	xnlock_get_irqsave(&nklock, s);
+	sched = xnsched_struct(cpu);
+	xnthread_migrate_passive(thread, sched);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+struct parent_wakeup_request {
+	struct ipipe_work_header work; /* Must be first. */
+	struct completion *done;
+};
+
+static void do_parent_wakeup(struct ipipe_work_header *work)
+{
+	struct parent_wakeup_request *rq;
+
+	rq = container_of(work, struct parent_wakeup_request, work);
+	complete(rq->done);
+}
+
+static inline void wakeup_parent(struct completion *done)
+{
+	struct parent_wakeup_request wakework = {
+		.work = {
+			.size = sizeof(wakework),
+			.handler = do_parent_wakeup,
+		},
+		.done = done,
+	};
+
+	trace_cobalt_lostage_request("wakeup", current);
+
+	ipipe_post_work_root(&wakework, work);
+}
+
+static inline void init_kthread_info(struct xnthread *thread)
+{
+	struct ipipe_threadinfo *p;
+
+	p = ipipe_current_threadinfo();
+	p->thread = thread;
+	p->process = NULL;
+}
+
+/**
+ * @fn int xnthread_map(struct xnthread *thread, struct completion *done)
+ * @internal
+ * @brief Create a shadow thread context over a kernel task.
+ *
+ * This call maps a nucleus thread to the "current" Linux task running
+ * in kernel space.  The priority and scheduling class of the
+ * underlying Linux task are not affected; it is assumed that the
+ * caller did set them appropriately before issuing the shadow mapping
+ * request.
+ *
+ * This call immediately moves the calling kernel thread to the
+ * Xenomai domain.
+ *
+ * @param thread The descriptor address of the new shadow thread to be
+ * mapped to "current". This descriptor must have been previously
+ * initialized by a call to xnthread_init().
+ *
+ * @param done A completion object to be signaled when @a thread is
+ * fully mapped over the current Linux context, waiting for
+ * xnthread_start().
+ *
+ * @return 0 is returned on success. Otherwise:
+ *
+ * - -ERESTARTSYS is returned if the current Linux task has received a
+ * signal, thus preventing the final migration to the Xenomai domain
+ * (i.e. in order to process the signal in the Linux domain). This
+ * error should not be considered as fatal.
+ *
+ * - -EPERM is returned if the shadow thread has been killed before
+ * the current task had a chance to return to the caller. In such a
+ * case, the real-time mapping operation has failed globally, and no
+ * Xenomai resource remains attached to it.
+ *
+ * - -EINVAL is returned if the thread control block bears the XNUSER
+ * bit.
+ *
+ * - -EBUSY is returned if either the current Linux task or the
+ * associated shadow thread is already involved in a shadow mapping.
+ *
+ * @coretags{secondary-only, might-switch}
+ */
+int xnthread_map(struct xnthread *thread, struct completion *done)
+{
+	struct task_struct *p = current;
+	int ret;
+	spl_t s;
+
+	if (xnthread_test_state(thread, XNUSER))
+		return -EINVAL;
+
+	if (xnthread_current() || xnthread_test_state(thread, XNMAPPED))
+		return -EBUSY;
+
+	thread->u_window = NULL;
+	xnthread_pin_initial(thread);
+
+	trace_cobalt_shadow_map(thread);
+
+	xnthread_init_shadow_tcb(thread, p);
+	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	init_kthread_info(thread);
+	xnthread_set_state(thread, XNMAPPED);
+	xndebug_shadow_init(thread);
+	xnthread_run_handler(thread, map_thread);
+	ipipe_enable_notifier(p);
+
+	/*
+	 * CAUTION: Soon after xnthread_init() has returned,
+	 * xnthread_start() is commonly invoked from the root domain,
+	 * therefore the call site may expect the started kernel
+	 * shadow to preempt immediately. As a result of such
+	 * assumption, start attributes (struct xnthread_start_attr)
+	 * are often laid on the caller's stack.
+	 *
+	 * For this reason, we raise the completion signal to wake up
+	 * the xnthread_init() caller only once the emerging thread is
+	 * hardened, and __never__ before that point. Since we run
+	 * over the Xenomai domain upon return from xnthread_harden(),
+	 * we schedule a virtual interrupt handler in the root domain
+	 * to signal the completion object.
+	 */
+	xnthread_resume(thread, XNDORMANT);
+	ret = xnthread_harden();
+	wakeup_parent(done);
+	xnlock_get_irqsave(&nklock, s);
+	/*
+	 * Make sure xnthread_start() did not slip in from another CPU
+	 * while we were back from wakeup_parent().
+	 */
+	if (thread->entry == NULL)
+		xnthread_suspend(thread, XNDORMANT,
+				 XN_INFINITE, XN_RELATIVE, NULL);
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnthread_test_cancel();
+
+	xntrace_pid(xnthread_host_pid(thread),
+		    xnthread_current_priority(thread));
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnthread_map);
+
+/* nklock locked, irqs off */
+void xnthread_call_mayday(struct xnthread *thread, int reason)
+{
+	struct task_struct *p = xnthread_host_task(thread);
+
+	/* Mayday traps are available to userland threads only. */
+	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
+	xnthread_set_info(thread, XNKICKED);
+	xnthread_signal(thread, SIGDEBUG, reason);
+	xnarch_call_mayday(p);
+}
+EXPORT_SYMBOL_GPL(xnthread_call_mayday);
+
+/* Xenomai's generic personality. */
+struct xnthread_personality xenomai_personality = {
+	.name = "core",
+	.magic = -1
+};
+EXPORT_SYMBOL_GPL(xenomai_personality);
 
 /** @} */

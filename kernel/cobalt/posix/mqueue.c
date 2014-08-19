@@ -270,7 +270,7 @@ static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)
 	struct cobalt_mqd *mqd;
 	struct xnsys_ppd *p;
 
-	p = xnsys_ppd_get(0);
+	p = cobalt_ppd_get(0);
 	if (p == &__xnsys_global_ppd)
 		return -EPERM;
 
@@ -365,7 +365,7 @@ static int mq_open(int uqd, const char *name, int oflags, ...)
 			list_add_tail(&mq->link, &cobalt_mqq);
 		xnlock_put_irqrestore(&nklock, s);
 		if (err < 0) {
-			rtdm_fd_close(xnsys_ppd_get(0), uqd, COBALT_MQD_MAGIC);
+			rtdm_fd_close(cobalt_ppd_get(0), uqd, COBALT_MQD_MAGIC);
 			if (err == -EEXIST)
 				goto retry_bind;
 			return err;
@@ -381,7 +381,7 @@ static int mq_open(int uqd, const char *name, int oflags, ...)
 
 static inline int mq_close(mqd_t fd)
 {
-	return rtdm_fd_close(xnsys_ppd_get(0), fd, COBALT_MQD_MAGIC);
+	return rtdm_fd_close(cobalt_ppd_get(0), fd, COBALT_MQD_MAGIC);
 }
 
 static inline int mq_unlink(const char *name)
@@ -746,10 +746,10 @@ static inline struct cobalt_mqd *cobalt_mqd_get(mqd_t ufd)
 {
 	struct rtdm_fd *fd;
 
-	fd = rtdm_fd_get(xnsys_ppd_get(0), ufd, COBALT_MQD_MAGIC);
+	fd = rtdm_fd_get(cobalt_ppd_get(0), ufd, COBALT_MQD_MAGIC);
 	if (IS_ERR(fd)) {
 		int err = PTR_ERR(fd);
-		if (err == -EBADF && cobalt_process_context() == NULL)
+		if (err == -EBADF && cobalt_current_process() == NULL)
 			err = -EPERM;
 		return ERR_PTR(err);
 	}

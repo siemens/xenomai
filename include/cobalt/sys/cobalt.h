@@ -55,6 +55,8 @@ struct cobalt_tsd_hook {
 extern "C" {
 #endif
 
+int cobalt_extend(unsigned int magic);
+
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat *stat);
 

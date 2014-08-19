@@ -24,6 +24,7 @@
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/arith.h>
+#include <asm/xenomai/syscall.h>
 #include "process.h"
 #include "extension.h"
 
@@ -45,26 +46,19 @@
 #define COBALT_MONITOR_MAGIC     COBALT_MAGIC(10)
 #define COBALT_TIMERFD_MAGIC	 COBALT_MAGIC(11)
 
-#define cobalt_obj_active(h,m,t)			\
+#define cobalt_obj_active(h,m,t)	\
 	((h) && ((t *)(h))->magic == (m))
 
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-extern int cobalt_muxid;
-
-static inline struct cobalt_process *cobalt_process_context(void)
-{
-	return xnshadow_get_context(cobalt_muxid);
-}
-
 static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 {
-	struct cobalt_process *ppd;
+	struct cobalt_process *process;
 
-	if (pshared || (ppd = xnshadow_get_context(cobalt_muxid)) == NULL)
+	if (pshared || (process = cobalt_current_process()) == NULL)
 		return &cobalt_global_kqueues;
 
-	return &ppd->kqueues;
+	return &process->kqueues;
 }
 
 static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
@@ -76,9 +70,5 @@ static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
 int cobalt_init(void);
 
 void cobalt_cleanup(void);
-
-int cobalt_syscall_init(void);
-
-void cobalt_syscall_cleanup(void);
 
 #endif /* !_COBALT_POSIX_INTERNAL_H */

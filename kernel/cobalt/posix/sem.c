@@ -58,7 +58,7 @@ int cobalt_sem_destroy_inner(xnhandle_t handle)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnheap_free(&xnsys_ppd_get(!!(sem->flags & SEM_PSHARED))->sem_heap,
+	xnheap_free(&cobalt_ppd_get(!!(sem->flags & SEM_PSHARED))->sem_heap,
 		sem->datp);
 	xnregistry_remove(sem->handle);
 
@@ -85,13 +85,13 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 
 	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL) {
-		ret = -ENOSPC;
+		ret = -ENOMEM;
 		goto out;
 	}
 
 	ksformat(sem->name, sizeof(sem->name), "%s", name);
 
-	sys_ppd = xnsys_ppd_get(!!(flags & SEM_PSHARED));
+	sys_ppd = cobalt_ppd_get(!!(flags & SEM_PSHARED));
 	datp = xnheap_alloc(&sys_ppd->sem_heap, sizeof(*datp));
 	if (datp == NULL) {
 		ret = -EAGAIN;

@@ -138,8 +138,8 @@ static void *cobalt_thread_trampoline(void *p)
 	 * Do _not_ inline the call to pthread_self() in the syscall
 	 * macro: this trashes the syscall regs on some archs.
 	 */
-	ret = -XENOMAI_SKINCALL5(__cobalt_muxid, sc_cobalt_thread_create, ptid,
-				 policy, &param_ex, personality, &u_winoff);
+	ret = -XENOMAI_SYSCALL5(sc_cobalt_thread_create, ptid,
+				policy, &param_ex, personality, &u_winoff);
 	if (ret == 0)
 		cobalt_set_tsd(u_winoff);
 
@@ -378,9 +378,8 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  */
 int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
-	return -XENOMAI_SKINCALL3(__cobalt_muxid,
-				  sc_cobalt_thread_setmode,
-				  clrmask, setmask, mode_r);
+	return -XENOMAI_SYSCALL3(sc_cobalt_thread_setmode,
+				 clrmask, setmask, mode_r);
 }
 
 /**
@@ -402,8 +401,7 @@ int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
  */
 COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
 {
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_thread_setname, thread, name);
+	return -XENOMAI_SYSCALL2(sc_cobalt_thread_setname, thread, name);
 }
 
 /**
@@ -432,8 +430,7 @@ COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 {
 	int ret;
 
-	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_thread_kill, thread, sig);
+	ret = -XENOMAI_SYSCALL2(sc_cobalt_thread_kill, thread, sig);
 	if (ret == ESRCH)
 		return __STD(pthread_kill(thread, sig));
 
@@ -654,10 +651,9 @@ int pthread_setschedparam_ex(pthread_t thread,
 	if (ret)
 		return ret;
 
-	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 sc_cobalt_thread_setschedparam_ex,
-				 thread, policy, param_ex,
-				 &u_winoff, &promoted);
+	ret = -XENOMAI_SYSCALL5(sc_cobalt_thread_setschedparam_ex,
+				thread, policy, param_ex,
+				&u_winoff, &promoted);
 
 	if (ret == 0 && promoted) {
 		commit_stack_memory();
@@ -742,9 +738,8 @@ int pthread_getschedparam_ex(pthread_t thread,
 	struct sched_param short_param;
 	int ret;
 
-	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 sc_cobalt_thread_getschedparam_ex,
-				 thread, policy_r, param_ex);
+	ret = -XENOMAI_SYSCALL3(sc_cobalt_thread_getschedparam_ex,
+				thread, policy_r, param_ex);
 	if (ret == ESRCH) {
 		ret = __STD(pthread_getschedparam(thread, policy_r, &short_param));
 		if (ret == 0)
@@ -772,7 +767,7 @@ COBALT_IMPL(int, sched_yield, (void))
 	    (cobalt_get_current_mode() & (XNWEAK|XNRELAX)) == (XNWEAK|XNRELAX))
 		return __STD(sched_yield());
 
-	return -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
+	return -XENOMAI_SYSCALL0(sc_cobalt_sched_yield);
 }
 
 /**
@@ -801,8 +796,7 @@ COBALT_IMPL(int, sched_get_priority_min, (int policy))
 	case SCHED_RR:
 		break;
 	default:
-		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_sched_minprio, policy);
+		ret = XENOMAI_SYSCALL1(sc_cobalt_sched_minprio, policy);
 		if (ret >= 0)
 			return ret;
 		if (ret != -EINVAL) {
@@ -835,8 +829,7 @@ int sched_get_priority_min_ex(int policy)
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_sched_minprio, policy);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sched_minprio, policy);
 	if (ret >= 0)
 		return ret;
 	if (ret != -EINVAL) {
@@ -873,8 +866,7 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
 	case SCHED_RR:
 		break;
 	default:
-		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_sched_maxprio, policy);
+		ret = XENOMAI_SYSCALL1(sc_cobalt_sched_maxprio, policy);
 		if (ret >= 0)
 			return ret;
 		if (ret != -EINVAL) {
@@ -907,8 +899,7 @@ int sched_get_priority_max_ex(int policy)
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_sched_maxprio, policy);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sched_maxprio, policy);
 	if (ret >= 0)
 		return ret;
 	if (ret != -EINVAL) {
@@ -1023,9 +1014,8 @@ COBALT_IMPL(int, pthread_yield, (void))
 int sched_setconfig_np(int cpu, int policy,
 		       const union sched_config *config, size_t len)
 {
-	return -XENOMAI_SKINCALL4(__cobalt_muxid,
-				  sc_cobalt_sched_setconfig_np,
-				  cpu, policy, config, len);
+	return -XENOMAI_SYSCALL4(sc_cobalt_sched_setconfig_np,
+				 cpu, policy, config, len);
 }
 
 /**
@@ -1065,9 +1055,8 @@ ssize_t sched_getconfig_np(int cpu, int policy,
 {
 	ssize_t ret;
 
-	ret = XENOMAI_SKINCALL4(__cobalt_muxid,
-				sc_cobalt_sched_getconfig_np,
-				cpu, policy, config, *len_r);
+	ret = XENOMAI_SYSCALL4(sc_cobalt_sched_getconfig_np,
+			       cpu, policy, config, *len_r);
 	if (ret < 0)
 		return -ret;
 

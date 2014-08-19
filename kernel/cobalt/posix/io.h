@@ -19,6 +19,8 @@
 #ifndef _COBALT_POSIX_IO_H
 #define _COBALT_POSIX_IO_H
 
+#include <rtdm/rtdm.h>
+
 int cobalt_open(int fd, const char __user *u_path, int oflag);
 
 int cobalt_socket(int fd, int protocol_family,
@@ -38,5 +40,11 @@ int cobalt_close(int fd);
 
 int cobalt_mmap(int fd, struct _rtdm_mmap_request __user *u_rma,
 		void __user **u_addrp);
+
+int cobalt_select(int nfds,
+		  fd_set __user *u_rfds,
+		  fd_set __user *u_wfds,
+		  fd_set __user *u_xfds,
+		  struct timeval __user *u_tv);
 
 #endif /* !_COBALT_POSIX_IO_H */

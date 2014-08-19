@@ -129,7 +129,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 		return err;
 	kcattr.clock = tmp;
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, &kcattr);
+	err = -XENOMAI_SYSCALL2( sc_cobalt_cond_init, _cnd, &kcattr);
 	if (err)
 		return err;
 
@@ -172,7 +172,7 @@ COBALT_IMPL(int, pthread_cond_destroy, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cond = &((union cobalt_cond_union *)cond)->shadow_cond;
 
-	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_cond_destroy, _cond);
+	return -XENOMAI_SYSCALL1( sc_cobalt_cond_destroy, _cond);
 }
 
 struct cobalt_cond_cleanup_t {
@@ -188,9 +188,8 @@ static void __pthread_cond_cleanup(void *data)
 	int err;
 
 	do {
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_cond_wait_epilogue,
-					c->cond, c->mutex);
+		err = XENOMAI_SYSCALL2(sc_cobalt_cond_wait_epilogue,
+				       c->cond, c->mutex);
 	} while (err == -EINTR);
 
 	c->mutex->lockcnt = c->count;
@@ -275,17 +274,15 @@ COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mute
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				 sc_cobalt_cond_wait_prologue,
-				 _cnd, _mx, &c.err, 0, NULL);
+	err = XENOMAI_SYSCALL5(sc_cobalt_cond_wait_prologue,
+			       _cnd, _mx, &c.err, 0, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 
 	pthread_cleanup_pop(0);
 
 	while (err == -EINTR)
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
+		err = XENOMAI_SYSCALL2(sc_cobalt_cond_wait_epilogue, _cnd, _mx);
 
 	_mx->lockcnt = count;
 
@@ -362,16 +359,14 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				sc_cobalt_cond_wait_prologue,
-				_cnd, _mx, &c.err, 1, abstime);
+	err = XENOMAI_SYSCALL5(sc_cobalt_cond_wait_prologue,
+			       _cnd, _mx, &c.err, 1, abstime);
 	pthread_setcanceltype(oldtype, NULL);
 
 	pthread_cleanup_pop(0);
 
 	while (err == -EINTR)
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
+		err = XENOMAI_SYSCALL2(sc_cobalt_cond_wait_epilogue, _cnd, _mx);
 
 	_mx->lockcnt = count;
 

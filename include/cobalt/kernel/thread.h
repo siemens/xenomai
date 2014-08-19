@@ -27,7 +27,6 @@
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/schedparam.h>
 #include <cobalt/kernel/trace.h>
-#include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/kernel/thread.h>
 #include <asm/xenomai/machine.h>
@@ -45,10 +44,11 @@ struct xnsched;
 struct xnselector;
 struct xnsched_class;
 struct xnsched_tpslot;
-struct xnpersonality;
+struct xnthread_personality;
+struct completion;
 
 struct xnthread_init_attr {
-	struct xnpersonality *personality;
+	struct xnthread_personality *personality;
 	cpumask_t affinity;
 	int flags;
 	const char *name;
@@ -62,6 +62,25 @@ struct xnthread_start_attr {
 
 struct xnthread_wait_context {
 	int posted;
+};
+
+struct xnthread_personality {
+	const char *name;
+	unsigned int magic;
+	int xid;
+	atomic_t refcnt;
+	struct {
+		void *(*attach_process)(void);
+		void (*detach_process)(void *arg);
+		void (*map_thread)(struct xnthread *thread);
+		struct xnthread_personality *(*relax_thread)(struct xnthread *thread);
+		struct xnthread_personality *(*harden_thread)(struct xnthread *thread);
+		struct xnthread_personality *(*move_thread)(struct xnthread *thread,
+							    int dest_cpu);
+		struct xnthread_personality *(*exit_thread)(struct xnthread *thread);
+		struct xnthread_personality *(*finalize_thread)(struct xnthread *thread);
+	} ops;
+	struct module *module;
 };
 
 struct xnthread {
@@ -170,7 +189,7 @@ struct xnthread {
 	struct pt_regs *regs;		/* Current register frame */
 	struct xnthread_user_window *u_window;	/* Data visible from userland. */
 
-	struct xnpersonality *personality; /* Originating interface/personality */
+	struct xnthread_personality *personality;
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */
@@ -252,14 +271,14 @@ static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread)
 
 #define xnthread_run_handler(__t, __h, __a...)				\
 	do {								\
-		struct xnpersonality *__p__ = (__t)->personality;	\
+		struct xnthread_personality *__p__ = (__t)->personality;	\
 		if ((__p__)->ops.__h)					\
 			(__p__)->ops.__h(__t, ##__a);			\
 	} while (0)
 	
 #define xnthread_run_handler_stack(__t, __h, __a...)			\
 	do {								\
-		struct xnpersonality *__p__ = (__t)->personality;	\
+		struct xnthread_personality *__p__ = (__t)->personality;	\
 		do {							\
 			if ((__p__)->ops.__h == NULL)			\
 				break;					\
@@ -344,18 +363,53 @@ void __xnthread_test_cancel(struct xnthread *curr);
 void __xnthread_cleanup(struct xnthread *curr);
 
 /**
+ * @fn struct xnthread *xnthread_current(void)
+ * @brief Retrieve the current Cobalt core TCB.
+ *
+ * Returns the address of the current Cobalt core thread descriptor,
+ * or NULL if running over a regular Linux task. This call is not
+ * affected by the current runtime mode of the core thread.
+ *
+ * @caution The returned value may differ from
+ * xnsched_current_thread() called from the same context, since the
+ * latter returns the root thread descriptor for the current CPU if
+ * the caller is running in secondary mode.
+ *
+ * @coretags{unrestricted}
+ */
+static inline struct xnthread *xnthread_current(void)
+{
+	return ipipe_current_threadinfo()->thread;
+}
+
+/**
+ * @fn struct xnthread *xnthread_from_task(struct task_struct *p)
+ * @brief Retrieve the Cobalt core TCB attached to a Linux task.
+ *
+ * Returns the address of the Cobalt core thread descriptor attached
+ * to the Linux task @a p, or NULL if @a p is a regular Linux
+ * task. This call is not affected by the current runtime mode of the
+ * core thread.
+ *
+ * @coretags{unrestricted}
+ */
+static inline struct xnthread *xnthread_from_task(struct task_struct *p)
+{
+	return ipipe_task_threadinfo(p)->thread;
+}
+
+/**
  * @fn void xnthread_test_cancel(void)
  * @brief Introduce a thread cancellation point.
  *
  * Terminates the current thread if a cancellation request is pending
  * for it, i.e. if xnthread_cancel() was called.
  *
- * Calling context: This service may be called from all runtime modes
- * of kernel or user-space threads.
+ * @coretags{mode-unrestricted}
  */
 static inline void xnthread_test_cancel(void)
 {
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 
 	if (curr && xnthread_test_info(curr, XNCANCELD))
 		__xnthread_test_cancel(curr);
@@ -431,6 +485,28 @@ void xnthread_cancel(struct xnthread *thread);
 
 int xnthread_join(struct xnthread *thread, bool uninterruptible);
 
+int xnthread_harden(void);
+
+void xnthread_relax(int notify, int reason);
+
+void __xnthread_kick(struct xnthread *thread);
+
+void xnthread_kick(struct xnthread *thread);
+
+void __xnthread_demote(struct xnthread *thread);
+
+void xnthread_demote(struct xnthread *thread);
+
+void xnthread_signal(struct xnthread *thread,
+		     int sig, int arg);
+
+void xnthread_pin_initial(struct xnthread *thread);
+
+int xnthread_map(struct xnthread *thread,
+		 struct completion *done);
+
+void xnthread_call_mayday(struct xnthread *thread, int reason);
+
 #ifdef CONFIG_SMP
 int xnthread_migrate(int cpu);
 
@@ -456,6 +532,8 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 int xnthread_set_schedparam(struct xnthread *thread,
 			    struct xnsched_class *sched_class,
 			    const union xnsched_policy_param *sched_param);
+
+extern struct xnthread_personality xenomai_personality;
 
 /** @} */
 

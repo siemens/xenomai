@@ -23,7 +23,6 @@
 #include <linux/time.h>
 #include <linux/signal.h>
 #include <cobalt/kernel/thread.h>
-#include <cobalt/kernel/shadow.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/sched.h>
 
@@ -118,7 +117,7 @@ struct cobalt_sigwait_context {
 
 static inline struct cobalt_thread *cobalt_current_thread(void)
 {
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 	return curr ? container_of(curr, struct cobalt_thread, threadbase) : NULL;
 }
 
@@ -130,7 +129,7 @@ struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 
 int cobalt_thread_create(unsigned long pth, int policy,
 			 struct sched_param_ex __user *u_param,
-			 int shifted_muxid,
+			 int xid,
 			 unsigned long __user *u_window_offset);
 
 struct cobalt_thread *
@@ -182,9 +181,9 @@ ssize_t cobalt_sched_getconfig_np(int cpu,
 
 void cobalt_thread_map(struct xnthread *curr);
 
-struct xnpersonality *cobalt_thread_exit(struct xnthread *curr);
+struct xnthread_personality *cobalt_thread_exit(struct xnthread *curr);
 
-struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie);
+struct xnthread_personality *cobalt_thread_finalize(struct xnthread *zombie);
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
 
@@ -212,7 +211,5 @@ int cobalt_thread_extended_p(const struct cobalt_thread *thread,
 #endif /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
 
 extern xnticks_t cobalt_time_slice;
-
-extern struct xnpersonality cobalt_personality;
 
 #endif /* !_COBALT_POSIX_THREAD_H */

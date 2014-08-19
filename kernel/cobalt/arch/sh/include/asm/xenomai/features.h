@@ -22,7 +22,7 @@
 #include <linux/ipipe.h>
 #include <asm/xenomai/uapi/features.h>
 
-static inline void collect_arch_features(struct xnfeatinfo *p)
+static inline void collect_arch_features(struct cobalt_featinfo *p)
 {
 	p->feat_arch.hrclock_membase = __pa(__ipipe_tsc);
 }

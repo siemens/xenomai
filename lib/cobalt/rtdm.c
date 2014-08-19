@@ -52,7 +52,7 @@ COBALT_IMPL(int, open, (const char *path, int oflag, ...))
 	 * the kernel service.
 	 */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid, sc_cobalt_open, fd, path, oflag);
+	ret = XENOMAI_SYSCALL3( sc_cobalt_open, fd, path, oflag);
 	pthread_setcanceltype(oldtype, NULL);
 	if (ret == fd)
 		return fd;
@@ -77,11 +77,11 @@ COBALT_IMPL(int, socket, (int protocol_family, int socket_type, int protocol))
 	if (fd < 0)
 		return fd;
 
-	ret = XENOMAI_SKINCALL4(__cobalt_muxid,
-				sc_cobalt_socket,
-				fd, protocol_family, socket_type, protocol);
+	ret = XENOMAI_SYSCALL4(sc_cobalt_socket, fd,
+			       protocol_family, socket_type, protocol);
 	if (ret == fd)
 		return fd;
+
 	__STD(close(fd));
 
 	if (ret != -EAFNOSUPPORT && ret != -EPROTONOSUPPORT && ret != -ENOSYS)
@@ -97,7 +97,7 @@ COBALT_IMPL(int, close, (int fd))
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_close, fd);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_close, fd);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -116,9 +116,7 @@ static int __xn_ioctl(int fd, unsigned long request, void *arg)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_ioctl,
-				fd, request, arg);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_ioctl,	fd, request, arg);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -148,9 +146,7 @@ COBALT_IMPL(ssize_t, read, (int fd, void *buf, size_t nbyte))
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_read,
-				fd, buf, nbyte);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_read, fd, buf, nbyte);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -166,9 +162,7 @@ COBALT_IMPL(ssize_t, write, (int fd, const void *buf, size_t nbyte))
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_write,
-				fd, buf, nbyte);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_write,	fd, buf, nbyte);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -184,9 +178,7 @@ static ssize_t __xn_recvmsg(int fd, struct msghdr *msg, int flags)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_recvmsg,
-				fd, msg, flags);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_recvmsg, fd, msg, flags);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -210,9 +202,7 @@ static ssize_t __xn_sendmsg(int fd, const struct msghdr *msg, int flags)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_sendmsg,
-				fd, msg, flags);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_sendmsg, fd, msg, flags);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -411,7 +401,7 @@ COBALT_IMPL(void *, mmap, (void *addr, size_t length, int prot, int flags,
 	rma.prot = prot;
 	rma.flags = flags;
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid, sc_cobalt_mmap, fd, &rma, &addr);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_mmap, fd, &rma, &addr);
 	if (ret != -EBADF && ret != -ENOSYS) {
 		ret = set_errno(ret);
 		if (ret)

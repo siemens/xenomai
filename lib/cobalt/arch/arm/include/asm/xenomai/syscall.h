@@ -34,22 +34,22 @@
 #error TLS support (__thread) is broken with GCC >= 4.3, use --disable-tls when configuring
 #endif
 
-#define LOADARGS_0(muxcode, dummy...)	\
-	__a0 = (unsigned long) (muxcode)
-#define LOADARGS_1(muxcode, arg1)	\
-	LOADARGS_0(muxcode);		\
+#define LOADARGS_0(syscode, dummy...)	\
+	__a0 = (unsigned long) (syscode)
+#define LOADARGS_1(syscode, arg1)	\
+	LOADARGS_0(syscode);		\
 	__a1 = (unsigned long) (arg1)
-#define LOADARGS_2(muxcode, arg1, arg2)	\
-	LOADARGS_1(muxcode, arg1);	\
+#define LOADARGS_2(syscode, arg1, arg2)	\
+	LOADARGS_1(syscode, arg1);	\
 	__a2 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3)	\
-	LOADARGS_2(muxcode,  arg1, arg2);	\
+#define LOADARGS_3(syscode, arg1, arg2, arg3)	\
+	LOADARGS_2(syscode,  arg1, arg2);	\
 	__a3 = (unsigned long) (arg3)
-#define LOADARGS_4(muxcode,  arg1, arg2, arg3, arg4)	\
-	LOADARGS_3(muxcode,  arg1, arg2, arg3);		\
+#define LOADARGS_4(syscode,  arg1, arg2, arg3, arg4)	\
+	LOADARGS_3(syscode,  arg1, arg2, arg3);		\
 	__a4 = (unsigned long) (arg4)
-#define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5)	\
-	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);		\
+#define LOADARGS_5(syscode, arg1, arg2, arg3, arg4, arg5)	\
+	LOADARGS_4(syscode, arg1, arg2, arg3, arg4);		\
 	__a5 = (unsigned long) (arg5)
 
 #define CLOBBER_REGS_0 "r0"
@@ -94,27 +94,27 @@
 #define __SYS_REG_DECL register unsigned long __r7 __asm__ ("r7")
 #define __SYS_REG_SET __r7 = XENO_ARM_SYSCALL
 #define __SYS_REG_INPUT ,"r" (__r7)
-#define __xn_syscall "swi\t0"
+#define __SYS_CALLOP "swi\t0"
 #else
 #define __SYS_REG
 #define __SYS_REG_DECL
 #define __SYS_REG_SET
 #define __SYS_REG_INPUT
 #define __NR_OABI_SYSCALL_BASE	0x900000
-#define __xn_syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
+#define __SYS_CALLOP "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
 #endif
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
+#define XENOMAI_DO_SYSCALL(nr, op, args...)				\
 	({								\
 		ASM_INDECL_##nr;					\
 		__SYS_REG_DECL;						\
-		LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
+		LOADARGS_##nr(__xn_syscode(op), args);			\
 		__asm__ __volatile__ ("" : /* */ : /* */ :		\
 				      CLOBBER_REGS_##nr __SYS_REG);	\
 		LOADREGS_##nr;						\
 		__SYS_REG_SET;						\
 		__asm__ __volatile__ (					\
-			__xn_syscall					\
+			__SYS_CALLOP					\
 			: "=r" (__r0)					\
 			: ASM_INPUT_##nr __SYS_REG_INPUT		\
 			: "memory");					\
@@ -122,31 +122,18 @@
 	})
 
 #define XENOMAI_SYSCALL0(op)			\
-	XENOMAI_DO_SYSCALL(0,0,op)
+	XENOMAI_DO_SYSCALL(0,op)
 #define XENOMAI_SYSCALL1(op,a1)			\
-	XENOMAI_DO_SYSCALL(1,0,op,a1)
+	XENOMAI_DO_SYSCALL(1,op,a1)
 #define XENOMAI_SYSCALL2(op,a1,a2)		\
-	XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
+	XENOMAI_DO_SYSCALL(2,op,a1,a2)
 #define XENOMAI_SYSCALL3(op,a1,a2,a3)		\
-	XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
+	XENOMAI_DO_SYSCALL(3,op,a1,a2,a3)
 #define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)	\
-	XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5)		\
-	XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2)			\
-	XENOMAI_DO_SYSCALL(2,0,sc_nucleus_bind,a1,a2)
-
-#define XENOMAI_SKINCALL0(id,op)		\
-	XENOMAI_DO_SYSCALL(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)		\
-	XENOMAI_DO_SYSCALL(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)		\
-	XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)	\
-	XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)	\
-	XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)		\
-	XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
+	XENOMAI_DO_SYSCALL(4,op,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5)	\
+	XENOMAI_DO_SYSCALL(5,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSBIND(breq)			\
+	XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
 #endif /* !_LIB_COBALT_ARM_SYSCALL_H */

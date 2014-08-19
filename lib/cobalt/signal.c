@@ -31,8 +31,7 @@ COBALT_IMPL(int, sigwait, (const sigset_t *set, int *sig))
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_sigwait, set, sig);
+	ret = -XENOMAI_SYSCALL2(sc_cobalt_sigwait, set, sig);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -45,8 +44,7 @@ COBALT_IMPL(int, sigwaitinfo, (const sigset_t *set, siginfo_t *si))
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
-				sc_cobalt_sigwaitinfo, set, si);
+	ret = XENOMAI_SYSCALL2(sc_cobalt_sigwaitinfo, set, si);
 	if (ret < 0) {
 		errno = -ret;
 		ret = -1;
@@ -64,8 +62,7 @@ COBALT_IMPL(int, sigtimedwait, (const sigset_t *set, siginfo_t *si,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_sigtimedwait, set, si, timeout);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_sigtimedwait, set, si, timeout);
 	if (ret < 0) {
 		errno = -ret;
 		ret = -1;
@@ -80,8 +77,7 @@ COBALT_IMPL(int, sigpending, (sigset_t *set))
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
-				sc_cobalt_sigpending, set);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sigpending, set);
 	if (ret) {
 		errno = -ret;
 		return -1;
@@ -101,8 +97,7 @@ COBALT_IMPL(int, kill, (pid_t pid, int sig))
 	if (pid <= 0)
 		return __STD(kill(pid, sig));
 
-	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
-				sc_cobalt_kill, pid, sig);
+	ret = XENOMAI_SYSCALL2(sc_cobalt_kill, pid, sig);
 	if (ret) {
 		errno = -ret;
 		return -1;
@@ -115,8 +110,7 @@ COBALT_IMPL(int, sigqueue, (pid_t pid, int sig, const union sigval value))
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_sigqueue, pid, sig, &value);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_sigqueue, pid, sig, &value);
 	if (ret) {
 		errno = -ret;
 		return -1;

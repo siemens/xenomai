@@ -26,6 +26,7 @@
 #include <linux/sched.h>
 #include <linux/socket.h>
 #include <cobalt/kernel/ppd.h>
+#include <rtdm/fd.h>
 
 #define RTDM_FD_MAGIC 0x52544446
 

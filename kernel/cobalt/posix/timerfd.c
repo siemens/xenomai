@@ -167,7 +167,7 @@ int cobalt_timerfd_create(int ufd, int clockid, int flags)
 	struct xnthread *curr;
 	struct xnsys_ppd *p;
 
-	p = xnsys_ppd_get(0);
+	p = cobalt_ppd_get(0);
 	if (p == &__xnsys_global_ppd)
 		return -EPERM;
 
@@ -183,7 +183,7 @@ int cobalt_timerfd_create(int ufd, int clockid, int flags)
 
 	tfd->flags = flags;
 	tfd->clockid = clockid;
-	curr = xnshadow_current();
+	curr = xnthread_current();
 	xntimer_init(&tfd->timer, &nkclock, timerfd_handler,
 		     curr ? xnthread_sched(curr) : NULL, XNTIMER_UGRAVITY);
 	xnsynch_init(&tfd->readers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
@@ -198,10 +198,10 @@ static inline struct cobalt_tfd *tfd_get(int ufd)
 {
 	struct rtdm_fd *fd;
 
-	fd = rtdm_fd_get(xnsys_ppd_get(0), ufd, COBALT_TIMERFD_MAGIC);
+	fd = rtdm_fd_get(cobalt_ppd_get(0), ufd, COBALT_TIMERFD_MAGIC);
 	if (IS_ERR(fd)) {
 		int err = PTR_ERR(fd);
-		if (err == -EBADF && cobalt_process_context() == NULL)
+		if (err == -EBADF && cobalt_current_process() == NULL)
 			err = -EPERM;
 		return ERR_PTR(err);
 	}
@@ -242,7 +242,7 @@ int cobalt_timerfd_settime(int fd, int flags,
 	xnlock_get_irqsave(&nklock, s);
 
 	if (flags & TFD_WAKEUP) {
-		tfd->target = xnshadow_current();
+		tfd->target = xnthread_current();
 		if (tfd->target == NULL) {
 			err = -EPERM;
 			goto out_unlock;

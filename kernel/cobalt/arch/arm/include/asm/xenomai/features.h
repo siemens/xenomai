@@ -26,8 +26,8 @@
 #define CONFIG_XENO_ARM_EABI 1
 #endif
 
-struct xnfeatinfo;
-static inline void collect_arch_features(struct xnfeatinfo *p) { }
+struct cobalt_featinfo;
+static inline void collect_arch_features(struct cobalt_featinfo *p) { }
 
 #include <asm/xenomai/uapi/features.h>
 

@@ -214,7 +214,7 @@ int cobalt_sched_yield(void)
 	 * mode to effectively yield the CPU to a thread of
 	 * same/higher priority stuck in secondary mode.
 	 *
-	 * NOTE: calling xnshadow_yield() with no timeout
+	 * NOTE: calling cobalt_yield() with no timeout
 	 * (i.e. XN_INFINITE) is probably never a good idea. This
 	 * means that a SCHED_FIFO non-rt thread stuck in a tight loop
 	 * would prevent the caller from waking up, since no
@@ -223,7 +223,7 @@ int cobalt_sched_yield(void)
 	 * arbitrary TICK_NSEC value to limit the wait time to a
 	 * reasonable amount.
 	 */
-	return xnshadow_yield(TICK_NSEC, TICK_NSEC);
+	return cobalt_yield(TICK_NSEC, TICK_NSEC);
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP

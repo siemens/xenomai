@@ -20,7 +20,6 @@
 
 #include <linux/time.h>
 #include <linux/list.h>
-#include <cobalt/kernel/shadow.h>
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
 
@@ -33,7 +32,7 @@ struct xnsched_class;
 union xnsched_policy_param;
 
 struct cobalt_extension {
-	struct xnpersonality core;
+	struct xnthread_personality core;
 	struct {
 		struct cobalt_thread *
 		(*timer_init)(struct cobalt_extref *reftimer, /* nklocked, IRQs off. */

@@ -21,6 +21,7 @@
 #include <linux/ipipe.h>
 #include <linux/mm.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
 

@@ -47,8 +47,6 @@ __weak int __cobalt_defer_init = 0;
 
 __weak int __cobalt_main_prio = -1;
 
-int __cobalt_muxid = -1;
-
 struct sigaction __cobalt_orig_sigdebug;
 
 pthread_t __cobalt_main_ptid;
@@ -61,13 +59,13 @@ static void sigill_handler(int sig)
 	exit(EXIT_FAILURE);
 }
 
-static int bind_interface(void)
+static void bind_to_core(void)
 {
 	sighandler_t old_sigill_handler;
-	struct xnsysinfo sysinfo;
-	struct xnbindreq breq;
-	struct xnfeatinfo *f;
-	int ret, muxid;
+	struct cobalt_sysinfo sysinfo;
+	struct cobalt_bindreq breq;
+	struct cobalt_featinfo *f;
+	int ret;
 
 	/* Some sanity checks first. */
 	if (access(XNHEAP_DEV_NAME, 0)) {
@@ -85,11 +83,13 @@ static int bind_interface(void)
 	f = &breq.feat_ret;
 	breq.feat_req = XENOMAI_FEAT_DEP;
 	breq.abi_rev = XENOMAI_ABI_REV;
-	muxid = XENOMAI_SYSBIND(COBALT_BINDING_MAGIC, &breq);
+	ret = XENOMAI_SYSBIND(&breq);
 
 	signal(SIGILL, old_sigill_handler);
 
-	switch (muxid) {
+	switch (ret) {
+	case 0:
+		break;
 	case -EINVAL:
 		report_error("incompatible feature set");
 		report_error_cont("(userland requires \"%s\", kernel provides \"%s\", missing=\"%s\")",
@@ -102,19 +102,14 @@ static int bind_interface(void)
 			XENOMAI_ABI_REV, f->feat_abirev);
 		exit(EXIT_FAILURE);
 
-	case -ENOSYS:
-	case -ESRCH:
-		return -1;
-	}
-
-	if (muxid < 0) {
-		report_error("binding failed: %s", strerror(-muxid));
+	default:
+		report_error("binding failed: %s", strerror(-ret));
 		exit(EXIT_FAILURE);
 	}
 
 	cobalt_check_features(f);
 
-	ret = XENOMAI_SYSCALL1(sc_nucleus_info, &sysinfo);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_info, &sysinfo);
 	if (ret) {
 		report_error("sysinfo failed: %s", strerror(-ret));
 		exit(EXIT_FAILURE);
@@ -125,8 +120,6 @@ static int bind_interface(void)
 	cobalt_init_current_keys();
 
 	cobalt_ticks_init(sysinfo.clockfreq);
-
-	return muxid;
 }
 
 static void __init_cobalt(void);
@@ -134,15 +127,10 @@ static void __init_cobalt(void);
 void __libcobalt_init(void)
 {
 	struct sigaction sa;
-	int muxid, ret;
+	int ret;
 
-	muxid = bind_interface();
-	if (muxid < 0) {
-		report_error("interface unavailable");
-		exit(EXIT_FAILURE);
-	}
+	bind_to_core();
 
-	__cobalt_muxid = __xn_mux_shifted_id(muxid);
 	sa.sa_sigaction = cobalt_sigdebug_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;

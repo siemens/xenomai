@@ -22,6 +22,18 @@
 #include <linux/bitmap.h>
 #include <cobalt/kernel/ppd.h>
 
+#define KEVENT_PROPAGATE   0
+#define KEVENT_STOP        1
+
+#define NR_PERSONALITIES  4
+#if BITS_PER_LONG < NR_PERSONALITIES
+#error "NR_PERSONALITIES overflows internal bitmap"
+#endif
+
+struct mm_struct;
+struct xnthread_personality;
+struct cobalt_timer;
+
 struct cobalt_kqueues {
 	struct list_head condq;
 	struct list_head mutexq;
@@ -32,15 +44,75 @@ struct cobalt_kqueues {
 	struct list_head schedq;
 };
 
-struct cobalt_timer;
 struct cobalt_process {
+	struct mm_struct *mm;
+	struct hlist_node hlink;
+	struct xnsys_ppd sys_ppd;
+	unsigned long permap;
 	struct cobalt_kqueues kqueues;
 	struct rb_root usems;
 	struct list_head sigwaiters;
 	DECLARE_BITMAP(timers_map, CONFIG_XENO_OPT_NRTIMERS);
 	struct cobalt_timer *timers[CONFIG_XENO_OPT_NRTIMERS];
+	void *priv[NR_PERSONALITIES];
 };
 
 extern struct cobalt_kqueues cobalt_global_kqueues;
+
+int cobalt_register_personality(struct xnthread_personality *personality);
+
+int cobalt_unregister_personality(int xid);
+
+struct xnthread_personality *cobalt_push_personality(int xid);
+
+void cobalt_pop_personality(struct xnthread_personality *prev);
+
+int cobalt_bind_core(void);
+
+int cobalt_bind_personality(unsigned int magic);
+
+struct cobalt_process *cobalt_search_process(struct mm_struct *mm);
+
+int cobalt_map_user(struct xnthread *thread,
+		    unsigned long __user *u_window_offset);
+
+void *cobalt_get_context(int xid);
+
+int cobalt_yield(xnticks_t min, xnticks_t max);
+
+int cobalt_process_init(void);
+
+void cobalt_process_cleanup(void);
+
+static inline struct cobalt_process *cobalt_current_process(void)
+{
+	return ipipe_current_threadinfo()->process;
+}
+
+static inline struct cobalt_process *
+cobalt_set_process(struct cobalt_process *process)
+{
+	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
+	struct cobalt_process *old;
+
+	old = p->process;
+	p->process = process;
+
+	return old;
+}
+
+static inline struct xnsys_ppd *cobalt_ppd_get(int global)
+{
+	struct cobalt_process *process;
+
+	if (global || (process = cobalt_current_process()) == NULL)
+		return &__xnsys_global_ppd;
+
+	return &process->sys_ppd;
+}
+
+extern struct xnthread_personality *cobalt_personalities[];
+
+extern struct xnthread_personality cobalt_personality;
 
 #endif /* !_COBALT_POSIX_PROCESS_H */

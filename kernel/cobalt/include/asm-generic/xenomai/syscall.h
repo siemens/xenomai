@@ -26,60 +26,6 @@
 #include <asm/xenomai/machine.h>
 #include <cobalt/uapi/asm-generic/syscall.h>
 
-struct task_struct;
-struct pt_regs;
-
-struct xnsyscall {
-	/*
-	 * CAUTION: no varargs, we want the calling convention for
-	 * regular functions to apply.
-	 */
-	int (*svc)(unsigned long arg1, unsigned long arg2, unsigned long arg3,
-		   unsigned long arg4, unsigned long arg5);
-
-/* Syscall must run into the Linux domain. */
-#define __xn_exec_lostage    0x1
-/* Syscall must run into the Xenomai domain. */
-#define __xn_exec_histage    0x2
-/* Shadow syscall: caller must be mapped. */
-#define __xn_exec_shadow     0x4
-/* Switch back toggle; caller must return to its original mode. */
-#define __xn_exec_switchback 0x8
-/* Exec in current domain. */
-#define __xn_exec_current    0x10
-/* Exec in conforming domain, Xenomai or Linux. */
-#define __xn_exec_conforming 0x20
-/* Attempt syscall restart in the opposite domain upon -ENOSYS. */
-#define __xn_exec_adaptive   0x40
-/* Do not restart syscall upon signal receipt. */
-#define __xn_exec_norestart  0x80
-/* Shorthand for shadow init syscall. */
-#define __xn_exec_init       __xn_exec_lostage
-/* Shorthand for shadow syscall in Xenomai space. */
-#define __xn_exec_primary   (__xn_exec_shadow|__xn_exec_histage)
-/* Shorthand for shadow syscall in Linux space. */
-#define __xn_exec_secondary (__xn_exec_shadow|__xn_exec_lostage)
-/* Shorthand for syscall in Linux space with switchback if shadow. */
-#define __xn_exec_downup    (__xn_exec_lostage|__xn_exec_switchback)
-/* Shorthand for non-restartable primary syscall. */
-#define __xn_exec_nonrestartable (__xn_exec_primary|__xn_exec_norestart)
-/* Shorthand for domain probing syscall */
-#define __xn_exec_probing   (__xn_exec_conforming|__xn_exec_adaptive)
-/* Shorthand for oneway trap - does not return to call site. */
-#define __xn_exec_oneway    __xn_exec_norestart
-
-	unsigned long flags;
-};
-
-#define __syscast__(fn)	((int (*)(unsigned long, unsigned long,	\
-				  unsigned long, unsigned long, unsigned long))(fn))
-
-#define SKINCALL_DEF(nr, fn, fl)	\
-	[nr] = { .svc = __syscast__(fn), .flags = __xn_exec_##fl }
-
-#define SKINCALL_NI	\
-	{ .svc = __syscast__(cobalt_syscall_ni), .flags = 0 }
-
 #define access_rok(addr, size)	access_ok(VERIFY_READ, (addr), (size))
 #define access_wok(addr, size)	access_ok(VERIFY_WRITE, (addr), (size))
 
@@ -115,6 +61,7 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 {
 	if (unlikely(!access_rok(src, 1)))
 		return -EFAULT;
+
 	return __xn_strncpy_from_user(dst, src, count);
 }
 

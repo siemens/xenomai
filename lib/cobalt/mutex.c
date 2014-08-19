@@ -97,8 +97,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	int err, tmp;
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
-		err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-					 sc_cobalt_mutex_check_init,_mutex);
+		err = -XENOMAI_SYSCALL1(sc_cobalt_mutex_check_init, _mutex);
 
 		if (err)
 			return err;
@@ -126,7 +125,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	}
 	kmattr.protocol = tmp;
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid,sc_cobalt_mutex_init,_mutex,&kmattr);
+	err = -XENOMAI_SYSCALL2(sc_cobalt_mutex_init, _mutex, &kmattr);
 	if (err)
 		return err;
 
@@ -172,7 +171,7 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
-	err = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mutex_destroy, _mutex);
+	err = XENOMAI_SYSCALL1(sc_cobalt_mutex_destroy, _mutex);
 
 	return -err;
 }
@@ -258,7 +257,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 		}
 
 	do {
-		err = XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_mutex_lock,_mutex);
+		err = XENOMAI_SYSCALL1(sc_cobalt_mutex_lock, _mutex);
 	} while (err == -EINTR);
 
 	if (!err)
@@ -344,8 +343,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 		}
 
 	do {
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_mutex_timedlock, _mutex, to);
+		err = XENOMAI_SYSCALL2(sc_cobalt_mutex_timedlock, _mutex, to);
 	} while (err == -EINTR);
 
 	if (!err)
@@ -420,8 +418,7 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 do_syscall:
 
 	do {
-		err = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_mutex_trylock, _mutex);
+		err = XENOMAI_SYSCALL1(sc_cobalt_mutex_trylock, _mutex);
 	} while (err == -EINTR);
 
 	if (!err)
@@ -490,8 +487,7 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 do_syscall:
 
 	do {
-		err = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_mutex_unlock, _mutex);
+		err = XENOMAI_SYSCALL1(sc_cobalt_mutex_unlock, _mutex);
 	} while (err == -EINTR);
 
 	return -err;

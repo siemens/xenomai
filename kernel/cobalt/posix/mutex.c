@@ -34,7 +34,7 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	int err;
 
 	kq = cobalt_kqueues(attr->pshared);
-	sys_ppd = xnsys_ppd_get(attr->pshared);
+	sys_ppd = cobalt_ppd_get(attr->pshared);
 	err = xnregistry_enter_anon(mutex, &shadow->handle);
 	if (err < 0)
 		return err;
@@ -74,7 +74,7 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	mutex = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
 		xnlock_put_irqrestore(&nklock, s);
-		printk("mutex_destroy: invalid mutex %x\n",
+		printk(XENO_WARN "mutex_destroy: invalid mutex %x\n",
 			mutex ? mutex->magic : ~0);
 		return;
 	}
@@ -89,7 +89,7 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	cobalt_mark_deleted(mutex);
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
+	xnheap_free(&cobalt_ppd_get(mutex->attr.pshared)->sem_heap,
 		    mutex->synchbase.fastlock);
 	xnfree(mutex);
 }
@@ -179,7 +179,7 @@ static inline
 int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 				 int timed, const struct timespec __user *u_ts)
 {
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 	int ret;
 
 	/* We need a valid thread handle for the fast lock. */
@@ -255,7 +255,7 @@ int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
 	if (mutex == NULL)
 		return -ENOMEM;
 
-	datp = xnheap_alloc(&xnsys_ppd_get(attr.pshared)->sem_heap,
+	datp = xnheap_alloc(&cobalt_ppd_get(attr.pshared)->sem_heap,
 			     sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(mutex);
@@ -265,7 +265,7 @@ int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
 	err = cobalt_mutex_init_inner(&mx, mutex, datp, &attr);
 	if (err) {
 		xnfree(mutex);
-		xnheap_free(&xnsys_ppd_get(attr.pshared)->sem_heap, datp);
+		xnheap_free(&cobalt_ppd_get(attr.pshared)->sem_heap, datp);
 		return err;
 	}
 
@@ -315,7 +315,7 @@ int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx)
 
 int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 {
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 	struct cobalt_mutex *mutex;
 	xnhandle_t handle;
 	spl_t s;
@@ -396,7 +396,7 @@ int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx)
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mx->handle);
-	curr = xnshadow_current();
+	curr = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
 	mutex = xnregistry_lookup(handle, NULL);

@@ -57,7 +57,7 @@ static volatile void *map_kmem(unsigned long pa, unsigned int pagesz)
 	return (volatile void *)(p + (pa & (pagesz - 1)));
 }
 
-void cobalt_chech_features(struct xnfeatinfo *finfo)
+void cobalt_chech_features(struct cobalt_featinfo *finfo)
 {
 	unsigned int pagesz = sysconf(_SC_PAGESIZE);
 

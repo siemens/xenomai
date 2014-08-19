@@ -442,7 +442,7 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 		 */
 		xnthread_suspend(&thread->threadbase, XNSUSP,
 				 XN_INFINITE, XN_RELATIVE, NULL);
-		if (&thread->threadbase == xnshadow_current() &&
+		if (&thread->threadbase == xnthread_current() &&
 		    xnthread_test_info(&thread->threadbase, XNBREAK))
 			ret = EINTR;
 		break;
@@ -453,10 +453,10 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 		xnthread_unblock(&thread->threadbase);
 		goto resched;
 	case SIGKICK:
-		xnshadow_kick(&thread->threadbase);
+		xnthread_kick(&thread->threadbase);
 		goto resched;
 	case SIGDEMT:
-		xnshadow_demote(&thread->threadbase);
+		xnthread_demote(&thread->threadbase);
 		goto resched;
 	case 1 ... _NSIG:
 		sigp = cobalt_signal_alloc();

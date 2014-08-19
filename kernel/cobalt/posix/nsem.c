@@ -20,7 +20,6 @@
 #include <linux/err.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/tree.h>
 #include "internal.h"
 #include "sem.h"
@@ -195,7 +194,7 @@ int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 	struct cobalt_process *cc;
 	long len;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	if (cc == NULL)
 		return -EPERM;
 
@@ -226,7 +225,7 @@ int cobalt_sem_close(struct cobalt_sem_shadow __user *usm)
 	struct cobalt_process *cc;
 	xnhandle_t handle;
 
-	cc = cobalt_process_context();
+	cc = cobalt_current_process();
 	if (cc == NULL)
 		return -EPERM;
 

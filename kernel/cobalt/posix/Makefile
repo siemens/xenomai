@@ -10,9 +10,9 @@ posix-y :=		\
 	mqueue.o	\
 	mutex.o		\
 	nsem.o		\
+	process.o	\
 	sched.o		\
 	sem.o		\
-	select.o	\
 	signal.o	\
 	syscall.o	\
 	thread.o	\

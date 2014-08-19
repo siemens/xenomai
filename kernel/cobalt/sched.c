@@ -17,13 +17,14 @@
  * 02111-1307, USA.
  */
 #include <linux/module.h>
+#include <linux/signal.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/arith.h>
+#include <cobalt/uapi/signal.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/cobalt-core.h>
 
@@ -120,7 +121,7 @@ static void watchdog_handler(struct xntimer *timer)
 	if (xnthread_test_state(curr, XNUSER)) {
 		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
 		       "'%s' signaled\n", xnsched_cpu(sched), xnthread_name(curr));
-		xnshadow_call_mayday(curr, SIGDEBUG_WATCHDOG);
+		xnthread_call_mayday(curr, SIGDEBUG_WATCHDOG);
 	} else {
 		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
 		       "'%s' canceled\n", xnsched_cpu(sched), xnthread_name(curr));
@@ -895,7 +896,7 @@ shadow_epilogue:
 	 * real-time shadow we've just rescheduled in the Linux domain
 	 * to have it exit properly.  Reap it now.
 	 */
-	if (xnshadow_current() == NULL) {
+	if (xnthread_current() == NULL) {
 		splnone();
 		__ipipe_reenter_root();
 		do_exit(0);

@@ -19,8 +19,8 @@
 #ifndef _COBALT_X86_ASM_FEATURES_H
 #define _COBALT_X86_ASM_FEATURES_H
 
-struct xnfeatinfo;
-static inline void collect_arch_features(struct xnfeatinfo *p) { }
+struct cobalt_featinfo;
+static inline void collect_arch_features(struct cobalt_featinfo *p) { }
 
 #include <asm/xenomai/uapi/features.h>
 

@@ -20,8 +20,8 @@
 #include <linux/types.h>
 #include <linux/ipipe.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/syscall.h>
 #include <asm/ptrace.h>
-#include <asm/xenomai/syscall.h>
 
 #ifdef CONFIG_X86_32
 
@@ -57,7 +57,7 @@ void xnarch_setup_mayday_page(void *page)
 	} code_sep = {
 		.mov_eax = {
 			.op = 0xb8,
-			.imm = __xn_mux_code(0, sc_nucleus_mayday)
+			.imm = __xn_syscode(sc_cobalt_mayday)
 		},
 		.syscall = {
 			.op = {
@@ -78,7 +78,7 @@ void xnarch_setup_mayday_page(void *page)
 	} code_nosep = {
 		.mov_eax = {
 			.op = 0xb8,
-			.imm = __xn_mux_code(0, sc_nucleus_mayday)
+			.imm = __xn_syscode(sc_cobalt_mayday)
 		},
 		.syscall = 0x80cd,
 		.bug = 0x0b0f,
@@ -116,7 +116,7 @@ void xnarch_setup_mayday_page(void *page)
 	} code = {
 		.mov_eax = {
 			.op = 0xb8,
-			.imm = __xn_mux_code(0, sc_nucleus_mayday)
+			.imm = __xn_syscode(sc_cobalt_mayday)
 		},
 		.syscall = 0x050f,
 		.bug = 0x0b0f,

@@ -33,7 +33,7 @@
 #include <limits.h>
 #include <malloc.h>
 #include <getopt.h>
-#include <cobalt/uapi/asm-generic/syscall.h>
+#include <signal.h>
 
 static const struct option base_options[] = {
 	{

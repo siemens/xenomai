@@ -50,14 +50,14 @@ int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 
 	switch (action) {
 	case SIGSHADOW_ACTION_HARDEN:
-		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
+		XENOMAI_SYSCALL1(sc_cobalt_migrate, COBALT_PRIMARY);
 		break;
 	case SIGSHADOW_ACTION_BACKTRACE:
 		arg = sigshadow_arg(si->si_int);
 		nr = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
 		/* Skip the sighandler context. */
 		skip = nr > 3 ? 3 : 0;
-		XENOMAI_SYSCALL3(sc_nucleus_backtrace, nr - skip, frames + skip, arg);
+		XENOMAI_SYSCALL3(sc_cobalt_backtrace, nr - skip, frames + skip, arg);
 		break;
 	default:
 		return 0;

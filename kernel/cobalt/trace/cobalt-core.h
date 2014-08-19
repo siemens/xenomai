@@ -96,47 +96,6 @@ DECLARE_EVENT_CLASS(clock_event,
 	TP_printk("clock_irq=%u", __entry->irq)
 );
 
-DECLARE_EVENT_CLASS(syscall_entry,
-	TP_PROTO(struct xnthread *thread, int muxid, int muxop),
-	TP_ARGS(thread, muxid, muxop),
-
-	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
-		__string(name, thread ? xnthread_name(thread) : "(anon)")
-		__field(int, muxid)
-		__field(int, muxop)
-	),
-
-	TP_fast_assign(
-		__entry->thread	= thread;
-		__assign_str(name, thread ? xnthread_name(thread) : "(anon)");
-		__entry->muxid = muxid;
-		__entry->muxop = muxop;
-	),
-
-	TP_printk("thread=%p(%s) muxid=%d muxop=%d",
-		  __entry->thread, __get_str(name), __entry->muxid,
-		  __entry->muxop)
-);
-
-DECLARE_EVENT_CLASS(syscall_exit,
-	TP_PROTO(struct xnthread *thread, int result),
-	TP_ARGS(thread, result),
-
-	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
-		__field(int, result)
-	),
-
-	TP_fast_assign(
-		__entry->thread = thread;
-		__entry->result = result;
-	),
-
-	TP_printk("thread=%p result=%d",
-		  __entry->thread, __entry->result)
-);
-
 DECLARE_EVENT_CLASS(thread_migrate,
 	TP_PROTO(struct xnthread *thread, unsigned int cpu),
 	TP_ARGS(thread, cpu),
@@ -419,11 +378,6 @@ DEFINE_EVENT(thread_event, cobalt_shadow_unmap,
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_shadow_finalize,
-	TP_PROTO(struct xnthread *thread),
-	TP_ARGS(thread)
-);
-
 TRACE_EVENT(cobalt_lostage_request,
         TP_PROTO(const char *type, struct task_struct *task),
 	TP_ARGS(type, task),
@@ -480,26 +434,6 @@ TRACE_EVENT(cobalt_lostage_signal,
 
 	TP_printk("pid=%d comm=%s sig=%d",
 		  __entry->pid, __entry->comm, __entry->sig)
-);
-
-DEFINE_EVENT(syscall_entry, cobalt_head_sysentry,
-	TP_PROTO(struct xnthread *thread, int muxid, int muxop),
-	TP_ARGS(thread, muxid, muxop)
-);
-
-DEFINE_EVENT(syscall_exit, cobalt_head_sysexit,
-	TP_PROTO(struct xnthread *thread, int result),
-	TP_ARGS(thread, result)
-);
-
-DEFINE_EVENT(syscall_entry, cobalt_root_sysentry,
-	TP_PROTO(struct xnthread *thread, int muxid, int muxop),
-	TP_ARGS(thread, muxid, muxop)
-);
-
-DEFINE_EVENT(syscall_exit, cobalt_root_sysexit,
-	TP_PROTO(struct xnthread *thread, int result),
-	TP_ARGS(thread, result)
 );
 
 DEFINE_EVENT(irq_event, cobalt_irq_entry,

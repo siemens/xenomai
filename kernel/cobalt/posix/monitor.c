@@ -69,7 +69,7 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
 		return -ENOMEM;
 
 	pshared = (flags & COBALT_MONITOR_SHARED) != 0;
-	heap = &xnsys_ppd_get(pshared)->sem_heap;
+	heap = &cobalt_ppd_get(pshared)->sem_heap;
 	datp = xnheap_alloc(heap, sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(mon);
@@ -147,7 +147,7 @@ static int cobalt_monitor_enter_inner(xnhandle_t handle, struct xnthread *curr)
 
 int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
 {
-	struct xnthread *curr = xnshadow_current();
+	struct xnthread *curr = xnthread_current();
 	xnhandle_t handle;
 	int ret;
 	spl_t s;
@@ -309,7 +309,7 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
-	curr = xnshadow_current();
+	curr = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -337,7 +337,7 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
-	curr = xnshadow_current();
+	curr = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -372,7 +372,7 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 	xnlock_put_irqrestore(&nklock, s);
 
 	pshared = (mon->flags & COBALT_MONITOR_SHARED) != 0;
-	heap = &xnsys_ppd_get(pshared)->sem_heap;
+	heap = &cobalt_ppd_get(pshared)->sem_heap;
 	xnheap_free(heap, mon->data);
 	xnfree(mon);
 }
@@ -387,7 +387,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
-	curr = xnshadow_current();
+	curr = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
 

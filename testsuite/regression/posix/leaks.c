@@ -35,10 +35,10 @@
 static unsigned long long get_used(void)
 {
 	unsigned long long used = 0;
-	struct xnheap_desc hd;
+	struct cobalt_heapstat hd;
 	int i;
 
-	for (i = 0; XENOMAI_SYSCALL2(sc_nucleus_heap_info, &hd, i) == 0; i++)
+	for (i = 0; XENOMAI_SYSCALL2(sc_cobalt_heap_getstat, &hd, i) == 0; i++)
 		used += hd.used;
 
 	if (used == 0) {

@@ -338,7 +338,7 @@ int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	thread = xnshadow_current();
+	thread = xnthread_current();
 	xnthread_suspend(thread, XNDELAY, timeout, mode, NULL);
 
 	return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
@@ -774,7 +774,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	trace_cobalt_driver_event_wait(event, xnshadow_current());
+	trace_cobalt_driver_event_wait(event, xnthread_current());
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -790,7 +790,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			goto unlock_out;
 		}
 
-		thread = xnshadow_current();
+		thread = xnthread_current();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1009,7 +1009,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	trace_cobalt_driver_sem_wait(sem, xnshadow_current());
+	trace_cobalt_driver_sem_wait(sem, xnthread_current());
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1021,7 +1021,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	} else if (timeout < 0) /* non-blocking mode */
 		err = -EWOULDBLOCK;
 	else {
-		thread = xnshadow_current();
+		thread = xnthread_current();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1254,7 +1254,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	curr_thread = xnshadow_current();
+	curr_thread = xnthread_current();
 	trace_cobalt_driver_mutex_wait(mutex, curr_thread);
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2151,7 +2151,7 @@ int rtdm_strncpy_from_user(struct rtdm_fd *fd, char *dst,
  * @return Non-zero is returned if the caller resides in real-time context, 0
  * otherwise.
  *
- * @coretags{task-unrestricted}
+ * @coretags{unrestricted}
  */
 int rtdm_in_rt_context(void);
 
@@ -2171,7 +2171,7 @@ int rtdm_in_rt_context(void);
  * for the driver to reject the request via -ENOSYS so that RTDM can switch
  * the caller and restart the request in real-time context.
  *
- * @coretags{task-unrestricted}
+ * @coretags{unrestricted}
  */
 int rtdm_rt_capable(struct rtdm_fd *fd);
 

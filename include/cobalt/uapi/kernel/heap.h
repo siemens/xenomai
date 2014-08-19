@@ -21,12 +21,12 @@
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
 #define XNHEAP_DEV_MINOR 254
 
-/* Possible arguments to the sys_heap_info syscall */
-#define XNHEAP_PROC_PRIVATE_HEAP 0
-#define XNHEAP_PROC_SHARED_HEAP  1
-#define XNHEAP_SYS_HEAP          2
+/* For sc_cobalt_heap_getstat. */
+#define COBALT_PRIVATE_HEAP  0
+#define COBALT_SHARED_HEAP   1
+#define COBALT_GLOBAL_HEAP   2
 
-struct xnheap_desc {
+struct cobalt_heapstat {
 	unsigned long handle;
 	unsigned int size;
 	unsigned long area;

@@ -26,7 +26,6 @@ noinst_HEADERS =	\
 	sched-tp.h	\
 	sched-weak.h	\
 	select.h	\
-	shadow.h	\
 	stat.h		\
 	synch.h		\
 	thread.h	\

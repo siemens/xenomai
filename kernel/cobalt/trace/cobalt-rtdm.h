@@ -7,12 +7,14 @@
 #include <linux/tracepoint.h>
 #include <linux/mman.h>
 
+struct rtdm_fd;
 struct rtdm_event;
 struct rtdm_sem;
 struct rtdm_mutex;
 struct xnthread;
 struct rtdm_device;
 struct rtdm_dev_context;
+struct _rtdm_mmap_request;
 
 DECLARE_EVENT_CLASS(fd_event,
 	TP_PROTO(struct rtdm_fd *fd, int ufd),

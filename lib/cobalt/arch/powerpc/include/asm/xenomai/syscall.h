@@ -23,22 +23,22 @@
 
 /* Some code pulled from glibc's inline syscalls. */
 
-#define LOADARGS_0(muxcode, dummy...)			\
-	__sc_0 = (unsigned long)(muxcode)
-#define LOADARGS_1(muxcode, arg1)			\
-	LOADARGS_0(muxcode);				\
+#define LOADARGS_0(syscode, dummy...)			\
+	__sc_0 = (unsigned long)(syscode)
+#define LOADARGS_1(syscode, arg1)			\
+	LOADARGS_0(syscode);				\
 	__sc_3 = (unsigned long) (arg1)
-#define LOADARGS_2(muxcode, arg1, arg2)			\
-	LOADARGS_1(muxcode, arg1);			\
+#define LOADARGS_2(syscode, arg1, arg2)			\
+	LOADARGS_1(syscode, arg1);			\
 	__sc_4 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3)		\
-	LOADARGS_2(muxcode, arg1, arg2);		\
+#define LOADARGS_3(syscode, arg1, arg2, arg3)		\
+	LOADARGS_2(syscode, arg1, arg2);		\
 	__sc_5 = (unsigned long) (arg3)
-#define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)	\
-	LOADARGS_3(muxcode, arg1, arg2, arg3);		\
+#define LOADARGS_4(syscode, arg1, arg2, arg3, arg4)	\
+	LOADARGS_3(syscode, arg1, arg2, arg3);		\
 	__sc_6 = (unsigned long) (arg4)
-#define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5) \
-	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	\
+#define LOADARGS_5(syscode, arg1, arg2, arg3, arg4, arg5) \
+	LOADARGS_4(syscode, arg1, arg2, arg3, arg4);	\
 	__sc_7 = (unsigned long) (arg5)
 
 #define ASM_INPUT_0 "0" (__sc_0)
@@ -48,7 +48,7 @@
 #define ASM_INPUT_4 ASM_INPUT_3, "4" (__sc_6)
 #define ASM_INPUT_5 ASM_INPUT_4, "5" (__sc_7)
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
+#define XENOMAI_DO_SYSCALL(nr, op, args...)			\
   ({								\
 	register unsigned long __sc_0  __asm__ ("r0");		\
 	register unsigned long __sc_3  __asm__ ("r3");		\
@@ -57,7 +57,7 @@
 	register unsigned long __sc_6  __asm__ ("r6");		\
 	register unsigned long __sc_7  __asm__ ("r7");		\
 								\
-	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
+	LOADARGS_##nr(__xn_syscode(op), args);			\
 	__asm__ __volatile__					\
 		("sc           \n\t"				\
 		 "mfcr %0      "				\
@@ -71,19 +71,12 @@
 	(int)((__sc_0 & (1 << 28)) ? -__sc_3 : __sc_3);		\
   })
 
-#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
-#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
-#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
-#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
-#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2)              XENOMAI_DO_SYSCALL(2,0,sc_nucleus_bind,a1,a2)
-
-#define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)          XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,op)
+#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,op,a1)
+#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,op,a1,a2)
+#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,op,a1,a2,a3)
+#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,op,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSBIND(breq)               XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
 #endif /* !_LIB_COBALT_POWERPC_SYSCALL_H */

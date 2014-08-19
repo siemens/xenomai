@@ -117,7 +117,7 @@ xnhandle_t cobalt_get_current_slow(void)
 	xnhandle_t current;
 	int err;
 
-	err = XENOMAI_SYSCALL1(sc_nucleus_current, &current);
+	err = XENOMAI_SYSCALL1(sc_cobalt_current, &current);
 
 	return err ? XN_NO_HANDLE : current;
 }
@@ -128,7 +128,7 @@ void cobalt_set_tsd(unsigned long u_winoff)
 	xnhandle_t current;
 	int ret;
 
-	ret = XENOMAI_SYSCALL1(sc_nucleus_current, &current);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_current, &current);
 	if (ret) {
 		report_error("error retrieving current handle: %s",
 			     strerror(-ret));

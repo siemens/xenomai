@@ -29,6 +29,7 @@
 #include <trace/events/cobalt-rtdm.h>
 #include <rtdm/fd.h>
 #include "internal.h"
+#include "../posix/process.h"
 
 DEFINE_PRIVATE_XNLOCK(__rtdm_fd_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
@@ -586,7 +587,7 @@ int rtdm_fd_valid_p(int ufd)
 	spl_t s;
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-	fd = rtdm_fd_fetch(xnsys_ppd_get(0), ufd);
+	fd = rtdm_fd_fetch(cobalt_ppd_get(0), ufd);
 	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
 
 	return fd != NULL;
@@ -618,7 +619,7 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 	struct rtdm_fd *fd;
 	int rc;
 
-	p = xnsys_ppd_get(0);
+	p = cobalt_ppd_get(0);
 	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd))
 		return PTR_ERR(fd);

@@ -17,11 +17,12 @@
  * 02111-1307, USA.
  */
 #include <stdarg.h>
+#include <linux/signal.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/clock.h>
-#include <cobalt/kernel/shadow.h>
+#include <cobalt/uapi/signal.h>
 #include <trace/events/cobalt-core.h>
 
 /**
@@ -141,7 +142,7 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
 
-	thread = xnshadow_current();
+	thread = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -344,7 +345,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
 
-	thread = xnshadow_current();
+	thread = xnthread_current();
 	threadh = xnthread_handle(thread);
 	lockp = xnsynch_fastlock(synch);
 	trace_cobalt_synch_acquire(synch, thread);
@@ -584,7 +585,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 
 	if (unlikely(xnthread_test_state(thread, XNWEAK))) {
 		if (xnthread_get_rescnt(thread) == 0)
-			xnshadow_send_sig(thread, SIGDEBUG,
+			xnthread_signal(thread, SIGDEBUG,
 					  SIGDEBUG_RESCNT_IMBALANCE);
 		else
 			xnthread_dec_rescnt(thread);
@@ -830,7 +831,7 @@ void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleepe
 	    !xnthread_test_info(sleeper, XNPIALERT) &&
 	    xnthread_test_state(synch->owner, XNRELAX)) {
 		xnthread_set_info(sleeper, XNPIALERT);
-		xnshadow_send_sig(sleeper, SIGDEBUG,
+		xnthread_signal(sleeper, SIGDEBUG,
 				  SIGDEBUG_MIGRATE_PRIOINV);
 	} else
 		xnthread_clear_info(sleeper,  XNPIALERT);
@@ -853,7 +854,7 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 		xnsynch_for_each_sleeper(sleeper, synch) {
 			if (xnthread_test_state(sleeper, XNWARN)) {
 				xnthread_set_info(sleeper, XNPIALERT);
-				xnshadow_send_sig(sleeper, SIGDEBUG,
+				xnthread_signal(sleeper, SIGDEBUG,
 						  SIGDEBUG_MIGRATE_PRIOINV);
 			}
 		}

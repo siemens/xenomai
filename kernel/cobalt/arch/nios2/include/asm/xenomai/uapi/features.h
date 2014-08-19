@@ -28,7 +28,7 @@
 #define XNARCH_HAVE_LLMULSHFT    1
 #define XNARCH_HAVE_NODIV_LLIMD  1
 
-struct xnfeatinfo_archdep {
+struct cobalt_featinfo_archdep {
 	unsigned long hrclock_membase;
 };
 

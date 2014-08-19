@@ -19,10 +19,10 @@
 #include <linux/types.h>
 #include <linux/ipipe.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
 #include <asm/bug.h>
-#include <asm/xenomai/syscall.h>
 
 void xnarch_setup_mayday_page(void *page)
 {
@@ -53,11 +53,11 @@ void xnarch_setup_mayday_page(void *page)
 	} code = {
 		.load_r5h = {
 			.op = 0xe145,
-			.imm = __xn_mux_code(0, sc_nucleus_mayday) >> 16
+			.imm = __xn_syscode(sc_cobalt_mayday) >> 16
 		},
 		.load_r5l = {
 			.op = 0xe105,
-			.imm = __xn_mux_code(0, sc_nucleus_mayday) & 0xffff
+			.imm = __xn_syscode(sc_cobalt_mayday) & 0xffff
 		},
 		.mov_p0 = 0x3205,
 		.syscall = 0x00a0,

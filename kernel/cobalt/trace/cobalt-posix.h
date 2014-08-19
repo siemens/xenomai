@@ -22,6 +22,44 @@
 #define __timespec_args(__name)					\
 	__entry->tv_sec_##__name, __entry->tv_nsec_##__name
 
+DECLARE_EVENT_CLASS(syscall_entry,
+	TP_PROTO(struct xnthread *thread, int nr),
+	TP_ARGS(thread, nr),
+
+	TP_STRUCT__entry(
+		__field(struct xnthread *, thread)
+		__string(name, thread ? xnthread_name(thread) : "(anon)")
+		__field(int, nr)
+	),
+
+	TP_fast_assign(
+		__entry->thread	= thread;
+		__assign_str(name, thread ? xnthread_name(thread) : "(anon)");
+		__entry->nr = nr;
+	),
+
+	TP_printk("thread=%p(%s) syscall=%d",
+		  __entry->thread, __get_str(name), __entry->nr)
+);
+
+DECLARE_EVENT_CLASS(syscall_exit,
+	TP_PROTO(struct xnthread *thread, int result),
+	TP_ARGS(thread, result),
+
+	TP_STRUCT__entry(
+		__field(struct xnthread *, thread)
+		__field(int, result)
+	),
+
+	TP_fast_assign(
+		__entry->thread = thread;
+		__entry->result = result;
+	),
+
+	TP_printk("thread=%p result=%d",
+		  __entry->thread, __entry->result)
+);
+
 #define cobalt_print_sched_policy(__policy)			\
 	__print_symbolic(__policy,				\
 			 {SCHED_NORMAL, "normal"},		\
@@ -109,6 +147,26 @@ DECLARE_EVENT_CLASS(cobalt_void,
 		(void)dummy;
 	),
 	TP_printk("%s", "")
+);
+
+DEFINE_EVENT(syscall_entry, cobalt_head_sysentry,
+	TP_PROTO(struct xnthread *thread, int nr),
+	TP_ARGS(thread, nr)
+);
+
+DEFINE_EVENT(syscall_exit, cobalt_head_sysexit,
+	TP_PROTO(struct xnthread *thread, int result),
+	TP_ARGS(thread, result)
+);
+
+DEFINE_EVENT(syscall_entry, cobalt_root_sysentry,
+	TP_PROTO(struct xnthread *thread, int nr),
+	TP_ARGS(thread, nr)
+);
+
+DEFINE_EVENT(syscall_exit, cobalt_root_sysexit,
+	TP_PROTO(struct xnthread *thread, int result),
+	TP_ARGS(thread, result)
 );
 
 DEFINE_EVENT(cobalt_posix_schedparam, cobalt_pthread_create,

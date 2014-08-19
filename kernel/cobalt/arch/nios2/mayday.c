@@ -16,10 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #include <linux/types.h>
 #include <linux/ipipe.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
 
@@ -28,8 +28,8 @@ void xnarch_setup_mayday_page(void *page)
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
-	 *	00c00334	movhi	r3,#sc_nucleus_mayday
-	 *	18c08ac4	addi	r3,r3,#sc_nucleus_mux
+	 *	00c00334	movhi	r3,#sc_cobalt_mayday
+	 *	18c08ac4	addi	r3,r3,#cobalt_syscall_tag
 	 *	00800004	movi	r2,0
 	 *	003b683a	trap
 	 *	003fff06	br	.
