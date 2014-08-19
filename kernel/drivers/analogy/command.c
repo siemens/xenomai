@@ -26,7 +26,6 @@
 #include <rtdm/analogy/device.h>
 
 /* --- Command descriptor management functions --- */
-
 int a4l_fill_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc, void *arg)
 {
 	int ret = 0;
@@ -284,11 +283,11 @@ int a4l_check_specific_cmdcnt(struct a4l_device_context * cxt, struct a4l_cmd_de
 
 /* --- IOCTL / FOPS function --- */
 
-int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
+int a4l_ioctl_cmd(struct a4l_device_context * ctx, void *arg)
 {
 	int ret = 0, simul_flag = 0;
 	struct a4l_cmd_desc *cmd_desc = NULL;
-	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_device *dev = a4l_get_dev(ctx);
 	struct a4l_subdevice *subd;
 
 	/* The command launching cannot be done in real-time because
@@ -310,12 +309,12 @@ int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 	memset(cmd_desc, 0, sizeof(struct a4l_cmd_desc));
 
 	/* Gets the command */
-	ret = a4l_fill_cmddesc(cxt, cmd_desc, arg);
+	ret = a4l_fill_cmddesc(ctx, cmd_desc, arg);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
 	/* Checks the command */
-	ret = a4l_check_cmddesc(cxt, cmd_desc);
+	ret = a4l_check_cmddesc(ctx, cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
@@ -323,7 +322,7 @@ int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
-	ret = a4l_check_specific_cmdcnt(cxt, cmd_desc);
+	ret = a4l_check_specific_cmdcnt(ctx, cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
@@ -347,7 +346,7 @@ int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 	}
 
 	/* Gets the transfer system ready */
-	ret = a4l_setup_buffer(cxt, cmd_desc);
+	ret = a4l_setup_buffer(ctx, cmd_desc);
 	if (ret < 0)
 		goto out_ioctl_cmd;
 
@@ -355,12 +354,14 @@ int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 	ret = subd->do_cmd(subd, cmd_desc);
 
 	if (ret != 0) {
-		a4l_cancel_buffer(cxt);
+		a4l_cancel_buffer(ctx);
 		goto out_ioctl_cmd;
 	}
 
 out_ioctl_cmd:
 	if (ret != 0 || simul_flag == 1) {
+		rtdm_safe_copy_to_user(rtdm_private_to_fd(ctx), arg, cmd_desc,
+			sizeof(struct a4l_cmd_desc));
 		a4l_free_cmddesc(cmd_desc);
 		rtdm_free(cmd_desc);
 	}
