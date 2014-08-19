@@ -2067,12 +2067,14 @@ static int ni_ai_cmdtest(struct a4l_subdevice *subd, struct a4l_cmd_desc * cmd)
 								   cmd->nb_chan)) {
 			cmd->scan_begin_arg =
 				ni_min_ai_scan_period_ns(dev, cmd->nb_chan);
-			return -EINVAL;
-		}
-		if (cmd->scan_begin_arg > devpriv->clock_ns * 0xffffff) {
+
+		if (cmd->scan_begin_arg > devpriv->clock_ns * 0xffffff)
 			cmd->scan_begin_arg = devpriv->clock_ns * 0xffffff;
-			return -EINVAL;
+
+		/* required for calibration */
+		return 0;
 		}
+
 	} else if (cmd->scan_begin_src == TRIG_EXT) {
 		/* external trigger */
 		unsigned int tmp = CR_CHAN(cmd->scan_begin_arg);
