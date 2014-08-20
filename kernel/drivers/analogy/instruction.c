@@ -228,10 +228,12 @@ int a4l_do_insn(struct a4l_device_context * cxt, struct a4l_kernel_instruction *
 	}
 
 	/* Checks the channel descriptor */
-	ret = a4l_check_chanlist(dev->transfer.subds[dsc->idx_subd],
-				 1, &dsc->chan_desc);
-	if (ret < 0)
-		return ret;
+	if ((subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_CALIB) {
+		ret = a4l_check_chanlist(dev->transfer.subds[dsc->idx_subd],
+					 1, &dsc->chan_desc);
+		if (ret < 0)
+			return ret;
+	}
 
 	/* Choose the proper handler, we can check the pointer because
 	   the subdevice was memset to 0 at allocation time */
