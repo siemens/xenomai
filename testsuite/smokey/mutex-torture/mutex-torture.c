@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
+#include <cobalt/sys/cobalt.h>
 #include <cobalt/uapi/syscall.h>
 #include "lib/cobalt/current.h"
 #include <smokey/smokey.h>
@@ -92,19 +93,20 @@ static void ms_sleep(int time)
 
 static void check_current_prio(int expected_prio)
 {
-	int current_prio;
-# ifdef __cobalt_get_current_prio
-	extern unsigned __cobalt_muxid;
+	struct cobalt_threadstat stat;
+	int ret;
 
-	XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_get_current_prio, &current_prio);
-# else /* !__cobalt_get_current_prio */
-	current_prio = expected_prio;
-# endif /* !__cobalt_get_current_prio */
+	ret = cobalt_thread_stat(0, &stat);
+	if (ret) {
+		fprintf(stderr,
+			"FAILURE: cobalt_threadstat (%s)\n", strerror(-ret));
+		exit(EXIT_FAILURE);
+	}
 
-	if (current_prio != expected_prio) {
+	if (stat.cprio != expected_prio) {
 		fprintf(stderr,
 			"FAILURE: current prio (%d) != expected prio (%d)\n",
-			current_prio, expected_prio);
+			stat.cprio, expected_prio);
 		exit(EXIT_FAILURE);
 	}
 }
