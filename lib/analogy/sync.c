@@ -211,13 +211,13 @@ int a4l_sync_read(a4l_desc_t * dsc,
 			.type = A4L_INSN_READ,
 			.idx_subd = idx_subd,
 			.chan_desc = chan_desc,
-			.data_size = 0,
+			.data_size = nbyte,
 			.data = buf},
 		{
 			.type = A4L_INSN_WAIT,
 			.idx_subd = idx_subd,
 			.chan_desc = chan_desc,
-			.data_size = 1,
+			.data_size = sizeof(unsigned int),
 			.data = NULL}
 	};
 
