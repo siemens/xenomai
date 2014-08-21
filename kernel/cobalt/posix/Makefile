@@ -1,6 +1,6 @@
-obj-$(CONFIG_XENOMAI) += posix.o
+obj-$(CONFIG_XENOMAI) += xenomai.o
 
-posix-y :=		\
+xenomai-y :=		\
 	clock.o		\
 	cond.o		\
 	event.o		\
