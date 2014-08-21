@@ -192,6 +192,11 @@ struct udd_device {
 	/** Name of the device managed by the mini-driver. */
 	const char *device_name;
 	/**
+	 * Additional device flags (e.g. RTDM_EXCLUSIVE,
+	 * RTDM_MINOR. RTDM_NAMED_DEVICE may be omitted).
+	 */
+	int device_flags;
+	/**
 	 * Textual description of the device managed by the
 	 * mini-driver.
 	 */

@@ -329,6 +329,8 @@ static inline int register_mapper(struct udd_device *udd)
  * - -EINVAL, if udd_device.irq is different from UDD_IRQ_CUSTOM and
  * UDD_IRQ_NONE but invalid, causing rtdm_irq_request() to fail.
  *
+ * - -EINVAL, if udd_device.device_flags contains invalid flags.
+ *
  * - -ENXIO can be received if this service is called while the Cobalt
  * kernel is disabled.
  *
@@ -343,6 +345,9 @@ int udd_register_device(struct udd_device *udd)
 	if (!realtime_core_enabled())
 		return -ENXIO;
 
+	if (udd->device_flags & RTDM_PROTOCOL_DEVICE)
+		return -EINVAL;
+
 	if (udd->irq != UDD_IRQ_NONE && udd->ops.interrupt == NULL)
 		return -EINVAL;
 
@@ -354,7 +359,7 @@ int udd_register_device(struct udd_device *udd)
 
 	memset(dev, 0, sizeof(*dev));
 	dev->struct_version = RTDM_DEVICE_STRUCT_VER;
-	dev->device_flags = RTDM_NAMED_DEVICE;
+	dev->device_flags = RTDM_NAMED_DEVICE|udd->device_flags;
 	dev->context_size = sizeof(struct udd_context);
 	dev->ops = (struct rtdm_fd_ops){
 		.open = udd_open,
