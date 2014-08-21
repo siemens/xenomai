@@ -18,6 +18,7 @@
 #ifndef _XENOMAI_TRANK_NATIVE_TIMER_H
 #define _XENOMAI_TRANK_NATIVE_TIMER_H
 
+#include <errno.h>
 #include <trank/trank.h>
 #include <alchemy/timer.h>
 
