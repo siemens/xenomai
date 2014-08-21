@@ -59,7 +59,7 @@ static void sigill_handler(int sig)
 	exit(EXIT_FAILURE);
 }
 
-static void bind_to_core(void)
+static void low_init(void)
 {
 	sighandler_t old_sigill_handler;
 	struct cobalt_sysinfo sysinfo;
@@ -129,7 +129,7 @@ void __libcobalt_init(void)
 	struct sigaction sa;
 	int ret;
 
-	bind_to_core();
+	low_init();
 
 	sa.sa_sigaction = cobalt_sigdebug_handler;
 	sigemptyset(&sa.sa_mask);

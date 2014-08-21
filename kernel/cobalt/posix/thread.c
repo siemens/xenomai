@@ -757,6 +757,7 @@ int cobalt_thread_stat(pid_t pid,
 	 * We have to hold the nklock to keep most values consistent.
 	 */
 	stat.cpu = xnsched_cpu(thread->sched);
+	stat.cprio = xnthread_current_priority(thread);
 	xtime = xnthread_get_exectime(thread);
 	if (xnthread_sched(thread)->curr == thread)
 		xtime += xnstat_exectime_now() - xnthread_get_lastswitch(thread);

@@ -38,6 +38,7 @@ struct cobalt_condattr {
 
 struct cobalt_threadstat {
 	int cpu;
+	int cprio;
 	unsigned long status;
 	unsigned long long xtime;
 	unsigned long msw;
