@@ -152,33 +152,4 @@
 #define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,op,a1,a2,a3,a4,a5)
 #define XENOMAI_SYSBIND(breq)		    XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
-/*
- * uClibc does not always provide the following symbols for this arch;
- * provide placeholders here. Note: let the compiler decides whether
- * it wants to actually inline this routine, i.e. do not force
- * always_inline.
- */
-inline __attribute__((weak)) int pthread_atfork(void (*prepare)(void),
-						void (*parent)(void),
-						void (*child)(void))
-{
-	return 0;
-}
-
-#include <errno.h>
-
-inline __attribute__((weak)) int shm_open(const char *name,
-					  int oflag,
-					  mode_t mode)
-{
-	errno = ENOSYS;
-	return -1;
-}
-
-inline __attribute__((weak)) int shm_unlink(const char *name)
-{
-	errno = ENOSYS;
-	return -1;
-}
-
 #endif /* !_LIB_COBALT_NIOS2_SYSCALL_H */

@@ -155,6 +155,12 @@
 /* Define to 1 if you have the `sched_getcpu' function. */
 #undef HAVE_SCHED_GETCPU
 
+/* Define to 1 if you have the `shm_open' function. */
+#undef HAVE_SHM_OPEN
+
+/* Define to 1 if you have the `shm_unlink' function. */
+#undef HAVE_SHM_UNLINK
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 

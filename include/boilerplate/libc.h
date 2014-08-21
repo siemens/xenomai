@@ -154,6 +154,22 @@ __weak inline int sched_getcpu(void)
 }
 #endif /* !HAVE_SCHED_GETCPU */
 
+#ifndef HAVE_SHM_OPEN
+__weak inline int shm_open(const char *name, int oflag, mode_t mode)
+{
+	errno = ENOSYS;
+	return -1;
+}
+#endif	/* !HAVE_SHM_OPEN */
+
+#ifndef HAVE_SHM_UNLINK
+__weak inline int shm_unlink(const char *name)
+{
+	errno = ENOSYS;
+	return -1;
+}
+#endif	/* !HAVE_SHM_UNLINK */
+
 #ifndef HAVE_PTHREAD_MUTEXATTR_SETROBUST_NP
 #define pthread_mutexattr_setrobust_np(__attr, __robust)	\
 	({ ENOSYS; })

@@ -511,7 +511,9 @@ AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
 		pthread_atfork			\
 		pthread_setname_np		\
 		sched_getcpu			\
-		clock_nanosleep])
+		clock_nanosleep			\
+		shm_open			\
+		shm_unlink])
 LIBS="$save_LIBS"
 
 dnl If we can't set the clock for condvar timeouts, then
