@@ -372,8 +372,7 @@ static int build_test_list(const char *test_enum)
 
 	return 0;
 fail:
-	warning("invalid test range in %s (each id. should be within [0-%d])",
-		test_enum, test_count - 1);
+	warning("invalid test range in %s", test_enum, test_count - 1);
 	free(s);
 
 	return -EINVAL;
