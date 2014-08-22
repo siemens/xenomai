@@ -19,7 +19,8 @@ SUBDIRS = 		\
 	sched-quota 	\
 	sched-tp 	\
 	vdso-access 	\
-	xddp
+	xddp		\
+	fork-exec
 else
 SUBDIRS =
 wrappers =
