@@ -200,9 +200,9 @@ static void remove_process(struct cobalt_process *process)
 		}
 	}
 
-	mutex_unlock(&personality_lock);
-
 	cobalt_set_process(NULL);
+
+	mutex_unlock(&personality_lock);
 }
 
 static int enter_personality(struct cobalt_process *process,
@@ -1066,7 +1066,6 @@ static inline void unlock_timers(void)
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */
 {
-	struct xnthread_personality *personality;
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 
@@ -1078,7 +1077,6 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	thread = xnthread_current();
 	XENO_BUGON(NUCLEUS, thread == NULL);
 	trace_cobalt_shadow_unmap(thread);
-	personality = thread->personality;
 
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
@@ -1257,8 +1255,12 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 
-	/* We are NOT called for exiting kernel shadows. */
-
+	/*
+	 * We are NOT called for exiting kernel shadows.
+	 * cobalt_current_process() is cleared if we get there after
+	 * handle_task_exit(), so we need to restore this context
+	 * pointer temporarily.
+	 */
 	process = cobalt_search_process(mm);
 	old = cobalt_set_process(process);
 	sys_ppd = cobalt_ppd_get(0);
@@ -1281,7 +1283,12 @@ static int handle_cleanup_event(struct mm_struct *mm)
 			remove_process(process);
 	}
 
-	cobalt_set_process(old);
+	/*
+	 * CAUTION: Do not override a state change caused by
+	 * remove_process().
+	 */
+	if (cobalt_current_process() == process)
+		cobalt_set_process(old);
 
 	return KEVENT_PROPAGATE;
 }
