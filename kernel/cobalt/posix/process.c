@@ -176,7 +176,7 @@ static void *lookup_context(int xid)
 	return priv;
 }
 
-static void remove_process(struct cobalt_process *p)
+static void remove_process(struct cobalt_process *process)
 {
 	struct xnthread_personality *personality;
 	void *priv;
@@ -185,13 +185,18 @@ static void remove_process(struct cobalt_process *p)
 	mutex_lock(&personality_lock);
 
 	for (xid = NR_PERSONALITIES - 1; xid >= 0; xid--) {
-		if (!__test_and_clear_bit(xid, &p->permap))
+		if (!__test_and_clear_bit(xid, &process->permap))
 			continue;
 		personality = cobalt_personalities[xid];
-		priv = p->priv[xid];
+		priv = process->priv[xid];
+		/*
+		 * CAUTION: process potentially refers to stale memory
+		 * upon return from detach_process() for the Cobalt
+		 * personality, so don't dereference it afterwards.
+		 */
 		if (priv) {
+			process->priv[xid] = NULL;
 			personality->ops.detach_process(priv);
-			p->priv[xid] = NULL;
 		}
 	}
 
@@ -1405,8 +1410,14 @@ static void detach_process(struct cobalt_process *process)
 
 	rtdm_fd_cleanup(p);
 	process_hash_remove(process);
-	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+	/*
+	 * CAUTION: the process descriptor might be immediately
+	 * released as a result of calling xnheap_destroy_mapped(), so
+	 * we must leave the personality _before_ calling the
+	 * latter not to tread on stale memory.
+	 */
 	leave_personality(process, &cobalt_personality);
+	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
 }
 
 static void cobalt_process_detach(void *arg)
@@ -1423,8 +1434,9 @@ static void cobalt_process_detach(void *arg)
 	cobalt_sched_cleanup(&process->kqueues);
 	detach_process(process);
 	/*
-	 * The cobalt_process descriptor release is deferred until the
-	 * last mapping on the private heap is gone.
+	 * The cobalt_process descriptor release may be deferred until
+	 * the last mapping on the private heap is gone. However, this
+	 * is potentially stale memory already.
 	 */
 }
 
