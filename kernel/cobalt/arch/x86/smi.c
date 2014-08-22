@@ -26,6 +26,7 @@
 #include <linux/pci.h>
 #include <linux/pci_ids.h>
 #include <linux/reboot.h>
+#include <cobalt/kernel/assert.h>
 #include <asm-generic/xenomai/pci_ids.h>
 #include <asm/xenomai/machine.h>
 
@@ -74,9 +75,9 @@ void mach_x86_smi_disable(void)
 	mask_bits(smi_masked_bits, smi_en_addr);
 
 	if (inl(smi_en_addr) & smi_masked_bits)
-		printk("Xenomai: SMI workaround failed!\n");
+		printk(XENO_WARN "SMI workaround failed!\n");
 	else
-		printk("Xenomai: SMI workaround enabled\n");
+		printk(XENO_INFO "SMI workaround enabled\n");
 
 	register_reboot_notifier(&smi_notifier);
 }
@@ -86,7 +87,7 @@ void mach_x86_smi_restore(void)
 	if (smi_en_addr == 0)
 		return;
 
-	printk("Xenomai: SMI configuration restored\n");
+	printk(XENO_INFO "SMI configuration restored\n");
 
 	set_bits(smi_saved_bits, smi_en_addr);
 
@@ -121,15 +122,14 @@ void mach_x86_smi_init(void)
 	}
 
 	if (smi_state == 0) {
-		printk("[Xenomai] SMI-enabled chipset found, but SMI "
-		       "workaround disabled\n"
-		       "         (see xenomai.smi parameter). You may encounter\n"
-		       "         high interrupt latencies!\n");
+		printk(XENO_WARN "SMI-enabled chipset found, but SMI workaround disabled\n"
+		       "          (see xenomai.smi parameter). You might encounter\n"
+		       "          high latencies!\n");
 		pci_dev_put(dev);
 		return;
 	}
 
-	printk("Xenomai: SMI-enabled chipset found\n");
+	printk(XENO_INFO "SMI-enabled chipset found\n");
 	smi_en_addr = get_smi_en_addr(dev);
 
 	pci_dev_put(dev);
