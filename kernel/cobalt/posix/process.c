@@ -378,10 +378,15 @@ int cobalt_bind_core(void)
  *   . ERR_PTR(negative value) indicating an error, the binding
  *   process will then abort.
  *
- * - personality->ops.detach() is called on behalf of an exiting
- *   user-space process which has previously attached to the
+ * - personality->ops.detach_process() is called on behalf of an
+ *   exiting user-space process which has previously attached to the
  *   personality. This handler is passed a pointer to the per-process
  *   data received earlier from the ops->attach_process() handler.
+ *
+ * @return the personality (extension) identifier.
+ *
+ * @note cobalt_get_context() is NULL when ops.detach_process() is
+ * invoked for the personality the caller detaches from.
  *
  * @coretags{secondary-only}
  */
@@ -1074,6 +1079,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	 * root thread.
 	 */
 	secondary_mode_only();
+
 	thread = xnthread_current();
 	XENO_BUGON(NUCLEUS, thread == NULL);
 	trace_cobalt_shadow_unmap(thread);

@@ -258,7 +258,7 @@ linux_syscall:
 		 * The call originates from the Linux domain, either
 		 * from a relaxed shadow or from a regular Linux task;
 		 * just propagate the event so that we will fall back
-		 * to linux_sysentry().
+		 * to handle_root_syscall().
 		 */
 		return KEVENT_PROPAGATE;
 
