@@ -108,7 +108,8 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 
 		if (unlikely(context->device != NULL)) {
 			xnlock_put_irqrestore(&rt_dev_lock, s);
-			return -EBUSY;
+			err = -EBUSY;
+			goto fail;
 		}
 
 		context->device = device;
@@ -117,21 +118,31 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 	} else {
 		context = kmalloc(sizeof(struct rtdm_dev_context) +
 				device->context_size, GFP_KERNEL);
-		if (unlikely(context == NULL))
-			return -ENOMEM;
+		if (unlikely(context == NULL)) {
+			err = -ENOMEM;
+			goto fail;
+		}
 
 		context->device = device;
 	}
 
 	context->reserved.close = device->reserved.close;
+	*context_ptr = context;
 
 	err = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
 	if (err < 0)
-		return err;
-
-	*context_ptr = context;
+		goto fail;
 
 	return fd;
+fail:
+	if (p == &__xnsys_global_ppd) {
+		xnlock_get_irqsave(&rt_fildes_lock, s);
+		__clear_bit(fd, used_fildes);
+		open_fildes--;
+		xnlock_put_irqrestore(&rt_fildes_lock, s);
+	}
+
+	return err;
 }
 
 int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)

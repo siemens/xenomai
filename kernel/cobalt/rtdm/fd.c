@@ -110,24 +110,20 @@ static struct rtdm_fd *rtdm_fd_fetch(struct xnsys_ppd *p, int ufd)
 	while (0)
 
 int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
-	unsigned int magic, struct rtdm_fd_ops *ops)
+		  unsigned int magic, struct rtdm_fd_ops *ops)
 {
 	struct rtdm_fd_index *idx;
 	spl_t s;
-	int err;
+	int ret;
 
 	secondary_mode_only();
 
-	if (magic == XNFD_MAGIC_ANY) {
-		err = -EINVAL;
-		goto err;
-	}
+	if (magic == XNFD_MAGIC_ANY)
+		return -EINVAL;
 
 	idx = kmalloc(sizeof(*idx), GFP_KERNEL);
-	if (idx == NULL) {
-		err = -ENOMEM;
-		goto err;
-	}
+	if (idx == NULL)
+		return -ENOMEM;
 
 	assign_default_dual_handlers(ops->ioctl);
 	assign_default_dual_handlers(ops->read);
@@ -146,22 +142,14 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 	idx->fd = fd;
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-	err = xnid_enter(&p->fds, &idx->id, ufd);
-	if (err < 0) {
-		xnlock_put_irqrestore(&__rtdm_fd_lock, s);
-		err = -EBUSY;
-		goto err_free_index;
-	}
+	ret = xnid_enter(&p->fds, &idx->id, ufd);
 	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+	if (ret < 0) {
+		kfree(idx);
+		ret = -EBUSY;
+	}
 
-	return 0;
-
-  err_free_index:
-	kfree(idx);
-  err:
-	if (ops->close)
-		ops->close(fd);
-	return err;
+	return ret;
 }
 
 /**
