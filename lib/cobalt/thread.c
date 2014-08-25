@@ -179,6 +179,7 @@ int pthread_create_ex(pthread_t *ptid_r,
 	int inherit, detachstate, ret;
 	struct pthread_iargs iargs;
 	struct sched_param param;
+	struct timespec timeout;
 	pthread_attr_t attr;
 	pthread_t lptid;
 	size_t stksz;
@@ -230,10 +231,14 @@ int pthread_create_ex(pthread_t *ptid_r,
 
 	ret = __STD(pthread_create(&lptid, &attr, cobalt_thread_trampoline, &iargs));
 	if (ret)
-		goto fail;
+		goto out;
+
+	__STD(clock_gettime(CLOCK_REALTIME, &timeout));
+	timeout.tv_sec += 5;
+	timeout.tv_nsec = 0;
 
 	for (;;) {
-		ret = __STD(sem_wait(&iargs.sync));
+		ret = __STD(sem_timedwait(&iargs.sync, &timeout));
 		if (ret && errno == EINTR)
 			continue;
 		if (ret == 0) {
@@ -241,13 +246,16 @@ int pthread_create_ex(pthread_t *ptid_r,
 			if (ret == 0)
 				*ptid_r = lptid;
 			break;
+		} else if (errno == ETIMEDOUT) {
+			ret = -EAGAIN;
+			break;
 		}
 		ret = -errno;
 		panic("regular sem_wait() failed with %s", symerror(ret));
 	}
 
 	cobalt_thread_harden(); /* May fail if regular thread. */
-fail:
+out:
 	__STD(sem_destroy(&iargs.sync));
 
 	return ret;
