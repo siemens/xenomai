@@ -23,7 +23,8 @@
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
 
-struct cobalt_thread;
+#include <cobalt/kernel/thread.h>
+
 struct cobalt_timer;
 struct cobalt_sigpending;
 struct cobalt_extref;
