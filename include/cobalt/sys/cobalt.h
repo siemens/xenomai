@@ -132,6 +132,14 @@ int cobalt_sched_weighted_prio(int policy,
 
 void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
 
+void __libcobalt_init(void);
+
+extern int __cobalt_defer_init;
+
+extern int __cobalt_main_prio;
+
+extern int __cobalt_print_bufsz;
+
 #ifdef __cplusplus
 }
 #endif

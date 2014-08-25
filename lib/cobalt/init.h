@@ -29,12 +29,4 @@
 
 #define __libcobalt_ctor  __attribute__ ((constructor(__LIBCOBALT_CTOR_PRIO)))
 
-void __libcobalt_init(void);
-
-extern int __cobalt_defer_init;
-
-extern int __cobalt_main_prio;
-
-extern int __cobalt_print_bufsz;
-
 #endif /* _LIB_COBALT_INIT_H */
