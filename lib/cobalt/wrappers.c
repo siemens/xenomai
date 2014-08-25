@@ -123,6 +123,24 @@ int __real_sem_wait(sem_t * sem)
 	return sem_wait(sem);
 }
 
+__weak
+int __real_sem_trywait(sem_t * sem)
+{
+	return sem_trywait(sem);
+}
+
+__weak
+int __real_sem_timedwait(sem_t * sem, const struct timespec *abs_timeout)
+{
+	return sem_timedwait(sem, abs_timeout);
+}
+
+__weak
+int __real_sem_getvalue(sem_t * sem, int *sval)
+{
+	return sem_getvalue(sem, sval);
+}
+
 /* rtdm */
 __weak
 int __real_open(const char *path, int oflag, ...)
