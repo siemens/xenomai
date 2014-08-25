@@ -176,6 +176,28 @@ static void *lookup_context(int xid)
 	return priv;
 }
 
+static int enter_personality(struct cobalt_process *process,
+			     struct xnthread_personality *personality)
+{
+	if (personality->module && !try_module_get(personality->module))
+		return -EAGAIN;
+
+	__set_bit(personality->xid, &process->permap);
+	atomic_inc(&personality->refcnt);
+
+	return 0;
+}
+
+static void leave_personality(struct cobalt_process *process,
+			      struct xnthread_personality *personality)
+{
+	__clear_bit(personality->xid, &process->permap);
+	atomic_dec(&personality->refcnt);
+	XENO_ASSERT(NUCLEUS, atomic_read(&personality->refcnt) >= 0);
+	if (personality->module)
+		module_put(personality->module);
+}
+
 static void remove_process(struct cobalt_process *process)
 {
 	struct xnthread_personality *personality;
@@ -197,34 +219,13 @@ static void remove_process(struct cobalt_process *process)
 		if (priv) {
 			process->priv[xid] = NULL;
 			personality->ops.detach_process(priv);
+			leave_personality(process, personality);
 		}
 	}
 
 	cobalt_set_process(NULL);
 
 	mutex_unlock(&personality_lock);
-}
-
-static int enter_personality(struct cobalt_process *process,
-			     struct xnthread_personality *personality)
-{
-	if (personality->module && !try_module_get(personality->module))
-		return -EAGAIN;
-
-	__set_bit(personality->xid, &process->permap);
-	atomic_inc(&personality->refcnt);
-
-	return 0;
-}
-
-static void leave_personality(struct cobalt_process *process,
-			      struct xnthread_personality *personality)
-{
-	__clear_bit(personality->xid, &process->permap);
-	atomic_dec(&personality->refcnt);
-	XENO_ASSERT(NUCLEUS, atomic_read(&personality->refcnt) >= 0);
-	if (personality->module)
-		module_put(personality->module);
 }
 
 static void post_ppd_release(struct xnheap *h)
@@ -298,6 +299,7 @@ static int bind_personality(struct xnthread_personality *personality)
 {
 	struct cobalt_process *process;
 	void *priv;
+	int ret;
 
 	/*
 	 * We also check capabilities for stacking a Cobalt extension,
@@ -320,6 +322,17 @@ static int bind_personality(struct xnthread_personality *personality)
 		return PTR_ERR(priv);
 
 	process = cobalt_current_process();
+	/*
+	 * We are still covered by the personality_lock, so we may
+	 * safely bump the module refcount after the attach handler
+	 * has returned.
+	 */
+	ret = enter_personality(process, personality);
+	if (ret) {
+		personality->ops.detach_process(priv);
+		return ret;
+	}
+
 	process->priv[personality->xid] = priv;
 
 	raise_cap(CAP_SYS_NICE);
@@ -1368,13 +1381,7 @@ static int attach_process(struct cobalt_process *process)
 	if (ret)
 		goto fail_hash;
 
-	ret = enter_personality(process, &cobalt_personality);
-	if (ret)
-		goto fail_personality;
-
 	return 0;
-fail_personality:
-	process_hash_remove(process);
 fail_hash:
 	if (p->exe_path)
 		kfree(p->exe_path);
@@ -1426,10 +1433,8 @@ static void detach_process(struct cobalt_process *process)
 	/*
 	 * CAUTION: the process descriptor might be immediately
 	 * released as a result of calling xnheap_destroy_mapped(), so
-	 * we must leave the personality _before_ calling the
-	 * latter not to tread on stale memory.
+	 * we must do this last, not to tread on stale memory.
 	 */
-	leave_personality(process, &cobalt_personality);
 	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
 }
 

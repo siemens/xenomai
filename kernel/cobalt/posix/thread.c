@@ -791,7 +791,6 @@ int cobalt_thread_extend(struct cobalt_extension *ext,
 		return -EINVAL;
 
 	cobalt_set_extref(&thread->extref, ext, priv);
-	XENO_BUGON(NUCLEUS, prev != &cobalt_personality);
 
 	return 0;
 }
