@@ -26,15 +26,17 @@
 #include <rtdm/analogy/device.h>
 
 /* --- Command descriptor management functions --- */
-int a4l_fill_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc, void *arg)
+int a4l_fill_cmddesc(struct a4l_device_context *cxt, struct a4l_cmd_desc *desc,
+		     unsigned int **chan_descs, void *arg)
 {
-	int ret = 0;
 	unsigned int *tmpchans = NULL;
+	int ret = 0;
 
 	ret = rtdm_safe_copy_from_user(rtdm_private_to_fd(cxt),
 				       desc, arg, sizeof(struct a4l_cmd_desc));
 	if (ret != 0)
 		goto out_cmddesc;
+
 
 	if (desc->nb_chan == 0) {
 		ret = -EINVAL;
@@ -50,13 +52,16 @@ int a4l_fill_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc
 	ret = rtdm_safe_copy_from_user(rtdm_private_to_fd(cxt),
 				       tmpchans,
 				       desc->chan_descs,
-				       desc->nb_chan * sizeof(unsigned long));
-	if (ret != 0)
+				       desc->nb_chan * sizeof(unsigned int));
+	if (ret != 0) {
+		__a4l_err("%s invalid arguments \n", __FUNCTION__);
 		goto out_cmddesc;
+	}
 
+	*chan_descs = desc->chan_descs;
 	desc->chan_descs = tmpchans;
 
-	__a4l_dbg(1, core_dbg, "desc dump\n");
+	__a4l_dbg(1, core_dbg, "desc dump: \n");
 	__a4l_dbg(1, core_dbg, "\t->idx_subd=%u\n", desc->idx_subd);
 	__a4l_dbg(1, core_dbg, "\t->flags=%lu\n", desc->flags);
 	__a4l_dbg(1, core_dbg, "\t->nb_chan=%u\n", desc->nb_chan);
@@ -64,9 +69,10 @@ int a4l_fill_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc
 	__a4l_dbg(1, core_dbg, "\t->data_len=%u\n", desc->data_len);
 	__a4l_dbg(1, core_dbg, "\t->pdata=0x%p\n", desc->data);
 
-      out_cmddesc:
+	out_cmddesc:
 
 	if (ret != 0) {
+		__a4l_err("a4l_fill_cmddesc: %d \n", ret);
 		if (tmpchans != NULL)
 			rtdm_free(tmpchans);
 		desc->chan_descs = NULL;
@@ -113,7 +119,7 @@ int a4l_check_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * des
 	}
 
 	return a4l_check_chanlist(dev->transfer.subds[desc->idx_subd],
-				     desc->nb_chan, desc->chan_descs);
+				  desc->nb_chan, desc->chan_descs);
 }
 
 /* --- Command checking functions --- */
@@ -124,7 +130,7 @@ int a4l_check_generic_cmdcnt(struct a4l_cmd_desc * desc)
 
 	/* Makes sure trigger sources are trivially valid */
 	tmp1 =
-	    desc->start_src & ~(TRIG_NOW | TRIG_INT | TRIG_EXT | TRIG_FOLLOW);
+	desc->start_src & ~(TRIG_NOW | TRIG_INT | TRIG_EXT | TRIG_FOLLOW);
 	tmp2 = desc->start_src & (TRIG_NOW | TRIG_INT | TRIG_EXT | TRIG_FOLLOW);
 	if (tmp1 != 0 || tmp2 == 0) {
 		__a4l_err("a4l_check_cmddesc: start_src, weird trigger\n");
@@ -288,6 +294,7 @@ int a4l_ioctl_cmd(struct a4l_device_context * ctx, void *arg)
 	int ret = 0, simul_flag = 0;
 	struct a4l_cmd_desc *cmd_desc = NULL;
 	struct a4l_device *dev = a4l_get_dev(ctx);
+	unsigned int *chan_descs, *tmp;
 	struct a4l_subdevice *subd;
 
 	/* The command launching cannot be done in real-time because
@@ -309,7 +316,7 @@ int a4l_ioctl_cmd(struct a4l_device_context * ctx, void *arg)
 	memset(cmd_desc, 0, sizeof(struct a4l_cmd_desc));
 
 	/* Gets the command */
-	ret = a4l_fill_cmddesc(ctx, cmd_desc, arg);
+	ret = a4l_fill_cmddesc(ctx, cmd_desc, &chan_descs, arg);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
@@ -327,23 +334,27 @@ int a4l_ioctl_cmd(struct a4l_device_context * ctx, void *arg)
 		goto out_ioctl_cmd;
 
 	__a4l_dbg(1, core_dbg,"1st cmd checks passed\n");
-
 	subd = dev->transfer.subds[cmd_desc->idx_subd];
 
 	/* Tests the command with the cmdtest function */
-	if (subd->do_cmdtest != NULL)
-		ret = subd->do_cmdtest(subd, cmd_desc);
-	if (ret != 0) {
-		__a4l_err("a4l_ioctl_cmd: driver's cmd_test failed\n");
-		goto out_ioctl_cmd;
-	}
-
-	__a4l_dbg(1, core_dbg, "driver's cmd checks passed\n");
-
 	if (cmd_desc->flags & A4L_CMD_SIMUL) {
 		simul_flag = 1;
+
+		if (!subd->do_cmdtest) {
+			__a4l_err("a4l_ioctl_cmd: driver's cmd_test NULL\n");
+			ret = -EINVAL;
+			goto out_ioctl_cmd;
+		}
+
+		ret = subd->do_cmdtest(subd, cmd_desc);
+		if (ret != 0) {
+			__a4l_err("a4l_ioctl_cmd: driver's cmd_test failed\n");
+			goto out_ioctl_cmd;
+		}
+		__a4l_dbg(1, core_dbg, "driver's cmd checks passed\n");
 		goto out_ioctl_cmd;
 	}
+
 
 	/* Gets the transfer system ready */
 	ret = a4l_setup_buffer(ctx, cmd_desc);
@@ -358,10 +369,21 @@ int a4l_ioctl_cmd(struct a4l_device_context * ctx, void *arg)
 		goto out_ioctl_cmd;
 	}
 
-out_ioctl_cmd:
-	if (ret != 0 || simul_flag == 1) {
+	out_ioctl_cmd:
+
+	if (simul_flag) {
+		/* copy the kernel based descriptor */
+		tmp = cmd_desc->chan_descs;
+		/* return the user based descriptor */
+		cmd_desc->chan_descs = chan_descs;
 		rtdm_safe_copy_to_user(rtdm_private_to_fd(ctx), arg, cmd_desc,
-			sizeof(struct a4l_cmd_desc));
+				       sizeof(struct a4l_cmd_desc));
+		/* make sure we release the memory associated to the kernel */
+		cmd_desc->chan_descs = tmp;
+
+	}
+
+	if (ret != 0 || simul_flag == 1) {
 		a4l_free_cmddesc(cmd_desc);
 		rtdm_free(cmd_desc);
 	}
