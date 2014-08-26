@@ -395,6 +395,16 @@ int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
 	return handle_head_syscall(ipd, regs);
 }
 
+int ipipe_fastcall_hook(struct pt_regs *regs)
+{
+	int ret;
+
+	ret = handle_head_syscall(&xnsched_realtime_domain, regs);
+	XENO_BUGON(NUCLEUS, ret == KEVENT_PROPAGATE);
+
+	return ret;
+}
+
 static int cobalt_migrate(int domain)
 {
 	struct xnthread *thread = xnthread_current();
