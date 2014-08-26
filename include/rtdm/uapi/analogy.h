@@ -236,7 +236,7 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 /**
  * Reference definition macro
  */
-#define AREF(a) (((a) & 0xf) << 24)
+#define AREF(a) (((a) & 0x03) << 24)
 /**
  * Flags definition macro
  */
@@ -244,7 +244,7 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 /**
  * Channel + range + reference definition macro
  */
-#define PACK(a, b, c) (CHAN(a) | RNG(b) | AREF(c))
+#define PACK(a, b, c) (a | RNG(b) | AREF(c))
 /**
  * Channel + range + reference + flags definition macro
  */
@@ -276,8 +276,8 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 #define CR_DITHER CR_ALT_FILTER
 #define CR_DEGLITCH CR_ALT_FILTER
 #define CR_ALT_SOURCE (1<<27)
-#define CR_EDGE	(1<<28)
-#define CR_INVERT (1<<29)
+#define CR_EDGE	(1<<30)
+#define CR_INVERT (1<<31)
 
 #endif /* !DOXYGEN_CPP */
 
@@ -288,43 +288,46 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 
 struct a4l_cmd_desc {
 	unsigned char idx_subd;
-			    /**< Subdevice to which the command will be applied. */
+			       /**< Subdevice to which the command will be applied. */
 
 	unsigned long flags;
-			 /**< Command flags */
+			       /**< Command flags */
 
 	/* Command trigger characteristics */
 	unsigned int start_src;
-			    /**< Start trigger type */
+			       /**< Start trigger type */
 	unsigned int start_arg;
-			    /**< Start trigger argument */
+			       /**< Start trigger argument */
 	unsigned int scan_begin_src;
-				 /**< Scan begin trigger type */
+			       /**< Scan begin trigger type */
 	unsigned int scan_begin_arg;
-				 /**< Scan begin trigger argument */
+			       /**< Scan begin trigger argument */
 	unsigned int convert_src;
-			      /**< Convert trigger type */
+			       /**< Convert trigger type */
 	unsigned int convert_arg;
-			      /**< Convert trigger argument */
+			       /**< Convert trigger argument */
 	unsigned int scan_end_src;
 			       /**< Scan end trigger type */
 	unsigned int scan_end_arg;
 			       /**< Scan end trigger argument */
 	unsigned int stop_src;
-			   /**< Stop trigger type */
+			       /**< Stop trigger type */
 	unsigned int stop_arg;
 			   /**< Stop trigger argument */
 
 	unsigned char nb_chan;
 			   /**< Count of channels related with the command */
 	unsigned int *chan_descs;
-			      /**< Tab containing channels descriptors */
+			    /**< Tab containing channels descriptors */
 
 	/* Driver specific fields */
+	unsigned int valid_simul_stages;
+			   /** < cmd simulation valid stages (driver dependent) */
+
 	unsigned int data_len;
 			   /**< Driver specific buffer size */
 	sampl_t *data;
-		   /**< Driver specific buffer pointer */
+	                   /**< Driver specific buffer pointer */
 };
 typedef struct a4l_cmd_desc a4l_cmd_t;
 
