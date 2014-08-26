@@ -205,7 +205,7 @@ int a4l_do_special_insn(struct a4l_device_context * cxt, struct a4l_kernel_instr
 
 int a4l_do_insn(struct a4l_device_context * cxt, struct a4l_kernel_instruction * dsc)
 {
-	int ret;
+	int ret = 0;
 	struct a4l_subdevice *subd;
 	struct a4l_device *dev = a4l_get_dev(cxt);
 	int (*hdlr) (struct a4l_subdevice *, struct a4l_kernel_instruction *) = NULL;
