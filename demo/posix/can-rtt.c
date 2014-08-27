@@ -44,6 +44,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <getopt.h>
+#include <memory.h>
 #include <netinet/in.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
@@ -95,7 +96,7 @@ static void *transmitter(void *arg)
     struct timespec next_period;
     struct timespec time;
     struct can_frame frame;
-    long long *rtt_time = (long long *)&frame.data;
+    long long *rtt_time = (long long *)&frame.data, t;
 
     /* Pre-fill CAN frame */
     frame.can_id = can_id;
@@ -123,7 +124,8 @@ static void *transmitter(void *arg)
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &time);
-	*rtt_time = (long long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;
+	t = (long long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;
+	memcpy(rtt_time, &t, sizeof(t));
 
 	/* Transmit the message containing the local time */
 	if (send(txsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
@@ -143,7 +145,7 @@ static void *receiver(void *arg)
     struct sched_param param = { .sched_priority = 82 };
     struct timespec time;
     struct can_frame frame;
-    long long *rtt_time = (long long *)frame.data;
+    long long *rtt_time = (long long *)frame.data, t;
     struct rtt_stat rtt_stat = {0, 1000000000000000000LL, -1000000000000000000LL,
 				0, 0, 0};
 
@@ -173,10 +175,11 @@ static void *receiver(void *arg)
 	    }
 	    txcount++;
 	} else {
+	    memcpy(&t, rtt_time, sizeof(t));
 	    clock_gettime(CLOCK_MONOTONIC, &time);
 	    if (rxcount > 0) {
 		rtt_stat.rtt = ((long long)time.tv_sec * 1000000000LL +
-				time.tv_nsec - *rtt_time);
+				time.tv_nsec - t);
 		rtt_stat.rtt_sum += rtt_stat.rtt;
 		if (rtt_stat.rtt <  rtt_stat.rtt_min)
 		    rtt_stat.rtt_min = rtt_stat.rtt;
