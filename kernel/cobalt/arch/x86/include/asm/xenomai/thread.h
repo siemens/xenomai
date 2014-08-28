@@ -27,7 +27,7 @@ typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
 
 struct xnarchtcb {
-	x86_fpustate i387 __attribute__ ((aligned (16)));
+	x86_fpustate i387;
 	struct xntcb core;
 	unsigned long sp;
 	unsigned long *spp;
