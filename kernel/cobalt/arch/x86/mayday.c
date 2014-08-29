@@ -110,8 +110,3 @@ void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
 	regs->ax = tcb->mayday.ax;
 	regs->sp = tcb->mayday.sp;
 }
-
-void xnarch_call_mayday(struct task_struct *p)
-{
-	ipipe_raise_mayday(p);
-}

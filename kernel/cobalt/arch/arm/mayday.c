@@ -93,11 +93,6 @@ void xnarch_setup_mayday_page(void *page)
 	flush_dcache_page(vmalloc_to_page(page));
 }
 
-void xnarch_call_mayday(struct task_struct *p)
-{
-	ipipe_raise_mayday(p);
-}
-
 void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
 			  unsigned long tramp)
 {

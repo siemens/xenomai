@@ -2162,7 +2162,7 @@ void __xnthread_kick(struct xnthread *thread) /* nklock locked, irqs off */
 	 */
 	if (thread != xnsched_current_thread() &&
 	    xnthread_test_state(thread, XNUSER))
-		xnarch_call_mayday(p);
+		ipipe_raise_mayday(p);
 }
 
 void xnthread_kick(struct xnthread *thread)
@@ -2413,7 +2413,7 @@ void xnthread_call_mayday(struct xnthread *thread, int reason)
 	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
 	xnthread_set_info(thread, XNKICKED);
 	xnthread_signal(thread, SIGDEBUG, reason);
-	xnarch_call_mayday(p);
+	ipipe_raise_mayday(p);
 }
 EXPORT_SYMBOL_GPL(xnthread_call_mayday);
 
