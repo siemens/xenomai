@@ -31,43 +31,12 @@ void xnarch_setup_mayday_page(void *page)
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
 	 *	b8 2b 02 00 0c		mov    $<mux_code>,%eax
-	 * if HAVE_SEP
-	 *      65 ff 15 10 00 00 00	call   *%gs:0x10
-	 * else
 	 *      cd 80			int    $0x80
-	 * endif
 	 *	0f 0b			ud2a
 	 *
 	 * We intentionally don't mess with EFLAGS here, so that we
 	 * don't have to save/restore it in handle/fixup code.
-	 *
-	 * Also note that if SEP is present, we always assume NPTL on
-	 * the user side.
 	 */
-	static const struct __attribute__ ((__packed__)) {
-		struct __attribute__ ((__packed__)) {
-			u8 op;
-			u32 imm;
-		} mov_eax;
-		struct __attribute__ ((__packed__)) {
-			u8 op[3];
-			u32 moffs;
-		} syscall;
-		u16 bug;
-	} code_sep = {
-		.mov_eax = {
-			.op = 0xb8,
-			.imm = __xn_syscode(sc_cobalt_mayday)
-		},
-		.syscall = {
-			.op = {
-				0x65, 0xff, 0x15
-			},
-			.moffs = 0x10
-		},
-		.bug = 0x0b0f,
-	};
-
 	static const struct __attribute__ ((__packed__)) {
 		struct __attribute__ ((__packed__)) {
 			u8 op;
@@ -75,7 +44,7 @@ void xnarch_setup_mayday_page(void *page)
 		} mov_eax;
 		u16 syscall;
 		u16 bug;
-	} code_nosep = {
+	} code = {
 		.mov_eax = {
 			.op = 0xb8,
 			.imm = __xn_syscode(sc_cobalt_mayday)
@@ -84,10 +53,7 @@ void xnarch_setup_mayday_page(void *page)
 		.bug = 0x0b0f,
 	};
 
-	if (cpu_has_sep)
-		memcpy(page, &code_sep, sizeof(code_sep));
-	else
-		memcpy(page, &code_nosep, sizeof(code_nosep));
+	memcpy(page, &code, sizeof(code));
 
 	/* no cache flush required. */
 }
