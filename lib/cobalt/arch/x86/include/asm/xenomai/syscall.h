@@ -75,18 +75,6 @@ asm (".L__X'%ebx = 1\n\t"
      ".endif\n\t"
      ".endm\n\t");
 
-#define __xn_get_eip(dest)			\
-	({					\
-		__label__ __here;		\
-	  __here:				\
-		*dest = &&__here;		\
-	})
-
-static inline void __xn_get_ebp(void **dest)
-{
-	asm volatile("movl %%ebp, %0": "=m"(*dest));
-}
-
 #define XENOMAI_DO_SYSCALL(nr, op, args...)			\
 ({								\
 	unsigned __resultvar;					\
@@ -145,7 +133,7 @@ static inline void __xn_get_ebp(void **dest)
 	, "a" (arg1), "c" (arg2), "d" (arg3), "S" (arg4), "D" (arg5)
 
 #define XENOMAI_SYSBIND(breq) \
-	XENOMAI_DO_SYSCALL_SAFE(1,sc_cobalt_bind,breq)
+	XENOMAI_DO_SYSCALL_SAFE(1, sc_cobalt_bind, breq)
 
 #else /* x86_64 */
 
@@ -214,7 +202,7 @@ static inline void __xn_get_ebp(void **dest)
 	DO_SYSCALL(__xn_syscode(op), nr, args)
 
 #define XENOMAI_SYSBIND(breq) \
-	XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
+	XENOMAI_DO_SYSCALL(1, sc_cobalt_bind, breq)
 
 #endif /* x86_64 */
 
