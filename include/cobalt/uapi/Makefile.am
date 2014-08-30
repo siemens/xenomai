@@ -9,6 +9,7 @@ includesub_HEADERS =	\
 	sem.h		\
 	signal.h	\
 	syscall.h	\
+	sysconf.h	\
 	thread.h	\
 	time.h
 

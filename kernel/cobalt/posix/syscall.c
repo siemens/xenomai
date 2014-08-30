@@ -19,9 +19,12 @@
 #include <linux/types.h>
 #include <linux/err.h>
 #include <linux/ipipe.h>
+#include <linux/kconfig.h>
 #include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/sysconf.h>
 #include <cobalt/kernel/tree.h>
 #include <cobalt/kernel/vdso.h>
+#include <xenomai/version.h>
 #include <asm-generic/xenomai/mayday.h>
 #include "internal.h"
 #include "thread.h"
@@ -653,6 +656,62 @@ static int cobalt_extend(unsigned int magic)
 	return cobalt_bind_personality(magic);
 }
 
+static int cobalt_sysconf(int option, void __user *u_buf, size_t u_bufsz)
+{
+	int ret, val = 0;
+
+	if (u_bufsz < sizeof(val))
+		return -EINVAL;
+
+	switch (option) {
+	case _SC_COBALT_VERSION:
+		val = XENO_VERSION_CODE;
+		break;
+	case _SC_COBALT_NR_PIPES:
+#if IS_ENABLED(CONFIG_XENO_OPT_PIPE)
+		val = CONFIG_XENO_OPT_PIPE_NRDEV;
+#endif
+		break;
+	case _SC_COBALT_NR_TIMERS:
+		val = CONFIG_XENO_OPT_NRTIMERS;
+		break;
+	case _SC_COBALT_POLICIES:
+		val = _SC_COBALT_SCHED_FIFO|_SC_COBALT_SCHED_RR;
+		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_WEAK))
+			val |= _SC_COBALT_SCHED_WEAK;
+		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_SPORADIC))
+			val |= _SC_COBALT_SCHED_SPORADIC;
+		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_QUOTA))
+			val |= _SC_COBALT_SCHED_QUOTA;
+		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_TP))
+			val |= _SC_COBALT_SCHED_TP;
+		break;
+	case _SC_COBALT_DEBUG:
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_NUCLEUS))
+			val |= _SC_COBALT_DEBUG_ASSERT;
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_CONTEXT))
+			val |= _SC_COBALT_DEBUG_CONTEXT;
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_LOCKING))
+			val |= _SC_COBALT_DEBUG_LOCKING;
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX))
+			val |= _SC_COBALT_DEBUG_SYNCREL;
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_TRACE_RELAX))
+			val |= _SC_COBALT_DEBUG_TRACEREL;
+		break;
+	case _SC_COBALT_WATCHDOG:
+#if IS_ENABLED(CONFIG_XENO_OPT_WATCHDOG)
+		val = CONFIG_XENO_OPT_WATCHDOG_TIMEOUT;
+#endif
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	ret = __xn_safe_copy_from_user(u_buf, &val, sizeof(val));
+
+	return ret ? -EFAULT : 0;
+}
+
 static int cobalt_ni(void)
 {
 	return -ENOSYS;
@@ -767,4 +826,5 @@ static struct cobalt_syscall cobalt_syscalls[] = {
 	__COBALT_CALL(sc_cobalt_mayday, cobalt_mayday, oneway),
 	__COBALT_CALL(sc_cobalt_backtrace, cobalt_backtrace, current),
 	__COBALT_CALL(sc_cobalt_serialdbg, cobalt_serialdbg, current),
+	__COBALT_CALL(sc_cobalt_sysconf, cobalt_sysconf, current),
 };

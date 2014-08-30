@@ -118,6 +118,7 @@
 #define sc_cobalt_backtrace			95
 #define sc_cobalt_serialdbg			96
 #define sc_cobalt_extend			97
+#define sc_cobalt_sysconf			98
 
 #define __NR_COBALT_SYSCALLS			100
 
