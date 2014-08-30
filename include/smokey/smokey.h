@@ -19,6 +19,7 @@
 #define _XENOMAI_SMOKEY_SMOKEY_H
 
 #include <boilerplate/list.h>
+#include <boilerplate/libc.h>
 #include <copperplate/clockobj.h>
 
 #define SMOKEY_INT(__name) {		\
