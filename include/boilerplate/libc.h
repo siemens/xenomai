@@ -37,6 +37,14 @@ enum {
 };
 #endif /* __UCLIBC__  && !UCLIBC_HAS_THREADS_NATIVE */
 
+#ifndef HAVE_FORK
+static inline int fork(void)
+{
+	errno = ENOSYS;
+	return -1;
+}
+#endif
+
 #ifndef HAVE_PTHREAD_ATFORK
 #ifndef HAVE_FORK
 static inline
