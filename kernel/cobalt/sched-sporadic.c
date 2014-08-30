@@ -23,7 +23,7 @@
 
 static void sporadic_post_recharge(struct xnthread *thread, xnticks_t budget);
 
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 
 static inline void sporadic_note_late_drop(struct xnsched *sched)
 {
@@ -33,7 +33,7 @@ static inline void sporadic_note_late_drop(struct xnsched *sched)
 	 * hundred times in a row. This normally reveals a time budget
 	 * which is too tight.
 	 */
-	XENO_BUGON(NUCLEUS, ++sched->pss.drop_retries > 100);
+	XENO_BUGON(COBALT, ++sched->pss.drop_retries > 100);
 }
 
 static inline void sporadic_note_valid_drop(struct xnsched *sched)
@@ -41,7 +41,7 @@ static inline void sporadic_note_valid_drop(struct xnsched *sched)
 	sched->pss.drop_retries = 0;
 }
 
-#else /* !XENO_BUGON(NUCLEUS) */
+#else /* !XENO_BUGON(COBALT) */
 
 static inline void sporadic_note_late_drop(struct xnsched *sched)
 {
@@ -51,7 +51,7 @@ static inline void sporadic_note_valid_drop(struct xnsched *sched)
 {
 }
 
-#endif /* !XENO_BUGON(NUCLEUS) */
+#endif /* !XENO_BUGON(COBALT) */
 
 static inline xnticks_t sporadic_diff_time(xnticks_t start, xnticks_t end)
 {
@@ -124,7 +124,7 @@ static void sporadic_replenish_handler(struct xntimer *timer)
 
 	pss = container_of(timer, struct xnsched_sporadic_data, repl_timer);
 	thread = pss->thread;
-	XENO_BUGON(NUCLEUS, pss->repl_pending <= 0);
+	XENO_BUGON(COBALT, pss->repl_pending <= 0);
 
 retry:
 	now = xnclock_read_monotonic(&nkclock);
@@ -233,7 +233,7 @@ static void xnsched_sporadic_init(struct xnsched *sched)
 	 * share the same priority scale, with the addition of budget
 	 * management for the sporadic ones.
 	 */
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	sched->pss.drop_retries = 0;
 #endif
 }

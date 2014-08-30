@@ -180,7 +180,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 		return -ENOSYS;
 
 	/* Sanity check: structure version */
-	if (!XENO_ASSERT(RTDM, device->struct_version == RTDM_DEVICE_STRUCT_VER)) {
+	if (!XENO_ASSERT(COBALT, device->struct_version == RTDM_DEVICE_STRUCT_VER)) {
 		printk(XENO_ERR "invalid rtdm_device version (%d, "
 		       "required %d)\n", device->struct_version,
 		       RTDM_DEVICE_STRUCT_VER);
@@ -188,7 +188,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 	}
 
 	/* Sanity check: proc_name specified? */
-	if (!XENO_ASSERT(RTDM, device->proc_name)) {
+	if (!XENO_ASSERT(COBALT, device->proc_name)) {
 		printk(XENO_ERR "no vfile (/proc) name specified for RTDM device\n");
 		return -EINVAL;
 	}

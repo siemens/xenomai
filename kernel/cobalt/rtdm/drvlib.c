@@ -335,7 +335,7 @@ int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 {
 	struct xnthread *thread;
 
-	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
 
 	thread = xnthread_current();
@@ -598,7 +598,7 @@ int device_service_routine(...)
  */
 void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p()); /* only warn here */
+	XENO_ASSERT(COBALT, !xnsched_unblockable_p()); /* only warn here */
 
 	*timeout_seq = xnclock_read_monotonic(&nkclock) + timeout;
 }
@@ -771,7 +771,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
 
 	trace_cobalt_driver_event_wait(event, xnthread_current());
@@ -1006,7 +1006,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
 
 	trace_cobalt_driver_sem_wait(sem, xnthread_current());
@@ -1182,7 +1182,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_destroy);
  */
 void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
-	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_interrupt_p()))
 		return;
 
 	trace_cobalt_driver_mutex_release(mutex);
@@ -1251,7 +1251,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	int err = 0;
 	spl_t s;
 
-	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
 
 	curr_thread = xnthread_current();
@@ -1264,7 +1264,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	else if (!xnthread_try_grab(curr_thread, &mutex->synch_base)) {
 		/* Redefinition to clarify XENO_ASSERT output */
 		#define mutex_owner xnsynch_owner(&mutex->synch_base)
-		if (!XENO_ASSERT(RTDM, mutex_owner != curr_thread)) {
+		if (!XENO_ASSERT(COBALT, mutex_owner != curr_thread)) {
 			err = -EDEADLK;
 			goto unlock_out;
 		}
@@ -1339,7 +1339,7 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 {
 	int err;
 
-	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
 		return -EPERM;
 
 	err = xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
@@ -1504,13 +1504,13 @@ static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 	maddr = vma->vm_start;
 	len = vma->vm_end - vma->vm_start;
 
-	if (!XENO_ASSERT(RTDM, vaddr == PAGE_ALIGN(vaddr)))
+	if (!XENO_ASSERT(COBALT, vaddr == PAGE_ALIGN(vaddr)))
 		return -EINVAL;
 
 #ifdef CONFIG_MMU
 	/* Catch vmalloc memory */
 	if (vaddr >= VMALLOC_START && vaddr < VMALLOC_END) {
-		if (!XENO_ASSERT(RTDM, (len & ~PAGE_MASK) == 0))
+		if (!XENO_ASSERT(COBALT, (len & ~PAGE_MASK) == 0))
 			return -EINVAL;
 
 		while (len >= PAGE_SIZE) {
@@ -1634,7 +1634,7 @@ static int rtdm_mmap(struct mmap_tramp_data *tramp_data,
 	void *old_priv_data;
 	struct file *filp;
 
-	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
 		return -EPERM;
 
 	filp = filp_open(XNHEAP_DEV_NAME, O_RDWR, 0);
@@ -1902,7 +1902,7 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_iomem);
  */
 int rtdm_munmap(void *ptr, size_t len)
 {
-	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
 		return -EPERM;
 
 	return vm_munmap((unsigned long)ptr, len);

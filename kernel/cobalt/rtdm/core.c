@@ -170,7 +170,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 
 	ret = device->ops.open(&context->fd, oflag);
 
-	if (!XENO_ASSERT(RTDM, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		splnone();
 
 	if (unlikely(ret < 0))
@@ -209,7 +209,7 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 
 	ret = device->ops.socket(&context->fd, protocol);
 
-	if (!XENO_ASSERT(RTDM, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		splnone();
 
 	if (unlikely(ret < 0))

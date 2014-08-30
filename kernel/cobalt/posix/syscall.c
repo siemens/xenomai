@@ -144,7 +144,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		     (thread == NULL && (sysflags & __xn_exec_shadow) != 0) ||
 		     (!cap_raised(current_cap(), CAP_SYS_NICE) &&
 		      nr != sc_cobalt_bind))) {
-		if (XENO_DEBUG(NUCLEUS))
+		if (XENO_DEBUG(COBALT))
 			printk(XENO_WARN
 			       "syscall <%d> denied to %s[%d]\n",
 			       nr, current->comm, current->pid);
@@ -403,7 +403,7 @@ int ipipe_fastcall_hook(struct pt_regs *regs)
 	int ret;
 
 	ret = handle_head_syscall(&xnsched_realtime_domain, regs);
-	XENO_BUGON(NUCLEUS, ret == KEVENT_PROPAGATE);
+	XENO_BUGON(COBALT, ret == KEVENT_PROPAGATE);
 
 	return ret;
 }
@@ -687,7 +687,7 @@ static int cobalt_sysconf(int option, void __user *u_buf, size_t u_bufsz)
 			val |= _SC_COBALT_SCHED_TP;
 		break;
 	case _SC_COBALT_DEBUG:
-		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_NUCLEUS))
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_COBALT))
 			val |= _SC_COBALT_DEBUG_ASSERT;
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_CONTEXT))
 			val |= _SC_COBALT_DEBUG_CONTEXT;

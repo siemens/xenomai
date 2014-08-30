@@ -435,7 +435,7 @@ static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off
 	xnvfile_touch_tag(&nkthreadlist_tag);
 
 	if (xnthread_test_state(thread, XNREADY)) {
-		XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
+		XENO_BUGON(COBALT, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
 		xnsched_dequeue(thread);
 		xnthread_clear_state(thread, XNREADY);
 	}
@@ -814,9 +814,9 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	spl_t s;
 
 	/* No, you certainly do not want to suspend the root thread. */
-	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
+	XENO_BUGON(COBALT, xnthread_test_state(thread, XNROOT));
 	/* No built-in support for conjunctive wait. */
-	XENO_BUGON(NUCLEUS, wchan && thread->wchan);
+	XENO_BUGON(COBALT, wchan && thread->wchan);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1438,7 +1438,7 @@ void xnthread_cancel(struct xnthread *thread)
 	spl_t s;
 
 	/* Right, so you want to kill the kernel?! */
-	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
+	XENO_BUGON(COBALT, xnthread_test_state(thread, XNROOT));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1517,7 +1517,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 	spl_t s;
 	int ret;
 
-	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
+	XENO_BUGON(COBALT, xnthread_test_state(thread, XNROOT));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1807,7 +1807,7 @@ void __xnthread_test_cancel(struct xnthread *curr)
 
 	do_exit(0);
 	/* ... won't return ... */
-	XENO_BUGON(NUCLEUS, 1);
+	XENO_BUG(COBALT);
 }
 EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
 
@@ -1970,7 +1970,7 @@ void xnthread_relax(int notify, int reason)
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	splnone();
 
-	if (XENO_DEBUG(NUCLEUS) && !ipipe_root_p)
+	if (XENO_DEBUG(COBALT) && !ipipe_root_p)
 		xnsys_fatal("xnthread_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_host_pid(thread));
 
@@ -2410,7 +2410,7 @@ void xnthread_call_mayday(struct xnthread *thread, int reason)
 	struct task_struct *p = xnthread_host_task(thread);
 
 	/* Mayday traps are available to userland threads only. */
-	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
+	XENO_BUGON(COBALT, !xnthread_test_state(thread, XNUSER));
 	xnthread_set_info(thread, XNKICKED);
 	xnthread_signal(thread, SIGDEBUG, reason);
 	ipipe_raise_mayday(p);

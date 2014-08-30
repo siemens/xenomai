@@ -334,7 +334,7 @@ void xnthread_set_sync_window(struct xnthread *thread, int state_bits)
 static inline int xnthread_try_grab(struct xnthread *thread,
 				    struct xnsynch *synch)
 {
-	XENO_BUGON(NUCLEUS, xnsynch_fastlock_p(synch));
+	XENO_BUGON(COBALT, xnsynch_fastlock_p(synch));
 
 	if (xnsynch_owner(synch) != NULL)
 		return 0;

@@ -497,7 +497,7 @@ static inline void rtdm_lock_init(rtdm_lock_t *lock)
  */
 static inline void rtdm_lock_get(rtdm_lock_t *lock)
 {
-	XENO_BUGON(RTDM, !spltest());
+	XENO_BUGON(COBALT, !spltest());
 	spin_lock(lock);
 	__xnsched_lock();
 }
@@ -765,7 +765,7 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 {
-	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
 		return -EPERM;
 	xnintr_detach(irq_handle);
 	return 0;
@@ -989,7 +989,7 @@ static inline rtdm_task_t *rtdm_task_current(void)
 
 static inline int rtdm_task_wait_period(void)
 {
-	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
 	return xnthread_wait_period(NULL);
 }
@@ -1211,7 +1211,7 @@ static inline int rtdm_strncpy_from_user(struct rtdm_fd *fd,
 
 static inline int rtdm_rt_capable(struct rtdm_fd *fd)
 {
-	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
+	if (!XENO_ASSERT(COBALT, !xnsched_interrupt_p()))
 		return 0;
 
 	if (!rtdm_fd_is_user(fd))

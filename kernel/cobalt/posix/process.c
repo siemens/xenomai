@@ -193,7 +193,7 @@ static void leave_personality(struct cobalt_process *process,
 {
 	__clear_bit(personality->xid, &process->permap);
 	atomic_dec(&personality->refcnt);
-	XENO_ASSERT(NUCLEUS, atomic_read(&personality->refcnt) >= 0);
+	XENO_ASSERT(COBALT, atomic_read(&personality->refcnt) >= 0);
 	if (personality->module)
 		module_put(personality->module);
 }
@@ -745,7 +745,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	 */
 	thread->regs = xnarch_fault_regs(d);
 
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	if (!user_mode(d->regs)) {
 		xntrace_panic_freeze();
 		printk(XENO_WARN
@@ -762,7 +762,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 		       xnarch_fault_trap(d),
 		       xnarch_fault_pc(d),
 		       xnthread_host_pid(thread));
-#endif /* XENO_DEBUG(NUCLEUS) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	if (xnarch_fault_pf_p(d))
 		/*
@@ -783,7 +783,7 @@ static int handle_mayday_event(struct pt_regs *regs)
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct xnsys_ppd *sys_ppd;
 
-	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
+	XENO_BUGON(COBALT, !xnthread_test_state(thread, XNUSER));
 
 	/* We enter the mayday handler with hw IRQs off. */
 	sys_ppd = cobalt_ppd_get(0);
@@ -1076,7 +1076,7 @@ static inline void lock_timers(void)
 
 static inline void unlock_timers(void)
 {
-	XENO_BUGON(NUCLEUS, atomic_read(&nkclklk) == 0);
+	XENO_BUGON(COBALT, atomic_read(&nkclklk) == 0);
 	smp_mb__before_atomic_dec();
 	atomic_dec(&nkclklk);
 	smp_mb__after_atomic_dec();
@@ -1094,7 +1094,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	secondary_mode_only();
 
 	thread = xnthread_current();
-	XENO_BUGON(NUCLEUS, thread == NULL);
+	XENO_BUGON(COBALT, thread == NULL);
 	trace_cobalt_shadow_unmap(thread);
 
 	if (xnthread_test_state(thread, XNDEBUG))
@@ -1182,7 +1182,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 	}
 
 no_ptrace:
-	if (XENO_DEBUG(NUCLEUS)) {
+	if (XENO_DEBUG(COBALT)) {
 		if (!xnthread_test_state(next, XNRELAX)) {
 			xntrace_panic_freeze();
 			show_stack(xnthread_host_task(next), NULL);

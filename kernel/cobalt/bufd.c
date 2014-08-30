@@ -333,7 +333,7 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 		goto advance_offset;
 	}
 
-	XENO_BUGON(NUCLEUS, 1);
+	XENO_BUG(COBALT);
 
 	return -EINVAL;
 
@@ -493,7 +493,7 @@ ssize_t xnbufd_unmap_uread(struct xnbufd *bufd)
 {
 	preemptible_only();
 
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	bufd->b_ptr = (caddr_t)-1;
 #endif
 	return bufd->b_off;
@@ -551,7 +551,7 @@ ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd)
 	if (bufd->b_len > sizeof(bufd->b_buf))
 		xnfree(bufd->b_carry);
 done:
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	bufd->b_ptr = (caddr_t)-1;
 #endif
 	return ret ?: (ssize_t)len;
@@ -592,7 +592,7 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
  */
 void xnbufd_invalidate(struct xnbufd *bufd)
 {
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	bufd->b_ptr = (caddr_t)-1;
 #endif
 	if (bufd->b_carry) {
@@ -620,7 +620,7 @@ EXPORT_SYMBOL_GPL(xnbufd_invalidate);
  */
 ssize_t xnbufd_unmap_kread(struct xnbufd *bufd)
 {
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	bufd->b_ptr = (caddr_t)-1;
 #endif
 	return bufd->b_off;
@@ -643,7 +643,7 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_kread);
  */
 ssize_t xnbufd_unmap_kwrite(struct xnbufd *bufd)
 {
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	bufd->b_ptr = (caddr_t)-1;
 #endif
 	return bufd->b_off;

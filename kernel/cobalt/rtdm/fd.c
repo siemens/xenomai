@@ -197,7 +197,7 @@ static void rtdm_fd_do_close(struct rtdm_fd *fd)
 
 	fd->ops->close(fd);
 
-	if (!XENO_ASSERT(NUCLEUS, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		splnone();
 }
 
@@ -327,7 +327,7 @@ void rtdm_fd_unlock(struct rtdm_fd *fd)
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
 	/* Warn if fd was unreferenced. */
-	XENO_ASSERT(NUCLEUS, fd->refs > 0);
+	XENO_ASSERT(COBALT, fd->refs > 0);
 	rtdm_fd_put_inner(fd, s);
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_unlock);
@@ -356,7 +356,7 @@ int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...)
 	else
 		err = fd->ops->ioctl_rt(fd, request, arg);
 
-	if (!XENO_ASSERT(NUCLEUS, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		    splnone();
 
 	if (err < 0) {
@@ -393,7 +393,7 @@ rtdm_fd_read(struct xnsys_ppd *p, int ufd, void __user *buf, size_t size)
 	else
 		err = fd->ops->read_rt(fd, buf, size);
 
-	if (!XENO_ASSERT(NUCLEUS, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		    splnone();
 
 	rtdm_fd_put(fd);
@@ -425,7 +425,7 @@ ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
 	else
 		err = fd->ops->write_rt(fd, buf, size);
 
-	if (!XENO_ASSERT(NUCLEUS, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		    splnone();
 
 	rtdm_fd_put(fd);
@@ -457,7 +457,7 @@ rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd, struct msghdr *msg, int flags)
 	else
 		err = fd->ops->recvmsg_rt(fd, msg, flags);
 
-	if (!XENO_ASSERT(NUCLEUS, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		    splnone();
 
 	rtdm_fd_put(fd);
@@ -489,7 +489,7 @@ rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd, const struct msghdr *msg, int flag
 	else
 		err = fd->ops->sendmsg_rt(fd, msg, flags);
 
-	if (!XENO_ASSERT(NUCLEUS, !spltest()))
+	if (!XENO_ASSERT(COBALT, !spltest()))
 		    splnone();
 
 	rtdm_fd_put(fd);
@@ -614,8 +614,8 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 
 	rc = fd->ops->select(fd, selector, type, ufd);
 
-	if (!XENO_ASSERT(RTDM, !spltest()))
-		    splnone();
+	if (!XENO_ASSERT(COBALT, !spltest()))
+		splnone();
 
 	rtdm_fd_put(fd);
 

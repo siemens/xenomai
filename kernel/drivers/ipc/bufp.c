@@ -243,7 +243,7 @@ redo:
 			goto out;
 
 		wc = rtipc_get_wait_context(waiter);
-		XENO_BUGON(NUCLEUS, wc == NULL);
+		XENO_BUGON(COBALT, wc == NULL);
 		bufwc = container_of(wc, struct bufp_wait_context, wc);
 		if (bufwc->len + sk->fillsz <= sk->bufsz)
 			/* This call rescheds internally. */
@@ -494,7 +494,7 @@ redo:
 			goto out;
 
 		wc = rtipc_get_wait_context(waiter);
-		XENO_BUGON(NUCLEUS, wc == NULL);
+		XENO_BUGON(COBALT, wc == NULL);
 		bufwc = container_of(wc, struct bufp_wait_context, wc);
 		if (bufwc->len <= rsk->fillsz)
 			rtdm_event_pulse(&rsk->i_event);

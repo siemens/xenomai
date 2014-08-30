@@ -599,14 +599,14 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 		} else {
 			if (bsize <= heap->pagesize)
 				--heap->buckets[ilog].fcount;
-			if (!XENO_ASSERT(NUCLEUS, !list_empty(&heap->extents)))
+			if (!XENO_ASSERT(COBALT, !list_empty(&heap->extents)))
 				goto oops;
 			list_for_each_entry(extent, &heap->extents, link) {
 				if ((caddr_t) block >= extent->membase &&
 				    (caddr_t) block < extent->memlim)
 					goto found;
 			}
-			XENO_ASSERT(NUCLEUS, 0);
+			XENO_ASSERT(COBALT, 0);
 		oops:
 			block = NULL;
 			goto release_and_exit;
@@ -799,7 +799,7 @@ found:
 		nextpage = freepage + heap->pagesize;
 		nblocks = heap->pagesize >> log2size;
 		heap->buckets[ilog].fcount -= (nblocks - 1);
-		XENO_BUGON(NUCLEUS, heap->buckets[ilog].fcount < 0);
+		XENO_BUGON(COBALT, heap->buckets[ilog].fcount < 0);
 
 		/*
 		 * Easy case: all free blocks are laid on a single
@@ -1254,9 +1254,9 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 	 * Trying to unmap user memory without providing a release
 	 * handler for deferred cleanup is a bug.
 	 */
-	XENO_ASSERT(NUCLEUS, mapaddr == NULL || release);
+	XENO_ASSERT(COBALT, mapaddr == NULL || release);
 
-	if (XENO_DEBUG(NUCLEUS) && heap->ubytes != 0)
+	if (XENO_DEBUG(COBALT) && heap->ubytes != 0)
 		printk(XENO_ERR "destroying shared heap '%s' "
 		       "with %lu bytes still in use.\n",
 		       heap->label, heap->ubytes);
@@ -1294,7 +1294,7 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 		/* The release handler is supposed to clean up the rest. */
 		heap->release = release;
 		spin_unlock(&kheapq_lock);
-		XENO_ASSERT(NUCLEUS, release != NULL);
+		XENO_ASSERT(COBALT, release != NULL);
 		return;
 	}
 

@@ -360,7 +360,7 @@ menuconfig XENO_OPT_DEBUG
 
 if XENO_OPT_DEBUG
 
-config XENO_OPT_DEBUG_NUCLEUS
+config XENO_OPT_DEBUG_COBALT
 	bool "Cobalt runtime assertions"
 	help
 
@@ -446,23 +446,5 @@ config XENO_OPT_WATCHDOG_TIMEOUT
 	help
 
 	Watchdog timeout value (in seconds).
-
-config XENO_OPT_DEBUG_COBALT
-	bool "Cobalt debugging support"
-	default n
-	help
-
-	This option activates various checks inside the POSIX API
-	implementation in the Cobalt kernel, mainly to help debugging
-	applications. This option has no significant overhead.
-
-config XENO_OPT_DEBUG_RTDM
-	bool "RTDM debugging checks"
-	default y
-	help
-
-	This option activates debugging checks for the RTDM subsystem.
-	It is a recommended option for analysing potential issues in
-	RTDM drivers. A marginal runtime overhead is added.
 
 endif # XENO_OPT_DEBUG

@@ -223,7 +223,7 @@ redo:
 	 * errors in all other cases.
 	 */
 	if (ops->begin) {
-		XENO_BUGON(NUCLEUS, ops->end == NULL);
+		XENO_BUGON(COBALT, ops->end == NULL);
 		data = ops->begin(it);
 		if (data == NULL) {
 			kfree(it);
@@ -300,7 +300,7 @@ static int vfile_snapshot_release(struct inode *inode, struct file *file)
 		it = seq->private;
 		if (it) {
 			--xnvfile_nref(it->vfile);
-			XENO_BUGON(NUCLEUS, it->vfile->entry.refcnt < 0);
+			XENO_BUGON(COBALT, it->vfile->entry.refcnt < 0);
 			if (it->databuf)
 				it->endfn(it, it->databuf);
 			kfree(it);
@@ -401,7 +401,7 @@ int xnvfile_init_snapshot(const char *name,
 	struct proc_dir_entry *ppde, *pde;
 	int mode;
 
-	XENO_BUGON(NUCLEUS, vfile->tag == NULL);
+	XENO_BUGON(COBALT, vfile->tag == NULL);
 
 	if (vfile->entry.lockops == NULL)
 		/* Defaults to nucleus lock */
@@ -555,7 +555,7 @@ static int vfile_regular_release(struct inode *inode, struct file *file)
 		it = seq->private;
 		if (it) {
 			--xnvfile_nref(it->vfile);
-			XENO_BUGON(NUCLEUS, xnvfile_nref(it->vfile) < 0);
+			XENO_BUGON(COBALT, xnvfile_nref(it->vfile) < 0);
 			kfree(it);
 		}
 

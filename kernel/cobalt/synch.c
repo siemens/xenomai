@@ -140,7 +140,7 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	primary_mode_only();
 
-	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
+	XENO_BUGON(COBALT, synch->status & XNSYNCH_OWNER);
 
 	thread = xnthread_current();
 
@@ -186,7 +186,7 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 	struct xnthread *thread;
 	spl_t s;
 
-	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
+	XENO_BUGON(COBALT, synch->status & XNSYNCH_OWNER);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -213,7 +213,7 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 	int nwakeups = 0;
 	spl_t s;
 
-	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
+	XENO_BUGON(COBALT, synch->status & XNSYNCH_OWNER);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -261,7 +261,7 @@ void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper
 {
 	spl_t s;
 
-	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
+	XENO_BUGON(COBALT, synch->status & XNSYNCH_OWNER);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -343,7 +343,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	primary_mode_only();
 
-	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
+	XENO_BUGON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
 
 	thread = xnthread_current();
 	threadh = xnthread_handle(thread);
@@ -491,7 +491,7 @@ static void clear_boost(struct xnsynch *synch, struct xnthread *owner)
 	} else {
 		/* Find the highest priority needed to enforce the PIP. */
 		hsynch = list_first_entry(&owner->claimq, struct xnsynch, link);
-		XENO_BUGON(NUCLEUS, list_empty(&hsynch->pendq));
+		XENO_BUGON(COBALT, list_empty(&hsynch->pendq));
 		target = list_first_entry(&hsynch->pendq, struct xnthread, plink);
 		if (target->wprio > wprio)
 			wprio = target->wprio;
@@ -579,7 +579,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 	atomic_long_t *lockp;
 	xnhandle_t threadh;
 
-	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
+	XENO_BUGON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
 
 	trace_cobalt_synch_release(synch);
 
@@ -735,7 +735,7 @@ int xnsynch_flush(struct xnsynch *synch, int reason)
 	trace_cobalt_synch_flush(synch);
 
 	if (list_empty(&synch->pendq)) {
-		XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_CLAIMED);
+		XENO_BUGON(COBALT, synch->status & XNSYNCH_CLAIMED);
 		ret = XNSYNCH_DONE;
 	} else {
 		ret = XNSYNCH_RESCHED;

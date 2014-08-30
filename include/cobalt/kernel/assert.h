@@ -53,8 +53,8 @@
 				    __FILE__, __LINE__, (#__cond));	\
 	} while (0)
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#ifndef CONFIG_XENO_OPT_DEBUG_COBALT
+#define CONFIG_XENO_OPT_DEBUG_COBALT 0
 #endif
 
 #ifndef CONFIG_XENO_OPT_DEBUG_CONTEXT
@@ -67,14 +67,6 @@
 
 #ifndef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
 #define CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX 0
-#endif
-
-#ifndef CONFIG_XENO_OPT_DEBUG_RTDM
-#define CONFIG_XENO_OPT_DEBUG_RTDM	0
-#endif
-
-#ifndef CONFIG_XENO_OPT_DEBUG_COBALT
-#define CONFIG_XENO_OPT_DEBUG_COBALT 0
 #endif
 
 #define primary_mode_only()	XENO_BUGON(CONTEXT, ipipe_root_p)

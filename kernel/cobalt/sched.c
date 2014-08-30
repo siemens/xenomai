@@ -62,7 +62,7 @@ static void xnsched_register_class(struct xnsched_class *sched_class)
 	 * Classes shall be registered by increasing priority order,
 	 * idle first and up.
 	 */
-	XENO_BUGON(NUCLEUS, sched_class->next &&
+	XENO_BUGON(COBALT, sched_class->next &&
 		   sched_class->next->weight > sched_class->weight);
 
 	printk(XENO_INFO "scheduling class %s registered.\n", sched_class->name);
@@ -335,7 +335,7 @@ void ___xnsched_unlock(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 
-	if (!XENO_ASSERT(NUCLEUS, xnthread_lock_count(curr) > 0))
+	if (!XENO_ASSERT(COBALT, xnthread_lock_count(curr) > 0))
 		return;
 
 	if (--xnthread_lock_count(curr) == 0) {
@@ -514,7 +514,7 @@ void xnsched_initq(struct xnsched_mlq *q)
 
 static inline int get_qindex(struct xnsched_mlq *q, int prio)
 {
-	XENO_BUGON(NUCLEUS, prio < 0 || prio >= XNSCHED_MLQ_LEVELS);
+	XENO_BUGON(COBALT, prio < 0 || prio >= XNSCHED_MLQ_LEVELS);
 	/*
 	 * BIG FAT WARNING: We need to rescale the priority level to a
 	 * 0-based range. We use find_first_bit() to scan the bitmap
@@ -582,7 +582,7 @@ struct xnthread *xnsched_getq(struct xnsched_mlq *q)
 
 	idx = xnsched_weightq(q);
 	head = q->heads + idx;
-	XENO_BUGON(NUCLEUS, list_empty(head));
+	XENO_BUGON(COBALT, list_empty(head));
 	thread = list_first_entry(head, struct xnthread, rlink);
 	del_q(q, &thread->rlink, idx);
 
@@ -623,7 +623,7 @@ struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 	 */
 	idx = xnsched_weightq(q);
 	head = q->heads + idx;
-	XENO_BUGON(NUCLEUS, list_empty(head));
+	XENO_BUGON(COBALT, list_empty(head));
 
 	/*
 	 * The active class (i.e. ->sched_class) is the one currently
@@ -909,7 +909,7 @@ shadow_epilogue:
 	 * handler that hit before we call xnsched_run in
 	 * xnthread_suspend() when relaxing a thread.
 	 */
-	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
+	XENO_BUGON(COBALT, !hard_irqs_disabled());
 
 	return 1;
 }

@@ -390,7 +390,7 @@ int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 static inline struct xnsched *
 xnsched_finish_unlocked_switch(struct xnsched *sched)
 {
-	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
+	XENO_BUGON(COBALT, !hard_irqs_disabled());
 	return xnsched_current();
 }
 

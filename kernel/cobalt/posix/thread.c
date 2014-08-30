@@ -205,7 +205,7 @@ void cobalt_thread_map(struct xnthread *curr)
 
 	thread = container_of(curr, struct cobalt_thread, threadbase);
 	thread->process = cobalt_current_process();
-	XENO_BUGON(NUCLEUS, thread->process == NULL);
+	XENO_BUGON(COBALT, thread->process == NULL);
 }
 
 struct xnthread_personality *cobalt_thread_exit(struct xnthread *curr)

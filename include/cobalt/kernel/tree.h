@@ -76,7 +76,7 @@ struct xnid *xnid_fetch(struct rb_root *t, unsigned long long id)
 
 static inline int xnid_remove(struct rb_root *t, struct xnid *xnid)
 {
-#if XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(COBALT)
 	if (xnid_fetch(t, xnid->id) != xnid)
 		return -ENOENT;
 #endif

@@ -643,7 +643,7 @@ static void switch_htick_mode(enum clock_event_mode mode,
 		xntimer_stop(&sched->htimer);
 		break;
 	default:
-		XENO_BUGON(NUCLEUS, 1);
+		XENO_BUG(COBALT);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
