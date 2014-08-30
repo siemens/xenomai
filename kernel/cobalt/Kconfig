@@ -465,12 +465,4 @@ config XENO_OPT_DEBUG_RTDM
 	It is a recommended option for analysing potential issues in
 	RTDM drivers. A marginal runtime overhead is added.
 
-config XENO_OPT_DEBUG_RTDM_APPL
-	bool "RTDM application cleanup checks"
-	default y
-	help
-
-	When enabled, this option makes RTDM warn about auto-clean
-	operations executed upon application termination.
-
 endif # XENO_OPT_DEBUG
