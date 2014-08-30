@@ -24,6 +24,7 @@
 
 #include <linux/errno.h>
 #include <asm/uaccess.h>
+#include <asm/unistd.h>
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
