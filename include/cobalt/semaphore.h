@@ -21,7 +21,7 @@
 #ifndef _COBALT_SEMAPHORE_H
 #define _COBALT_SEMAPHORE_H
 
-#include <nocore/atomic.h>
+#include <boilerplate/atomic.h>
 #include <cobalt/wrappers.h>
 #include <cobalt/uapi/sem.h>
 

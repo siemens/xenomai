@@ -3,7 +3,6 @@ nodist_include_HEADERS=$(CONFIG_HEADER)
 include_HEADERS = version.h
 
 SUBDIRS = 		\
-	nocore		\
 	boilerplate	\
 	copperplate	\
 	smokey		\
@@ -26,7 +25,6 @@ DIST_SUBDIRS = 		\
 	cobalt 		\
 	copperplate	\
 	mercury		\
-	nocore		\
 	psos 		\
 	rtdm		\
 	smokey		\

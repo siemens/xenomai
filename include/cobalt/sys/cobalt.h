@@ -26,7 +26,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <time.h>
-#include <nocore/atomic.h>
+#include <boilerplate/atomic.h>
+#include <boilerplate/list.h>
 #include <cobalt/uapi/kernel/synch.h>
 #include <cobalt/uapi/kernel/vdso.h>
 #include <cobalt/uapi/mutex.h>
@@ -35,7 +36,6 @@
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
 #include <cobalt/uapi/sem.h>
-#include <boilerplate/list.h>
 
 #define report_error(fmt, args...) \
 	__STD(fprintf(stderr, "Xenomai/cobalt: %s(): " fmt "\n", __func__, ##args))

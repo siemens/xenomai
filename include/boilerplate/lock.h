@@ -20,7 +20,7 @@
 #define _BOILERPLATE_LOCK_H
 
 #include <pthread.h>
-#include <nocore/atomic.h>
+#include <boilerplate/atomic.h>
 #include <boilerplate/wrappers.h>
 #include <boilerplate/ancillaries.h>
 #include <boilerplate/debug.h>

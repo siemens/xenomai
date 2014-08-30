@@ -898,7 +898,6 @@ AC_CONFIG_FILES([ \
 	demo/alchemy/Makefile \
 	demo/alchemy/cobalt/Makefile \
 	include/Makefile \
-	include/nocore/Makefile \
 	include/cobalt/uapi/Makefile \
 	include/cobalt/uapi/asm-generic/Makefile \
 	include/cobalt/uapi/kernel/Makefile \

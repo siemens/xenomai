@@ -26,7 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
-#include <nocore/atomic.h>
+#include <boilerplate/atomic.h>
 #include <boilerplate/compiler.h>
 #include "current.h"
 #include "internal.h"

@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include "nocore/atomic.h"
+#include "boilerplate/atomic.h"
 #include "boilerplate/lock.h"
 #include "boilerplate/time.h"
 #include "boilerplate/scope.h"

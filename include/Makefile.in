@@ -378,15 +378,14 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 nodist_include_HEADERS = $(CONFIG_HEADER)
 include_HEADERS = version.h
-SUBDIRS = nocore boilerplate copperplate smokey alchemy psos trank \
-	vxworks $(am__append_1) $(am__append_2)
+SUBDIRS = boilerplate copperplate smokey alchemy psos trank vxworks \
+	$(am__append_1) $(am__append_2)
 DIST_SUBDIRS = \
 	alchemy		\
 	boilerplate	\
 	cobalt 		\
 	copperplate	\
 	mercury		\
-	nocore		\
 	psos 		\
 	rtdm		\
 	smokey		\
