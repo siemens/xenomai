@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <error.h>
 #include <xeno_config.h>
+#include <boilerplate/libc.h>
 #include <smokey/smokey.h>
 
 smokey_test_plugin(fork_exec,
@@ -34,6 +35,10 @@ static int run_fork_exec(struct smokey_test *t, int argc, char *const argv[])
 
 	switch (fork()) {
 	case -1:
+		if (errno == ENOSYS) {
+			smokey_note("fork() not available -- discarding test");
+			return 0;
+		}
 		error(1, errno, "fork");
 	case 0:
 		/*
