@@ -109,14 +109,14 @@ static inline struct xnthread *xnsynch_owner(struct xnsynch *synch)
 	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
 #define xnsynch_fast_mask_claimed(fastlock) ((fastlock & ~XNSYNCH_FLCLAIM))
 
-#if XENO_DEBUG(SYNCH_RELAX)
+#if XENO_DEBUG(USER)
 
 void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
 				  struct xnthread *sleeper);
 
 void xnsynch_detect_claimed_relax(struct xnthread *owner);
 
-#else /* !XENO_DEBUG(SYNCH_RELAX) */
+#else /* !XENO_DEBUG(USER) */
 
 static inline void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
 				  struct xnthread *sleeper)
@@ -127,7 +127,7 @@ static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
 }
 
-#endif /* !XENO_DEBUG(SYNCH_RELAX) */
+#endif /* !XENO_DEBUG(USER) */
 
 void xnsynch_init(struct xnsynch *synch, int flags,
 		  atomic_long_t *fastlock);

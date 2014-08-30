@@ -185,7 +185,7 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 		goto unlock_and_return;
 	}
 
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(USER)
 	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
 		err = -EPERM;
 		goto unlock_and_return;

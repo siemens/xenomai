@@ -389,26 +389,27 @@ config XENO_OPT_DEBUG_LOCKING
 	This option may induce a measurable overhead on low end
 	machines.
 
-config XENO_OPT_DEBUG_SYNCH_RELAX
-	bool "Detect mutexes held in relaxed sections"
-	default y
+config XENO_OPT_DEBUG_USER
+	bool "User consistency checks"
 	help
 
-	This option detects when a Cobalt thread attempts to sleep on
-	a Cobalt mutex, which is owned by another thread currently
-	running in secondary mode (i.e. plain Linux execution
-	mode). If the WARNSW flag is enabled for the sleeper when this
-	situation arises, it immediately receives the SIGDEBUG signal
-	(see pthread_setmode_np(), rt_task_set_mode() depending on
-	your API).
+	This option enables a set of consistency checks for detecting
+	wrong runtime behavior in user applications.
 
-	This particular situation is a possible source of unwanted
-	latency, since the current mutex owner may be unexpectedly
-	delayed as a result of using non-deterministic Linux services,
-	thus deferring the release of the Cobalt mutex for too long.
+	For instance, this feature detects when a Cobalt thread
+	attempts to sleep on a Cobalt mutex, which is owned by another
+	thread currently running in secondary mode (i.e. plain Linux
+	execution mode). If the WARNSW flag is enabled for the sleeper
+	when this situation arises, it immediately receives the
+	SIGDEBUG signal (see pthread_setmode_np(), rt_task_set_mode()
+	depending on your API). This particular situation is a
+	possible source of unwanted latency, since the current mutex
+	owner may be unexpectedly delayed as a result of using
+	non-deterministic Linux services, thus deferring the release
+	of the Cobalt mutex after an undefined amount of time.
 
-	This option may introduce some overhead in case mutexes are
-	highly contended. Use this feature for debugging purposes
+	This option may introduce some overhead (e.g. with highly
+	contended mutexes). Use this feature for debugging purposes
 	only.
 
 config XENO_OPT_DEBUG_TRACE_RELAX

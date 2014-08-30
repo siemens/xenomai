@@ -220,10 +220,10 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(USER)
 	if (sem->owningq != sem_kqueue(sem))
 		return -EPERM;
-#endif /* XENO_DEBUG(COBALT) */
+#endif
 
 	if (atomic_long_sub_return(1, &sem->datp->value) < 0)
 		return -EAGAIN;
@@ -327,10 +327,10 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(USER)
 	if (ownq && ownq != sem_kqueue(sem))
 		return -EPERM;
-#endif /* XENO_DEBUG(COBALT) */
+#endif
 
 	if (atomic_long_read(&sem->datp->value) == SEM_VALUE_MAX)
 		return -EINVAL;

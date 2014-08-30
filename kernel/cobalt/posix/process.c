@@ -745,7 +745,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	 */
 	thread->regs = xnarch_fault_regs(d);
 
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(COBALT) || XENO_DEBUG(USER)
 	if (!user_mode(d->regs)) {
 		xntrace_panic_freeze();
 		printk(XENO_WARN
@@ -762,7 +762,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 		       xnarch_fault_trap(d),
 		       xnarch_fault_pc(d),
 		       xnthread_host_pid(thread));
-#endif /* XENO_DEBUG(COBALT) */
+#endif
 
 	if (xnarch_fault_pf_p(d))
 		/*

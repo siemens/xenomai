@@ -819,7 +819,7 @@ void xnsynch_release_all_ownerships(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_release_all_ownerships);
 
-#if XENO_DEBUG(SYNCH_RELAX)
+#if XENO_DEBUG(USER)
 
 /*
  * Detect when a thread is about to sleep on a synchronization
@@ -861,6 +861,6 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 	}
 }
 
-#endif /* XENO_DEBUG(SYNCH_RELAX) */
+#endif /* XENO_DEBUG(USER) */
 
 /** @} */

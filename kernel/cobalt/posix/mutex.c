@@ -102,10 +102,10 @@ static inline int cobalt_mutex_acquire(struct xnthread *cur,
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		return -EINVAL;
 
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(USER)
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
 		return -EPERM;
-#endif /* XENO_DEBUG(COBALT) */
+#endif
 
 	if (xnsynch_owner_check(&mutex->synchbase, cur) == 0)
 		return -EBUSY;
@@ -154,11 +154,10 @@ int cobalt_mutex_release(struct xnthread *cur,
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		 return -EINVAL;
 
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(USER)
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
 		return -EPERM;
-#endif /* XENO_DEBUG(COBALT) */
-
+#endif
 	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
 	flags = datp->flags;
 	need_resched = 0;
@@ -193,11 +192,11 @@ int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 	switch(mutex->attr.type) {
 	case PTHREAD_MUTEX_NORMAL:
 		/* Attempting to relock a normal mutex, deadlock. */
-#if XENO_DEBUG(COBALT)
+#if XENO_DEBUG(USER)
 		printk(XENO_WARN
 		       "thread %s deadlocks on non-recursive mutex\n",
 		       curr->name);
-#endif /* XENO_DEBUG(COBALT) */
+#endif
 		cobalt_mutex_acquire_unchecked(curr, mutex, timed, u_ts);
 		break;
 
