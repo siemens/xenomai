@@ -35,7 +35,12 @@
 
 int cobalt_extend(unsigned int magic)
 {
-	return XENOMAI_SYSCALL1( sc_cobalt_extend, magic);
+	return XENOMAI_SYSCALL1(sc_cobalt_extend, magic);
+}
+
+int cobalt_sysconf(int option, void *buf, size_t bufsz)
+{
+	return XENOMAI_SYSCALL3(sc_cobalt_sysconf, option, buf, bufsz);
 }
 
 void cobalt_thread_harden(void)
