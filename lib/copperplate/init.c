@@ -364,10 +364,9 @@ static int parse_base_options(int *argcp, char *const **argvp,
 		c = getopt_long(*largcp, uargv, "", options, &lindex);
 		if (c == EOF)
 			break;
-		if (lindex == -1) {
-			usage();
-			exit(1);
-		}
+		if (lindex == -1)
+			continue;
+
 		switch (lindex - base_opt_start) {
 		case mempool_opt:
 			__node_info.mem_pool = atoi(optarg) * 1024;
