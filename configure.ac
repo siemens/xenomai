@@ -626,6 +626,11 @@ XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -pipe -fstrict-aliasing \
 -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDADD="$XENO_USER_APP_LDFLAGS"
 
+dnl Add any flags forced on the command line, but only
+dnl for building apps.
+XENO_USER_APP_CFLAGS="$CFLAGS $XENO_USER_APP_CFLAGS"
+XENO_USER_APP_LDFLAGS="$LDFLAGS  $XENO_USER_APP_LDFLAGS"
+
 if test x$debug_mode = xpartial; then
    XENO_USER_CFLAGS="-g -O2 $XENO_USER_CFLAGS"
 elif test x$debug_mode = xfull; then
