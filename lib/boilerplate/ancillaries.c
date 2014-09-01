@@ -267,16 +267,23 @@ pid_t get_thread_pid(void)
 	return syscall(__NR_gettid);
 }
 
+static pthread_once_t init_once = PTHREAD_ONCE_INIT;
+
+static void reset_on_fork(void)
+{
+	init_once = PTHREAD_ONCE_INIT;
+}
+
 static void __boilerplate_init(void)
 {
+	pthread_atfork(NULL, NULL, reset_on_fork);
 	__RT(clock_gettime(CLOCK_MONOTONIC, &__init_date));
 	__RT(pthread_mutex_init(&__printlock, NULL));
 }
 
 void boilerplate_init(void)
 {
-	static pthread_once_t once = PTHREAD_ONCE_INIT;
-	pthread_once(&once, __boilerplate_init);
+	pthread_once(&init_once, __boilerplate_init);
 }
 
 const char *config_strings[] = {
