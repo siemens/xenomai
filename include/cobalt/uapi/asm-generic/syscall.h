@@ -18,6 +18,7 @@
 #ifndef _COBALT_UAPI_ASM_GENERIC_SYSCALL_H
 #define _COBALT_UAPI_ASM_GENERIC_SYSCALL_H
 
+#include <linux/types.h>
 #include <asm/xenomai/uapi/features.h>
 #include <asm/xenomai/uapi/syscall.h>
 
@@ -36,8 +37,8 @@ struct cobalt_bindreq {
 #define COBALT_PRIMARY    1
 
 struct cobalt_sysinfo {
-	unsigned long long clockfreq;	/* Real-time clock frequency */
-	unsigned long vdso;		/* Offset of nkvdso in the sem heap */
+	__u64 clockfreq;	/* Real-time clock frequency */
+	__u32 vdso;		/* Offset of nkvdso in the sem heap */
 };
 
 #endif /* !_COBALT_UAPI_ASM_GENERIC_SYSCALL_H */
