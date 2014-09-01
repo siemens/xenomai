@@ -113,13 +113,10 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	unsigned long sysflags;
 	struct task_struct *p;
 
-	thread = xnthread_current();
-	if (thread)
-		thread->regs = regs;
-
 	if (!__xn_syscall_p(regs))
 		goto linux_syscall;
 
+	thread = xnthread_current();
 	nr = __xn_syscall(regs);
 
 	trace_cobalt_head_sysentry(thread, nr);
@@ -301,14 +298,11 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 */
 	xnthread_test_cancel();
 
-	thread = xnthread_current();
-	if (thread)
-		thread->regs = regs;
-
 	if (!__xn_syscall_p(regs))
 		/* Fall back to Linux syscall handling. */
 		return KEVENT_PROPAGATE;
 
+	thread = xnthread_current();
 	/* nr has already been checked in the head domain handler. */
 	nr = __xn_syscall(regs);
 
@@ -555,30 +549,31 @@ static int cobalt_serialdbg(const char __user *u_msg, int len)
 
 static int cobalt_mayday(void)
 {
+	struct pt_regs *regs = task_pt_regs(current);
 	struct xnthread *cur;
 
 	cur = xnthread_current();
-	if (likely(cur)) {
-		/*
-		 * If the thread was kicked by the watchdog, this
-		 * syscall we have just forced on it via the mayday
-		 * escape will cause it to relax. See
-		 * handle_head_syscall().
-		 */
-		xnarch_fixup_mayday(xnthread_archtcb(cur), cur->regs);
-
-		/*
-		 * Return whatever value xnarch_fixup_mayday set for
-		 * this register, in order not to undo what
-		 * xnarch_fixup_mayday did.
-		 */
-		return __xn_reg_rval(cur->regs);
+	if (cur == NULL) {
+		printk(XENO_WARN
+		       "MAYDAY received from invalid context %s[%d]\n",
+		       current->comm, current->pid);
+		return -EPERM;
 	}
 
-	printk(XENO_WARN "MAYDAY received from invalid context %s[%d]\n",
-	       current->comm, current->pid);
+	/*
+	 * If the thread was kicked by the watchdog, this syscall we
+	 * have just forced on it via the mayday escape will cause it
+	 * to relax. See handle_head_syscall().
+	 */
+	xnarch_fixup_mayday(xnthread_archtcb(cur), regs);
 
-	return -EPERM;
+	/*
+	 * Return whatever value xnarch_fixup_mayday set for this
+	 * register, in order not to undo what xnarch_fixup_mayday
+	 * did.
+	 */
+	return __xn_reg_rval(regs);
+
 }
 
 static void stringify_feature_set(unsigned long fset, char *buf, int size)

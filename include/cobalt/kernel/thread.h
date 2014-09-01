@@ -186,7 +186,6 @@ struct xnthread {
 	void (*entry)(void *cookie); /* Thread entry routine */
 	void *cookie;		/* Cookie to pass to the entry routine */
 
-	struct pt_regs *regs;		/* Current register frame */
 	struct xnthread_user_window *u_window;	/* Data visible from userland. */
 
 	struct xnthread_personality *personality;
