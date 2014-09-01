@@ -435,9 +435,9 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 		do {
 			bitmap = old_bitmap;
 			j = __builtin_ffsl(bitmap) - 1;
-			old_bitmap = atomic_long_cmpxchg(&pool_bitmap[i],
-							 bitmap,
-							 bitmap & ~(1UL << j));
+			old_bitmap = atomic_cmpxchg(&pool_bitmap[i],
+						    bitmap,
+						    bitmap & ~(1UL << j));
 		} while (old_bitmap != bitmap && old_bitmap);
 		j += i * __WORDSIZE;
 	} while (!old_bitmap);
@@ -549,9 +549,9 @@ static void cleanup_buffer(struct print_buffer *buffer)
 		old_bitmap = atomic_long_read(&pool_bitmap[i]);
 		do {
 			bitmap = old_bitmap;
-			old_bitmap = atomic_long_cmpxchg(&pool_bitmap[i],
-							 bitmap,
-							 bitmap | (1UL << j));
+			old_bitmap = atomic_cmpxchg(&pool_bitmap[i],
+						    bitmap,
+						    bitmap | (1UL << j));
 		} while (old_bitmap != bitmap);
 
 		return;

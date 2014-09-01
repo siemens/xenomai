@@ -29,7 +29,7 @@ typedef __u64 xntime_t; /* ns */
 
 typedef __s64 xnstime_t;
 
-typedef unsigned long xnhandle_t;
+typedef __u32 xnhandle_t;
 
 #define XN_NO_HANDLE ((xnhandle_t)0)
 

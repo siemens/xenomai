@@ -198,7 +198,7 @@ char *generate_name(char *buf, const char *radix,
 		strncpy(buf, radix, len);
 		buf[len] = '\0';
 	} else {
-		tag = atomic_add_fetch(ngen->serial, 1);
+		tag = atomic_add_fetch(&ngen->serial, 1);
 		snprintf(buf, len, "%s@%d", ngen->radix, tag);
 	}
 

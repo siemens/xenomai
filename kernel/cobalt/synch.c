@@ -33,7 +33,7 @@
 
 /**
  * @fn void xnsynch_init(struct xnsynch *synch, int flags,
- *                       atomic_long_t *fastlock)
+ *                       atomic_t *fastlock)
  *
  * @brief Initialize a synchronization object.
  *
@@ -78,7 +78,7 @@
  *
  * @coretags{task-unrestricted}
  */
-void xnsynch_init(struct xnsynch *synch, int flags, atomic_long_t *fastlock)
+void xnsynch_init(struct xnsynch *synch, int flags, atomic_t *fastlock)
 {
 	if (flags & XNSYNCH_PIP)
 		flags |= XNSYNCH_PRIO | XNSYNCH_OWNER;	/* Obviously... */
@@ -92,7 +92,7 @@ void xnsynch_init(struct xnsynch *synch, int flags, atomic_long_t *fastlock)
 	if (flags & XNSYNCH_OWNER) {
 		BUG_ON(fastlock == NULL);
 		synch->fastlock = fastlock;
-		atomic_long_set(fastlock, XN_NO_HANDLE);
+		atomic_set(fastlock, XN_NO_HANDLE);
 	} else
 		synch->fastlock = NULL;
 }
@@ -338,7 +338,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 {
 	xnhandle_t threadh, fastlock, old;
 	struct xnthread *thread, *owner;
-	atomic_long_t *lockp;
+	atomic_t *lockp;
 	spl_t s;
 
 	primary_mode_only();
@@ -350,7 +350,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	lockp = xnsynch_fastlock(synch);
 	trace_cobalt_synch_acquire(synch, thread);
 redo:
-	fastlock = atomic_long_cmpxchg(lockp, XN_NO_HANDLE, threadh);
+	fastlock = atomic_cmpxchg(lockp, XN_NO_HANDLE, threadh);
 
 	if (likely(fastlock == XN_NO_HANDLE)) {
 		if (xnthread_test_state(thread, XNWEAK))
@@ -369,13 +369,13 @@ redo:
 	 * set, start with cmpxchg directly.
 	 */
 	if (xnsynch_fast_is_claimed(fastlock)) {
-		old = atomic_long_read(lockp);
+		old = atomic_read(lockp);
 		goto test_no_owner;
 	}
 
 	do {
-		old = atomic_long_cmpxchg(lockp, fastlock,
-				xnsynch_fast_set_claimed(fastlock, 1));
+		old = atomic_cmpxchg(lockp, fastlock,
+				     xnsynch_fast_set_claimed(fastlock, 1));
 		if (likely(old == fastlock))
 			break;
 	test_no_owner:
@@ -467,7 +467,7 @@ block:
 		threadh = xnsynch_fast_set_claimed(threadh, 1);
 
 	/* Set new ownership for this mutex. */
-	atomic_long_set(lockp, threadh);
+	atomic_set(lockp, threadh);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -509,7 +509,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 {
 	struct xnthread *nextowner;
 	xnhandle_t nextownerh;
-	atomic_long_t *lockp;
+	atomic_t *lockp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -518,7 +518,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 
 	if (list_empty(&synch->pendq)) {
 		synch->owner = NULL;
-		atomic_long_set(lockp, XN_NO_HANDLE);
+		atomic_set(lockp, XN_NO_HANDLE);
 		xnlock_put_irqrestore(&nklock, s);
 		return NULL;
 	}
@@ -536,7 +536,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 
 	nextownerh = xnsynch_fast_set_claimed(xnthread_handle(nextowner),
 					      xnsynch_pended_p(synch));
-	atomic_long_set(lockp, nextownerh);
+	atomic_set(lockp, nextownerh);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -576,8 +576,8 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 struct xnthread *xnsynch_release(struct xnsynch *synch,
 				 struct xnthread *thread)
 {
-	atomic_long_t *lockp;
 	xnhandle_t threadh;
+	atomic_t *lockp;
 
 	XENO_BUGON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
 

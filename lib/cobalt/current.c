@@ -66,8 +66,8 @@ static inline void __cobalt_set_tsd(xnhandle_t current,
 {
 	struct xnthread_user_window *window;
 
-	current = (current != XN_NO_HANDLE ? current : (xnhandle_t)(0));
-	pthread_setspecific(cobalt_current_key, (void *)current);
+	current = (current != XN_NO_HANDLE ? current : (xnhandle_t)0);
+	pthread_setspecific(cobalt_current_key, (void *)(uintptr_t)current);
 
 	window = (void *)(cobalt_sem_heap[0] + u_winoff);
 	pthread_setspecific(cobalt_current_window_key, window);

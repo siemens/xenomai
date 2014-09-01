@@ -24,6 +24,7 @@
 #include <string.h>
 #include <boilerplate/signal.h>
 #include <boilerplate/compiler.h>
+#include <boilerplate/atomic.h>
 
 extern struct timespec __init_date;
 
@@ -35,14 +36,14 @@ struct cleanup_block;
 struct name_generator {
 	const char *radix;
 	int length;
-	int serial;
+	atomic_t serial;
 };
 
 #define DEFINE_NAME_GENERATOR(__name, __radix, __type, __member)	\
 	struct name_generator __name = {				\
 		.radix = __radix,					\
 		.length = sizeof ((__type *)0)->__member,		\
-		.serial = 1,						\
+		.serial = ATOMIC_INIT(1),				\
 	}
 
 #define ONE_BILLION  1000000000

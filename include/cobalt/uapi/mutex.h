@@ -21,7 +21,7 @@
 #define COBALT_MUTEX_MAGIC  0x86860303
 
 struct mutex_dat {
-	atomic_long_t owner;
+	atomic_t owner;
 	unsigned long flags;
 #define COBALT_MUTEX_COND_SIGNAL 0x00000001
 #define COBALT_MUTEX_ERRORCHECK  0x00000002

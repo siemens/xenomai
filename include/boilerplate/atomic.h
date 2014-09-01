@@ -16,44 +16,50 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _NOCORE_ATOMIC_H
-#define _NOCORE_ATOMIC_H
+#ifndef _BOILERPLATE_ATOMIC_H
+#define _BOILERPLATE_ATOMIC_H
 
 #include <xeno_config.h>
 
-typedef struct {
-	unsigned long v;
-} atomic_long_t;
+typedef struct { int v; } atomic_t;
 
-#ifndef cpu_relax
-#define cpu_relax() __sync_synchronize()
-#endif
+typedef struct { long v; } atomic_long_t;
 
-#ifndef atomic_long_read
-#define atomic_long_read(p)		((p)->v)
-#endif
+#define ATOMIC_INIT(__n) { (__n) }
 
-#ifndef atomic_long_set
-#define atomic_long_set(p, i)		((p)->v = i)
-#endif
+static inline long atomic_long_read(const atomic_long_t *ptr)
+{
+	return ptr->v;
+}
 
-#ifndef atomic_long_cmpxchg
-#define atomic_long_cmpxchg(p, o, n)				\
-	__sync_val_compare_and_swap(&(p)->v,			\
-				    (typeof((p)->v))(o),	\
-				    (typeof((p)->v))(n))
+static inline void atomic_long_set(atomic_long_t *ptr, long v)
+{
+	ptr->v = v;
+}
+
+static inline int atomic_read(const atomic_t *ptr)
+{
+	return ptr->v;
+}
+
+static inline void atomic_set(atomic_t *ptr, long v)
+{
+	ptr->v = v;
+}
+
+#ifndef atomic_cmpxchg
+#define atomic_cmpxchg(__ptr, __old, __new)  \
+	__sync_val_compare_and_swap(&(__ptr)->v, __old, __new)
 #endif
 
 #ifndef atomic_sub_fetch
-#define atomic_sub_fetch(v, n)	__sync_sub_and_fetch(&(v), n)
+#define atomic_sub_fetch(__ptr, __n)	\
+	__sync_sub_and_fetch(&(__ptr)->v, __n)
 #endif
 
 #ifndef atomic_add_fetch
-#define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)
-#endif
-
-#ifndef atomic_cmp_swap
-#define atomic_cmp_swap(ptr, old, new)  __sync_val_compare_and_swap(ptr, old, new)
+#define atomic_add_fetch(__ptr, __n)	\
+	__sync_add_and_fetch(&(__ptr)->v, __n)
 #endif
 
 #ifdef CONFIG_SMP
@@ -76,4 +82,8 @@ typedef struct {
 
 #define barrier()	__asm__ __volatile__("": : :"memory")
 
-#endif /* _NOCORE_ATOMIC_H */
+#ifndef cpu_relax
+#define cpu_relax() __sync_synchronize()
+#endif
+
+#endif /* _BOILERPLATE_ATOMIC_H */

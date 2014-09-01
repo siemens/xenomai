@@ -33,7 +33,7 @@ static inline struct mutex_dat *mutex_get_datp(struct cobalt_mutex_shadow *shado
 	return shadow->dat;
 }
 
-static inline atomic_long_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow)
+static inline atomic_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow)
 {
 	return &mutex_get_datp(shadow)->owner;
 }

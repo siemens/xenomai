@@ -201,7 +201,7 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 			old = value;
 			new = value + 1;
 
-			value = atomic_long_cmpxchg(&datp->value, old, new);
+			value = atomic_cmpxchg(&datp->value, old, new);
 			if (value < 0)
 				goto do_syscall;
 		} while (value != old);
@@ -262,7 +262,7 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 			old = value;
 			new = value - 1;
 
-			value = atomic_long_cmpxchg(&datp->value, old, new);
+			value = atomic_cmpxchg(&datp->value, old, new);
 			if (value <= 0)
 				goto eagain;
 		} while (value != old);

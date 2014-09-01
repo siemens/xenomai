@@ -19,7 +19,7 @@
 #define _COBALT_UAPI_MONITOR_H
 
 struct cobalt_monitor_data {
-	atomic_long_t owner;
+	atomic_t owner;
 	unsigned long flags;
 #define COBALT_MONITOR_GRANTED    0x01
 #define COBALT_MONITOR_DRAINED    0x02

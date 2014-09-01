@@ -1082,7 +1082,7 @@ void rtdm_sem_destroy(rtdm_sem_t *sem);
 
 typedef struct rtdm_mutex {
 	struct xnsynch synch_base;
-	atomic_long_t fastlock;
+	atomic_t fastlock;
 } rtdm_mutex_t;
 
 void rtdm_mutex_init(rtdm_mutex_t *mutex);

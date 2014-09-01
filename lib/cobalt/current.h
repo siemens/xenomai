@@ -18,6 +18,7 @@
 #ifndef _LIB_COBALT_CURRENT_H
 #define _LIB_COBALT_CURRENT_H
 
+#include <stdint.h>
 #include <pthread.h>
 #include <cobalt/uapi/thread.h>
 #include <xeno_config.h>
@@ -61,7 +62,7 @@ static inline xnhandle_t cobalt_get_current(void)
 {
 	void *val = pthread_getspecific(cobalt_current_key);
 
-	return (xnhandle_t)val ?: cobalt_get_current_slow();
+	return (xnhandle_t)(uintptr_t)val ?: cobalt_get_current_slow();
 }
 
 /* syscall-free, but unreliable in TSD destructor context */
@@ -69,7 +70,7 @@ static inline xnhandle_t cobalt_get_current_fast(void)
 {
 	void *val = pthread_getspecific(cobalt_current_key);
 
-	return (xnhandle_t)val ?: XN_NO_HANDLE;
+	return (xnhandle_t)(uintptr_t)val ?: XN_NO_HANDLE;
 }
 
 static inline unsigned long cobalt_get_current_mode(void)

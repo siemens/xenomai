@@ -385,7 +385,7 @@ DECLARE_EVENT_CLASS(cobalt_posix_sem,
 	TP_fast_assign(
 		__entry->handle = handle;
 	),
-	TP_printk("sem=%#lx", __entry->handle)
+	TP_printk("sem=%#x", __entry->handle)
 );
 
 DEFINE_EVENT(cobalt_posix_sem, cobalt_psem_wait,
@@ -434,7 +434,7 @@ TRACE_EVENT(cobalt_psem_getvalue,
 		__entry->handle = handle;
 		__entry->value = value;
 	),
-	TP_printk("sem=%#lx value=%d", __entry->handle, __entry->value)
+	TP_printk("sem=%#x value=%d", __entry->handle, __entry->value)
 );
 
 #define cobalt_print_sem_flags(__flags)				\
@@ -463,7 +463,7 @@ TRACE_EVENT(cobalt_psem_init,
 		__entry->flags = flags;
 		__entry->value = value;
 	),
-	TP_printk("sem=%#lx(%s) flags=%#x(%s) value=%u",
+	TP_printk("sem=%#x(%s) flags=%#x(%s) value=%u",
 		  __entry->handle,
 		  __get_str(name),
 		  __entry->flags,
@@ -527,7 +527,7 @@ TRACE_EVENT(cobalt_psem_open,
 			__entry->value = 0;
 		}
 	),
-	TP_printk("named_sem=%#lx=(%s) oflags=%#x(%s) mode=%o value=%u",
+	TP_printk("named_sem=%#x=(%s) oflags=%#x(%s) mode=%o value=%u",
 		  __entry->handle, __get_str(name),
 		  __entry->oflags, cobalt_print_oflags(__entry->oflags),
 		  __entry->mode, __entry->value)

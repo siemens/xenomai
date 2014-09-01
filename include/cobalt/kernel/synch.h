@@ -56,7 +56,7 @@ struct xnsynch {
 	unsigned long status;	 /** Status word */
 	struct list_head pendq;	 /** Pending threads */
 	struct xnthread *owner;	/** Thread which owns the resource */
-	atomic_long_t *fastlock; /** Pointer to fast lock word */
+	atomic_t *fastlock; /** Pointer to fast lock word */
 	void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 };
 
@@ -130,7 +130,7 @@ static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 #endif /* !XENO_DEBUG(USER) */
 
 void xnsynch_init(struct xnsynch *synch, int flags,
-		  atomic_long_t *fastlock);
+		  atomic_t *fastlock);
 
 #define xnsynch_destroy(synch)	xnsynch_flush(synch, XNRMID)
 

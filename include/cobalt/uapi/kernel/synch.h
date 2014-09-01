@@ -39,19 +39,19 @@
 	do { (handle) &= ~(bits); } while (0)
 
 /* Fast lock API */
-static inline int xnsynch_fast_owner_check(atomic_long_t *fastlock,
-					   xnhandle_t ownerh)
+static inline int
+xnsynch_fast_owner_check(atomic_t *fastlock, xnhandle_t ownerh)
 {
-	return (xnhandle_mask_spare(atomic_long_read(fastlock)) == ownerh) ?
+	return (xnhandle_mask_spare(atomic_read(fastlock)) == ownerh) ?
 		0 : -EPERM;
 }
 
-static inline int xnsynch_fast_acquire(atomic_long_t *fastlock,
-				       xnhandle_t new_ownerh)
+static inline
+int xnsynch_fast_acquire(atomic_t *fastlock, xnhandle_t new_ownerh)
 {
 	xnhandle_t h;
 
-	h = atomic_long_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
+	h = atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
 	if (h != XN_NO_HANDLE) {
 		if (xnhandle_mask_spare(h) == new_ownerh)
 			return -EBUSY;
@@ -62,11 +62,11 @@ static inline int xnsynch_fast_acquire(atomic_long_t *fastlock,
 	return 0;
 }
 
-static inline int xnsynch_fast_release(atomic_long_t *fastlock,
-				       xnhandle_t cur_ownerh)
+static inline
+int xnsynch_fast_release(atomic_t *fastlock, xnhandle_t cur_ownerh)
 {
-	return (atomic_long_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
-		cur_ownerh);
+	return atomic_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE)
+		== cur_ownerh;
 }
 
 #endif /* !_COBALT_UAPI_KERNEL_SYNCH_H */
