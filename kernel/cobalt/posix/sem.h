@@ -34,7 +34,7 @@ struct cobalt_sem {
 	int flags;
 	struct cobalt_kqueues *owningq;
 	xnhandle_t handle;
-	unsigned refs;
+	unsigned int refs;
 	char name[COBALT_MAXNAME];
 };
 

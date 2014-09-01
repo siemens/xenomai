@@ -44,7 +44,7 @@
 
 static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
 {
-	unsigned pshared = shadow->datp_offset < 0;
+	unsigned int pshared = shadow->datp_offset < 0;
 
 	if (pshared)
 		return (struct sem_dat *)
@@ -87,10 +87,10 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned int value))
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int ret;
 
-	ret = -XENOMAI_SYSCALL3(sc_cobalt_sem_init,
-				_sem, pshared ? SEM_PSHARED : 0, value);
+	ret = XENOMAI_SYSCALL3(sc_cobalt_sem_init,
+			       _sem, pshared ? SEM_PSHARED : 0, value);
 	if (ret) {
-		errno = ret;
+		errno = -ret;
 		return -1;
 	}
 
@@ -135,7 +135,7 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned int value))
 COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err;
+	int ret;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
 	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -143,12 +143,13 @@ COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 		return -1;
 	}
 
-	err = XENOMAI_SYSCALL1(sc_cobalt_sem_destroy, _sem);
-	if (err >= 0)
-		return err;
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sem_destroy, _sem);
+	if (ret < 0) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = -err;
-	return -1;
+	return ret;
 }
 
 /**
@@ -178,9 +179,8 @@ COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 COBALT_IMPL(int, sem_post, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	int value, ret, old, new;
 	struct sem_dat *datp;
-	long value;
-	int err;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
 	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -189,19 +189,13 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 	}
 
 	datp = sem_get_datp(_sem);
-
-	value = atomic_long_read(&datp->value);
-
+	value = atomic_read(&datp->value);
 	if (value >= 0) {
-		long old, new;
-
 		if (datp->flags & SEM_PULSE)
 			return 0;
-
 		do {
 			old = value;
 			new = value + 1;
-
 			value = atomic_cmpxchg(&datp->value, old, new);
 			if (value < 0)
 				goto do_syscall;
@@ -211,12 +205,13 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 	}
 
   do_syscall:
-	err = -XENOMAI_SYSCALL1(sc_cobalt_sem_post, _sem);
-	if (!err)
-		return 0;
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sem_post, _sem);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 /**
@@ -244,7 +239,7 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
-	long value;
+	int value, old, new;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
 	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -253,16 +248,11 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 	}
 
 	datp = sem_get_datp(_sem);
-
-	value = atomic_long_read(&datp->value);
-
+	value = atomic_read(&datp->value);
 	if (value > 0) {
-		long old, new;
-
 		do {
 			old = value;
 			new = value - 1;
-
 			value = atomic_cmpxchg(&datp->value, old, new);
 			if (value <= 0)
 				goto eagain;
@@ -270,9 +260,9 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 
 		return 0;
 	}
-
-  eagain:
+eagain:
 	errno = EAGAIN;
+
 	return -1;
 }
 
@@ -308,24 +298,24 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 COBALT_IMPL(int, sem_wait, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err, oldtype;
+	int ret, oldtype;
 
-	err = __RT(sem_trywait(sem));
-
-	if (err != -1 || errno != EAGAIN)
-		return err;
+	ret = __RT(sem_trywait(sem));
+	if (ret != -1 || errno != EAGAIN)
+		return ret;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SYSCALL1(sc_cobalt_sem_wait, _sem);
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sem_wait, _sem);
 
 	pthread_setcanceltype(oldtype, NULL);
 
-	if (err == 0)
-		return 0;
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 /**
@@ -361,24 +351,24 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
 COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *abs_timeout))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err, oldtype;
+	int ret, oldtype;
 
-	err = __RT(sem_trywait(sem));
-
-	if (err != -1 || errno != EAGAIN)
-		return err;
+	ret = __RT(sem_trywait(sem));
+	if (ret != -1 || errno != EAGAIN)
+		return ret;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SYSCALL2(sc_cobalt_sem_timedwait, _sem, abs_timeout);
+	ret = XENOMAI_SYSCALL2(sc_cobalt_sem_timedwait, _sem, abs_timeout);
 
 	pthread_setcanceltype(oldtype, NULL);
 
-	if (!err)
-		return 0;
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 /**
@@ -413,7 +403,7 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
-	long value;
+	int value;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
 	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -422,12 +412,12 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 	}
 
 	datp = sem_get_datp(_sem);
-
-	value = atomic_long_read(&datp->value);
+	value = atomic_read(&datp->value);
 	if (value < 0 && (datp->flags & SEM_REPORT) == 0)
 		value = 0;
 
 	*sval = value;
+
 	return 0;
 }
 
@@ -482,31 +472,31 @@ COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 	va_list ap;
 	int err;
 
-	if ((oflags & O_CREAT)) {
+	if (oflags & O_CREAT) {
 		va_start(ap, oflags);
 		mode = va_arg(ap, int);
 		value = va_arg(ap, unsigned);
 		va_end(ap);
 	}
 
-	rsem = sem = (union cobalt_sem_union *)malloc(sizeof(*sem));
-
-	if (!rsem) {
-		err = ENOSPC;
+	rsem = sem = malloc(sizeof(*sem));
+	if (rsem == NULL) {
+		err = -ENOSPC;
 		goto error;
 	}
 
-	err = -XENOMAI_SYSCALL5(sc_cobalt_sem_open,
-				&rsem, name, oflags, mode, value);
-	if (!err) {
+	err = XENOMAI_SYSCALL5(sc_cobalt_sem_open,
+			       &rsem, name, oflags, mode, value);
+	if (err == 0) {
 		if (rsem != sem)
 			free(sem);
 		return &rsem->native_sem;
 	}
 
 	free(sem);
-      error:
-	errno = err;
+error:
+	errno = -err;
+
 	return SEM_FAILED;
 }
 
@@ -538,19 +528,19 @@ COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 COBALT_IMPL(int, sem_close, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err;
+	int ret;
 
 	if (_sem->magic != COBALT_NAMED_SEM_MAGIC) {
 		errno = EINVAL;
 		return -1;
 	}
 
-	err = XENOMAI_SYSCALL1(sc_cobalt_sem_close, _sem);
-	if (err < 0) {
-		errno = -err;
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sem_close, _sem);
+	if (ret < 0) {
+		errno = -ret;
 		return -1;
 	}
-	if (err)
+	if (ret)
 		free(sem);
 
 	return 0;
@@ -582,35 +572,36 @@ COBALT_IMPL(int, sem_close, (sem_t *sem))
  */
 COBALT_IMPL(int, sem_unlink, (const char *name))
 {
-	int err;
+	int ret;
 
-	err = -XENOMAI_SYSCALL1(sc_cobalt_sem_unlink, name);
-	if (!err)
-		return 0;
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sem_unlink, name);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 int sem_init_np(sem_t *sem, int flags, unsigned int value)
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err;
+	int ret;
 
-	err = -XENOMAI_SYSCALL3(sc_cobalt_sem_init, _sem, flags, value);
-	if (!err)
-		return 0;
+	ret = XENOMAI_SYSCALL3(sc_cobalt_sem_init, _sem, flags, value);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 int sem_broadcast_np(sem_t *sem)
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
-	long value;
-	int err;
+	int value, ret;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
 	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -619,17 +610,17 @@ int sem_broadcast_np(sem_t *sem)
 	}
 
 	datp = sem_get_datp(_sem);
-
-	value = atomic_long_read(&datp->value);
+	value = atomic_read(&datp->value);
 	if (value >= 0)
 		return 0;
 
-	err = -XENOMAI_SYSCALL1(sc_cobalt_sem_broadcast_np, _sem);
-	if (!err)
-		return 0;
+	ret = XENOMAI_SYSCALL1(sc_cobalt_sem_broadcast_np, _sem);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 /** @} */
