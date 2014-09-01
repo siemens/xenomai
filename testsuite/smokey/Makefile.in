@@ -388,14 +388,14 @@ core_libs = $(am__append_1)
 @XENO_COBALT_TRUE@	arith 		\
 @XENO_COBALT_TRUE@	bufp		\
 @XENO_COBALT_TRUE@	cond-torture 	\
+@XENO_COBALT_TRUE@	fork-exec	\
 @XENO_COBALT_TRUE@	iddp		\
 @XENO_COBALT_TRUE@	mutex-torture 	\
 @XENO_COBALT_TRUE@	rtdm 		\
 @XENO_COBALT_TRUE@	sched-quota 	\
 @XENO_COBALT_TRUE@	sched-tp 	\
 @XENO_COBALT_TRUE@	vdso-access 	\
-@XENO_COBALT_TRUE@	xddp		\
-@XENO_COBALT_TRUE@	fork-exec
+@XENO_COBALT_TRUE@	xddp
 
 plugin_list = $(foreach plugin,$(SUBDIRS),$(plugin)/lib$(plugin).a)
 # wrap-link.sh is confused by -whole-archive, so work around
@@ -421,6 +421,7 @@ DIST_SUBDIRS = \
 	arith 		\
 	bufp		\
 	cond-torture 	\
+	fork-exec	\
 	iddp		\
 	mutex-torture 	\
 	rtdm 		\

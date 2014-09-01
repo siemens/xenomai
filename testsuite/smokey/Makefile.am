@@ -13,14 +13,14 @@ SUBDIRS = 		\
 	arith 		\
 	bufp		\
 	cond-torture 	\
+	fork-exec	\
 	iddp		\
 	mutex-torture 	\
 	rtdm 		\
 	sched-quota 	\
 	sched-tp 	\
 	vdso-access 	\
-	xddp		\
-	fork-exec
+	xddp
 else
 SUBDIRS =
 wrappers =
@@ -51,6 +51,7 @@ DIST_SUBDIRS = 		\
 	arith 		\
 	bufp		\
 	cond-torture 	\
+	fork-exec	\
 	iddp		\
 	mutex-torture 	\
 	rtdm 		\
