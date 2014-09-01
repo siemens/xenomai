@@ -99,8 +99,8 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 			return ERR_PTR(-ENOENT);
 
 		shadow.magic = 0;
-		sem = cobalt_sem_init_inner
-			(&name[1], &shadow, SEM_PSHARED | SEM_NAMED, value);
+		sem = __cobalt_sem_init(&name[1], &shadow,
+					SEM_PSHARED | SEM_NAMED, value);
 		if (IS_ERR(sem)) {
 			rc = PTR_ERR(sem);
 			if (rc == -EEXIST)
@@ -109,7 +109,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 		}
 
 		if (__xn_safe_copy_to_user(ushadow, &shadow, sizeof(shadow))) {
-			cobalt_sem_destroy_inner(shadow.handle);
+			__cobalt_sem_destroy(shadow.handle);
 			return ERR_PTR(-EFAULT);
 		}
 		handle = shadow.handle;
@@ -169,7 +169,7 @@ static int sem_close(struct cobalt_process *cc, xnhandle_t handle)
 	xnid_remove(&cc->usems, &u->id);
 	xnlock_put_irqrestore(&named_sem_lock, s);
 
-	cobalt_sem_destroy_inner(handle);
+	__cobalt_sem_destroy(handle);
 
 	xnfree(u);
 	return 1;
@@ -179,9 +179,9 @@ static int sem_close(struct cobalt_process *cc, xnhandle_t handle)
 	return err;
 }
 
-void cobalt_sem_unlink_inner(xnhandle_t handle)
+void __cobalt_sem_unlink(xnhandle_t handle)
 {
-	if (cobalt_sem_destroy_inner(handle) == -EBUSY)
+	if (__cobalt_sem_destroy(handle) == -EBUSY)
 		xnregistry_unlink(xnregistry_key(handle));
 }
 
@@ -247,7 +247,7 @@ static inline int sem_unlink(const char *name)
 	if (ret == -EWOULDBLOCK)
 		return -ENOENT;
 
-	cobalt_sem_unlink_inner(handle);
+	__cobalt_sem_unlink(handle);
 
 	return 0;
 }

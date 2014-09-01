@@ -45,7 +45,6 @@ struct cobalt_sem_info {
 	int nrwait;
 };
 
-/* For Cobalt's sem_init_np() extension. */
 #define SEM_FIFO       0x1
 #define SEM_PULSE      0x2
 #define SEM_PSHARED    0x4

@@ -745,7 +745,6 @@ static struct cobalt_syscall cobalt_syscalls[] = {
 	__COBALT_CALL(sc_cobalt_sem_open, cobalt_sem_open, current),
 	__COBALT_CALL(sc_cobalt_sem_close, cobalt_sem_close, current),
 	__COBALT_CALL(sc_cobalt_sem_unlink, cobalt_sem_unlink, current),
-	__COBALT_CALL(sc_cobalt_sem_init_np, cobalt_sem_init_np, current),
 	__COBALT_CALL(sc_cobalt_sem_broadcast_np, cobalt_sem_broadcast_np, current),
 	__COBALT_CALL(sc_cobalt_sem_inquire, cobalt_sem_inquire, current),
 	__COBALT_CALL(sc_cobalt_clock_getres, cobalt_clock_getres, current),

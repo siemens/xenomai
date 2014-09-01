@@ -30,7 +30,7 @@ static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
 	return cobalt_kqueues(pshared);
 }
 
-int cobalt_sem_destroy_inner(xnhandle_t handle)
+int __cobalt_sem_destroy(xnhandle_t handle)
 {
 	struct cobalt_sem *sem;
 	int ret = 0;
@@ -68,8 +68,8 @@ int cobalt_sem_destroy_inner(xnhandle_t handle)
 }
 
 struct cobalt_sem *
-cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
-		      int flags, unsigned int value)
+__cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
+		  int flags, unsigned int value)
 {
 	struct cobalt_sem *sem, *osem;
 	struct cobalt_kqueues *kq;
@@ -125,7 +125,7 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
-	cobalt_sem_destroy_inner(sm->handle);
+	__cobalt_sem_destroy(sm->handle);
 	xnlock_get_irqsave(&nklock, s);
   do_init:
 	if (value > (unsigned)SEM_VALUE_MAX) {
@@ -204,7 +204,7 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 	cobalt_mark_deleted(sm);
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = cobalt_sem_destroy_inner(sem->handle);
+	ret = __cobalt_sem_destroy(sem->handle);
 
 	return warn ? ret : 0;
 
@@ -395,7 +395,8 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 	return 0;
 }
 
-int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem, int pshared, unsigned value)
+int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem,
+		    int flags, unsigned int value)
 {
 	struct cobalt_sem_shadow sm;
 	struct cobalt_sem *sem;
@@ -403,7 +404,11 @@ int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem, int pshared, unsigne
 	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
 
-	sem = cobalt_sem_init_inner("", &sm, pshared ? SEM_PSHARED : 0, value);
+	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|\
+		      SEM_WARNDEL|SEM_RAWCLOCK|SEM_NOBUSYDEL))
+		return -EINVAL;
+
+	sem = __cobalt_sem_init("", &sm, flags, value);
 	if (IS_ERR(sem))
 		return PTR_ERR(sem);
 
@@ -481,26 +486,6 @@ int cobalt_sem_destroy(struct cobalt_sem_shadow __user *u_sem)
 		return err;
 
 	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem)) ?: err;
-}
-
-int cobalt_sem_init_np(struct cobalt_sem_shadow __user *u_sem,
-		       int flags, unsigned value)
-{
-	struct cobalt_sem_shadow sm;
-	struct cobalt_sem *sem;
-
-	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
-		return -EFAULT;
-
-	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|\
-		      SEM_WARNDEL|SEM_RAWCLOCK|SEM_NOBUSYDEL))
-		return -EINVAL;
-
-	sem = cobalt_sem_init_inner("", &sm, flags, value);
-	if (IS_ERR(sem))
-		return PTR_ERR(sem);
-
-	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
 }
 
 int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem)
@@ -616,8 +601,8 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 	list_for_each_entry_safe(sem, tmp, &q->semq, link) {
 		xnlock_put_irqrestore(&nklock, s);
 		if (sem->flags & SEM_NAMED)
-			cobalt_sem_unlink_inner(sem->handle);
-		cobalt_sem_destroy_inner(sem->handle);
+			__cobalt_sem_unlink(sem->handle);
+		__cobalt_sem_destroy(sem->handle);
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:

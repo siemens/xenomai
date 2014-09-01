@@ -42,7 +42,7 @@
 #define sc_cobalt_sem_unlink            	19
 #define sc_cobalt_sem_timedwait         	20
 #define sc_cobalt_sem_inquire           	21
-#define sc_cobalt_sem_init_np           	22
+/* 22 unimp */
 #define sc_cobalt_sem_broadcast_np      	23
 #define sc_cobalt_clock_getres          	24
 #define sc_cobalt_clock_gettime         	25

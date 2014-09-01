@@ -82,14 +82,15 @@ static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
  * Specification.</a>
  *
  */
-COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
+COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned int value))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err;
+	int ret;
 
-	err = -XENOMAI_SYSCALL3(sc_cobalt_sem_init, _sem, pshared, value);
-	if (err) {
-		errno = err;
+	ret = -XENOMAI_SYSCALL3(sc_cobalt_sem_init,
+				_sem, pshared ? SEM_PSHARED : 0, value);
+	if (ret) {
+		errno = ret;
 		return -1;
 	}
 
@@ -596,7 +597,7 @@ int sem_init_np(sem_t *sem, int flags, unsigned int value)
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err;
 
-	err = -XENOMAI_SYSCALL3(sc_cobalt_sem_init_np, _sem, flags, value);
+	err = -XENOMAI_SYSCALL3(sc_cobalt_sem_init, _sem, flags, value);
 	if (!err)
 		return 0;
 

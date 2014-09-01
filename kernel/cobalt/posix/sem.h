@@ -58,18 +58,18 @@ typedef struct
 #define SEM_FAILED	NULL
 #define SEM_NAMED	0x80000000
 
-struct cobalt_sem *
-cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sem,
-		int flags, unsigned value);
+int __cobalt_sem_destroy(xnhandle_t handle);
 
-int cobalt_sem_destroy_inner(xnhandle_t handle);
-
-void cobalt_sem_unlink_inner(xnhandle_t handle);
+void __cobalt_sem_unlink(xnhandle_t handle);
 
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc);
 
+struct cobalt_sem *
+__cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sem,
+		  int flags, unsigned value);
+
 int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem,
-		    int pshared, unsigned value);
+		    int flags, unsigned value);
 
 int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem);
 
@@ -92,9 +92,6 @@ int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 int cobalt_sem_close(struct cobalt_sem_shadow __user *usm);
 
 int cobalt_sem_unlink(const char __user *u_name);
-
-int cobalt_sem_init_np(struct cobalt_sem_shadow __user *u_sem,
-		       int flags, unsigned value);
 
 int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem);
 
