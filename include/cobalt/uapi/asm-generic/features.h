@@ -18,19 +18,21 @@
 #ifndef _COBALT_UAPI_ASM_GENERIC_FEATURES_H
 #define _COBALT_UAPI_ASM_GENERIC_FEATURES_H
 
+#include <linux/types.h>
+
 #define XNFEAT_STRING_LEN 64
 
 struct cobalt_featinfo {
-	unsigned long feat_all;	/* Available feature set. */
+	__u32 feat_abirev;  /* ABI revision level. */
+	__u32 feat_all;	    /* Available feature set. */
+	__u32 feat_man;	    /* Mandatory features (when requested). */
+	__u32 feat_req;	    /* Requested feature set. */
+	__u32 feat_mis;	    /* Missing features. */
 	char feat_all_s[XNFEAT_STRING_LEN];
-	unsigned long feat_man;	/* Mandatory features (when requested). */
 	char feat_man_s[XNFEAT_STRING_LEN];
-	unsigned long feat_req;	/* Requested feature set. */
 	char feat_req_s[XNFEAT_STRING_LEN];
-	unsigned long feat_mis;	/* Missing features. */
 	char feat_mis_s[XNFEAT_STRING_LEN];
 	struct cobalt_featinfo_archdep feat_arch; /* Arch-dep extension. */
-	unsigned long feat_abirev; /* ABI revision level. */
 };
 
 #define __xn_feat_smp         0x80000000

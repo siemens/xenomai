@@ -18,6 +18,8 @@
 #ifndef _COBALT_NIOS2_ASM_UAPI_FEATURES_H
 #define _COBALT_NIOS2_ASM_UAPI_FEATURES_H
 
+#include <linux/types.h>
+
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   8UL
 
@@ -29,7 +31,7 @@
 #define XNARCH_HAVE_NODIV_LLIMD  1
 
 struct cobalt_featinfo_archdep {
-	unsigned long hrclock_membase;
+	__u32 hrclock_membase;
 };
 
 #include <cobalt/uapi/asm-generic/features.h>
