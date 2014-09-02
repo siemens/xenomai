@@ -101,9 +101,10 @@ COBALT_SYSCALL(monitor_init, current,
 
 	datp->flags = 0;
 	datoff = xnheap_mapped_offset(heap, datp);
+	XENO_BUGON(COBALT, datoff != (__u32)datoff);
 	shadow.flags = flags;
 	shadow.handle = mon->handle;
-	shadow.u.data_offset = datoff;
+	shadow.u.data_offset = (__u32)datoff;
 
 	return __xn_safe_copy_to_user(u_mon, &shadow, sizeof(*u_mon));
 }

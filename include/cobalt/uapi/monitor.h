@@ -18,9 +18,11 @@
 #ifndef _COBALT_UAPI_MONITOR_H
 #define _COBALT_UAPI_MONITOR_H
 
+#include <cobalt/uapi/kernel/types.h>
+
 struct cobalt_monitor_data {
 	atomic_t owner;
-	unsigned long flags;
+	__u32 flags;
 #define COBALT_MONITOR_GRANTED    0x01
 #define COBALT_MONITOR_DRAINED    0x02
 #define COBALT_MONITOR_SIGNALED   0x03 /* i.e. GRANTED or DRAINED */
@@ -34,9 +36,9 @@ struct cobalt_monitor_shadow {
 	xnhandle_t handle;
 	union {
 		struct cobalt_monitor_data *data;
-		unsigned int data_offset;
+		__u32 data_offset;
 	} u;
-	int flags;
+	__u32 flags;
 #define COBALT_MONITOR_SHARED     0x1
 #define COBALT_MONITOR_WAITGRANT  0x0
 #define COBALT_MONITOR_WAITDRAIN  0x1
