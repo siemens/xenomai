@@ -62,14 +62,13 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 		return -ENOMEM;
 
 	sys_ppd = cobalt_ppd_get(attr->pshared);
-	cond->pending_signals = (unsigned long *)
-		xnheap_alloc(&sys_ppd->sem_heap,
-			     sizeof(*(cond->pending_signals)));
-	if (!cond->pending_signals) {
+	cond->pending_signals = xnheap_alloc(&sys_ppd->sem_heap,
+					     sizeof(*cond->pending_signals));
+	if (cond->pending_signals == NULL) {
 		err = -EAGAIN;
 		goto err_free_cond;
 	}
-	*(cond->pending_signals) = 0;
+	*cond->pending_signals = 0;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -417,7 +416,7 @@ COBALT_SYSCALL(cond_wait_epilogue, primary,
 
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 {
-	unsigned long pending_signals;
+	__u32 pending_signals;
 	int need_resched;
 
 	pending_signals = *cond->pending_signals;
@@ -429,7 +428,7 @@ int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 							    pending_signals);
 		break;
 
-	case ~0UL:
+	case ~0U:
 		need_resched =
 			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
 		*cond->pending_signals = 0;

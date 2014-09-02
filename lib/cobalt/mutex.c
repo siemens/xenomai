@@ -250,7 +250,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 			return EDEADLK;
 
 		case PTHREAD_MUTEX_RECURSIVE:
-			if (_mutex->lockcnt == UINT_MAX)
+			if (_mutex->lockcnt == UINT32_MAX)
 				return EAGAIN;
 			++_mutex->lockcnt;
 			return 0;
@@ -335,7 +335,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 			return EDEADLK;
 
 		case PTHREAD_MUTEX_RECURSIVE:
-			if (_mutex->lockcnt == UINT_MAX)
+			if (_mutex->lockcnt == UINT32_MAX)
 				return EAGAIN;
 
 			++_mutex->lockcnt;
@@ -406,7 +406,7 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 	}
 
 	if (err == -EBUSY && _mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
-		if (_mutex->lockcnt == UINT_MAX)
+		if (_mutex->lockcnt == UINT32_MAX)
 			return EAGAIN;
 
 		++_mutex->lockcnt;

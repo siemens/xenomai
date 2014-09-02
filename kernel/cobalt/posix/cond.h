@@ -18,6 +18,7 @@
 #ifndef _COBALT_POSIX_COND_H
 #define _COBALT_POSIX_COND_H
 
+#include <linux/types.h>
 #include <linux/time.h>
 #include <linux/list.h>
 #include <cobalt/kernel/synch.h>
@@ -34,7 +35,7 @@ struct cobalt_cond {
 	/** cobalt_condq */
 	struct list_head link;
 	struct list_head mutex_link;
-	unsigned long *pending_signals;
+	__u32 *pending_signals;
 	struct cobalt_condattr attr;
 	struct cobalt_mutex *mutex;
 	struct cobalt_kqueues *owningq;

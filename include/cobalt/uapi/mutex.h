@@ -18,11 +18,13 @@
 #ifndef _COBALT_UAPI_MUTEX_H
 #define _COBALT_UAPI_MUTEX_H
 
+#include <cobalt/uapi/kernel/types.h>
+
 #define COBALT_MUTEX_MAGIC  0x86860303
 
 struct mutex_dat {
 	atomic_t owner;
-	unsigned long flags;
+	__u32 flags;
 #define COBALT_MUTEX_COND_SIGNAL 0x00000001
 #define COBALT_MUTEX_ERRORCHECK  0x00000002
 };
@@ -30,11 +32,11 @@ struct mutex_dat {
 union cobalt_mutex_union {
 	pthread_mutex_t native_mutex;
 	struct cobalt_mutex_shadow {
-		unsigned int magic;
-		unsigned int lockcnt;
+		__u32 magic;
+		__u32 lockcnt;
 		xnhandle_t handle;
 		union {
-			unsigned int dat_offset;
+			__u32 dat_offset;
 			struct mutex_dat *dat;
 		};
 		struct cobalt_mutexattr attr;

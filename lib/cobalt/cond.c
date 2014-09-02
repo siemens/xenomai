@@ -55,11 +55,11 @@
 
 static pthread_condattr_t cobalt_default_condattr;
 
-static inline unsigned long *cond_get_signalsp(struct cobalt_cond_shadow *shadow)
+static inline __u32 *cond_get_signalsp(struct cobalt_cond_shadow *shadow)
 {
 	if (shadow->attr.pshared)
-		return (unsigned long *)(cobalt_sem_heap[1]
-					 + shadow->pending_signals_offset);
+		return (__u32 *)(cobalt_sem_heap[1]
+				 + shadow->pending_signals_offset);
 
 	return shadow->pending_signals;
 }
@@ -112,8 +112,8 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 				     const pthread_condattr_t * attr))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
-	unsigned long *pending_signalsp;
 	struct cobalt_condattr kcattr;
+	__u32 *pending_signalsp;
 	int err, tmp;
 
 	if (attr == NULL)
@@ -134,7 +134,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 		return err;
 
 	if (!_cnd->attr.pshared) {
-		pending_signalsp = (unsigned long *)
+		pending_signalsp = (__u32 *)
 			(cobalt_sem_heap[0] + _cnd->pending_signals_offset);
 		_cnd->pending_signals = pending_signalsp;
 	} else
@@ -399,10 +399,10 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
-	unsigned long pending_signals, *pending_signalsp;
+	__u32 pending_signals, *pending_signalsp;
 	struct mutex_dat *mutex_datp;
-	unsigned long flags;
 	xnhandle_t cur;
+	__u32 flags;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
@@ -421,7 +421,7 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
 		pending_signalsp = cond_get_signalsp(_cnd);
 		pending_signals = *pending_signalsp;
-		if (pending_signals != ~0UL)
+		if (pending_signals != ~0U)
 			*pending_signalsp = pending_signals + 1;
 	}
 
@@ -450,8 +450,8 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	struct mutex_dat *mutex_datp;
-	unsigned long flags;
 	xnhandle_t cur;
+	__u32 flags;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
@@ -468,7 +468,7 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 				return EPERM;
 		}
 		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
-		*cond_get_signalsp(_cnd) = ~0UL;
+		*cond_get_signalsp(_cnd) = ~0U;
 	}
 
 	return 0;

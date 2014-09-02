@@ -25,15 +25,15 @@
 union cobalt_cond_union {
 	pthread_cond_t native_cond;
 	struct cobalt_cond_shadow {
-		unsigned int magic;
+		__u32 magic;
 		struct cobalt_condattr attr;
 		xnhandle_t handle;
 		union {
-			unsigned int pending_signals_offset;
-			unsigned long *pending_signals;
+			__u32 pending_signals_offset;
+			__u32 *pending_signals;
 		};
 		union {
-			unsigned int mutex_datp_offset;
+			__u32 mutex_datp_offset;
 			struct mutex_dat *mutex_datp;
 		};
 	} shadow_cond;
