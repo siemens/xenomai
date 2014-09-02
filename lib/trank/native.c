@@ -19,6 +19,7 @@
 #include <copperplate/heapobj.h>
 #include <trank/native/task.h>
 #include <trank/native/alarm.h>
+#include <trank/native/event.h>
 #include "../alchemy/alarm.h"
 
 #ifdef DOXYGEN_CPP
@@ -247,6 +248,108 @@ int COMPAT__rt_alarm_create(RT_ALARM *alarm, const char *name);
 
 int rt_alarm_wait(RT_ALARM *alarm);
 
+/**
+ * @fn int COMPAT__rt_event_create(RT_EVENT *event, const char *name, unsigned long ivalue, int mode)
+ * @brief Create an event flag group.
+ *
+ * This call is the legacy form of the rt_event_create() service,
+ * using a long event mask. The new form uses a regular integer to
+ * hold the event mask instead.
+ *
+ * @param event The address of an event descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * event. When non-NULL and non-empty, a copy of this string is used
+ * for indexing the created event into the object registry.
+ *
+ * @param ivalue The initial value of the group's event mask.
+ *
+ * @param mode The event group creation mode. The following flags can
+ * be OR'ed into this bitmask:
+ *
+ * - EV_FIFO makes tasks pend in FIFO order on the event flag group.
+ *
+ * - EV_PRIO makes tasks pend in priority order on the event flag group.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a mode is invalid.
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the event flag group.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered event flag group.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
+ *
+ * @note Event flag groups can be shared by multiple processes which
+ * belong to the same Xenomai session.
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
+int COMPAT__rt_event_create(RT_EVENT *event, const char *name,
+			    unsigned long ivalue, int mode);
+
+/**
+ * @fn int COMPAT__rt_event_signal(RT_EVENT *event, unsigned long mask)
+ * @brief Signal an event.
+ *
+ * This call is the legacy form of the rt_event_signal() service,
+ * using a long event mask. The new form uses a regular integer to
+ * hold the event mask instead.
+ *
+ * @param event The event descriptor.
+ *
+ * @param mask The set of events to be posted.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a event is not an event flag group
+ * descriptor.
+ *
+ * @apitags{unrestricted, switch-primary}
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
+int COMPAT__rt_event_signal(RT_EVENT *event, unsigned int mask);
+
+/**
+ * @fn int COMPAT__rt_event_clear(RT_EVENT *event,unsigned long mask,unsigned long *mask_r)
+ * @brief Clear event flags.
+ *
+ * This call is the legacy form of the rt_event_clear() service,
+ * using a long event mask. The new form uses a regular integer to
+ * hold the event mask instead.
+
+ * @param event The event descriptor.
+ *
+ * @param mask The set of event flags to be cleared.
+ *
+ * @param mask_r If non-NULL, @a mask_r is the address of a memory
+ * location which will receive the previous value of the event flag
+ * group before the flags are cleared.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a event is not a valid event flag group
+ * descriptor.
+ *
+ * @apitags{unrestricted, switch-primary}
+ *
+ * @deprecated This is a compatibility service from the Transition
+ * Kit.
+ */
+int COMPAT__rt_event_clear(RT_EVENT *event,
+			   unsigned long mask, unsigned long *mask_r);
+
 #else /* !DOXYGEN_CPP */
 
 int rt_task_create(RT_TASK *task, const char *name,
@@ -445,6 +548,32 @@ int rt_alarm_delete(RT_ALARM *alarm)
 	__RT(pthread_cond_destroy(&aw->event));
 	__RT(pthread_mutex_destroy(&aw->lock));
 	xnfree(aw);
+
+	return 0;
+}
+
+int rt_event_create(RT_EVENT *event, const char *name,
+		    unsigned long ivalue, int mode)
+{
+	return __CURRENT(rt_event_create(event, name, ivalue, mode));
+}
+
+int rt_event_signal(RT_EVENT *event, unsigned long mask)
+{
+	return __CURRENT(rt_event_signal(event, mask));
+}
+
+int rt_event_clear(RT_EVENT *event, unsigned long mask,
+		   unsigned long *mask_r)
+{
+	unsigned int _mask;
+	int ret;
+
+	ret = __CURRENT(rt_event_clear(event, mask, &_mask));
+	if (ret)
+		return ret;
+
+	*mask_r = _mask;
 
 	return 0;
 }

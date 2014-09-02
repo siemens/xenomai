@@ -62,7 +62,7 @@ static int event_registry_open(struct fsobj *fsobj, void *priv)
 	struct eventobj_waitentry *waitlist, *p;
 	struct fsobstack *o = priv;
 	struct alchemy_event *evcb;
-	unsigned long val;
+	unsigned int val;
 	size_t waitsz;
 	int ret;
 
@@ -122,7 +122,7 @@ static void event_finalize(struct eventobj *evobj)
 fnref_register(libalchemy, event_finalize);
 
 /**
- * @fn int rt_event_create(RT_EVENT *event, const char *name, unsigned long ivalue, int mode)
+ * @fn int rt_event_create(RT_EVENT *event, const char *name, unsigned int ivalue, int mode)
  * @brief Create an event flag group.
  *
  * Event groups provide for task synchronization by allowing a set of
@@ -165,8 +165,13 @@ fnref_register(libalchemy, event_finalize);
  * @note Event flag groups can be shared by multiple processes which
  * belong to the same Xenomai session.
  */
+#ifndef DOXYGEN_CPP
+CURRENT_IMPL(int, rt_event_create, (RT_EVENT *event, const char *name,
+				    unsigned int ivalue, int mode))
+#else
 int rt_event_create(RT_EVENT *event, const char *name,
-		    unsigned long ivalue, int mode)
+		    unsigned int ivalue, int mode)
+#endif
 {
 	int evobj_flags = 0, ret = 0;
 	struct alchemy_event *evcb;
@@ -271,7 +276,7 @@ out:
 }
 
 /**
- * @fn int rt_event_wait(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)
+ * @fn int rt_event_wait(RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, RTIME timeout)
  * @brief Wait for an arbitrary set of events (with relative scalar timeout).
  *
  * This routine is a variant of rt_event_wait_timed() accepting a
@@ -292,7 +297,7 @@ out:
  */
 
 /**
- * @fn int rt_event_wait_until(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME abs_timeout)
+ * @fn int rt_event_wait_until(RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, RTIME abs_timeout)
  * @brief Wait for an arbitrary set of events (with absolute scalar timeout).
  *
  * This routine is a variant of rt_event_wait_timed() accepting an
@@ -313,7 +318,7 @@ out:
  */
 
 /**
- * @fn int rt_event_wait_timed(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, const struct timespec *abs_timeout)
+ * @fn int rt_event_wait_timed(RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, const struct timespec *abs_timeout)
  * @brief Wait for an arbitrary set of events.
  *
  * Waits for one or more events to be signaled in @a event, or until a
@@ -375,7 +380,7 @@ out:
  * defaults to 1 nanosecond).
  */
 int rt_event_wait_timed(RT_EVENT *event,
-			unsigned long mask, unsigned long *mask_r,
+			unsigned int mask, unsigned int *mask_r,
 			int mode, const struct timespec *abs_timeout)
 {
 	int evobj_mode = 0, ret = 0;
@@ -406,7 +411,7 @@ out:
 }
 
 /**
- * @fn int rt_event_signal(RT_EVENT *event, unsigned long mask)
+ * @fn int rt_event_signal(RT_EVENT *event, unsigned int mask)
  * @brief Signal an event.
  *
  * Post a set of flags to @a event. All tasks having their wait
@@ -424,7 +429,12 @@ out:
  *
  * @apitags{unrestricted, switch-primary}
  */
-int rt_event_signal(RT_EVENT *event, unsigned long mask)
+#ifndef DOXYGEN_CPP
+CURRENT_IMPL(int, rt_event_signal,
+	     (RT_EVENT *event, unsigned int mask))
+#else
+int rt_event_signal(RT_EVENT *event, unsigned int mask)
+#endif
 {
 	struct alchemy_event *evcb;
 	struct service svc;
@@ -444,7 +454,7 @@ out:
 }
 
 /**
- * @fn int rt_event_clear(RT_EVENT *event,unsigned long mask,unsigned long *mask_r)
+ * @fn int rt_event_clear(RT_EVENT *event,unsigned int mask,unsigned int *mask_r)
  * @brief Clear event flags.
  *
  * This routine clears a set of flags from @a event.
@@ -464,8 +474,13 @@ out:
  *
  * @apitags{unrestricted, switch-primary}
  */
+#ifndef DOXYGEN_CPP
+CURRENT_IMPL(int, rt_event_clear,
+	     (RT_EVENT *event, unsigned int mask, unsigned int *mask_r))
+#else
 int rt_event_clear(RT_EVENT *event,
-		   unsigned long mask, unsigned long *mask_r)
+		   unsigned int mask, unsigned int *mask_r)
+#endif
 {
 	struct alchemy_event *evcb;
 	struct service svc;

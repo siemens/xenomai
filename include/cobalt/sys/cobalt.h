@@ -106,20 +106,20 @@ void cobalt_monitor_drain_all(cobalt_monitor_t *mon);
 int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon);
 
 int cobalt_event_init(cobalt_event_t *event,
-		      unsigned long value,
+		      unsigned int value,
 		      int flags);
 
 int cobalt_event_post(cobalt_event_t *event,
-		      unsigned long bits);
+		      unsigned int bits);
 
 int cobalt_event_wait(cobalt_event_t *event,
-		      unsigned long bits,
-		      unsigned long *bits_r,
+		      unsigned int bits,
+		      unsigned int *bits_r,
 		      int mode,
 		      const struct timespec *timeout);
 
 unsigned long cobalt_event_clear(cobalt_event_t *event,
-				 unsigned long bits);
+				 unsigned int bits);
 
 int cobalt_event_inquire(cobalt_event_t *event,
 			 struct cobalt_event_info *info,

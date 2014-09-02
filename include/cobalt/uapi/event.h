@@ -18,11 +18,13 @@
 #ifndef _COBALT_UAPI_EVENT_H
 #define _COBALT_UAPI_EVENT_H
 
+#include <cobalt/uapi/kernel/types.h>
+
 struct cobalt_event_data {
-	unsigned long value;
-	unsigned long flags;
+	__u32 value;
+	__u32 flags;
 #define COBALT_EVENT_PENDED  0x1
-	int nwaiters;
+	__u32 nwaiters;
 };
 
 struct cobalt_event;
@@ -40,13 +42,13 @@ struct cobalt_event_shadow {
 	xnhandle_t handle;
 	union {
 		struct cobalt_event_data *data;
-		unsigned int data_offset;
+		__u32 data_offset;
 	} u;
-	int flags;
+	__u32 flags;
 };
 
 struct cobalt_event_info {
-	unsigned long value;
+	unsigned int value;
 	int flags;
 	int nrwait;
 };

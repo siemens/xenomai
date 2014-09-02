@@ -50,12 +50,12 @@ struct eventobj_wait_struct {
 
 struct eventobj_corespec {
 	struct syncobj sobj;
-	unsigned long value;
+	unsigned int value;
 	int flags;
 };
 
 struct eventobj_wait_struct {
-	unsigned long value;
+	unsigned int value;
 	int mode;
 };
 
@@ -77,27 +77,27 @@ extern "C" {
 #endif
 
 int eventobj_init(struct eventobj *evobj,
-		  unsigned long value, int flags,
+		  unsigned int value, int flags,
 		  fnref_type(void (*)(struct eventobj *evobj)) finalizer) __must_check;
 
 int eventobj_destroy(struct eventobj *evobj);
 
 int eventobj_post(struct eventobj *evobj,
-		  unsigned long bits);
+		  unsigned int bits);
 
 int eventobj_wait(struct eventobj *evobj,
-		  unsigned long bits,
-		  unsigned long *bits_r,
+		  unsigned int bits,
+		  unsigned int *bits_r,
 		  int mode,
 		  const struct timespec *timeout) __must_check;
 
 int eventobj_clear(struct eventobj *evobj,
-		   unsigned long bits,
-		   unsigned long *bits_r);
+		   unsigned int bits,
+		   unsigned int *bits_r);
 
 int eventobj_inquire(struct eventobj *evobj, size_t waitsz,
 		     struct eventobj_waitentry *waitlist,
-		     unsigned long *bits_r);
+		     unsigned int *bits_r);
 
 #ifdef __cplusplus
 }

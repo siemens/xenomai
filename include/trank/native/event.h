@@ -20,4 +20,54 @@
 
 #include <alchemy/event.h>
 
+COMPAT_DECL(int, rt_event_create(RT_EVENT *event, const char *name,
+				 unsigned long ivalue, int mode));
+
+COMPAT_DECL(int, rt_event_signal(RT_EVENT *event, unsigned long mask));
+
+COMPAT_DECL(int, rt_event_clear(RT_EVENT *event, unsigned long mask,
+				unsigned long *mask_r));
+
+#ifdef __XENO_COMPAT__
+
+static inline
+int rt_event_wait_until(RT_EVENT *event,
+			unsigned long mask, unsigned long *mask_r,
+			int mode, RTIME timeout)
+{
+	struct timespec ts;
+	unsigned int _mask;
+	int ret;
+
+	ret = rt_event_wait_timed(event, mask, &_mask, mode,
+				  alchemy_abs_timeout(timeout, &ts));
+	if (ret)
+		return ret;
+
+	*mask_r = _mask;
+
+	return 0;
+}
+
+static inline
+int rt_event_wait(RT_EVENT *event,
+		  unsigned long mask, unsigned long *mask_r,
+		  int mode, RTIME timeout)
+{
+	struct timespec ts;
+	unsigned int _mask;
+	int ret;
+
+	ret = rt_event_wait_timed(event, mask, &_mask, mode,
+				  alchemy_rel_timeout(timeout, &ts));
+	if (ret)
+		return ret;
+
+	*mask_r = _mask;
+
+	return 0;
+}
+
+#endif /* __XENO_COMPAT__ */
+
 #endif /* _XENOMAI_TRANK_NATIVE_EVENT_H */

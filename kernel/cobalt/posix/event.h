@@ -27,7 +27,7 @@ struct cobalt_kqueues;
 
 struct cobalt_event {
 	unsigned int magic;
-	unsigned long value;
+	unsigned int value;
 	struct xnsynch synch;
 	struct cobalt_event_data *data;
 	struct cobalt_kqueues *owningq;
@@ -38,13 +38,13 @@ struct cobalt_event {
 
 COBALT_SYSCALL_DECL(event_init,
 		    int, (struct cobalt_event_shadow __user *u_evtsh,
-			  unsigned long value,
+			  unsigned int value,
 			  int flags));
 
 COBALT_SYSCALL_DECL(event_wait,
 		    int, (struct cobalt_event_shadow __user *u_evtsh,
-			  unsigned long bits,
-			  unsigned long __user *u_bits_r,
+			  unsigned int bits,
+			  unsigned int __user *u_bits_r,
 			  int mode,
 			  struct timespec __user *u_ts));
 

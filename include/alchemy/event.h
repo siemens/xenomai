@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <alchemy/timer.h>
+#include <alchemy/compat.h>
 
 /**
  * @addtogroup alchemy_event
@@ -51,7 +52,7 @@ struct RT_EVENT_INFO {
 	/**
 	 * Current value of the event flag group.
 	 */
-	unsigned long value;
+	unsigned int value;
 	/**
 	 * Number of tasks currently waiting for events.
 	 */
@@ -68,24 +69,27 @@ typedef struct RT_EVENT_INFO RT_EVENT_INFO;
 extern "C" {
 #endif
 
-int rt_event_create(RT_EVENT *event,
-		    const char *name,
-		    unsigned long ivalue,
-		    int mode);
+CURRENT_DECL(int, rt_event_create(RT_EVENT *event,
+				  const char *name,
+				  unsigned int ivalue,
+				  int mode));
 
 int rt_event_delete(RT_EVENT *event);
 
-int rt_event_signal(RT_EVENT *event,
-		    unsigned long mask);
+CURRENT_DECL(int, rt_event_signal(RT_EVENT *event,
+				  unsigned int mask));
 
 int rt_event_wait_timed(RT_EVENT *event,
-			unsigned long mask,
-			unsigned long *mask_r,
+			unsigned int mask,
+			unsigned int *mask_r,
 			int mode,
 			const struct timespec *abs_timeout);
+
+#ifndef __XENO_COMPAT__
+
 static inline
 int rt_event_wait_until(RT_EVENT *event,
-			unsigned long mask, unsigned long *mask_r,
+			unsigned int mask, unsigned int *mask_r,
 			int mode, RTIME timeout)
 {
 	struct timespec ts;
@@ -95,7 +99,7 @@ int rt_event_wait_until(RT_EVENT *event,
 
 static inline
 int rt_event_wait(RT_EVENT *event,
-		  unsigned long mask, unsigned long *mask_r,
+		  unsigned int mask, unsigned int *mask_r,
 		  int mode, RTIME timeout)
 {
 	struct timespec ts;
@@ -103,9 +107,11 @@ int rt_event_wait(RT_EVENT *event,
 				   alchemy_rel_timeout(timeout, &ts));
 }
 
-int rt_event_clear(RT_EVENT *event,
-		   unsigned long mask,
-		   unsigned long *mask_r);
+#endif	/* !__XENO_COMPAT__ */
+
+CURRENT_DECL(int, rt_event_clear(RT_EVENT *event,
+				 unsigned int mask,
+				 unsigned int *mask_r));
 
 int rt_event_inquire(RT_EVENT *event,
 		     RT_EVENT_INFO *info);

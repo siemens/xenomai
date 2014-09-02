@@ -27,7 +27,7 @@
 
 #include "cobalt/internal.h"
 
-int eventobj_init(struct eventobj *evobj, unsigned long value, int flags,
+int eventobj_init(struct eventobj *evobj, unsigned int value, int flags,
 		  fnref_type(void (*)(struct eventobj *evobj)) finalizer)
 {
 	int ret, event_flags = event_scope_attribute;
@@ -60,7 +60,7 @@ int eventobj_destroy(struct eventobj *evobj)
 }
 
 int eventobj_wait(struct eventobj *evobj,
-		  unsigned long bits, unsigned long *bits_r,
+		  unsigned int bits, unsigned int *bits_r,
 		  int mode, const struct timespec *timeout)
 {
 	int ret;
@@ -73,7 +73,7 @@ int eventobj_wait(struct eventobj *evobj,
 	return 0;
 }
 
-int eventobj_post(struct eventobj *evobj, unsigned long bits)
+int eventobj_post(struct eventobj *evobj, unsigned int bits)
 {
 	int ret;
 
@@ -84,10 +84,10 @@ int eventobj_post(struct eventobj *evobj, unsigned long bits)
 	return 0;
 }
 
-int eventobj_clear(struct eventobj *evobj, unsigned long bits,
-		   unsigned long *bits_r)
+int eventobj_clear(struct eventobj *evobj, unsigned int bits,
+		   unsigned int *bits_r)
 {
-	unsigned long oldval;
+	unsigned int oldval;
 
 	oldval = cobalt_event_clear(&evobj->core.event, bits);
 	if (bits_r)
@@ -98,7 +98,7 @@ int eventobj_clear(struct eventobj *evobj, unsigned long bits,
 
 int eventobj_inquire(struct eventobj *evobj, size_t waitsz,
 		     struct eventobj_waitentry *waitlist,
-		     unsigned long *bits_r)
+		     unsigned int *bits_r)
 {
 	struct cobalt_threadstat stat;
 	struct cobalt_event_info info;
@@ -151,7 +151,7 @@ static void eventobj_finalize(struct syncobj *sobj)
 }
 fnref_register(libcopperplate, eventobj_finalize);
 
-int eventobj_init(struct eventobj *evobj, unsigned long value, int flags,
+int eventobj_init(struct eventobj *evobj, unsigned int value, int flags,
 		  fnref_type(void (*)(struct eventobj *evobj)) finalizer)
 {
 	int sobj_flags = 0, ret;
@@ -187,11 +187,11 @@ int eventobj_destroy(struct eventobj *evobj)
 }
 
 int eventobj_wait(struct eventobj *evobj,
-		  unsigned long bits, unsigned long *bits_r,
+		  unsigned int bits, unsigned int *bits_r,
 		  int mode, const struct timespec *timeout)
 {
 	struct eventobj_wait_struct *wait;
-	unsigned long waitval, testval;
+	unsigned int waitval, testval;
 	struct syncstate syns;
 	int ret = 0;
 
@@ -239,10 +239,10 @@ done:
 	return ret;
 }
 
-int eventobj_post(struct eventobj *evobj, unsigned long bits)
+int eventobj_post(struct eventobj *evobj, unsigned int bits)
 {
 	struct eventobj_wait_struct *wait;
-	unsigned long waitval, testval;
+	unsigned int waitval, testval;
 	struct threadobj *thobj, *tmp;
 	struct syncstate syns;
 	int ret;
@@ -272,11 +272,11 @@ done:
 }
 
 int eventobj_clear(struct eventobj *evobj,
-		   unsigned long bits,
-		   unsigned long *bits_r)
+		   unsigned int bits,
+		   unsigned int *bits_r)
 {
 	struct syncstate syns;
-	unsigned long oldval;
+	unsigned int oldval;
 	int ret;
 
 	ret = syncobj_lock(&evobj->core.sobj, &syns);
@@ -296,7 +296,7 @@ int eventobj_clear(struct eventobj *evobj,
 
 int eventobj_inquire(struct eventobj *evobj, size_t waitsz,
 		     struct eventobj_waitentry *waitlist,
-		     unsigned long *bits_r)
+		     unsigned int *bits_r)
 {
 	struct threadobj *thobj;
 	struct syncstate syns;

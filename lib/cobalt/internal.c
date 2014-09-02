@@ -437,7 +437,7 @@ struct cobalt_event_data *get_event_data(cobalt_event_t *event)
 		event->u.data;
 }
 
-int cobalt_event_init(cobalt_event_t *event, unsigned long value,
+int cobalt_event_init(cobalt_event_t *event, unsigned int value,
 		      int flags)
 {
 	struct cobalt_event_data *datp;
@@ -463,7 +463,7 @@ int cobalt_event_destroy(cobalt_event_t *event)
 	return XENOMAI_SYSCALL1(sc_cobalt_event_destroy, event);
 }
 
-int cobalt_event_post(cobalt_event_t *event, unsigned long bits)
+int cobalt_event_post(cobalt_event_t *event, unsigned int bits)
 {
 	struct cobalt_event_data *datp = get_event_data(event);
 
@@ -479,7 +479,7 @@ int cobalt_event_post(cobalt_event_t *event, unsigned long bits)
 }
 
 int cobalt_event_wait(cobalt_event_t *event,
-		      unsigned long bits, unsigned long *bits_r,
+		      unsigned int bits, unsigned int *bits_r,
 		      int mode, const struct timespec *timeout)
 {
 	int ret, oldtype;
@@ -495,7 +495,7 @@ int cobalt_event_wait(cobalt_event_t *event,
 }
 
 unsigned long cobalt_event_clear(cobalt_event_t *event,
-				 unsigned long bits)
+				 unsigned int bits)
 {
 	struct cobalt_event_data *datp = get_event_data(event);
 

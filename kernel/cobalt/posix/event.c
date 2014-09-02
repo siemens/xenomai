@@ -25,8 +25,8 @@
  * Cobalt event notification services
  *
  * An event flag group is a synchronization object represented by a
- * long-word structure; every available bit in such word can be used
- * to map a user-defined event flag.  When a flag is set, the
+ * regular native integer; every available bit in such word can be
+ * used to map a user-defined event flag.  When a flag is set, the
  * associated event is said to have occurred.
  *
  * Xenomai threads and interrupt handlers can use event flags to
@@ -42,13 +42,13 @@
 
 struct event_wait_context {
 	struct xnthread_wait_context wc;
-	unsigned long value;
+	unsigned int value;
 	int mode;
 };
 
 COBALT_SYSCALL(event_init, current,
 	       int, (struct cobalt_event_shadow __user *u_event,
-		     unsigned long value, int flags))
+		     unsigned int value, int flags))
 {
 	struct cobalt_event_shadow shadow;
 	struct cobalt_event_data *datp;
@@ -97,20 +97,21 @@ COBALT_SYSCALL(event_init, current,
 	datp->flags = 0;
 	datp->nwaiters = 0;
 	datoff = xnheap_mapped_offset(heap, datp);
+	XENO_BUGON(COBALT, datoff != (__u32)datoff);
 	shadow.flags = flags;
 	shadow.handle = event->handle;
-	shadow.u.data_offset = datoff;
+	shadow.u.data_offset = (__u32)datoff;
 
 	return __xn_safe_copy_to_user(u_event, &shadow, sizeof(*u_event));
 }
 
 COBALT_SYSCALL(event_wait, primary,
 	       int, (struct cobalt_event_shadow __user *u_event,
-		     unsigned long bits,
-		     unsigned long __user *u_bits_r,
+		     unsigned int bits,
+		     unsigned int __user *u_bits_r,
 		     int mode, struct timespec __user *u_ts))
 {
-	unsigned long rbits = 0, testval;
+	unsigned int rbits = 0, testval;
 	xnticks_t timeout = XN_INFINITE;
 	struct cobalt_event_data *datp;
 	xntmode_t tmode = XN_RELATIVE;
@@ -196,7 +197,7 @@ out:
 COBALT_SYSCALL(event_sync, current,
 	       int, (struct cobalt_event_shadow __user *u_event))
 {
-	unsigned long bits, waitval, testval;
+	unsigned int bits, waitval, testval;
 	struct xnthread_wait_context *wc;
 	struct cobalt_event_data *datp;
 	struct event_wait_context *ewc;
