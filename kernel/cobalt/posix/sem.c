@@ -395,8 +395,9 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 	return 0;
 }
 
-int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem,
-		    int flags, unsigned int value)
+COBALT_SYSCALL(sem_init, current,
+	       int, (struct cobalt_sem_shadow __user *u_sem,
+		     int flags, unsigned int value))
 {
 	struct cobalt_sem_shadow sm;
 	struct cobalt_sem *sem;
@@ -415,7 +416,8 @@ int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem,
 	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
 }
 
-int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem)
+COBALT_SYSCALL(sem_post, current,
+	       int, (struct cobalt_sem_shadow __user *u_sem))
 {
 	xnhandle_t handle;
 
@@ -425,7 +427,8 @@ int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem)
 	return sem_post(handle);
 }
 
-int cobalt_sem_wait(struct cobalt_sem_shadow __user *u_sem)
+COBALT_SYSCALL(sem_wait, primary,
+	       int, (struct cobalt_sem_shadow __user *u_sem))
 {
 	xnhandle_t handle;
 
@@ -435,8 +438,9 @@ int cobalt_sem_wait(struct cobalt_sem_shadow __user *u_sem)
 	return sem_wait(handle);
 }
 
-int cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
-			 struct timespec __user *u_ts)
+COBALT_SYSCALL(sem_timedwait, primary,
+	       int, (struct cobalt_sem_shadow __user *u_sem,
+		     struct timespec __user *u_ts))
 {
 	xnhandle_t handle;
 
@@ -446,7 +450,8 @@ int cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 	return sem_timedwait(handle, u_ts);
 }
 
-int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem)
+COBALT_SYSCALL(sem_trywait, primary,
+	       int, (struct cobalt_sem_shadow __user *u_sem))
 {
 	xnhandle_t handle;
 
@@ -456,7 +461,9 @@ int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem)
 	return sem_trywait(handle);
 }
 
-int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem, int __user *u_sval)
+COBALT_SYSCALL(sem_getvalue, current,
+	       int, (struct cobalt_sem_shadow __user *u_sem,
+		     int __user *u_sval))
 {
 	int ret, sval = -1;
 	xnhandle_t handle;
@@ -471,7 +478,8 @@ int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem, int __user *u_sv
 	return __xn_safe_copy_to_user(u_sval, &sval, sizeof(sval));
 }
 
-int cobalt_sem_destroy(struct cobalt_sem_shadow __user *u_sem)
+COBALT_SYSCALL(sem_destroy, current,
+	       int, (struct cobalt_sem_shadow __user *u_sem))
 {
 	struct cobalt_sem_shadow sm;
 	int err;
@@ -488,7 +496,8 @@ int cobalt_sem_destroy(struct cobalt_sem_shadow __user *u_sem)
 	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem)) ?: err;
 }
 
-int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem)
+COBALT_SYSCALL(sem_broadcast_np, current,
+	       int, (struct cobalt_sem_shadow __user *u_sem))
 {
 	struct cobalt_sem *sm;
 	xnhandle_t handle;
@@ -506,10 +515,11 @@ int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem)
 	return err;
 }
 
-int cobalt_sem_inquire(struct cobalt_sem_shadow __user *u_sem,
-		       struct cobalt_sem_info __user *u_info,
-		       pid_t __user *u_waitlist,
-		       size_t waitsz)
+COBALT_SYSCALL(sem_inquire, current,
+	       int, (struct cobalt_sem_shadow __user *u_sem,
+		     struct cobalt_sem_info __user *u_info,
+		     pid_t __user *u_waitlist,
+		     size_t waitsz))
 {
 	int val = 0, nrwait = 0, nrpids, ret = 0;
 	unsigned long pstamp, nstamp = 0;

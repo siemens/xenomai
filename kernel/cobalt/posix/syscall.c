@@ -78,9 +78,9 @@ typedef int (*cobalt_handler)(unsigned long arg1, unsigned long arg2,
 			      unsigned long arg3, unsigned long arg4,
 			      unsigned long arg5);
 
-static cobalt_handler cobalt_syscalls[];
+static const cobalt_handler cobalt_syscalls[];
 
-static int cobalt_sysmodes[];
+static const int cobalt_sysmodes[];
 
 static void prepare_for_signal(struct task_struct *p,
 			       struct xnthread *thread,
@@ -403,7 +403,7 @@ int ipipe_fastcall_hook(struct pt_regs *regs)
 	return ret;
 }
 
-static int cobalt_migrate(int domain)
+static COBALT_SYSCALL(migrate, current, int, (int domain))
 {
 	struct xnthread *thread = xnthread_current();
 
@@ -433,7 +433,8 @@ static int cobalt_migrate(int domain)
 	return 0;
 }
 
-static int cobalt_info(struct cobalt_sysinfo __user *u_info)
+static COBALT_SYSCALL(info, lostage,
+		      int, (struct cobalt_sysinfo __user *u_info))
 {
 	struct cobalt_sysinfo info;
 
@@ -444,8 +445,9 @@ static int cobalt_info(struct cobalt_sysinfo __user *u_info)
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(info));
 }
 
-static int cobalt_trace(int op, unsigned long a1,
-			unsigned long a2, unsigned long a3)
+static COBALT_SYSCALL(trace, current,
+		      int, (int op, unsigned long a1,
+			    unsigned long a2, unsigned long a3))
 {
 	int ret = -EINVAL;
 
@@ -486,8 +488,17 @@ static int cobalt_trace(int op, unsigned long a1,
 	return ret;
 }
 
-static int cobalt_heapstat(struct cobalt_heapstat __user *u_hd,
-			   unsigned int heap_nr)
+static COBALT_SYSCALL(archcall, current,
+		      int, (unsigned long a1, unsigned long a2,
+			    unsigned long a3, unsigned long a4,
+			    unsigned long a5))
+{
+	return xnarch_local_syscall(a1, a2, a3, a4, a5);
+}
+
+static COBALT_SYSCALL(heap_getstat, lostage,
+		      int, (struct cobalt_heapstat __user *u_hd,
+			    unsigned int heap_nr))
 {
 	struct cobalt_heapstat hd;
 	struct xnheap *heap;
@@ -512,7 +523,8 @@ static int cobalt_heapstat(struct cobalt_heapstat __user *u_hd,
 	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }
 
-static int cobalt_get_current(xnhandle_t __user *u_handle)
+static COBALT_SYSCALL(get_current, current,
+		      int, (xnhandle_t __user *u_handle))
 {
 	struct xnthread *cur = xnthread_current();
 
@@ -523,13 +535,16 @@ static int cobalt_get_current(xnhandle_t __user *u_handle)
 				      sizeof(*u_handle));
 }
 
-static int cobalt_backtrace(int nr, unsigned long __user *u_backtrace, int reason)
+static COBALT_SYSCALL(backtrace, current,
+		      int, (int nr, unsigned long __user *u_backtrace,
+			    int reason))
 {
 	xndebug_trace_relax(nr, u_backtrace, reason);
 	return 0;
 }
 
-static int cobalt_serialdbg(const char __user *u_msg, int len)
+static COBALT_SYSCALL(serialdbg, current,
+		      int, (const char __user *u_msg, int len))
 {
 	char buf[128];
 	int n;
@@ -548,7 +563,7 @@ static int cobalt_serialdbg(const char __user *u_msg, int len)
 	return 0;
 }
 
-static int cobalt_mayday(void)
+static COBALT_SYSCALL(mayday, oneway, int, (void))
 {
 	struct pt_regs *regs = task_pt_regs(current);
 	struct xnthread *cur;
@@ -597,7 +612,8 @@ static void stringify_feature_set(unsigned long fset, char *buf, int size)
 	}
 }
 
-static int cobalt_bind(struct cobalt_bindreq __user *u_breq)
+static COBALT_SYSCALL(bind, lostage,
+		      int, (struct cobalt_bindreq __user *u_breq))
 {
 	unsigned long featreq, featmis;
 	struct cobalt_bindreq breq;
@@ -647,12 +663,13 @@ static int cobalt_bind(struct cobalt_bindreq __user *u_breq)
 	return cobalt_bind_core();
 }
 
-static int cobalt_extend(unsigned int magic)
+static COBALT_SYSCALL(extend, lostage, int, (unsigned int magic))
 {
 	return cobalt_bind_personality(magic);
 }
 
-static int cobalt_sysconf(int option, void __user *u_buf, size_t u_bufsz)
+static COBALT_SYSCALL(sysconf, current,
+		      int, (int option, void __user *u_buf, size_t u_bufsz))
 {
 	int ret, val = 0;
 
@@ -713,209 +730,209 @@ static int cobalt_ni(void)
 	return -ENOSYS;
 }
 
-#define __syscast__(__handler)		((cobalt_handler)(__handler))
-#define __COBALT_CALL(__nr, __handler)	[__nr] = __syscast__(__handler)
-#define __COBALT_MODE(__nr, __flags)	[__nr] = __xn_exec_##__flags
-#define __COBALT_NI			__syscast__(cobalt_ni)
+#define __syshand__(__name)		((cobalt_handler)(cobalt_ ## __name))
+#define __COBALT_CALL(__name)		[sc_cobalt_ ## __name] = __syshand__(__name)
+#define __COBALT_MODE(__name, __flags)	[sc_cobalt_ ## __name] = __xn_exec_##__flags
+#define __COBALT_NI			__syshand__(ni)
 
-static cobalt_handler cobalt_syscalls[] = {
+static const cobalt_handler cobalt_syscalls[] = {
 	[0 ... __NR_COBALT_SYSCALLS-1] = __COBALT_NI,
-	__COBALT_CALL(sc_cobalt_thread_create, cobalt_thread_create),
-	__COBALT_CALL(sc_cobalt_thread_getpid, cobalt_thread_pid),
-	__COBALT_CALL(sc_cobalt_thread_setschedparam_ex, cobalt_thread_setschedparam_ex),
-	__COBALT_CALL(sc_cobalt_thread_getschedparam_ex, cobalt_thread_getschedparam_ex),
-	__COBALT_CALL(sc_cobalt_sched_weightprio, cobalt_sched_weighted_prio),
-	__COBALT_CALL(sc_cobalt_sched_yield, cobalt_sched_yield),
-	__COBALT_CALL(sc_cobalt_thread_setmode, cobalt_thread_setmode_np),
-	__COBALT_CALL(sc_cobalt_thread_setname, cobalt_thread_setname_np),
-	__COBALT_CALL(sc_cobalt_thread_kill, cobalt_thread_kill),
-	__COBALT_CALL(sc_cobalt_thread_getstat, cobalt_thread_stat),
-	__COBALT_CALL(sc_cobalt_thread_join, cobalt_thread_join),
-	__COBALT_CALL(sc_cobalt_sem_init, cobalt_sem_init),
-	__COBALT_CALL(sc_cobalt_sem_destroy, cobalt_sem_destroy),
-	__COBALT_CALL(sc_cobalt_sem_post, cobalt_sem_post),
-	__COBALT_CALL(sc_cobalt_sem_wait, cobalt_sem_wait),
-	__COBALT_CALL(sc_cobalt_sem_timedwait, cobalt_sem_timedwait),
-	__COBALT_CALL(sc_cobalt_sem_trywait, cobalt_sem_trywait),
-	__COBALT_CALL(sc_cobalt_sem_getvalue, cobalt_sem_getvalue),
-	__COBALT_CALL(sc_cobalt_sem_open, cobalt_sem_open),
-	__COBALT_CALL(sc_cobalt_sem_close, cobalt_sem_close),
-	__COBALT_CALL(sc_cobalt_sem_unlink, cobalt_sem_unlink),
-	__COBALT_CALL(sc_cobalt_sem_broadcast_np, cobalt_sem_broadcast_np),
-	__COBALT_CALL(sc_cobalt_sem_inquire, cobalt_sem_inquire),
-	__COBALT_CALL(sc_cobalt_clock_getres, cobalt_clock_getres),
-	__COBALT_CALL(sc_cobalt_clock_gettime, cobalt_clock_gettime),
-	__COBALT_CALL(sc_cobalt_clock_settime, cobalt_clock_settime),
-	__COBALT_CALL(sc_cobalt_clock_nanosleep, cobalt_clock_nanosleep),
-	__COBALT_CALL(sc_cobalt_mutex_init, cobalt_mutex_init),
-	__COBALT_CALL(sc_cobalt_mutex_check_init, cobalt_mutex_check_init),
-	__COBALT_CALL(sc_cobalt_mutex_destroy, cobalt_mutex_destroy),
-	__COBALT_CALL(sc_cobalt_mutex_lock, cobalt_mutex_lock),
-	__COBALT_CALL(sc_cobalt_mutex_timedlock, cobalt_mutex_timedlock),
-	__COBALT_CALL(sc_cobalt_mutex_trylock, cobalt_mutex_trylock),
-	__COBALT_CALL(sc_cobalt_mutex_unlock, cobalt_mutex_unlock),
-	__COBALT_CALL(sc_cobalt_cond_init, cobalt_cond_init),
-	__COBALT_CALL(sc_cobalt_cond_destroy, cobalt_cond_destroy),
-	__COBALT_CALL(sc_cobalt_cond_wait_prologue, cobalt_cond_wait_prologue),
-	__COBALT_CALL(sc_cobalt_cond_wait_epilogue, cobalt_cond_wait_epilogue),
-	__COBALT_CALL(sc_cobalt_mq_open, cobalt_mq_open),
-	__COBALT_CALL(sc_cobalt_mq_close, cobalt_mq_close),
-	__COBALT_CALL(sc_cobalt_mq_unlink, cobalt_mq_unlink),
-	__COBALT_CALL(sc_cobalt_mq_getattr, cobalt_mq_getattr),
-	__COBALT_CALL(sc_cobalt_mq_setattr, cobalt_mq_setattr),
-	__COBALT_CALL(sc_cobalt_mq_timedsend, cobalt_mq_timedsend),
-	__COBALT_CALL(sc_cobalt_mq_timedreceive, cobalt_mq_timedreceive),
-	__COBALT_CALL(sc_cobalt_mq_notify, cobalt_mq_notify),
-	__COBALT_CALL(sc_cobalt_sigwait, cobalt_sigwait),
-	__COBALT_CALL(sc_cobalt_sigwaitinfo, cobalt_sigwaitinfo),
-	__COBALT_CALL(sc_cobalt_sigtimedwait, cobalt_sigtimedwait),
-	__COBALT_CALL(sc_cobalt_sigpending, cobalt_sigpending),
-	__COBALT_CALL(sc_cobalt_kill, cobalt_kill),
-	__COBALT_CALL(sc_cobalt_sigqueue, cobalt_sigqueue),
-	__COBALT_CALL(sc_cobalt_timer_create, cobalt_timer_create),
-	__COBALT_CALL(sc_cobalt_timer_delete, cobalt_timer_delete),
-	__COBALT_CALL(sc_cobalt_timer_settime, cobalt_timer_settime),
-	__COBALT_CALL(sc_cobalt_timer_gettime, cobalt_timer_gettime),
-	__COBALT_CALL(sc_cobalt_timer_getoverrun, cobalt_timer_getoverrun),
-	__COBALT_CALL(sc_cobalt_timerfd_create, cobalt_timerfd_create),
-	__COBALT_CALL(sc_cobalt_timerfd_gettime, cobalt_timerfd_gettime),
-	__COBALT_CALL(sc_cobalt_timerfd_settime, cobalt_timerfd_settime),
-	__COBALT_CALL(sc_cobalt_select, cobalt_select),
-	__COBALT_CALL(sc_cobalt_sched_minprio, cobalt_sched_min_prio),
-	__COBALT_CALL(sc_cobalt_sched_maxprio, cobalt_sched_max_prio),
-	__COBALT_CALL(sc_cobalt_monitor_init, cobalt_monitor_init),
-	__COBALT_CALL(sc_cobalt_monitor_destroy, cobalt_monitor_destroy),
-	__COBALT_CALL(sc_cobalt_monitor_enter, cobalt_monitor_enter),
-	__COBALT_CALL(sc_cobalt_monitor_wait, cobalt_monitor_wait),
-	__COBALT_CALL(sc_cobalt_monitor_sync, cobalt_monitor_sync),
-	__COBALT_CALL(sc_cobalt_monitor_exit, cobalt_monitor_exit),
-	__COBALT_CALL(sc_cobalt_event_init, cobalt_event_init),
-	__COBALT_CALL(sc_cobalt_event_destroy, cobalt_event_destroy),
-	__COBALT_CALL(sc_cobalt_event_wait, cobalt_event_wait),
-	__COBALT_CALL(sc_cobalt_event_sync, cobalt_event_sync),
-	__COBALT_CALL(sc_cobalt_event_inquire, cobalt_event_inquire),
-	__COBALT_CALL(sc_cobalt_sched_setconfig_np, cobalt_sched_setconfig_np),
-	__COBALT_CALL(sc_cobalt_sched_getconfig_np, cobalt_sched_getconfig_np),
-	__COBALT_CALL(sc_cobalt_open, cobalt_open),
-	__COBALT_CALL(sc_cobalt_socket, cobalt_socket),
-	__COBALT_CALL(sc_cobalt_close, cobalt_close),
-	__COBALT_CALL(sc_cobalt_mmap, cobalt_mmap),
-	__COBALT_CALL(sc_cobalt_ioctl, cobalt_ioctl),
-	__COBALT_CALL(sc_cobalt_read, cobalt_read),
-	__COBALT_CALL(sc_cobalt_write, cobalt_write),
-	__COBALT_CALL(sc_cobalt_recvmsg, cobalt_recvmsg),
-	__COBALT_CALL(sc_cobalt_sendmsg, cobalt_sendmsg),
-	__COBALT_CALL(sc_cobalt_migrate, cobalt_migrate),
-	__COBALT_CALL(sc_cobalt_arch, xnarch_local_syscall),
-	__COBALT_CALL(sc_cobalt_bind, cobalt_bind),
-	__COBALT_CALL(sc_cobalt_extend, cobalt_extend),
-	__COBALT_CALL(sc_cobalt_info, cobalt_info),
-	__COBALT_CALL(sc_cobalt_trace, cobalt_trace),
-	__COBALT_CALL(sc_cobalt_heap_getstat, cobalt_heapstat),
-	__COBALT_CALL(sc_cobalt_current, cobalt_get_current),
-	__COBALT_CALL(sc_cobalt_mayday, cobalt_mayday),
-	__COBALT_CALL(sc_cobalt_backtrace, cobalt_backtrace),
-	__COBALT_CALL(sc_cobalt_serialdbg, cobalt_serialdbg),
-	__COBALT_CALL(sc_cobalt_sysconf, cobalt_sysconf),
+	__COBALT_CALL(thread_create),
+	__COBALT_CALL(thread_getpid),
+	__COBALT_CALL(thread_setschedparam_ex),
+	__COBALT_CALL(thread_getschedparam_ex),
+	__COBALT_CALL(sched_weightprio),
+	__COBALT_CALL(sched_yield),
+	__COBALT_CALL(thread_setmode),
+	__COBALT_CALL(thread_setname),
+	__COBALT_CALL(thread_kill),
+	__COBALT_CALL(thread_getstat),
+	__COBALT_CALL(thread_join),
+	__COBALT_CALL(sem_init),
+	__COBALT_CALL(sem_destroy),
+	__COBALT_CALL(sem_post),
+	__COBALT_CALL(sem_wait),
+	__COBALT_CALL(sem_timedwait),
+	__COBALT_CALL(sem_trywait),
+	__COBALT_CALL(sem_getvalue),
+	__COBALT_CALL(sem_open),
+	__COBALT_CALL(sem_close),
+	__COBALT_CALL(sem_unlink),
+	__COBALT_CALL(sem_broadcast_np),
+	__COBALT_CALL(sem_inquire),
+	__COBALT_CALL(clock_getres),
+	__COBALT_CALL(clock_gettime),
+	__COBALT_CALL(clock_settime),
+	__COBALT_CALL(clock_nanosleep),
+	__COBALT_CALL(mutex_init),
+	__COBALT_CALL(mutex_check_init),
+	__COBALT_CALL(mutex_destroy),
+	__COBALT_CALL(mutex_lock),
+	__COBALT_CALL(mutex_timedlock),
+	__COBALT_CALL(mutex_trylock),
+	__COBALT_CALL(mutex_unlock),
+	__COBALT_CALL(cond_init),
+	__COBALT_CALL(cond_destroy),
+	__COBALT_CALL(cond_wait_prologue),
+	__COBALT_CALL(cond_wait_epilogue),
+	__COBALT_CALL(mq_open),
+	__COBALT_CALL(mq_close),
+	__COBALT_CALL(mq_unlink),
+	__COBALT_CALL(mq_getattr),
+	__COBALT_CALL(mq_setattr),
+	__COBALT_CALL(mq_timedsend),
+	__COBALT_CALL(mq_timedreceive),
+	__COBALT_CALL(mq_notify),
+	__COBALT_CALL(sigwait),
+	__COBALT_CALL(sigwaitinfo),
+	__COBALT_CALL(sigtimedwait),
+	__COBALT_CALL(sigpending),
+	__COBALT_CALL(kill),
+	__COBALT_CALL(sigqueue),
+	__COBALT_CALL(timer_create),
+	__COBALT_CALL(timer_delete),
+	__COBALT_CALL(timer_settime),
+	__COBALT_CALL(timer_gettime),
+	__COBALT_CALL(timer_getoverrun),
+	__COBALT_CALL(timerfd_create),
+	__COBALT_CALL(timerfd_gettime),
+	__COBALT_CALL(timerfd_settime),
+	__COBALT_CALL(select),
+	__COBALT_CALL(sched_minprio),
+	__COBALT_CALL(sched_maxprio),
+	__COBALT_CALL(monitor_init),
+	__COBALT_CALL(monitor_destroy),
+	__COBALT_CALL(monitor_enter),
+	__COBALT_CALL(monitor_wait),
+	__COBALT_CALL(monitor_sync),
+	__COBALT_CALL(monitor_exit),
+	__COBALT_CALL(event_init),
+	__COBALT_CALL(event_destroy),
+	__COBALT_CALL(event_wait),
+	__COBALT_CALL(event_sync),
+	__COBALT_CALL(event_inquire),
+	__COBALT_CALL(sched_setconfig_np),
+	__COBALT_CALL(sched_getconfig_np),
+	__COBALT_CALL(open),
+	__COBALT_CALL(socket),
+	__COBALT_CALL(close),
+	__COBALT_CALL(mmap),
+	__COBALT_CALL(ioctl),
+	__COBALT_CALL(read),
+	__COBALT_CALL(write),
+	__COBALT_CALL(recvmsg),
+	__COBALT_CALL(sendmsg),
+	__COBALT_CALL(migrate),
+	__COBALT_CALL(archcall),
+	__COBALT_CALL(bind),
+	__COBALT_CALL(extend),
+	__COBALT_CALL(info),
+	__COBALT_CALL(trace),
+	__COBALT_CALL(heap_getstat),
+	__COBALT_CALL(get_current),
+	__COBALT_CALL(mayday),
+	__COBALT_CALL(backtrace),
+	__COBALT_CALL(serialdbg),
+	__COBALT_CALL(sysconf),
 };
 
-static int cobalt_sysmodes[] = {
+static const int cobalt_sysmodes[] = {
 	[0 ... __NR_COBALT_SYSCALLS-1] = 0,
-	__COBALT_MODE(sc_cobalt_thread_create, init),
-	__COBALT_MODE(sc_cobalt_thread_getpid, current),
-	__COBALT_MODE(sc_cobalt_thread_setschedparam_ex, conforming),
-	__COBALT_MODE(sc_cobalt_thread_getschedparam_ex, current),
-	__COBALT_MODE(sc_cobalt_sched_weightprio, current),
-	__COBALT_MODE(sc_cobalt_sched_yield, primary),
-	__COBALT_MODE(sc_cobalt_thread_setmode, primary),
-	__COBALT_MODE(sc_cobalt_thread_setname, current),
-	__COBALT_MODE(sc_cobalt_thread_kill, conforming),
-	__COBALT_MODE(sc_cobalt_thread_getstat, current),
-	__COBALT_MODE(sc_cobalt_thread_join, primary),
-	__COBALT_MODE(sc_cobalt_sem_init, current),
-	__COBALT_MODE(sc_cobalt_sem_destroy, current),
-	__COBALT_MODE(sc_cobalt_sem_post, current),
-	__COBALT_MODE(sc_cobalt_sem_wait, primary),
-	__COBALT_MODE(sc_cobalt_sem_timedwait, primary),
-	__COBALT_MODE(sc_cobalt_sem_trywait, primary),
-	__COBALT_MODE(sc_cobalt_sem_getvalue, current),
-	__COBALT_MODE(sc_cobalt_sem_open, current),
-	__COBALT_MODE(sc_cobalt_sem_close, current),
-	__COBALT_MODE(sc_cobalt_sem_unlink, current),
-	__COBALT_MODE(sc_cobalt_sem_broadcast_np, current),
-	__COBALT_MODE(sc_cobalt_sem_inquire, current),
-	__COBALT_MODE(sc_cobalt_clock_getres, current),
-	__COBALT_MODE(sc_cobalt_clock_gettime, current),
-	__COBALT_MODE(sc_cobalt_clock_settime, current),
-	__COBALT_MODE(sc_cobalt_clock_nanosleep, nonrestartable),
-	__COBALT_MODE(sc_cobalt_mutex_init, current),
-	__COBALT_MODE(sc_cobalt_mutex_check_init, current),
-	__COBALT_MODE(sc_cobalt_mutex_destroy, current),
-	__COBALT_MODE(sc_cobalt_mutex_lock, primary),
-	__COBALT_MODE(sc_cobalt_mutex_timedlock, primary),
-	__COBALT_MODE(sc_cobalt_mutex_trylock, primary),
-	__COBALT_MODE(sc_cobalt_mutex_unlock, nonrestartable),
-	__COBALT_MODE(sc_cobalt_cond_init, current),
-	__COBALT_MODE(sc_cobalt_cond_destroy, current),
-	__COBALT_MODE(sc_cobalt_cond_wait_prologue, nonrestartable),
-	__COBALT_MODE(sc_cobalt_cond_wait_epilogue, primary),
-	__COBALT_MODE(sc_cobalt_mq_open, lostage),
-	__COBALT_MODE(sc_cobalt_mq_close, lostage),
-	__COBALT_MODE(sc_cobalt_mq_unlink, lostage),
-	__COBALT_MODE(sc_cobalt_mq_getattr, current),
-	__COBALT_MODE(sc_cobalt_mq_setattr, current),
-	__COBALT_MODE(sc_cobalt_mq_timedsend, primary),
-	__COBALT_MODE(sc_cobalt_mq_timedreceive, primary),
-	__COBALT_MODE(sc_cobalt_mq_notify, primary),
-	__COBALT_MODE(sc_cobalt_sigwait, primary),
-	__COBALT_MODE(sc_cobalt_sigwaitinfo, nonrestartable),
-	__COBALT_MODE(sc_cobalt_sigtimedwait, nonrestartable),
-	__COBALT_MODE(sc_cobalt_sigpending, primary),
-	__COBALT_MODE(sc_cobalt_kill, conforming),
-	__COBALT_MODE(sc_cobalt_sigqueue, conforming),
-	__COBALT_MODE(sc_cobalt_timer_create, current),
-	__COBALT_MODE(sc_cobalt_timer_delete, current),
-	__COBALT_MODE(sc_cobalt_timer_settime, primary),
-	__COBALT_MODE(sc_cobalt_timer_gettime, current),
-	__COBALT_MODE(sc_cobalt_timer_getoverrun, current),
-	__COBALT_MODE(sc_cobalt_timerfd_create, lostage),
-	__COBALT_MODE(sc_cobalt_timerfd_gettime, current),
-	__COBALT_MODE(sc_cobalt_timerfd_settime, current),
-	__COBALT_MODE(sc_cobalt_select, nonrestartable),
-	__COBALT_MODE(sc_cobalt_sched_minprio, current),
-	__COBALT_MODE(sc_cobalt_sched_maxprio, current),
-	__COBALT_MODE(sc_cobalt_monitor_init, current),
-	__COBALT_MODE(sc_cobalt_monitor_destroy, primary),
-	__COBALT_MODE(sc_cobalt_monitor_enter, primary),
-	__COBALT_MODE(sc_cobalt_monitor_wait, nonrestartable),
-	__COBALT_MODE(sc_cobalt_monitor_sync, nonrestartable),
-	__COBALT_MODE(sc_cobalt_monitor_exit, primary),
-	__COBALT_MODE(sc_cobalt_event_init, current),
-	__COBALT_MODE(sc_cobalt_event_destroy, current),
-	__COBALT_MODE(sc_cobalt_event_wait, primary),
-	__COBALT_MODE(sc_cobalt_event_sync, current),
-	__COBALT_MODE(sc_cobalt_event_inquire, current),
-	__COBALT_MODE(sc_cobalt_sched_setconfig_np, current),
-	__COBALT_MODE(sc_cobalt_sched_getconfig_np, current),
-	__COBALT_MODE(sc_cobalt_open, lostage),
-	__COBALT_MODE(sc_cobalt_socket, lostage),
-	__COBALT_MODE(sc_cobalt_close, lostage),
-	__COBALT_MODE(sc_cobalt_mmap, lostage),
-	__COBALT_MODE(sc_cobalt_ioctl, probing),
-	__COBALT_MODE(sc_cobalt_read, probing),
-	__COBALT_MODE(sc_cobalt_write, probing),
-	__COBALT_MODE(sc_cobalt_recvmsg, probing),
-	__COBALT_MODE(sc_cobalt_sendmsg, probing),
-	__COBALT_MODE(sc_cobalt_migrate, current),
-	__COBALT_MODE(sc_cobalt_arch, current),
-	__COBALT_MODE(sc_cobalt_bind, lostage),
-	__COBALT_MODE(sc_cobalt_extend, lostage),
-	__COBALT_MODE(sc_cobalt_info, lostage),
-	__COBALT_MODE(sc_cobalt_trace, current),
-	__COBALT_MODE(sc_cobalt_heap_getstat, lostage),
-	__COBALT_MODE(sc_cobalt_current, current),
-	__COBALT_MODE(sc_cobalt_mayday, oneway),
-	__COBALT_MODE(sc_cobalt_backtrace, current),
-	__COBALT_MODE(sc_cobalt_serialdbg, current),
-	__COBALT_MODE(sc_cobalt_sysconf, current),
+	__COBALT_MODE(thread_create, init),
+	__COBALT_MODE(thread_getpid, current),
+	__COBALT_MODE(thread_setschedparam_ex, conforming),
+	__COBALT_MODE(thread_getschedparam_ex, current),
+	__COBALT_MODE(sched_weightprio, current),
+	__COBALT_MODE(sched_yield, primary),
+	__COBALT_MODE(thread_setmode, primary),
+	__COBALT_MODE(thread_setname, current),
+	__COBALT_MODE(thread_kill, conforming),
+	__COBALT_MODE(thread_getstat, current),
+	__COBALT_MODE(thread_join, primary),
+	__COBALT_MODE(sem_init, current),
+	__COBALT_MODE(sem_destroy, current),
+	__COBALT_MODE(sem_post, current),
+	__COBALT_MODE(sem_wait, primary),
+	__COBALT_MODE(sem_timedwait, primary),
+	__COBALT_MODE(sem_trywait, primary),
+	__COBALT_MODE(sem_getvalue, current),
+	__COBALT_MODE(sem_open, current),
+	__COBALT_MODE(sem_close, current),
+	__COBALT_MODE(sem_unlink, current),
+	__COBALT_MODE(sem_broadcast_np, current),
+	__COBALT_MODE(sem_inquire, current),
+	__COBALT_MODE(clock_getres, current),
+	__COBALT_MODE(clock_gettime, current),
+	__COBALT_MODE(clock_settime, current),
+	__COBALT_MODE(clock_nanosleep, nonrestartable),
+	__COBALT_MODE(mutex_init, current),
+	__COBALT_MODE(mutex_check_init, current),
+	__COBALT_MODE(mutex_destroy, current),
+	__COBALT_MODE(mutex_lock, primary),
+	__COBALT_MODE(mutex_timedlock, primary),
+	__COBALT_MODE(mutex_trylock, primary),
+	__COBALT_MODE(mutex_unlock, nonrestartable),
+	__COBALT_MODE(cond_init, current),
+	__COBALT_MODE(cond_destroy, current),
+	__COBALT_MODE(cond_wait_prologue, nonrestartable),
+	__COBALT_MODE(cond_wait_epilogue, primary),
+	__COBALT_MODE(mq_open, lostage),
+	__COBALT_MODE(mq_close, lostage),
+	__COBALT_MODE(mq_unlink, lostage),
+	__COBALT_MODE(mq_getattr, current),
+	__COBALT_MODE(mq_setattr, current),
+	__COBALT_MODE(mq_timedsend, primary),
+	__COBALT_MODE(mq_timedreceive, primary),
+	__COBALT_MODE(mq_notify, primary),
+	__COBALT_MODE(sigwait, primary),
+	__COBALT_MODE(sigwaitinfo, nonrestartable),
+	__COBALT_MODE(sigtimedwait, nonrestartable),
+	__COBALT_MODE(sigpending, primary),
+	__COBALT_MODE(kill, conforming),
+	__COBALT_MODE(sigqueue, conforming),
+	__COBALT_MODE(timer_create, current),
+	__COBALT_MODE(timer_delete, current),
+	__COBALT_MODE(timer_settime, primary),
+	__COBALT_MODE(timer_gettime, current),
+	__COBALT_MODE(timer_getoverrun, current),
+	__COBALT_MODE(timerfd_create, lostage),
+	__COBALT_MODE(timerfd_gettime, current),
+	__COBALT_MODE(timerfd_settime, current),
+	__COBALT_MODE(select, nonrestartable),
+	__COBALT_MODE(sched_minprio, current),
+	__COBALT_MODE(sched_maxprio, current),
+	__COBALT_MODE(monitor_init, current),
+	__COBALT_MODE(monitor_destroy, primary),
+	__COBALT_MODE(monitor_enter, primary),
+	__COBALT_MODE(monitor_wait, nonrestartable),
+	__COBALT_MODE(monitor_sync, nonrestartable),
+	__COBALT_MODE(monitor_exit, primary),
+	__COBALT_MODE(event_init, current),
+	__COBALT_MODE(event_destroy, current),
+	__COBALT_MODE(event_wait, primary),
+	__COBALT_MODE(event_sync, current),
+	__COBALT_MODE(event_inquire, current),
+	__COBALT_MODE(sched_setconfig_np, current),
+	__COBALT_MODE(sched_getconfig_np, current),
+	__COBALT_MODE(open, lostage),
+	__COBALT_MODE(socket, lostage),
+	__COBALT_MODE(close, lostage),
+	__COBALT_MODE(mmap, lostage),
+	__COBALT_MODE(ioctl, probing),
+	__COBALT_MODE(read, probing),
+	__COBALT_MODE(write, probing),
+	__COBALT_MODE(recvmsg, probing),
+	__COBALT_MODE(sendmsg, probing),
+	__COBALT_MODE(migrate, current),
+	__COBALT_MODE(archcall, current),
+	__COBALT_MODE(bind, lostage),
+	__COBALT_MODE(extend, lostage),
+	__COBALT_MODE(info, lostage),
+	__COBALT_MODE(trace, current),
+	__COBALT_MODE(heap_getstat, lostage),
+	__COBALT_MODE(get_current, current),
+	__COBALT_MODE(mayday, oneway),
+	__COBALT_MODE(backtrace, current),
+	__COBALT_MODE(serialdbg, current),
+	__COBALT_MODE(sysconf, current),
 };

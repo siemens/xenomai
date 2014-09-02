@@ -47,7 +47,7 @@ void cobalt_check_features(struct cobalt_featinfo *finfo)
 	if (__xn_tscinfo.kinfo.counter != NULL)
 		return;
 
-	err = XENOMAI_SYSCALL2(sc_cobalt_arch,
+	err = XENOMAI_SYSCALL2(sc_cobalt_archcall,
 			       XENOMAI_SYSARCH_TSCINFO, &__xn_tscinfo.kinfo);
 	if (err) {
 		report_error("Your board/configuration does not "

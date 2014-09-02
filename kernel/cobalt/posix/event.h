@@ -21,6 +21,7 @@
 
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/event.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_kqueues;
 
@@ -35,24 +36,29 @@ struct cobalt_event {
 	xnhandle_t handle;
 };
 
-int cobalt_event_init(struct cobalt_event_shadow __user *u_evtsh,
-		      unsigned long value,
-		      int flags);
+COBALT_SYSCALL_DECL(event_init,
+		    int, (struct cobalt_event_shadow __user *u_evtsh,
+			  unsigned long value,
+			  int flags));
 
-int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
-		      unsigned long bits,
-		      unsigned long __user *u_bits_r,
-		      int mode,
-		      struct timespec __user *u_ts);
+COBALT_SYSCALL_DECL(event_wait,
+		    int, (struct cobalt_event_shadow __user *u_evtsh,
+			  unsigned long bits,
+			  unsigned long __user *u_bits_r,
+			  int mode,
+			  struct timespec __user *u_ts));
 
-int cobalt_event_sync(struct cobalt_event_shadow __user *u_evtsh);
+COBALT_SYSCALL_DECL(event_sync,
+		    int, (struct cobalt_event_shadow __user *u_evtsh));
 
-int cobalt_event_destroy(struct cobalt_event_shadow __user *u_evtsh);
+COBALT_SYSCALL_DECL(event_destroy,
+		    int, (struct cobalt_event_shadow __user *u_evtsh));
 
-int cobalt_event_inquire(struct cobalt_event_shadow __user *u_event,
-			 struct cobalt_event_info __user *u_info,
-			 pid_t __user *u_waitlist,
-			 size_t waitsz);
+COBALT_SYSCALL_DECL(event_inquire,
+		    int, (struct cobalt_event_shadow __user *u_event,
+			  struct cobalt_event_info __user *u_info,
+			  pid_t __user *u_waitlist,
+			  size_t waitsz));
 
 void cobalt_eventq_cleanup(struct cobalt_kqueues *q);
 

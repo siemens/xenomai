@@ -445,11 +445,12 @@ static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
  * the Cobalt ABI. Useland changes scheduling parameters only via the
  * extended cobalt_thread_setschedparam_ex syscall.
  */
-int cobalt_thread_setschedparam_ex(unsigned long pth,
-				   int policy,
-				   const struct sched_param_ex __user *u_param,
-				   unsigned long __user *u_window_offset,
-				   int __user *u_promoted)
+COBALT_SYSCALL(thread_setschedparam_ex, conforming,
+	       int, (unsigned long pth,
+		     int policy,
+		     const struct sched_param_ex __user *u_param,
+		     unsigned long __user *u_window_offset,
+		     int __user *u_promoted))
 {
 	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
@@ -489,9 +490,10 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
  * the Cobalt ABI. Useland retrieves scheduling parameters only via
  * the extended cobalt_thread_getschedparam_ex syscall.
  */
-int cobalt_thread_getschedparam_ex(unsigned long pth,
-				   int __user *u_policy,
-				   struct sched_param_ex __user *u_param)
+COBALT_SYSCALL(thread_getschedparam_ex, current,
+	       int, (unsigned long pth,
+		     int __user *u_policy,
+		     struct sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
@@ -516,10 +518,11 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 	return __xn_safe_copy_to_user(u_param, &param_ex, sizeof(param_ex));
 }
 
-int cobalt_thread_create(unsigned long pth, int policy,
-			 struct sched_param_ex __user *u_param,
-			 int xid,
-			 unsigned long __user *u_window_offset)
+COBALT_SYSCALL(thread_create, init,
+	       int, (unsigned long pth, int policy,
+		     struct sched_param_ex __user *u_param,
+		     int xid,
+		     unsigned long __user *u_window_offset))
 {
 	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
@@ -602,7 +605,8 @@ fail:
 	return ERR_PTR(ret);
 }
 
-int cobalt_thread_setmode_np(int clrmask, int setmask, int __user *u_mode_r)
+COBALT_SYSCALL(thread_setmode, primary,
+	       int, (int clrmask, int setmask, int __user *u_mode_r))
 {
 	int ret, old;
 
@@ -618,7 +622,8 @@ int cobalt_thread_setmode_np(int clrmask, int setmask, int __user *u_mode_r)
 	return 0;
 }
 
-int cobalt_thread_setname_np(unsigned long pth, const char __user *u_name)
+COBALT_SYSCALL(thread_setname, current,
+	       int, (unsigned long pth, const char __user *u_name))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -657,7 +662,8 @@ int cobalt_thread_setname_np(unsigned long pth, const char __user *u_name)
 	return 0;
 }
 
-int cobalt_thread_kill(unsigned long pth, int sig)
+COBALT_SYSCALL(thread_kill, conforming,
+	       int, (unsigned long pth, int sig))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -681,7 +687,7 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 	return ret;
 }
 
-int cobalt_thread_join(unsigned long pth)
+COBALT_SYSCALL(thread_join, primary, int, (unsigned long pth))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -703,7 +709,7 @@ int cobalt_thread_join(unsigned long pth)
 	return xnthread_join(&thread->threadbase, false);
 }
 
-pid_t cobalt_thread_pid(unsigned long pth)
+COBALT_SYSCALL(thread_getpid, current, pid_t, (unsigned long pth))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -727,8 +733,9 @@ pid_t cobalt_thread_pid(unsigned long pth)
 	return pid;
 }
 
-int cobalt_thread_stat(pid_t pid,
-		       struct cobalt_threadstat __user *u_stat)
+COBALT_SYSCALL(thread_getstat, current,
+	       int, (pid_t pid,
+		     struct cobalt_threadstat __user *u_stat))
 {
 	struct cobalt_threadstat stat;
 	struct cobalt_thread *p;

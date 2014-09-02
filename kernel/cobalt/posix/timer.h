@@ -22,7 +22,8 @@
 #include <linux/time.h>
 #include <linux/list.h>
 #include <cobalt/kernel/timer.h>
-#include "signal.h"
+#include <xenomai/posix/signal.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_thread;
 struct cobalt_kqueues;
@@ -36,21 +37,6 @@ struct cobalt_timer {
 	struct cobalt_sigpending sigp;
 	struct cobalt_extref extref;
 };
-
-int cobalt_timer_create(clockid_t clock,
-			const struct sigevent __user *u_sev,
-			timer_t __user *u_tm);
-
-int cobalt_timer_delete(timer_t tm);
-
-int cobalt_timer_settime(timer_t tm,
-			 int flags,
-			 const struct itimerspec __user *u_newval,
-			 struct itimerspec __user *u_oldval);
-
-int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val);
-
-int cobalt_timer_getoverrun(timer_t tm);
 
 int cobalt_timer_deliver(timer_t timerid);
 
@@ -71,5 +57,22 @@ int cobalt_xntimer_settime(struct xntimer *__restrict__ timer, int clock_flag,
 			const struct itimerspec *__restrict__ value);
 
 void cobalt_timer_handler(struct xntimer *xntimer);
+
+COBALT_SYSCALL_DECL(timer_create,
+		    int, (clockid_t clock,
+			  const struct sigevent __user *u_sev,
+			  timer_t __user *u_tm));
+
+COBALT_SYSCALL_DECL(timer_delete, int, (timer_t tm));
+
+COBALT_SYSCALL_DECL(timer_settime,
+		    int, (timer_t tm, int flags,
+			  const struct itimerspec __user *u_newval,
+			  struct itimerspec __user *u_oldval));
+
+COBALT_SYSCALL_DECL(timer_gettime,
+		    int, (timer_t tm, struct itimerspec __user *u_val));
+
+COBALT_SYSCALL_DECL(timer_getoverrun, int, (timer_t tm));
 
 #endif /* !_COBALT_POSIX_TIMER_H */

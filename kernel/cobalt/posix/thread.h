@@ -25,6 +25,7 @@
 #include <cobalt/kernel/thread.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/sched.h>
+#include <xenomai/posix/syscall.h> /* CAUTION: rtdm/cobalt.h reads this. */
 
 #define PTHREAD_PROCESS_PRIVATE 0
 #define PTHREAD_PROCESS_SHARED  1
@@ -127,57 +128,46 @@ struct cobalt_thread *cobalt_thread_find_local(pid_t pid);
 
 struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 
-int cobalt_thread_create(unsigned long pth, int policy,
-			 struct sched_param_ex __user *u_param,
-			 int xid,
-			 unsigned long __user *u_window_offset);
+COBALT_SYSCALL_DECL(thread_create,
+		    int, (unsigned long pth, int policy,
+			  struct sched_param_ex __user *u_param,
+			  int xid,
+			  unsigned long __user *u_window_offset));
 
 struct cobalt_thread *
 cobalt_thread_shadow(struct task_struct *p,
 		     struct cobalt_local_hkey *lhkey,
 		     unsigned long __user *u_window_offset);
 
-int cobalt_thread_setmode_np(int clrmask, int setmask, int __user *u_mode_r);
+COBALT_SYSCALL_DECL(thread_setmode,
+		    int, (int clrmask, int setmask, int __user *u_mode_r));
 
-int cobalt_thread_setname_np(unsigned long pth, const char __user *u_name);
+COBALT_SYSCALL_DECL(thread_setname,
+		    int, (unsigned long pth, const char __user *u_name));
 
-int cobalt_thread_kill(unsigned long pth, int sig);
+COBALT_SYSCALL_DECL(thread_kill,
+		    int, (unsigned long pth, int sig));
 
-int cobalt_thread_join(unsigned long pth);
+COBALT_SYSCALL_DECL(thread_join, int, (unsigned long pth));
 
-pid_t cobalt_thread_pid(unsigned long pth);
+COBALT_SYSCALL_DECL(thread_getpid,
+		    pid_t, (unsigned long pth));
 
-int cobalt_thread_stat(pid_t pid,
-		       struct cobalt_threadstat __user *u_stat);
+COBALT_SYSCALL_DECL(thread_getstat,
+		    int, (pid_t pid,
+			  struct cobalt_threadstat __user *u_stat));
 
-int cobalt_thread_setschedparam_ex(unsigned long pth,
-				   int policy,
-				   const struct sched_param_ex __user *u_param,
-				   unsigned long __user *u_window_offset,
-				   int __user *u_promoted);
+COBALT_SYSCALL_DECL(thread_setschedparam_ex,
+		    int, (unsigned long pth,
+			  int policy,
+			  const struct sched_param_ex __user *u_param,
+			  unsigned long __user *u_window_offset,
+			  int __user *u_promoted));
 
-int cobalt_thread_getschedparam_ex(unsigned long pth,
-				   int __user *u_policy,
-				   struct sched_param_ex __user *u_param);
-
-int cobalt_sched_yield(void);
-
-int cobalt_sched_weighted_prio(int policy,
-			       const struct sched_param_ex __user *u_param);
-
-int cobalt_sched_min_prio(int policy);
-
-int cobalt_sched_max_prio(int policy);
-
-int cobalt_sched_setconfig_np(int cpu,
-			      int policy,
-			      const union sched_config __user *u_config,
-			      size_t len);
-
-ssize_t cobalt_sched_getconfig_np(int cpu,
-				  int policy,
-				  union sched_config __user *u_config,
-				  size_t len);
+COBALT_SYSCALL_DECL(thread_getschedparam_ex,
+		    int, (unsigned long pth,
+			  int __user *u_policy,
+			  struct sched_param_ex __user *u_param));
 
 void cobalt_thread_map(struct xnthread *curr);
 

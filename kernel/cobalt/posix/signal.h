@@ -22,6 +22,7 @@
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/uapi/signal.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_thread;
 
@@ -71,24 +72,30 @@ void cobalt_signal_flush(struct cobalt_thread *thread);
 int cobalt_signal_wait(sigset_t *set, struct siginfo *si,
 		       xnticks_t timeout, xntmode_t tmode);
 
-int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig);
-
-int cobalt_sigtimedwait(const sigset_t __user *u_set,
-			struct siginfo __user *u_si,
-			const struct timespec __user *u_timeout);
-
-int cobalt_sigwaitinfo(const sigset_t __user *u_set,
-		       struct siginfo __user *u_si);
-
-int cobalt_sigpending(sigset_t __user *u_set);
-
 int __cobalt_kill(struct cobalt_thread *thread,
 		  int sig, int group);
 
-int cobalt_kill(pid_t pid, int sig);
+COBALT_SYSCALL_DECL(sigwait,
+		    int, (const sigset_t __user *u_set,
+			  int __user *u_sig));
 
-int cobalt_sigqueue(pid_t pid, int sig,
-		    const union sigval __user *u_value);
+COBALT_SYSCALL_DECL(sigtimedwait,
+		    int, (const sigset_t __user *u_set,
+			  struct siginfo __user *u_si,
+			  const struct timespec __user *u_timeout));
+
+COBALT_SYSCALL_DECL(sigwaitinfo,
+		    int, (const sigset_t __user *u_set,
+			  struct siginfo __user *u_si));
+
+COBALT_SYSCALL_DECL(sigpending,
+		    int, (sigset_t __user *u_set));
+
+COBALT_SYSCALL_DECL(kill, int, (pid_t pid, int sig));
+
+COBALT_SYSCALL_DECL(sigqueue,
+		    int, (pid_t pid, int sig,
+			  const union sigval __user *u_value));
 
 int cobalt_signal_pkg_init(void);
 

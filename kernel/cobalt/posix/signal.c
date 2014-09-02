@@ -355,7 +355,8 @@ fail:
 	return ret;
 }
 
-int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig)
+COBALT_SYSCALL(sigwait, primary,
+	       int, (const sigset_t __user *u_set, int __user *u_sig))
 {
 	sigset_t set;
 	int sig;
@@ -373,8 +374,10 @@ int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig)
 	return 0;
 }
 
-int cobalt_sigtimedwait(const sigset_t __user *u_set, struct siginfo __user *u_si,
-			const struct timespec __user *u_timeout)
+COBALT_SYSCALL(sigtimedwait, nonrestartable,
+	       int, (const sigset_t __user *u_set,
+		     struct siginfo __user *u_si,
+		     const struct timespec __user *u_timeout))
 {
 	struct timespec timeout;
 	xnticks_t ticks;
@@ -396,7 +399,9 @@ int cobalt_sigtimedwait(const sigset_t __user *u_set, struct siginfo __user *u_s
 	return signal_wait(&set, ticks, u_si);
 }
 
-int cobalt_sigwaitinfo(const sigset_t __user *u_set, struct siginfo __user *u_si)
+COBALT_SYSCALL(sigwaitinfo, nonrestartable,
+	       int, (const sigset_t __user *u_set,
+		     struct siginfo __user *u_si))
 {
 	sigset_t set;
 
@@ -406,7 +411,7 @@ int cobalt_sigwaitinfo(const sigset_t __user *u_set, struct siginfo __user *u_si
 	return signal_wait(&set, XN_INFINITE, u_si);
 }
 
-int cobalt_sigpending(sigset_t __user *u_set)
+COBALT_SYSCALL(sigpending, primary, int, (sigset_t __user *u_set))
 {
 	struct cobalt_thread *curr;
 
@@ -479,7 +484,7 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 	return ret;
 }
 
-int cobalt_kill(pid_t pid, int sig)
+COBALT_SYSCALL(kill, conforming, int, (pid_t pid, int sig))
 {
 	struct cobalt_thread *thread;
 	int ret;
@@ -498,8 +503,9 @@ int cobalt_kill(pid_t pid, int sig)
 	return ret;
 }
 
-int cobalt_sigqueue(pid_t pid, int sig,
-		    const union sigval __user *u_value)
+COBALT_SYSCALL(sigqueue, conforming,
+	       int, (pid_t pid, int sig,
+		     const union sigval __user *u_value))
 {
 	struct cobalt_sigpending *sigp;
 	struct cobalt_thread *thread;

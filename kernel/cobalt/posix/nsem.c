@@ -185,9 +185,10 @@ void __cobalt_sem_unlink(xnhandle_t handle)
 		xnregistry_unlink(xnregistry_key(handle));
 }
 
-int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
-		    const char __user *u_name,
-		    int oflags, mode_t mode, unsigned value)
+COBALT_SYSCALL(sem_open, current,
+	       int, (struct cobalt_sem_shadow __user *__user *u_addr,
+		     const char __user *u_name,
+		     int oflags, mode_t mode, unsigned value))
 {
 	struct cobalt_sem_shadow __user *usm;
 	char name[COBALT_MAXNAME + 1];
@@ -220,7 +221,8 @@ int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 	return 0;
 }
 
-int cobalt_sem_close(struct cobalt_sem_shadow __user *usm)
+COBALT_SYSCALL(sem_close, current,
+	       int, (struct cobalt_sem_shadow __user *usm))
 {
 	struct cobalt_process *cc;
 	xnhandle_t handle;
@@ -252,7 +254,8 @@ static inline int sem_unlink(const char *name)
 	return 0;
 }
 
-int cobalt_sem_unlink(const char __user *u_name)
+COBALT_SYSCALL(sem_unlink, current,
+	       int, (const char __user *u_name))
 {
 	char name[COBALT_MAXNAME + 1];
 	long len;

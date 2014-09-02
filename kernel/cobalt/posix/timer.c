@@ -445,9 +445,10 @@ int cobalt_timer_delete(timer_t timerid)
 	return timer_delete(timerid);
 }
 
-int cobalt_timer_create(clockid_t clock,
-			const struct sigevent __user *u_sev,
-			timer_t __user *u_tm)
+COBALT_SYSCALL(timer_create, current,
+	       int, (clockid_t clock,
+		     const struct sigevent __user *u_sev,
+		     timer_t __user *u_tm))
 {
 	struct sigevent sev, *evp = NULL;
 	timer_t timerid = 0;
@@ -471,9 +472,10 @@ int cobalt_timer_create(clockid_t clock,
 	return 0;
 }
 
-int cobalt_timer_settime(timer_t tm, int flags,
-			 const struct itimerspec __user *u_newval,
-			 struct itimerspec __user *u_oldval)
+COBALT_SYSCALL(timer_settime, primary,
+	       int, (timer_t tm, int flags,
+		     const struct itimerspec __user *u_newval,
+		     struct itimerspec __user *u_oldval))
 {
 	struct itimerspec newv, oldv, *oldvp;
 	int ret;
@@ -495,7 +497,8 @@ int cobalt_timer_settime(timer_t tm, int flags,
 	return 0;
 }
 
-int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val)
+COBALT_SYSCALL(timer_gettime, current,
+	       int, (timer_t tm, struct itimerspec __user *u_val))
 {
 	struct itimerspec val;
 	int ret;
@@ -507,7 +510,8 @@ int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val)
 	return __xn_safe_copy_to_user(u_val, &val, sizeof(val));
 }
 
-int cobalt_timer_getoverrun(timer_t timerid)
+COBALT_SYSCALL(timer_getoverrun, current,
+	       int, (timer_t timerid))
 {
 	struct cobalt_timer *timer;
 	struct cobalt_process *cc;

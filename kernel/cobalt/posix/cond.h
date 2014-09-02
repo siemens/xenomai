@@ -23,6 +23,7 @@
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_kqueues;
 struct cobalt_mutex;
@@ -40,21 +41,25 @@ struct cobalt_cond {
 	xnhandle_t handle;
 };
 
+COBALT_SYSCALL_DECL(cond_init,
+		    int, (struct cobalt_cond_shadow __user *u_cnd,
+			  const struct cobalt_condattr __user *u_attr));
+
+COBALT_SYSCALL_DECL(cond_destroy,
+		    int, (struct cobalt_cond_shadow __user *u_cnd));
+
+COBALT_SYSCALL_DECL(cond_wait_prologue,
+		    int, (struct cobalt_cond_shadow __user *u_cnd,
+			  struct cobalt_mutex_shadow __user *u_mx,
+			  int *u_err,
+			  unsigned int timed,
+			  struct timespec __user *u_ts));
+
+COBALT_SYSCALL_DECL(cond_wait_epilogue,
+		    int, (struct cobalt_cond_shadow __user *u_cnd,
+			  struct cobalt_mutex_shadow __user *u_mx));
+
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
-
-int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
-		     const struct cobalt_condattr __user *u_attr);
-
-int cobalt_cond_destroy(struct cobalt_cond_shadow __user *u_cnd);
-
-int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
-			      struct cobalt_mutex_shadow __user *u_mx,
-			      int *u_err,
-			      unsigned int timed,
-			      struct timespec __user *u_ts);
-
-int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
-			      struct cobalt_mutex_shadow __user *u_mx);
 
 void cobalt_condq_cleanup(struct cobalt_kqueues *q);
 

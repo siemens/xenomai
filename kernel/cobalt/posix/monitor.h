@@ -21,6 +21,7 @@
 
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/monitor.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_kqueues;
 
@@ -37,21 +38,27 @@ struct cobalt_monitor {
 	xnhandle_t handle;
 };
 
-int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
-			clockid_t clk_id,
-			int flags);
+COBALT_SYSCALL_DECL(monitor_init,
+		    int, (struct cobalt_monitor_shadow __user *u_monsh,
+			  clockid_t clk_id,
+			  int flags));
 
-int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh);
+COBALT_SYSCALL_DECL(monitor_enter,
+		    int, (struct cobalt_monitor_shadow __user *u_monsh));
 
-int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_monsh);
+COBALT_SYSCALL_DECL(monitor_sync,
+		    int, (struct cobalt_monitor_shadow __user *u_monsh));
 
-int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh);
+COBALT_SYSCALL_DECL(monitor_exit,
+		    int, (struct cobalt_monitor_shadow __user *u_monsh));
 
-int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
-			int event, const struct timespec __user *u_ts,
-			int __user *u_ret);
+COBALT_SYSCALL_DECL(monitor_wait,
+		    int, (struct cobalt_monitor_shadow __user *u_monsh,
+			  int event, const struct timespec __user *u_ts,
+			  int __user *u_ret));
 
-int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh);
+COBALT_SYSCALL_DECL(monitor_destroy,
+		    int, (struct cobalt_monitor_shadow __user *u_monsh));
 
 void cobalt_monitorq_cleanup(struct cobalt_kqueues *q);
 

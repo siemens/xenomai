@@ -109,11 +109,11 @@
 #define sc_cobalt_mmap            		86
 #define sc_cobalt_select                	87
 #define sc_cobalt_migrate			88
-#define sc_cobalt_arch				89
+#define sc_cobalt_archcall			89
 #define sc_cobalt_info				90
 #define sc_cobalt_trace				91
 #define sc_cobalt_heap_getstat			92
-#define sc_cobalt_current			93
+#define sc_cobalt_get_current			93
 #define sc_cobalt_mayday			94
 #define sc_cobalt_backtrace			95
 #define sc_cobalt_serialdbg			96

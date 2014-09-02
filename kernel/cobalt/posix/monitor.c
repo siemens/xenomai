@@ -48,8 +48,9 @@
  * Implementation-wise, the monitor logic is shared with the Cobalt
  * thread object.
  */
-int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
-			clockid_t clk_id, int flags)
+COBALT_SYSCALL(monitor_init, current,
+	       int, (struct cobalt_monitor_shadow __user *u_mon,
+		     clockid_t clk_id, int flags))
 {
 	struct cobalt_monitor_shadow shadow;
 	struct cobalt_monitor_data *datp;
@@ -108,7 +109,7 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
 }
 
 /* nklock held, irqs off */
-static int cobalt_monitor_enter_inner(xnhandle_t handle, struct xnthread *curr)
+static int monitor_enter(xnhandle_t handle, struct xnthread *curr)
 {
 	struct cobalt_monitor *mon;
 	int ret = 0, info;
@@ -145,7 +146,8 @@ static int cobalt_monitor_enter_inner(xnhandle_t handle, struct xnthread *curr)
 	return 0;
 }
 
-int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
+COBALT_SYSCALL(monitor_enter, primary,
+	       int, (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct xnthread *curr = xnthread_current();
 	xnhandle_t handle;
@@ -155,14 +157,14 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	ret = cobalt_monitor_enter_inner(handle, curr);
+	ret = monitor_enter(handle, curr);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
 
 /* nklock held, irqs off */
-static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
+static void monitor_wakeup(struct cobalt_monitor *mon)
 {
 	struct cobalt_monitor_data *datp = mon->data;
 	struct cobalt_thread *thread, *tmp;
@@ -221,9 +223,10 @@ drain:
 		datp->flags &= ~COBALT_MONITOR_PENDED;
 }
 
-int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
-			int event, const struct timespec __user *u_ts,
-			int __user *u_ret)
+COBALT_SYSCALL(monitor_wait, nonrestartable,
+	       int, (struct cobalt_monitor_shadow __user *u_mon,
+		     int event, const struct timespec __user *u_ts,
+		     int __user *u_ret))
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
 	struct cobalt_monitor_data *datp;
@@ -259,7 +262,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	 */
 	datp = mon->data;
 	if (datp->flags & COBALT_MONITOR_SIGNALED)
-		cobalt_monitor_wakeup(mon);
+		monitor_wakeup(mon);
 
 	/* Release the gate prior to waiting, all atomically. */
 	xnsynch_release(&mon->gate, &curr->threadbase);
@@ -291,7 +294,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 			opret = -ETIMEDOUT;
 	}
 
-	ret = cobalt_monitor_enter_inner(handle, &curr->threadbase);
+	ret = monitor_enter(handle, &curr->threadbase);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -300,7 +303,8 @@ out:
 	return ret;
 }
 
-int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
+COBALT_SYSCALL(monitor_sync, nonrestartable,
+	       int, (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct cobalt_monitor *mon;
 	struct xnthread *curr;
@@ -317,10 +321,10 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
 	else if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
-		cobalt_monitor_wakeup(mon);
+		monitor_wakeup(mon);
 		xnsynch_release(&mon->gate, curr);
 		xnsched_run();
-		ret = cobalt_monitor_enter_inner(handle, curr);
+		ret = monitor_enter(handle, curr);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -328,7 +332,8 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 	return ret;
 }
 
-int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
+COBALT_SYSCALL(monitor_exit, primary,
+	       int, (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct cobalt_monitor *mon;
 	struct xnthread *curr;
@@ -346,7 +351,7 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 		ret = -EINVAL;
 	else {
 		if (mon->data->flags & COBALT_MONITOR_SIGNALED)
-			cobalt_monitor_wakeup(mon);
+			monitor_wakeup(mon);
 
 		xnsynch_release(&mon->gate, curr);
 		xnsched_run();
@@ -357,8 +362,8 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 	return ret;
 }
 
-static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
-					 struct cobalt_kqueues *q)
+static void monitor_destroy(struct cobalt_monitor *mon,
+			    struct cobalt_kqueues *q)
 {
 	struct xnheap *heap;
 	int pshared;
@@ -377,7 +382,8 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 	xnfree(mon);
 }
 
-int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
+COBALT_SYSCALL(monitor_destroy, primary,
+	       int, (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct cobalt_monitor_data *datp;
 	struct cobalt_monitor *mon;
@@ -417,7 +423,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	cobalt_monitor_destroy_inner(mon, mon->owningq);
+	monitor_destroy(mon, mon->owningq);
 
 	xnsched_run();
 
@@ -441,7 +447,7 @@ void cobalt_monitorq_cleanup(struct cobalt_kqueues *q)
 	list_for_each_entry_safe(mon, tmp, &q->monitorq, link) {
 		mon->magic = 0;
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_monitor_destroy_inner(mon, q);
+		monitor_destroy(mon, q);
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:

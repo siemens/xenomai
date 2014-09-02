@@ -20,6 +20,7 @@
 
 #include <linux/list.h>
 #include <cobalt/kernel/sched.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_kqueues;
 
@@ -37,24 +38,26 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
 			  int u_policy, const struct sched_param_ex *param_ex,
 			  xnticks_t *tslice_r);
 
-int cobalt_sched_yield(void);
+COBALT_SYSCALL_DECL(sched_yield, int, (void));
 
-int cobalt_sched_weighted_prio(int policy,
-			       const struct sched_param_ex __user *u_param);
+COBALT_SYSCALL_DECL(sched_weightprio,
+		    int, (int policy,
+			  const struct sched_param_ex __user *u_param));
 
-int cobalt_sched_min_prio(int policy);
+COBALT_SYSCALL_DECL(sched_minprio, int, (int policy));
 
-int cobalt_sched_max_prio(int policy);
+COBALT_SYSCALL_DECL(sched_maxprio, int, (int policy));
 
-int cobalt_sched_setconfig_np(int cpu,
-			      int policy,
-			      const union sched_config __user *u_config,
-			      size_t len);
+COBALT_SYSCALL_DECL(sched_setconfig_np,
+		    int, (int cpu,
+			  int policy,
+			  const union sched_config __user *u_config,
+			  size_t len));
 
-ssize_t cobalt_sched_getconfig_np(int cpu,
-				  int policy,
-				  union sched_config __user *u_config,
-				  size_t len);
+COBALT_SYSCALL_DECL(sched_getconfig_np,
+		    ssize_t, (int cpu, int policy,
+			      union sched_config __user *u_config,
+			      size_t len));
 
 void cobalt_sched_cleanup(struct cobalt_kqueues *q);
 

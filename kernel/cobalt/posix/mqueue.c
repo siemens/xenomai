@@ -419,7 +419,7 @@ static inline int mq_unlink(const char *name)
 }
 
 static inline struct cobalt_msg *
-cobalt_mq_trysend(struct cobalt_mqd *mqd, size_t len)
+mq_trysend(struct cobalt_mqd *mqd, size_t len)
 {
 	struct cobalt_msg *msg;
 	struct cobalt_mq *mq;
@@ -445,7 +445,7 @@ cobalt_mq_trysend(struct cobalt_mqd *mqd, size_t len)
 }
 
 static inline struct cobalt_msg *
-cobalt_mq_tryrcv(struct cobalt_mqd *mqd, size_t len)
+mq_tryrcv(struct cobalt_mqd *mqd, size_t len)
 {
 	struct cobalt_msg *msg;
 	unsigned int flags;
@@ -473,8 +473,8 @@ cobalt_mq_tryrcv(struct cobalt_mqd *mqd, size_t len)
 }
 
 static struct cobalt_msg *
-cobalt_mq_timedsend_inner(struct cobalt_mqd *mqd,
-			  size_t len, const struct timespec *abs_timeoutp)
+mq_timedsend_inner(struct cobalt_mqd *mqd,
+		   size_t len, const struct timespec *abs_timeoutp)
 {
 	struct cobalt_mqwait_context mwc;
 	struct cobalt_msg *msg;
@@ -485,7 +485,7 @@ cobalt_mq_timedsend_inner(struct cobalt_mqd *mqd,
 	int ret;
 
 	xnlock_get_irqsave(&nklock, s);
-	msg = cobalt_mq_trysend(mqd, len);
+	msg = mq_trysend(mqd, len);
 	if (msg != ERR_PTR(-EAGAIN))
 		goto out;
 
@@ -545,7 +545,7 @@ static void mq_release_msg(struct cobalt_mq *mq, struct cobalt_msg *msg)
 }
 
 static int
-cobalt_mq_finish_send(struct cobalt_mqd *mqd, struct cobalt_msg *msg)
+mq_finish_send(struct cobalt_mqd *mqd, struct cobalt_msg *msg)
 {
 	struct cobalt_mqwait_context *mwc;
 	struct xnthread_wait_context *wc;
@@ -593,8 +593,8 @@ cobalt_mq_finish_send(struct cobalt_mqd *mqd, struct cobalt_msg *msg)
 }
 
 static struct cobalt_msg *
-cobalt_mq_timedrcv_inner(struct cobalt_mqd *mqd,
-			 size_t len, const struct timespec *abs_timeoutp)
+mq_timedrcv_inner(struct cobalt_mqd *mqd,
+		  size_t len, const struct timespec *abs_timeoutp)
 {
 	struct cobalt_mqwait_context mwc;
 	struct cobalt_msg *msg;
@@ -605,7 +605,7 @@ cobalt_mq_timedrcv_inner(struct cobalt_mqd *mqd,
 	int ret;
 
 	xnlock_get_irqsave(&nklock, s);
-	msg = cobalt_mq_tryrcv(mqd, len);
+	msg = mq_tryrcv(mqd, len);
 	if (msg != ERR_PTR(-EAGAIN))
 		goto out;
 
@@ -641,7 +641,7 @@ out:
 }
 
 static int
-cobalt_mq_finish_rcv(struct cobalt_mqd *mqd, struct cobalt_msg *msg)
+mq_finish_rcv(struct cobalt_mqd *mqd, struct cobalt_msg *msg)
 {
 	spl_t s;
 
@@ -762,7 +762,8 @@ static inline void cobalt_mqd_put(struct cobalt_mqd *mqd)
 	rtdm_fd_put(&mqd->fd);
 }
 
-int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
+COBALT_SYSCALL(mq_notify, primary,
+	       int, (mqd_t fd, const struct sigevent *__user evp))
 {
 	struct cobalt_mqd *mqd;
 	struct sigevent sev;
@@ -789,8 +790,9 @@ int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
 	return err;
 }
 
-int cobalt_mq_open(const char __user *u_name, int oflags,
-		   mode_t mode, struct mq_attr __user *u_attr, mqd_t uqd)
+COBALT_SYSCALL(mq_open, lostage,
+	       int, (const char __user *u_name, int oflags,
+		     mode_t mode, struct mq_attr __user *u_attr, mqd_t uqd))
 {
 	struct mq_attr locattr, *attr;
 	char name[COBALT_MAXNAME];
@@ -819,14 +821,15 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 	return mq_open(uqd, name, oflags, mode, attr);
 }
 
-int cobalt_mq_close(mqd_t uqd)
+COBALT_SYSCALL(mq_close, lostage, int, (mqd_t uqd))
 {
 	trace_cobalt_mq_close(uqd);
 
 	return mq_close(uqd);
 }
 
-int cobalt_mq_unlink(const char __user *u_name)
+COBALT_SYSCALL(mq_unlink, lostage,
+	       int, (const char __user *u_name))
 {
 	char name[COBALT_MAXNAME];
 	unsigned len;
@@ -842,7 +845,8 @@ int cobalt_mq_unlink(const char __user *u_name)
 	return mq_unlink(name);
 }
 
-int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
+COBALT_SYSCALL(mq_getattr, current,
+	       int, (mqd_t uqd, struct mq_attr __user *u_attr))
 {
 	struct cobalt_mqd *mqd;
 	struct mq_attr attr;
@@ -863,8 +867,9 @@ int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
 }
 
-int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
-		      struct mq_attr __user *u_oattr)
+COBALT_SYSCALL(mq_setattr, current,
+	       int, (mqd_t uqd, const struct mq_attr __user *u_attr,
+		     struct mq_attr __user *u_oattr))
 {
 	struct mq_attr attr, oattr;
 	struct cobalt_mqd *mqd;
@@ -893,8 +898,9 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 	return 0;
 }
 
-int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
-			unsigned int prio, const struct timespec __user *u_ts)
+COBALT_SYSCALL(mq_timedsend, primary,
+	       int, (mqd_t uqd, const void __user *u_buf, size_t len,
+		     unsigned int prio, const struct timespec __user *u_ts))
 {
 	struct timespec timeout, *timeoutp;
 	struct cobalt_msg *msg;
@@ -927,31 +933,32 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 		trace_cobalt_mq_send(uqd, u_buf, len, prio);
 	}
 
-	msg = cobalt_mq_timedsend_inner(mqd, len, timeoutp);
+	msg = mq_timedsend_inner(mqd, len, timeoutp);
 	if (IS_ERR(msg)) {
 		err = PTR_ERR(msg);
 		goto out;
 	}
 
 	if(__xn_copy_from_user(msg->data, u_buf, len)) {
-		cobalt_mq_finish_rcv(mqd, msg);
+		mq_finish_rcv(mqd, msg);
 		err = -EFAULT;
 		goto out;
 	}
 	msg->len = len;
 	msg->prio = prio;
 
-	err = cobalt_mq_finish_send(mqd, msg);
+	err = mq_finish_send(mqd, msg);
   out:
 	cobalt_mqd_put(mqd);
 
 	return err;
 }
 
-int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
-			   ssize_t __user *u_len,
-			   unsigned int __user *u_prio,
-			   const struct timespec __user *u_ts)
+COBALT_SYSCALL(mq_timedreceive, primary,
+	       int, (mqd_t uqd, void __user *u_buf,
+		     ssize_t __user *u_len,
+		     unsigned int __user *u_prio,
+		     const struct timespec __user *u_ts))
 {
 	struct timespec timeout, *timeoutp;
 	struct cobalt_mqd *mqd;
@@ -987,21 +994,21 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 		trace_cobalt_mq_receive(uqd, u_buf, len);
 	}
 
-	msg = cobalt_mq_timedrcv_inner(mqd, len, timeoutp);
+	msg = mq_timedrcv_inner(mqd, len, timeoutp);
 	if (IS_ERR(msg)) {
 		err = PTR_ERR(msg);
 		goto fail;
 	}
 
 	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
-		cobalt_mq_finish_rcv(mqd, msg);
+		mq_finish_rcv(mqd, msg);
 		err = -EFAULT;
 		goto fail;
 	}
 
 	len = msg->len;
 	prio = msg->prio;
-	err = cobalt_mq_finish_rcv(mqd, msg);
+	err = mq_finish_rcv(mqd, msg);
 	if (err)
 		goto fail;
 

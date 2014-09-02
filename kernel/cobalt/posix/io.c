@@ -21,10 +21,12 @@
 #include <cobalt/kernel/ppd.h>
 #include <xenomai/rtdm/internal.h>
 #include "process.h"
+#include "internal.h"
 #include "clock.h"
 #include "io.h"
 
-int cobalt_open(int fd, const char __user *u_path, int oflag)
+COBALT_SYSCALL(open, lostage,
+	       int, (int fd, const char __user *u_path, int oflag))
 {
 	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
 
@@ -37,29 +39,39 @@ int cobalt_open(int fd, const char __user *u_path, int oflag)
 	return __rt_dev_open(cobalt_ppd_get(0), fd, krnl_path, oflag);
 }
 
-int cobalt_socket(int fd, int protocol_family,
-		  int socket_type, int protocol)
+COBALT_SYSCALL(socket, lostage,
+	       int, (int fd, int protocol_family,
+		     int socket_type, int protocol))
 {
 	return __rt_dev_socket(cobalt_ppd_get(0), fd,
 			protocol_family, socket_type, protocol);
 }
 
-int cobalt_ioctl(int fd, unsigned int request, void __user *arg)
+COBALT_SYSCALL(close, lostage, int, (int fd))
+{
+	return rtdm_fd_close(cobalt_ppd_get(0), fd, XNFD_MAGIC_ANY);
+}
+
+COBALT_SYSCALL(ioctl, probing,
+	       int, (int fd, unsigned int request, void __user *arg))
 {
 	return rtdm_fd_ioctl(cobalt_ppd_get(0), fd, request, arg);
 }
 
-ssize_t cobalt_read(int fd, void __user *buf, size_t size)
+COBALT_SYSCALL(read, probing,
+	       ssize_t, (int fd, void __user *buf, size_t size))
 {
 	return rtdm_fd_read(cobalt_ppd_get(0), fd, buf, size);
 }
 
-ssize_t cobalt_write(int fd, const void __user *buf, size_t size)
+COBALT_SYSCALL(write, probing,
+	       ssize_t, (int fd, const void __user *buf, size_t size))
 {
 	return rtdm_fd_write(cobalt_ppd_get(0), fd, buf, size);
 }
 
-ssize_t cobalt_recvmsg(int fd, struct msghdr __user *umsg, int flags)
+COBALT_SYSCALL(recvmsg, probing,
+	       ssize_t, (int fd, struct msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
 	int ret;
@@ -77,7 +89,8 @@ ssize_t cobalt_recvmsg(int fd, struct msghdr __user *umsg, int flags)
 	return ret;
 }
 
-ssize_t cobalt_sendmsg(int fd, struct msghdr __user *umsg, int flags)
+COBALT_SYSCALL(sendmsg, probing,
+	       ssize_t, (int fd, struct msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
 
@@ -87,13 +100,9 @@ ssize_t cobalt_sendmsg(int fd, struct msghdr __user *umsg, int flags)
 	return rtdm_fd_sendmsg(cobalt_ppd_get(0), fd, &m, flags);
 }
 
-int cobalt_close(int fd)
-{
-	return rtdm_fd_close(cobalt_ppd_get(0), fd, XNFD_MAGIC_ANY);
-}
-
-int cobalt_mmap(int fd, struct _rtdm_mmap_request __user *u_rma,
-                  void __user **u_addrp)
+COBALT_SYSCALL(mmap, lostage,
+	       int, (int fd, struct _rtdm_mmap_request __user *u_rma,
+		     void __user **u_addrp))
 {
 	struct _rtdm_mmap_request rma;
 	void *u_addr;
@@ -159,11 +168,12 @@ static int select_bind_all(struct xnselector *selector,
 }
 
 /* int select(int, fd_set *, fd_set *, fd_set *, struct timeval *) */
-int cobalt_select(int nfds,
-		  fd_set __user *u_rfds,
-		  fd_set __user *u_wfds,
-		  fd_set __user *u_xfds,
-		  struct timeval __user *u_tv)
+COBALT_SYSCALL(select, nonrestartable,
+	       int, (int nfds,
+		     fd_set __user *u_rfds,
+		     fd_set __user *u_wfds,
+		     fd_set __user *u_xfds,
+		     struct timeval __user *u_tv))
 {
 	fd_set __user *ufd_sets[XNSELECT_MAX_TYPES] = {
 		[XNSELECT_READ] = u_rfds,

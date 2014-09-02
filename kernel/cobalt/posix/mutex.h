@@ -21,6 +21,7 @@
 
 #include "thread.h"
 #include <cobalt/uapi/mutex.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_mutex {
 	unsigned int magic;
@@ -33,21 +34,28 @@ struct cobalt_mutex {
 	xnhandle_t handle;
 };
 
-int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx);
+COBALT_SYSCALL_DECL(mutex_check_init,
+		    int, (struct cobalt_mutex_shadow __user *u_mx));
 
-int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
-		      const struct cobalt_mutexattr __user *u_attr);
+COBALT_SYSCALL_DECL(mutex_init,
+		    int, (struct cobalt_mutex_shadow __user *u_mx,
+			  const struct cobalt_mutexattr __user *u_attr));
 
-int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx);
+COBALT_SYSCALL_DECL(mutex_destroy,
+		    int, (struct cobalt_mutex_shadow __user *u_mx));
 
-int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx);
+COBALT_SYSCALL_DECL(mutex_trylock,
+		    int, (struct cobalt_mutex_shadow __user *u_mx));
 
-int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx);
+COBALT_SYSCALL_DECL(mutex_lock,
+		    int, (struct cobalt_mutex_shadow __user *u_mx));
 
-int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
-			   const struct timespec __user *u_ts);
+COBALT_SYSCALL_DECL(mutex_timedlock,
+		    int, (struct cobalt_mutex_shadow __user *u_mx,
+			  const struct timespec __user *u_ts));
 
-int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx);
+COBALT_SYSCALL_DECL(mutex_unlock,
+		    int, (struct cobalt_mutex_shadow __user *u_mx));
 
 int cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 				   struct cobalt_mutex *mutex,

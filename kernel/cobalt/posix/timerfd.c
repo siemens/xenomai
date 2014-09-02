@@ -161,7 +161,8 @@ static void timerfd_handler(struct xntimer *xntimer)
 		xnthread_unblock(tfd->target);
 }
 
-int cobalt_timerfd_create(int ufd, int clockid, int flags)
+COBALT_SYSCALL(timerfd_create, lostage,
+	       int, (int ufd, int clockid, int flags))
 {
 	struct cobalt_tfd *tfd;
 	struct xnthread *curr;
@@ -214,9 +215,10 @@ static inline void tfd_put(struct cobalt_tfd *tfd)
 	rtdm_fd_put(&tfd->fd);
 }
 
-int cobalt_timerfd_settime(int fd, int flags,
-			const struct itimerspec __user *new_value,
-			struct itimerspec __user *old_value)
+COBALT_SYSCALL(timerfd_settime, current,
+	       int, (int fd, int flags,
+		     const struct itimerspec __user *new_value,
+		     struct itimerspec __user *old_value))
 {
 	struct itimerspec ovalue, value;
 	struct cobalt_tfd *tfd;
@@ -276,7 +278,8 @@ int cobalt_timerfd_settime(int fd, int flags,
 	return err;
 }
 
-int cobalt_timerfd_gettime(int fd, struct itimerspec __user *curr_value)
+COBALT_SYSCALL(timerfd_gettime, current,
+	       int, (int fd, struct itimerspec __user *curr_value))
 {
 	struct itimerspec value;
 	struct cobalt_tfd *tfd;

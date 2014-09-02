@@ -22,6 +22,7 @@
 #include <linux/fcntl.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/registry.h>
+#include <xenomai/posix/syscall.h>
 
 struct cobalt_process;
 
@@ -68,37 +69,48 @@ struct cobalt_sem *
 __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sem,
 		  int flags, unsigned value);
 
-int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem,
-		    int flags, unsigned value);
+COBALT_SYSCALL_DECL(sem_init,
+		    int, (struct cobalt_sem_shadow __user *u_sem,
+			  int flags, unsigned value));
 
-int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem);
+COBALT_SYSCALL_DECL(sem_post,
+		    int, (struct cobalt_sem_shadow __user *u_sem));
 
-int cobalt_sem_wait(struct cobalt_sem_shadow __user *u_sem);
+COBALT_SYSCALL_DECL(sem_wait,
+		    int, (struct cobalt_sem_shadow __user *u_sem));
 
-int cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
-			 struct timespec __user *u_ts);
+COBALT_SYSCALL_DECL(sem_timedwait,
+		    int, (struct cobalt_sem_shadow __user *u_sem,
+			  struct timespec __user *u_ts));
 
-int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem);
+COBALT_SYSCALL_DECL(sem_trywait,
+		    int, (struct cobalt_sem_shadow __user *u_sem));
 
-int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem,
-			int __user *u_sval);
+COBALT_SYSCALL_DECL(sem_getvalue, int,
+		    (struct cobalt_sem_shadow __user *u_sem,
+		     int __user *u_sval));
 
-int cobalt_sem_destroy(struct cobalt_sem_shadow __user *u_sem);
+COBALT_SYSCALL_DECL(sem_destroy,
+		    int, (struct cobalt_sem_shadow __user *u_sem));
 
-int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
-		    const char __user *u_name,
-		    int oflags, mode_t mode, unsigned value);
+COBALT_SYSCALL_DECL(sem_open,
+		    int, (struct cobalt_sem_shadow __user *__user *u_addr,
+			  const char __user *u_name,
+			  int oflags, mode_t mode, unsigned value));
 
-int cobalt_sem_close(struct cobalt_sem_shadow __user *usm);
+COBALT_SYSCALL_DECL(sem_close,
+		    int, (struct cobalt_sem_shadow __user *usm));
 
-int cobalt_sem_unlink(const char __user *u_name);
+COBALT_SYSCALL_DECL(sem_unlink, int, (const char __user *u_name));
 
-int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem);
+COBALT_SYSCALL_DECL(sem_broadcast_np,
+		    int, (struct cobalt_sem_shadow __user *u_sem));
 
-int cobalt_sem_inquire(struct cobalt_sem_shadow __user *u_sem,
-		       struct cobalt_sem_info __user *u_info,
-		       pid_t __user *u_waitlist,
-		       size_t waitsz);
+COBALT_SYSCALL_DECL(sem_inquire,
+		    int, (struct cobalt_sem_shadow __user *u_sem,
+			  struct cobalt_sem_info __user *u_info,
+			  pid_t __user *u_waitlist,
+			  size_t waitsz));
 
 void cobalt_semq_cleanup(struct cobalt_kqueues *q);
 

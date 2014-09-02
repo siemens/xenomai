@@ -46,9 +46,9 @@ struct event_wait_context {
 	int mode;
 };
 
-int cobalt_event_init(struct cobalt_event_shadow __user *u_event,
-		      unsigned long value,
-		      int flags)
+COBALT_SYSCALL(event_init, current,
+	       int, (struct cobalt_event_shadow __user *u_event,
+		     unsigned long value, int flags))
 {
 	struct cobalt_event_shadow shadow;
 	struct cobalt_event_data *datp;
@@ -104,11 +104,11 @@ int cobalt_event_init(struct cobalt_event_shadow __user *u_event,
 	return __xn_safe_copy_to_user(u_event, &shadow, sizeof(*u_event));
 }
 
-int cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
-		      unsigned long bits,
-		      unsigned long __user *u_bits_r,
-		      int mode,
-		      struct timespec __user *u_ts)
+COBALT_SYSCALL(event_wait, primary,
+	       int, (struct cobalt_event_shadow __user *u_event,
+		     unsigned long bits,
+		     unsigned long __user *u_bits_r,
+		     int mode, struct timespec __user *u_ts))
 {
 	unsigned long rbits = 0, testval;
 	xnticks_t timeout = XN_INFINITE;
@@ -193,7 +193,8 @@ out:
 	return ret;
 }
 
-int cobalt_event_sync(struct cobalt_event_shadow __user *u_event)
+COBALT_SYSCALL(event_sync, current,
+	       int, (struct cobalt_event_shadow __user *u_event))
 {
 	unsigned long bits, waitval, testval;
 	struct xnthread_wait_context *wc;
@@ -242,9 +243,9 @@ out:
 	return ret;
 }
 
-static void cobalt_event_destroy_inner(struct cobalt_event *event,
-				       struct cobalt_kqueues *q,
-				       spl_t s)
+static void event_destroy(struct cobalt_event *event,
+			  struct cobalt_kqueues *q,
+			  spl_t s)
 {
 	struct xnheap *heap;
 	int pshared;
@@ -262,7 +263,8 @@ static void cobalt_event_destroy_inner(struct cobalt_event *event,
 	xnlock_get_irqsave(&nklock, s);
 }
 
-int cobalt_event_destroy(struct cobalt_event_shadow __user *u_event)
+COBALT_SYSCALL(event_destroy, current,
+	       int, (struct cobalt_event_shadow __user *u_event))
 {
 	struct cobalt_event *event;
 	xnhandle_t handle;
@@ -281,7 +283,7 @@ int cobalt_event_destroy(struct cobalt_event_shadow __user *u_event)
 		goto out;
 	}
 
-	cobalt_event_destroy_inner(event, event->owningq, s);
+	event_destroy(event, event->owningq, s);
 
 	xnsched_run();
 out:
@@ -290,10 +292,11 @@ out:
 	return ret;
 }
 
-int cobalt_event_inquire(struct cobalt_event_shadow __user *u_event,
-			 struct cobalt_event_info __user *u_info,
-			 pid_t __user *u_waitlist,
-			 size_t waitsz)
+COBALT_SYSCALL(event_inquire, current,
+	       int, (struct cobalt_event_shadow __user *u_event,
+		     struct cobalt_event_info __user *u_info,
+		     pid_t __user *u_waitlist,
+		     size_t waitsz))
 {
 	int nrpend = 0, nrwait = 0, nrpids, ret = 0;
 	unsigned long pstamp, nstamp = 0;
@@ -384,7 +387,7 @@ void cobalt_eventq_cleanup(struct cobalt_kqueues *q)
 
 	if (!list_empty(&q->eventq)) {
 		list_for_each_entry_safe(event, tmp, &q->eventq, link)
-			cobalt_event_destroy_inner(event, q, s);
+			event_destroy(event, q, s);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

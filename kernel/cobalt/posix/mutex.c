@@ -214,7 +214,8 @@ int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 	return ret;
 }
 
-int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx)
+COBALT_SYSCALL(mutex_check_init, current,
+	       int, (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct cobalt_mutex *mutex;
 	xnhandle_t handle;
@@ -235,8 +236,9 @@ int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx)
 	return err;
 }
 
-int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
-		      const struct cobalt_mutexattr __user *u_attr)
+COBALT_SYSCALL(mutex_init, current,
+	       int, (struct cobalt_mutex_shadow __user *u_mx,
+		     const struct cobalt_mutexattr __user *u_attr))
 {
 	struct cobalt_mutexattr attr;
 	struct cobalt_mutex *mutex;
@@ -271,7 +273,8 @@ int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
 	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
 
-int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx)
+COBALT_SYSCALL(mutex_destroy, current,
+	       int, (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct cobalt_mutex *mutex;
 	struct cobalt_mutex_shadow mx;
@@ -312,7 +315,8 @@ int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx)
 	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
 
-int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
+COBALT_SYSCALL(mutex_trylock, primary,
+	       int, (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct xnthread *curr = xnthread_current();
 	struct cobalt_mutex *mutex;
@@ -353,7 +357,8 @@ int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 	return err;
 }
 
-int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx)
+COBALT_SYSCALL(mutex_lock, primary,
+	       int, (struct cobalt_mutex_shadow __user *u_mx))
 {
 	xnhandle_t handle;
 	spl_t s;
@@ -369,8 +374,9 @@ int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx)
 	return err;
 }
 
-int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
-			   const struct timespec __user *u_ts)
+COBALT_SYSCALL(mutex_timedlock, primary,
+	       int, (struct cobalt_mutex_shadow __user *u_mx,
+		     const struct timespec __user *u_ts))
 {
 	xnhandle_t handle;
 	spl_t s;
@@ -386,7 +392,8 @@ int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
 	return err;
 }
 
-int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx)
+COBALT_SYSCALL(mutex_unlock, nonrestartable,
+	       int, (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct cobalt_mutex *mutex;
 	struct xnthread *curr;

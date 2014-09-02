@@ -20,31 +20,41 @@
 #define _COBALT_POSIX_IO_H
 
 #include <rtdm/rtdm.h>
+#include <xenomai/posix/syscall.h>
 
-int cobalt_open(int fd, const char __user *u_path, int oflag);
+COBALT_SYSCALL_DECL(open, int,
+		    (int fd, const char __user *u_path, int oflag));
 
-int cobalt_socket(int fd, int protocol_family,
-		  int socket_type, int protocol);
+COBALT_SYSCALL_DECL(socket, int,
+		    (int fd, int protocol_family,
+		     int socket_type, int protocol));
 
-int cobalt_ioctl(int fd, unsigned int request, void __user *arg);
+COBALT_SYSCALL_DECL(close, int, (int fd));
 
-ssize_t cobalt_read(int fd, void __user *buf, size_t size);
+COBALT_SYSCALL_DECL(ioctl, int,
+		    (int fd, unsigned int request, void __user *arg));
 
-ssize_t cobalt_write(int fd, const void __user *buf, size_t size);
+COBALT_SYSCALL_DECL(read, ssize_t,
+		    (int fd, void __user *buf, size_t size));
 
-ssize_t cobalt_recvmsg(int fd, struct msghdr __user *umsg, int flags);
+COBALT_SYSCALL_DECL(write, ssize_t,
+		    (int fd, const void __user *buf, size_t size));
 
-ssize_t cobalt_sendmsg(int fd, struct msghdr __user *umsg, int flags);
+COBALT_SYSCALL_DECL(recvmsg, ssize_t,
+		    (int fd, struct msghdr __user *umsg, int flags));
 
-int cobalt_close(int fd);
+COBALT_SYSCALL_DECL(sendmsg, ssize_t,
+		    (int fd, struct msghdr __user *umsg, int flags));
 
-int cobalt_mmap(int fd, struct _rtdm_mmap_request __user *u_rma,
-		void __user **u_addrp);
+COBALT_SYSCALL_DECL(mmap, int,
+		    (int fd, struct _rtdm_mmap_request __user *u_rma,
+		     void __user **u_addrp));
 
-int cobalt_select(int nfds,
-		  fd_set __user *u_rfds,
-		  fd_set __user *u_wfds,
-		  fd_set __user *u_xfds,
-		  struct timeval __user *u_tv);
+COBALT_SYSCALL_DECL(select,
+		    int, (int nfds,
+			  fd_set __user *u_rfds,
+			  fd_set __user *u_wfds,
+			  fd_set __user *u_xfds,
+			  struct timeval __user *u_tv));
 
 #endif /* !_COBALT_POSIX_IO_H */
