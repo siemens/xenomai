@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003,2007 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2014 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,12 @@
 #ifndef _COBALT_X86_ASM_UAPI_SYSCALL_H
 #define _COBALT_X86_ASM_UAPI_SYSCALL_H
 
-#define __xn_syscode(op)	((op << 24)|(cobalt_syscall_tag & 0x7fff))
+#ifdef __ILP32__
+#define __xn_syscall_base  __COBALT_X32_BASE
+#else
+#define __xn_syscall_base  0
+#endif
+
+#define __xn_syscode(__nr)	(__COBALT_SYSCALL_BIT | (__nr + __xn_syscall_base))
 
 #endif /* !_COBALT_X86_ASM_UAPI_SYSCALL_H */

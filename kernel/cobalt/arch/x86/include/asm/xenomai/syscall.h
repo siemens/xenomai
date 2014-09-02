@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003,2007 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2014 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_X86_ASM_SYSCALL_H
 #define _COBALT_X86_ASM_SYSCALL_H
 
@@ -36,16 +35,15 @@
 #define __xn_reg_arg1(regs)   ((regs)->di)
 #define __xn_reg_arg2(regs)   ((regs)->si)
 #define __xn_reg_arg3(regs)   ((regs)->dx)
-#define __xn_reg_arg4(regs)   ((regs)->r10) /* entry.S convention here. */
+#define __xn_reg_arg4(regs)   ((regs)->r10)
 #define __xn_reg_arg5(regs)   ((regs)->r8)
 #endif /* x86_64 */
 #define __xn_reg_pc(regs)     ((regs)->ip)
 #define __xn_reg_sp(regs)     ((regs)->sp)
 
-#define __xn_syscall_p(regs)  ((__xn_reg_sys(regs) & 0x7fff) == cobalt_syscall_tag)
-#define __xn_syscall(regs)     ((__xn_reg_sys(regs) >> 24) & 0xff)
-
-#define __xn_syslinux_p(regs, nr)  (__xn_reg_sys(regs) == (nr))
+#define __xn_syscall_p(regs)  (__xn_reg_sys(regs) & __COBALT_SYSCALL_BIT)
+#define __xn_syscall(regs)    (__xn_reg_sys(regs) & \
+			       ~(__COBALT_SYSCALL_BIT|__COBALT_SYSCALL_MASK))
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {

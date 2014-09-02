@@ -24,6 +24,7 @@
 #include <linux/compat.h>
 
 #define __COBALT_X32_BASE	128
+#define __COBALT_SYSCALL_MASK	__X32_SYSCALL_BIT
 
 #if __NR_COBALT_SYSCALLS >= __COBALT_X32_BASE
 #error "__NR_COBALT_SYSCALLS >= __COBALT_X32_BASE"
@@ -50,5 +51,9 @@
 #define COBALT_SYSCALL32x_DECL(__name, __type, __args)
 
 #endif /* !CONFIG_X86_X32 */
+
+#ifndef __COBALT_SYSCALL_MASK
+#define __COBALT_SYSCALL_MASK	0
+#endif
 
 #endif /* !_COBALT_X86_ASM_SYSCALL32_H */
