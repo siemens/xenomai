@@ -19,4 +19,6 @@ xenomai-y :=		\
 	timer.o		\
 	timerfd.o
 
+xenomai-$(CONFIG_XENO_OPT_SYS3264) += syscall32.o
+
 ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai -Ikernel

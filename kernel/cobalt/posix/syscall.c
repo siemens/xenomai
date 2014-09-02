@@ -20,7 +20,6 @@
 #include <linux/err.h>
 #include <linux/ipipe.h>
 #include <linux/kconfig.h>
-#include <cobalt/uapi/syscall.h>
 #include <cobalt/uapi/sysconf.h>
 #include <cobalt/kernel/tree.h>
 #include <cobalt/kernel/vdso.h>
@@ -74,11 +73,11 @@
 /* Shorthand for oneway trap - does not return to call site. */
 #define __xn_exec_oneway    __xn_exec_norestart
 
-typedef int (*cobalt_handler)(unsigned long arg1, unsigned long arg2,
+typedef int (*cobalt_syshand)(unsigned long arg1, unsigned long arg2,
 			      unsigned long arg3, unsigned long arg4,
 			      unsigned long arg5);
 
-static const cobalt_handler cobalt_syscalls[];
+static const cobalt_syshand cobalt_syscalls[];
 
 static const int cobalt_sysmodes[];
 
@@ -110,7 +109,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	struct cobalt_process *process;
 	int nr, switched, ret, sigs;
 	struct xnthread *thread;
-	cobalt_handler handler;
+	cobalt_syshand handler;
 	struct task_struct *p;
 	int sysflags;
 
@@ -288,7 +287,7 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int nr, sysflags, switched, ret, sigs;
 	struct xnthread *thread;
-	cobalt_handler handler;
+	cobalt_syshand handler;
 	struct task_struct *p;
 
 	/*
@@ -730,110 +729,174 @@ static int cobalt_ni(void)
 	return -ENOSYS;
 }
 
-#define __syshand__(__name)		((cobalt_handler)(cobalt_ ## __name))
-#define __COBALT_CALL(__name)		[sc_cobalt_ ## __name] = __syshand__(__name)
-#define __COBALT_MODE(__name, __flags)	[sc_cobalt_ ## __name] = __xn_exec_##__flags
+/*
+ * We have a single syscall table for all ABI models, i.e. 64bit
+ * native + 32bit) or plain 32bit. In the former case, we may want to
+ * support several models with a single build (e.g. ia32 and x32 for
+ * x86_64).
+ *
+ * The syscall table is set up in a single step, based on three
+ * subsequent sources of initializers:
+ *
+ * - first, all syscall entries are defaulted to a placeholder
+ * returning -ENOSYS, as the table may be sparse.
+ *
+ * - then __COBALT_CALL_ENTRY() produces a native call entry
+ * (e.g. pure 64bit call handler for a 64bit architecture), and
+ * optionally a set of 32bit syscall entries offset by an
+ * arch-specific base index defaulting to the native calls, all in the
+ * same syscall table/array. These nitty-gritty details are defined by
+ * asm/xenomai/syscall32.h. 32bit architectures - or 64bit ones for
+ * which we don't support any 32bit ABI model - will simply define
+ * __COBALT_CALL32_ENTRY() as an empty macro.
+ *
+ * - finally, pure 32bit call entries are generated per-architecture,
+ * by including <asm/xenomai/syscall32-table.h>, overriding the
+ * default handlers installed during the previous step.
+ *
+ * For instance, with CONFIG_X86_X32 support enabled in an x86_64
+ * kernel, sc_cobalt_mq_timedreceive would appear twice in the table,
+ * as:
+ *
+ * [sc_cobalt_mq_timedreceive] = cobalt_mq_timedreceive,
+ * ...
+ * [sc_cobalt_mq_timedreceive + __COBALT_X32_BASE] = cobalt32x_mq_timedreceive,
+ *
+ * cobalt32x_mq_timedreceive() would do the required thunking for
+ * dealing with the 32<->64bit conversion of arguments. On the other
+ * hand, sc_cobalt_sched_yield which do not require any thunking would
+ * also appear twice, but both entries would point at the native
+ * syscall implementation:
+ *
+ * [sc_cobalt_sched_yield] = cobalt_sched_yield,
+ * ...
+ * [sc_cobalt_sched_yield + __COBALT_X32_BASE] = cobalt_sched_yield,
+ *
+ * Accordingly, applications targeting the x32 model (-mx32) issue
+ * syscalls in the range [__COBALT_X32_BASE..__COBALT_X32_BASE +
+ * __NR_COBALT_SYSCALLS-1], whilst native (32/64bit) ones issue
+ * syscalls in the range [0..__NR_COBALT_SYSCALLS-1].
+ *
+ * In short, this is an incremental process where the arch-specific
+ * code can override the 32bit syscall entries, pointing at the thunk
+ * routines it may need for handing 32bit calls over their respective
+ * 64bit implementation.
+ *
+ * By convention, there is NO 32bit-specific syscall, which means that
+ * each 32bit syscall defined by a compat ABI interface MUST match a
+ * native (64bit) syscall. This is important as we share the call
+ * modes (i.e. __xn_exec_ bits) between all ABI models.
+ *
+ * --rpm
+ */
+#define __syshand__(__name)		((cobalt_syshand)(cobalt_ ## __name))
+#define __COBALT_CALL_ENTRY(__name)	[sc_cobalt_ ## __name] = __syshand__(__name)	\
+					__COBALT_CALL32_ENTRY(__name, __syshand__(__name))
+#define __COBALT_MODE(__name, __mode)	[sc_cobalt_ ## __name] = __xn_exec_##__mode
 #define __COBALT_NI			__syshand__(ni)
 
-static const cobalt_handler cobalt_syscalls[] = {
+static const cobalt_syshand cobalt_syscalls[] = {
 	[0 ... __NR_COBALT_SYSCALLS-1] = __COBALT_NI,
-	__COBALT_CALL(thread_create),
-	__COBALT_CALL(thread_getpid),
-	__COBALT_CALL(thread_setschedparam_ex),
-	__COBALT_CALL(thread_getschedparam_ex),
-	__COBALT_CALL(sched_weightprio),
-	__COBALT_CALL(sched_yield),
-	__COBALT_CALL(thread_setmode),
-	__COBALT_CALL(thread_setname),
-	__COBALT_CALL(thread_kill),
-	__COBALT_CALL(thread_getstat),
-	__COBALT_CALL(thread_join),
-	__COBALT_CALL(sem_init),
-	__COBALT_CALL(sem_destroy),
-	__COBALT_CALL(sem_post),
-	__COBALT_CALL(sem_wait),
-	__COBALT_CALL(sem_timedwait),
-	__COBALT_CALL(sem_trywait),
-	__COBALT_CALL(sem_getvalue),
-	__COBALT_CALL(sem_open),
-	__COBALT_CALL(sem_close),
-	__COBALT_CALL(sem_unlink),
-	__COBALT_CALL(sem_broadcast_np),
-	__COBALT_CALL(sem_inquire),
-	__COBALT_CALL(clock_getres),
-	__COBALT_CALL(clock_gettime),
-	__COBALT_CALL(clock_settime),
-	__COBALT_CALL(clock_nanosleep),
-	__COBALT_CALL(mutex_init),
-	__COBALT_CALL(mutex_check_init),
-	__COBALT_CALL(mutex_destroy),
-	__COBALT_CALL(mutex_lock),
-	__COBALT_CALL(mutex_timedlock),
-	__COBALT_CALL(mutex_trylock),
-	__COBALT_CALL(mutex_unlock),
-	__COBALT_CALL(cond_init),
-	__COBALT_CALL(cond_destroy),
-	__COBALT_CALL(cond_wait_prologue),
-	__COBALT_CALL(cond_wait_epilogue),
-	__COBALT_CALL(mq_open),
-	__COBALT_CALL(mq_close),
-	__COBALT_CALL(mq_unlink),
-	__COBALT_CALL(mq_getattr),
-	__COBALT_CALL(mq_setattr),
-	__COBALT_CALL(mq_timedsend),
-	__COBALT_CALL(mq_timedreceive),
-	__COBALT_CALL(mq_notify),
-	__COBALT_CALL(sigwait),
-	__COBALT_CALL(sigwaitinfo),
-	__COBALT_CALL(sigtimedwait),
-	__COBALT_CALL(sigpending),
-	__COBALT_CALL(kill),
-	__COBALT_CALL(sigqueue),
-	__COBALT_CALL(timer_create),
-	__COBALT_CALL(timer_delete),
-	__COBALT_CALL(timer_settime),
-	__COBALT_CALL(timer_gettime),
-	__COBALT_CALL(timer_getoverrun),
-	__COBALT_CALL(timerfd_create),
-	__COBALT_CALL(timerfd_gettime),
-	__COBALT_CALL(timerfd_settime),
-	__COBALT_CALL(select),
-	__COBALT_CALL(sched_minprio),
-	__COBALT_CALL(sched_maxprio),
-	__COBALT_CALL(monitor_init),
-	__COBALT_CALL(monitor_destroy),
-	__COBALT_CALL(monitor_enter),
-	__COBALT_CALL(monitor_wait),
-	__COBALT_CALL(monitor_sync),
-	__COBALT_CALL(monitor_exit),
-	__COBALT_CALL(event_init),
-	__COBALT_CALL(event_destroy),
-	__COBALT_CALL(event_wait),
-	__COBALT_CALL(event_sync),
-	__COBALT_CALL(event_inquire),
-	__COBALT_CALL(sched_setconfig_np),
-	__COBALT_CALL(sched_getconfig_np),
-	__COBALT_CALL(open),
-	__COBALT_CALL(socket),
-	__COBALT_CALL(close),
-	__COBALT_CALL(mmap),
-	__COBALT_CALL(ioctl),
-	__COBALT_CALL(read),
-	__COBALT_CALL(write),
-	__COBALT_CALL(recvmsg),
-	__COBALT_CALL(sendmsg),
-	__COBALT_CALL(migrate),
-	__COBALT_CALL(archcall),
-	__COBALT_CALL(bind),
-	__COBALT_CALL(extend),
-	__COBALT_CALL(info),
-	__COBALT_CALL(trace),
-	__COBALT_CALL(heap_getstat),
-	__COBALT_CALL(get_current),
-	__COBALT_CALL(mayday),
-	__COBALT_CALL(backtrace),
-	__COBALT_CALL(serialdbg),
-	__COBALT_CALL(sysconf),
+	__COBALT_CALL_ENTRY(thread_create),
+	__COBALT_CALL_ENTRY(thread_getpid),
+	__COBALT_CALL_ENTRY(thread_setschedparam_ex),
+	__COBALT_CALL_ENTRY(thread_getschedparam_ex),
+	__COBALT_CALL_ENTRY(sched_weightprio),
+	__COBALT_CALL_ENTRY(sched_yield),
+	__COBALT_CALL_ENTRY(thread_setmode),
+	__COBALT_CALL_ENTRY(thread_setname),
+	__COBALT_CALL_ENTRY(thread_kill),
+	__COBALT_CALL_ENTRY(thread_getstat),
+	__COBALT_CALL_ENTRY(thread_join),
+	__COBALT_CALL_ENTRY(sem_init),
+	__COBALT_CALL_ENTRY(sem_destroy),
+	__COBALT_CALL_ENTRY(sem_post),
+	__COBALT_CALL_ENTRY(sem_wait),
+	__COBALT_CALL_ENTRY(sem_timedwait),
+	__COBALT_CALL_ENTRY(sem_trywait),
+	__COBALT_CALL_ENTRY(sem_getvalue),
+	__COBALT_CALL_ENTRY(sem_open),
+	__COBALT_CALL_ENTRY(sem_close),
+	__COBALT_CALL_ENTRY(sem_unlink),
+	__COBALT_CALL_ENTRY(sem_broadcast_np),
+	__COBALT_CALL_ENTRY(sem_inquire),
+	__COBALT_CALL_ENTRY(clock_getres),
+	__COBALT_CALL_ENTRY(clock_gettime),
+	__COBALT_CALL_ENTRY(clock_settime),
+	__COBALT_CALL_ENTRY(clock_nanosleep),
+	__COBALT_CALL_ENTRY(mutex_init),
+	__COBALT_CALL_ENTRY(mutex_check_init),
+	__COBALT_CALL_ENTRY(mutex_destroy),
+	__COBALT_CALL_ENTRY(mutex_lock),
+	__COBALT_CALL_ENTRY(mutex_timedlock),
+	__COBALT_CALL_ENTRY(mutex_trylock),
+	__COBALT_CALL_ENTRY(mutex_unlock),
+	__COBALT_CALL_ENTRY(cond_init),
+	__COBALT_CALL_ENTRY(cond_destroy),
+	__COBALT_CALL_ENTRY(cond_wait_prologue),
+	__COBALT_CALL_ENTRY(cond_wait_epilogue),
+	__COBALT_CALL_ENTRY(mq_open),
+	__COBALT_CALL_ENTRY(mq_close),
+	__COBALT_CALL_ENTRY(mq_unlink),
+	__COBALT_CALL_ENTRY(mq_getattr),
+	__COBALT_CALL_ENTRY(mq_setattr),
+	__COBALT_CALL_ENTRY(mq_timedsend),
+	__COBALT_CALL_ENTRY(mq_timedreceive),
+	__COBALT_CALL_ENTRY(mq_notify),
+	__COBALT_CALL_ENTRY(sigwait),
+	__COBALT_CALL_ENTRY(sigwaitinfo),
+	__COBALT_CALL_ENTRY(sigtimedwait),
+	__COBALT_CALL_ENTRY(sigpending),
+	__COBALT_CALL_ENTRY(kill),
+	__COBALT_CALL_ENTRY(sigqueue),
+	__COBALT_CALL_ENTRY(timer_create),
+	__COBALT_CALL_ENTRY(timer_delete),
+	__COBALT_CALL_ENTRY(timer_settime),
+	__COBALT_CALL_ENTRY(timer_gettime),
+	__COBALT_CALL_ENTRY(timer_getoverrun),
+	__COBALT_CALL_ENTRY(timerfd_create),
+	__COBALT_CALL_ENTRY(timerfd_gettime),
+	__COBALT_CALL_ENTRY(timerfd_settime),
+	__COBALT_CALL_ENTRY(select),
+	__COBALT_CALL_ENTRY(sched_minprio),
+	__COBALT_CALL_ENTRY(sched_maxprio),
+	__COBALT_CALL_ENTRY(monitor_init),
+	__COBALT_CALL_ENTRY(monitor_destroy),
+	__COBALT_CALL_ENTRY(monitor_enter),
+	__COBALT_CALL_ENTRY(monitor_wait),
+	__COBALT_CALL_ENTRY(monitor_sync),
+	__COBALT_CALL_ENTRY(monitor_exit),
+	__COBALT_CALL_ENTRY(event_init),
+	__COBALT_CALL_ENTRY(event_destroy),
+	__COBALT_CALL_ENTRY(event_wait),
+	__COBALT_CALL_ENTRY(event_sync),
+	__COBALT_CALL_ENTRY(event_inquire),
+	__COBALT_CALL_ENTRY(sched_setconfig_np),
+	__COBALT_CALL_ENTRY(sched_getconfig_np),
+	__COBALT_CALL_ENTRY(open),
+	__COBALT_CALL_ENTRY(socket),
+	__COBALT_CALL_ENTRY(close),
+	__COBALT_CALL_ENTRY(mmap),
+	__COBALT_CALL_ENTRY(ioctl),
+	__COBALT_CALL_ENTRY(read),
+	__COBALT_CALL_ENTRY(write),
+	__COBALT_CALL_ENTRY(recvmsg),
+	__COBALT_CALL_ENTRY(sendmsg),
+	__COBALT_CALL_ENTRY(migrate),
+	__COBALT_CALL_ENTRY(archcall),
+	__COBALT_CALL_ENTRY(bind),
+	__COBALT_CALL_ENTRY(extend),
+	__COBALT_CALL_ENTRY(info),
+	__COBALT_CALL_ENTRY(trace),
+	__COBALT_CALL_ENTRY(heap_getstat),
+	__COBALT_CALL_ENTRY(get_current),
+	__COBALT_CALL_ENTRY(mayday),
+	__COBALT_CALL_ENTRY(backtrace),
+	__COBALT_CALL_ENTRY(serialdbg),
+	__COBALT_CALL_ENTRY(sysconf),
+#ifdef CONFIG_XENO_OPT_SYS3264
+#include <asm/xenomai/syscall32-table.h>
+#endif	
 };
 
 static const int cobalt_sysmodes[] = {

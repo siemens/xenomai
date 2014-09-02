@@ -18,10 +18,16 @@
 #ifndef _COBALT_POSIX_SYSCALL_H
 #define _COBALT_POSIX_SYSCALL_H
 
+#include <cobalt/uapi/syscall.h>
+
+/* Regular (native) syscall handler implementation. */
 #define COBALT_SYSCALL(__name, __mode, __type, __args)	\
 	__typeof__(__type) cobalt_ ## __name __args
 
+/* Regular (native) syscall handler declaration. */
 #define COBALT_SYSCALL_DECL(__name, __type, __args)	\
 	__typeof__(__type) cobalt_ ## __name __args
+
+#include <asm/xenomai/syscall32.h>
 
 #endif /* !_COBALT_POSIX_SYSCALL_H */
