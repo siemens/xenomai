@@ -18,15 +18,16 @@
 #ifndef _COBALT_UAPI_KERNEL_TYPES_H
 #define _COBALT_UAPI_KERNEL_TYPES_H
 
+#include <linux/types.h>
 #include <cobalt/uapi/kernel/limits.h>
 
-typedef unsigned long long xnticks_t;
+typedef __u64 xnticks_t;
 
-typedef long long xnsticks_t;
+typedef __s64 xnsticks_t;
 
-typedef unsigned long long xntime_t; /* ns */
+typedef __u64 xntime_t; /* ns */
 
-typedef long long xnstime_t;
+typedef __s64 xnstime_t;
 
 typedef unsigned long xnhandle_t;
 
