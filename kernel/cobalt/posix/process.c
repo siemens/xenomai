@@ -613,7 +613,7 @@ static inline int disable_ondemand_memory(void)
 #endif /* !CONFIG_MMU */
 
 /**
- * @fn int cobalt_map_user(struct xnthread *thread, unsigned long __user *u_window_offset)
+ * @fn int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
  * @internal
  * @brief Create a shadow thread context over a user task.
  *
@@ -627,7 +627,7 @@ static inline int disable_ondemand_memory(void)
  * mapped to current. This descriptor must have been previously
  * initialized by a call to xnthread_init().
  *
- * @param u_window_offset will receive the offset of the per-thread
+ * @param u_winoff will receive the offset of the per-thread
  * "u_window" structure in the process shared heap associated to @a
  * thread. This structure reflects thread state information visible
  * from userland through a shared memory window.
@@ -642,8 +642,7 @@ static inline int disable_ondemand_memory(void)
  *
  * @coretags{secondary-only}
  */
-int cobalt_map_user(struct xnthread *thread,
-		    unsigned long __user *u_window_offset)
+int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 {
 	struct xnthread_user_window *u_window;
 	struct xnthread_start_attr attr;
@@ -657,7 +656,7 @@ int cobalt_map_user(struct xnthread *thread,
 	if (xnthread_current() || xnthread_test_state(thread, XNMAPPED))
 		return -EBUSY;
 
-	if (!access_wok(u_window_offset, sizeof(*u_window_offset)))
+	if (!access_wok(u_winoff, sizeof(*u_winoff)))
 		return -EFAULT;
 
 	ret = disable_ondemand_memory();
@@ -671,7 +670,7 @@ int cobalt_map_user(struct xnthread *thread,
 		return -ENOMEM;
 
 	thread->u_window = u_window;
-	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_window_offset);
+	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_winoff);
 	xnthread_pin_initial(thread);
 
 	trace_cobalt_shadow_map(thread);

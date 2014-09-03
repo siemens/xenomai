@@ -449,7 +449,7 @@ COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 	       int, (unsigned long pth,
 		     int policy,
 		     const struct sched_param_ex __user *u_param,
-		     unsigned long __user *u_window_offset,
+		     __u32 __user *u_winoff,
 		     int __user *u_promoted))
 {
 	struct sched_param_ex param_ex;
@@ -465,8 +465,8 @@ COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 	trace_cobalt_pthread_setschedparam(pth, policy, &param_ex);
 
 	thread = thread_lookup(&hkey);
-	if (thread == NULL && u_window_offset) {
-		thread = cobalt_thread_shadow(current, &hkey, u_window_offset);
+	if (thread == NULL && u_winoff) {
+		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
 		if (IS_ERR(thread))
 			return PTR_ERR(thread);
 
@@ -522,7 +522,7 @@ COBALT_SYSCALL(thread_create, init,
 	       int, (unsigned long pth, int policy,
 		     struct sched_param_ex __user *u_param,
 		     int xid,
-		     unsigned long __user *u_window_offset))
+		     __u32 __user *u_winoff))
 {
 	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
@@ -547,7 +547,7 @@ COBALT_SYSCALL(thread_create, init,
 	if (ret)
 		return ret;
 
-	ret = cobalt_map_user(&thread->threadbase, u_window_offset);
+	ret = cobalt_map_user(&thread->threadbase, u_winoff);
 	if (ret)
 		goto fail;
 
@@ -573,7 +573,7 @@ fail:
 struct cobalt_thread *
 cobalt_thread_shadow(struct task_struct *p,
 		     struct cobalt_local_hkey *hkey,
-		     unsigned long __user *u_window_offset)
+		     __u32 __user *u_winoff)
 {
 	struct cobalt_thread *thread = NULL;
 	struct sched_param_ex param_ex;
@@ -585,7 +585,7 @@ cobalt_thread_shadow(struct task_struct *p,
 	if (ret)
 		return ERR_PTR(-ret);
 
-	ret = cobalt_map_user(&thread->threadbase, u_window_offset);
+	ret = cobalt_map_user(&thread->threadbase, u_winoff);
 	if (ret)
 		goto fail;
 

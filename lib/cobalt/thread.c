@@ -116,7 +116,7 @@ static void *cobalt_thread_trampoline(void *p)
 	int personality, parent_prio, policy;
 	struct pthread_iargs *iargs = p;
 	struct sched_param_ex param_ex;
-	unsigned long u_winoff;
+	__u32 u_winoff;
 	long ret;
 
 	cobalt_sigshadow_install_once();
@@ -648,8 +648,8 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
 int pthread_setschedparam_ex(pthread_t thread,
 			     int policy, const struct sched_param_ex *param_ex)
 {
-	unsigned long u_winoff;
 	int ret, promoted;
+	__u32 u_winoff;
 
 	/*
 	 * First we tell the libc and the regular kernel about the

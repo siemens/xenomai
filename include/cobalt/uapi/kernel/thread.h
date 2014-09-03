@@ -97,9 +97,9 @@
 #define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....L"
 
 struct xnthread_user_window {
-	unsigned long state;
-	unsigned long info;
-	unsigned long grant_value;
+	__u32 state;
+	__u32 info;
+	__u32 grant_value;
 };
 
 #endif /* !_COBALT_UAPI_KERNEL_THREAD_H */

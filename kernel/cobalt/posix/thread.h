@@ -131,13 +131,12 @@ struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 COBALT_SYSCALL_DECL(thread_create,
 		    int, (unsigned long pth, int policy,
 			  struct sched_param_ex __user *u_param,
-			  int xid,
-			  unsigned long __user *u_window_offset));
+			  int xid, __u32 __user *u_winoff));
 
 struct cobalt_thread *
 cobalt_thread_shadow(struct task_struct *p,
 		     struct cobalt_local_hkey *lhkey,
-		     unsigned long __user *u_window_offset);
+		     __u32 __user *u_winoff);
 
 COBALT_SYSCALL_DECL(thread_setmode,
 		    int, (int clrmask, int setmask, int __user *u_mode_r));
@@ -161,7 +160,7 @@ COBALT_SYSCALL_DECL(thread_setschedparam_ex,
 		    int, (unsigned long pth,
 			  int policy,
 			  const struct sched_param_ex __user *u_param,
-			  unsigned long __user *u_window_offset,
+			  __u32 __user *u_winoff,
 			  int __user *u_promoted));
 
 COBALT_SYSCALL_DECL(thread_getschedparam_ex,

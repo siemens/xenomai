@@ -86,14 +86,11 @@ struct xnthread_personality {
 struct xnthread {
 	struct xnarchtcb tcb;		/* Architecture-dependent block */
 
-	unsigned long state;		/* Thread state flags */
-
-	unsigned long info;		/* Thread information flags */
+	__u32 state;		/* Thread state flags */
+	__u32 info;		/* Thread information flags */
 
 	struct xnsched *sched;		/* Thread scheduler */
-
 	struct xnsched_class *sched_class; /* Current scheduling class */
-
 	struct xnsched_class *base_class; /* Base scheduling class */
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP

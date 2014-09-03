@@ -73,8 +73,7 @@ int cobalt_bind_personality(unsigned int magic);
 
 struct cobalt_process *cobalt_search_process(struct mm_struct *mm);
 
-int cobalt_map_user(struct xnthread *thread,
-		    unsigned long __user *u_window_offset);
+int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff);
 
 void *cobalt_get_context(int xid);
 

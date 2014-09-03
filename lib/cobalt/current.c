@@ -36,7 +36,7 @@ xnhandle_t cobalt_current = XN_NO_HANDLE;
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 struct xnthread_user_window *cobalt_current_window;
 
-static inline void __cobalt_set_tsd(xnhandle_t current, unsigned long u_winoff)
+static inline void __cobalt_set_tsd(xnhandle_t current, __u32 u_winoff)
 {
 	struct xnthread_user_window *window;
 
@@ -62,7 +62,7 @@ pthread_key_t cobalt_current_window_key;
 pthread_key_t cobalt_current_key;
 
 static inline void __cobalt_set_tsd(xnhandle_t current,
-				    unsigned long u_winoff)
+				    __u32 u_winoff)
 {
 	struct xnthread_user_window *window;
 
@@ -122,7 +122,7 @@ xnhandle_t cobalt_get_current_slow(void)
 	return err ? XN_NO_HANDLE : current;
 }
 
-void cobalt_set_tsd(unsigned long u_winoff)
+void cobalt_set_tsd(__u32 u_winoff)
 {
 	struct cobalt_tsd_hook *th;
 	xnhandle_t current;

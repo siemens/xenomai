@@ -91,6 +91,6 @@ static inline struct xnthread_user_window *cobalt_get_current_window(void)
 
 void cobalt_init_current_keys(void);
 
-void cobalt_set_tsd(unsigned long u_winoff);
+void cobalt_set_tsd(__u32 u_winoff);
 
 #endif /* _LIB_COBALT_CURRENT_H */
