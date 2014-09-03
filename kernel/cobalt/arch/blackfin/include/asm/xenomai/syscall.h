@@ -23,18 +23,16 @@
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_reg_sys(regs)    ((regs)->orig_p0)
-#define __xn_reg_rval(regs)   ((regs)->r0)
-#define __xn_reg_arg1(regs)   ((regs)->r0)
-#define __xn_reg_arg2(regs)   ((regs)->r1)
-#define __xn_reg_arg3(regs)   ((regs)->r2)
-#define __xn_reg_arg4(regs)   ((regs)->r3)
-#define __xn_reg_arg5(regs)   ((regs)->r4)
+#define __xn_reg_sys(__regs)	((__regs)->orig_p0)
+#define __xn_syscall_p(__regs)	(__xn_reg_sys(__regs) & __COBALT_SYSCALL_BIT)
+#define __xn_syscall(__regs)	(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT)
 
-#define __xn_syscall_p(regs)        ((__xn_reg_sys(regs) & 0xffff) == cobalt_syscall_tag)
-#define __xn_syscall(regs)           ((__xn_reg_sys(regs) >> 16) & 0xff)
-
-#define __xn_syslinux_p(regs, nr)  (__xn_reg_sys(regs) == (nr))
+#define __xn_reg_rval(__regs)	((__regs)->r0)
+#define __xn_reg_arg1(__regs)	((__regs)->r0)
+#define __xn_reg_arg2(__regs)	((__regs)->r1)
+#define __xn_reg_arg3(__regs)	((__regs)->r2)
+#define __xn_reg_arg4(__regs)	((__regs)->r3)
+#define __xn_reg_arg5(__regs)	((__regs)->r4)
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {

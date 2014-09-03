@@ -18,8 +18,8 @@
 #ifndef _COBALT_NIOS2_ASM_UAPI_SYSCALL_H
 #define _COBALT_NIOS2_ASM_UAPI_SYSCALL_H
 
-#define __xn_syscode(op)	(((op << 16) & 0xff0000)|(cobalt_syscall_tag & 0xffff))
+#define __xn_syscode(__nr)	(__COBALT_SYSCALL_BIT | (__nr))
 
-#define __xn_lsys_xchg   0
+#define __xn_lsys_xchg	0
 
 #endif /* !_COBALT_NIOS2_ASM_UAPI_SYSCALL_H */

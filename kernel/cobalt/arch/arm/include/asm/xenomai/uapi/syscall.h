@@ -21,7 +21,7 @@
 #ifndef _COBALT_ARM_ASM_UAPI_SYSCALL_H
 #define _COBALT_ARM_ASM_UAPI_SYSCALL_H
 
-#define __xn_syscode(op)	((op << 24)|(cobalt_syscall_tag & 0xffff))
+#define __xn_syscode(__nr)	(__COBALT_SYSCALL_BIT | (__nr))
 
 #define XENO_ARM_SYSCALL        0x000F0042	/* carefully chosen... */
 

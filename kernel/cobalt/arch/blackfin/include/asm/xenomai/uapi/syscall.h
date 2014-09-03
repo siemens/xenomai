@@ -18,12 +18,7 @@
 #ifndef _COBALT_BLACKFIN_ASM_UAPI_SYSCALL_H
 #define _COBALT_BLACKFIN_ASM_UAPI_SYSCALL_H
 
-/*
- * NOTE: watch out for the p0 sign convention used by Linux
- * (i.e. negative syscall number in orig_p0 meaning "non-syscall
- * entry").
- */
-#define __xn_syscode(op)		(((op << 16) & 0xff0000)|(cobalt_syscall_tag & 0xffff))
+#define __xn_syscode(__nr)	(__COBALT_SYSCALL_BIT | (__nr))
 
 /*
  * No atomic xchg available from user-space. We implement this as a

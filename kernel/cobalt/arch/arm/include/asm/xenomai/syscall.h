@@ -28,29 +28,29 @@
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_reg_sys(regs)      ((regs)->ARM_ORIG_r0)
-#define __xn_reg_rval(regs)     ((regs)->ARM_r0)
-#define __xn_reg_arg1(regs)     ((regs)->ARM_r1)
-#define __xn_reg_arg2(regs)     ((regs)->ARM_r2)
-#define __xn_reg_arg3(regs)     ((regs)->ARM_r3)
-#define __xn_reg_arg4(regs)     ((regs)->ARM_r4)
-#define __xn_reg_arg5(regs)     ((regs)->ARM_r5)
-#define __xn_reg_pc(regs)       ((regs)->ARM_ip)
-#define __xn_reg_sp(regs)       ((regs)->ARM_sp)
+#ifndef __ARM_NR_ipipe
+/* Legacy pipelines do not define this. */
+#define __ARM_NR_ipipe	(__NR_SYSCALL_BASE + XENO_ARM_SYSCALL)
+#endif
 
+#define __xn_reg_sys(__regs)	((__regs)->ARM_ORIG_r0)
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT
-#define __xn_syscall_p(regs)    ( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
-				  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL) )
-#define __xn_syslinux_p(regs, nr) \
-				( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + (nr)) || \
-				  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + (nr)) )
+#define __xn_syscall_p(__regs)	(((__regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
+				 ((__regs)->ARM_r7 == __ARM_NR_ipipe))
 #else /* !CONFIG_OABI_COMPAT */
-#define __xn_syscall_p(regs)      ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL)
-#define __xn_syslinux_p(regs, nr) ((regs)->ARM_r7 == __NR_SYSCALL_BASE + (nr))
+#define __xn_syscall_p(__regs)	((__regs)->ARM_r7 == __ARM_NR_ipipe)
 #endif /* !CONFIG_OABI_COMPAT */
+#define __xn_syscall(__regs)	(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT)
 
-#define __xn_syscall(regs)       ((__xn_reg_sys(regs) >> 24) & 0xff)
+#define __xn_reg_rval(__regs)	((__regs)->ARM_r0)
+#define __xn_reg_arg1(__regs)	((__regs)->ARM_r1)
+#define __xn_reg_arg2(__regs)	((__regs)->ARM_r2)
+#define __xn_reg_arg3(__regs)	((__regs)->ARM_r3)
+#define __xn_reg_arg4(__regs)	((__regs)->ARM_r4)
+#define __xn_reg_arg5(__regs)	((__regs)->ARM_r5)
+#define __xn_reg_pc(__regs)	((__regs)->ARM_ip)
+#define __xn_reg_sp(__regs)	((__regs)->ARM_sp)
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {

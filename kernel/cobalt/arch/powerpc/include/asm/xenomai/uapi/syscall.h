@@ -18,6 +18,6 @@
 #ifndef _COBALT_POWERPC_ASM_UAPI_SYSCALL_H
 #define _COBALT_POWERPC_ASM_UAPI_SYSCALL_H
 
-#define __xn_syscode(op)	((op << 24)|(cobalt_syscall_tag & 0xffff))
+#define __xn_syscode(__nr)	(__COBALT_SYSCALL_BIT | (__nr))
 
 #endif /* !_COBALT_POWERPC_ASM_UAPI_SYSCALL_H */

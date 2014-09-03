@@ -22,7 +22,7 @@
 #include <asm/xenomai/uapi/features.h>
 #include <asm/xenomai/uapi/syscall.h>
 
-#define cobalt_syscall_tag	555	/* Must fit within 15bit */
+#define __COBALT_SYSCALL_BIT	0x10000000
 
 struct cobalt_bindreq {
 	/** Features userland requires. */
