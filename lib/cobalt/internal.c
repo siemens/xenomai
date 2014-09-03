@@ -156,7 +156,7 @@ static inline
 struct cobalt_monitor_data *get_monitor_data(cobalt_monitor_t *mon)
 {
 	return mon->flags & COBALT_MONITOR_SHARED ?
-		(void *)cobalt_sem_heap[1] + mon->u.data_offset :
+		cobalt_sem_heap[1] + mon->u.data_offset :
 		mon->u.data;
 }
 
@@ -171,7 +171,7 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 		return ret;
 
 	if ((flags & COBALT_MONITOR_SHARED) == 0) {
-		datp = (void *)cobalt_sem_heap[0] + mon->u.data_offset;
+		datp = cobalt_sem_heap[0] + mon->u.data_offset;
 		mon->u.data = datp;
 	} else
 		datp = get_monitor_data(mon);
@@ -433,7 +433,7 @@ static inline
 struct cobalt_event_data *get_event_data(cobalt_event_t *event)
 {
 	return event->flags & COBALT_EVENT_SHARED ?
-		(void *)cobalt_sem_heap[1] + event->u.data_offset :
+		cobalt_sem_heap[1] + event->u.data_offset :
 		event->u.data;
 }
 
@@ -448,7 +448,7 @@ int cobalt_event_init(cobalt_event_t *event, unsigned int value,
 		return ret;
 
 	if ((flags & COBALT_EVENT_SHARED) == 0) {
-		datp = (void *)cobalt_sem_heap[0] + event->u.data_offset;
+		datp = cobalt_sem_heap[0] + event->u.data_offset;
 		event->u.data = datp;
 	} else
 		datp = get_event_data(event);

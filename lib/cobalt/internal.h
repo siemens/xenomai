@@ -21,14 +21,15 @@
 #include <cobalt/sys/cobalt.h>
 #include "current.h"
 
-extern unsigned long cobalt_sem_heap[2];
+extern void *cobalt_sem_heap[2];
 
 void cobalt_sigshadow_install_once(void);
 
 static inline struct mutex_dat *mutex_get_datp(struct cobalt_mutex_shadow *shadow)
 {
 	if (shadow->attr.pshared)
-		return (struct mutex_dat *)(cobalt_sem_heap[1] + shadow->dat_offset);
+		return (struct mutex_dat *)
+			(cobalt_sem_heap[1] + shadow->dat_offset);
 
 	return shadow->dat;
 }

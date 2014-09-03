@@ -37,7 +37,7 @@
 
 struct xnvdso *vdso;
 
-unsigned long cobalt_sem_heap[2] = { 0, 0 };
+void *cobalt_sem_heap[2] = { NULL, NULL };
 
 static pthread_once_t init_private_heap = PTHREAD_ONCE_INIT;
 static struct cobalt_heapstat private_hdesc;
@@ -101,14 +101,14 @@ static void unmap_on_fork(void)
 	 * We replace former mappings with an invalid one, to detect
 	 * any spuriously late access from the fastsync code.
 	 */
-	addr = __STD(mmap((void *)cobalt_sem_heap[PRIVATE],
+	addr = __STD(mmap(cobalt_sem_heap[PRIVATE],
 			  private_hdesc.size, PROT_NONE,
 			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0));
 
-	if (addr != (void *)cobalt_sem_heap[PRIVATE])
-		munmap((void *)cobalt_sem_heap[PRIVATE], private_hdesc.size);
+	if (addr != cobalt_sem_heap[PRIVATE])
+		munmap(cobalt_sem_heap[PRIVATE], private_hdesc.size);
 
-	cobalt_sem_heap[PRIVATE] = 0UL;
+	cobalt_sem_heap[PRIVATE] = NULL;
 	init_private_heap = PTHREAD_ONCE_INIT;
 }
 
@@ -130,8 +130,8 @@ static void cobalt_init_vdso(void)
    after a fork */
 static void cobalt_init_private_heap(void)
 {
-	cobalt_sem_heap[PRIVATE] = (unsigned long)map_sem_heap(PRIVATE);
-	if (cobalt_sem_heap[PRIVATE] == (unsigned long)MAP_FAILED) {
+	cobalt_sem_heap[PRIVATE] = map_sem_heap(PRIVATE);
+	if (cobalt_sem_heap[PRIVATE] == MAP_FAILED) {
 		report_error("cannot map private heap: %s",
 			     strerror(errno));
 		exit(EXIT_FAILURE);
@@ -143,8 +143,8 @@ static void cobalt_init_rest_once(void)
 {
 	pthread_atfork(NULL, NULL, unmap_on_fork);
 
-	cobalt_sem_heap[SHARED] = (unsigned long)map_sem_heap(SHARED);
-	if (cobalt_sem_heap[SHARED] == (unsigned long)MAP_FAILED) {
+	cobalt_sem_heap[SHARED] = map_sem_heap(SHARED);
+	if (cobalt_sem_heap[SHARED] == MAP_FAILED) {
 		report_error("cannot map shared heap: %s",
 			     strerror(errno));
 		exit(EXIT_FAILURE);
