@@ -67,7 +67,7 @@ void __xnsys_fatal(const char *format, ...)
 				continue;
 			cprio = xnthread_current_priority(thread);
 			ksformat(pbuf, sizeof(pbuf), "%3d", cprio);
-			printk(KERN_ERR "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
+			printk(KERN_ERR "%c%3u  %-6d %-8s %-8Lu %.8x  %s\n",
 			       thread == sched->curr ? '>' : ' ',
 			       cpu,
 			       xnthread_host_pid(thread),

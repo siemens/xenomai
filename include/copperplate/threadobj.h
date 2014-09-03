@@ -23,6 +23,7 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <boilerplate/list.h>
 #include <boilerplate/lock.h>
 #include <boilerplate/sched.h>
@@ -42,24 +43,24 @@ struct threadobj_corespec {
 };
 
 struct threadobj_stat {
+	/** Execution time in primary mode (ns). */
+	ticks_t xtime;
+	/** Current timeout value (ns). */
+	ticks_t timeout;
+	/** Number of primary->secondary mode switches. */
+	uint64_t msw;
+	/** Number of context switches. */
+	uint64_t csw;
+	/** Number of Xenomai syscalls. */
+	uint64_t xsc;
 	/** Current CPU for thread. */
 	int cpu;
 	/** Scheduler lock nesting count. */
 	int schedlock;
 	/** Cobalt thread status bits. */
-	unsigned long status;
-	/** Execution time in primary mode (ns). */
-	ticks_t xtime;
-	/** Number of primary->secondary mode switches. */
-	unsigned long msw;
-	/** Number of context switches. */
-	unsigned long csw;
-	/** Number of Xenomai syscalls. */
-	unsigned long xsc;
+	unsigned int status;
 	/** Number of page faults. */
-	unsigned long pf;
-	/** Current timeout value (ns). */
-	ticks_t timeout;
+	uint32_t pf;
 };
 
 #define SCHED_CORE  SCHED_COBALT
@@ -88,14 +89,14 @@ struct threadobj_corespec {
 };
 
 struct threadobj_stat {
+	/** Current timeout value (ns). */
+	ticks_t timeout;
 	/** Current CPU for thread. */
 	int cpu;
 	/** Scheduler lock nesting count. */
 	int schedlock;
 	/** Mercury thread status bits. */
-	unsigned long status;
-	/** Current timeout value (ns). */
-	ticks_t timeout;
+	unsigned int status;
 };
 
 #define SCHED_CORE  SCHED_FIFO

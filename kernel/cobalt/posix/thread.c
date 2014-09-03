@@ -760,9 +760,7 @@ COBALT_SYSCALL(thread_getstat, current,
 		thread = &p->threadbase;
 	}
 
-	/*
-	 * We have to hold the nklock to keep most values consistent.
-	 */
+	/* We have to hold the nklock to keep most values consistent. */
 	stat.cpu = xnsched_cpu(thread->sched);
 	stat.cprio = xnthread_current_priority(thread);
 	xtime = xnthread_get_exectime(thread);

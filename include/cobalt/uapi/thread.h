@@ -37,15 +37,15 @@ struct cobalt_condattr {
 };
 
 struct cobalt_threadstat {
+	__u64 xtime;
+	__u64 timeout;
+	__u64 msw;
+	__u64 csw;
+	__u64 xsc;
+	__u32 status;
+	__u32 pf;
 	int cpu;
 	int cprio;
-	unsigned long status;
-	unsigned long long xtime;
-	unsigned long msw;
-	unsigned long csw;
-	unsigned long xsc;
-	unsigned long pf;
-	unsigned long long timeout;
 	char name[XNOBJECT_NAME_LEN];
 	char personality[XNOBJECT_NAME_LEN];
 };
