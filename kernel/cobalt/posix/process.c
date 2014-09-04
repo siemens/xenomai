@@ -228,11 +228,11 @@ static void remove_process(struct cobalt_process *process)
 	mutex_unlock(&personality_lock);
 }
 
-static void post_ppd_release(struct xnheap *h)
+static void post_ppd_release(struct cobalt_umm *umm)
 {
 	struct cobalt_process *process;
 
-	process = container_of(h, struct cobalt_process, sys_ppd.sem_heap);
+	process = container_of(umm, struct cobalt_process, sys_ppd.umm);
 	kfree(process);
 }
 
@@ -647,7 +647,7 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 	struct xnthread_user_window *u_window;
 	struct xnthread_start_attr attr;
 	struct xnsys_ppd *sys_ppd;
-	struct xnheap *sem_heap;
+	struct cobalt_umm *umm;
 	int ret;
 
 	if (!xnthread_test_state(thread, XNUSER))
@@ -664,13 +664,13 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 		return ret;
 
 	sys_ppd = cobalt_ppd_get(0);
-	sem_heap = &sys_ppd->sem_heap;
-	u_window = xnheap_alloc(sem_heap, sizeof(*u_window));
+	umm = &sys_ppd->umm;
+	u_window = cobalt_umm_alloc(umm, sizeof(*u_window));
 	if (u_window == NULL)
 		return -ENOMEM;
 
 	thread->u_window = u_window;
-	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_winoff);
+	__xn_put_user(cobalt_umm_offset(umm, u_window), u_winoff);
 	xnthread_pin_initial(thread);
 
 	trace_cobalt_shadow_map(thread);
@@ -832,9 +832,15 @@ static unsigned long mayday_unmapped_area(struct file *file,
 
 static int mayday_map(struct file *filp, struct vm_area_struct *vma)
 {
+	struct page *page = vmalloc_to_page(mayday_page);
+
 	vma->vm_pgoff = (unsigned long)mayday_page >> PAGE_SHIFT;
-	return xnheap_remap_vm_page(vma, vma->vm_start,
-				    (unsigned long)mayday_page);
+#ifdef CONFIG_MMU
+	return vm_insert_page(vma, vma->vm_start, page);
+#else
+	return remap_pfn_range(vma, vma->vm_start, page_to_pfn(page),
+			       PAGE_SHIFT, vma->vm_page_prot);
+#endif
 }
 
 static struct file_operations mayday_fops = {
@@ -1104,7 +1110,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 
 	if (xnthread_test_state(thread, XNUSER)) {
 		sys_ppd = cobalt_ppd_get(0);
-		xnheap_free(&sys_ppd->sem_heap, thread->u_window);
+		cobalt_umm_free(&sys_ppd->umm, thread->u_window);
 		thread->u_window = NULL;
 		if (atomic_dec_and_test(&sys_ppd->refcnt))
 			remove_process(cobalt_current_process());
@@ -1345,14 +1351,12 @@ static int attach_process(struct cobalt_process *process)
 	char *exe_path;
 	int ret;
 
-	ret = xnheap_init_mapped(&p->sem_heap,
-				 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
-				 XNARCH_SHARED_HEAP_FLAGS);
+	ret = cobalt_umm_init(&p->umm, CONFIG_XENO_OPT_PRIVATE_HEAPSZ * 1024,
+			      post_ppd_release);
 	if (ret)
 		return ret;
 
-	xnheap_set_label(&p->sem_heap,
-			 "private sem heap [%d]", current->pid);
+	cobalt_umm_set_name(&p->umm, "private heap[%d]", current->pid);
 
 	p->mayday_addr = map_mayday_page(current);
 	if (p->mayday_addr == 0) {
@@ -1383,7 +1387,7 @@ fail_hash:
 	if (p->exe_path)
 		kfree(p->exe_path);
 fail_mayday:
-	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+	cobalt_umm_destroy(&p->umm);
 
 	return ret;
 }
@@ -1429,10 +1433,10 @@ static void detach_process(struct cobalt_process *process)
 	process_hash_remove(process);
 	/*
 	 * CAUTION: the process descriptor might be immediately
-	 * released as a result of calling xnheap_destroy_mapped(), so
-	 * we must do this last, not to tread on stale memory.
+	 * released as a result of calling cobalt_umm_destroy(), so we
+	 * must do this last, not to tread on stale memory.
 	 */
-	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+	cobalt_umm_destroy(&p->umm);
 }
 
 static void cobalt_process_detach(void *arg)
@@ -1484,6 +1488,10 @@ int cobalt_process_init(void)
 
 	xnsynch_init(&yield_sync, XNSYNCH_FIFO, NULL);
 
+	ret = cobalt_memdev_init();
+	if (ret)
+		goto fail_memdev;
+
 	ret = cobalt_register_personality(&cobalt_personality);
 	if (ret)
 		goto fail_register;
@@ -1494,6 +1502,8 @@ int cobalt_process_init(void)
 
 	return 0;
 fail_register:
+	cobalt_memdev_cleanup();
+fail_memdev:
 	xnsynch_destroy(&yield_sync);
 	mayday_cleanup_page();
 fail_mayday:
@@ -1507,6 +1517,7 @@ fail_debug:
 void cobalt_process_cleanup(void)
 {
 	cobalt_unregister_personality(cobalt_personality.xid);
+	cobalt_memdev_cleanup();
 	xnsynch_destroy(&yield_sync);
 	ipipe_set_hooks(&xnsched_realtime_domain, 0);
 	ipipe_set_hooks(ipipe_root_domain, 0);

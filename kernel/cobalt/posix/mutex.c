@@ -44,7 +44,7 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	shadow->lockcnt = 0;
 
 	shadow->attr = *attr;
-	shadow->dat_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, datp);
+	shadow->dat_offset = cobalt_umm_offset(&sys_ppd->umm, datp);
 
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
@@ -89,8 +89,8 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	cobalt_mark_deleted(mutex);
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnheap_free(&cobalt_ppd_get(mutex->attr.pshared)->sem_heap,
-		    mutex->synchbase.fastlock);
+	cobalt_umm_free(&cobalt_ppd_get(mutex->attr.pshared)->umm,
+			mutex->synchbase.fastlock);
 	xnfree(mutex);
 }
 
@@ -256,8 +256,8 @@ COBALT_SYSCALL(mutex_init, current,
 	if (mutex == NULL)
 		return -ENOMEM;
 
-	datp = xnheap_alloc(&cobalt_ppd_get(attr.pshared)->sem_heap,
-			     sizeof(*datp));
+	datp = cobalt_umm_alloc(&cobalt_ppd_get(attr.pshared)->umm,
+				sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(mutex);
 		return -EAGAIN;
@@ -266,7 +266,7 @@ COBALT_SYSCALL(mutex_init, current,
 	err = cobalt_mutex_init_inner(&mx, mutex, datp, &attr);
 	if (err) {
 		xnfree(mutex);
-		xnheap_free(&cobalt_ppd_get(attr.pshared)->sem_heap, datp);
+		cobalt_umm_free(&cobalt_ppd_get(attr.pshared)->umm, datp);
 		return err;
 	}
 

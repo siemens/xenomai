@@ -58,8 +58,8 @@ int __cobalt_sem_destroy(xnhandle_t handle)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnheap_free(&cobalt_ppd_get(!!(sem->flags & SEM_PSHARED))->sem_heap,
-		sem->datp);
+	cobalt_umm_free(&cobalt_ppd_get(!!(sem->flags & SEM_PSHARED))->umm,
+			sem->datp);
 	xnregistry_remove(sem->handle);
 
 	xnfree(sem);
@@ -92,7 +92,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	ksformat(sem->name, sizeof(sem->name), "%s", name);
 
 	sys_ppd = cobalt_ppd_get(!!(flags & SEM_PSHARED));
-	datp = xnheap_alloc(&sys_ppd->sem_heap, sizeof(*datp));
+	datp = cobalt_umm_alloc(&sys_ppd->umm, sizeof(*datp));
 	if (datp == NULL) {
 		ret = -EAGAIN;
 		goto err_free_sem;
@@ -151,7 +151,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 
 	sm->magic = name[0] ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
 	sm->handle = sem->handle;
-	sm->datp_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, datp);
+	sm->datp_offset = cobalt_umm_offset(&sys_ppd->umm, datp);
 	if (flags & SEM_PSHARED)
 		sm->datp_offset = -sm->datp_offset;
 	xnlock_put_irqrestore(&nklock, s);
@@ -162,7 +162,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 
 err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_free(&sys_ppd->sem_heap, datp);
+	cobalt_umm_free(&sys_ppd->umm, datp);
 err_free_sem:
 	xnfree(sem);
 out:

@@ -11,8 +11,10 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
 #include <linux/unistd.h>
 #include <boilerplate/compiler.h>
+#include <rtdm/rtdm.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <asm/xenomai/syscall.h>
 
@@ -34,16 +36,24 @@
 
 static unsigned long long get_used(void)
 {
+	const char *memdev[] = {
+		COBALT_MEMDEV_PRIVATE,
+		COBALT_MEMDEV_SHARED,
+		COBALT_MEMDEV_SYS,
+		NULL,
+	};
+	struct cobalt_memdev_stat statbuf;
 	unsigned long long used = 0;
-	struct cobalt_heapstat hd;
-	int i;
+	int i, fd;
 
-	for (i = 0; XENOMAI_SYSCALL2(sc_cobalt_heap_getstat, &hd, i) == 0; i++)
-		used += hd.used;
-
-	if (used == 0) {
-		fprintf(stderr, "Error: could not get size of used memory\n");
-		exit(EXIT_FAILURE);
+	for (i = 0; memdev[i]; i++) {
+		fd = open(memdev[i], O_RDONLY);
+		if (fd < 0 || ioctl(fd, MEMDEV_RTIOC_STAT, &statbuf)) {
+			fprintf(stderr, "Error: could not open/ioctl device %s\n",
+				memdev[i]);
+			exit(EXIT_FAILURE);
+		}
+		used += statbuf.size - statbuf.free;
 	}
 
 	return used;

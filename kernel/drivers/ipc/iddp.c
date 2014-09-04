@@ -587,7 +587,7 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 			free_pages_exact(poolmem, poolsz);
 			goto fail;
 		}
-		xnheap_set_label(&sk->privpool, "ippd: %d", port);
+		xnheap_set_name(&sk->privpool, "iddp-pool@%d", port);
 
 		sk->poolwaitq = &sk->privwaitq;
 		sk->bufpool = &sk->privpool;

@@ -41,7 +41,7 @@ static inline void __cobalt_set_tsd(xnhandle_t current, __u32 u_winoff)
 	struct xnthread_user_window *window;
 
 	cobalt_current = current;
-	window = cobalt_sem_heap[0] + u_winoff;
+	window = cobalt_umm_private + u_winoff;
 	cobalt_current_window = window;
 	cobalt_commit_memory(cobalt_current_window);
 }
@@ -69,7 +69,7 @@ static inline void __cobalt_set_tsd(xnhandle_t current,
 	current = (current != XN_NO_HANDLE ? current : (xnhandle_t)0);
 	pthread_setspecific(cobalt_current_key, (void *)(uintptr_t)current);
 
-	window = cobalt_sem_heap[0] + u_winoff;
+	window = cobalt_umm_private + u_winoff;
 	pthread_setspecific(cobalt_current_window_key, window);
 	cobalt_commit_memory(window);
 }

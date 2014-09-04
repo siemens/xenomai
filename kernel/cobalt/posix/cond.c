@@ -43,8 +43,8 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
 	xnsynch_destroy(&cond->synchbase);
 	cobalt_mark_deleted(cond);
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_free(&cobalt_ppd_get(cond->attr.pshared)->sem_heap,
-		    cond->pending_signals);
+	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm,
+			cond->pending_signals);
 	xnfree(cond);
 }
 
@@ -62,8 +62,8 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 		return -ENOMEM;
 
 	sys_ppd = cobalt_ppd_get(attr->pshared);
-	cond->pending_signals = xnheap_alloc(&sys_ppd->sem_heap,
-					     sizeof(*cond->pending_signals));
+	cond->pending_signals = cobalt_umm_alloc(&sys_ppd->umm,
+				sizeof(*cond->pending_signals));
 	if (cond->pending_signals == NULL) {
 		err = -EAGAIN;
 		goto err_free_cond;
@@ -102,8 +102,7 @@ do_init:
 	cnd->handle = cond->handle;
 	cnd->attr = *attr;
 	cnd->pending_signals_offset =
-		xnheap_mapped_offset(&sys_ppd->sem_heap,
-				     cond->pending_signals);
+		cobalt_umm_offset(&sys_ppd->umm, cond->pending_signals);
 	cnd->mutex_datp = (struct mutex_dat *)~0UL;
 
 	cnd->magic = COBALT_COND_MAGIC;
@@ -121,8 +120,8 @@ do_init:
 
   err_free_pending_signals:
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_free(&cobalt_ppd_get(cond->attr.pshared)->sem_heap,
-		    cond->pending_signals);
+	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm,
+			cond->pending_signals);
   err_free_cond:
 	xnfree(cond);
 	return err;

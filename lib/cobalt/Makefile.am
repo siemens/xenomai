@@ -2,7 +2,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 
 noinst_HEADERS =	\
 	current.h	\
-	sem_heap.h	\
+	umm.h		\
 	init.h		\
 	internal.h
 
@@ -27,7 +27,6 @@ libcobalt_la_SOURCES =		\
 	printf.c		\
 	rtdm.c			\
 	select.c		\
-	sem_heap.c		\
 	semaphore.c		\
 	signal.c		\
 	sigshadow.c		\
@@ -36,6 +35,7 @@ libcobalt_la_SOURCES =		\
 	timer.c			\
 	timerfd.c		\
 	trace.c			\
+	umm.c			\
 	wrappers.c
 
 libcobalt_la_CPPFLAGS =			\

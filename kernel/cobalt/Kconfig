@@ -305,28 +305,29 @@ config XENO_OPT_SYS_HEAPSZ
 	The system heap is used for various internal allocations by
 	the Cobalt kernel. The size is expressed in Kilobytes.
 
-config XENO_OPT_SEM_HEAPSZ
+config XENO_OPT_PRIVATE_HEAPSZ
 	int "Size of private heap (Kb)"
 	default 32
 	help
 
 	The Cobalt kernel implements fast IPC mechanisms within the
-	scope of a process which require a private memory heap to be
-	shared internally between the kernel and each Xenomai
-	application process. This option can be used to set the size
-	of this per-process heap.
+	scope of a process which require a private kernel memory heap
+	to be mapped in the address space of each Xenomai application
+	process. This option can be used to set the size of this
+	per-process heap.
 
 	32k is considered a large enough size for common use cases.
 
-config XENO_OPT_GLOBAL_SEM_HEAPSZ
-	int "Size of global heap (Kb)"
+config XENO_OPT_SHARED_HEAPSZ
+	int "Size of shared heap (Kb)"
 	default 32
 	help
 
 	The Cobalt kernel implements fast IPC mechanisms between
-	processes which require a global memory heap to be shared
-	between the kernel and all Xenomai application processes. This
-	option can be used to set the size of this system-wide heap.
+	processes which require a shared kernel memory heap to be
+	mapped in the address space of all Xenomai application
+	processes. This option can be used to set the size of this
+	system-wide heap.
 
 	32k is considered a large enough size for common use cases.
 

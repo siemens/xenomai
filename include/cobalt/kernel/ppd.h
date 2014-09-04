@@ -19,12 +19,21 @@
 #ifndef _COBALT_KERNEL_PPD_H
 #define _COBALT_KERNEL_PPD_H
 
+#include <linux/types.h>
 #include <linux/atomic.h>
 #include <linux/rbtree.h>
 #include <cobalt/kernel/heap.h>
 
+struct cobalt_umm {
+	struct xnheap heap;
+	u32 size;
+	void *basemem;
+	atomic_t refcount;
+	void (*release)(struct cobalt_umm *umm);
+};
+
 struct xnsys_ppd {
-	struct xnheap sem_heap;
+	struct cobalt_umm umm;
 	unsigned long mayday_addr;
 	atomic_t refcnt;
 	char *exe_path;

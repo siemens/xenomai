@@ -1514,7 +1514,8 @@ static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 			return -EINVAL;
 
 		while (len >= PAGE_SIZE) {
-			if (xnheap_remap_vm_page(vma, maddr, vaddr))
+			if (vm_insert_page(vma, maddr,
+					   vmalloc_to_page((void *)vaddr)))
 				return -EAGAIN;
 			maddr += PAGE_SIZE;
 			vaddr += PAGE_SIZE;
@@ -1530,8 +1531,8 @@ static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 	vma->vm_pgoff = paddr >> PAGE_SHIFT;
 #endif /* CONFIG_MMU */
 
-	ret = xnheap_remap_kmem_page_range(vma, maddr, paddr,
-					   len, PAGE_SHARED);
+	ret = remap_pfn_range(vma, maddr, paddr >> PAGE_SHIFT,
+			      len, PAGE_SHARED);
 	if (ret)
 		return ret;
 
@@ -1543,16 +1544,23 @@ static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 
 static int mmap_iomem_helper(struct vm_area_struct *vma, phys_addr_t pa)
 {
-	unsigned long maddr, len;
+	pgprot_t prot = PAGE_SHARED;
+	unsigned long len;
 
-	maddr = vma->vm_start;
 	len = vma->vm_end - vma->vm_start;
 #ifndef CONFIG_MMU
 	vma->vm_pgoff = pa >> PAGE_SHIFT;
 #endif /* CONFIG_MMU */
 
-	return xnheap_remap_io_page_range(vma, maddr, pa,
-					  len, PAGE_SHARED);
+#ifdef __HAVE_PHYS_MEM_ACCESS_PROT
+	if (vma->vm_file)
+		prot = phys_mem_access_prot(vma->vm_file, pa >> PAGE_SHIFT,
+					    len, prot);
+#endif
+	vma->vm_page_prot = pgprot_noncached(prot);
+
+	return remap_pfn_range(vma, vma->vm_start, pa >> PAGE_SHIFT,
+			       len, vma->vm_page_prot);
 }
 
 static int mmap_buffer_helper(struct rtdm_fd *fd, struct vm_area_struct *vma)

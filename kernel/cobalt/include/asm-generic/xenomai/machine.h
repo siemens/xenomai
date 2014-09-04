@@ -69,8 +69,8 @@ static inline unsigned long xnarch_timer_calibrate(void)
 	return xnarch_machdesc.calibrate();
 }
 
-#ifndef XNARCH_SHARED_HEAP_FLAGS
-#define XNARCH_SHARED_HEAP_FLAGS  0
+#ifndef xnarch_cache_aliasing
+#define xnarch_cache_aliasing()  0
 #endif
 
 #endif /* !_COBALT_ASM_GENERIC_MACHINE_H */

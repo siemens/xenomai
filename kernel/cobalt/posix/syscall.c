@@ -438,8 +438,7 @@ static COBALT_SYSCALL(info, lostage,
 	struct cobalt_sysinfo info;
 
 	info.clockfreq = xnarch_machdata.clock_freq;
-	info.vdso = xnheap_mapped_offset(&cobalt_ppd_get(1)->sem_heap,
-					 nkvdso);
+	info.vdso = cobalt_umm_offset(&cobalt_ppd_get(1)->umm, nkvdso);
 
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(info));
 }
@@ -493,33 +492,6 @@ static COBALT_SYSCALL(archcall, current,
 			    unsigned long a5))
 {
 	return xnarch_local_syscall(a1, a2, a3, a4, a5);
-}
-
-static COBALT_SYSCALL(heap_getstat, lostage,
-		      int, (struct cobalt_heapstat __user *u_hd,
-			    unsigned int heap_nr))
-{
-	struct cobalt_heapstat hd;
-	struct xnheap *heap;
-
-	switch(heap_nr) {
-	case COBALT_PRIVATE_HEAP:
-	case COBALT_SHARED_HEAP:
-		heap = &cobalt_ppd_get(heap_nr)->sem_heap;
-		break;
-	case COBALT_GLOBAL_HEAP:
-		heap = &kheap;
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	hd.handle = (unsigned long)heap;
-	hd.size = xnheap_extentsize(heap);
-	hd.area = xnheap_base_memory(heap);
-	hd.used = xnheap_used_mem(heap);
-
-	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }
 
 static COBALT_SYSCALL(get_current, current,
@@ -744,11 +716,11 @@ static int cobalt_ni(void)
  * - then __COBALT_CALL_ENTRY() produces a native call entry
  * (e.g. pure 64bit call handler for a 64bit architecture), and
  * optionally a set of 32bit syscall entries offset by an
- * arch-specific base index defaulting to the native calls, all in the
- * same syscall table/array. These nitty-gritty details are defined by
- * asm/xenomai/syscall32.h. 32bit architectures - or 64bit ones for
- * which we don't support any 32bit ABI model - will simply define
- * __COBALT_CALL32_ENTRY() as an empty macro.
+ * arch-specific base index, which default to the native calls. These
+ * nitty-gritty details are defined by <asm/xenomai/syscall32.h>. 32bit
+ * architectures - or 64bit ones for which we don't support any 32bit
+ * ABI model - will simply define __COBALT_CALL32_ENTRY() as an empty
+ * macro.
  *
  * - finally, pure 32bit call entries are generated per-architecture,
  * by including <asm/xenomai/syscall32-table.h>, overriding the
@@ -764,8 +736,8 @@ static int cobalt_ni(void)
  *
  * cobalt32x_mq_timedreceive() would do the required thunking for
  * dealing with the 32<->64bit conversion of arguments. On the other
- * hand, sc_cobalt_sched_yield which do not require any thunking would
- * also appear twice, but both entries would point at the native
+ * hand, sc_cobalt_sched_yield - which do not require any thunking -
+ * would also appear twice, but both entries would point at the native
  * syscall implementation:
  *
  * [sc_cobalt_sched_yield] = cobalt_sched_yield,
@@ -888,7 +860,6 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(extend),
 	__COBALT_CALL_ENTRY(info),
 	__COBALT_CALL_ENTRY(trace),
-	__COBALT_CALL_ENTRY(heap_getstat),
 	__COBALT_CALL_ENTRY(get_current),
 	__COBALT_CALL_ENTRY(mayday),
 	__COBALT_CALL_ENTRY(backtrace),
@@ -992,7 +963,6 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(extend, lostage),
 	__COBALT_MODE(info, lostage),
 	__COBALT_MODE(trace, current),
-	__COBALT_MODE(heap_getstat, lostage),
 	__COBALT_MODE(get_current, current),
 	__COBALT_MODE(mayday, oneway),
 	__COBALT_MODE(backtrace, current),

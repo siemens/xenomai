@@ -18,19 +18,20 @@
 #ifndef _COBALT_UAPI_KERNEL_HEAP_H
 #define _COBALT_UAPI_KERNEL_HEAP_H
 
+#include <linux/types.h>
+
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
 #define XNHEAP_DEV_MINOR 254
 
-/* For sc_cobalt_heap_getstat. */
-#define COBALT_PRIVATE_HEAP  0
-#define COBALT_SHARED_HEAP   1
-#define COBALT_GLOBAL_HEAP   2
+#define COBALT_MEMDEV_PRIVATE  "memdev-private"
+#define COBALT_MEMDEV_SHARED   "memdev-shared"
+#define COBALT_MEMDEV_SYS      "memdev-sys"
 
-struct cobalt_heapstat {
-	unsigned long handle;
-	unsigned int size;
-	unsigned long area;
-	unsigned long used;
+struct cobalt_memdev_stat {
+	__u32 size;
+	__u32 free;
 };
+
+#define MEMDEV_RTIOC_STAT	_IOR(RTDM_CLASS_MEMORY, 0, struct cobalt_memdev_stat)
 
 #endif /* !_COBALT_UAPI_KERNEL_HEAP_H */

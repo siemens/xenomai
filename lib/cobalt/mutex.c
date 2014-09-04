@@ -79,8 +79,8 @@ void cobalt_default_mutexattr_init(void)
  * - ENOMEM, insufficient memory exists in the system heap to initialize the
  *   mutex, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  * - EAGAIN, insufficient memory exists in the semaphore heap to initialize the
- *   mutex, increase CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ for a process-shared
- *   mutex, or CONFG_XENO_OPT_SEM_HEAPSZ for a process-private mutex.
+ *   mutex, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared
+ *   mutex, or CONFG_XENO_OPT_PRIVATE_HEAPSZ for a process-private mutex.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
@@ -131,7 +131,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 
 	if (!_mutex->attr.pshared) {
 		datp = (struct mutex_dat *)
-			(cobalt_sem_heap[0] + _mutex->dat_offset);
+			(cobalt_umm_private + _mutex->dat_offset);
 		_mutex->dat = datp;
 	} else
 		datp = mutex_get_datp(_mutex);

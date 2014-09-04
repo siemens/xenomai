@@ -48,10 +48,10 @@ static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
 
 	if (pshared)
 		return (struct sem_dat *)
-			(cobalt_sem_heap[1] - shadow->datp_offset);
-	else
-		return (struct sem_dat *)
-			(cobalt_sem_heap[0] + shadow->datp_offset);
+			(cobalt_umm_shared - shadow->datp_offset);
+
+	return (struct sem_dat *)
+		(cobalt_umm_private + shadow->datp_offset);
 }
 
 /**

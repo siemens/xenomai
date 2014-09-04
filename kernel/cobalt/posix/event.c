@@ -55,8 +55,8 @@ COBALT_SYSCALL(event_init, current,
 	int pshared, synflags, ret;
 	struct cobalt_event *event;
 	struct cobalt_kqueues *kq;
+	struct cobalt_umm *umm;
 	unsigned long datoff;
-	struct xnheap *heap;
 	spl_t s;
 
 	trace_cobalt_event_init(u_event, value, flags);
@@ -66,8 +66,8 @@ COBALT_SYSCALL(event_init, current,
 		return -ENOMEM;
 
 	pshared = (flags & COBALT_EVENT_SHARED) != 0;
-	heap = &cobalt_ppd_get(pshared)->sem_heap;
-	datp = xnheap_alloc(heap, sizeof(*datp));
+	umm = &cobalt_ppd_get(pshared)->umm;
+	datp = cobalt_umm_alloc(umm, sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(event);
 		return -EAGAIN;
@@ -75,7 +75,7 @@ COBALT_SYSCALL(event_init, current,
 
 	ret = xnregistry_enter_anon(event, &event->handle);
 	if (ret) {
-		xnheap_free(heap, datp);
+		cobalt_umm_free(umm, datp);
 		xnfree(event);
 		return ret;
 	}
@@ -96,7 +96,7 @@ COBALT_SYSCALL(event_init, current,
 	datp->value = value;
 	datp->flags = 0;
 	datp->nwaiters = 0;
-	datoff = xnheap_mapped_offset(heap, datp);
+	datoff = cobalt_umm_offset(umm, datp);
 	XENO_BUGON(COBALT, datoff != (__u32)datoff);
 	shadow.flags = flags;
 	shadow.handle = event->handle;
@@ -246,9 +246,9 @@ out:
 
 static void event_destroy(struct cobalt_event *event,
 			  struct cobalt_kqueues *q,
-			  spl_t s)
+			  spl_t s) /* atomic-entry */
 {
-	struct xnheap *heap;
+	struct cobalt_umm *umm;
 	int pshared;
 
 	list_del(&event->link);
@@ -256,10 +256,10 @@ static void event_destroy(struct cobalt_event *event,
 	xnregistry_remove(event->handle);
 	event->magic = 0;
 	pshared = (event->flags & COBALT_EVENT_SHARED) != 0;
-
 	xnlock_put_irqrestore(&nklock, s);
-	heap = &cobalt_ppd_get(pshared)->sem_heap;
-	xnheap_free(heap, event->data);
+
+	umm = &cobalt_ppd_get(pshared)->umm;
+	cobalt_umm_free(umm, event->data);
 	xnfree(event);
 	xnlock_get_irqsave(&nklock, s);
 }

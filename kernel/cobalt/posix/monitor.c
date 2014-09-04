@@ -57,8 +57,8 @@ COBALT_SYSCALL(monitor_init, current,
 	struct cobalt_monitor *mon;
 	struct cobalt_kqueues *kq;
 	int pshared, tmode, ret;
+	struct cobalt_umm *umm;
 	unsigned long datoff;
-	struct xnheap *heap;
 	spl_t s;
 
 	tmode = clock_flag(TIMER_ABSTIME, clk_id);
@@ -70,8 +70,8 @@ COBALT_SYSCALL(monitor_init, current,
 		return -ENOMEM;
 
 	pshared = (flags & COBALT_MONITOR_SHARED) != 0;
-	heap = &cobalt_ppd_get(pshared)->sem_heap;
-	datp = xnheap_alloc(heap, sizeof(*datp));
+	umm = &cobalt_ppd_get(pshared)->umm;
+	datp = cobalt_umm_alloc(umm, sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(mon);
 		return -EAGAIN;
@@ -79,7 +79,7 @@ COBALT_SYSCALL(monitor_init, current,
 
 	ret = xnregistry_enter_anon(mon, &mon->handle);
 	if (ret) {
-		xnheap_free(heap, datp);
+		cobalt_umm_free(umm, datp);
 		xnfree(mon);
 		return ret;
 	}
@@ -100,7 +100,7 @@ COBALT_SYSCALL(monitor_init, current,
 	mon->magic = COBALT_MONITOR_MAGIC;
 
 	datp->flags = 0;
-	datoff = xnheap_mapped_offset(heap, datp);
+	datoff = cobalt_umm_offset(umm, datp);
 	XENO_BUGON(COBALT, datoff != (__u32)datoff);
 	shadow.flags = flags;
 	shadow.handle = mon->handle;
@@ -366,7 +366,7 @@ COBALT_SYSCALL(monitor_exit, primary,
 static void monitor_destroy(struct cobalt_monitor *mon,
 			    struct cobalt_kqueues *q)
 {
-	struct xnheap *heap;
+	struct cobalt_umm *umm;
 	int pshared;
 	spl_t s;
 
@@ -378,8 +378,8 @@ static void monitor_destroy(struct cobalt_monitor *mon,
 	xnlock_put_irqrestore(&nklock, s);
 
 	pshared = (mon->flags & COBALT_MONITOR_SHARED) != 0;
-	heap = &cobalt_ppd_get(pshared)->sem_heap;
-	xnheap_free(heap, mon->data);
+	umm = &cobalt_ppd_get(pshared)->umm;
+	cobalt_umm_free(umm, mon->data);
 	xnfree(mon);
 }
 

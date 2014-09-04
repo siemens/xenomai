@@ -63,8 +63,6 @@
 #define XNHEAP_PCONT   1
 #define XNHEAP_PLIST   2
 
-#define XNHEAP_GFP_NONCACHED (1 << __GFP_BITS_SHIFT)
-
 struct xnpagemap {
 	unsigned int type : 8;	  /* PFREE, PCONT, PLIST or log2 */
 	unsigned int bcount : 24; /* Number of active blocks. */
@@ -84,6 +82,7 @@ struct xnextent {
 };
 
 struct xnheap {
+	char name[XNOBJECT_NAME_LEN];
 	unsigned long extentsize;
 	unsigned long pagesize;
 	unsigned long pageshift;
@@ -92,7 +91,6 @@ struct xnheap {
 	unsigned long npages;
 	unsigned long ubytes;
 	unsigned long maxcont;
-
 	struct list_head extents;
 	int nrextents;
 
@@ -103,22 +101,8 @@ struct xnheap {
 		int fcount;
 	} buckets[XNHEAP_NBUCKETS];
 
-	/* # of active user-space mappings. */
-	unsigned long numaps;
-	/* Kernel memory flags (0 if vmalloc()). */
-	int kmflags;
-	/* Shared heap memory base. */
-	void *heapbase;
-	/* Callback upon last munmap. */
-	void (*release)(struct xnheap *heap);
-
 	/** heapq */
-	struct list_head stat_link;
-
-	char label[XNOBJECT_NAME_LEN+16];
-
-	/** kheap */
-	struct list_head link;
+	struct list_head next;
 };
 
 extern struct xnheap kheap;
@@ -188,25 +172,8 @@ int xnheap_mount(void);
 
 void xnheap_umount(void);
 
-int xnheap_init_mapped(struct xnheap *heap,
-		       unsigned long heapsize,
-		       int memflags);
-
-void xnheap_destroy_mapped(struct xnheap *heap,
-			   void (*release)(struct xnheap *heap),
-			   void __user *mapaddr);
-
 #define xnheap_base_memory(heap) \
 	((unsigned long)((heap)->heapbase))
-
-#define xnheap_mapped_offset(heap,ptr) \
-	(((caddr_t)(ptr)) - (caddr_t)xnheap_base_memory(heap))
-
-#define xnheap_mapped_address(heap,off) \
-	((caddr_t)xnheap_base_memory(heap) + (off))
-
-#define xnheap_mapped_p(heap) \
-	(xnheap_base_memory(heap) != 0)
 
 /* Public interface. */
 
@@ -215,8 +182,8 @@ int xnheap_init(struct xnheap *heap,
 		unsigned long heapsize,
 		unsigned long pagesize);
 
-void xnheap_set_label(struct xnheap *heap,
-		      const char *name, ...);
+void xnheap_set_name(struct xnheap *heap,
+		     const char *name, ...);
 
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,
@@ -241,20 +208,6 @@ int xnheap_free(struct xnheap *heap,
 
 int xnheap_check_block(struct xnheap *heap,
 		       void *block);
-
-int xnheap_remap_vm_page(struct vm_area_struct *vma,
-			 unsigned long from, unsigned long to);
-
-struct file;
-struct vm_area_struct;
-
-int xnheap_remap_io_page_range(struct vm_area_struct *vma,
-			       unsigned long from, phys_addr_t to,
-			       unsigned long size, pgprot_t prot);
-
-int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
-				 unsigned long from, unsigned long to,
-				 unsigned long size, pgprot_t prot);
 
 /** @} */
 

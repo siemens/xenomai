@@ -15,17 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _LIB_COBALT_SEM_HEAP_H
-#define _LIB_COBALT_SEM_HEAP_H
+#ifndef _LIB_COBALT_UMM_H
+#define _LIB_COBALT_UMM_H
 
-struct cobalt_heapstat;
-
-void cobalt_init_sem_heaps(void);
-
-void *cobalt_map_heap(struct cobalt_heapstat *hd);
+void cobalt_init_umm(void);
 
 struct xnvdso;
 
 extern struct xnvdso *vdso;
 
-#endif /* _LIB_COBALT_SEM_HEAP_H */
+#endif /* _LIB_COBALT_UMM_H */

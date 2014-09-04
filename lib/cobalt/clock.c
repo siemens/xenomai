@@ -28,7 +28,7 @@
 #include <cobalt/ticks.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/tsc.h>
-#include "sem_heap.h"
+#include "umm.h"
 #include "internal.h"
 
 /**

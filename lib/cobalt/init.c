@@ -30,7 +30,7 @@
 #include <cobalt/uapi/kernel/heap.h>
 #include <cobalt/ticks.h>
 #include <asm/xenomai/syscall.h>
-#include "sem_heap.h"
+#include "umm.h"
 #include "internal.h"
 #include "init.h"
 
@@ -115,7 +115,7 @@ static void low_init(void)
 		exit(EXIT_FAILURE);
 	}
 
-	cobalt_init_sem_heaps();
+	cobalt_init_umm();
 
 	cobalt_init_current_keys();
 

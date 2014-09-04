@@ -6,6 +6,7 @@ xenomai-y :=		\
 	event.o		\
 	init.o		\
 	io.o		\
+	memory.o	\
 	monitor.o	\
 	mqueue.o	\
 	mutex.o		\

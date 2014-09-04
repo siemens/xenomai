@@ -58,7 +58,7 @@ static pthread_condattr_t cobalt_default_condattr;
 static inline __u32 *cond_get_signalsp(struct cobalt_cond_shadow *shadow)
 {
 	if (shadow->attr.pshared)
-		return (__u32 *)(cobalt_sem_heap[1]
+		return (__u32 *)(cobalt_umm_shared
 				 + shadow->pending_signals_offset);
 
 	return shadow->pending_signals;
@@ -71,7 +71,7 @@ cond_get_mutex_datp(struct cobalt_cond_shadow *shadow)
 		return NULL;
 
 	if (shadow->attr.pshared)
-		return (struct mutex_dat *)(cobalt_sem_heap[1]
+		return (struct mutex_dat *)(cobalt_umm_shared
 					    + shadow->mutex_datp_offset);
 
 	return shadow->mutex_datp;
@@ -135,7 +135,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 
 	if (!_cnd->attr.pshared) {
 		pending_signalsp = (__u32 *)
-			(cobalt_sem_heap[0] + _cnd->pending_signals_offset);
+			(cobalt_umm_private + _cnd->pending_signals_offset);
 		_cnd->pending_signals = pending_signalsp;
 	} else
 		pending_signalsp = cond_get_signalsp(_cnd);

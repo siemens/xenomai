@@ -261,7 +261,6 @@ static __init int enable_timesource(void)
 
 	nkclock.wallclock_offset =
 		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
-	nkvdso->wallclock_offset = nkclock.wallclock_offset;
 
 	ret = xntimer_setup_ipi();
 	if (ret)
@@ -344,10 +343,10 @@ static __init int sys_init(void)
 	heapaddr = alloc_pages_exact(sysheap_size_arg * 1024, GFP_KERNEL);
 	if (heapaddr == NULL ||
 	    xnheap_init(&kheap, heapaddr, sysheap_size_arg * 1024,
-			XNHEAP_PAGE_SIZE) != 0) {
+			PAGE_SIZE) != 0) {
 		return -ENOMEM;
 	}
-	xnheap_set_label(&kheap, "main heap");
+	xnheap_set_name(&kheap, "system heap");
 
 	for_each_online_cpu(cpu) {
 		sched = &per_cpu(nksched, cpu);

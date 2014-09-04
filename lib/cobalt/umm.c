@@ -22,68 +22,55 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <rtdm/rtdm.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <asm/xenomai/syscall.h>
 #include "current.h"
-#include "sem_heap.h"
+#include "umm.h"
 #include "internal.h"
-
-#define PRIVATE 0
-#define SHARED 1
 
 struct xnvdso *vdso;
 
-void *cobalt_sem_heap[2] = { NULL, NULL };
+void *cobalt_umm_private = NULL;
 
-static pthread_once_t init_private_heap = PTHREAD_ONCE_INIT;
-static struct cobalt_heapstat private_hdesc;
+void *cobalt_umm_shared = NULL;
 
-void *cobalt_map_heap(struct cobalt_heapstat *hd)
+static pthread_once_t init_bind_once = PTHREAD_ONCE_INIT;
+
+static uint32_t private_size;
+
+static void *map_umm(const char *name, uint32_t *size_r)
 {
+	struct cobalt_memdev_stat statbuf;
 	int fd, ret;
 	void *addr;
 
-	fd = open(XNHEAP_DEV_NAME, O_RDWR, 0);
+	fd = __RT(open(name, O_RDWR));
 	if (fd < 0) {
-		report_error("cannot open %s: %s", XNHEAP_DEV_NAME,
+		report_error("cannot open RTDM device %s: %s", name,
 			     strerror(errno));
 		return MAP_FAILED;
 	}
 
-	ret = ioctl(fd, 0, hd->handle);
+	ret = __RT(ioctl(fd, MEMDEV_RTIOC_STAT, &statbuf));
 	if (ret) {
-		report_error("failed association with %s: %s",
-			     XNHEAP_DEV_NAME, strerror(errno));
+		report_error("failed getting status of %s: %s",
+			     name, strerror(errno));
 		return MAP_FAILED;
 	}
 
-	addr = __STD(mmap(NULL, hd->size, PROT_READ|PROT_WRITE,
-			  MAP_SHARED, fd, hd->area));
+	addr = __RT(mmap(NULL, statbuf.size, PROT_READ|PROT_WRITE,
+			 MAP_SHARED, fd, 0));
+	__RT(close(fd));
 
-	close(fd);
+	*size_r = statbuf.size;
 
 	return addr;
-}
-
-static void *map_sem_heap(unsigned int shared)
-{
-	struct cobalt_heapstat global_hdesc, *hdesc;
-	int ret;
-
-	hdesc = shared ? &global_hdesc : &private_hdesc;
-	ret = XENOMAI_SYSCALL2(sc_cobalt_heap_getstat, hdesc, shared);
-	if (ret < 0) {
-		report_error("cannot locate %s heap: %s",
-			     shared ? "shared" : "private",
-			     strerror(-ret));
-		return MAP_FAILED;
-	}
-
-	return cobalt_map_heap(hdesc);
 }
 
 static void unmap_on_fork(void)
@@ -101,18 +88,18 @@ static void unmap_on_fork(void)
 	 * We replace former mappings with an invalid one, to detect
 	 * any spuriously late access from the fastsync code.
 	 */
-	addr = __STD(mmap(cobalt_sem_heap[PRIVATE],
-			  private_hdesc.size, PROT_NONE,
+	addr = __STD(mmap(cobalt_umm_private,
+			  private_size, PROT_NONE,
 			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0));
 
-	if (addr != cobalt_sem_heap[PRIVATE])
-		munmap(cobalt_sem_heap[PRIVATE], private_hdesc.size);
+	if (addr != cobalt_umm_private)
+		munmap(cobalt_umm_private, private_size);
 
-	cobalt_sem_heap[PRIVATE] = NULL;
-	init_private_heap = PTHREAD_ONCE_INIT;
+	cobalt_umm_private = NULL;
+	init_bind_once = PTHREAD_ONCE_INIT;
 }
 
-static void cobalt_init_vdso(void)
+static void init_vdso(void)
 {
 	struct cobalt_sysinfo sysinfo;
 	int ret;
@@ -123,40 +110,44 @@ static void cobalt_init_vdso(void)
 		exit(EXIT_FAILURE);
 	}
 
-	vdso = (struct xnvdso *)(cobalt_sem_heap[SHARED] + sysinfo.vdso);
+	vdso = (struct xnvdso *)(cobalt_umm_shared + sysinfo.vdso);
 }
 
-/* Will be called once at library loading time, and when re-binding
-   after a fork */
-static void cobalt_init_private_heap(void)
+/*
+ * Will be called once at library loading time, and when re-binding
+ * after a fork.
+ */
+static void init_bind(void)
 {
-	cobalt_sem_heap[PRIVATE] = map_sem_heap(PRIVATE);
-	if (cobalt_sem_heap[PRIVATE] == MAP_FAILED) {
-		report_error("cannot map private heap: %s",
+	cobalt_umm_private = map_umm(COBALT_MEMDEV_PRIVATE, &private_size);
+	if (cobalt_umm_private == MAP_FAILED) {
+		report_error("cannot map private umm area: %s",
 			     strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 }
 
 /* Will be called only once, at library loading time. */
-static void cobalt_init_rest_once(void)
+static void init_loadup(void)
 {
+	uint32_t size;
+
 	pthread_atfork(NULL, NULL, unmap_on_fork);
 
-	cobalt_sem_heap[SHARED] = map_sem_heap(SHARED);
-	if (cobalt_sem_heap[SHARED] == MAP_FAILED) {
-		report_error("cannot map shared heap: %s",
+	cobalt_umm_shared = map_umm(COBALT_MEMDEV_SHARED, &size);
+	if (cobalt_umm_shared == MAP_FAILED) {
+		report_error("cannot map shared umm area: %s",
 			     strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	cobalt_init_vdso();
+	init_vdso();
 }
 
-void cobalt_init_sem_heaps(void)
+void cobalt_init_umm(void)
 {
-	static pthread_once_t init_rest_once = PTHREAD_ONCE_INIT;
+	static pthread_once_t init_loadup_once = PTHREAD_ONCE_INIT;
 
-	pthread_once(&init_private_heap, &cobalt_init_private_heap);
-	pthread_once(&init_rest_once, &cobalt_init_rest_once);
+	pthread_once(&init_bind_once, init_bind);
+	pthread_once(&init_loadup_once, init_loadup);
 }

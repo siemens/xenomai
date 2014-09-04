@@ -35,7 +35,7 @@
 #include <asm/mach/irq.h>
 #include <asm/cacheflush.h>
 
-#define XNARCH_SHARED_HEAP_FLAGS (cache_is_vivt() ? XNHEAP_GFP_NONCACHED : 0)
+#define xnarch_cache_aliasing() cache_is_vivt()
 
 #if __LINUX_ARM_ARCH__ < 5
 static inline __attribute_const__ unsigned long ffnz(unsigned long x)

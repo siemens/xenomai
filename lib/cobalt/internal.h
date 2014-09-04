@@ -21,7 +21,9 @@
 #include <cobalt/sys/cobalt.h>
 #include "current.h"
 
-extern void *cobalt_sem_heap[2];
+extern void *cobalt_umm_private;
+
+extern void *cobalt_umm_shared;
 
 void cobalt_sigshadow_install_once(void);
 
@@ -29,7 +31,7 @@ static inline struct mutex_dat *mutex_get_datp(struct cobalt_mutex_shadow *shado
 {
 	if (shadow->attr.pshared)
 		return (struct mutex_dat *)
-			(cobalt_sem_heap[1] + shadow->dat_offset);
+			(cobalt_umm_shared + shadow->dat_offset);
 
 	return shadow->dat;
 }

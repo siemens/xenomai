@@ -28,6 +28,7 @@
 #include "process.h"
 #include "extension.h"
 #include "syscall.h"
+#include "memory.h"
 
 #define COBALT_MAXNAME		64
 #define COBALT_PERMS_MASK	(O_RDONLY | O_WRONLY | O_RDWR)
