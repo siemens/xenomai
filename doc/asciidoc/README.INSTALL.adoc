@@ -566,7 +566,7 @@ for the supported SOCs:
 		may be +-march=armv7-a+ or
 		+-march=armv7a+]|
 |imx6q	     | +-march=armv7-a -mfpu=vfp3+ footnoteref:[armv7] |
-|ixp4xx      | +-march=armv5 -msoft-float+         | +--enable-arm-tsc=ixp4xx+
+|ixp4xx      | +-march=armv5 -msoft-float+         |
 |omap3       | +-march=armv7-a -mfpu=vfp3+ footnoteref:[armv7] |
 |omap4       | +-march=armv7-a -mfpu=vfp3+ footnoteref:[armv7] |
 |orion       | +-march=armv5 -mfpu=vfp+            |
