@@ -347,7 +347,7 @@ static int __wind_task_unlock(struct pt_regs *regs)
 static int __wind_task_safe(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	xnthread_t *thread;
+	xnthread_t *curr;
 	WIND_TCB *pTcb;
 	spl_t s;
 
@@ -359,11 +359,11 @@ static int __wind_task_safe(struct pt_regs *regs)
 			xnlock_put_irqrestore(&nklock, s);
 			return S_objLib_OBJ_ID_ERROR;
 		}
-		thread = &pTcb->threadbase;
+		curr = &pTcb->threadbase;
 	} else
-		thread = xnpod_current_thread();
+		curr = xnpod_current_thread();
 
-	taskSafeInner(thread);
+	taskSafeInner(curr);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;

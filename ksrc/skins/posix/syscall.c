@@ -1122,7 +1122,7 @@ static int __pthread_mutex_trylock(struct pt_regs *regs)
 
 static int __pthread_mutex_unlock(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	struct __shadow_mutex *shadow;
 	union __xeno_mutex mx, *umx;
 	DECLARE_CB_LOCK_FLAGS(s);
@@ -1152,7 +1152,7 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	mutex = shadow->mutex;
 
-	err = (xnsynch_owner(&mutex->synchbase) == cur) ? 0 : -EPERM;
+	err = (xnsynch_owner(&mutex->synchbase) == curr) ? 0 : -EPERM;
 	if (err)
 		goto out;
 
@@ -1543,7 +1543,7 @@ struct us_cond_data {
 /* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
 static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *curr = xnshadow_thread(current);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
 	struct us_cond_data d;
@@ -1577,14 +1577,14 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 					     sizeof(ts)))
 			return -EFAULT;
 
-		err = pse51_cond_timedwait_prologue(cur,
+		err = pse51_cond_timedwait_prologue(curr,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
 						    &d.count,
 						    timed,
 						    ts2ticks_ceil(&ts) + 1);
 	} else
-		err = pse51_cond_timedwait_prologue(cur,
+		err = pse51_cond_timedwait_prologue(curr,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
 						    &d.count,
@@ -1594,7 +1594,7 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 	case 0:
 	case ETIMEDOUT:
 		perr = d.err = err;
-		err = -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+		err = -pse51_cond_timedwait_epilogue(curr, &cnd.shadow_cond,
 					    	    &mx.shadow_mutex, d.count);
 		if (err == 0 &&
 		    __xn_safe_copy_to_user((void __user *)
@@ -1620,7 +1620,7 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 /* pthread_cond_wait_epilogue(cond, mutex, count) */
 static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *curr = xnshadow_thread(current);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
 	unsigned count;
@@ -1646,7 +1646,7 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 				     ))
 		return -EFAULT;
 
-	err = pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+	err = pse51_cond_timedwait_epilogue(curr, &cnd.shadow_cond,
 					      &mx.shadow_mutex, count);
 
 	if (err == 0
@@ -2157,7 +2157,7 @@ static int __intr_wait(struct pt_regs *regs)
 	pthread_intr_t intr = (pthread_intr_t) __xn_reg_arg1(regs);
 	union xnsched_policy_param param;
 	struct timespec ts;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xnticks_t timeout;
 	int err = 0;
 	spl_t s;
@@ -2188,21 +2188,21 @@ static int __intr_wait(struct pt_regs *regs)
 	}
 
 	if (!intr->pending) {
-		thread = xnpod_current_thread();
+		curr = xnpod_current_thread();
 
-		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
+		if (xnthread_base_priority(curr) != XNSCHED_IRQ_PRIO) {
 			/* Boost the waiter above all regular threads if needed. */
 			param.rt.prio = XNSCHED_IRQ_PRIO;
-			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+			xnpod_set_thread_schedparam(curr, &xnsched_class_rt, &param);
 		}
 
 		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 
-		if (xnthread_test_info(thread, XNRMID))
+		if (xnthread_test_info(curr, XNRMID))
 			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
+		else if (xnthread_test_info(curr, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
+		else if (xnthread_test_info(curr, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 		else {
 			err = intr->pending;
@@ -2416,12 +2416,12 @@ static int __select(struct pt_regs *regs)
 	xntmode_t mode = XN_RELATIVE;
 	struct xnselector *selector;
 	struct timeval tv;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	int i, err, nfds;
 	size_t fds_size;
 
-	thread = xnpod_current_thread();
-	if (!thread)
+	curr = xnpod_current_thread();
+	if (!curr)
 		return -EPERM;
 
 	if (__xn_reg_arg5(regs)) {
@@ -2453,7 +2453,7 @@ static int __select(struct pt_regs *regs)
 				return -EFAULT;
 		}
 
-	selector = thread->selector;
+	selector = curr->selector;
 	if (!selector) {
 		/* This function may be called from pure Linux fd_sets, we want
 		   to avoid the xnselector allocation in this case, so, we do a
@@ -2462,10 +2462,10 @@ static int __select(struct pt_regs *regs)
 		if (!first_fd_valid_p(in_fds, nfds))
 			return -EBADF;
 
-		if (!(selector = xnmalloc(sizeof(*thread->selector))))
+		if (!(selector = xnmalloc(sizeof(*curr->selector))))
 			return -ENOMEM;
 		xnselector_init(selector);
-		thread->selector = selector;
+		curr->selector = selector;
 
 		/* Bind directly the file descriptors, we do not need to go
 		   through xnselect returning -ECHRNG */

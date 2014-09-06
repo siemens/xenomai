@@ -798,7 +798,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
 {
 	struct xnobject *object;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xntbase_t *tbase;
 	int err = 0;
 	spl_t s;
@@ -806,8 +806,8 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 	if (!key)
 		return -EINVAL;
 
-	thread = xnpod_current_thread();
-	tbase = xnthread_time_base(thread);
+	curr = xnpod_current_thread();
+	tbase = xnthread_time_base(curr);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -831,15 +831,15 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 			goto unlock_and_exit;
 		}
 
-		thread->registry.waitkey = key;
+		curr->registry.waitkey = key;
 		xnsynch_sleep_on(&registry_hash_synch, timeout, timeout_mode);
 
-		if (xnthread_test_info(thread, XNTIMEO)) {
+		if (xnthread_test_info(curr, XNTIMEO)) {
 			err = -ETIMEDOUT;
 			goto unlock_and_exit;
 		}
 
-		if (xnthread_test_info(thread, XNBREAK)) {
+		if (xnthread_test_info(curr, XNBREAK)) {
 			err = -EINTR;
 			goto unlock_and_exit;
 		}

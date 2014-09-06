@@ -98,17 +98,17 @@ static inline void __xnpod_giveup_fpu(struct xnsched *sched,
 		sched->fpuholder = NULL;
 }
 
-static inline void __xnpod_release_fpu(struct xnthread *thread)
+static inline void __xnpod_release_fpu(struct xnthread *curr)
 {
-	if (xnthread_test_state(thread, XNFPU)) {
+	if (xnthread_test_state(curr, XNFPU)) {
 		/*
 		 * Force the FPU save, and nullify the
 		 * sched->fpuholder pointer, to avoid leaving
 		 * fpuholder pointing on the backup area of the
 		 * migrated thread.
 		 */
-		xnarch_save_fpu(xnthread_archtcb(thread));
-		thread->sched->fpuholder = NULL;
+		xnarch_save_fpu(xnthread_archtcb(curr));
+		curr->sched->fpuholder = NULL;
 	}
 }
 
@@ -1917,7 +1917,7 @@ unlock_and_exit:
 
 int xnpod_migrate_thread(int cpu)
 {
-	struct xnthread *thread;
+	struct xnthread *curr;
 	struct xnsched *sched;
 	int ret = 0;
 	spl_t s;
@@ -1930,9 +1930,9 @@ int xnpod_migrate_thread(int cpu)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	thread = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
-	if (!xnarch_cpu_isset(cpu, thread->affinity)) {
+	if (!xnarch_cpu_isset(cpu, curr->affinity)) {
 		ret = -EPERM;
 		goto unlock_and_exit;
 	}
@@ -1944,15 +1944,15 @@ int xnpod_migrate_thread(int cpu)
 
 	trace_mark(xn_nucleus, thread_migrate,
 		   "thread %p thread_name %s cpu %d",
-		   thread, xnthread_name(thread), cpu);
+		   curr, xnthread_name(curr), cpu);
 
-	__xnpod_release_fpu(thread);
+	__xnpod_release_fpu(curr);
 
 	/* Move to remote scheduler. */
-	xnsched_migrate(thread, sched);
+	xnsched_migrate(curr, sched);
 
 	/* Migrate the thread periodic timer. */
-	xntimer_set_sched(&thread->ptimer, sched);
+	xntimer_set_sched(&curr->ptimer, sched);
 
 	xnpod_schedule();
 
@@ -1960,7 +1960,7 @@ int xnpod_migrate_thread(int cpu)
 	 * Reset execution time measurement period so that we don't
 	 * mess up per-CPU statistics.
 	 */
-	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
+	xnstat_exectime_reset_stats(&curr->stat.lastperiod);
 
       unlock_and_exit:
 
@@ -1983,7 +1983,7 @@ EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
 
 void xnpod_dispatch_signals(void)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	int asrimask, savedmask;
 	xnflags_t oldmode;
 	xnsigmask_t sigs;
@@ -1992,26 +1992,26 @@ void xnpod_dispatch_signals(void)
 	/* Process user-defined signals if the ASR is enabled for this
 	   thread. */
 
-	if (thread->signals == 0 || xnthread_test_state(thread, XNASDI)
-	    || thread->asr == XNTHREAD_INVALID_ASR)
+	if (curr->signals == 0 || xnthread_test_state(curr, XNASDI)
+	    || curr->asr == XNTHREAD_INVALID_ASR)
 		return;
 
 	trace_mark(xn_nucleus, sched_sigdispatch, "signals %lu",
-		   thread->signals);
+		   curr->signals);
 
 	/* Start the asynchronous service routine */
-	oldmode = xnthread_test_state(thread, XNTHREAD_MODE_BITS);
-	sigs = thread->signals;
-	asrimask = thread->asrimask;
-	asr = thread->asr;
+	oldmode = xnthread_test_state(curr, XNTHREAD_MODE_BITS);
+	sigs = curr->signals;
+	asrimask = curr->asrimask;
+	asr = curr->asr;
 
 	/* Clear pending signals mask since an ASR can be reentrant */
-	thread->signals = 0;
+	curr->signals = 0;
 
 	/* Reset ASR mode bits */
-	xnthread_clear_state(thread, XNTHREAD_MODE_BITS);
-	xnthread_set_state(thread, thread->asrmode);
-	thread->asrlevel++;
+	xnthread_clear_state(curr, XNTHREAD_MODE_BITS);
+	xnthread_set_state(curr, curr->asrmode);
+	curr->asrlevel++;
 
 	/* Setup ASR interrupt mask then fire it. */
 	savedmask = xnarch_setimask(asrimask);
@@ -2019,9 +2019,9 @@ void xnpod_dispatch_signals(void)
 	xnarch_setimask(savedmask);
 
 	/* Reset the thread mode bits */
-	thread->asrlevel--;
-	xnthread_clear_state(thread, XNTHREAD_MODE_BITS);
-	xnthread_set_state(thread, oldmode);
+	curr->asrlevel--;
+	xnthread_clear_state(curr, XNTHREAD_MODE_BITS);
+	xnthread_set_state(curr, oldmode);
 }
 
 /*!
@@ -2036,26 +2036,26 @@ void xnpod_dispatch_signals(void)
  * Entered with nklock locked, irqs off.
  */
 
-void xnpod_welcome_thread(xnthread_t *thread, int imask)
+void xnpod_welcome_thread(xnthread_t *curr, int imask)
 {
-	xnsched_t *sched = xnsched_finish_unlocked_switch(thread->sched);
+	xnsched_t *sched = xnsched_finish_unlocked_switch(curr->sched);
 
 	xnsched_finalize_zombie(sched);
 
 	trace_mark(xn_nucleus, thread_boot, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+		   curr, xnthread_name(curr));
 
-	xnarch_trace_pid(-1, xnthread_current_priority(thread));
+	xnarch_trace_pid(-1, xnthread_current_priority(curr));
 
-	if (xnthread_test_state(thread, XNLOCK))
+	if (xnthread_test_state(curr, XNLOCK))
 		/* Actually grab the scheduler lock. */
 		xnpod_lock_sched();
 
-	__xnpod_init_fpu(sched, thread);
+	__xnpod_init_fpu(sched, curr);
 
-	xnthread_clear_state(thread, XNRESTART);
+	xnthread_clear_state(curr, XNRESTART);
 
-	if (xnthread_signaled_p(thread))
+	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
 
 	xnlock_clear_irqoff(&nklock);
@@ -2535,23 +2535,23 @@ EXPORT_SYMBOL_GPL(xnpod_remove_hook);
 
 int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 {
-	xnthread_t *thread;
+	xnthread_t *curr;
 
 	if (!xnpod_active_p() ||
 	    (!xnpod_interrupt_p() && xnpod_idle_p()))
 		return 0;
 
-	thread = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
 	trace_mark(xn_nucleus, thread_fault,
 		   "thread %p thread_name %s ip %p type 0x%x",
-		   thread, xnthread_name(thread),
+		   curr, xnthread_name(curr),
 		   (void *)xnarch_fault_pc(fltinfo),
 		   xnarch_fault_trap(fltinfo));
 
 #ifdef __KERNEL__
 	if (xnarch_fault_fpu_p(fltinfo)) {
-		if (__xnpod_fault_init_fpu(thread))
+		if (__xnpod_fault_init_fpu(curr))
 			return 1;
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(fltinfo));
@@ -2560,10 +2560,10 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 	if (!xnpod_userspace_p()) {
 		xnprintf
 		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #0x%x\n",
-		     thread, thread->name, xnarch_fault_pc(fltinfo),
+		     curr, curr->name, xnarch_fault_pc(fltinfo),
 		     xnarch_fault_trap(fltinfo));
 
-		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
+		xnpod_suspend_thread(curr, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		return 1;
 	}
 
@@ -2580,24 +2580,24 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 			xnarch_trace_panic_freeze();
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u in "
-			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
+			     "kernel-space at 0x%lx (pid %d)\n", curr->name,
 			     xnarch_fault_trap(fltinfo),
 			     xnarch_fault_pc(fltinfo),
-			     xnthread_user_pid(thread));
+			     xnthread_user_pid(curr));
 			xnarch_trace_panic_dump();
 		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u from "
-			     "user-space at 0x%lx (pid %d)\n", thread->name,
+			     "user-space at 0x%lx (pid %d)\n", curr->name,
 			     xnarch_fault_trap(fltinfo),
 			     xnarch_fault_pc(fltinfo),
-			     xnthread_user_pid(thread));
+			     xnthread_user_pid(curr));
 #endif /* XENO_DEBUG(NUCLEUS) */
 		if (xnarch_fault_pf_p(fltinfo))
 			/* The page fault counter is not SMP-safe, but it's a
 			   simple indicator that something went wrong wrt memory
 			   locking anyway. */
-			xnstat_counter_inc(&thread->stat.pf);
+			xnstat_counter_inc(&curr->stat.pf);
 
 		xnshadow_relax(xnarch_fault_notify(fltinfo),
 			       SIGDEBUG_MIGRATE_FAULT);
@@ -2957,31 +2957,31 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 {
 	xnticks_t now;
 	unsigned long overruns = 0;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xntbase_t *tbase;
 	int err = 0;
 	spl_t s;
 
-	thread = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(!xntimer_running_p(&thread->ptimer))) {
+	if (unlikely(!xntimer_running_p(&curr->ptimer))) {
 		err = -EWOULDBLOCK;
 		goto unlock_and_exit;
 	}
 
 	trace_mark(xn_nucleus, thread_waitperiod, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+		   curr, xnthread_name(curr));
 
 	/* Work with either TSC or periodic ticks. */
-	tbase = xnthread_time_base(thread);
+	tbase = xnthread_time_base(curr);
 	now = xntbase_get_rawclock(tbase);
 
-	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
-		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
+	if (likely((xnsticks_t)(now - xntimer_pexpect(&curr->ptimer)) < 0)) {
+		xnpod_suspend_thread(curr, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
-		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
+		if (unlikely(xnthread_test_info(curr, XNBREAK))) {
 			err = -EINTR;
 			goto unlock_and_exit;
 		}
@@ -2989,13 +2989,13 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 		now = xntbase_get_rawclock(tbase);
 	}
 
-	overruns = xntimer_get_overruns(&thread->ptimer, now);
+	overruns = xntimer_get_overruns(&curr->ptimer, now);
 	if (overruns) {
 		err = -ETIMEDOUT;
 
 		trace_mark(xn_nucleus, thread_missedperiod,
 			   "thread %p thread_name %s overruns %lu",
-			   thread, xnthread_name(thread), overruns);
+			   curr, xnthread_name(curr), overruns);
 	}
 
 	if (likely(overruns_r != NULL))

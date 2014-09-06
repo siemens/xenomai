@@ -171,7 +171,7 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
 xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 			   xntmode_t timeout_mode)
 {
-	struct xnthread *thread = xnpod_current_thread();
+	struct xnthread *curr = xnpod_current_thread();
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
@@ -180,18 +180,18 @@ xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	trace_mark(xn_nucleus, synch_sleepon,
 		   "thread %p thread_name %s synch %p",
-		   thread, xnthread_name(thread), synch);
+		   curr, xnthread_name(curr), synch);
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
-		appendpq(&synch->pendq, &thread->plink);
+		appendpq(&synch->pendq, &curr->plink);
 	else /* i.e. priority-sorted */
-		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+		insertpqf(&synch->pendq, &curr->plink, w_cprio(curr));
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
+	xnpod_suspend_thread(curr, XNPEND, timeout, timeout_mode, synch);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
+	return xnthread_test_info(curr, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
@@ -406,8 +406,8 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			  xntmode_t timeout_mode)
 {
-	struct xnthread *thread = xnpod_current_thread(), *owner;
-	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
+	struct xnthread *curr = xnpod_current_thread(), *owner;
+	xnhandle_t threadh = xnthread_handle(curr), fastlock, old;
 	const int use_fastlock = xnsynch_fastlock_p(synch);
 	spl_t s;
 
@@ -424,9 +424,9 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 						 XN_NO_HANDLE, threadh);
 
 		if (likely(fastlock == XN_NO_HANDLE)) {
-			if (xnthread_test_state(thread, XNOTHER))
-				xnthread_inc_rescnt(thread);
-			xnthread_clear_info(thread,
+			if (xnthread_test_state(curr, XNOTHER))
+				xnthread_inc_rescnt(curr);
+			xnthread_clear_info(curr,
 					    XNRMID | XNTIMEO | XNBREAK);
 			return 0;
 		}
@@ -464,7 +464,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		if (!owner) {
 			/* The handle is broken, therefore pretend that the synch
 			   object was deleted to signal an error. */
-			xnthread_set_info(thread, XNRMID);
+			xnthread_set_info(curr, XNRMID);
 			goto unlock_and_exit;
 		}
 
@@ -475,29 +475,29 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		owner = synch->owner;
 
 		if (!owner) {
-			synch->owner = thread;
-			if (xnthread_test_state(thread, XNOTHER))
-				xnthread_inc_rescnt(thread);
-			xnthread_clear_info(thread,
+			synch->owner = curr;
+			if (xnthread_test_state(curr, XNOTHER))
+				xnthread_inc_rescnt(curr);
+			xnthread_clear_info(curr,
 					    XNRMID | XNTIMEO | XNBREAK);
 			goto unlock_and_exit;
 		}
 	}
 
-	xnsynch_detect_relaxed_owner(synch, thread);
+	xnsynch_detect_relaxed_owner(synch, curr);
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
-		appendpq(&synch->pendq, &thread->plink);
-	else if (w_cprio(thread) > w_cprio(owner)) {
+		appendpq(&synch->pendq, &curr->plink);
+	else if (w_cprio(curr) > w_cprio(owner)) {
 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
-			synch->owner = thread;
-			xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
+			synch->owner = curr;
+			xnthread_clear_info(curr, XNRMID | XNTIMEO | XNBREAK);
 			xnthread_set_info(owner, XNROBBED);
 			goto grab_and_exit;
 		}
 
-		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+		insertpqf(&synch->pendq, &curr->plink, w_cprio(curr));
 
 		if (testbits(synch->status, XNSYNCH_PIP)) {
 			if (!xnthread_test_state(owner, XNBOOST)) {
@@ -510,21 +510,21 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			else
 				__setbits(synch->status, XNSYNCH_CLAIMED);
 
-			insertpqf(&owner->claimq, &synch->link, w_cprio(thread));
-			xnsynch_renice_thread(owner, thread);
+			insertpqf(&owner->claimq, &synch->link, w_cprio(curr));
+			xnsynch_renice_thread(owner, curr);
 		}
 	} else
-		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+		insertpqf(&synch->pendq, &curr->plink, w_cprio(curr));
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
+	xnpod_suspend_thread(curr, XNPEND, timeout, timeout_mode, synch);
 
-	thread->wwake = NULL;
-	xnthread_clear_info(thread, XNWAKEN);
+	curr->wwake = NULL;
+	xnthread_clear_info(curr, XNWAKEN);
 
-	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
+	if (xnthread_test_info(curr, XNRMID | XNTIMEO | XNBREAK))
 		goto unlock_and_exit;
 
-	if (xnthread_test_info(thread, XNROBBED)) {
+	if (xnthread_test_info(curr, XNROBBED)) {
 		/* Somebody stole us the ownership while we were ready
 		   to run, waiting for the CPU: we need to wait again
 		   for the resource. */
@@ -532,18 +532,18 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
 		}
-		timeout = xntimer_get_timeout_stopped(&thread->rtimer);
+		timeout = xntimer_get_timeout_stopped(&curr->rtimer);
 		if (timeout > 1) { /* Otherwise, it's too late. */
 			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
 		}
-		xnthread_set_info(thread, XNTIMEO);
+		xnthread_set_info(curr, XNTIMEO);
 	} else {
 
 	      grab_and_exit:
 
-		if (xnthread_test_state(thread, XNOTHER))
-			xnthread_inc_rescnt(thread);
+		if (xnthread_test_state(curr, XNOTHER))
+			xnthread_inc_rescnt(curr);
 
 		if (use_fastlock) {
 			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
@@ -560,7 +560,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
+	return xnthread_test_info(curr, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 

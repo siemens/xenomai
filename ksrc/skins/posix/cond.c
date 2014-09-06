@@ -222,7 +222,7 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 
    Note: this function is very similar to mutex_unlock_internal() in mutex.c.
 */
-static inline int mutex_save_count(xnthread_t *cur,
+static inline int mutex_save_count(xnthread_t *curr,
 				   struct __shadow_mutex *shadow,
 				   unsigned *count_ptr)
 {
@@ -233,7 +233,7 @@ static inline int mutex_save_count(xnthread_t *cur,
 	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex))
 		 return EINVAL;
 
-	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
+	if (xnsynch_owner_check(&mutex->synchbase, curr) != 0)
 		return EPERM;
 
 	*count_ptr = shadow->lockcnt;
@@ -246,7 +246,7 @@ static inline int mutex_save_count(xnthread_t *cur,
 	return 0;
 }
 
-int pse51_cond_timedwait_prologue(xnthread_t *cur,
+int pse51_cond_timedwait_prologue(xnthread_t *curr,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex,
 				  unsigned *count_ptr,
@@ -265,7 +265,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
 	cond = shadow->cond;
 
@@ -284,7 +284,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 
 	/* Unlock mutex, with its previous recursive lock count stored
 	   in "*count_ptr". */
-	err = mutex_save_count(cur, mutex, count_ptr);
+	err = mutex_save_count(curr, mutex, count_ptr);
 	if (err)
 		goto unlock_and_return;
 
@@ -317,9 +317,9 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 
 	err = 0;
 
-	if (xnthread_test_info(cur, XNBREAK))
+	if (xnthread_test_info(curr, XNBREAK))
 		err = EINTR;
-	else if (xnthread_test_info(cur, XNTIMEO))
+	else if (xnthread_test_info(curr, XNTIMEO))
 		err = ETIMEDOUT;
 
       unlock_and_return:
@@ -328,7 +328,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	return err;
 }
 
-int pse51_cond_timedwait_epilogue(xnthread_t *cur,
+int pse51_cond_timedwait_epilogue(xnthread_t *curr,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex, unsigned count)
 {
@@ -340,7 +340,7 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
 
 	cond = shadow->cond;
 
-	err = pse51_mutex_timedlock_internal(cur, mutex, count, 0, XN_INFINITE);
+	err = pse51_mutex_timedlock_internal(curr, mutex, count, 0, XN_INFINITE);
 
 	if (err == -EINTR)
 		goto unlock_and_return;
@@ -352,7 +352,7 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
 	    && cond->mutex == mutex->mutex)
 		cond->mutex = NULL;
 
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
       unlock_and_return:
 	xnlock_put_irqrestore(&nklock, s);
@@ -415,7 +415,7 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
 	struct __shadow_mutex *mutex =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	unsigned count;
 	int err;
 
@@ -424,11 +424,11 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 		return EINVAL;
 #endif /* CONFIG_XENO_FASTSYNCH */
 
-	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
+	err = pse51_cond_timedwait_prologue(curr, cond, mutex,
 					    &count, 0, XN_INFINITE);
 
 	if (!err || err == EINTR)
-		while (-EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+		while (-EINTR == pse51_cond_timedwait_epilogue(curr, cond,
 							       mutex, count))
 			;
 
@@ -483,7 +483,7 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
 	struct __shadow_mutex *mutex =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	unsigned count;
 	int err;
 
@@ -492,11 +492,11 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 		return EINVAL;
 #endif /* CONFIG_XENO_FASTSYNCH */
 
-	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
+	err = pse51_cond_timedwait_prologue(curr, cond, mutex, &count, 1,
 					    ts2ticks_ceil(abstime) + 1);
 
 	if (!err || err == EINTR || err == ETIMEDOUT)
-		while (-EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+		while (-EINTR == pse51_cond_timedwait_epilogue(curr, cond,
 							       mutex, count))
 			;
 

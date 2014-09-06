@@ -436,7 +436,7 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
 
-static inline int xnthread_try_grab(struct xnthread *thread,
+static inline int xnthread_try_grab(struct xnthread *curr,
 				    struct xnsynch *synch)
 {
 	XENO_BUGON(NUCLEUS, xnsynch_fastlock_p(synch));
@@ -444,10 +444,10 @@ static inline int xnthread_try_grab(struct xnthread *thread,
 	if (xnsynch_owner(synch) != NULL)
 		return 0;
 
-	xnsynch_set_owner(synch, thread);
+	xnsynch_set_owner(synch, curr);
 
-	if (xnthread_test_state(thread, XNOTHER))
-		xnthread_inc_rescnt(thread);
+	if (xnthread_test_state(curr, XNOTHER))
+		xnthread_inc_rescnt(curr);
 
 	return 1;
 }

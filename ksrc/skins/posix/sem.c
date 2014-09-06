@@ -558,18 +558,18 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 					 int timed, xnticks_t to)
 {
 	pse51_sem_t *sem = shadow->sem;
-	xnthread_t *cur;
+	xnthread_t *curr;
 	int err;
 
 	if (xnpod_unblockable_p())
 		return EPERM;
 
-	cur = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
 	if ((err = sem_trywait_internal(shadow)) != EAGAIN)
 		return err;
 
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
 	if (timed)
 		xnsynch_sleep_on(&sem->synchbase, to, XN_REALTIME);
@@ -577,15 +577,15 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 		xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
 
 	/* Handle cancellation requests. */
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
-	if (xnthread_test_info(cur, XNRMID))
+	if (xnthread_test_info(curr, XNRMID))
 		return EINVAL;
 
-	if (xnthread_test_info(cur, XNBREAK))
+	if (xnthread_test_info(curr, XNBREAK))
 		return EINTR;
 
-	if (xnthread_test_info(cur, XNTIMEO))
+	if (xnthread_test_info(curr, XNTIMEO))
 		return ETIMEDOUT;
 
 	return 0;

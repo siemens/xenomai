@@ -939,13 +939,13 @@ static int gatekeeper_thread(void *data)
 int xnshadow_harden(void)
 {
 	struct task_struct *this_task = current;
-	struct xnthread *thread;
+	struct xnthread *curr;
 	struct xnsched *sched;
 	int cpu, err;
 
 redo:
-	thread = xnshadow_thread(this_task);
-	if (!thread)
+	curr = xnshadow_thread(this_task);
+	if (!curr)
 		return -EPERM;
 
 	cpu = task_cpu(this_task);
@@ -957,8 +957,8 @@ redo:
 		goto failed;
 	}
 
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state & ~XNRELAX;
+	if (curr->u_mode)
+		*(curr->u_mode) = curr->state & ~XNRELAX;
 
 	preempt_disable();
 
@@ -986,16 +986,16 @@ redo:
 
 	trace_mark(xn_nucleus, shadow_gohard,
 		   "thread %p thread_name %s comm %s",
-		   thread, xnthread_name(thread), this_task->comm);
+		   curr, xnthread_name(curr), this_task->comm);
 
-	sched->gktarget = thread;
-	xnthread_set_info(thread, XNATOMIC);
+	sched->gktarget = curr;
+	xnthread_set_info(curr, XNATOMIC);
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
 
 	wake_up_process(sched->gatekeeper);
 
 	schedule();
-	xnthread_clear_info(thread, XNATOMIC);
+	xnthread_clear_info(curr, XNATOMIC);
 
 	/*
 	 * Rare case: we might have received a signal before entering
@@ -1009,7 +1009,7 @@ redo:
 		    || this_task->state != TASK_RUNNING))
 			xnpod_fatal
 			    ("xnshadow_harden() failed for thread %s[%d]",
-			     thread->name, xnthread_user_pid(thread));
+			     curr->name, xnthread_user_pid(curr));
 
 		/*
 		 * Synchronize with the chosen gatekeeper so that it no longer
@@ -1024,7 +1024,7 @@ redo:
 	}
 
 	/* "current" is now running into the Xenomai domain. */
-	sched = xnsched_finish_unlocked_switch(thread->sched);
+	sched = xnsched_finish_unlocked_switch(curr->sched);
 
 	xnsched_finalize_zombie(sched);
 
@@ -1034,7 +1034,7 @@ redo:
 
 	xnarch_schedule_tail(this_task);
 
-	if (xnthread_signaled_p(thread))
+	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
 
 	xnlock_clear_irqon(&nklock);
@@ -1046,11 +1046,11 @@ redo:
 	 * gatekeeper; in such a case, we must unlink from the remote
 	 * CPU's RPI list now.
 	 */
-	if (rpi_p(thread))
-		rpi_clear_remote(thread);
+	if (rpi_p(curr))
+		rpi_clear_remote(curr);
 
 	trace_mark(xn_nucleus, shadow_hardened, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+		   curr, xnthread_name(curr));
 
 	/*
 	 * Recheck pending signals once again. As we block task wakeups during
@@ -1060,7 +1060,7 @@ redo:
 	 * to here.
 	 */
 	if (signal_pending(this_task)) {
-		xnshadow_relax(!xnthread_test_state(thread, XNDEBUG),
+		xnshadow_relax(!xnthread_test_state(curr, XNDEBUG),
 			       SIGDEBUG_MIGRATE_SIGNAL);
 		return -ERESTARTSYS;
 	}
@@ -1070,8 +1070,8 @@ redo:
 	return 0;
 
       failed:
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state;
+	if (curr->u_mode)
+		*(curr->u_mode) = curr->state;
 	return err;
 }
 EXPORT_SYMBOL_GPL(xnshadow_harden);
@@ -1108,11 +1108,11 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
 
 void xnshadow_relax(int notify, int reason)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	siginfo_t si;
 	int prio;
 
-	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
+	XENO_BUGON(NUCLEUS, xnthread_test_state(curr, XNROOT));
 
 	/*
 	 * Enqueue the request to move the running shadow from the Xenomai
@@ -1120,7 +1120,7 @@ void xnshadow_relax(int notify, int reason)
 	 * to resume using the register state of the shadow thread.
 	 */
 	trace_mark(xn_nucleus, shadow_gorelax, "thread %p thread_name %s",
-		  thread, xnthread_name(thread));
+		  curr, xnthread_name(curr));
 
 	/*
 	 * If you intend to change the following interrupt-free
@@ -1136,7 +1136,7 @@ void xnshadow_relax(int notify, int reason)
 	 * xnpod_suspend_thread() has an interrupts-on section built in.
 	 */
 	splmax();
-	rpi_push(thread->sched, thread);
+	rpi_push(curr->sched, curr);
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
 	/*
@@ -1145,21 +1145,21 @@ void xnshadow_relax(int notify, int reason)
 	 */
 	xnlock_get(&nklock);
 	clear_task_nowakeup(current);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xnpod_suspend_thread(curr, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
 	splnone();
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
-			    thread->name, xnthread_user_pid(thread));
+			    curr->name, xnthread_user_pid(curr));
 
-	prio = normalize_priority(xnthread_current_priority(thread));
+	prio = normalize_priority(xnthread_current_priority(curr));
 	rthal_reenter_root(get_switch_lock_owner(),
 			   prio ? SCHED_FIFO : SCHED_NORMAL, prio);
 
-	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
+	xnstat_counter_inc(&curr->stat.ssw);	/* Account for secondary mode switch. */
 
 	if (notify) {
-		if (xnthread_test_state(thread, XNTRAPSW)) {
+		if (xnthread_test_state(curr, XNTRAPSW)) {
 			/* Help debugging spurious relaxes. */
 			memset(&si, 0, sizeof(si));
 			si.si_signo = SIGDEBUG;
@@ -1167,12 +1167,12 @@ void xnshadow_relax(int notify, int reason)
 			si.si_int = reason;
 			send_sig_info(SIGDEBUG, &si, current);
 		}
-		xnsynch_detect_claimed_relax(thread);
+		xnsynch_detect_claimed_relax(curr);
 	}
 
-	if (xnthread_test_info(thread, XNPRIOSET)) {
-		xnthread_clear_info(thread, XNPRIOSET);
-		xnshadow_send_sig(thread, SIGSHADOW,
+	if (xnthread_test_info(curr, XNPRIOSET)) {
+		xnthread_clear_info(curr, XNPRIOSET);
+		xnshadow_send_sig(curr, SIGSHADOW,
 				  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio),
 				  1);
 	}
@@ -1183,21 +1183,21 @@ void xnshadow_relax(int notify, int reason)
 	   counter-part when returning to secondary mode. [Actually,
 	   there is no service changing the CPU affinity from primary
 	   mode available from the nucleus --rpm]. */
-	if (xnthread_test_info(thread, XNAFFSET)) {
-		xnthread_clear_info(thread, XNAFFSET);
-		set_cpus_allowed(current, xnthread_affinity(thread));
+	if (xnthread_test_info(curr, XNAFFSET)) {
+		xnthread_clear_info(curr, XNAFFSET);
+		set_cpus_allowed(current, xnthread_affinity(curr));
 	}
 #endif /* CONFIG_SMP */
 
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */
 
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state;
+	if (curr->u_mode)
+		*(curr->u_mode) = curr->state;
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
-		  thread, xnthread_name(thread), current->comm);
+		  curr, xnthread_name(curr), current->comm);
 }
 EXPORT_SYMBOL_GPL(xnshadow_relax);
 
@@ -1210,7 +1210,7 @@ void xnshadow_exit(void)
 }
 
 /*!
- * \fn int xnshadow_map(xnthread_t *thread,
+ * \fn int xnshadow_map(xnthread_t *curr,
  *                      xncompletion_t __user *u_completion,
  *                      unsigned long __user *u_mode_offset)
  * @internal
@@ -1271,7 +1271,7 @@ void xnshadow_exit(void)
  *
  */
 
-int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
+int xnshadow_map(xnthread_t *curr, xncompletion_t __user *u_completion,
 		 unsigned long __user *u_mode_offset)
 {
 	struct xnthread_start_attr attr;
@@ -1283,10 +1283,10 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	spl_t s;
 	int ret;
 
-	if (!xnthread_test_state(thread, XNSHADOW))
+	if (!xnthread_test_state(curr, XNSHADOW))
 		return -EINVAL;
 
-	if (xnshadow_thread(current) || xnthread_test_state(thread, XNMAPPED))
+	if (xnshadow_thread(current) || xnthread_test_state(curr, XNMAPPED))
 		return -EBUSY;
 
 	if (!access_wok(u_mode_offset, sizeof(*u_mode_offset)))
@@ -1307,7 +1307,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 #endif /* CONFIG_MMU */
 
 	/* Increment the interface reference count. */
-	magic = xnthread_get_magic(thread);
+	magic = xnthread_get_magic(curr);
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
 		if (muxtable[muxid].props && muxtable[muxid].props->magic == magic) {
@@ -1335,17 +1335,17 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	trace_mark(xn_nucleus, shadow_map,
 		   "thread %p thread_name %s pid %d priority %d",
-		   thread, xnthread_name(thread), current->pid,
-		   xnthread_base_priority(thread));
+		   curr, xnthread_name(curr), current->pid,
+		   xnthread_base_priority(curr));
 
-	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
-			       xnthread_name(thread));
+	xnarch_init_shadow_tcb(xnthread_archtcb(curr), curr,
+			       xnthread_name(curr));
 
-	thread->u_mode = u_mode;
+	curr->u_mode = u_mode;
 	__xn_put_user(xnheap_mapped_offset(sem_heap, u_mode), u_mode_offset);
 
-	xnthread_set_state(thread, XNMAPPED);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xnthread_set_state(curr, XNMAPPED);
+	xnpod_suspend_thread(curr, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
 	/*
 	 * Switch on propagation of normal kernel events for the bound
@@ -1360,23 +1360,23 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 * positive in debug code from do_schedule_event() and
 	 * friends.
 	 */
-	xnshadow_thrptd(current) = thread;
+	xnshadow_thrptd(current) = curr;
 	xnshadow_mmptd(current) = current->mm;
 	xnarch_atomic_inc(&sys_ppd->refcnt);
 
 	rthal_enable_notifier(current);
 
-	if (xnthread_base_priority(thread) == 0 &&
+	if (xnthread_base_priority(curr) == 0 &&
 	    current->policy == SCHED_NORMAL)
 		/* Non real-time shadow. */
-		xnthread_set_state(thread, XNOTHER);
+		xnthread_set_state(curr, XNOTHER);
 
 	if (u_completion) {
 		/*
 		 * Send the renice signal if we are not migrating so that user
 		 * space will immediately align Linux sched policy and prio.
 		 */
-		xnshadow_renice(thread);
+		xnshadow_renice(curr);
 
 		/*
 		 * We still have the XNDORMANT bit set, so we can't
@@ -1393,12 +1393,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	attr.affinity = affinity;
 	attr.entry = NULL;
 	attr.cookie = NULL;
-	ret = xnpod_start_thread(thread, &attr);
+	ret = xnpod_start_thread(curr, &attr);
 	if (ret)
 		return ret;
 
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state;
+	if (curr->u_mode)
+		*(curr->u_mode) = curr->state;
 
 	ret = xnshadow_harden();
 
@@ -1406,10 +1406,10 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 * Ensure that user space will receive the proper Linux task policy
 	 * and prio on next switch to secondary mode.
 	 */
-	xnthread_set_info(thread, XNPRIOSET);
+	xnthread_set_info(curr, XNPRIOSET);
 
-	xnarch_trace_pid(xnthread_user_pid(thread),
-			 xnthread_current_priority(thread));
+	xnarch_trace_pid(xnthread_user_pid(curr),
+			 xnthread_current_priority(curr));
 
 	return ret;
 }
@@ -1653,16 +1653,16 @@ EXPORT_SYMBOL_GPL(xnshadow_call_mayday);
 
 static int xnshadow_sys_mayday(struct pt_regs *regs)
 {
-	struct xnthread *cur;
+	struct xnthread *curr;
 
-	cur = xnshadow_thread(current);
-	if (likely(cur != NULL)) {
+	curr = xnshadow_thread(current);
+	if (likely(curr != NULL)) {
 		/*
 		 * If the thread is amok in primary mode, this syscall
 		 * we have just forced on it will cause it to
 		 * relax. See do_hisyscall_event().
 		 */
-		xnarch_fixup_mayday(xnthread_archtcb(cur), regs);
+		xnarch_fixup_mayday(xnthread_archtcb(curr), regs);
 
 		/* returning 0 here would clobber the register holding
 		   the return value. Instead, return whatever value
@@ -2097,15 +2097,15 @@ static int xnshadow_sys_heap_info(struct pt_regs *regs)
 
 static int xnshadow_sys_current(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *curr = xnshadow_thread(current);
 	xnhandle_t __user *us_handle;
 
-	if (!cur)
+	if (!curr)
 		return -EPERM;
 
 	us_handle = (xnhandle_t __user *) __xn_reg_arg1(regs);
 
-	return __xn_safe_copy_to_user(us_handle, &xnthread_handle(cur),
+	return __xn_safe_copy_to_user(us_handle, &xnthread_handle(curr),
 				      sizeof(*us_handle));
 }
 
@@ -2113,28 +2113,28 @@ static int xnshadow_sys_current_info(struct pt_regs *regs)
 {
 	xnthread_info_t __user *us_info;
 	xnthread_info_t info;
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *curr = xnshadow_thread(current);
 	xnticks_t raw_exectime;
 	int i;
 
-	if (!cur)
+	if (!curr)
 		return -EPERM;
 
-	info.state = xnthread_state_flags(cur);
-	info.bprio = xnthread_base_priority(cur);
-	info.cprio = xnthread_current_priority(cur);
-	info.cpu = xnsched_cpu(xnthread_sched(cur));
+	info.state = xnthread_state_flags(curr);
+	info.bprio = xnthread_base_priority(curr);
+	info.cprio = xnthread_current_priority(curr);
+	info.cpu = xnsched_cpu(xnthread_sched(curr));
 	for (i = 0, info.affinity = 0; i < BITS_PER_LONG; i++)
-		if (xnthread_affine_p(cur, i))
+		if (xnthread_affine_p(curr, i))
 			info.affinity |= 1UL << i;
-	info.relpoint = xntimer_get_date(&cur->ptimer);
-	raw_exectime = xnthread_get_exectime(cur) +
-		xnstat_exectime_now() - xnthread_get_lastswitch(cur);
+	info.relpoint = xntimer_get_date(&curr->ptimer);
+	raw_exectime = xnthread_get_exectime(curr) +
+		xnstat_exectime_now() - xnthread_get_lastswitch(curr);
 	info.exectime = xnarch_tsc_to_ns(raw_exectime);
-	info.modeswitches = xnstat_counter_get(&cur->stat.ssw);
-	info.ctxswitches = xnstat_counter_get(&cur->stat.csw);
-	info.pagefaults = xnstat_counter_get(&cur->stat.pf);
-	strcpy(info.name, xnthread_name(cur));
+	info.modeswitches = xnstat_counter_get(&curr->stat.ssw);
+	info.ctxswitches = xnstat_counter_get(&curr->stat.csw);
+	info.pagefaults = xnstat_counter_get(&curr->stat.pf);
+	strcpy(info.name, xnthread_name(curr));
 
 	us_info = (xnthread_info_t __user *) __xn_reg_arg1(regs);
 

@@ -397,7 +397,7 @@ int rt_cond_broadcast(RT_COND *cond)
 int rt_cond_wait_prologue(RT_COND *cond, RT_MUTEX *mutex, unsigned *plockcnt,
 		       xntmode_t timeout_mode, RTIME timeout)
 {
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xnflags_t info;
 	spl_t s;
 	int err;
@@ -424,9 +424,9 @@ int rt_cond_wait_prologue(RT_COND *cond, RT_MUTEX *mutex, unsigned *plockcnt,
 		goto unlock_and_exit;
 	}
 
-	thread = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
-	err = xnsynch_owner_check(&mutex->synch_base, thread);
+	err = xnsynch_owner_check(&mutex->synch_base, curr);
 
 	if (err)
 		goto unlock_and_exit;

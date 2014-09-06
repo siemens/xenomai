@@ -307,7 +307,7 @@ STATUS semFlush(SEM_ID sem_id)
 /* Must be called with nklock locked, interrupts off. */
 static STATUS semb_take(wind_sem_t *sem, xnticks_t to)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 
 	if (sem->count > 0)
 		--sem->count;
@@ -317,13 +317,13 @@ static STATUS semb_take(wind_sem_t *sem, xnticks_t to)
 
 		xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
 
-		error_check(xnthread_test_info(thread, XNBREAK), -EINTR,
+		error_check(xnthread_test_info(curr, XNBREAK), -EINTR,
 			    return ERROR);
 
-		error_check(xnthread_test_info(thread, XNRMID),
+		error_check(xnthread_test_info(curr, XNRMID),
 			    S_objLib_OBJ_DELETED, return ERROR);
 
-		error_check(xnthread_test_info(thread, XNTIMEO),
+		error_check(xnthread_test_info(curr, XNTIMEO),
 			    S_objLib_OBJ_TIMEOUT, return ERROR);
 	}
 
@@ -383,12 +383,12 @@ static const sem_vtbl_t semc_vtbl = {
 /* Must be called with nklock locked, interrupts off. */
 static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 
-	if (xnthread_try_grab(cur, &sem->synchbase))
+	if (xnthread_try_grab(curr, &sem->synchbase))
 		goto grab_sem;
 
-	if (xnsynch_owner(&sem->synchbase) == cur) {
+	if (xnsynch_owner(&sem->synchbase) == curr) {
 		sem->count++;
 		return OK;
 	}
@@ -398,13 +398,13 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 
 	xnsynch_acquire(&sem->synchbase, to, XN_RELATIVE);
 
-	error_check(xnthread_test_info(cur, XNBREAK),
+	error_check(xnthread_test_info(curr, XNBREAK),
 		    -EINTR, return ERROR);
 
-	error_check(xnthread_test_info(cur, XNRMID),
+	error_check(xnthread_test_info(curr, XNRMID),
 		    S_objLib_OBJ_DELETED, return ERROR);
 
-	error_check(xnthread_test_info(cur, XNTIMEO),
+	error_check(xnthread_test_info(curr, XNTIMEO),
 		    S_objLib_OBJ_TIMEOUT, return ERROR);
  grab_sem:
 	/*
@@ -414,7 +414,7 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 	sem->count = 1;
 
 	if (xnsynch_test_flags(&sem->synchbase, WIND_SEM_DEL_SAFE))
-		taskSafeInner(cur);
+		taskSafeInner(curr);
 
 	return OK;
 }
@@ -422,12 +422,12 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 /* Must be called with nklock locked, interrupts off. */
 static STATUS semm_give(wind_sem_t *sem)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	int resched = 0;
 
 	check_NOT_ISR_CALLABLE(return ERROR);
 
-	if (cur != xnsynch_owner(&sem->synchbase)) {
+	if (curr != xnsynch_owner(&sem->synchbase)) {
 		wind_errnoset(S_semLib_INVALID_OPERATION);
 		return ERROR;
 	}
@@ -441,7 +441,7 @@ static STATUS semm_give(wind_sem_t *sem)
 	}
 
 	if (xnsynch_test_flags(&sem->synchbase, WIND_SEM_DEL_SAFE))
-		if (taskUnsafeInner(cur))
+		if (taskUnsafeInner(curr))
 			resched = 1;
 
 	if (resched)

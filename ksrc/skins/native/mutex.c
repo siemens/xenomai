@@ -352,7 +352,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 			   xntmode_t timeout_mode)
 {
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xnflags_t info;
 
 	if (xnpod_unblockable_p())
@@ -363,9 +363,9 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 	if (!mutex)
 		return xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-	thread = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
-	if (xnsynch_owner_check(&mutex->synch_base, thread) == 0) {
+	if (xnsynch_owner_check(&mutex->synch_base, curr) == 0) {
 		mutex->lockcnt++;
 		return 0;
 	}
@@ -373,9 +373,9 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 	if (timeout == TM_NONBLOCK && timeout_mode == XN_RELATIVE) {
 #ifdef CONFIG_XENO_FASTSYNCH
 		if (xnsynch_fast_acquire(mutex->synch_base.fastlock,
-					 xnthread_handle(thread)) == 0) {
-			if (xnthread_test_state(thread, XNOTHER))
-				xnthread_inc_rescnt(thread);
+					 xnthread_handle(curr)) == 0) {
+			if (xnthread_test_state(curr, XNOTHER))
+				xnthread_inc_rescnt(curr);
 			mutex->lockcnt = 1;
 			return 0;
 		} else
@@ -387,8 +387,8 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 
 		xnlock_get_irqsave(&nklock, s);
 		if (xnsynch_owner(&mutex->synch_base) == NULL) {
-			if (xnthread_test_state(thread, XNOTHER))
-				xnthread_inc_rescnt(thread);
+			if (xnthread_test_state(curr, XNOTHER))
+				xnthread_inc_rescnt(curr);
 			mutex->lockcnt = 1;
 		} else
 			err = -EWOULDBLOCK;
@@ -582,7 +582,7 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 
 int rt_mutex_release(RT_MUTEX *mutex)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	int err;
 
 	if (xnpod_unblockable_p())
@@ -593,7 +593,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	if (!mutex)
 		return xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-	err = xnsynch_owner_check(&mutex->synch_base, thread);
+	err = xnsynch_owner_check(&mutex->synch_base, curr);
 	if (err)
 		return err;
 

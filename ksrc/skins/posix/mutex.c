@@ -290,16 +290,16 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 				int timed, xnticks_t abs_to)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	pse51_mutex_t *mutex;
 	spl_t s;
 	int err;
 
 	/* We need a valid thread handle for the fast lock. */
-	if (xnthread_handle(cur) == XN_NO_HANDLE)
+	if (xnthread_handle(curr) == XN_NO_HANDLE)
 		return -EPERM;
 
-	err = pse51_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
+	err = pse51_mutex_timedlock_internal(curr, shadow, 1, timed, abs_to);
 	if (err != -EBUSY)
 		goto unlock_and_return;
 
@@ -317,17 +317,17 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 				xnsynch_acquire(&mutex->synchbase,
 						XN_INFINITE, XN_RELATIVE);
 
-			if (xnthread_test_info(cur, XNBREAK)) {
+			if (xnthread_test_info(curr, XNBREAK)) {
 				err = -EINTR;
 				break;
 			}
 
-			if (xnthread_test_info(cur, XNTIMEO)) {
+			if (xnthread_test_info(curr, XNTIMEO)) {
 				err = -ETIMEDOUT;
 				break;
 			}
 
-			if (xnthread_test_info(cur, XNRMID)) {
+			if (xnthread_test_info(curr, XNRMID)) {
 				err = -EINVAL;
 				break;
 			}
@@ -387,7 +387,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	pse51_mutex_t *mutex = shadow->mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
 	int err;
@@ -415,13 +415,13 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 
 #ifdef CONFIG_XENO_FASTSYNCH
 	err = -xnsynch_fast_acquire(mutex->synchbase.fastlock,
-				    xnthread_handle(cur));
+				    xnthread_handle(curr));
 #else /* !CONFIG_XENO_FASTSYNCH */
 	{
 		xnthread_t *owner = xnsynch_owner(&mutex->synchbase);
 		if (!owner)
 			err = 0;
-		else if (owner == cur)
+		else if (owner == curr)
 			err = EBUSY;
 		else
 			err = EAGAIN;
@@ -429,8 +429,8 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 #endif /* !CONFIG_XENO_FASTSYNCH */
 
 	if (likely(!err)) {
-		if (xnthread_test_state(cur, XNOTHER) && !err)
-			xnthread_inc_rescnt(cur);
+		if (xnthread_test_state(curr, XNOTHER) && !err)
+			xnthread_inc_rescnt(curr);
 		shadow->lockcnt = 1;
 	}
 	else if (err == EBUSY) {
@@ -596,7 +596,7 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	DECLARE_CB_LOCK_FLAGS(s);
 	pse51_mutex_t *mutex;
 	int err;
@@ -616,7 +616,7 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 		goto out;
 	}
 
-	err = -xnsynch_owner_check(&mutex->synchbase, cur);
+	err = -xnsynch_owner_check(&mutex->synchbase, curr);
 	if (err)
 		goto out;
 

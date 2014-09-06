@@ -204,7 +204,7 @@ int sc_mcreate(unsigned int opt, int *errp)
 
 void sc_mpost(int mid, int *errp)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	vrtxmx_t *mx;
 	spl_t s;
 
@@ -212,7 +212,7 @@ void sc_mpost(int mid, int *errp)
 
 	mx = xnmap_fetch(vrtx_mx_idmap, mid);
 	/* Return ER_ID if the poster does not own the mutex. */
-	if (mx == NULL || xnsynch_owner(&mx->synchbase) != cur) {
+	if (mx == NULL || xnsynch_owner(&mx->synchbase) != curr) {
 		*errp = ER_ID;
 		goto unlock_and_exit;
 	}
@@ -264,7 +264,7 @@ unlock_and_exit:
 
 void sc_mpend(int mid, unsigned long timeout, int *errp)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	vrtxtask_t *task;
 	vrtxmx_t *mx;
 	spl_t s;
@@ -284,13 +284,13 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 
 	*errp = RET_OK;
 
-	if (xnthread_try_grab(cur, &mx->synchbase))
+	if (xnthread_try_grab(curr, &mx->synchbase))
 		goto unlock_and_exit;
 
-	if (xnsynch_owner(&mx->synchbase) == cur)
+	if (xnsynch_owner(&mx->synchbase) == curr)
 		goto unlock_and_exit;
 
-	task = thread2vrtxtask(cur);
+	task = thread2vrtxtask(curr);
 	task->vrtxtcb.TCBSTAT = TBSMUTEX;
 
 	if (timeout)
@@ -298,11 +298,11 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 
 	xnsynch_acquire(&mx->synchbase, timeout, XN_RELATIVE);
 
-	if (xnthread_test_info(cur, XNBREAK))
+	if (xnthread_test_info(curr, XNBREAK))
 		*errp = -EINTR;
-	else if (xnthread_test_info(cur, XNRMID))
+	else if (xnthread_test_info(curr, XNRMID))
 		*errp = ER_DEL;	/* Mutex deleted while pending. */
-	else if (xnthread_test_info(cur, XNTIMEO))
+	else if (xnthread_test_info(curr, XNTIMEO))
 		*errp = ER_TMO;	/* Timeout. */
 
       unlock_and_exit:

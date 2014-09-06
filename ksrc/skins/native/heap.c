@@ -553,7 +553,7 @@ int rt_heap_delete(RT_HEAP *heap)
 int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 {
 	void *block = NULL;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xnflags_t info;
 	int err = 0;
 	spl_t s;
@@ -613,9 +613,9 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 		goto unlock_and_exit;
 	}
 
-	thread = xnpod_current_thread();
-	thread->wait_u.buffer.size = size;
-	thread->wait_u.buffer.ptr = NULL;
+	curr = xnpod_current_thread();
+	curr->wait_u.buffer.size = size;
+	curr->wait_u.buffer.ptr = NULL;
 	info = xnsynch_sleep_on(&heap->synch_base, timeout, XN_RELATIVE);
 	if (info & XNRMID)
 		err = -EIDRM;	/* Heap deleted while pending. */
@@ -624,7 +624,7 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 	else if (info & XNBREAK)
 		err = -EINTR;	/* Unblocked. */
 	else
-		block = thread->wait_u.buffer.ptr;
+		block = curr->wait_u.buffer.ptr;
 
       unlock_and_exit:
 

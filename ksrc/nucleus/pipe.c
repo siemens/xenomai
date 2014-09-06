@@ -509,7 +509,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 {
 	struct xnpipe_state *state;
 	struct xnholder *h;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	ssize_t ret;
 	spl_t s;
 
@@ -528,7 +528,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 		goto unlock_and_exit;
 	}
 
-	thread = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
 	while ((h = getq(&state->inq)) == NULL) {
 		if (timeout == XN_NONBLOCK) {
@@ -538,21 +538,21 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 
 		xnsynch_sleep_on(&state->synchbase, timeout, XN_RELATIVE);
 
-		if (xnthread_test_info(thread, XNTIMEO)) {
+		if (xnthread_test_info(curr, XNTIMEO)) {
 			ret = -ETIMEDOUT;
 			goto unlock_and_exit;
 		}
-		if (xnthread_test_info(thread, XNBREAK)) {
+		if (xnthread_test_info(curr, XNBREAK)) {
 			ret = -EINTR;
 			goto unlock_and_exit;
 		}
-		if (xnthread_test_info(thread, XNRMID)) {
+		if (xnthread_test_info(curr, XNRMID)) {
 			ret = -EIDRM;
 			goto unlock_and_exit;
 		}
 
 		/* remaining timeout */
-		timeout = xnthread_timeout(thread);
+		timeout = xnthread_timeout(curr);
 	}
 
 	*pmh = link2mh(h);

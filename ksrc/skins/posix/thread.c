@@ -620,16 +620,16 @@ int pthread_make_periodic_np(pthread_t thread,
  */
 int pthread_wait_np(unsigned long *overruns_r)
 {
-	xnthread_t *cur;
+	xnthread_t *curr;
 	int err;
 
 	if (xnpod_unblockable_p())
 		return EPERM;
 
-	cur = xnpod_current_thread();
-	thread_cancellation_point(cur);
+	curr = xnpod_current_thread();
+	thread_cancellation_point(curr);
 	err = -xnpod_wait_thread_period(overruns_r);
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
 	return err;
 }
@@ -667,11 +667,11 @@ int pthread_wait_np(unsigned long *overruns_r)
  */
 int pthread_set_mode_np(int clrmask, int setmask)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	xnflags_t valid_flags = XNLOCK;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnthread_test_state(cur, XNSHADOW))
+	if (xnthread_test_state(curr, XNSHADOW))
 		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW | XNRPIOFF;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
@@ -680,7 +680,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return EINVAL;
 
-	xnpod_set_thread_mode(cur,
+	xnpod_set_thread_mode(curr,
 			      clrmask & ~XNTHREAD_STATE_SPARE1,
 			      setmask & ~XNTHREAD_STATE_SPARE1);
 
@@ -689,7 +689,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
 		xnpod_schedule();
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
+	if (xnthread_test_state(curr, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
 		xnshadow_relax(0, 0);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 

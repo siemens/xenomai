@@ -306,7 +306,7 @@ int clock_nanosleep(clockid_t clock_id,
 		    int flags,
 		    const struct timespec *rqtp, struct timespec *rmtp)
 {
-	xnthread_t *cur;
+	xnthread_t *curr;
 	spl_t s;
 	int err = 0;
 
@@ -322,23 +322,23 @@ int clock_nanosleep(clockid_t clock_id,
 	if (flags & ~TIMER_ABSTIME)
 		return EINVAL;
 
-	cur = xnpod_current_thread();
+	curr = xnpod_current_thread();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
-	xnpod_suspend_thread(cur, XNDELAY, ts2ticks_ceil(rqtp) + 1,
+	xnpod_suspend_thread(curr, XNDELAY, ts2ticks_ceil(rqtp) + 1,
 			     clock_flag(flags, clock_id), NULL);
 
-	thread_cancellation_point(cur);
+	thread_cancellation_point(curr);
 
-	if (xnthread_test_info(cur, XNBREAK)) {
+	if (xnthread_test_info(curr, XNBREAK)) {
 
 		if (flags == 0 && rmtp) {
 			xnsticks_t rem;
 
-			rem = xntimer_get_timeout_stopped(&cur->rtimer);
+			rem = xntimer_get_timeout_stopped(&curr->rtimer);
 			xnlock_put_irqrestore(&nklock, s);
 
 			ticks2ts(rmtp, rem > 1 ? rem : 0);

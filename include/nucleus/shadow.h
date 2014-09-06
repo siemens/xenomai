@@ -61,7 +61,7 @@ void xnshadow_grab_events(void);
 
 void xnshadow_release_events(void);
 
-int xnshadow_map(struct xnthread *thread,
+int xnshadow_map(struct xnthread *curr,
 		 xncompletion_t __user *u_completion,
 		 unsigned long __user *u_mode_offset);
 

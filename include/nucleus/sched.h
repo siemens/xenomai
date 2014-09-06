@@ -276,7 +276,7 @@ int xnsched_set_policy(struct xnthread *thread,
 void xnsched_track_policy(struct xnthread *thread,
 			  struct xnthread *target);
 
-void xnsched_migrate(struct xnthread *thread,
+void xnsched_migrate(struct xnthread *curr,
 		     struct xnsched *sched);
 
 void xnsched_migrate_passive(struct xnthread *thread,

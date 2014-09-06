@@ -80,9 +80,9 @@ MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
 static void xnsched_watchdog_handler(struct xntimer *timer)
 {
 	struct xnsched *sched = xnpod_current_sched();
-	struct xnthread *thread = sched->curr;
+	struct xnthread *curr = sched->curr;
 
-	if (likely(xnthread_test_state(thread, XNROOT))) {
+	if (likely(xnthread_test_state(curr, XNROOT))) {
 		xnsched_reset_watchdog(sched);
 		return;
 	}
@@ -91,24 +91,24 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		return;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnthread_test_state(thread, XNSHADOW) &&
-	    !xnthread_amok_p(thread)) {
+	if (xnthread_test_state(curr, XNSHADOW) &&
+	    !xnthread_amok_p(curr)) {
 		trace_mark(xn_nucleus, watchdog_signal,
 			   "thread %p thread_name %s",
-			   thread, xnthread_name(thread));
+			   curr, xnthread_name(curr));
 		xnprintf("watchdog triggered -- signaling runaway thread "
-			 "'%s'\n", xnthread_name(thread));
-		xnthread_set_info(thread, XNAMOK);
-		xnshadow_send_sig(thread, SIGDEBUG, SIGDEBUG_WATCHDOG, 1);
-		xnshadow_call_mayday(thread);
+			 "'%s'\n", xnthread_name(curr));
+		xnthread_set_info(curr, XNAMOK);
+		xnshadow_send_sig(curr, SIGDEBUG, SIGDEBUG_WATCHDOG, 1);
+		xnshadow_call_mayday(curr);
 	} else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	{
 		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
-			   thread, xnthread_name(thread));
+			   curr, xnthread_name(curr));
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
-			 xnthread_name(thread));
-		xnpod_delete_thread(thread);
+			 xnthread_name(curr));
+		xnpod_delete_thread(curr);
 	}
 	xnsched_reset_watchdog(sched);
 }
@@ -478,33 +478,33 @@ void xnsched_track_policy(struct xnthread *thread,
 
 /* Must be called with nklock locked, interrupts off. thread must be
  * runnable. */
-void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
+void xnsched_migrate(struct xnthread *curr, struct xnsched *sched)
 {
-	struct xnsched_class *sched_class = thread->sched_class;
+	struct xnsched_class *sched_class = curr->sched_class;
 
-	if (xnthread_test_state(thread, XNREADY)) {
-		xnsched_dequeue(thread);
-		xnthread_clear_state(thread, XNREADY);
+	if (xnthread_test_state(curr, XNREADY)) {
+		xnsched_dequeue(curr);
+		xnthread_clear_state(curr, XNREADY);
 	}
 
 	if (sched_class->sched_migrate)
-		sched_class->sched_migrate(thread, sched);
+		sched_class->sched_migrate(curr, sched);
 	/*
 	 * WARNING: the scheduling class may have just changed as a
 	 * result of calling the per-class migration hook.
 	 */
-	xnsched_set_resched(thread->sched);
-	thread->sched = sched;
+	xnsched_set_resched(curr->sched);
+	curr->sched = sched;
 
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	/*
 	 * Mark the thread in flight, xnsched_finish_unlocked_switch()
 	 * will put the thread on the remote runqueue.
 	 */
-	xnthread_set_state(thread, XNMIGRATE);
+	xnthread_set_state(curr, XNMIGRATE);
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 	/* Move thread to the remote runnable queue. */
-	xnsched_putback(thread);
+	xnsched_putback(curr);
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 }
 

@@ -1019,7 +1019,7 @@ static int __rt_timer_inquire(struct pt_regs *regs)
 
 static int __rt_timer_spin(struct pt_regs *regs)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	struct task_struct *p = current;
 	RTIME etime;
 	RTIME ns;
@@ -1030,7 +1030,7 @@ static int __rt_timer_spin(struct pt_regs *regs)
 
 	etime = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(ns);
 	while ((SRTIME)(xnarch_get_cpu_tsc() - etime) < 0) {
-		if (signal_pending(p) || xnthread_amok_p(thread))
+		if (signal_pending(p) || xnthread_amok_p(curr))
 			return -EINTR;
 		cpu_relax();
 	}
@@ -2958,7 +2958,7 @@ static int __rt_alarm_stop(struct pt_regs *regs)
 
 static int __rt_alarm_wait(struct pt_regs *regs)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	union xnsched_policy_param param;
 	RT_ALARM_PLACEHOLDER ph;
 	RT_ALARM *alarm;
@@ -2981,10 +2981,10 @@ static int __rt_alarm_wait(struct pt_regs *regs)
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
+	if (xnthread_base_priority(curr) != XNSCHED_IRQ_PRIO) {
 		/* Boost the waiter above all regular tasks if needed. */
 		param.rt.prio = XNSCHED_IRQ_PRIO;
-		xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+		xnpod_set_thread_schedparam(curr, &xnsched_class_rt, &param);
 	}
 
 	info = xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
@@ -3179,7 +3179,7 @@ static int __rt_intr_wait(struct pt_regs *regs)
 {
 	union xnsched_policy_param param;
 	RT_INTR_PLACEHOLDER ph;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xnflags_t info;
 	RTIME timeout;
 	RT_INTR *intr;
@@ -3209,12 +3209,12 @@ static int __rt_intr_wait(struct pt_regs *regs)
 	}
 
 	if (!intr->pending) {
-		thread = xnpod_current_thread();
+		curr = xnpod_current_thread();
 
-		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
+		if (xnthread_base_priority(curr) != XNSCHED_IRQ_PRIO) {
 			/* Boost the waiter above all regular tasks if needed. */
 			param.rt.prio = XNSCHED_IRQ_PRIO;
-			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+			xnpod_set_thread_schedparam(curr, &xnsched_class_rt, &param);
 		}
 
 		info = xnsynch_sleep_on(&intr->synch_base,

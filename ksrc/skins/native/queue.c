@@ -783,7 +783,7 @@ ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
 			       xntmode_t timeout_mode, RTIME timeout)
 {
 	rt_queue_msg_t *msg = NULL;
-	xnthread_t *thread;
+	xnthread_t *curr;
 	xnholder_t *holder;
 	ssize_t err = 0;
 	xnflags_t info;
@@ -823,9 +823,9 @@ ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
 		else if (info & XNBREAK)
 			err = -EINTR;	/* Unblocked. */
 		else {
-			thread = xnpod_current_thread();
-			msg = thread->wait_u.buffer.ptr;
-			thread->wait_u.buffer.ptr = NULL;
+			curr = xnpod_current_thread();
+			msg = curr->wait_u.buffer.ptr;
+			curr->wait_u.buffer.ptr = NULL;
 		}
 	}
 

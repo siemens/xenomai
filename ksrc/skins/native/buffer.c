@@ -361,7 +361,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 			      struct xnbufd *bufd,
 			      xntmode_t timeout_mode, RTIME timeout)
 {
-	xnthread_t *thread, *waiter;
+	xnthread_t *curr, *waiter;
 	size_t len, rbytes, n;
 	xnflags_t info;
 	u_long wrtoken;
@@ -486,8 +486,8 @@ redo:
 			break;
 		}
 
-		thread = xnpod_current_thread();
-		thread->wait_u.size = len;
+		curr = xnpod_current_thread();
+		curr->wait_u.size = len;
 		info = xnsynch_sleep_on(&bf->osynch_base,
 					timeout, timeout_mode);
 		if (info & XNRMID) {
@@ -520,7 +520,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 			     struct xnbufd *bufd,
 			     xntmode_t timeout_mode, RTIME timeout)
 {
-	xnthread_t *thread, *waiter;
+	xnthread_t *curr, *waiter;
 	size_t len, rbytes, n;
 	xnflags_t info;
 	u_long rdtoken;
@@ -658,8 +658,8 @@ redo:
 			goto redo;
 		}
 
-		thread = xnpod_current_thread();
-		thread->wait_u.bufd =  bufd;
+		curr = xnpod_current_thread();
+		curr->wait_u.bufd =  bufd;
 		info = xnsynch_sleep_on(&bf->isynch_base,
 					timeout, timeout_mode);
 		if (info & XNRMID) {

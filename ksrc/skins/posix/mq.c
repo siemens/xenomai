@@ -525,7 +525,7 @@ static pse51_msg_t *pse51_mq_tryrcv(pse51_mq_t **mqp,
 pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 				      const struct timespec *abs_timeoutp)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	pse51_msg_t *msg;
 	spl_t s;
 	int rc;
@@ -564,26 +564,26 @@ pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 
 		mq = node2mq(pse51_desc_node(desc));
 
-		thread_cancellation_point(cur);
+		thread_cancellation_point(curr);
 
 		if (abs_timeoutp)
 			xnsynch_sleep_on(&mq->senders, to, XN_REALTIME);
 		else
 			xnsynch_sleep_on(&mq->senders, to, XN_RELATIVE);
 
-		thread_cancellation_point(cur);
+		thread_cancellation_point(curr);
 
-		if (xnthread_test_info(cur, XNBREAK)) {
+		if (xnthread_test_info(curr, XNBREAK)) {
 			msg = ERR_PTR(-EINTR);
 			break;
 		}
 
-		if (xnthread_test_info(cur, XNTIMEO)) {
+		if (xnthread_test_info(curr, XNTIMEO)) {
 			msg = ERR_PTR(-ETIMEDOUT);
 			break;
 		}
 
-		if (xnthread_test_info(cur, XNRMID)) {
+		if (xnthread_test_info(curr, XNRMID)) {
 			msg = ERR_PTR(-EBADF);
 			break;
 		}
@@ -653,7 +653,7 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 				     const struct timespec *abs_timeoutp)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	pse51_msg_t *msg;
 	spl_t s;
 	int rc;
@@ -691,26 +691,26 @@ pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 
 		mq = node2mq(pse51_desc_node(desc));
 
-		thread_cancellation_point(cur);
+		thread_cancellation_point(curr);
 
 		if (abs_timeoutp)
 			xnsynch_sleep_on(&mq->receivers, to, XN_REALTIME);
 		else
 			xnsynch_sleep_on(&mq->receivers, to, XN_RELATIVE);
 
-		thread_cancellation_point(cur);
+		thread_cancellation_point(curr);
 
-		if (xnthread_test_info(cur, XNRMID)) {
+		if (xnthread_test_info(curr, XNRMID)) {
 			msg = ERR_PTR(-EBADF);
 			break;
 		}
 
-		if (xnthread_test_info(cur, XNTIMEO)) {
+		if (xnthread_test_info(curr, XNTIMEO)) {
 			msg = ERR_PTR(-ETIMEDOUT);
 			break;
 		}
 
-		if (xnthread_test_info(cur, XNBREAK)) {
+		if (xnthread_test_info(curr, XNBREAK)) {
 			msg = ERR_PTR(-EINTR);
 			break;
 		}

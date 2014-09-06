@@ -387,15 +387,15 @@ int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 
 int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 
 	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
-	xnpod_suspend_thread(thread, XNDELAY,
-			     xntbase_ns2ticks_ceil(xnthread_time_base(thread),
+	xnpod_suspend_thread(curr, XNDELAY,
+			     xntbase_ns2ticks_ceil(xnthread_time_base(curr),
 						   timeout), mode, NULL);
 
-	return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
+	return xnthread_test_info(curr, XNBREAK) ? -EINTR : 0;
 }
 
 EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
@@ -944,7 +944,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_wait);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *thread;
+	xnthread_t *curr;
 	spl_t s;
 	int err = 0;
 
@@ -970,7 +970,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			goto unlock_out;
 		}
 
-		thread = xnpod_current_thread();
+		curr = xnpod_current_thread();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -980,18 +980,18 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			/* infinite or relative timeout */
 			xnsynch_sleep_on(&event->synch_base,
 					 xntbase_ns2ticks_ceil
-					 (xnthread_time_base(thread), timeout),
+					 (xnthread_time_base(curr), timeout),
 					 XN_RELATIVE);
 		}
 
 		if (likely
-		    (!xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK))) {
+		    (!xnthread_test_info(curr, XNTIMEO | XNRMID | XNBREAK))) {
 			xnsynch_clear_flags(&event->synch_base,
 					    RTDM_EVENT_PENDING);
 			xnselect_signal(&event->select_block, 0);
-		} else if (xnthread_test_info(thread, XNTIMEO))
+		} else if (xnthread_test_info(curr, XNTIMEO))
 			err = -ETIMEDOUT;
-		else if (xnthread_test_info(thread, XNRMID))
+		else if (xnthread_test_info(curr, XNRMID))
 			err = -EIDRM;
 		else /* XNBREAK */
 			err = -EINTR;
@@ -1229,7 +1229,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_down);
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *thread;
+	xnthread_t *curr;
 	spl_t s;
 	int err = 0;
 
@@ -1249,7 +1249,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	} else if (timeout < 0) /* non-blocking mode */
 		err = -EWOULDBLOCK;
 	else {
-		thread = xnpod_current_thread();
+		curr = xnpod_current_thread();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1259,14 +1259,14 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 			/* infinite or relative timeout */
 			xnsynch_sleep_on(&sem->synch_base,
 					 xntbase_ns2ticks_ceil
-					 (xnthread_time_base(thread), timeout),
+					 (xnthread_time_base(curr), timeout),
 					 XN_RELATIVE);
 		}
 
-		if (xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK)) {
-			if (xnthread_test_info(thread, XNTIMEO))
+		if (xnthread_test_info(curr, XNTIMEO | XNRMID | XNBREAK)) {
+			if (xnthread_test_info(curr, XNTIMEO))
 				err = -ETIMEDOUT;
-			else if (xnthread_test_info(thread, XNRMID))
+			else if (xnthread_test_info(curr, XNRMID))
 				err = -EIDRM;
 			else /* XNBREAK */
 				err = -EINTR;
@@ -1523,7 +1523,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *curr_thread = xnpod_current_thread();
+	xnthread_t *curr = xnpod_current_thread();
 	spl_t s;
 	int err = 0;
 
@@ -1538,10 +1538,10 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	if (unlikely(xnsynch_test_flags(&mutex->synch_base,
 					RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
-	else if (!xnthread_try_grab(curr_thread, &mutex->synch_base)) {
+	else if (!xnthread_try_grab(curr, &mutex->synch_base)) {
 		/* Redefinition to clarify XENO_ASSERT output */
 		#define mutex_owner xnsynch_owner(&mutex->synch_base)
-		XENO_ASSERT(RTDM, mutex_owner != curr_thread,
+		XENO_ASSERT(RTDM, mutex_owner != curr,
 			    err = -EDEADLK; goto unlock_out;);
 
 		/* non-blocking mode */
@@ -1559,15 +1559,15 @@ restart:
 			/* infinite or relative timeout */
 			xnsynch_acquire(&mutex->synch_base,
 					xntbase_ns2ticks_ceil
-					(xnthread_time_base(curr_thread),
+					(xnthread_time_base(curr),
 					 timeout), XN_RELATIVE);
 		}
 
-		if (unlikely(xnthread_test_info(curr_thread,
+		if (unlikely(xnthread_test_info(curr,
 						XNTIMEO | XNRMID | XNBREAK))) {
-			if (xnthread_test_info(curr_thread, XNTIMEO))
+			if (xnthread_test_info(curr, XNTIMEO))
 				err = -ETIMEDOUT;
-			else if (xnthread_test_info(curr_thread, XNRMID))
+			else if (xnthread_test_info(curr, XNRMID))
 				err = -EIDRM;
 			else /*  XNBREAK */
 				goto restart;
