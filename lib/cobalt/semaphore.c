@@ -189,6 +189,7 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 	}
 
 	datp = sem_get_datp(_sem);
+	smp_mb();
 	value = atomic_read(&datp->value);
 	if (value >= 0) {
 		if (datp->flags & SEM_PULSE)
@@ -248,6 +249,7 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 	}
 
 	datp = sem_get_datp(_sem);
+	smp_mb();
 	value = atomic_read(&datp->value);
 	if (value > 0) {
 		do {
@@ -412,6 +414,7 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 	}
 
 	datp = sem_get_datp(_sem);
+	smp_mb();
 	value = atomic_read(&datp->value);
 	if (value < 0 && (datp->flags & SEM_REPORT) == 0)
 		value = 0;
@@ -610,6 +613,7 @@ int sem_broadcast_np(sem_t *sem)
 	}
 
 	datp = sem_get_datp(_sem);
+	smp_mb();
 	value = atomic_read(&datp->value);
 	if (value >= 0)
 		return 0;
