@@ -1586,8 +1586,7 @@ void xnpod_resume_thread(struct xnthread *thread, xnflags_t mask)
 	trace_mark(xn_nucleus, thread_resume,
 		   "thread %p thread_name %s mask %lu",
 		   thread, xnthread_name(thread), mask);
-	xnarch_trace_pid(xnthread_user_task(thread) ?
-			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
+	xnarch_trace_pid(xnthread_user_pid(thread),
 			 xnthread_current_priority(thread));
 
 	sched = thread->sched;
@@ -2177,8 +2176,7 @@ void __xnpod_schedule(struct xnsched *sched)
 
 	curr = sched->curr;
 
-	xnarch_trace_pid(xnthread_user_task(curr) ?
-			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
+	xnarch_trace_pid(xnthread_current_user_pid(curr),
 			 xnthread_current_priority(curr));
 reschedule:
 	switched = 0;
@@ -2266,8 +2264,7 @@ reschedule:
 	 */
 	curr = sched->curr;
 
-	xnarch_trace_pid(xnthread_user_task(curr) ?
-			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
+	xnarch_trace_pid(xnthread_current_user_pid(curr),
 			 xnthread_current_priority(curr));
 
 	if (zombie)
@@ -2583,7 +2580,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 			     "kernel-space at 0x%lx (pid %d)\n", curr->name,
 			     xnarch_fault_trap(fltinfo),
 			     xnarch_fault_pc(fltinfo),
-			     xnthread_user_pid(curr));
+			     xnthread_current_user_pid(curr));
 			xnarch_trace_panic_dump();
 		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
 			xnprintf
@@ -2591,7 +2588,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 			     "user-space at 0x%lx (pid %d)\n", curr->name,
 			     xnarch_fault_trap(fltinfo),
 			     xnarch_fault_pc(fltinfo),
-			     xnthread_user_pid(curr));
+			     xnthread_current_user_pid(curr));
 #endif /* XENO_DEBUG(NUCLEUS) */
 		if (xnarch_fault_pf_p(fltinfo))
 			/* The page fault counter is not SMP-safe, but it's a

@@ -385,6 +385,17 @@ typedef struct xnhook {
 #define xnthread_user_pid(thread) \
     (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
+#define xnthread_current_user_task(curr)				\
+	({								\
+		struct xnthread *__c = (curr);				\
+		XENO_BUGON(NUCLEUS, __c != xnpod_current_thread());	\
+		xnthread_test_state(__c, XNROOT|XNSHADOW) ? current : NULL; \
+	})
+#define xnthread_current_user_pid(curr)					\
+	({								\
+		struct task_struct *p = xnthread_current_user_task(curr); \
+		p ? p->pid : 0;						\
+	})
 #define xnthread_affinity(thread)          ((thread)->affinity)
 #define xnthread_affine_p(thread, cpu)     xnarch_cpu_isset(cpu, (thread)->affinity)
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)

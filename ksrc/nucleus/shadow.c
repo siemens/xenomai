@@ -1009,7 +1009,7 @@ redo:
 		    || this_task->state != TASK_RUNNING))
 			xnpod_fatal
 			    ("xnshadow_harden() failed for thread %s[%d]",
-			     curr->name, xnthread_user_pid(curr));
+			     curr->name, xnthread_current_user_pid(curr));
 
 		/*
 		 * Synchronize with the chosen gatekeeper so that it no longer
@@ -1150,7 +1150,7 @@ void xnshadow_relax(int notify, int reason)
 	splnone();
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
-			    curr->name, xnthread_user_pid(curr));
+			    curr->name, xnthread_current_user_pid(curr));
 
 	prio = normalize_priority(xnthread_current_priority(curr));
 	rthal_reenter_root(get_switch_lock_owner(),
@@ -1408,7 +1408,7 @@ int xnshadow_map(xnthread_t *curr, xncompletion_t __user *u_completion,
 	 */
 	xnthread_set_info(curr, XNPRIOSET);
 
-	xnarch_trace_pid(xnthread_user_pid(curr),
+	xnarch_trace_pid(xnthread_current_user_pid(curr),
 			 xnthread_current_priority(curr));
 
 	return ret;
