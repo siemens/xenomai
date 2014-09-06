@@ -24,6 +24,21 @@ Description: Xenomai runtime utilities
  This package contains the runtime programs and the testsuite for the Xenomai
  realtime system.
 
+Package: xenomai-runtime-dbg
+Section: debug
+Architecture: amd64 arm armeb armel armhf i386 powerpc powerpcspe
+Depends: xenomai-runtime (=${binary:Version}), ${misc:Depends}
+Description: debugging symbols for Xenomai runtime utilities
+ Xenomai is a real-time development framework cooperating with the Linux
+ kernel in order to provide a pervasive, interface-agnostic, hard real-time
+ support to user-space applications, seamlessly integrated into the GNU/Linux
+ environment. Xenomai provides its own API and emulation layers ("skins") to
+ make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
+ uiTRON, RTAI, POSIX.
+ .
+ This package contains the debug symbols for the runtime programs and testsuite
+ for Xenomai realtime system.
+
 Package: xenomai-kernel-source
 Section: kernel
 Architecture: all
@@ -61,6 +76,20 @@ Description: Shared libraries for Xenomai
  uiTRON, RTAI, POSIX.
  .
  This package contains the shared libraries.
+
+Package: libxenomai1-dbg
+Section: debug
+Architecture: amd64 arm armeb armel armhf i386 powerpc powerpcspe
+Depends: libxenomai1 (=${binary:Version}), ${misc:Depends}
+Description: Debugging symbols for libxenomai1
+ Xenomai is a real-time development framework cooperating with the Linux
+ kernel in order to provide a pervasive, interface-agnostic, hard real-time
+ support to user-space applications, seamlessly integrated into the GNU/Linux
+ environment. Xenomai provides its own API and emulation layers ("skins") to
+ make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
+ uiTRON, RTAI, POSIX.
+ .
+ This package contains the debug symbols for libxenomai1.
 
 Package: libxenomai-dev
 Section: libdevel
