@@ -50,6 +50,8 @@ extern int clock_nanosleep (clockid_t __clock_id, int __flags,
 #define USEC_PER_SEC	1000000
 #define NSEC_PER_SEC	1000000000
 
+#define HIST_MAX		1000000
+
 #define MODE_CYCLIC		0
 #define MODE_CLOCK_NANOSLEEP	1
 #define MODE_SYS_ITIMER		2
@@ -83,14 +85,19 @@ struct thread_stat {
 	long act;
 	double avg;
 	long *values;
+	long *hist_array;
+	long *outliers;
 	pthread_t thread;
 	int threadstarted;
 	int tid;
-	int traced;
+    int traced;
+	long hist_overflow;
+	long num_outliers;
 };
 
 static int test_shutdown;
 static int tracelimit = 100000;
+static int histogram = 0;
 static struct timespec start;
 
 static inline void tsnorm(struct timespec *ts)
@@ -282,6 +289,19 @@ void *timerthread(void *param)
 		if (par->bufmsk)
 			stat->values[stat->cycles & par->bufmsk] = diff;
 
+		/* Update the histogram */
+		if (histogram) {
+			if (diff >= histogram) {
+				stat->hist_overflow++;
+				if (stat->num_outliers < histogram)
+					stat->outliers[stat->num_outliers++] = stat->cycles;
+			}
+			else
+				stat->hist_array[diff]++;
+		}
+
+		stat->cycles++;
+
 		next.tv_sec += interval.tv_sec;
 		next.tv_nsec += interval.tv_nsec;
 		tsnorm(&next);
@@ -325,6 +345,9 @@ static void display_help(void)
 	       "                           0 = CLOCK_MONOTONIC (default)\n"
 	       "                           1 = CLOCK_REALTIME\n"
 	       "-d DIST  --distance=DIST   distance of thread intervals in us default=500\n"
+	       "-h       --histogram=US    dump a latency histogram to stdout after the run\n"
+	       "                           (with same priority about many threads)\n"
+	       "                           US is the max time to be be tracked in microseconds\n"
 	       "-i INTV  --interval=INTV   base interval of thread in us default=1000\n"
 	       "-l LOOPS --loops=LOOPS     number of loops: default=0(endless)\n"
 	       "-n       --nanosleep       use clock_nanosleep\n"
@@ -368,6 +391,7 @@ static void process_options (int argc, char *argv[])
 			{"breaktrace", required_argument, NULL, 'b'},
 			{"clock", required_argument, NULL, 'c'},
 			{"distance", required_argument, NULL, 'd'},
+			{"histogram",        required_argument, NULL, 'h' },
 			{"interval", required_argument, NULL, 'i'},
 			{"loops", required_argument, NULL, 'l'},
 			{"nanosleep", no_argument, NULL, 'n'},
@@ -382,7 +406,7 @@ static void process_options (int argc, char *argv[])
 			{"help", no_argument, NULL, '?'},
 			{NULL, 0, NULL, 0}
 		};
-		int c = getopt_long (argc, argv, "b:c:d:i:l:np:qrt:v",
+		int c = getopt_long (argc, argv, "b:c:d:h:i:l:np:qrt:v",
 			long_options, &option_index);
 		if (c == -1)
 			break;
@@ -390,6 +414,7 @@ static void process_options (int argc, char *argv[])
 		case 'b': tracelimit = atoi(optarg); break;
 		case 'c': clocksel = atoi(optarg); break;
 		case 'd': distance = atoi(optarg); break;
+		case 'h': histogram = atoi(optarg); break;
 		case 'i': interval = atoi(optarg); break;
 		case 'l': max_cycles = atoi(optarg); break;
 		case 'n': use_nanosleep = MODE_CLOCK_NANOSLEEP; break;
@@ -408,6 +433,12 @@ static void process_options (int argc, char *argv[])
 	if (clocksel < 0 || clocksel > ARRAY_SIZE(clocksources))
 		error = 1;
 
+	if (histogram < 0)
+		error = 1;
+
+	if (histogram > HIST_MAX)
+		histogram = HIST_MAX;
+
 	if (priority < 0 || priority > 99)
 		error = 1;
 
@@ -422,6 +453,72 @@ static void sighand(int sig)
 {
 	test_shutdown = 1;
 }
+
+static void print_hist(struct thread_param par[], int nthreads)
+{
+	int i, j;
+	unsigned long long int log_entries[nthreads+1];
+	unsigned long maxmax, alloverflows;
+
+	bzero(log_entries, sizeof(log_entries));
+
+	printf("# Histogram\n");
+	for (i = 0; i < histogram; i++) {
+		unsigned long long int allthreads = 0;
+
+		printf("%06d ", i);
+
+		for (j = 0; j < nthreads; j++) {
+			unsigned long curr_latency=par[j].stats->hist_array[i];
+			printf("%06lu", curr_latency);
+			if (j < nthreads - 1)
+				printf("\t");
+			log_entries[j] += curr_latency;
+			allthreads += curr_latency;
+		}
+		printf("\n");
+	}
+	printf("# Total:");
+	for (j = 0; j < nthreads; j++)
+		printf(" %09llu", log_entries[j]);
+	printf("\n");
+	printf("# Min Latencies:");
+	for (j = 0; j < nthreads; j++)
+		printf(" %05lu", par[j].stats->min);
+	printf("\n");
+	printf("# Avg Latencies:");
+	for (j = 0; j < nthreads; j++)
+		printf(" %05lu", par[j].stats->cycles ?
+		       (long)(par[j].stats->avg/par[j].stats->cycles) : 0);
+	printf("\n");
+	printf("# Max Latencies:");
+	maxmax = 0;
+	for (j = 0; j < nthreads; j++) {
+		printf(" %05lu", par[j].stats->max);
+		if (par[j].stats->max > maxmax)
+			maxmax = par[j].stats->max;
+	}
+	printf("\n");
+	printf("# Histogram Overflows:");
+	alloverflows = 0;
+	for (j = 0; j < nthreads; j++) {
+		printf(" %05lu", par[j].stats->hist_overflow);
+		alloverflows += par[j].stats->hist_overflow;
+	}
+	printf("\n");
+
+	printf("# Histogram Overflow at cycle number:\n");
+	for (i = 0; i < nthreads; i++) {
+		printf("# Thread %d:", i);
+		for (j = 0; j < par[i].stats->num_outliers; j++)
+			printf(" %05lu", par[i].stats->outliers[j]);
+		if (par[i].stats->num_outliers < par[i].stats->hist_overflow)
+			printf(" # %05lu others", par[i].stats->hist_overflow - par[i].stats->num_outliers);
+		printf("\n");
+	}
+	printf("\n");
+}
+
 
 static void print_stat(struct thread_param *par, int index, int verbose)
 {
@@ -490,6 +587,21 @@ int main(int argc, char **argv)
 	clock_gettime(clocksources[clocksel], &start);
 
 	for (i = 0; i < num_threads; i++) {
+		/* allocate the histogram if requested */
+		if (histogram) {
+			int bufsize = histogram * sizeof(long);
+
+			stat[i].hist_array = malloc(bufsize);
+			stat[i].outliers = malloc(bufsize);
+			if (stat[i].hist_array == NULL || stat[i].outliers == NULL) {
+				fprintf(stderr, "failed to allocate histogram of size %d on node %d\n",
+				      histogram, i);
+				exit(EXIT_FAILURE);
+			}
+			memset(stat[i].hist_array, 0, bufsize);
+			memset(stat[i].outliers, 0, bufsize);
+		}
+
 		if (verbose) {
 			stat[i].values = calloc(VALBUF_SIZE, sizeof(long));
 			if (!stat[i].values)
@@ -547,6 +659,14 @@ int main(int argc, char **argv)
 		quiet = 0; /* Now we want to output the statistics */
 		for (i = 0; i < num_threads; i++) {
 			print_stat(&par[i], i, verbose);
+		}
+	}
+
+	if (histogram) {
+		print_hist(par, num_threads);
+		for (i = 0; i < num_threads; i++) {
+			free(stat[i].hist_array);
+			free(stat[i].outliers);
 		}
 	}
 	ret = 0;
