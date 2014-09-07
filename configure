@@ -13650,6 +13650,38 @@ XENO_LIB_CFLAGS="$XENO_USER_CFLAGS"
 XENO_LIB_LDFLAGS="$XENO_USER_LDFLAGS"
 
 case "$build_for" in
+ arm*-*)
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether using r7 causes errors" >&5
+$as_echo_n "checking whether using r7 causes errors... " >&6; }
+if ${ac_cv_r7_error+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat > conftest.c <<\EOF
+int foo(void) {
+	register unsigned x __asm__("r7");
+     	__asm__("mov %0,#0\n\t": "=r"(x));
+     	return x;
+}
+EOF
+		if { ac_try='${CC-cc} $CPPFLAGS $CFLAGS $XENO_USER_CFLAGS -c conftest.c >&5'
+  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; }; then
+			ac_cv_r7_error=no
+		else
+			ac_cv_r7_error=yes
+		fi
+		rm -f conftest*
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_r7_error" >&5
+$as_echo "$ac_cv_r7_error" >&6; }
+	if test x"$ac_cv_r7_error" = xyes; then
+   	   	XENO_USER_CFLAGS="-fomit-frame-pointer $XENO_USER_CFLAGS"
+		XENO_LIB_CFLAGS="-fomit-frame-pointer $XENO_LIB_CFLAGS"
+	fi
+	;;
  i*86*-*)
 	XENO_LIB_CFLAGS="$XENO_LIB_CFLAGS -fno-omit-frame-pointer"
 	;;
@@ -13776,7 +13808,7 @@ $as_echo_n "checking for fortify support... " >&6; }
 # Check whether --enable-fortify was given.
 if test "${enable_fortify+set}" = set; then :
   enableval=$enable_fortify; case "$enableval" in
-              y | yes) want_fortify=yes;;
+	      y | yes) want_fortify=yes;;
 	      *) want_fortify=no;;
 	      esac
 fi

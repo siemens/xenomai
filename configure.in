@@ -549,6 +549,26 @@ XENO_LIB_CFLAGS="$XENO_USER_CFLAGS"
 XENO_LIB_LDFLAGS="$XENO_USER_LDFLAGS"
 
 case "$build_for" in
+ arm*-*)
+	AC_CACHE_CHECK([whether using r7 causes errors], ac_cv_r7_error,
+		[cat > conftest.c <<\EOF
+int foo(void) {
+	register unsigned x __asm__("r7");
+     	__asm__("mov %0,#0\n\t": "=r"(x));
+     	return x;
+}
+EOF
+		if AC_TRY_COMMAND([${CC-cc} $CPPFLAGS $CFLAGS $XENO_USER_CFLAGS -c conftest.c >&AS_MESSAGE_LOG_FD]); then
+			ac_cv_r7_error=no
+		else
+			ac_cv_r7_error=yes
+		fi
+		rm -f conftest*])
+	if test x"$ac_cv_r7_error" = xyes; then
+   	   	XENO_USER_CFLAGS="-fomit-frame-pointer $XENO_USER_CFLAGS"
+		XENO_LIB_CFLAGS="-fomit-frame-pointer $XENO_LIB_CFLAGS"
+	fi
+	;;
  i*86*-*)
 	XENO_LIB_CFLAGS="$XENO_LIB_CFLAGS -fno-omit-frame-pointer"
 	;;
@@ -619,12 +639,12 @@ AC_MSG_RESULT($XENO_TEST_DIR)
 
 unset want_fortify
 AC_MSG_CHECKING(for fortify support)
-AC_ARG_ENABLE([fortify], 
+AC_ARG_ENABLE([fortify],
 	      AC_HELP_STRING([--enable-fortify],
 			     [Enable support for applications compiled
 			     with _FORTIFY_SOURCE]),
 	      [case "$enableval" in
-              y | yes) want_fortify=yes;;
+	      y | yes) want_fortify=yes;;
 	      *) want_fortify=no;;
 	      esac])
 AC_MSG_RESULT(${want_fortify:-autodetect})
