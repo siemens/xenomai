@@ -135,7 +135,6 @@ static inline void thread_unhash(const struct cobalt_local_hkey *hkey)
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnfree(lslot);
-	xnfree(gslot);
 }
 
 static struct cobalt_thread *
