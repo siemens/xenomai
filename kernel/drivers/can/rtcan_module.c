@@ -332,9 +332,8 @@ static const struct file_operations rtcan_proc_filter_ops = {
 
 static int rtcan_read_proc_version(struct seq_file *p, void *data)
 {
-	seq_printf(p, "RT-Socket-CAN %d.%d.%d - built on %s %s\n",
-		   RTCAN_MAJOR_VER, RTCAN_MINOR_VER, RTCAN_BUGFIX_VER,
-		   __DATE__, __TIME__);
+	seq_printf(p, "RT-Socket-CAN %d.%d.%d\n",
+		   RTCAN_MAJOR_VER, RTCAN_MINOR_VER, RTCAN_BUGFIX_VER);
 
 	return 0;
 }
