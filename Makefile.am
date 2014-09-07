@@ -37,7 +37,7 @@ echo '*** privileges.' ; \
 	   done ; \
 	else if test -d $(DESTDIR)/etc/udev/rules.d ; then \
 	      for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
-		 sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
+		  $$sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
 	      done ; \
 	   fi ; \
 	fi ; \
