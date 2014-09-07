@@ -67,7 +67,7 @@ void a4l_set_dev(a4l_cxt_t *cxt)
 
 /* --- Device tab proc section --- */
 
-#ifdef CONFIG_PROC_FS
+#if defined(CONFIG_PROC_FS) && defined(CONFIG_XENO_OPT_PERVASIVE)
 
 int a4l_rdproc_devs(struct seq_file *p, void *data)
 {
@@ -168,7 +168,7 @@ void a4l_proc_detach(a4l_cxt_t * cxt)
 	rtdm_free(entry_name);
 }
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_PROC_FS || !CONFIG_XENO_OPT_PERVASIVE */
 
 int a4l_proc_attach(a4l_cxt_t * cxt)
 {
@@ -179,7 +179,7 @@ void a4l_proc_detach(a4l_cxt_t * cxt)
 {
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* !CONFIG_PROC_FS || !CONFIG_XENO_OPT_PERVASIVE */
 
 /* --- Attach / detach section --- */
 
