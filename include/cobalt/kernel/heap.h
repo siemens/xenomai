@@ -134,12 +134,7 @@ int xnheap_init(struct xnheap *heap, void *membase, u32 size);
 void xnheap_set_name(struct xnheap *heap,
 		     const char *name, ...);
 
-void xnheap_destroy(struct xnheap *heap,
-		    void (*flushfn)(struct xnheap *heap,
-				    void *membase,
-				    u32 size,
-				    void *cookie),
-		    void *cookie);
+void xnheap_destroy(struct xnheap *heap);
 
 void *xnheap_alloc(struct xnheap *heap, u32 size);
 

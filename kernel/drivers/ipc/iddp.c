@@ -159,12 +159,6 @@ static void __iddp_free_mbuf(struct iddp_socket *sk,
 	rtdm_waitqueue_broadcast(sk->poolwaitq);
 }
 
-static void __iddp_flush_pool(struct xnheap *heap,
-			      void *poolmem, u32 poolsz, void *cookie)
-{
-	free_pages_exact(poolmem, poolsz);
-}
-
 static int iddp_socket(struct rtdm_fd *fd)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
@@ -196,6 +190,8 @@ static void iddp_close(struct rtdm_fd *fd)
 	struct iddp_socket *sk = priv->state;
 	struct iddp_message *mbuf;
 	rtdm_lockctx_t s;
+	void *poolmem;
+	u32 poolsz;
 
 	if (sk->name.sipc_port > -1) {
 		cobalt_atomic_enter(s);
@@ -210,7 +206,10 @@ static void iddp_close(struct rtdm_fd *fd)
 		xnregistry_remove(sk->handle);
 
 	if (sk->bufpool != &kheap) {
-		xnheap_destroy(&sk->privpool, __iddp_flush_pool, NULL);
+		poolmem = xnheap_get_membase(&sk->privpool);
+		poolsz = xnheap_get_size(&sk->privpool);
+		xnheap_destroy(&sk->privpool);
+		free_pages_exact(poolmem, poolsz);
 		return;
 	}
 
@@ -587,7 +586,6 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 			goto fail;
 		}
 		xnheap_set_name(&sk->privpool, "iddp-pool@%d", port);
-
 		sk->poolwaitq = &sk->privwaitq;
 		sk->bufpool = &sk->privpool;
 	}
@@ -601,9 +599,10 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 		ret = xnregistry_enter(sk->label, sk,
 				       &sk->handle, &__iddp_pnode.node);
 		if (ret) {
-			if (poolsz > 0)
-				xnheap_destroy(&sk->privpool,
-					       __iddp_flush_pool, NULL);
+			if (poolsz > 0) {
+				xnheap_destroy(&sk->privpool);
+				free_pages_exact(poolmem, poolsz);
+			}
 			goto fail;
 		}
 	}

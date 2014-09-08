@@ -243,26 +243,16 @@ int xnheap_init(struct xnheap *heap, void *membase, u32 size)
 EXPORT_SYMBOL_GPL(xnheap_init);
 
 /**
- * @fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *membase, u32 size, void *cookie), void *cookie)
+ * @fn void xnheap_destroy(struct xnheap *heap)
  * @brief Destroys a memory heap.
  *
  * Destroys a memory heap.
  *
- * @param heap The descriptor address of the destroyed heap.
- *
- * @param flushfn If non-NULL, the address of a user-supplied flush
- * routine which will be called to further release the heap memory.
- *
- * @param cookie If @a flushfn is non-NULL, @a cookie is an opaque
- * pointer which will be passed unmodified to @a flushfn.
+ * @param heap The heap descriptor.
  *
  * @coretags{secondary-only}
  */
-void xnheap_destroy(struct xnheap *heap,
-		    void (*flushfn)(struct xnheap *heap,
-				    void *membase,
-				    u32 size, void *cookie),
-		    void *cookie)
+void xnheap_destroy(struct xnheap *heap)
 {
 	spl_t s;
 
@@ -274,9 +264,6 @@ void xnheap_destroy(struct xnheap *heap,
 	xnvfile_touch_tag(&vfile_tag);
 	xnlock_put_irqrestore(&nklock, s);
 	kfree(heap->pagemap);
-
-	if (flushfn)
-		flushfn(heap, heap->membase, heap->size, cookie);
 }
 EXPORT_SYMBOL_GPL(xnheap_destroy);
 

@@ -116,16 +116,12 @@ static void disable_timesource(void)
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 
-static void flush_heap(struct xnheap *heap,
-		       void *mem, u32 size, void *cookie)
-{
-	free_pages_exact(mem, size);
-}
-
 static void sys_shutdown(void)
 {
 	struct xnthread *thread, *tmp;
 	struct xnsched *sched;
+	void *membase;
+	u32 memsize;
 	int cpu;
 	spl_t s;
 
@@ -152,7 +148,10 @@ static void sys_shutdown(void)
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnregistry_cleanup();
-	xnheap_destroy(&kheap, flush_heap, NULL);
+	membase = xnheap_get_membase(&kheap);
+	memsize = xnheap_get_size(&kheap);
+	xnheap_destroy(&kheap);
+	free_pages_exact(membase, memsize);
 }
 
 static int __init mach_setup(void)

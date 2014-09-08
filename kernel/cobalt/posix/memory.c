@@ -352,7 +352,7 @@ void cobalt_umm_destroy(struct cobalt_umm *umm)
 	secondary_mode_only();
 
 	if (atomic_dec_and_test(&umm->refcount)) {
-		xnheap_destroy(&umm->heap, NULL, NULL);
+		xnheap_destroy(&umm->heap);
 		vfree(xnheap_get_membase(&umm->heap));
 		if (umm->release)
 			umm->release(umm);

@@ -104,12 +104,6 @@ static struct xnpnode_link __xddp_pnode = {
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-static void __xddp_flush_pool(struct xnheap *heap,
-			      void *poolmem, u32 poolsz, void *cookie)
-{
-	free_pages_exact(poolmem, poolsz);
-}
-
 static void *__xddp_alloc_handler(size_t size, void *skarg) /* nklock free */
 {
 	struct xddp_socket *sk = skarg;
@@ -205,9 +199,15 @@ static int __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg) /
 static void __xddp_release_handler(void *skarg) /* nklock free */
 {
 	struct xddp_socket *sk = skarg;
+	void *poolmem;
+	u32 poolsz;
 
-	if (sk->bufpool == &sk->privpool)
-		xnheap_destroy(&sk->privpool, __xddp_flush_pool, NULL);
+	if (sk->bufpool == &sk->privpool) {
+		poolmem = xnheap_get_membase(&sk->privpool);
+		poolsz = xnheap_get_size(&sk->privpool);
+		xnheap_destroy(&sk->privpool);
+		free_pages_exact(poolmem, poolsz);
+	}
 
 	kfree(sk);
 }
@@ -735,8 +735,10 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 		if (ret == -EBUSY)
 			ret = -EADDRINUSE;
 	fail_freeheap:
-		if (sk->bufpool == &sk->privpool)
-			xnheap_destroy(&sk->privpool, __xddp_flush_pool, NULL);
+		if (poolsz > 0) {
+			xnheap_destroy(&sk->privpool);
+			free_pages_exact(poolmem, poolsz);
+		}
 	fail:
 		clear_bit(_XDDP_BINDING, &sk->status);
 		return ret;
