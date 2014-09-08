@@ -24,7 +24,6 @@
 #include <xeno_config.h>
 #include <errno.h>
 #include <cobalt/uapi/syscall.h>
-#include <asm/xenomai/features.h> /* for CONFIG_XENO_ARM_EABI */
 
 /*
  * Some of the following macros have been adapted from Linux's
@@ -89,7 +88,7 @@
 #define __sys2(x)	#x
 #define __sys1(x)	__sys2(x)
 
-#ifdef CONFIG_XENO_ARM_EABI
+#ifdef __ARM_EABI__
 #define __SYS_REG , "r7"
 #define __SYS_REG_DECL register unsigned long __r7 __asm__ ("r7")
 #define __SYS_REG_SET __r7 = XENO_ARM_SYSCALL

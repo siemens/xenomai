@@ -22,10 +22,6 @@
 #ifndef _COBALT_ARM_ASM_FEATURES_H
 #define _COBALT_ARM_ASM_FEATURES_H
 
-#ifdef CONFIG_AEABI
-#define CONFIG_XENO_ARM_EABI 1
-#endif
-
 struct cobalt_featinfo;
 static inline void collect_arch_features(struct cobalt_featinfo *p) { }
 

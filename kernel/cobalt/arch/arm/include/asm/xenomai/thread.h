@@ -40,7 +40,7 @@ struct xnarchtcb {
 	struct {
 		unsigned long pc;
 		unsigned long r0;
-#ifdef CONFIG_XENO_ARM_EABI
+#ifdef __ARM_EABI__
 		unsigned long r7;
 #endif
 #ifdef CONFIG_ARM_THUMB

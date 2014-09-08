@@ -21,10 +21,6 @@
 #include_next <features.h>
 #include <xeno_config.h>
 
-#ifdef __ARM_EABI__
-#define CONFIG_XENO_ARM_EABI 1
-#endif
-
 #if defined(__ARM_ARCH_2__)
 #define __LINUX_ARM_ARCH__ 2
 #endif /* armv2 */

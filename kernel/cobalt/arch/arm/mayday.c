@@ -54,7 +54,7 @@ void xnarch_setup_mayday_page(void *page)
 	 * We don't mess with CPSR here, so no need to save/restore it
 	 * in handle/fixup code.
 	 */
-#ifdef CONFIG_XENO_ARM_EABI
+#ifdef __ARM_EABI__
 	static const struct {
 		u32 ldr_r0;
 		u32 ldr_r7;
@@ -98,7 +98,7 @@ void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
 {
 	tcb->mayday.pc = regs->ARM_pc;
 	tcb->mayday.r0 = regs->ARM_r0;
-#ifdef CONFIG_XENO_ARM_EABI
+#ifdef __ARM_EABI__
 	tcb->mayday.r7 = regs->ARM_r7;
 #endif
 #ifdef CONFIG_ARM_THUMB
@@ -113,7 +113,7 @@ void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
 {
 	regs->ARM_pc = tcb->mayday.pc;
 	regs->ARM_r0 = tcb->mayday.r0;
-#ifdef CONFIG_XENO_ARM_EABI
+#ifdef __ARM_EABI__
 	regs->ARM_r7 = tcb->mayday.r7;
 #endif
 #ifdef CONFIG_ARM_THUMB
