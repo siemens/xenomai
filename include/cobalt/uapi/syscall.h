@@ -112,7 +112,7 @@
 #define sc_cobalt_archcall			89
 #define sc_cobalt_info				90
 #define sc_cobalt_trace				91
-/* 92 unimp */
+#define sc_cobalt_sysctl			92
 #define sc_cobalt_get_current			93
 #define sc_cobalt_mayday			94
 #define sc_cobalt_backtrace			95

@@ -696,6 +696,12 @@ static COBALT_SYSCALL(sysconf, current,
 	return ret ? -EFAULT : 0;
 }
 
+static COBALT_SYSCALL(sysctl, probing,
+		      int, (int option, void __user *u_buf, size_t u_bufsz))
+{
+	return -EINVAL;
+}
+
 static int cobalt_ni(void)
 {
 	return -ENOSYS;
@@ -865,6 +871,7 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(backtrace),
 	__COBALT_CALL_ENTRY(serialdbg),
 	__COBALT_CALL_ENTRY(sysconf),
+	__COBALT_CALL_ENTRY(sysctl),
 #ifdef CONFIG_XENO_OPT_SYS3264
 #include <asm/xenomai/syscall32-table.h>
 #endif	
@@ -968,4 +975,5 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(backtrace, current),
 	__COBALT_MODE(serialdbg, current),
 	__COBALT_MODE(sysconf, current),
+	__COBALT_MODE(sysctl, probing),
 };
