@@ -17,24 +17,13 @@
  * 02111-1307, USA.
  */
 #include <stdarg.h>
-#include <linux/miscdevice.h>
-#include <linux/device.h>
 #include <linux/vmalloc.h>
-#include <linux/mm.h>
-#include <linux/fs.h>
-#include <linux/spinlock.h>
-#include <linux/sched.h>
-#include <linux/mm.h>
-#include <linux/semaphore.h>
 #include <linux/slab.h>
-#include <linux/uaccess.h>
-#include <asm/io.h>
-#include <cobalt/kernel/thread.h>
+#include <linux/kernel.h>
+#include <linux/log2.h>
+#include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/vfile.h>
-#include <cobalt/kernel/ppd.h>
-#include <cobalt/kernel/vdso.h>
-#include <cobalt/kernel/assert.h>
 
 /**
  * @ingroup cobalt_core
@@ -45,34 +34,7 @@
  * Purpose Memory Allocator for the 4.3BSD Unix Kernel" by Marshall
  * K. McKusick and Michael J. Karels. You can find it at various
  * locations on the net, including
- * http://docs.FreeBSD.org/44doc/papers/kernmalloc.pdf.  A minor
- * variation allows this implementation to have 'extendable' heaps
- * when needed, with multiple memory extents providing autonomous page
- * address spaces.
- *
- * The data structures hierarchy is as follows:
- *
- * <tt> @verbatim
-HEAP {
-     block_buckets[]
-     extent_queue -------+
-}                        |
-			 V
-		      EXTENT #1 {
-			     {static header}
-			     page_map[npages]
-			     page_array[npages][pagesize]
-		      } -+
-			 |
-			 |
-			 V
-		      EXTENT #n {
-			     {static header}
-			     page_map[npages]
-			     page_array[npages][pagesize]
-		      }
-@endverbatim </tt>
- *
+ * http://docs.FreeBSD.org/44doc/papers/kernmalloc.pdf.
  *@{
  */
 struct xnheap kheap;		/* System heap */
@@ -93,8 +55,8 @@ struct vfile_priv {
 };
 
 struct vfile_data {
-	size_t usable_mem;
-	size_t used_mem;
+	size_t all_mem;
+	size_t free_mem;
 	char name[XNOBJECT_NAME_LEN];
 };
 
@@ -135,8 +97,8 @@ static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 		priv->curr = list_entry(heap->next.next,
 					struct xnheap, next);
 
-	p->usable_mem = xnheap_usable_mem(heap);
-	p->used_mem = xnheap_used_mem(heap);
+	p->all_mem = xnheap_get_size(heap);
+	p->free_mem = xnheap_get_free(heap);
 	knamecpy(p->name, heap->name);
 
 	return 1;
@@ -148,11 +110,11 @@ static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 
 	if (p == NULL)
 		xnvfile_printf(it, "%9s %9s  %s\n",
-			       "TOTAL", "USED", "NAME");
+			       "TOTAL", "FREE", "NAME");
 	else
 		xnvfile_printf(it, "%9Zu %9Zu  %s\n",
-			       p->usable_mem,
-			       p->used_mem,
+			       p->all_mem,
+			       p->free_mem,
 			       p->name);
 	return 0;
 }
@@ -175,125 +137,100 @@ void xnheap_cleanup_proc(void)
 
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-static void init_extent(struct xnheap *heap, struct xnextent *extent)
+static void init_freelist(struct xnheap *heap)
 {
 	caddr_t freepage;
 	int n, lastpgnum;
 
-	/* The page area starts right after the (aligned) header. */
-	extent->membase = (caddr_t) extent + heap->hdrsize;
+	heap->used = 0;
+	memset(heap->buckets, 0, sizeof(heap->buckets));
 	lastpgnum = heap->npages - 1;
 
 	/* Mark each page as free in the page map. */
-	for (n = 0, freepage = extent->membase;
+	for (n = 0, freepage = heap->membase;
 	     n < lastpgnum; n++, freepage += XNHEAP_PAGESZ) {
-		*((caddr_t *) freepage) = freepage + XNHEAP_PAGESZ;
-		extent->pagemap[n].type = XNHEAP_PFREE;
-		extent->pagemap[n].bcount = 0;
+		*((caddr_t *)freepage) = freepage + XNHEAP_PAGESZ;
+		heap->pagemap[n].type = XNHEAP_PFREE;
+		heap->pagemap[n].bcount = 0;
 	}
 
 	*((caddr_t *) freepage) = NULL;
-	extent->pagemap[lastpgnum].type = XNHEAP_PFREE;
-	extent->pagemap[lastpgnum].bcount = 0;
-	extent->memlim = freepage + XNHEAP_PAGESZ;
+	heap->pagemap[lastpgnum].type = XNHEAP_PFREE;
+	heap->pagemap[lastpgnum].bcount = 0;
+	heap->memlim = freepage + XNHEAP_PAGESZ;
 
-	/* The first page starts the free list of a new extent. */
-	extent->freelist = extent->membase;
+	/* The first page starts the free list. */
+	heap->freelist = heap->membase;
 }
 
-/*
- */
-
 /**
- * @fn xnheap_init(struct xnheap *heap,void *heapaddr,unsigned long heapsize)
+ * @fn xnheap_init(struct xnheap *heap,void *membase,unsigned long size)
  * @brief Initialize a memory heap.
  *
  * Initializes a memory heap suitable for time-bounded allocation
  * requests of dynamic memory.
  *
- * @param heap The address of a heap descriptor which will be used to
- * store the allocation data.  This descriptor must always be valid
- * while the heap is active therefore it must be allocated in
- * permanent memory.
+ * @param heap The address of a heap descriptor which is used to store
+ * the meta-data.
  *
- * @param heapaddr The address of the heap storage area. All
- * allocations will be made from the given area in time-bounded
- * mode. Since additional extents can be added to a heap, this
- * parameter is also known as the "initial extent".
+ * @param membase The address of the storage area.
  *
- * @param heapsize The size in bytes of the initial extent pointed at
- * by @a heapaddr. @a heapsize must be a multiple of the page size and
- * lower than 16 Mbytes. @a heapsize must be large enough to contain a
- * dynamically-sized internal header. The following formula gives the
- * size of this header:\n
+ * @param size The size in bytes of the storage area.  @a size
+ * must be a multiple of PAGE_SIZE and smaller than 2 Gb in the
+ * current implementation.
  *
- * H = heapsize, P=XNHEAP_PAGESZ, M=sizeof(struct pagemap), E=sizeof(struct xnextent)\n
- * hdrsize = ((H - E) * M) / (M + 1)\n
+ * @return 0 is returned upon success, or:
  *
- * This value is then aligned on the next 16-byte boundary. The
- * routine xnheap_overhead() computes the corrected heap size
- * according to the previous formula.
+ * -EINVAL is returned if @a size is either:
  *
- * @return 0 is returned upon success, or one of the following error
- * codes:
+ *   - not aligned on PAGE_SIZE
+ *   - smaller than 2 * PAGE_SIZE
+ *   - greater than 2 Gb (XNHEAP_MAXHEAPSZ)
  *
- * - -EINVAL is returned whenever a parameter is invalid.
+ * - ENOMEM is returned upon failure of allocating the meta-data area
+ * used internally to maintain the heap.
  *
- * @coretags{task-unrestricted}
+ * @coretags{secondary-only}
  */
-int xnheap_init(struct xnheap *heap, void *heapaddr, unsigned long heapsize)
+int xnheap_init(struct xnheap *heap, void *membase, unsigned long size)
 {
-	struct xnextent *extent;
-	unsigned long hdrsize;
 	spl_t s;
 
-	/*
-	 * Perform some parametrical checks first.
-	 * Constraints are:
-	 * HEAPSIZE must be large enough to contain the static part of an
-	 * extent header.
-	 * HEAPSIZE must be a multiple of XNHEAP_PAGESZ.
-	 * HEAPSIZE must be lower than XNHEAP_MAXEXTSZ.
-	 */
+	secondary_mode_only();
 
- 	if (heapsize <= sizeof(struct xnextent) ||
-	    heapsize > XNHEAP_MAXEXTSZ || (heapsize & (XNHEAP_PAGESZ - 1)) != 0)
+	/*
+	 * HEAPSIZE must be aligned on XNHEAP_PAGESZ.
+	 * HEAPSIZE must be lower than XNHEAP_MAXHEAPSZ.
+	 */
+ 	if (size > XNHEAP_MAXHEAPSZ ||
+	    !IS_ALIGNED(size, XNHEAP_PAGESZ))
 		return -EINVAL;
 
 	/*
-	 * Determine the page map overhead inside the given extent
-	 * size. We need to reserve 4 bytes in a page map for each
-	 * page which is addressable into this extent. The page map is
-	 * itself stored in the extent space, right after the static
-	 * part of its header, and before the first allocatable page.
-	 * pmapsize = (heapsize - sizeof(struct xnextent)) / XNHEAP_PAGESZ *
-	 * sizeof(struct xnpagemap). The overall header size is:
-	 * static_part + pmapsize rounded to the minimum alignment
-	 * size.
-	*/
-	hdrsize = xnheap_internal_overhead(heapsize);
-	heap->extentsize = heapsize;
-	heap->hdrsize = hdrsize;
-	heap->npages = (heapsize - hdrsize) / XNHEAP_PAGESZ;
-
+	 * We need to reserve 4 bytes in a page map for each page
+	 * which is addressable into the storage area.  pmapsize =
+	 * (size / XNHEAP_PAGESZ) * sizeof(struct xnpagemap).
+	 */
+	heap->size = size;
+	heap->membase = membase;
+	heap->npages = size / XNHEAP_PAGESZ;
 	/*
-	 * An extent must contain at least two addressable pages to cope
-	 * with allocation sizes between pagesize and 2 * pagesize.
+	 * The heap must contain at least two addressable pages to
+	 * cope with allocation sizes between XNHEAP_PAGESZ and 2 *
+	 * XNHEAP_PAGESZ.
 	 */
 	if (heap->npages < 2)
 		return -EINVAL;
 
-	heap->ubytes = 0;
-	heap->maxcont = heap->npages * XNHEAP_PAGESZ;
+	heap->pagemap = kmalloc(sizeof(struct xnpagemap) * heap->npages,
+				GFP_KERNEL);
+	if (heap->pagemap == NULL)
+		return -ENOMEM;
 
-	INIT_LIST_HEAD(&heap->extents);
-	heap->nrextents = 1;
 	xnlock_init(&heap->lock);
-	memset(heap->buckets, 0, sizeof(heap->buckets));
-	extent = heapaddr;
-	init_extent(heap, extent);
-	list_add_tail(&extent->link, &heap->extents);
+	init_freelist(heap);
 
+	/* Default name, override with xnheap_set_name() */
 	ksformat(heap->name, sizeof(heap->name), "(%p)", heap);
 
 	xnlock_get_irqsave(&nklock, s);
@@ -305,6 +242,44 @@ int xnheap_init(struct xnheap *heap, void *heapaddr, unsigned long heapsize)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnheap_init);
+
+/**
+ * @fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *membase, unsigned long size, void *cookie), void *cookie)
+ * @brief Destroys a memory heap.
+ *
+ * Destroys a memory heap.
+ *
+ * @param heap The descriptor address of the destroyed heap.
+ *
+ * @param flushfn If non-NULL, the address of a user-supplied flush
+ * routine which will be called to further release the heap memory.
+ *
+ * @param cookie If @a flushfn is non-NULL, @a cookie is an opaque
+ * pointer which will be passed unmodified to @a flushfn.
+ *
+ * @coretags{secondary-only}
+ */
+void xnheap_destroy(struct xnheap *heap,
+		    void (*flushfn)(struct xnheap *heap,
+				    void *membase,
+				    unsigned long size, void *cookie),
+		    void *cookie)
+{
+	spl_t s;
+
+	secondary_mode_only();
+
+	xnlock_get_irqsave(&nklock, s);
+	list_del(&heap->next);
+	nrheaps--;
+	xnvfile_touch_tag(&vfile_tag);
+	xnlock_put_irqrestore(&nklock, s);
+	kfree(heap->pagemap);
+
+	if (flushfn)
+		flushfn(heap, heap->membase, heap->size, cookie);
+}
+EXPORT_SYMBOL_GPL(xnheap_destroy);
 
 /**
  * @fn xnheap_set_name(struct xnheap *heap,const char *name,...)
@@ -329,58 +304,6 @@ void xnheap_set_name(struct xnheap *heap, const char *name, ...)
 }
 EXPORT_SYMBOL_GPL(xnheap_set_name);
 
-/**
- * @fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *extaddr, unsigned long extsize, void *cookie), void *cookie)
- * @brief Destroys a memory heap.
- *
- * Destroys a memory heap.
- *
- * @param heap The descriptor address of the destroyed heap.
- *
- * @param flushfn If non-NULL, the address of a flush routine which
- * will be called for each extent attached to the heap. This routine
- * can be used by the calling code to further release the heap memory.
- *
- * @param cookie If @a flushfn is non-NULL, @a cookie is an opaque
- * pointer which will be passed unmodified to @a flushfn.
- *
- * @coretags{task-unrestricted}
- */
-void xnheap_destroy(struct xnheap *heap,
-		    void (*flushfn)(struct xnheap *heap,
-				    void *extaddr,
-				    unsigned long extsize, void *cookie),
-		    void *cookie)
-{
-	struct xnextent *p, *tmp;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	list_del(&heap->next);
-	nrheaps--;
-	xnvfile_touch_tag(&vfile_tag);
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (flushfn == NULL)
-		return;
-
-	xnlock_get_irqsave(&heap->lock, s);
-
-	if (list_empty(&heap->extents))
-		goto done;
-
-	list_for_each_entry_safe(p, tmp, &heap->extents, link) {
-		list_del(&p->link);
-		heap->nrextents--;
-		xnlock_put_irqrestore(&heap->lock, s);
-		flushfn(heap, p, heap->extentsize, cookie);
-		xnlock_get_irqsave(&heap->lock, s);
-	}
-done:
-	xnlock_put_irqrestore(&heap->lock, s);
-}
-EXPORT_SYMBOL_GPL(xnheap_destroy);
-
 /*
  * get_free_range() -- Obtain a range of contiguous free pages to
  * fulfill an allocation of 2 ** log2size.  The caller must have
@@ -391,46 +314,36 @@ static caddr_t get_free_range(struct xnheap *heap, unsigned long bsize, int log2
 {
 	caddr_t block, eblock, freepage, lastpage, headpage, freehead = NULL;
 	unsigned long pagenum, pagecont, freecont;
-	struct xnextent *extent;
 
-	if (list_empty(&heap->extents))
-		return NULL;
-
-	list_for_each_entry(extent, &heap->extents, link) {
-		freepage = extent->freelist;
-		while (freepage) {
-			headpage = freepage;
-			freecont = 0;
-			/*
-			 * Search for a range of contiguous pages in
-			 * the free page list of the current
-			 * extent. The range must be 'bsize' long.
-			 */
-			do {
-				lastpage = freepage;
-				freepage = *((caddr_t *) freepage);
-				freecont += XNHEAP_PAGESZ;
-			}
-			while (freepage == lastpage + XNHEAP_PAGESZ
-			       && freecont < bsize);
-
-			if (freecont >= bsize) {
-				/*
-				 * Ok, got it. Just update the free
-				 * page list, then proceed to the next
-				 * step.
-				 */
-				if (headpage == extent->freelist)
-					extent->freelist =
-					    *((caddr_t *) lastpage);
-				else
-					*((caddr_t *) freehead) =
-					    *((caddr_t *) lastpage);
-
-				goto splitpage;
-			}
-			freehead = lastpage;
+	freepage = heap->freelist;
+	while (freepage) {
+		headpage = freepage;
+		freecont = 0;
+		/*
+		 * Search for a range of contiguous pages in the free
+		 * page list. The range must be 'bsize' long.
+		 */
+		do {
+			lastpage = freepage;
+			freepage = *((caddr_t *) freepage);
+			freecont += XNHEAP_PAGESZ;
 		}
+		while (freepage == lastpage + XNHEAP_PAGESZ &&
+		       freecont < bsize);
+
+		if (freecont >= bsize) {
+			/*
+			 * Ok, got it. Just update the free page list,
+			 * then proceed to the next step.
+			 */
+			if (headpage == heap->freelist)
+				heap->freelist = *((caddr_t *)lastpage);
+			else
+				*((caddr_t *)freehead) = *((caddr_t *)lastpage);
+
+			goto splitpage;
+		}
+		freehead = lastpage;
 	}
 
 	return NULL;
@@ -444,20 +357,20 @@ splitpage:
 	 */
 	if (bsize < XNHEAP_PAGESZ) {
 		/*
-		 * If the allocation size is smaller than the standard
-		 * page size, split the page in smaller blocks of this
+		 * If the allocation size is smaller than the page
+		 * size, split the page in smaller blocks of this
 		 * size, building a free list of free blocks.
 		 */
 		for (block = headpage, eblock =
 		     headpage + XNHEAP_PAGESZ - bsize; block < eblock;
 		     block += bsize)
-			*((caddr_t *) block) = block + bsize;
+			*((caddr_t *)block) = block + bsize;
 
-		*((caddr_t *) eblock) = NULL;
+		*((caddr_t *)eblock) = NULL;
 	} else
-		*((caddr_t *) headpage) = NULL;
+		*((caddr_t *)headpage) = NULL;
 
-	pagenum = (headpage - extent->membase) / XNHEAP_PAGESZ;
+	pagenum = (headpage - heap->membase) / XNHEAP_PAGESZ;
 
 	/*
 	 * Update the page map.  If log2size is non-zero (i.e. bsize
@@ -469,12 +382,12 @@ splitpage:
 	 * In any case, the following pages slots are marked as
 	 * 'continued' (PCONT).
 	 */
-	extent->pagemap[pagenum].type = log2size ? : XNHEAP_PLIST;
-	extent->pagemap[pagenum].bcount = 1;
+	heap->pagemap[pagenum].type = log2size ? : XNHEAP_PLIST;
+	heap->pagemap[pagenum].bcount = 1;
 
 	for (pagecont = bsize / XNHEAP_PAGESZ; pagecont > 1; pagecont--) {
-		extent->pagemap[pagenum + pagecont - 1].type = XNHEAP_PCONT;
-		extent->pagemap[pagenum + pagecont - 1].bcount = 0;
+		heap->pagemap[pagenum + pagecont - 1].type = XNHEAP_PCONT;
+		heap->pagemap[pagenum + pagecont - 1].bcount = 0;
 	}
 
 	return headpage;
@@ -505,7 +418,6 @@ splitpage:
 void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 {
 	unsigned long pagenum, bsize;
-	struct xnextent *extent;
 	int log2size, ilog;
 	caddr_t block;
 	spl_t s;
@@ -519,80 +431,58 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 	 * the minimum alignment size if greater or equal to this
 	 * value.
 	 */
-	if (size <= XNHEAP_PAGESZ) {
-		if (size <= XNHEAP_MINALIGNSZ)
-			size =
-			    (size + XNHEAP_MINALLOCSZ -
-			     1) & ~(XNHEAP_MINALLOCSZ - 1);
-		else
-			size =
-			    (size + XNHEAP_MINALIGNSZ -
-			     1) & ~(XNHEAP_MINALIGNSZ - 1);
-	} else
-		/* Sizes greater than the page size are rounded to a multiple
-		   of the page size. */
-		size = (size + XNHEAP_PAGESZ - 1) & ~(XNHEAP_PAGESZ - 1);
+	if (size > XNHEAP_PAGESZ)
+		size = ALIGN(size, XNHEAP_PAGESZ);
+	else if (size <= XNHEAP_MINALIGNSZ)
+		size = ALIGN(size, XNHEAP_MINALLOCSZ);
+	else
+		size = ALIGN(size, XNHEAP_MINALIGNSZ);
 
-	/* It becomes more space efficient to directly allocate pages from
-	   the free page list whenever the requested size is greater than
-	   2 times the page size. Otherwise, use the bucketed memory
-	   blocks. */
-
+	/*
+	 * It is more space efficient to directly allocate pages from
+	 * the free page list whenever the requested size is greater
+	 * than 2 times the page size. Otherwise, use the bucketed
+	 * memory blocks.
+	 */
 	if (likely(size <= XNHEAP_PAGESZ * 2)) {
-		/* Find the first power of two greater or equal to the rounded
-		   size. The log2 value of this size is also computed. */
-
-		for (bsize = (1 << XNHEAP_MINLOG2), log2size = XNHEAP_MINLOG2;
-		     bsize < size; bsize <<= 1, log2size++)
-			;	/* Loop */
-
+		/*
+		 * Find the first power of two greater or equal to the
+		 * rounded size.
+		 */
+		bsize = size < XNHEAP_MINALLOCSZ ? XNHEAP_MINALLOCSZ : size;
+		log2size = order_base_2(bsize);
+		bsize = 1 << log2size;
 		ilog = log2size - XNHEAP_MINLOG2;
-
 		xnlock_get_irqsave(&heap->lock, s);
-
 		block = heap->buckets[ilog].freelist;
 		if (block == NULL) {
 			block = get_free_range(heap, bsize, log2size);
 			if (block == NULL)
-				goto release_and_exit;
+				goto out;
 			if (bsize <= XNHEAP_PAGESZ)
 				heap->buckets[ilog].fcount += (XNHEAP_PAGESZ >> log2size) - 1;
 		} else {
 			if (bsize <= XNHEAP_PAGESZ)
 				--heap->buckets[ilog].fcount;
-			if (!XENO_ASSERT(COBALT, !list_empty(&heap->extents)))
-				goto oops;
-			list_for_each_entry(extent, &heap->extents, link) {
-				if ((caddr_t) block >= extent->membase &&
-				    (caddr_t) block < extent->memlim)
-					goto found;
-			}
-			XENO_BUG(COBALT);
-		oops:
-			block = NULL;
-			goto release_and_exit;
-		found:
-			pagenum = ((caddr_t) block - extent->membase) / XNHEAP_PAGESZ;
-			++extent->pagemap[pagenum].bcount;
+			XENO_BUGON(COBALT, (caddr_t)block < heap->membase ||
+				   (caddr_t)block >= heap->memlim);
+			pagenum = ((caddr_t)block - heap->membase) / XNHEAP_PAGESZ;
+			++heap->pagemap[pagenum].bcount;
 		}
-
 		heap->buckets[ilog].freelist = *((caddr_t *)block);
-		heap->ubytes += bsize;
+		heap->used += bsize;
 	} else {
-		if (size > heap->maxcont)
+		if (size > heap->size)
 			return NULL;
 
 		xnlock_get_irqsave(&heap->lock, s);
 
 		/* Directly request a free page range. */
 		block = get_free_range(heap, size, 0);
-
 		if (block)
-			heap->ubytes += size;
+			heap->used += size;
 	}
-
-      release_and_exit:
-
+out:
 	xnlock_put_irqrestore(&heap->lock, s);
 
 	return block;
@@ -634,33 +524,19 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
 	int log2size, npages, ret, nblocks, xpage, ilog;
 	unsigned long pagenum, pagecont, boffset, bsize;
-	struct xnextent *extent;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
-	/*
-	 * Find the extent from which the returned block is
-	 * originating from.
-	 */
 	ret = -EFAULT;
-	if (list_empty(&heap->extents))
+	if ((caddr_t)block < heap->membase || (caddr_t)block >= heap->memlim)
 		goto unlock_and_fail;
 
-	list_for_each_entry(extent, &heap->extents, link) {
-		if ((caddr_t)block >= extent->membase &&
-		    (caddr_t)block < extent->memlim)
-			goto found;
-	}
-
-	goto unlock_and_fail;
-found:
 	/* Compute the heading page number in the page map. */
-	pagenum = ((caddr_t)block - extent->membase) / XNHEAP_PAGESZ;
-	boffset = ((caddr_t) block -
-		   (extent->membase + (pagenum * XNHEAP_PAGESZ)));
+	pagenum = ((caddr_t)block - heap->membase) / XNHEAP_PAGESZ;
+	boffset = ((caddr_t)block - (heap->membase + pagenum * XNHEAP_PAGESZ));
 
-	switch (extent->pagemap[pagenum].type) {
+	switch (heap->pagemap[pagenum].type) {
 	case XNHEAP_PFREE:	/* Unallocated page? */
 	case XNHEAP_PCONT:	/* Not a range heading page? */
 	bad_block:
@@ -677,7 +553,7 @@ found:
 		npages = 1;
 
 		while (npages < heap->npages &&
-		       extent->pagemap[pagenum + npages].type == XNHEAP_PCONT)
+		       heap->pagemap[pagenum + npages].type == XNHEAP_PCONT)
 			npages++;
 
 		bsize = npages * XNHEAP_PAGESZ;
@@ -693,33 +569,32 @@ found:
 
 	free_pages:
 
-		/* Mark the released pages as free in the extent's page map. */
+		/* Mark the released pages as free. */
 
 		for (pagecont = 0; pagecont < npages; pagecont++)
-			extent->pagemap[pagenum + pagecont].type = XNHEAP_PFREE;
+			heap->pagemap[pagenum + pagecont].type = XNHEAP_PFREE;
 
-		/* Return the sub-list to the free page list, keeping
-		   an increasing address order to favor coalescence. */
-
-		for (nextpage = extent->freelist, lastpage = NULL;
+		/*
+		 * Return the sub-list to the free page list, keeping
+		 * an increasing address order to favor coalescence.
+		 */
+		for (nextpage = heap->freelist, lastpage = NULL;
 		     nextpage != NULL && nextpage < (caddr_t) block;
-		     lastpage = nextpage, nextpage = *((caddr_t *) nextpage))
+		     lastpage = nextpage, nextpage = *((caddr_t *)nextpage))
 		  ;	/* Loop */
 
-		*((caddr_t *) tailpage) = nextpage;
+		*((caddr_t *)tailpage) = nextpage;
 
 		if (lastpage)
-			*((caddr_t *) lastpage) = (caddr_t) block;
+			*((caddr_t *)lastpage) = (caddr_t)block;
 		else
-			extent->freelist = (caddr_t) block;
+			heap->freelist = (caddr_t)block;
 		break;
 
 	default:
-
-		log2size = extent->pagemap[pagenum].type;
+		log2size = heap->pagemap[pagenum].type;
 		bsize = (1 << log2size);
-
-		if ((boffset & (bsize - 1)) != 0)	/* Not a block start? */
+		if ((boffset & (bsize - 1)) != 0) /* Not a block start? */
 			goto bad_block;
 
 		if (ckfn && (ret = ckfn(block)) != 0)
@@ -733,17 +608,15 @@ found:
 		 */
 
 		ilog = log2size - XNHEAP_MINLOG2;
-
-		if (likely(--extent->pagemap[pagenum].bcount > 0)) {
+		if (likely(--heap->pagemap[pagenum].bcount > 0)) {
 			/* Return the block to the bucketed memory space. */
-			*((caddr_t *) block) = heap->buckets[ilog].freelist;
+			*((caddr_t *)block) = heap->buckets[ilog].freelist;
 			heap->buckets[ilog].freelist = block;
 			++heap->buckets[ilog].fcount;
 			break;
 		}
 
 		npages = bsize / XNHEAP_PAGESZ;
-
 		if (unlikely(npages > 1))
 			/*
 			 * The simplest case: we only have a single
@@ -754,7 +627,7 @@ found:
 			 */
 			goto free_page_list;
 
-		freepage = extent->membase + (pagenum * XNHEAP_PAGESZ);
+		freepage = heap->membase + pagenum * XNHEAP_PAGESZ;
 		block = freepage;
 		tailpage = freepage;
 		nextpage = freepage + XNHEAP_PAGESZ;
@@ -781,11 +654,10 @@ found:
 		 * traversed, or we hit the end of list, whichever
 		 * comes first.
 		 */
-
 		for (tailptr = &heap->buckets[ilog].freelist, freeptr = *tailptr, xpage = 1;
 		     freeptr != NULL && nblocks > 0; freeptr = *((caddr_t *) freeptr)) {
 			if (unlikely(freeptr < freepage || freeptr >= nextpage)) {
-				if (unlikely(xpage)) { /* Limit random writes */
+				if (unlikely(xpage)) {
 					*tailptr = freeptr;
 					xpage = 0;
 				}
@@ -795,12 +667,11 @@ found:
 				xpage = 1;
 			}
 		}
-
 		*tailptr = freeptr;
 		goto free_pages;
 	}
 
-	heap->ubytes -= bsize;
+	heap->used -= bsize;
 
 	xnlock_put_irqrestore(&heap->lock, s);
 
@@ -824,7 +695,7 @@ EXPORT_SYMBOL_GPL(xnheap_test_and_free);
  * codes:
  *
  * - -EFAULT is returned whenever the memory address is outside the
- * heap address space.
+ * storage space of @a heap.
  *
  * - -EINVAL is returned whenever the memory address does not
  * represent a valid block.
@@ -837,72 +708,21 @@ int xnheap_free(struct xnheap *heap, void *block)
 }
 EXPORT_SYMBOL_GPL(xnheap_free);
 
-/**
- * @fn int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
- * @brief Extend a memory heap.
- *
- * Add a new extent to an existing memory heap.
- *
- * @param heap The descriptor address of the heap to add an extent to.
- *
- * @param extaddr The address of the extent memory.
- *
- * @param extsize The size of the extent memory (in bytes). In the
- * current implementation, this size must match the one of the initial
- * extent passed to xnheap_init().
- *
- * @return 0 is returned upon success, or -EINVAL is returned if
- * @a extsize differs from the initial extent's size.
- *
- * @coretags{unrestricted}
- */
-int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
-{
-	struct xnextent *extent = extaddr;
-	spl_t s;
-
-	if (extsize != heap->extentsize)
-		return -EINVAL;
-
-	init_extent(heap, extent);
-	xnlock_get_irqsave(&heap->lock, s);
-	list_add_tail(&extent->link, &heap->extents);
-	heap->nrextents++;
-	xnlock_put_irqrestore(&heap->lock, s);
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xnheap_extend);
-
 int xnheap_check_block(struct xnheap *heap, void *block)
 {
 	unsigned long pagenum, boffset;
 	int ptype, ret = -EINVAL;
-	struct xnextent *extent;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
-	/*
-	 * Find the extent from which the checked block is
-	 * originating from.
-	 */
-	if (list_empty(&heap->extents))
+	if ((caddr_t)block < heap->membase || (caddr_t)block >= heap->memlim)
 		goto out;
 
-	list_for_each_entry(extent, &heap->extents, link) {
-		if ((caddr_t)block >= extent->membase &&
-		    (caddr_t)block < extent->memlim)
-			goto found;
-	}
-
-	goto out;
-found:
 	/* Compute the heading page number in the page map. */
-	pagenum = ((caddr_t)block - extent->membase) / XNHEAP_PAGESZ;
-	boffset = ((caddr_t)block -
-		   (extent->membase + (pagenum * XNHEAP_PAGESZ)));
-	ptype = extent->pagemap[pagenum].type;
+	pagenum = ((caddr_t)block - heap->membase) / XNHEAP_PAGESZ;
+	boffset = ((caddr_t)block - (heap->membase + pagenum * XNHEAP_PAGESZ));
+	ptype = heap->pagemap[pagenum].type;
 
 	/* Raise error if page unallocated or not heading a range. */
 	if (ptype != XNHEAP_PFREE && ptype != XNHEAP_PCONT)

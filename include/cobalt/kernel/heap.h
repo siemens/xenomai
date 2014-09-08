@@ -19,10 +19,8 @@
 #ifndef _COBALT_KERNEL_HEAP_H
 #define _COBALT_KERNEL_HEAP_H
 
-#include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/list.h>
-#include <cobalt/kernel/trace.h>
 #include <cobalt/uapi/kernel/types.h>
 #include <cobalt/uapi/kernel/heap.h>
 
@@ -54,7 +52,7 @@
 #define XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
 #define XNHEAP_MINALIGNSZ (1 << 4) /* i.e. 16 bytes */
 #define XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)
-#define XNHEAP_MAXEXTSZ   (1 << 31) /* i.e. 2Gb */
+#define XNHEAP_MAXHEAPSZ  (1 << 31) /* i.e. 2Gb */
 
 #define XNHEAP_PFREE   0
 #define XNHEAP_PCONT   1
@@ -65,30 +63,10 @@ struct xnpagemap {
 	unsigned int bcount : 24; /* Number of active blocks. */
 };
 
-struct xnextent {
-	/** xnheap->extents */
-	struct list_head link;
-	/** Base address of the page array */
-	caddr_t membase;
-	/** Memory limit of page array */
-	caddr_t memlim;
-	/** Head of the free page list */
-	caddr_t freelist;
-	/** Beginning of page map */
-	struct xnpagemap pagemap[1];
-};
-
 struct xnheap {
 	char name[XNOBJECT_NAME_LEN];
-	unsigned long extentsize;
-	unsigned long hdrsize;
-	/** Number of pages per extent */
-	unsigned long npages;
-	unsigned long ubytes;
-	unsigned long maxcont;
-	struct list_head extents;
-	int nrextents;
-
+	unsigned long size;
+	unsigned long used;
 	DECLARE_XNLOCK(lock);
 
 	struct xnbucket {
@@ -96,60 +74,46 @@ struct xnheap {
 		int fcount;
 	} buckets[XNHEAP_NBUCKETS];
 
+	/** Base address of the page array */
+	caddr_t membase;
+	/** Memory limit of page array */
+	caddr_t memlim;
+	/** Number of pages in the freelist */
+	unsigned long npages;
+	/** Head of the free page list */
+	caddr_t freelist;
+	/** Address of the page map */
+	struct xnpagemap *pagemap;
 	/** heapq */
 	struct list_head next;
 };
 
 extern struct xnheap kheap;
 
-#define xnheap_extentsize(heap)		((heap)->extentsize)
-#define xnheap_page_count(heap)		((heap)->npages)
-#define xnheap_usable_mem(heap)		((heap)->maxcont * (heap)->nrextents)
-#define xnheap_used_mem(heap)		((heap)->ubytes)
-#define xnheap_max_contiguous(heap)	((heap)->maxcont)
+#define xnmalloc(size)     xnheap_alloc(&kheap, size)
+#define xnfree(ptr)        xnheap_free(&kheap, ptr)
 
-static inline size_t xnheap_align(size_t size, size_t al)
+static inline size_t xnheap_get_size(const struct xnheap *heap)
 {
-	/* The alignment value must be a power of 2 */
-	return ((size+al-1)&(~(al-1)));
+	return heap->size;
 }
 
-static inline size_t xnheap_external_overhead(size_t hsize)
+static inline size_t xnheap_get_free(const struct xnheap *heap)
 {
-	size_t pages = (hsize + XNHEAP_PAGESZ - 1) / XNHEAP_PAGESZ;
-	return xnheap_align(sizeof(struct xnextent)
-			    + pages * sizeof(struct xnpagemap), XNHEAP_PAGESZ);
+	return heap->size - heap->used;
 }
 
-static inline size_t xnheap_internal_overhead(size_t hsize)
+static inline void *xnheap_get_membase(const struct xnheap *heap)
 {
-	/* o = (h - o) * m / p + e
-	   o * p = (h - o) * m + e * p
-	   o * (p + m) = h * m + e * p
-	   o = (h * m + e *p) / (p + m)
-	*/
-	return xnheap_align((sizeof(struct xnextent) * XNHEAP_PAGESZ
-			     + sizeof(struct xnpagemap) * hsize)
-			    / (XNHEAP_PAGESZ + sizeof(struct xnpagemap)), XNHEAP_PAGESZ);
+	return heap->membase;
 }
 
-#define xnmalloc(size)     xnheap_alloc(&kheap,size)
-#define xnfree(ptr)        xnheap_free(&kheap,ptr)
-
-static inline size_t xnheap_rounded_size(size_t hsize)
+static inline size_t xnheap_rounded_size(size_t size)
 {
-	/*
-	 * Account for the minimum heap size (i.e. 2 * page size) plus
-	 * overhead so that the actual heap space is large enough to
-	 * match the requested size. Using a small page size for large
-	 * single-block heaps might reserve a lot of useless page map
-	 * memory, but this should never get pathological anyway,
-	 * since we only consume 4 bytes per page.
-	 */
-	if (hsize < 2 * XNHEAP_PAGESZ)
-		hsize = 2 * XNHEAP_PAGESZ;
-	hsize += xnheap_external_overhead(hsize);
-	return xnheap_align(hsize, XNHEAP_PAGESZ);
+	if (size < 2 * XNHEAP_PAGESZ)
+		return 2 * XNHEAP_PAGESZ;
+
+	return ALIGN(size, XNHEAP_PAGESZ);
 }
 
 /* Private interface. */
@@ -162,28 +126,21 @@ static inline void xnheap_init_proc(void) { }
 static inline void xnheap_cleanup_proc(void) { }
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-#define xnheap_base_memory(heap) \
-	((unsigned long)((heap)->heapbase))
-
 /* Public interface. */
 
 int xnheap_init(struct xnheap *heap,
-		void *heapaddr,
-		unsigned long heapsize);
+		void *membase,
+		unsigned long size);
 
 void xnheap_set_name(struct xnheap *heap,
 		     const char *name, ...);
 
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,
-				    void *extaddr,
-				    unsigned long extsize,
+				    void *membase,
+				    unsigned long size,
 				    void *cookie),
 		    void *cookie);
-
-int xnheap_extend(struct xnheap *heap,
-		  void *extaddr,
-		  unsigned long extsize);
 
 void *xnheap_alloc(struct xnheap *heap,
 		   unsigned long size);

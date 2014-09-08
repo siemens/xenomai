@@ -120,7 +120,7 @@ static void *__xddp_alloc_handler(size_t size, void *skarg) /* nklock free */
 	if (unlikely(buf == NULL)) {
 		if (sk->monitor)
 			sk->monitor(sk->fd, XDDP_EVTNOBUF, size);
-		if (size > xnheap_max_contiguous(sk->bufpool))
+		if (size > xnheap_get_size(sk->bufpool))
 			buf = (void *)-1; /* Will never succeed. */
 	}
 
@@ -897,7 +897,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		if (len > 0) {
 			len += sizeof(struct xddp_message);
 			if (sk->bufpool &&
-			    len > xnheap_max_contiguous(sk->bufpool)) {
+			    len > xnheap_get_size(sk->bufpool)) {
 				return -EINVAL;
 			}
 		}

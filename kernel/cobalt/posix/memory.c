@@ -119,7 +119,7 @@ static int stat_umm(struct rtdm_fd *fd,
 
 	xnlock_get_irqsave(&umm->heap.lock, s);
 	stat.size = umm->size;
-	stat.free = umm->size - xnheap_used_mem(&umm->heap);
+	stat.free = xnheap_get_free(&umm->heap);
 	xnlock_put_irqrestore(&umm->heap.lock, s);
 
 	return rtdm_safe_copy_to_user(fd, u_stat, &stat, sizeof(stat));
@@ -173,8 +173,8 @@ static int do_sysmem_ioctls(struct rtdm_fd *fd,
 	switch (request) {
 	case MEMDEV_RTIOC_STAT:
 		xnlock_get_irqsave(&kheap.lock, s);
-		stat.size = xnheap_usable_mem(&kheap);
-		stat.free = stat.size - xnheap_used_mem(&kheap);
+		stat.size = xnheap_get_size(&kheap);
+		stat.free = xnheap_get_free(&kheap);
 		xnlock_put_irqrestore(&kheap.lock, s);
 		ret = rtdm_safe_copy_to_user(fd, arg, &stat, sizeof(stat));
 		break;
