@@ -95,7 +95,6 @@ struct vfile_priv {
 struct vfile_data {
 	size_t usable_mem;
 	size_t used_mem;
-	size_t page_size;
 	char name[XNOBJECT_NAME_LEN];
 };
 
@@ -138,7 +137,6 @@ static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 
 	p->usable_mem = xnheap_usable_mem(heap);
 	p->used_mem = xnheap_used_mem(heap);
-	p->page_size = xnheap_page_size(heap);
 	knamecpy(p->name, heap->name);
 
 	return 1;
@@ -149,13 +147,12 @@ static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 	struct vfile_data *p = data;
 
 	if (p == NULL)
-		xnvfile_printf(it, "%9s %9s  %6s  %s\n",
-			       "TOTAL", "USED", "PAGESZ", "NAME");
+		xnvfile_printf(it, "%9s %9s  %s\n",
+			       "TOTAL", "USED", "NAME");
 	else
-		xnvfile_printf(it, "%9Zu %9Zu  %6Zu  %s\n",
+		xnvfile_printf(it, "%9Zu %9Zu  %s\n",
 			       p->usable_mem,
 			       p->used_mem,
-			       p->page_size,
 			       p->name);
 	return 0;
 }
@@ -189,8 +186,8 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
 
 	/* Mark each page as free in the page map. */
 	for (n = 0, freepage = extent->membase;
-	     n < lastpgnum; n++, freepage += heap->pagesize) {
-		*((caddr_t *) freepage) = freepage + heap->pagesize;
+	     n < lastpgnum; n++, freepage += XNHEAP_PAGESZ) {
+		*((caddr_t *) freepage) = freepage + XNHEAP_PAGESZ;
 		extent->pagemap[n].type = XNHEAP_PFREE;
 		extent->pagemap[n].bcount = 0;
 	}
@@ -198,7 +195,7 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
 	*((caddr_t *) freepage) = NULL;
 	extent->pagemap[lastpgnum].type = XNHEAP_PFREE;
 	extent->pagemap[lastpgnum].bcount = 0;
-	extent->memlim = freepage + heap->pagesize;
+	extent->memlim = freepage + XNHEAP_PAGESZ;
 
 	/* The first page starts the free list of a new extent. */
 	extent->freelist = extent->membase;
@@ -208,7 +205,7 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  */
 
 /**
- * @fn xnheap_init(struct xnheap *heap,void *heapaddr,unsigned long heapsize,unsigned long pagesize)
+ * @fn xnheap_init(struct xnheap *heap,void *heapaddr,unsigned long heapsize)
  * @brief Initialize a memory heap.
  *
  * Initializes a memory heap suitable for time-bounded allocation
@@ -225,25 +222,17 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  * parameter is also known as the "initial extent".
  *
  * @param heapsize The size in bytes of the initial extent pointed at
- * by @a heapaddr. @a heapsize must be a multiple of pagesize and
+ * by @a heapaddr. @a heapsize must be a multiple of the page size and
  * lower than 16 Mbytes. @a heapsize must be large enough to contain a
  * dynamically-sized internal header. The following formula gives the
  * size of this header:\n
  *
- * H = heapsize, P=pagesize, M=sizeof(struct pagemap), E=sizeof(struct xnextent)\n
+ * H = heapsize, P=XNHEAP_PAGESZ, M=sizeof(struct pagemap), E=sizeof(struct xnextent)\n
  * hdrsize = ((H - E) * M) / (M + 1)\n
  *
  * This value is then aligned on the next 16-byte boundary. The
  * routine xnheap_overhead() computes the corrected heap size
  * according to the previous formula.
- *
- * @param pagesize The size in bytes of the fundamental memory page
- * which will be used to subdivide the heap internally. Choosing the
- * right page size is important regarding performance and memory
- * fragmentation issues, so it might be a good idea to take a look at
- * http://docs.FreeBSD.org/44doc/papers/kernmalloc.pdf to pick the
- * best one for your needs. In the current implementation, pagesize
- * must be a power of two in the range [ 8 .. 32768 ] inclusive.
  *
  * @return 0 is returned upon success, or one of the following error
  * codes:
@@ -252,30 +241,23 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  *
  * @coretags{task-unrestricted}
  */
-int xnheap_init(struct xnheap *heap,
-		void *heapaddr, unsigned long heapsize, unsigned long pagesize)
+int xnheap_init(struct xnheap *heap, void *heapaddr, unsigned long heapsize)
 {
-	unsigned long hdrsize, shiftsize, pageshift;
 	struct xnextent *extent;
+	unsigned long hdrsize;
 	spl_t s;
 
 	/*
 	 * Perform some parametrical checks first.
 	 * Constraints are:
-	 * PAGESIZE must be >= 2 ** MINLOG2.
-	 * PAGESIZE must be <= 2 ** MAXLOG2.
-	 * PAGESIZE must be a power of 2.
 	 * HEAPSIZE must be large enough to contain the static part of an
 	 * extent header.
-	 * HEAPSIZE must be a multiple of PAGESIZE.
+	 * HEAPSIZE must be a multiple of XNHEAP_PAGESZ.
 	 * HEAPSIZE must be lower than XNHEAP_MAXEXTSZ.
 	 */
 
-	if ((pagesize < (1 << XNHEAP_MINLOG2)) ||
-	    (pagesize > (1 << XNHEAP_MAXLOG2)) ||
-	    (pagesize & (pagesize - 1)) != 0 ||
-	    heapsize <= sizeof(struct xnextent) ||
-	    heapsize > XNHEAP_MAXEXTSZ || (heapsize & (pagesize - 1)) != 0)
+ 	if (heapsize <= sizeof(struct xnextent) ||
+	    heapsize > XNHEAP_MAXEXTSZ || (heapsize & (XNHEAP_PAGESZ - 1)) != 0)
 		return -EINVAL;
 
 	/*
@@ -284,23 +266,15 @@ int xnheap_init(struct xnheap *heap,
 	 * page which is addressable into this extent. The page map is
 	 * itself stored in the extent space, right after the static
 	 * part of its header, and before the first allocatable page.
-	 * pmapsize = (heapsize - sizeof(struct xnextent)) / pagesize *
+	 * pmapsize = (heapsize - sizeof(struct xnextent)) / XNHEAP_PAGESZ *
 	 * sizeof(struct xnpagemap). The overall header size is:
 	 * static_part + pmapsize rounded to the minimum alignment
 	 * size.
 	*/
-	hdrsize = xnheap_internal_overhead(heapsize, pagesize);
-
-	/* Compute the page shiftmask from the page size (i.e. log2 value). */
-	for (pageshift = 0, shiftsize = pagesize;
-	     shiftsize > 1; shiftsize >>= 1, pageshift++)
-		;	/* Loop */
-
-	heap->pagesize = pagesize;
-	heap->pageshift = pageshift;
+	hdrsize = xnheap_internal_overhead(heapsize);
 	heap->extentsize = heapsize;
 	heap->hdrsize = hdrsize;
-	heap->npages = (heapsize - hdrsize) >> pageshift;
+	heap->npages = (heapsize - hdrsize) / XNHEAP_PAGESZ;
 
 	/*
 	 * An extent must contain at least two addressable pages to cope
@@ -310,7 +284,7 @@ int xnheap_init(struct xnheap *heap,
 		return -EINVAL;
 
 	heap->ubytes = 0;
-	heap->maxcont = heap->npages * pagesize;
+	heap->maxcont = heap->npages * XNHEAP_PAGESZ;
 
 	INIT_LIST_HEAD(&heap->extents);
 	heap->nrextents = 1;
@@ -435,9 +409,9 @@ static caddr_t get_free_range(struct xnheap *heap, unsigned long bsize, int log2
 			do {
 				lastpage = freepage;
 				freepage = *((caddr_t *) freepage);
-				freecont += heap->pagesize;
+				freecont += XNHEAP_PAGESZ;
 			}
-			while (freepage == lastpage + heap->pagesize
+			while (freepage == lastpage + XNHEAP_PAGESZ
 			       && freecont < bsize);
 
 			if (freecont >= bsize) {
@@ -468,14 +442,14 @@ splitpage:
 	 * page of a range of contiguous free pages larger or equal
 	 * than 'bsize'.
 	 */
-	if (bsize < heap->pagesize) {
+	if (bsize < XNHEAP_PAGESZ) {
 		/*
 		 * If the allocation size is smaller than the standard
 		 * page size, split the page in smaller blocks of this
 		 * size, building a free list of free blocks.
 		 */
 		for (block = headpage, eblock =
-		     headpage + heap->pagesize - bsize; block < eblock;
+		     headpage + XNHEAP_PAGESZ - bsize; block < eblock;
 		     block += bsize)
 			*((caddr_t *) block) = block + bsize;
 
@@ -483,7 +457,7 @@ splitpage:
 	} else
 		*((caddr_t *) headpage) = NULL;
 
-	pagenum = (headpage - extent->membase) >> heap->pageshift;
+	pagenum = (headpage - extent->membase) / XNHEAP_PAGESZ;
 
 	/*
 	 * Update the page map.  If log2size is non-zero (i.e. bsize
@@ -498,7 +472,7 @@ splitpage:
 	extent->pagemap[pagenum].type = log2size ? : XNHEAP_PLIST;
 	extent->pagemap[pagenum].bcount = 1;
 
-	for (pagecont = bsize >> heap->pageshift; pagecont > 1; pagecont--) {
+	for (pagecont = bsize / XNHEAP_PAGESZ; pagecont > 1; pagecont--) {
 		extent->pagemap[pagenum + pagecont - 1].type = XNHEAP_PCONT;
 		extent->pagemap[pagenum + pagecont - 1].bcount = 0;
 	}
@@ -545,7 +519,7 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 	 * the minimum alignment size if greater or equal to this
 	 * value.
 	 */
-	if (size <= heap->pagesize) {
+	if (size <= XNHEAP_PAGESZ) {
 		if (size <= XNHEAP_MINALIGNSZ)
 			size =
 			    (size + XNHEAP_MINALLOCSZ -
@@ -557,14 +531,14 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 	} else
 		/* Sizes greater than the page size are rounded to a multiple
 		   of the page size. */
-		size = (size + heap->pagesize - 1) & ~(heap->pagesize - 1);
+		size = (size + XNHEAP_PAGESZ - 1) & ~(XNHEAP_PAGESZ - 1);
 
 	/* It becomes more space efficient to directly allocate pages from
 	   the free page list whenever the requested size is greater than
 	   2 times the page size. Otherwise, use the bucketed memory
 	   blocks. */
 
-	if (likely(size <= heap->pagesize * 2)) {
+	if (likely(size <= XNHEAP_PAGESZ * 2)) {
 		/* Find the first power of two greater or equal to the rounded
 		   size. The log2 value of this size is also computed. */
 
@@ -581,10 +555,10 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 			block = get_free_range(heap, bsize, log2size);
 			if (block == NULL)
 				goto release_and_exit;
-			if (bsize <= heap->pagesize)
-				heap->buckets[ilog].fcount += (heap->pagesize >> log2size) - 1;
+			if (bsize <= XNHEAP_PAGESZ)
+				heap->buckets[ilog].fcount += (XNHEAP_PAGESZ >> log2size) - 1;
 		} else {
-			if (bsize <= heap->pagesize)
+			if (bsize <= XNHEAP_PAGESZ)
 				--heap->buckets[ilog].fcount;
 			if (!XENO_ASSERT(COBALT, !list_empty(&heap->extents)))
 				goto oops;
@@ -598,7 +572,7 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 			block = NULL;
 			goto release_and_exit;
 		found:
-			pagenum = ((caddr_t) block - extent->membase) >> heap->pageshift;
+			pagenum = ((caddr_t) block - extent->membase) / XNHEAP_PAGESZ;
 			++extent->pagemap[pagenum].bcount;
 		}
 
@@ -682,9 +656,9 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 	goto unlock_and_fail;
 found:
 	/* Compute the heading page number in the page map. */
-	pagenum = ((caddr_t)block - extent->membase) >> heap->pageshift;
+	pagenum = ((caddr_t)block - extent->membase) / XNHEAP_PAGESZ;
 	boffset = ((caddr_t) block -
-		   (extent->membase + (pagenum << heap->pageshift)));
+		   (extent->membase + (pagenum * XNHEAP_PAGESZ)));
 
 	switch (extent->pagemap[pagenum].type) {
 	case XNHEAP_PFREE:	/* Unallocated page? */
@@ -706,16 +680,16 @@ found:
 		       extent->pagemap[pagenum + npages].type == XNHEAP_PCONT)
 			npages++;
 
-		bsize = npages * heap->pagesize;
+		bsize = npages * XNHEAP_PAGESZ;
 
 	free_page_list:
 
 		/* Link all freed pages in a single sub-list. */
 
 		for (freepage = (caddr_t) block,
-		     tailpage = (caddr_t) block + bsize - heap->pagesize;
-		     freepage < tailpage; freepage += heap->pagesize)
-			*((caddr_t *) freepage) = freepage + heap->pagesize;
+		     tailpage = (caddr_t) block + bsize - XNHEAP_PAGESZ;
+		     freepage < tailpage; freepage += XNHEAP_PAGESZ)
+			*((caddr_t *) freepage) = freepage + XNHEAP_PAGESZ;
 
 	free_pages:
 
@@ -768,7 +742,7 @@ found:
 			break;
 		}
 
-		npages = bsize >> heap->pageshift;
+		npages = bsize / XNHEAP_PAGESZ;
 
 		if (unlikely(npages > 1))
 			/*
@@ -780,11 +754,11 @@ found:
 			 */
 			goto free_page_list;
 
-		freepage = extent->membase + (pagenum << heap->pageshift);
+		freepage = extent->membase + (pagenum * XNHEAP_PAGESZ);
 		block = freepage;
 		tailpage = freepage;
-		nextpage = freepage + heap->pagesize;
-		nblocks = heap->pagesize >> log2size;
+		nextpage = freepage + XNHEAP_PAGESZ;
+		nblocks = XNHEAP_PAGESZ >> log2size;
 		heap->buckets[ilog].fcount -= (nblocks - 1);
 		XENO_BUGON(COBALT, heap->buckets[ilog].fcount < 0);
 
@@ -925,9 +899,9 @@ int xnheap_check_block(struct xnheap *heap, void *block)
 	goto out;
 found:
 	/* Compute the heading page number in the page map. */
-	pagenum = ((caddr_t)block - extent->membase) >> heap->pageshift;
+	pagenum = ((caddr_t)block - extent->membase) / XNHEAP_PAGESZ;
 	boffset = ((caddr_t)block -
-		   (extent->membase + (pagenum << heap->pageshift)));
+		   (extent->membase + (pagenum * XNHEAP_PAGESZ)));
 	ptype = extent->pagemap[pagenum].type;
 
 	/* Raise error if page unallocated or not heading a range. */

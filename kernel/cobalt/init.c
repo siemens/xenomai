@@ -342,8 +342,7 @@ static __init int sys_init(void)
 
 	heapaddr = alloc_pages_exact(sysheap_size_arg * 1024, GFP_KERNEL);
 	if (heapaddr == NULL ||
-	    xnheap_init(&kheap, heapaddr, sysheap_size_arg * 1024,
-			PAGE_SIZE) != 0) {
+	    xnheap_init(&kheap, heapaddr, sysheap_size_arg * 1024)) {
 		return -ENOMEM;
 	}
 	xnheap_set_name(&kheap, "system heap");

@@ -48,10 +48,7 @@
  * XNHEAP_MAXLOG2 inclusive, plus one to honor requests ranging from
  * the maximum page size to twice this size.
  */
-#define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
-#define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
-#define XNHEAP_PAGE_ALIGN(addr)	(((addr)+XNHEAP_PAGE_SIZE-1)&XNHEAP_PAGE_MASK)
-
+#define XNHEAP_PAGESZ	  PAGE_SIZE
 #define XNHEAP_MINLOG2    3
 #define XNHEAP_MAXLOG2    22	/* Must hold pagemap::bcount objects */
 #define XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
@@ -84,8 +81,6 @@ struct xnextent {
 struct xnheap {
 	char name[XNOBJECT_NAME_LEN];
 	unsigned long extentsize;
-	unsigned long pagesize;
-	unsigned long pageshift;
 	unsigned long hdrsize;
 	/** Number of pages per extent */
 	unsigned long npages;
@@ -108,7 +103,6 @@ struct xnheap {
 extern struct xnheap kheap;
 
 #define xnheap_extentsize(heap)		((heap)->extentsize)
-#define xnheap_page_size(heap)		((heap)->pagesize)
 #define xnheap_page_count(heap)		((heap)->npages)
 #define xnheap_usable_mem(heap)		((heap)->maxcont * (heap)->nrextents)
 #define xnheap_used_mem(heap)		((heap)->ubytes)
@@ -120,29 +114,29 @@ static inline size_t xnheap_align(size_t size, size_t al)
 	return ((size+al-1)&(~(al-1)));
 }
 
-static inline size_t xnheap_external_overhead(size_t hsize, size_t psize)
+static inline size_t xnheap_external_overhead(size_t hsize)
 {
-	size_t pages = (hsize + psize - 1) / psize;
+	size_t pages = (hsize + XNHEAP_PAGESZ - 1) / XNHEAP_PAGESZ;
 	return xnheap_align(sizeof(struct xnextent)
-			    + pages * sizeof(struct xnpagemap), psize);
+			    + pages * sizeof(struct xnpagemap), XNHEAP_PAGESZ);
 }
 
-static inline size_t xnheap_internal_overhead(size_t hsize, size_t psize)
+static inline size_t xnheap_internal_overhead(size_t hsize)
 {
 	/* o = (h - o) * m / p + e
 	   o * p = (h - o) * m + e * p
 	   o * (p + m) = h * m + e * p
 	   o = (h * m + e *p) / (p + m)
 	*/
-	return xnheap_align((sizeof(struct xnextent) * psize
+	return xnheap_align((sizeof(struct xnextent) * XNHEAP_PAGESZ
 			     + sizeof(struct xnpagemap) * hsize)
-			    / (psize + sizeof(struct xnpagemap)), psize);
+			    / (XNHEAP_PAGESZ + sizeof(struct xnpagemap)), XNHEAP_PAGESZ);
 }
 
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
 
-static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
+static inline size_t xnheap_rounded_size(size_t hsize)
 {
 	/*
 	 * Account for the minimum heap size (i.e. 2 * page size) plus
@@ -152,10 +146,10 @@ static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 	 * memory, but this should never get pathological anyway,
 	 * since we only consume 4 bytes per page.
 	 */
-	if (hsize < 2 * psize)
-		hsize = 2 * psize;
-	hsize += xnheap_external_overhead(hsize, psize);
-	return xnheap_align(hsize, psize);
+	if (hsize < 2 * XNHEAP_PAGESZ)
+		hsize = 2 * XNHEAP_PAGESZ;
+	hsize += xnheap_external_overhead(hsize);
+	return xnheap_align(hsize, XNHEAP_PAGESZ);
 }
 
 /* Private interface. */
@@ -175,8 +169,7 @@ static inline void xnheap_cleanup_proc(void) { }
 
 int xnheap_init(struct xnheap *heap,
 		void *heapaddr,
-		unsigned long heapsize,
-		unsigned long pagesize);
+		unsigned long heapsize);
 
 void xnheap_set_name(struct xnheap *heap,
 		     const char *name, ...);

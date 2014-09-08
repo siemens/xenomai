@@ -334,7 +334,7 @@ int cobalt_umm_init(struct cobalt_umm *umm, u32 size,
 	if (basemem == NULL)
 		return -ENOMEM;
 
-	ret = xnheap_init(&umm->heap, basemem, size, PAGE_SIZE);
+	ret = xnheap_init(&umm->heap, basemem, size);
 	if (ret) {
 		vfree(basemem);
 		return ret;

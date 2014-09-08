@@ -695,15 +695,14 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 
 	poolsz = sk->poolsz;
 	if (poolsz > 0) {
-		poolsz = xnheap_rounded_size(poolsz + sk->reqbufsz, XNHEAP_PAGE_SIZE);
+		poolsz = xnheap_rounded_size(poolsz + sk->reqbufsz);
 		poolmem = alloc_pages_exact(poolsz, GFP_KERNEL);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
 			goto fail;
 		}
 
-		ret = xnheap_init(&sk->privpool,
-				  poolmem, poolsz, XNHEAP_PAGE_SIZE);
+		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
 		if (ret) {
 			free_pages_exact(poolmem, poolsz);
 			goto fail;

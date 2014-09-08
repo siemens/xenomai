@@ -574,15 +574,14 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 	 */
 	poolsz = sk->poolsz;
 	if (poolsz > 0) {
-		poolsz = xnheap_rounded_size(poolsz, XNHEAP_PAGE_SIZE);
+		poolsz = xnheap_rounded_size(poolsz);
 		poolmem = alloc_pages_exact(poolsz, GFP_KERNEL);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
 			goto fail;
 		}
 
-		ret = xnheap_init(&sk->privpool,
-				  poolmem, poolsz, XNHEAP_PAGE_SIZE);
+		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
 		if (ret) {
 			free_pages_exact(poolmem, poolsz);
 			goto fail;
