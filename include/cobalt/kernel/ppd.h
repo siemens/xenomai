@@ -26,8 +26,6 @@
 
 struct cobalt_umm {
 	struct xnheap heap;
-	u32 size;
-	void *basemem;
 	atomic_t refcount;
 	void (*release)(struct cobalt_umm *umm);
 };

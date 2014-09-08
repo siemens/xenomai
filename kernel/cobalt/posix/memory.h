@@ -40,7 +40,7 @@ void cobalt_umm_free(struct cobalt_umm *umm, void *p)
 static inline
 __u32 cobalt_umm_offset(struct cobalt_umm *umm, void *p)
 {
-	return p - umm->basemem;
+	return p - xnheap_get_membase(&umm->heap);
 }
 
 int cobalt_memdev_init(void);

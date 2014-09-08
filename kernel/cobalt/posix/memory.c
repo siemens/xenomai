@@ -89,7 +89,7 @@ static int umm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 		return -ENODEV;
 
 	len = vma->vm_end - vma->vm_start;
-	if (len != umm->size)
+	if (len != xnheap_get_size(&umm->heap))
 		return -EINVAL;
 
 	vma->vm_private_data = umm;
@@ -97,7 +97,7 @@ static int umm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 	if (xnarch_cache_aliasing())
 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 
-	ret = rtdm_mmap_vmem(vma, umm->basemem);
+	ret = rtdm_mmap_vmem(vma, xnheap_get_membase(&umm->heap));
 	if (ret)
 		return ret;
 
@@ -118,7 +118,7 @@ static int stat_umm(struct rtdm_fd *fd,
 		return -ENODEV;
 
 	xnlock_get_irqsave(&umm->heap.lock, s);
-	stat.size = umm->size;
+	stat.size = xnheap_get_size(&umm->heap);
 	stat.free = xnheap_get_free(&umm->heap);
 	xnlock_put_irqrestore(&umm->heap.lock, s);
 
@@ -340,8 +340,6 @@ int cobalt_umm_init(struct cobalt_umm *umm, u32 size,
 		return ret;
 	}
 
-	umm->basemem = basemem;
-	umm->size = size;
 	umm->release = release;
 	atomic_set(&umm->refcount, 1);
 	smp_mb();
@@ -355,7 +353,7 @@ void cobalt_umm_destroy(struct cobalt_umm *umm)
 
 	if (atomic_dec_and_test(&umm->refcount)) {
 		xnheap_destroy(&umm->heap, NULL, NULL);
-		vfree(umm->basemem);
+		vfree(xnheap_get_membase(&umm->heap));
 		if (umm->release)
 			umm->release(umm);
 	}
