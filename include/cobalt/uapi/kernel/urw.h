@@ -18,6 +18,8 @@
 #ifndef _COBALT_UAPI_KERNEL_URW_H
 #define _COBALT_UAPI_KERNEL_URW_H
 
+#include <linux/types.h>
+
 /*
  * A restricted version of the kernel seqlocks with a slightly
  * different interface, allowing for unsynced reads with concurrent
@@ -40,12 +42,12 @@
  */
 
 typedef struct {
-	unsigned int sequence;
+	__u32 sequence;
 } urw_t;
 
 typedef struct {
-	unsigned int token;
-	int dirty;
+	__u32 token;
+	__u32 dirty;
 } urwstate_t;
 
 #define URW_INITIALIZER     { 0 }
@@ -53,7 +55,7 @@ typedef struct {
 
 static inline void __try_read_start(const urw_t *urw, urwstate_t *tmp)
 {
-	unsigned int token;
+	__u32 token;
 repeat:
 	token = ACCESS_ONCE(urw->sequence);
 	smp_rmb();

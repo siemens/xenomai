@@ -67,16 +67,16 @@ pthread_mutex_t lock;
 #define acquire_lock(lock)			pthread_mutex_lock(lock)
 #define release_lock(lock)			pthread_mutex_unlock(lock)
 #endif
-unsigned long long last_common = 0;
+uint64_t last_common = 0;
 clockid_t clock_id = CLOCK_REALTIME;
 
 struct per_cpu_data {
-	unsigned long long first_tod, first_clock;
+	uint64_t first_tod, first_clock;
 	int first_round;
-	long long offset;
+	int64_t offset;
 	double drift;
 	unsigned long warps;
-	unsigned long long max_warp;
+	uint64_t max_warp;
 	pthread_t thread;
 } *per_cpu_data;
 
@@ -96,7 +96,8 @@ static void show_hostrt_diagnostics(void)
 
 	printf("Sequence counter : %u\n",
 	       vdso->hostrt_data.lock.sequence);
-	printf("wall_time_sec    : %ld\n", vdso->hostrt_data.wall_time_sec);
+	printf("wall_time_sec    : %lld\n",
+	       (unsigned long long)vdso->hostrt_data.wall_time_sec);
 	printf("wall_time_nsec   : %u\n", vdso->hostrt_data.wall_time_nsec);
 	printf("wall_to_monotonic\n");
 	printf("          tv_sec : %jd\n",
@@ -119,7 +120,7 @@ static void show_realtime_offset(void)
 	printf("Wallclock offset : %llu\n", vdso->wallclock_offset);
 }
 
-static inline unsigned long long read_clock(clockid_t clock_id)
+static inline uint64_t read_clock(clockid_t clock_id)
 {
 	struct timespec ts;
 	int res;
@@ -138,7 +139,7 @@ static inline unsigned long long read_clock(clockid_t clock_id)
 	return ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 }
 
-static inline unsigned long long read_reference_clock(void)
+static inline uint64_t read_reference_clock(void)
 {
 	struct timeval tv;
 
@@ -152,8 +153,8 @@ static inline unsigned long long read_reference_clock(void)
 
 static void check_reference(struct per_cpu_data *per_cpu_data)
 {
-	unsigned long long clock_val[10], tod_val[10];
-	long long delta, min_delta;
+	uint64_t clock_val[10], tod_val[10];
+	int64_t delta, min_delta;
 	int i, idx;
 
 	for (i = 0; i < 10; i++) {
@@ -188,8 +189,8 @@ static void check_reference(struct per_cpu_data *per_cpu_data)
 static void check_time_warps(struct per_cpu_data *per_cpu_data)
 {
 	int i;
-	unsigned long long last, now;
-	long long incr;
+	uint64_t last, now;
+	int64_t incr;
 
 	for (i = 0; i < 100; i++) {
 		acquire_lock(&lock);

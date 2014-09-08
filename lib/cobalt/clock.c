@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
@@ -109,9 +110,10 @@ COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 
 static int __do_clock_host_realtime(struct timespec *ts)
 {
-	unsigned long long now, base, mask, cycle_delta;
+	uint64_t now, base, mask, cycle_delta, nsec;
 	struct xnvdso_hostrt_data *hostrt_data;
-	unsigned long mult, shift, nsec, rem;
+	uint32_t mult, shift;
+	unsigned long rem;
 	urwstate_t tmp;
 
 	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME))
@@ -175,8 +177,8 @@ static int __do_clock_host_realtime(struct timespec *ts)
  */
 COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 {
-	unsigned long long ns;
 	unsigned long rem;
+	xnticks_t ns;
 	int ret;
 
 	switch (clock_id) {

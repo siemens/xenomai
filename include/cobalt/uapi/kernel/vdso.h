@@ -21,30 +21,29 @@
 #include <cobalt/uapi/kernel/urw.h>
 
 struct xnvdso_hostrt_data {
-	short live;
+	__u16 live;
 	urw_t lock;
-	time_t wall_time_sec;
-	unsigned int wall_time_nsec;
+	__u64 wall_time_sec;
+	__u32 wall_time_nsec;
 	struct timespec wall_to_monotonic;
-	unsigned long long cycle_last;
-	unsigned long long mask;
-	unsigned int mult;
-	unsigned int shift;
+	__u64 cycle_last;
+	__u64 mask;
+	__u32 mult;
+	__u32 shift;
 };
 
 /*
- * Data shared between Xenomai kernel/userland and the Linux
- * kernel/userland on the global semaphore heap. The features element
- * indicates which data are shared. Notice that struct xnvdso may only
- * grow, but never shrink.
+ * Data shared between the Cobalt kernel and applications, which lives
+ * in the shared memory heap (COBALT_MEMDEV_SHARED).
+ * xnvdso_hostrt_data.features tells which data is present. Notice
+ * that struct xnvdso may only grow, but never shrink.
  */
 struct xnvdso {
-	unsigned long long features;
-
+	__u64 features;
 	/* XNVDSO_FEAT_HOST_REALTIME */
 	struct xnvdso_hostrt_data hostrt_data;
 	/* XNVDSO_FEAT_WALLCLOCK_OFFSET */
-	unsigned long long wallclock_offset;
+	__u64 wallclock_offset;
 };
 
 /* For each shared feature, add a flag below. */
@@ -53,7 +52,7 @@ struct xnvdso {
 #define XNVDSO_FEAT_WALLCLOCK_OFFSET	0x0000000000000002ULL
 
 static inline int xnvdso_test_feature(struct xnvdso *vdso,
-				      unsigned long long feature)
+				      __u64 feature)
 {
 	return (vdso->features & feature) != 0;
 }
