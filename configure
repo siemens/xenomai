@@ -667,18 +667,6 @@ CONFIG_XENO_FASTSYNCH_TRUE
 W3M
 A2X
 ASCIIDOC
-DBX_ABS_SRCDIR_FALSE
-DBX_ABS_SRCDIR_TRUE
-DBX_XSL_ROOT
-DBX_ROOT
-DBX_MAYBE_NONET
-DBX_FOP
-DBX_XSLTPROC
-DBX_LINT
-DBX_GEN_DOC_ROOT
-DBX_DOC_FALSE
-DBX_DOC_TRUE
-DBX_DOC_ROOT
 DOXYGEN_HAVE_DOT
 DOXYGEN
 XENO_MAYBE_DOCDIR
@@ -836,10 +824,6 @@ enable_arm_tsc
 enable_arm_quirks
 enable_doc_install
 enable_dox_doc
-enable_dbx
-enable_dbx_network
-with_dbx_root
-with_docbook_xsl_root
 enable_verbose_latex
 enable_asciidoc
 with___thread
@@ -1504,11 +1488,6 @@ Optional Features:
                           [default=no]
   --disable-doc-install   Do not install documentation [default=no]
   --enable-dox-doc        Build Doxygen documentation [default=no]
-  --enable-dbx            Build Docbook XML documentation. [default=no]
-  --enable-dbx-network    Try to access Docbook DTD and XSL stylesheets
-                          through network (default is to die if local
-                          installation can not be found by configure).
-                          [default=no]
   --enable-verbose-latex  Uses LaTeX non-stop mode [default=no]
   --enable-asciidoc       Build Asciidoc documentation [default=no]
   --enable-fortify        Enable support for applications compiled with
@@ -1525,13 +1504,6 @@ Optional Packages:
                         (or the compiler's sysroot if not specified).
   --with-atomic-ops       Select implementation of atomic ops
                           [default=builtins on ARM, ad-hoc otherwise]
-  --with-dbx-root         specify the Docbook XML root (that is, the directory
-                          where docbookx.dtd should be found). Default is to
-                          use well-known locations (or network if
-                          --enable-dbx-network was passed).
-  --with-dbx-xsl-root     specify the Docbook XML XSL stylesheet root. Default
-                          is to use well-known locations (or network if
-                          --enable-dbx-network was passed)
   --with-__thread         use optimized TLS features (x86 only), disabling the
                           ability to use dlopen on Xenomai skin libraries
   --with-testdir=<test-binaries-dir>
@@ -12642,11 +12614,11 @@ $as_echo_n "checking for atomic operation support... " >&6; }
 if test "${with_atomic_ops+set}" = set; then :
   withval=$with_atomic_ops; case "$withval" in
 	y | yes | built*)
-	    	atomic_ops=builtins
-	    	;;
+		atomic_ops=builtins
+		;;
 	ad-hoc|adhoc)
-	    	atomic_ops=ad-hoc
-	    	;;
+		atomic_ops=ad-hoc
+		;;
 	*)
 		as_fn_error $? "invalid switch \"$withval\" for atomic-ops (builtins/ad-hoc)" "$LINENO" 5
 		;;
@@ -12905,298 +12877,6 @@ if test x"$DOXYGEN_HAVE_DOT" = xYES ; then
 else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
 fi
-
-case "$CONFIG_XENO_DOC_DBX" in
-y | ye | yes)
-    DBX_DOC=yes ;;
-*)
-    DBX_DOC="" ;;
-esac
-DBX_NET="$CONFIG_XENO_DBX_NET"
-DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
-DBX_XSL_ROOT="$CONFIG_XENO_DBX_XSL_ROOT"
-
-DBX_DOC_ROOT="doc/docbook"
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiling Docbook XML documentation" >&5
-$as_echo_n "checking whether compiling Docbook XML documentation... " >&6; }
-# Check whether --enable-dbx was given.
-if test "${enable_dbx+set}" = set; then :
-  enableval=$enable_dbx; case "$enableval" in
-	y | ye | yes) DBX_DOC=yes;;
-	*) DBX_DOC="" ;;
-	esac
-fi
-
-
-if test \! -f "$srcdir/doc/docbook/catalog.in"; then
-    if test x$DBX_DOC = xyes;
-    then
-        as_fn_error $? "doc/docbook/catalog.in could not be found in the source tree,
-DocBook documentation can not be generated." "$LINENO" 5
-    fi
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present." >&5
-$as_echo "not present." >&6; }
-else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${DBX_DOC:-no}" >&5
-$as_echo "${DBX_DOC:-no}" >&6; }
-fi
- if test "$DBX_DOC" = yes; then
-  DBX_DOC_TRUE=
-  DBX_DOC_FALSE='#'
-else
-  DBX_DOC_TRUE='#'
-  DBX_DOC_FALSE=
-fi
-
-
-#
-DBX_GEN_DOC_ROOT="doc/generated"
-
-
-# First: search for needed tools.
-# Extract the first word of "xmllint", so it can be a program name with args.
-set dummy xmllint; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_DBX_LINT+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$DBX_LINT"; then
-  ac_cv_prog_DBX_LINT="$DBX_LINT" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_DBX_LINT="xmllint"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-DBX_LINT=$ac_cv_prog_DBX_LINT
-if test -n "$DBX_LINT"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DBX_LINT" >&5
-$as_echo "$DBX_LINT" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-if test x"$DBX_LINT" = x -a -n "$DBX_DOC"; then
-   as_fn_error $? "xmllint was not found. Check your PATH variable and try again." "$LINENO" 5
-fi
-
-
-
-# Extract the first word of "xsltproc", so it can be a program name with args.
-set dummy xsltproc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_DBX_XSLTPROC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$DBX_XSLTPROC"; then
-  ac_cv_prog_DBX_XSLTPROC="$DBX_XSLTPROC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_DBX_XSLTPROC="xsltproc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-DBX_XSLTPROC=$ac_cv_prog_DBX_XSLTPROC
-if test -n "$DBX_XSLTPROC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DBX_XSLTPROC" >&5
-$as_echo "$DBX_XSLTPROC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-if test x"$DBX_XSLTPROC" = x -a -n "$DBX_DOC"; then
-   as_fn_error $? "xsltproc was not found. Check your PATH variable and try
-again." "$LINENO" 5
-fi
-
-
-
-# Extract the first word of "fop", so it can be a program name with args.
-set dummy fop; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_DBX_FOP+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$DBX_FOP"; then
-  ac_cv_prog_DBX_FOP="$DBX_FOP" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_DBX_FOP="fop"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-DBX_FOP=$ac_cv_prog_DBX_FOP
-if test -n "$DBX_FOP"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $DBX_FOP" >&5
-$as_echo "$DBX_FOP" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-if test x"$DBX_FOP" = x -a -n "$DBX_DOC"; then
-   as_fn_error $? "fop was not found. Check your PATH variable and try again." "$LINENO" 5
-fi
-
-
-# Second: search for DTD and XSL stylesheets.
-DBX_DTD_VERSION="4.2"
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether Docbook XML documentation generation can use network." >&5
-$as_echo_n "checking whether Docbook XML documentation generation can use network.... " >&6; }
-# Check whether --enable-dbx-network was given.
-if test "${enable_dbx_network+set}" = set; then :
-  enableval=$enable_dbx_network;  case "$enable_dbx_network" in
-           y | yes | yes )
-                DBX_NET=yes;;
-           n | no )
-                DBX_NET="";;
-          esac
-
-fi
-
-
-# Do not define the --nonet xsltproc flag if the option --enable-dbx-network was
-# passed
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${DBX_NET:-no}" >&5
-$as_echo "${DBX_NET:-no}" >&6; }
-if test -n "$DBX_NET"; then
-    unset DBX_MAYBE_NONET
-else
-    DBX_MAYBE_NONET=--nonet
-fi
-
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for docbook-xml root dir" >&5
-$as_echo_n "checking for docbook-xml root dir... " >&6; }
-
-# Check whether --with-dbx-root was given.
-if test "${with_dbx_root+set}" = set; then :
-  withval=$with_dbx_root; DBX_ROOT="$withval"
-fi
-
-if test x"$DBX_ROOT" = x; then
-   # Still not found, we will hence look for it using the "well-known"
-   # places (well... for the moment, only the Debian package directory)
-   for dir in \
-       /usr/share/sgml/docbook/dtd/xml/$DBX_DTD_VERSION
-   do
-        if test -e $dir/docbookx.dtd; then
-           DBX_ROOT="$dir";
-           break;
-        fi
-   done
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${DBX_ROOT:-network}" >&5
-$as_echo "${DBX_ROOT:-network}" >&6; }
-if test x"$DBX_ROOT" = x; then
-   if test x"$enable_dbx_network" != x  -a -n "$DBX_DOC"; then
-        as_fn_error $? "The Docbook XML DTD was not found, and accessing it
-through network is forbidden." "$LINENO" 5
-   fi
-   DBX_ROOT="http://www.oasis-open.org/docbook/xml/$DBX_DTD_VERSION/"
-else
-   DBX_ROOT="file://$DBX_ROOT"
-fi
-
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for docbook-xsl root dir" >&5
-$as_echo_n "checking for docbook-xsl root dir... " >&6; }
-
-# Check whether --with-docbook-xsl-root was given.
-if test "${with_docbook_xsl_root+set}" = set; then :
-  withval=$with_docbook_xsl_root;  DBX_XSL_ROOT="$withval"
-fi
-
-if test x"$DBX_XSL_ROOT" = x; then
-   # Still not found, we will hence look for it using the "well-known"
-   # places (well... for the moment, only the Debian standard directory)
-   for dir in \
-       /usr/share/sgml/docbook/stylesheet/xsl/nwalsh
-   do
-        if test -e "$dir/html/docbook.xsl"; then
-           DBX_XSL_ROOT="$dir";
-           break;
-        fi
-   done
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${DBX_XSL_ROOT:-network}" >&5
-$as_echo "${DBX_XSL_ROOT:-network}" >&6; }
-if test x"$DBX_XSL_ROOT" = x; then
-   if test x"$enable_dbx_network" != x -a -n "$DBX_DOC"; then
-        as_fn_error $? "The Docbook XML DTD was not found, and accessing it
-through network is forbidden." "$LINENO" 5
-   fi
-   DBX_XSL_ROOT="http://http://docbook.sourceforge.net/release/xsl/current"
-else
-   DBX_XSL_ROOT="file://$DBX_XSL_ROOT"
-fi
-
-
-
-DBX_ABS_SRCDIR=`case $srcdir in
-  \\/* | ?:\\/* ) echo : ;;
-  *) echo false ;;
-esac`
- if $DBX_ABS_SRCDIR; then
-  DBX_ABS_SRCDIR_TRUE=
-  DBX_ABS_SRCDIR_FALSE='#'
-else
-  DBX_ABS_SRCDIR_TRUE='#'
-  DBX_ABS_SRCDIR_FALSE=
-fi
-
-
-
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether using LaTeX non-stop mode" >&5
 $as_echo_n "checking whether using LaTeX non-stop mode... " >&6; }
@@ -13659,8 +13339,8 @@ else
   cat > conftest.c <<\EOF
 int foo(void) {
 	register unsigned x __asm__("r7");
-     	__asm__("mov %0,#0\n\t": "=r"(x));
-     	return x;
+	__asm__("mov %0,#0\n\t": "=r"(x));
+	return x;
 }
 EOF
 		if { ac_try='${CC-cc} $CPPFLAGS $CFLAGS $XENO_USER_CFLAGS -c conftest.c >&5'
@@ -13678,7 +13358,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_r7_error" >&5
 $as_echo "$ac_cv_r7_error" >&6; }
 	if test x"$ac_cv_r7_error" = xyes; then
-   	   	XENO_USER_CFLAGS="-fomit-frame-pointer $XENO_USER_CFLAGS"
+		XENO_USER_CFLAGS="-fomit-frame-pointer $XENO_USER_CFLAGS"
 		XENO_LIB_CFLAGS="-fomit-frame-pointer $XENO_LIB_CFLAGS"
 	fi
 	;;
@@ -13867,7 +13547,7 @@ if test x"$LD_FILE_OPTION" = x"yes" ; then
 fi
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
-      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-native doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/asciidoc/Makefile doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
+      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-native doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/asciidoc/Makefile"
 
 fi
 
@@ -14006,14 +13686,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XENO_TARGET_ARCH_X86_TRUE}" && test -z "${XENO_TARGET_ARCH_X86_FALSE}"; then
   as_fn_error $? "conditional \"XENO_TARGET_ARCH_X86\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${DBX_DOC_TRUE}" && test -z "${DBX_DOC_FALSE}"; then
-  as_fn_error $? "conditional \"DBX_DOC\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${DBX_ABS_SRCDIR_TRUE}" && test -z "${DBX_ABS_SRCDIR_FALSE}"; then
-  as_fn_error $? "conditional \"DBX_ABS_SRCDIR\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_FASTSYNCH_TRUE}" && test -z "${CONFIG_XENO_FASTSYNCH_FALSE}"; then
@@ -14994,16 +14666,6 @@ do
     "doc/doxygen/Doxyfile-posix") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-posix" ;;
     "doc/doxygen/Doxyfile-rtdm") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-rtdm" ;;
     "doc/asciidoc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/asciidoc/Makefile" ;;
-    "doc/docbook/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/Makefile" ;;
-    "doc/docbook/catalog") CONFIG_FILES="$CONFIG_FILES doc/docbook/catalog" ;;
-    "doc/docbook/custom-stylesheets/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/Makefile" ;;
-    "doc/docbook/custom-stylesheets/xsl/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/Makefile" ;;
-    "doc/docbook/custom-stylesheets/xsl/common/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/common/Makefile" ;;
-    "doc/docbook/custom-stylesheets/xsl/fo/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/fo/Makefile" ;;
-    "doc/docbook/custom-stylesheets/xsl/html/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/html/Makefile" ;;
-    "doc/docbook/custom-stylesheets/xsl/html/chunk.xsl") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/html/chunk.xsl" ;;
-    "doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl" ;;
-    "doc/docbook/xenomai/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/xenomai/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

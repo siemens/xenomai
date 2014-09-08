@@ -1,4 +1,4 @@
-SUBDIRS=asciidoc docbook doxygen man txt
+SUBDIRS=asciidoc doxygen man txt
 
 GENERATE_DOC=$(top_srcdir)/scripts/maint/generate-doc
 

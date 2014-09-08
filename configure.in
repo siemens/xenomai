@@ -156,11 +156,11 @@ AC_ARG_WITH(atomic-ops,
 	AS_HELP_STRING([--with-atomic-ops], [Select implementation of atomic ops [default=builtins on ARM, ad-hoc otherwise]]),
 	[case "$withval" in
 	y | yes | built*)
-	    	atomic_ops=builtins
-	    	;;
+		atomic_ops=builtins
+		;;
 	ad-hoc|adhoc)
-	    	atomic_ops=ad-hoc
-	    	;;
+		atomic_ops=ad-hoc
+		;;
 	*)
 		AC_MSG_ERROR([invalid switch "$withval" for atomic-ops (builtins/ad-hoc)])
 		;;
@@ -325,17 +325,6 @@ if test x"$DOXYGEN_HAVE_DOT" = xYES ; then
 else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
 fi
-
-case "$CONFIG_XENO_DOC_DBX" in
-y | ye | yes)
-    DBX_DOC=yes ;;
-*)
-    DBX_DOC="" ;;
-esac
-DBX_NET="$CONFIG_XENO_DBX_NET"
-DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
-DBX_XSL_ROOT="$CONFIG_XENO_DBX_XSL_ROOT"
-DBX_DOC_INIT(doc/docbook, doc/generated, 4.2)
 
 AC_MSG_CHECKING(whether using LaTeX non-stop mode)
 AC_ARG_ENABLE(verbose-latex,
@@ -554,8 +543,8 @@ case "$build_for" in
 		[cat > conftest.c <<\EOF
 int foo(void) {
 	register unsigned x __asm__("r7");
-     	__asm__("mov %0,#0\n\t": "=r"(x));
-     	return x;
+	__asm__("mov %0,#0\n\t": "=r"(x));
+	return x;
 }
 EOF
 		if AC_TRY_COMMAND([${CC-cc} $CPPFLAGS $CFLAGS $XENO_USER_CFLAGS -c conftest.c >&AS_MESSAGE_LOG_FD]); then
@@ -565,7 +554,7 @@ EOF
 		fi
 		rm -f conftest*])
 	if test x"$ac_cv_r7_error" = xyes; then
-   	   	XENO_USER_CFLAGS="-fomit-frame-pointer $XENO_USER_CFLAGS"
+		XENO_USER_CFLAGS="-fomit-frame-pointer $XENO_USER_CFLAGS"
 		XENO_LIB_CFLAGS="-fomit-frame-pointer $XENO_LIB_CFLAGS"
 	fi
 	;;
@@ -776,16 +765,6 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/doxygen/Doxyfile-posix \
 	doc/doxygen/Doxyfile-rtdm \
 	doc/asciidoc/Makefile \
-	doc/docbook/Makefile \
-	doc/docbook/catalog \
-	doc/docbook/custom-stylesheets/Makefile \
-	doc/docbook/custom-stylesheets/xsl/Makefile \
-	doc/docbook/custom-stylesheets/xsl/common/Makefile \
-	doc/docbook/custom-stylesheets/xsl/fo/Makefile \
-	doc/docbook/custom-stylesheets/xsl/html/Makefile \
-	doc/docbook/custom-stylesheets/xsl/html/chunk.xsl \
-	doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl \
-	doc/docbook/xenomai/Makefile \
       ])
 fi
 
