@@ -20,9 +20,6 @@
 
 #include <linux/types.h>
 
-#define XNHEAP_DEV_NAME  "/dev/rtheap"
-#define XNHEAP_DEV_MINOR 254
-
 #define COBALT_MEMDEV_PRIVATE  "memdev-private"
 #define COBALT_MEMDEV_SHARED   "memdev-shared"
 #define COBALT_MEMDEV_SYS      "memdev-sys"

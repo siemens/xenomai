@@ -940,22 +940,4 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnheap_check_block);
 
-static struct file_operations xnheap_fops = {
-	.owner = THIS_MODULE,
-};
-
-static struct miscdevice xnheap_dev = {
-	XNHEAP_DEV_MINOR, "rtheap", &xnheap_fops
-};
-
-void xnheap_umount(void)
-{
-	misc_deregister(&xnheap_dev);
-}
-
-int __init xnheap_mount(void)
-{
-	return misc_register(&xnheap_dev);
-}
-
 /** @} */

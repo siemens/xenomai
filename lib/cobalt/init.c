@@ -67,13 +67,6 @@ static void low_init(void)
 	struct cobalt_featinfo *f;
 	int ret;
 
-	/* Some sanity checks first. */
-	if (access(XNHEAP_DEV_NAME, 0)) {
-		report_error("%s is missing\n(chardev, major=10 minor=%d)",
-			     XNHEAP_DEV_NAME, XNHEAP_DEV_MINOR);
-		exit(EXIT_FAILURE);
-	}
-
 	old_sigill_handler = signal(SIGILL, sigill_handler);
 	if (old_sigill_handler == SIG_ERR) {
 		report_error("signal(SIGILL): %s", strerror(errno));

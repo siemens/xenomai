@@ -147,9 +147,6 @@ fnref_register(libalchemy, queue_finalize);
  * exchange data through the use of variable-sized messages. A message
  * queue is created empty.
  *
- * This service needs the special character device /dev/rtheap
- * (10,254) when called from user-space tasks.
- *
  * @param q The address of a queue descriptor which can be later used
  * to identify uniquely the created object, upon success of this call.
  *

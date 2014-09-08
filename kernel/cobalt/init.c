@@ -405,15 +405,11 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_proc;
 
-	ret = xnheap_mount();
-	if (ret)
-		goto cleanup_mach;
-
 	xnintr_mount();
 
 	ret = xnpipe_mount();
 	if (ret)
-		goto cleanup_heap;
+		goto cleanup_mach;
 
 	ret = xnselect_mount();
 	if (ret)
@@ -449,8 +445,6 @@ cleanup_select:
 	xnselect_umount();
 cleanup_pipe:
 	xnpipe_umount();
-cleanup_heap:
-	xnheap_umount();
 cleanup_mach:
 	mach_cleanup();
 cleanup_proc:

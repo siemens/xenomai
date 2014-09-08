@@ -23,13 +23,10 @@
  */
 #include <stdarg.h>
 #include <linux/unistd.h>
-#include <linux/wait.h>
-#include <linux/semaphore.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/fs.h>
-#include <linux/sched.h>
-#include <linux/kthread.h>
+#include <linux/anon_inodes.h>
 #include <linux/mman.h>
 #include <linux/mm.h>
 #include <linux/slab.h>
@@ -37,9 +34,8 @@
 #include <linux/file.h>
 #include <linux/ptrace.h>
 #include <linux/vmalloc.h>
-#include <linux/completion.h>
-#include <linux/kallsyms.h>
 #include <linux/signal.h>
+#include <linux/kallsyms.h>
 #include <linux/ipipe.h>
 #include <linux/ipipe_tickdev.h>
 #include <cobalt/kernel/sched.h>
@@ -850,18 +846,14 @@ static struct file_operations mayday_fops = {
 
 static unsigned long map_mayday_page(struct task_struct *p)
 {
-	const struct file_operations *old_fops;
 	unsigned long u_addr;
 	struct file *filp;
 
-	filp = filp_open(XNHEAP_DEV_NAME, O_RDONLY, 0);
+	filp = anon_inode_getfile("[mayday]", &mayday_fops, NULL, O_RDONLY);
 	if (IS_ERR(filp))
 		return 0;
 
-	old_fops = filp->f_op;
-	filp->f_op = &mayday_fops;
 	u_addr = vm_mmap(filp, 0, PAGE_SIZE, PROT_EXEC|PROT_READ, MAP_SHARED, 0);
-	filp->f_op = (typeof(filp->f_op))old_fops;
 	filp_close(filp, p->files);
 
 	return IS_ERR_VALUE(u_addr) ? 0UL : u_addr;

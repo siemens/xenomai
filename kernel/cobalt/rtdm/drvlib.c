@@ -27,7 +27,7 @@
 #include <asm/pgtable.h>
 #include <linux/highmem.h>
 #include <linux/err.h>
-
+#include <linux/anon_inodes.h>
 #include <rtdm/driver.h>
 #include "internal.h"
 #include <trace/events/cobalt-rtdm.h>
@@ -1633,30 +1633,21 @@ static struct file_operations mmap_fops = {
 	.get_unmapped_area = unmapped_area_trampoline
 };
 
-static int rtdm_mmap(struct mmap_tramp_data *tramp_data,
-		     size_t len, off_t offset, int prot, int flags,
-		     void **pptr)
+static int do_rtdm_mmap(struct mmap_tramp_data *tramp_data,
+			size_t len, off_t offset, int prot, int flags,
+			void **pptr)
 {
-	const struct file_operations *old_fops;
 	unsigned long u_addr;
-	void *old_priv_data;
 	struct file *filp;
 
 	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
 		return -EPERM;
 
-	filp = filp_open(XNHEAP_DEV_NAME, O_RDWR, 0);
+	filp = anon_inode_getfile("[rtdm]", &mmap_fops, tramp_data, O_RDWR);
 	if (IS_ERR(filp))
 		return PTR_ERR(filp);
 
-	old_fops = filp->f_op;
-	filp->f_op = &mmap_fops;
-	old_priv_data = filp->private_data;
-	filp->private_data = tramp_data;
 	u_addr = vm_mmap(filp, (unsigned long)*pptr, len, prot, flags, offset);
-	filp->f_op = (typeof(filp->f_op))old_fops;
-	filp->private_data = old_priv_data;
-
 	filp_close(filp, current->files);
 
 	if (IS_ERR_VALUE(u_addr))
@@ -1676,7 +1667,7 @@ int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 		.unmapped_area_handler = NULL,
 	};
 
-	return rtdm_mmap(&tramp_data, len, offset, prot, flags, pptr);
+	return do_rtdm_mmap(&tramp_data, len, offset, prot, flags, pptr);
 }
 
 /**
@@ -1745,7 +1736,7 @@ int rtdm_mmap_to_user(struct rtdm_fd *fd,
 		.vm_private_data = vm_private_data
 	};
 
-	return rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
+	return do_rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
 }
 EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
 
@@ -1811,7 +1802,7 @@ int rtdm_iomap_to_user(struct rtdm_fd *fd,
 		.vm_private_data = vm_private_data
 	};
 
-	return rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
+	return do_rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
 }
 EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
 

@@ -168,10 +168,6 @@ static inline void xnheap_init_proc(void) { }
 static inline void xnheap_cleanup_proc(void) { }
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-int xnheap_mount(void);
-
-void xnheap_umount(void);
-
 #define xnheap_base_memory(heap) \
 	((unsigned long)((heap)->heapbase))
 
