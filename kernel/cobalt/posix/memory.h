@@ -32,9 +32,9 @@ void *cobalt_umm_alloc(struct cobalt_umm *umm, __u32 size)
 }
 
 static inline
-int cobalt_umm_free(struct cobalt_umm *umm, void *p)
+void cobalt_umm_free(struct cobalt_umm *umm, void *p)
 {
-	return xnheap_free(&umm->heap, p);
+	xnheap_free(&umm->heap, p);
 }
 
 static inline

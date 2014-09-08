@@ -145,11 +145,7 @@ void xnheap_destroy(struct xnheap *heap,
 void *xnheap_alloc(struct xnheap *heap,
 		   unsigned long size);
 
-int xnheap_test_and_free(struct xnheap *heap,
-			 void *block,
-			 int (*ckfn)(void *block));
-
-int xnheap_free(struct xnheap *heap,
+void xnheap_free(struct xnheap *heap,
 		void *block);
 
 int xnheap_check_block(struct xnheap *heap,

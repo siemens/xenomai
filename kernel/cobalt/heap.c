@@ -170,8 +170,7 @@ static void init_freelist(struct xnheap *heap)
  * Initializes a memory heap suitable for time-bounded allocation
  * requests of dynamic memory.
  *
- * @param heap The address of a heap descriptor which is used to store
- * the meta-data.
+ * @param heap The address of a heap descriptor to initialize.
  *
  * @param membase The address of the storage area.
  *
@@ -490,47 +489,28 @@ out:
 EXPORT_SYMBOL_GPL(xnheap_alloc);
 
 /**
- * @fn int xnheap_test_and_free(struct xnheap *heap,void *block,int (*ckfn)(void *block))
- * @brief Test and release a memory block to a memory heap.
+ * @fn void xnheap_free(struct xnheap *heap, void *block)
+ * @brief Release a block to a memory heap.
  *
- * Releases a memory region to the memory heap it was previously
- * allocated from. Before the actual release is performed, an optional
- * user-defined can be invoked to check for additional criteria with
- * respect to the request consistency.
+ * Releases a memory block to a heap.
  *
- * @param heap The descriptor address of the heap to release memory
- * to.
+ * @param heap The heap descriptor.
  *
- * @param block The address of the region to be returned to the heap.
- *
- * @param ckfn The address of a user-supplied verification routine
- * which is to be called after the memory address specified by @a
- * block has been checked for validity. The routine is expected to
- * proceed to further consistency checks, and either return zero upon
- * success, or non-zero upon error. In the latter case, the release
- * process is aborted, and @a ckfn's return value is passed back to
- * the caller of this service as its error return code.
- *
- * @warning @a ckfn must not reschedule either directly or indirectly.
- *
- * @return 0 is returned upon success, or -EINVAL is returned whenever
- * the block is not a valid region of the specified heap. Additional
- * return codes can also be defined locally by the @a ckfn routine.
+ * @param block The block to be returned to the heap.
  *
  * @coretags{unrestricted}
  */
-int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *block))
+void xnheap_free(struct xnheap *heap, void *block)
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
-	int log2size, npages, ret, nblocks, xpage, ilog;
 	unsigned long pagenum, pagecont, boffset, bsize;
+	int log2size, npages, nblocks, xpage, ilog;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
-	ret = -EFAULT;
 	if ((caddr_t)block < heap->membase || (caddr_t)block >= heap->memlim)
-		goto unlock_and_fail;
+		goto bad_block;
 
 	/* Compute the heading page number in the page map. */
 	pagenum = ((caddr_t)block - heap->membase) / XNHEAP_PAGESZ;
@@ -540,18 +520,12 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 	case XNHEAP_PFREE:	/* Unallocated page? */
 	case XNHEAP_PCONT:	/* Not a range heading page? */
 	bad_block:
-		ret = -EINVAL;
-	unlock_and_fail:
 		xnlock_put_irqrestore(&heap->lock, s);
-		return ret;
+		XENO_BUG(COBALT);
+		return;
 
 	case XNHEAP_PLIST:
-
-		if (ckfn && (ret = ckfn(block)) != 0)
-			goto unlock_and_fail;
-
 		npages = 1;
-
 		while (npages < heap->npages &&
 		       heap->pagemap[pagenum + npages].type == XNHEAP_PCONT)
 			npages++;
@@ -559,18 +533,14 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 		bsize = npages * XNHEAP_PAGESZ;
 
 	free_page_list:
-
 		/* Link all freed pages in a single sub-list. */
-
 		for (freepage = (caddr_t) block,
 		     tailpage = (caddr_t) block + bsize - XNHEAP_PAGESZ;
 		     freepage < tailpage; freepage += XNHEAP_PAGESZ)
 			*((caddr_t *) freepage) = freepage + XNHEAP_PAGESZ;
 
 	free_pages:
-
 		/* Mark the released pages as free. */
-
 		for (pagecont = 0; pagecont < npages; pagecont++)
 			heap->pagemap[pagenum + pagecont].type = XNHEAP_PFREE;
 
@@ -597,9 +567,6 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 		if ((boffset & (bsize - 1)) != 0) /* Not a block start? */
 			goto bad_block;
 
-		if (ckfn && (ret = ckfn(block)) != 0)
-			goto unlock_and_fail;
-
 		/*
 		 * Return the page to the free list if we've just
 		 * freed its last busy block. Pages from multi-page
@@ -616,15 +583,14 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 			break;
 		}
 
+		/*
+		 * In the simplest case, we only have a single block
+		 * to deal with, which spans multiple pages. We just
+		 * need to release it as a list of pages, without
+		 * caring about the consistency of the bucket.
+		 */
 		npages = bsize / XNHEAP_PAGESZ;
 		if (unlikely(npages > 1))
-			/*
-			 * The simplest case: we only have a single
-			 * block to deal with, which spans multiple
-			 * pages. We just need to release it as a list
-			 * of pages, without caring about the
-			 * consistency of the bucket.
-			 */
 			goto free_page_list;
 
 		freepage = heap->membase + pagenum * XNHEAP_PAGESZ;
@@ -636,11 +602,10 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 		XENO_BUGON(COBALT, heap->buckets[ilog].fcount < 0);
 
 		/*
-		 * Easy case: all free blocks are laid on a single
-		 * page we are now releasing. Just clear the bucket
-		 * and bail out.
+		 * Still easy case: all free blocks are laid on a
+		 * single page we are now releasing. Just clear the
+		 * bucket and bail out.
 		 */
-
 		if (likely(heap->buckets[ilog].fcount == 0)) {
 			heap->buckets[ilog].freelist = NULL;
 			goto free_pages;
@@ -674,37 +639,6 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 	heap->used -= bsize;
 
 	xnlock_put_irqrestore(&heap->lock, s);
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xnheap_test_and_free);
-
-/**
- * @fn int xnheap_free(struct xnheap *heap, void *block)
- * @brief Release a memory block to a memory heap.
- *
- * Releases a memory region to the memory heap it was previously
- * allocated from.
- *
- * @param heap The descriptor address of the heap to release memory
- * to.
- *
- * @param block The address of the region to be returned to the heap.
- *
- * @return 0 is returned upon success, or one of the following error
- * codes:
- *
- * - -EFAULT is returned whenever the memory address is outside the
- * storage space of @a heap.
- *
- * - -EINVAL is returned whenever the memory address does not
- * represent a valid block.
- *
- * @coretags{unrestricted}
- */
-int xnheap_free(struct xnheap *heap, void *block)
-{
-	return xnheap_test_and_free(heap, block, NULL);
 }
 EXPORT_SYMBOL_GPL(xnheap_free);
 
