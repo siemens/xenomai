@@ -117,9 +117,9 @@ static void disable_timesource(void)
 }
 
 static void flush_heap(struct xnheap *heap,
-		       void *extaddr, unsigned long extsize, void *cookie)
+		       void *mem, u32 size, void *cookie)
 {
-	free_pages_exact(extaddr, extsize);
+	free_pages_exact(mem, size);
 }
 
 static void sys_shutdown(void)

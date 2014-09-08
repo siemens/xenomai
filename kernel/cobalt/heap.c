@@ -164,7 +164,7 @@ static void init_freelist(struct xnheap *heap)
 }
 
 /**
- * @fn xnheap_init(struct xnheap *heap,void *membase,unsigned long size)
+ * @fn xnheap_init(struct xnheap *heap, void *membase, u32 size)
  * @brief Initialize a memory heap.
  *
  * Initializes a memory heap suitable for time-bounded allocation
@@ -191,7 +191,7 @@ static void init_freelist(struct xnheap *heap)
  *
  * @coretags{secondary-only}
  */
-int xnheap_init(struct xnheap *heap, void *membase, unsigned long size)
+int xnheap_init(struct xnheap *heap, void *membase, u32 size)
 {
 	spl_t s;
 
@@ -243,7 +243,7 @@ int xnheap_init(struct xnheap *heap, void *membase, unsigned long size)
 EXPORT_SYMBOL_GPL(xnheap_init);
 
 /**
- * @fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *membase, unsigned long size, void *cookie), void *cookie)
+ * @fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *membase, u32 size, void *cookie), void *cookie)
  * @brief Destroys a memory heap.
  *
  * Destroys a memory heap.
@@ -261,7 +261,7 @@ EXPORT_SYMBOL_GPL(xnheap_init);
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,
 				    void *membase,
-				    unsigned long size, void *cookie),
+				    u32 size, void *cookie),
 		    void *cookie)
 {
 	spl_t s;
@@ -309,10 +309,10 @@ EXPORT_SYMBOL_GPL(xnheap_set_name);
  * acquired the heap lock.
  */
 
-static caddr_t get_free_range(struct xnheap *heap, unsigned long bsize, int log2size)
+static caddr_t get_free_range(struct xnheap *heap, u32 bsize, int log2size)
 {
 	caddr_t block, eblock, freepage, lastpage, headpage, freehead = NULL;
-	unsigned long pagenum, pagecont, freecont;
+	u32 pagenum, pagecont, freecont;
 
 	freepage = heap->freelist;
 	while (freepage) {
@@ -393,7 +393,7 @@ splitpage:
 }
 
 /**
- * @fn void *xnheap_alloc(struct xnheap *heap, unsigned long size)
+ * @fn void *xnheap_alloc(struct xnheap *heap, u32 size)
  * @brief Allocate a memory block from a memory heap.
  *
  * Allocates a contiguous region of memory from an active memory heap.
@@ -414,9 +414,9 @@ splitpage:
  *
  * @coretags{unrestricted}
  */
-void *xnheap_alloc(struct xnheap *heap, unsigned long size)
+void *xnheap_alloc(struct xnheap *heap, u32 size)
 {
-	unsigned long pagenum, bsize;
+	u32 pagenum, bsize;
 	int log2size, ilog;
 	caddr_t block;
 	spl_t s;
@@ -503,8 +503,8 @@ EXPORT_SYMBOL_GPL(xnheap_alloc);
 void xnheap_free(struct xnheap *heap, void *block)
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
-	unsigned long pagenum, pagecont, boffset, bsize;
 	int log2size, npages, nblocks, xpage, ilog;
+	u32 pagenum, pagecont, boffset, bsize;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
@@ -644,8 +644,8 @@ EXPORT_SYMBOL_GPL(xnheap_free);
 
 int xnheap_check_block(struct xnheap *heap, void *block)
 {
-	unsigned long pagenum, boffset;
 	int ptype, ret = -EINVAL;
+	u32 pagenum, boffset;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);

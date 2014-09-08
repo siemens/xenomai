@@ -160,7 +160,7 @@ static void __iddp_free_mbuf(struct iddp_socket *sk,
 }
 
 static void __iddp_flush_pool(struct xnheap *heap,
-			      void *poolmem, u_long poolsz, void *cookie)
+			      void *poolmem, u32 poolsz, void *cookie)
 {
 	free_pages_exact(poolmem, poolsz);
 }
