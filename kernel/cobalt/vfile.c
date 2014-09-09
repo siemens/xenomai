@@ -339,7 +339,6 @@ ssize_t vfile_snapshot_write(struct file *file, const char __user *buf,
 }
 
 static struct file_operations vfile_snapshot_fops = {
-	.owner = THIS_MODULE,
 	.open = vfile_snapshot_open,
 	.read = seq_read,
 	.write = vfile_snapshot_write,
@@ -592,7 +591,6 @@ ssize_t vfile_regular_write(struct file *file, const char __user *buf,
 }
 
 static struct file_operations vfile_regular_fops = {
-	.owner = THIS_MODULE,
 	.open = vfile_regular_open,
 	.read = seq_read,
 	.write = vfile_regular_write,

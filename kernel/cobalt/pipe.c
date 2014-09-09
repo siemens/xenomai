@@ -1093,7 +1093,6 @@ static unsigned xnpipe_poll(struct file *file, poll_table *pt)
 }
 
 static struct file_operations xnpipe_fops = {
-	.owner = THIS_MODULE,
 	.read = xnpipe_read,
 	.write = xnpipe_write,
 	.poll = xnpipe_poll,
