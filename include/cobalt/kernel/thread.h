@@ -169,8 +169,6 @@ struct xnthread {
 
 	xnhandle_t handle;	/* Handle in registry */
 
-	const char *waitkey;	/* Pended key */
-
 	char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 
 	void (*entry)(void *cookie); /* Thread entry routine */

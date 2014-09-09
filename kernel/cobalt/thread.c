@@ -180,7 +180,6 @@ int __xnthread_init(struct xnthread *thread,
 	thread->wcontext = NULL;
 	thread->res_count = 0;
 	thread->handle = XN_NO_HANDLE;
-	thread->waitkey = NULL;
 	memset(&thread->stat, 0, sizeof(thread->stat));
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);

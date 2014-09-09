@@ -559,15 +559,22 @@ static struct xnobject *registry_hash_find(const char *key)
 	return NULL;
 }
 
+struct registry_wait_context {
+	struct xnthread_wait_context wc;
+	const char *key;
+};
+
 static inline int registry_wakeup_sleepers(const char *key)
 {
+	struct registry_wait_context *rwc;
+	struct xnthread_wait_context *wc;
 	struct xnthread *sleeper, *tmp;
 	int cnt = 0;
 
 	xnsynch_for_each_sleeper_safe(sleeper, tmp, &register_synch) {
-		if (*key == *sleeper->waitkey &&
-		    strcmp(key, sleeper->waitkey) == 0) {
-			sleeper->waitkey = NULL;
+		wc = xnthread_get_wait_context(sleeper);
+		rwc = container_of(wc, struct registry_wait_context, wc);
+		if (*key == *rwc->key && strcmp(key, rwc->key) == 0) {
 			xnsynch_wakeup_this_sleeper(&register_synch, sleeper);
 			++cnt;
 		}
@@ -731,8 +738,8 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
 {
+	struct registry_wait_context rwc;
 	struct xnobject *object;
-	struct xnthread *thread;
 	int ret = 0, info;
 	spl_t s;
 
@@ -760,8 +767,8 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 			goto unlock_and_exit;
 		}
 
-		thread = xnthread_current();
-		thread->waitkey = key;
+		rwc.key = key;
+		xnthread_prepare_wait(&rwc.wc);
 		info = xnsynch_sleep_on(&register_synch, timeout, timeout_mode);
 		if (info & XNTIMEO) {
 			ret = -ETIMEDOUT;
