@@ -215,7 +215,7 @@ static inline void tfd_put(struct cobalt_tfd *tfd)
 	rtdm_fd_put(&tfd->fd);
 }
 
-COBALT_SYSCALL(timerfd_settime, current,
+COBALT_SYSCALL(timerfd_settime, primary,
 	       int, (int fd, int flags,
 		     const struct itimerspec __user *new_value,
 		     struct itimerspec __user *old_value))

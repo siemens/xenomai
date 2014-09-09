@@ -938,7 +938,7 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(timer_getoverrun, current),
 	__COBALT_MODE(timerfd_create, lostage),
 	__COBALT_MODE(timerfd_gettime, current),
-	__COBALT_MODE(timerfd_settime, current),
+	__COBALT_MODE(timerfd_settime, primary),
 	__COBALT_MODE(select, nonrestartable),
 	__COBALT_MODE(sched_minprio, current),
 	__COBALT_MODE(sched_maxprio, current),
