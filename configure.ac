@@ -531,6 +531,13 @@ dnl won't vary for a given Xenomai installation.
 AC_CHECK_FUNC(pthread_condattr_setclock,,
     [AC_DEFINE(CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED, 1,[config])])
 
+dnl Check that Copperplate can implement a shared heap if
+dnl --enable-pshared was given.
+if test x$use_pshared = xy;  then
+  AC_CHECK_FUNC(shm_open,,
+      [AC_MSG_ERROR([shm_open() is missing, --disable-pshared is required])])
+fi
+
 dnl
 dnl Produce the info needed to build xeno_config.h
 dnl
