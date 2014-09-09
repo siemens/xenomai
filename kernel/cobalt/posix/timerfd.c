@@ -18,6 +18,8 @@
 
 #include <linux/timerfd.h>
 #include <linux/err.h>
+#include <linux/fdtable.h>
+#include <linux/anon_inodes.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/select.h>
 #include <rtdm/fd.h>
@@ -162,15 +164,12 @@ static void timerfd_handler(struct xntimer *xntimer)
 }
 
 COBALT_SYSCALL(timerfd_create, lostage,
-	       int, (int ufd, int clockid, int flags))
+	       int, (int clockid, int flags))
 {
 	struct cobalt_tfd *tfd;
 	struct xnthread *curr;
-	struct xnsys_ppd *p;
-
-	p = cobalt_ppd_get(0);
-	if (p == &__xnsys_global_ppd)
-		return -EPERM;
+	struct xnsys_ppd *ppd;
+	int ret, ufd;
 
 	if (clockid != CLOCK_REALTIME && clockid != CLOCK_MONOTONIC)
 		return -EINVAL;
@@ -182,6 +181,14 @@ COBALT_SYSCALL(timerfd_create, lostage,
 	if (tfd == NULL)
 		return -ENOMEM;
 
+	ppd = cobalt_ppd_get(0);
+	ufd = anon_inode_getfd("[cobalt-timerfd]", &rtdm_dumb_fops, ppd,
+			       O_RDWR | (flags & TFD_SHARED_FCNTL_FLAGS));
+	if (ufd < 0) {
+		ret = ufd;
+		goto fail_getfd;
+	}
+
 	tfd->flags = flags;
 	tfd->clockid = clockid;
 	curr = xnthread_current();
@@ -191,8 +198,21 @@ COBALT_SYSCALL(timerfd_create, lostage,
 	xnselect_init(&tfd->read_select);
 	tfd->target = NULL;
 
-	return rtdm_fd_enter(p, &tfd->fd, ufd, COBALT_TIMERFD_MAGIC,
-			&timerfd_ops);
+	ret = rtdm_fd_enter(ppd, &tfd->fd, ufd, COBALT_TIMERFD_MAGIC,
+			    &timerfd_ops);
+	if (ret < 0)
+		goto fail;
+
+	return ufd;
+fail:
+	xnselect_destroy(&tfd->read_select);
+	xnsynch_destroy(&tfd->readers);
+	xntimer_destroy(&tfd->timer);
+	__close_fd(current->files, ufd);
+fail_getfd:
+	xnfree(tfd);
+
+	return ret;
 }
 
 static inline struct cobalt_tfd *tfd_get(int ufd)

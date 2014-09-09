@@ -24,20 +24,15 @@
 
 COBALT_IMPL(int, timerfd_create, (int clockid, int flags))
 {
-	int ret;
 	int fd;
 
-	fd = __STD(open("/dev/null", O_RDWR, 0));
-	if (fd == -1)
-		return fd;
-
-	ret = -XENOMAI_SYSCALL3(sc_cobalt_timerfd_create, fd, clockid, flags);
-	if (ret == 0)
-		return fd;
+	fd = XENOMAI_SYSCALL2(sc_cobalt_timerfd_create, clockid, flags);
+	if (fd < 0) {
+		errno = -fd;
+		return -1;
+	}
 	
-	__STD(close(fd));
-	errno = ret;
-	return -1;
+	return fd;
 }
 
 COBALT_IMPL(int, timerfd_settime, (int fd, int flags,

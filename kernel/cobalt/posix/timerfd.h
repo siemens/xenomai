@@ -5,7 +5,7 @@
 #include <xenomai/posix/syscall.h>
 
 COBALT_SYSCALL_DECL(timerfd_create,
-		    int, (int fd, int clockid, int flags));
+		    int, (int clockid, int flags));
 
 COBALT_SYSCALL_DECL(timerfd_settime,
 		    int, (int fd, int flags,
