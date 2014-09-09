@@ -195,20 +195,10 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
-		/* Sanity check: any open handler? */
-		if (device->ops.open == NULL) {
-			printk(XENO_ERR "missing open handler for RTDM device\n");
-			return -EINVAL;
-		}
 		device->ops.socket = (typeof(device->ops.socket))enosys;
 		break;
 
 	case RTDM_PROTOCOL_DEVICE:
-		/* Sanity check: any socket handler? */
-		if (device->ops.socket == NULL) {
-			printk(XENO_ERR "missing socket handler for RTDM device\n");
-			return -EINVAL;
-		}
 		device->ops.open = (typeof(device->ops.open))enosys;
 		break;
 
@@ -216,12 +206,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 		return -EINVAL;
 	}
 
-	/* Sanity check: driver-defined close handler?
-	 * (Always required for forced cleanup) */
-	if (device->ops.close == NULL) {
-		printk(XENO_ERR "missing close handler for RTDM device\n");
-		return -EINVAL;
-	}
 	device->reserved.close = device->ops.close;
 	device->ops.close = __rt_dev_close;
 	atomic_set(&device->reserved.refcount, 0);

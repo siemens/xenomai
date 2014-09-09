@@ -56,7 +56,8 @@ static void cleanup_instance(struct rtdm_device *device,
 void __rt_dev_close(struct rtdm_fd *fd)
 {
 	struct rtdm_dev_context *context = rtdm_fd_to_context(fd);
-	context->reserved.close(fd);
+	if (context->reserved.close)
+		context->reserved.close(fd);
 	cleanup_instance(context->device, context);
 }
 
@@ -168,13 +169,13 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
-	ret = device->ops.open(&context->fd, oflag);
-
-	if (!XENO_ASSERT(COBALT, !spltest()))
-		splnone();
-
-	if (ret < 0)
-		goto cleanup_out;
+	if (device->ops.open) {
+		ret = device->ops.open(&context->fd, oflag);
+		if (!XENO_ASSERT(COBALT, !spltest()))
+			splnone();
+		if (ret < 0)
+			goto cleanup_out;
+	}
 
 	trace_cobalt_fd_created(&context->fd, ufd);
 
@@ -195,9 +196,8 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 	int ret;
 
 	device = __rtdm_get_protocol_device(protocol_family, socket_type);
-	ret = -EAFNOSUPPORT;
-	if (!device)
-		goto err_out;
+	if (device == NULL)
+		return -EAFNOSUPPORT;
 
 	ret = create_instance(p, ufd, device, &context);
 	if (ret < 0)
@@ -206,13 +206,13 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 
 	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
 
-	ret = device->ops.socket(&context->fd, protocol);
-
-	if (!XENO_ASSERT(COBALT, !spltest()))
-		splnone();
-
-	if (unlikely(ret < 0))
-		goto cleanup_out;
+	if (device->ops.socket) {
+		ret = device->ops.socket(&context->fd, protocol);
+		if (!XENO_ASSERT(COBALT, !spltest()))
+			splnone();
+		if (ret < 0)
+			goto cleanup_out;
+	}
 
 	trace_cobalt_fd_created(&context->fd, ufd);
 
@@ -221,7 +221,6 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 cleanup_out:
 	cleanup_instance(device, context);
 
-err_out:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(__rt_dev_socket);
