@@ -120,11 +120,11 @@ static void watchdog_handler(struct xntimer *timer)
 
 	if (xnthread_test_state(curr, XNUSER)) {
 		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
-		       "'%s' signaled\n", xnsched_cpu(sched), xnthread_name(curr));
+		       "'%s' signaled\n", xnsched_cpu(sched), curr->name);
 		xnthread_call_mayday(curr, SIGDEBUG_WATCHDOG);
 	} else {
 		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
-		       "'%s' canceled\n", xnsched_cpu(sched), xnthread_name(curr));
+		       "'%s' canceled\n", xnsched_cpu(sched), curr->name);
 		/*
 		 * On behalf on an IRQ handler, xnthread_cancel()
 		 * would go half way cancelling the preempted
@@ -324,7 +324,7 @@ void ___xnsched_lock(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 
-	if (xnthread_lock_count(curr)++ == 0) {
+	if (curr->lock_count++ == 0) {
 		sched->lflags |= XNINLOCK;
 		xnthread_set_state(curr, XNLOCK);
 	}
@@ -335,10 +335,10 @@ void ___xnsched_unlock(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 
-	if (!XENO_ASSERT(COBALT, xnthread_lock_count(curr) > 0))
+	if (!XENO_ASSERT(COBALT, curr->lock_count > 0))
 		return;
 
-	if (--xnthread_lock_count(curr) == 0) {
+	if (--curr->lock_count == 0) {
 		xnthread_clear_state(curr, XNLOCK);
 		xnthread_clear_info(curr, XNLBALERT);
 		sched->lflags &= ~XNINLOCK;
@@ -351,7 +351,7 @@ void ___xnsched_unlock_fully(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 
-	xnthread_lock_count(curr) = 0;
+	curr->lock_count = 0;
 	xnthread_clear_state(curr, XNLOCK);
 	xnthread_clear_info(curr, XNLBALERT);
 	sched->lflags &= ~XNINLOCK;
@@ -808,7 +808,13 @@ int __xnsched_run(struct xnsched *sched)
 	xnlock_get_irqsave(&nklock, s);
 
 	curr = sched->curr;
-	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
+	/*
+	 * CAUTION: xnthread_host_task(curr) may be unsynced and even
+	 * stale if curr = &rootcb, since the task logged by
+	 * leave_root() may not still be the current one. Use
+	 * "current" for disambiguating.
+	 */
+	xntrace_pid(current->pid, xnthread_current_priority(curr));
 reschedule:
 	switched = 0;
 	if (!test_resched(sched))
@@ -873,14 +879,14 @@ reschedule:
 	 */
 	curr = sched->curr;
 	xnthread_switch_fpu(sched);
-	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
+	xntrace_pid(current->pid, xnthread_current_priority(curr));
 
 out:
 	if (switched &&
 	    xnsched_maybe_resched_after_unlocked_switch(sched))
 		goto reschedule;
 
-	if (xnthread_lock_count(curr))
+	if (curr->lock_count)
 		sched->lflags |= XNINLOCK;
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -932,7 +938,7 @@ struct vfile_schedlist_data {
 	char personality[XNOBJECT_NAME_LEN];
 	int cprio;
 	xnticks_t timeout;
-	unsigned long state;
+	int state;
 };
 
 static struct xnvfile_snapshot_ops vfile_schedlist_ops;
@@ -976,7 +982,7 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->cprio = thread->cprio;
-	p->state = xnthread_state_flags(thread);
+	p->state = xnthread_get_state(thread);
 	knamecpy(p->sched_class, thread->sched_class->name);
 	knamecpy(p->personality, thread->personality->name);
 	period = xnthread_get_period(thread);
@@ -1073,7 +1079,7 @@ struct vfile_schedstat_priv {
 struct vfile_schedstat_data {
 	int cpu;
 	pid_t pid;
-	unsigned long state;
+	int state;
 	char name[XNOBJECT_NAME_LEN];
 	unsigned long ssw;
 	unsigned long csw;
@@ -1140,7 +1146,7 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 	p->cpu = xnsched_cpu(sched);
 	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
-	p->state = xnthread_state_flags(thread);
+	p->state = xnthread_get_state(thread);
 	p->ssw = xnstat_counter_get(&thread->stat.ssw);
 	p->csw = xnstat_counter_get(&thread->stat.csw);
 	p->xsc = xnstat_counter_get(&thread->stat.xsc);
@@ -1219,7 +1225,7 @@ static int vfile_schedstat_show(struct xnvfile_snapshot_iterator *it,
 					      p->account_period, NULL);
 		}
 		xnvfile_printf(it,
-			       "%3u  %-6d %-10lu %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
+			       "%3u  %-6d %-10lu %-10lu %-10lu %-4lu  %.8x  %3u.%u"
 			       "  %s\n",
 			       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
 			       usage / 10, usage % 10, p->name);
@@ -1236,7 +1242,7 @@ static int vfile_schedacct_show(struct xnvfile_snapshot_iterator *it,
 	if (p == NULL)
 		return 0;
 
-	xnvfile_printf(it, "%u %d %lu %lu %lu %lu %.8lx %Lu %Lu %Lu %s %s %d %Lu\n",
+	xnvfile_printf(it, "%u %d %lu %lu %lu %lu %.8x %Lu %Lu %Lu %s %s %d %Lu\n",
 		       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
 		       xnclock_ticks_to_ns(&nkclock, p->account_period),
 		       xnclock_ticks_to_ns(&nkclock, p->exectime_period),

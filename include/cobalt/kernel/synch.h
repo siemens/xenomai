@@ -101,7 +101,7 @@ static inline struct xnthread *xnsynch_owner(struct xnsynch *synch)
 #define xnsynch_fastlock(synch)		((synch)->fastlock)
 #define xnsynch_fastlock_p(synch)	((synch)->fastlock != NULL)
 #define xnsynch_owner_check(synch, thread) \
-	xnsynch_fast_owner_check((synch)->fastlock, xnthread_handle(thread))
+	xnsynch_fast_owner_check((synch)->fastlock, thread->handle)
 
 #define xnsynch_fast_is_claimed(fastlock) \
 	xnhandle_test_spare(fastlock, XNSYNCH_FLCLAIM)

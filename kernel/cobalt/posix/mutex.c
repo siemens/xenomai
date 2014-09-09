@@ -182,7 +182,7 @@ int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 	int ret;
 
 	/* We need a valid thread handle for the fast lock. */
-	if (xnthread_handle(curr) == XN_NO_HANDLE)
+	if (curr->handle == XN_NO_HANDLE)
 		return -EPERM;
 
 	ret = cobalt_mutex_acquire(curr, mutex, timed, u_ts);
@@ -333,12 +333,11 @@ COBALT_SYSCALL(mutex_trylock, primary,
 		goto err_unlock;
 	}
 
-	err = xnsynch_fast_acquire(mutex->synchbase.fastlock,
-				   xnthread_handle(curr));
+	err = xnsynch_fast_acquire(mutex->synchbase.fastlock, curr->handle);
 	switch(err) {
 	case 0:
 		if (xnthread_test_state(curr, XNWEAK))
-			xnthread_inc_rescnt(curr);
+			curr->res_count++;
 		break;
 
 /* This should not happen, as recursive mutexes are handled in

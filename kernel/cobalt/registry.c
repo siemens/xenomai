@@ -565,9 +565,9 @@ static inline int registry_wakeup_sleepers(const char *key)
 	int cnt = 0;
 
 	xnsynch_for_each_sleeper_safe(sleeper, tmp, &register_synch) {
-		if (*key == *sleeper->registry.waitkey &&
-		    strcmp(key, sleeper->registry.waitkey) == 0) {
-			sleeper->registry.waitkey = NULL;
+		if (*key == *sleeper->waitkey &&
+		    strcmp(key, sleeper->waitkey) == 0) {
+			sleeper->waitkey = NULL;
 			xnsynch_wakeup_this_sleeper(&register_synch, sleeper);
 			++cnt;
 		}
@@ -761,7 +761,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		}
 
 		thread = xnthread_current();
-		thread->registry.waitkey = key;
+		thread->waitkey = key;
 		info = xnsynch_sleep_on(&register_synch, timeout, timeout_mode);
 		if (info & XNTIMEO) {
 			ret = -ETIMEDOUT;

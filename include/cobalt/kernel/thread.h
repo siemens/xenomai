@@ -119,7 +119,7 @@ struct xnthread {
 	 */
 	int wprio;
 
-	unsigned long schedlck;	/** Scheduler lock count. */
+	int lock_count;	/** Scheduler lock count. */
 
 	/**
 	 * Thread holder in xnsched runnable queue. Prioritized by
@@ -146,7 +146,7 @@ struct xnthread {
 
 	struct xnsynch *wwake;		/* Wait channel the thread was resumed from */
 
-	int hrescnt;			/* Held resources count */
+	int res_count;			/* Held resources count */
 
 	struct xntimer rtimer;		/* Resource timer */
 
@@ -167,16 +167,9 @@ struct xnthread {
 
 	struct xnselector *selector;    /* For select. */
 
-	int imode;			/* Initial mode */
+	xnhandle_t handle;	/* Handle in registry */
 
-	struct xnsched_class *init_class; /* Initial scheduling class */
-
-	union xnsched_policy_param init_schedparam; /* Initial scheduling parameters */
-
-	struct {
-		xnhandle_t handle;	/* Handle in registry */
-		const char *waitkey;	/* Pended key */
-	} registry;
+	const char *waitkey;	/* Pended key */
 
 	char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 
@@ -195,11 +188,10 @@ struct xnthread {
 	struct xnsynch join_synch;
 };
 
-#define xnthread_name(thread)               ((thread)->name)
-#define xnthread_clear_name(thread)        do { *(thread)->name = 0; } while(0)
-#define xnthread_sched(thread)             ((thread)->sched)
-#define xnthread_start_time(thread)        ((thread)->stime)
-#define xnthread_state_flags(thread)       ((thread)->state)
+static inline int xnthread_get_state(const struct xnthread *thread)
+{
+	return thread->state;
+}
 
 static inline int xnthread_test_state(struct xnthread *thread, int bits)
 {
@@ -236,28 +228,28 @@ static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread)
 	return &thread->tcb;
 }
 
-#define xnthread_lock_count(thread)        ((thread)->schedlck)
-#define xnthread_init_schedparam(thread)   ((thread)->init_schedparam)
-#define xnthread_base_priority(thread)     ((thread)->bprio)
-#define xnthread_current_priority(thread)  ((thread)->cprio)
-#define xnthread_init_class(thread)        ((thread)->init_class)
-#define xnthread_base_class(thread)        ((thread)->base_class)
-#define xnthread_sched_class(thread)       ((thread)->sched_class)
-#define xnthread_time_slice(thread)        ((thread)->rrperiod)
-#define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
-#define xnthread_handle(thread)            ((thread)->registry.handle)
-#define xnthread_host_task(thread)         (xnthread_archtcb(thread)->core.host_task)
-#define xnthread_host_pid(thread)	   (xnthread_test_state((thread),XNROOT) ? 0 : \
-					    xnthread_archtcb(thread)->core.host_task->pid)
-#define xnthread_host_mm(thread)           (xnthread_host_task(thread)->mm)
-#define xnthread_affinity(thread)          ((thread)->affinity)
-#define xnthread_affine_p(thread, cpu)     cpu_isset(cpu, (thread)->affinity)
-#define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
-#define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
-#define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
-#define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
-#define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
-#define xnthread_personality(thread)       ((thread)->personality)
+static inline int xnthread_base_priority(const struct xnthread *thread)
+{
+	return thread->bprio;
+}
+
+static inline int xnthread_current_priority(const struct xnthread *thread)
+{
+	return thread->cprio;
+}
+
+static inline struct task_struct *xnthread_host_task(struct xnthread *thread)
+{
+	return xnthread_archtcb(thread)->core.host_task;
+}
+
+static inline pid_t xnthread_host_pid(struct xnthread *thread)
+{
+	if (xnthread_test_state(thread, XNROOT))
+		return 0;
+
+	return xnthread_host_task(thread)->pid;
+}
 
 #define xnthread_for_each_claimed(__pos, __thread)		\
 	list_for_each_entry(__pos, &(__thread)->claimq, link)
@@ -291,14 +283,14 @@ struct xnthread_wait_context *xnthread_get_wait_context(struct xnthread *thread)
 static inline
 int xnthread_register(struct xnthread *thread, const char *name)
 {
-	return xnregistry_enter(name, thread, &xnthread_handle(thread), NULL);
+	return xnregistry_enter(name, thread, &thread->handle, NULL);
 }
 
 static inline
 struct xnthread *xnthread_lookup(xnhandle_t threadh)
 {
 	struct xnthread *thread = xnregistry_lookup(threadh, NULL);
-	return thread && xnthread_handle(thread) == threadh ? thread : NULL;
+	return thread && thread->handle == threadh ? thread : NULL;
 }
 
 static inline void xnthread_sync_window(struct xnthread *thread)
@@ -338,7 +330,7 @@ static inline int xnthread_try_grab(struct xnthread *thread,
 	xnsynch_set_owner(synch, thread);
 
 	if (xnthread_test_state(thread, XNWEAK))
-		xnthread_inc_rescnt(thread);
+		thread->res_count++;
 
 	return 1;
 }

@@ -1183,8 +1183,8 @@ no_ptrace:
 			show_stack(xnthread_host_task(next), NULL);
 			xnsys_fatal
 				("hardened thread %s[%d] running in Linux domain?! "
-				 "(status=0x%lx, sig=%d, prev=%s[%d])",
-				 next->name, next_task->pid, xnthread_state_flags(next),
+				 "(status=0x%x, sig=%d, prev=%s[%d])",
+				 next->name, next_task->pid, xnthread_get_state(next),
 				 signal_pending(next_task), prev_task->comm, prev_task->pid);
 		} else if (!(next_task->ptrace & PT_PTRACED) &&
 			   /*
@@ -1197,8 +1197,8 @@ no_ptrace:
 			show_stack(xnthread_host_task(next), NULL);
 			xnsys_fatal
 				("blocked thread %s[%d] rescheduled?! "
-				 "(status=0x%lx, sig=%d, prev=%s[%d])",
-				 next->name, next_task->pid, xnthread_state_flags(next),
+				 "(status=0x%x, sig=%d, prev=%s[%d])",
+				 next->name, next_task->pid, xnthread_get_state(next),
 				 signal_pending(next_task), prev_task->comm, prev_task->pid);
 		}
 	}

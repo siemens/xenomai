@@ -86,7 +86,7 @@ timer_init(struct cobalt_timer *timer,
 	 * want to deliver a signal when a timer elapses.
 	 */
 	xntimer_init(&timer->timerbase, &nkclock, cobalt_timer_handler,
-		     xnthread_sched(&target->threadbase), XNTIMER_UGRAVITY);
+		     target->threadbase.sched, XNTIMER_UGRAVITY);
 
 	return target;
 }
@@ -347,7 +347,7 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 	 * Make the timer affine to the CPU running the thread to be
 	 * signaled.
 	 */
-	xntimer_set_sched(&timer->timerbase, xnthread_sched(&thread->threadbase));
+	xntimer_set_sched(&timer->timerbase, thread->threadbase.sched);
 
 	return cobalt_xntimer_settime(&timer->timerbase,
 				clock_flag(flags, timer->clockid), value);

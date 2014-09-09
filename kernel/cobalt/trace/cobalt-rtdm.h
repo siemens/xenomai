@@ -89,12 +89,12 @@ DECLARE_EVENT_CLASS(task_op,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, task)
-		__string(task_name, xnthread_name(task))
+		__string(task_name, task->name)
 	),
 
 	TP_fast_assign(
 		__entry->task = task;
-		__assign_str(task_name, xnthread_name(task));
+		__assign_str(task_name, task->name);
 	),
 
 	TP_printk("task %p(%s)", __entry->task, __get_str(task_name))
@@ -383,13 +383,13 @@ TRACE_EVENT(cobalt_driver_event_wait,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, task)
-		__string(task_name, xnthread_name(task))
+		__string(task_name, task->name)
 		__field(struct rtdm_event *, ev)
 	),
 
 	TP_fast_assign(
 		__entry->task = task;
-		__assign_str(task_name, xnthread_name(task));
+		__assign_str(task_name, task->name);
 		__entry->ev = ev;
 	),
 
@@ -441,13 +441,13 @@ TRACE_EVENT(cobalt_driver_sem_wait,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, task)
-		__string(task_name, xnthread_name(task))
+		__string(task_name, task->name)
 		__field(struct rtdm_sem *, sem)
 	),
 
 	TP_fast_assign(
 		__entry->task = task;
-		__assign_str(task_name, xnthread_name(task));
+		__assign_str(task_name, task->name);
 		__entry->sem = sem;
 	),
 
@@ -486,13 +486,13 @@ TRACE_EVENT(cobalt_driver_mutex_wait,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, task)
-		__string(task_name, xnthread_name(task))
+		__string(task_name, task->name)
 		__field(struct rtdm_mutex *, mutex)
 	),
 
 	TP_fast_assign(
 		__entry->task = task;
-		__assign_str(task_name, xnthread_name(task));
+		__assign_str(task_name, task->name);
 		__entry->mutex = mutex;
 	),
 

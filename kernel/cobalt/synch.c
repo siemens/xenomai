@@ -346,7 +346,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	XENO_BUGON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
 
 	thread = xnthread_current();
-	threadh = xnthread_handle(thread);
+	threadh = thread->handle;
 	lockp = xnsynch_fastlock(synch);
 	trace_cobalt_synch_acquire(synch, thread);
 redo:
@@ -354,7 +354,7 @@ redo:
 
 	if (likely(fastlock == XN_NO_HANDLE)) {
 		if (xnthread_test_state(thread, XNWEAK))
-			xnthread_inc_rescnt(thread);
+			thread->res_count++;
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
 		return 0;
 	}
@@ -461,7 +461,7 @@ block:
 	}
  grab:
 	if (xnthread_test_state(thread, XNWEAK))
-		xnthread_inc_rescnt(thread);
+		thread->res_count++;
 
 	if (xnsynch_pended_p(synch))
 		threadh = xnsynch_fast_set_claimed(threadh, 1);
@@ -534,7 +534,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 	if (synch->status & XNSYNCH_CLAIMED)
 		clear_boost(synch, lastowner);
 
-	nextownerh = xnsynch_fast_set_claimed(xnthread_handle(nextowner),
+	nextownerh = xnsynch_fast_set_claimed(nextowner->handle,
 					      xnsynch_pended_p(synch));
 	atomic_set(lockp, nextownerh);
 
@@ -584,15 +584,15 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 	trace_cobalt_synch_release(synch);
 
 	if (unlikely(xnthread_test_state(thread, XNWEAK))) {
-		if (xnthread_get_rescnt(thread) == 0)
+		if (thread->res_count == 0)
 			xnthread_signal(thread, SIGDEBUG,
 					  SIGDEBUG_RESCNT_IMBALANCE);
 		else
-			xnthread_dec_rescnt(thread);
+			thread->res_count--;
 	}
 
 	lockp = xnsynch_fastlock(synch);
-	threadh = xnthread_handle(thread);
+	threadh = thread->handle;
 	if (likely(xnsynch_fast_release(lockp, threadh)))
 		return NULL;
 

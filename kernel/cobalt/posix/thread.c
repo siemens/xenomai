@@ -257,7 +257,7 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 		goto out;
 	}
 
-	tslice = xnthread_time_slice(&thread->threadbase);
+	tslice = thread->threadbase.rrperiod;
 	sched_class = cobalt_sched_policy_param(&param, policy,
 						param_ex, &tslice);
 	if (sched_class == NULL) {
@@ -295,14 +295,14 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 	}
 
 	base_thread = &thread->threadbase;
-	base_class = xnthread_base_class(base_thread);
+	base_class = base_thread->base_class;
 	*policy_r = thread->sched_u_policy;
 	prio = xnthread_base_priority(base_thread);
 	param_ex->sched_priority = prio;
 
 	if (base_class == &xnsched_class_rt) {
 		if (xnthread_test_state(base_thread, XNRRB))
-			ns2ts(&param_ex->sched_rr_quantum, xnthread_time_slice(base_thread));
+			ns2ts(&param_ex->sched_rr_quantum, base_thread->rrperiod);
 		goto unlock_and_exit;
 	}
 
@@ -648,7 +648,7 @@ COBALT_SYSCALL(thread_setname, current,
 		return -ESRCH;
 	}
 
-	ksformat(xnthread_name(&thread->threadbase),
+	ksformat(thread->threadbase.name,
 		 XNOBJECT_NAME_LEN - 1, "%s", name);
 	p = xnthread_host_task(&thread->threadbase);
 	get_task_struct(p);
@@ -762,19 +762,20 @@ COBALT_SYSCALL(thread_getstat, current,
 	/* We have to hold the nklock to keep most values consistent. */
 	stat.cpu = xnsched_cpu(thread->sched);
 	stat.cprio = xnthread_current_priority(thread);
-	xtime = xnthread_get_exectime(thread);
-	if (xnthread_sched(thread)->curr == thread)
-		xtime += xnstat_exectime_now() - xnthread_get_lastswitch(thread);
+	xtime = xnstat_exectime_get_total(&thread->stat.account);
+	if (thread->sched->curr == thread)
+		xtime += xnstat_exectime_now() -
+			xnstat_exectime_get_last_switch(thread->sched);
 	stat.xtime = xnclock_ticks_to_ns(&nkclock, xtime);
 	stat.msw = xnstat_counter_get(&thread->stat.ssw);
 	stat.csw = xnstat_counter_get(&thread->stat.csw);
 	stat.xsc = xnstat_counter_get(&thread->stat.xsc);
 	stat.pf = xnstat_counter_get(&thread->stat.pf);
-	stat.status = xnthread_state_flags(thread);
+	stat.status = xnthread_get_state(thread);
 	stat.timeout = xnthread_get_timeout(thread,
 					    xnclock_read_monotonic(&nkclock));
-	strcpy(stat.name, xnthread_name(thread));
-	strcpy(stat.personality, xnthread_personality(thread)->name);
+	strcpy(stat.name, thread->name);
+	strcpy(stat.personality, thread->personality->name);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
@@ -805,7 +806,7 @@ void cobalt_thread_restrict(void)
 	struct cobalt_thread *thread = cobalt_current_thread();
 
 	trace_cobalt_pthread_restrict(thread->hkey.u_pth,
-		      xnthread_personality(&thread->threadbase)->name);
+		      thread->threadbase.personality->name);
 	cobalt_pop_personality(&cobalt_personality);
 	cobalt_set_extref(&thread->extref, NULL, NULL);
 }

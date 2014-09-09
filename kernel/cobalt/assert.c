@@ -73,8 +73,8 @@ void __xnsys_fatal(const char *format, ...)
 			       xnthread_host_pid(thread),
 			       pbuf,
 			       xnthread_get_timeout(thread, now),
-			       xnthread_state_flags(thread),
-			       xnthread_name(thread));
+			       xnthread_get_state(thread),
+			       thread->name);
 		}
 	}
 

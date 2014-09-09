@@ -28,13 +28,13 @@ DECLARE_EVENT_CLASS(syscall_entry,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, thread)
-		__string(name, thread ? xnthread_name(thread) : "(anon)")
+		__string(name, thread ? thread->name : "(anon)")
 		__field(int, nr)
 	),
 
 	TP_fast_assign(
 		__entry->thread	= thread;
-		__assign_str(name, thread ? xnthread_name(thread) : "(anon)");
+		__assign_str(name, thread ? thread->name : "(anon)");
 		__entry->nr = nr;
 	),
 

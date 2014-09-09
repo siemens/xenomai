@@ -126,11 +126,11 @@ static int monitor_enter(xnhandle_t handle, struct xnthread *curr)
 	 *
 	 * NOTE: monitors do not support recursive entries.
 	 */
-	ret = xnsynch_fast_acquire(mon->gate.fastlock, xnthread_handle(curr));
+	ret = xnsynch_fast_acquire(mon->gate.fastlock, curr->handle);
 	switch(ret) {
 	case 0:
 		if (xnthread_test_state(curr, XNWEAK))
-			xnthread_inc_rescnt(curr);
+			curr->res_count++;
 		break;
 	default:
 		/* Nah, we really have to wait. */

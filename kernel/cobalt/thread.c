@@ -173,20 +173,19 @@ int __xnthread_init(struct xnthread *thread,
 	thread->sched = sched;
 	thread->state = flags;
 	thread->info = 0;
-	thread->schedlck = 0;
+	thread->lock_count = 0;
 	thread->rrperiod = XN_INFINITE;
 	thread->wchan = NULL;
 	thread->wwake = NULL;
 	thread->wcontext = NULL;
-	thread->hrescnt = 0;
-	thread->registry.handle = XN_NO_HANDLE;
-	thread->registry.waitkey = NULL;
+	thread->res_count = 0;
+	thread->handle = XN_NO_HANDLE;
+	thread->waitkey = NULL;
 	memset(&thread->stat, 0, sizeof(thread->stat));
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
 	xnsynch_init(&thread->join_synch, XNSYNCH_FIFO, NULL);
 	/* These will be filled by xnthread_start() */
-	thread->imode = 0;
 	thread->entry = NULL;
 	thread->cookie = NULL;
 
@@ -201,9 +200,7 @@ int __xnthread_init(struct xnthread *thread,
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
-	thread->init_class = sched_class;
 	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
-	thread->init_schedparam = *sched_param;
 	ret = xnsched_init_thread(thread);
 	if (ret)
 		goto err_out;
@@ -261,10 +258,10 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 
 void xnthread_deregister(struct xnthread *thread)
 {
-	if (thread->registry.handle != XN_NO_HANDLE)
-		xnregistry_remove(thread->registry.handle);
+	if (thread->handle != XN_NO_HANDLE)
+		xnregistry_remove(thread->handle);
 
-	thread->registry.handle = XN_NO_HANDLE;
+	thread->handle = XN_NO_HANDLE;
 }
 
 char *xnthread_format_status(unsigned long status, char *buf, int size)
@@ -349,7 +346,7 @@ xnticks_t xnthread_get_period(struct xnthread *thread)
 	if (xntimer_running_p(&thread->ptimer))
 		period = xntimer_interval(&thread->ptimer);
 	else if (xnthread_test_state(thread,XNRRB))
-		period = xnthread_time_slice(thread);
+		period = thread->rrperiod;
 
 	return period;
 }
@@ -644,7 +641,6 @@ int xnthread_start(struct xnthread *thread,
 	}
 
 	xnthread_set_state(thread, attr->mode & (XNTHREAD_MODE_BITS | XNSUSP));
-	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
 	thread->entry = attr->entry;
 	thread->cookie = attr->cookie;
 
@@ -718,7 +714,7 @@ int xnthread_set_mode(struct xnthread *thread, int clrmask, int setmask)
 	xnlock_get_irqsave(&nklock, s);
 
 	curr = xnsched_current_thread();
-	oldmode = xnthread_state_flags(thread) & XNTHREAD_MODE_BITS;
+	oldmode = xnthread_get_state(thread) & XNTHREAD_MODE_BITS;
 	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
 	trace_cobalt_thread_set_mode(thread);
@@ -732,13 +728,13 @@ int xnthread_set_mode(struct xnthread *thread, int clrmask, int setmask)
 			if (thread == curr)
 				__xnsched_lock();
 			else
-				xnthread_lock_count(curr) = 1;
+				curr->lock_count = 1;
 		}
 	} else if (oldmode & XNLOCK) {
 		if (thread == curr)
 			__xnsched_unlock_fully(); /* Will resched. */
 		else
-			xnthread_lock_count(curr) = 0;
+			curr->lock_count = 0;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -1617,7 +1613,7 @@ int xnthread_migrate(int cpu)
 	}
 
 	sched = xnsched_struct(cpu);
-	if (sched == xnthread_sched(thread))
+	if (sched == thread->sched)
 		goto unlock_and_exit;
 
 	trace_cobalt_thread_migrate(thread, cpu);

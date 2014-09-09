@@ -231,7 +231,7 @@ done:
 			sigs = 1;
 			prepare_for_signal(p, thread, regs, sysflags);
 		} else if (xnthread_test_state(thread, XNWEAK) &&
-			   xnthread_get_rescnt(thread) == 0) {
+			   thread->res_count == 0) {
 			if (switched)
 				switched = 0;
 			else
@@ -365,7 +365,7 @@ restart:
 			sigs = 1;
 			prepare_for_signal(p, thread, regs, sysflags);
 		} else if (xnthread_test_state(thread, XNWEAK) &&
-			   xnthread_get_rescnt(thread) == 0)
+			   thread->res_count == 0)
 			sysflags |= __xn_exec_switchback;
 	}
 	if (!sigs && (sysflags & __xn_exec_switchback) != 0
@@ -502,7 +502,7 @@ static COBALT_SYSCALL(get_current, current,
 	if (cur == NULL)
 		return -EPERM;
 
-	return __xn_safe_copy_to_user(u_handle, &xnthread_handle(cur),
+	return __xn_safe_copy_to_user(u_handle, &cur->handle,
 				      sizeof(*u_handle));
 }
 
