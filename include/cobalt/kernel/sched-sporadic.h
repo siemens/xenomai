@@ -38,8 +38,8 @@
 extern struct xnsched_class xnsched_class_sporadic;
 
 struct xnsched_sporadic_repl {
-	xntime_t date;
-	xntime_t amount;
+	xnticks_t date;
+	xnticks_t amount;
 };
 
 struct xnsched_sporadic_data {

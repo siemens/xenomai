@@ -42,8 +42,8 @@ struct xnsched_tp_param {
 };
 
 struct xnsched_sporadic_param {
-	xntime_t init_budget;
-	xntime_t repl_period;
+	xnticks_t init_budget;
+	xnticks_t repl_period;
 	int max_repl;
 	int low_prio;
 	int normal_prio;

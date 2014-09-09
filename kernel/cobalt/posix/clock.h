@@ -32,20 +32,20 @@ static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)
 
 static inline xnticks_t ts2ns(const struct timespec *ts)
 {
-	xntime_t nsecs = ts->tv_nsec;
+	xnticks_t nsecs = ts->tv_nsec;
 
 	if (ts->tv_sec)
-		nsecs += (xntime_t)ts->tv_sec * ONE_BILLION;
+		nsecs += (xnticks_t)ts->tv_sec * ONE_BILLION;
 
 	return nsecs;
 }
 
 static inline xnticks_t tv2ns(const struct timeval *tv)
 {
-	xntime_t nsecs = tv->tv_usec * 1000;
+	xnticks_t nsecs = tv->tv_usec * 1000;
 
 	if (tv->tv_sec)
-		nsecs += (xntime_t)tv->tv_sec * ONE_BILLION;
+		nsecs += (xnticks_t)tv->tv_sec * ONE_BILLION;
 
 	return nsecs;
 }
