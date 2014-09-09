@@ -350,6 +350,18 @@ config XENO_OPT_RTDM_FILDES
 	descriptor is created by each successful call to the open()
 	service of the Cobalt/POSIX API).
 
+config XENO_OPT_DEBUG_TRACE_LOGSZ
+       int "Trace log size"
+       depends on XENO_OPT_DEBUG_TRACE_RELAX
+       default 16
+       help
+       
+       The size (kilobytes) of the trace log of relax requests. Once
+       this limit is reached, subsequent traces will be silently
+       discarded.
+
+       Writing to /proc/xenomai/debug/relax empties the trace log.
+
 endmenu
 
 menuconfig XENO_OPT_DEBUG

@@ -22,6 +22,7 @@
 #include <linux/jhash.h>
 #include <linux/mm.h>
 #include <linux/signal.h>
+#include <linux/vmalloc.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/clock.h>
@@ -49,6 +50,8 @@ struct hashed_symbol {
 };
 
 static struct hashed_symbol *symbol_jhash[SYMBOL_HSLOTS];
+
+static struct xnheap memory_pool;
 
 /*
  * This is a permanent storage for ASCII strings which comes handy to
@@ -80,7 +83,7 @@ static const char *hash_symbol(const char *symbol)
 	if (p)
 		goto done;
 
-	p = xnmalloc(sizeof(*p) + len + 1);
+	p = xnheap_alloc(&memory_pool, sizeof(*p) + len + 1);
 	if (p == NULL) {
 		s = NULL;
 		goto out;
@@ -328,7 +331,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 	 * allocation while probing and updating the hash table in a
 	 * single move.
 	 */
-	p = xnmalloc(sizeof(*p));
+	p = xnheap_alloc(&memory_pool, sizeof(*p));
 	if (p == NULL)
 		goto out;      /* Something is about to go wrong... */
 
@@ -479,7 +482,7 @@ static ssize_t relax_vfile_store(struct xnvfile_input *input)
 
 	while (p) {
 		np = p->r_next;
-		xnfree(p);
+		xnheap_free(&memory_pool, p);
 		p = np;
 	}
 
@@ -501,12 +504,37 @@ static struct xnvfile_regular relax_vfile = {
 
 static inline int init_trace_relax(void)
 {
-	return xnvfile_init_regular("relax", &relax_vfile, &debug_vfroot);
+	u32 size = CONFIG_XENO_OPT_DEBUG_TRACE_LOGSZ * 1024;
+	void *p;
+	int ret;
+
+	p = vmalloc(size);
+	if (p == NULL)
+		return -ENOMEM;
+
+	ret = xnheap_init(&memory_pool, p, size);
+	if (ret)
+		return ret;
+
+	xnheap_set_name(&memory_pool, "debug log");
+
+	ret = xnvfile_init_regular("relax", &relax_vfile, &debug_vfroot);
+	if (ret) {
+		xnheap_destroy(&memory_pool);
+		vfree(p);
+	}
+
+	return ret;
 }
 
 static inline void cleanup_trace_relax(void)
 {
+	void *p;
+
 	xnvfile_destroy_regular(&relax_vfile);
+	p = xnheap_get_membase(&memory_pool);
+	xnheap_destroy(&memory_pool);
+	vfree(p);
 }
 
 #else /* !CONFIG_XENO_OPT_DEBUG_TRACE_RELAX */
