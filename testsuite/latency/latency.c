@@ -478,7 +478,7 @@ static void cleanup(void)
 		overall.histogram_max = histogram_max;
 		overall.histogram_avg = histogram_avg;
 
-		rt_dev_ioctl(benchdev, RTTST_RTIOC_TMBENCH_STOP, &overall);
+		ioctl(benchdev, RTTST_RTIOC_TMBENCH_STOP, &overall);
 
 		gminj = overall.result.min;
 		gmaxj = overall.result.max;
