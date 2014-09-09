@@ -38,13 +38,6 @@ static struct rtdm_device private_umm_device;
 
 static struct rtdm_device shared_umm_device;
 
-static int umm_open(struct rtdm_fd *fd, int oflags)
-{
-	return 0;
-}
-
-static void umm_close(struct rtdm_fd *fd) { }
-
 static void umm_vmopen(struct vm_area_struct *vma)
 {
 	struct cobalt_umm *umm = vma->vm_private_data;
@@ -161,8 +154,6 @@ static int sysmem_open(struct rtdm_fd *fd, int oflags)
 	return 0;
 }
 
-static void sysmem_close(struct rtdm_fd *fd) { }
-
 static int do_sysmem_ioctls(struct rtdm_fd *fd,
 			    unsigned int request, void __user *arg)
 {
@@ -202,11 +193,9 @@ static struct rtdm_device private_umm_device = {
 	.device_flags		=	RTDM_NAMED_DEVICE,
 	.context_size		=	0,
 	.ops = {
-		.open		=	umm_open,
 		.ioctl_rt	=	umm_ioctl_rt,
 		.ioctl_nrt	=	umm_ioctl_nrt,
 		.mmap		=	umm_mmap,
-		.close		=	umm_close,
 	},
 	.device_class		=	RTDM_CLASS_MEMORY,
 	.device_sub_class	=	UMM_PRIVATE,
@@ -223,11 +212,9 @@ static struct rtdm_device shared_umm_device = {
 	.device_flags		=	RTDM_NAMED_DEVICE,
 	.context_size		=	0,
 	.ops = {
-		.open		=	umm_open,
 		.ioctl_rt	=	umm_ioctl_rt,
 		.ioctl_nrt	=	umm_ioctl_nrt,
 		.mmap		=	umm_mmap,
-		.close		=	umm_close,
 	},
 	.device_class		=	RTDM_CLASS_MEMORY,
 	.device_sub_class	=	UMM_SHARED,
@@ -247,7 +234,6 @@ static struct rtdm_device sysmem_device = {
 		.open		=	sysmem_open,
 		.ioctl_rt	=	sysmem_ioctl_rt,
 		.ioctl_nrt	=	sysmem_ioctl_nrt,
-		.close		=	sysmem_close,
 	},
 	.device_class		=	RTDM_CLASS_MEMORY,
 	.device_sub_class	=	SYS_GLOBAL,
