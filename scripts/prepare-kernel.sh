@@ -321,9 +321,9 @@ if test -r $linux_tree/include/linux/ipipe.h; then
     fi
 else
    if test x$ipipe_patch = x; then
-      # We pick ipipe-core-* patches first over adeos-ipipe-* ones,
-      # then the highest numbered sequence/release number.
-      default_ipipe_patch="`( ls $xenomai_root/kernel/cobalt/arch/$linux_arch/patches/ipipe-core-$linux_version*-$linux_arch-* $xenomai_root/kernel/cobalt/arch/$linux_arch/patches/adeos-ipipe-$linux_version*-$linux_arch-*|sort -r ) 2>/dev/null | head -n1`"
+      # Pick ipipe-core-* patches based on the highest numbered
+      # sequence/release number.
+      default_ipipe_patch="`( ls $xenomai_root/kernel/cobalt/arch/$linux_arch/patches/ipipe-core-$linux_version*-$linux_arch-*|sort -r ) 2>/dev/null | head -n1`"
    fi
    if test x$default_ipipe_patch = x; then
       if test x$verbose = x1; then
