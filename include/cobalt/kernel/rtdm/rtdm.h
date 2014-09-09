@@ -31,7 +31,6 @@
 #define RTDM_FD_MAGIC 0x52544446
 
 typedef u32 socklen_t;
-typedef struct task_struct rtdm_user_info_t;
 
 int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag);
 
