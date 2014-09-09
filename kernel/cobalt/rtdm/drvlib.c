@@ -1606,7 +1606,7 @@ unsigned long unmapped_area_helper(struct file *filp,
 	if (pa)
 		return (unsigned long)__va(pa);
 
-	return (unsigned long)mmap_data->src_vaddr;
+	return (unsigned long)helper_data->src_vaddr;
 }
 
 static unsigned long
