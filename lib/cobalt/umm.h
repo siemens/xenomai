@@ -22,6 +22,6 @@ void cobalt_init_umm(void);
 
 struct xnvdso;
 
-extern struct xnvdso *vdso;
+extern struct xnvdso *cobalt_vdso;
 
 #endif /* _LIB_COBALT_UMM_H */

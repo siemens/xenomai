@@ -15,7 +15,7 @@ smokey_test_plugin(vdso_access,
 
 extern void *cobalt_umm_shared;
 
-extern struct xnvdso *vdso;
+extern struct xnvdso *cobalt_vdso;
 
 int run_vdso_access(struct smokey_test *t, int argc, char *const argv[])
 {
@@ -24,7 +24,7 @@ int run_vdso_access(struct smokey_test *t, int argc, char *const argv[])
 		return 1;
 	}
 
-	printf("VDSO: features detected: %llx\n", vdso->features);
+	printf("VDSO: features detected: %llx\n", cobalt_vdso->features);
 
 	return 0;
 }

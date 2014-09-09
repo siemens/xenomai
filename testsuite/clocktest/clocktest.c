@@ -34,7 +34,7 @@
 
 #include <xeno_config.h>
 
-extern struct xnvdso *vdso;
+extern struct xnvdso *cobalt_vdso;
 
 #ifndef HAVE_RECENT_SETAFFINITY
 #ifdef HAVE_OLD_SETAFFINITY
@@ -82,12 +82,12 @@ struct per_cpu_data {
 
 static void show_hostrt_diagnostics(void)
 {
-	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME)) {
+	if (!xnvdso_test_feature(cobalt_vdso, XNVDSO_FEAT_HOST_REALTIME)) {
 		printf("XNVDSO_FEAT_HOST_REALTIME not available\n");
 		return;
 	}
 
-	if (vdso->hostrt_data.live)
+	if (cobalt_vdso->hostrt_data.live)
 		printf("hostrt data area is live\n");
 	else {
 		printf("hostrt data area is not live\n");
@@ -95,29 +95,29 @@ static void show_hostrt_diagnostics(void)
 	}
 
 	printf("Sequence counter : %u\n",
-	       vdso->hostrt_data.lock.sequence);
+	       cobalt_vdso->hostrt_data.lock.sequence);
 	printf("wall_time_sec    : %lld\n",
-	       (unsigned long long)vdso->hostrt_data.wall_time_sec);
-	printf("wall_time_nsec   : %u\n", vdso->hostrt_data.wall_time_nsec);
+	       (unsigned long long)cobalt_vdso->hostrt_data.wall_time_sec);
+	printf("wall_time_nsec   : %u\n", cobalt_vdso->hostrt_data.wall_time_nsec);
 	printf("wall_to_monotonic\n");
 	printf("          tv_sec : %jd\n",
-	       (intmax_t)vdso->hostrt_data.wall_to_monotonic.tv_sec);
+	       (intmax_t)cobalt_vdso->hostrt_data.wall_to_monotonic.tv_sec);
 	printf("         tv_nsec : %ld\n",
-	       vdso->hostrt_data.wall_to_monotonic.tv_nsec);
-	printf("cycle_last       : %Lu\n", vdso->hostrt_data.cycle_last);
-	printf("mask             : 0x%Lx\n", vdso->hostrt_data.mask);
-	printf("mult             : %u\n", vdso->hostrt_data.mult);
-	printf("shift            : %u\n\n", vdso->hostrt_data.shift);
+	       cobalt_vdso->hostrt_data.wall_to_monotonic.tv_nsec);
+	printf("cycle_last       : %Lu\n", cobalt_vdso->hostrt_data.cycle_last);
+	printf("mask             : 0x%Lx\n", cobalt_vdso->hostrt_data.mask);
+	printf("mult             : %u\n", cobalt_vdso->hostrt_data.mult);
+	printf("shift            : %u\n\n", cobalt_vdso->hostrt_data.shift);
 }
 
 static void show_realtime_offset(void)
 {
-	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME)) {
+	if (!xnvdso_test_feature(cobalt_vdso, XNVDSO_FEAT_HOST_REALTIME)) {
 		printf("XNVDSO_FEAT_WALLCLOCK_OFFSET not available\n");
 		return;
 	}
 
-	printf("Wallclock offset : %llu\n", vdso->wallclock_offset);
+	printf("Wallclock offset : %llu\n", cobalt_vdso->wallclock_offset);
 }
 
 static inline uint64_t read_clock(clockid_t clock_id)

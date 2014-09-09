@@ -34,7 +34,7 @@
 #include "umm.h"
 #include "internal.h"
 
-struct xnvdso *vdso;
+struct xnvdso *cobalt_vdso;
 
 void *cobalt_umm_private = NULL;
 
@@ -110,7 +110,7 @@ static void init_vdso(void)
 		exit(EXIT_FAILURE);
 	}
 
-	vdso = (struct xnvdso *)(cobalt_umm_shared + sysinfo.vdso);
+	cobalt_vdso = (struct xnvdso *)(cobalt_umm_shared + sysinfo.vdso);
 }
 
 /*

@@ -116,10 +116,10 @@ static int __do_clock_host_realtime(struct timespec *ts)
 	unsigned long rem;
 	urwstate_t tmp;
 
-	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME))
+	if (!xnvdso_test_feature(cobalt_vdso, XNVDSO_FEAT_HOST_REALTIME))
 		return -1;
 
-	hostrt_data = &vdso->hostrt_data;
+	hostrt_data = &cobalt_vdso->hostrt_data;
 
 	if (!hostrt_data->live)
 		return -1;
@@ -193,7 +193,7 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 		return 0;
 	case CLOCK_REALTIME:
 		ns = cobalt_ticks_to_ns(cobalt_read_tsc());
-		ns += vdso->wallclock_offset;
+		ns += cobalt_vdso->wallclock_offset;
 		tp->tv_sec = cobalt_divrem_billion(ns, &rem);
 		tp->tv_nsec = rem;
 		return 0;
