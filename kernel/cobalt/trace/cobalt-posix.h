@@ -739,28 +739,25 @@ TRACE_EVENT(cobalt_cond_wait,
 );
 
 TRACE_EVENT(cobalt_mq_open,
-	TP_PROTO(const char *name, int oflags, mode_t mode, mqd_t mqd),
-	TP_ARGS(name, oflags, mode, mqd),
+	TP_PROTO(const char *name, int oflags, mode_t mode),
+	TP_ARGS(name, oflags, mode),
 
 	TP_STRUCT__entry(
 		__string(name, name)
 		__field(int, oflags)
 		__field(mode_t, mode)
-		__field(mqd_t, mqd)
 	),
 
 	TP_fast_assign(
 		__assign_str(name, name);
 		__entry->oflags = oflags;
 		__entry->mode = (oflags & O_CREAT) ? mode : 0;
-		__entry->mqd = mqd;
 	),
 
-	TP_printk("name=%s oflags=%#x(%s) mode=%o mqd=%d",
+	TP_printk("name=%s oflags=%#x(%s) mode=%o",
 		  __get_str(name),
 		  __entry->oflags, cobalt_print_oflags(__entry->oflags),
-		  __entry->mode,
-		  __entry->mqd)
+		  __entry->mode)
 );
 
 TRACE_EVENT(cobalt_mq_notify,

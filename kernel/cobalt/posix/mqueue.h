@@ -32,8 +32,7 @@ struct mq_attr {
 
 COBALT_SYSCALL_DECL(mq_open,
 		    int, (const char __user *u_name, int oflags,
-			  mode_t mode, struct mq_attr __user *u_attr,
-			  mqd_t uqd));
+			  mode_t mode, struct mq_attr __user *u_attr));
 
 COBALT_SYSCALL_DECL(mq_close, int, (mqd_t uqd));
 

@@ -18,6 +18,8 @@
 
 #include <stdarg.h>
 #include <linux/fs.h>
+#include <linux/fdtable.h>
+#include <linux/anon_inodes.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
 #include <cobalt/kernel/select.h>
@@ -284,13 +286,11 @@ static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)
 	return rtdm_fd_enter(p, &mqd->fd, ufd, COBALT_MQD_MAGIC, &mqd_ops);
 }
 
-static int mq_open(int uqd, const char *name, int oflags, ...)
+static int mq_open(int uqd, const char *name, int oflags,
+		   int mode, struct mq_attr *attr)
 {
 	struct cobalt_mq *mq;
-	struct mq_attr *attr;
 	xnhandle_t handle;
-	mode_t mode;
-	va_list ap;
 	spl_t s;
 	int err;
 
@@ -336,11 +336,6 @@ static int mq_open(int uqd, const char *name, int oflags, ...)
 		mq = kmalloc(sizeof(*mq), GFP_KERNEL);
 		if (mq == NULL)
 			return -ENOSPC;
-
-		va_start(ap, oflags);
-		mode = va_arg(ap, int);	/* unused */
-		attr = va_arg(ap, struct mq_attr *);
-		va_end(ap);
 
 		err = mq_init(mq, attr);
 		if (err) {
@@ -792,11 +787,14 @@ COBALT_SYSCALL(mq_notify, primary,
 
 COBALT_SYSCALL(mq_open, lostage,
 	       int, (const char __user *u_name, int oflags,
-		     mode_t mode, struct mq_attr __user *u_attr, mqd_t uqd))
+		     mode_t mode, struct mq_attr __user *u_attr))
 {
 	struct mq_attr locattr, *attr;
 	char name[COBALT_MAXNAME];
-	unsigned len;
+	struct xnsys_ppd *ppd;
+	unsigned int len;
+	mqd_t uqd;
+	int ret;
 
 	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
 	if (len < 0)
@@ -816,9 +814,20 @@ COBALT_SYSCALL(mq_open, lostage,
 	} else
 		attr = NULL;
 
-	trace_cobalt_mq_open(name, oflags, mode, uqd);
+	trace_cobalt_mq_open(name, oflags, mode);
 
-	return mq_open(uqd, name, oflags, mode, attr);
+	ppd = cobalt_ppd_get(0);
+	uqd = anon_inode_getfd("[cobalt-mq]", &rtdm_dumb_fops, ppd, oflags);
+	if (uqd < 0)
+		return uqd;
+
+	ret = mq_open(uqd, name, oflags, mode, attr);
+	if (ret < 0) {
+		__close_fd(current->files, uqd);
+		return ret;
+	}
+
+	return uqd;
 }
 
 COBALT_SYSCALL(mq_close, lostage, int, (mqd_t uqd))

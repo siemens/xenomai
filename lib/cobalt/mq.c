@@ -104,7 +104,7 @@ COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
 	struct mq_attr *attr = NULL;
 	mode_t mode = 0;
 	va_list ap;
-	int q, err;
+	int fd;
 
 	if ((oflags & O_CREAT) != 0) {
 		va_start(ap, oflags);
@@ -113,17 +113,13 @@ COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
 		va_end(ap);
 	}
 
-	q = __STD(open("/dev/null", O_RDWR, 0));
-	if (q == -1)
-		return (mqd_t) - 1;
+	fd = XENOMAI_SYSCALL4(sc_cobalt_mq_open, name, oflags, mode, attr);
+	if (fd < 0) {
+		errno = -fd;
+		return (mqd_t)-1;
+	}
 
-	err = -XENOMAI_SYSCALL5(sc_cobalt_mq_open, name, oflags, mode, attr, q);
-
-	if (!err)
-		return (mqd_t) q;
-
-	errno = err;
-	return (mqd_t) - 1;
+	return (mqd_t)fd;
 }
 
 /**
