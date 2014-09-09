@@ -23,10 +23,10 @@
 #include <xenomai/posix/syscall.h>
 
 COBALT_SYSCALL_DECL(open, int,
-		    (int fd, const char __user *u_path, int oflag));
+		    (const char __user *u_path, int oflag));
 
 COBALT_SYSCALL_DECL(socket, int,
-		    (int fd, int protocol_family,
+		    (int protocol_family,
 		     int socket_type, int protocol));
 
 COBALT_SYSCALL_DECL(close, int, (int fd));

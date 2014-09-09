@@ -22,6 +22,7 @@
 
 #include <linux/types.h>
 #include <linux/socket.h>
+#include <linux/file.h>
 #include <cobalt/kernel/tree.h>
 
 struct vm_area_struct;
@@ -351,5 +352,7 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 void rtdm_fd_cleanup(struct xnsys_ppd *p);
 
 void rtdm_fd_init(void);
+
+extern const struct file_operations rtdm_dumb_fops;
 
 #endif /* _COBALT_KERNEL_FD_H */

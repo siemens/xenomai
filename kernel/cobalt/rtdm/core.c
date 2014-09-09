@@ -147,8 +147,8 @@ fail:
 
 int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 {
-	struct rtdm_device *device;
 	struct rtdm_dev_context *context;
+	struct rtdm_device *device;
 	int ret, minor;
 
 	/* skip common /dev prefix */
@@ -156,13 +156,13 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 		path += 5;
 
 	device = __rtdm_get_named_device(path, &minor);
-	ret = -ENODEV;
-	if (!device)
-		goto err_out;
+	if (device == NULL)
+		return -ENODEV;
 
 	ret = create_instance(p, ufd, device, &context);
 	if (ret < 0)
 		goto cleanup_out;
+
 	ufd = ret;
 	context->fd.minor = minor;
 
@@ -173,7 +173,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 	if (!XENO_ASSERT(COBALT, !spltest()))
 		splnone();
 
-	if (unlikely(ret < 0))
+	if (ret < 0)
 		goto cleanup_out;
 
 	trace_cobalt_fd_created(&context->fd, ufd);
@@ -183,7 +183,6 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 cleanup_out:
 	cleanup_instance(device, context);
 
-err_out:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(__rt_dev_open);

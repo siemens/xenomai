@@ -18,6 +18,11 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <linux/err.h>
+#include <linux/file.h>
+#include <linux/fs.h>
+#include <linux/poll.h>
+#include <linux/fdtable.h>
+#include <linux/anon_inodes.h>
 #include <cobalt/kernel/ppd.h>
 #include <xenomai/rtdm/internal.h>
 #include "process.h"
@@ -25,26 +30,85 @@
 #include "clock.h"
 #include "io.h"
 
-COBALT_SYSCALL(open, lostage,
-	       int, (int fd, const char __user *u_path, int oflag))
+static inline void warn_user(const char *name)
 {
-	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
+#ifdef CONFIG_XENO_OPT_DEBUG_USER
+	printk(XENO_WARN "%s[%d] called regular %s() with RTDM file/socket\n",
+	       current->comm, current->pid, name + 5);
+#endif
+}
 
-	if (unlikely(__xn_safe_strncpy_from_user(krnl_path, u_path,
-						 sizeof(krnl_path) - 1) < 0))
+static ssize_t dumb_read(struct file *file, char  __user *buf,
+			 size_t count, loff_t __user *ppos)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+static ssize_t dumb_write(struct file *file,  const char __user *buf,
+			  size_t count, loff_t __user *ppos)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+static unsigned int dumb_poll(struct file *file, poll_table *pt)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+static long dumb_ioctl(struct file *file, unsigned int cmd,
+		       unsigned long arg)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+const struct file_operations rtdm_dumb_fops = {
+	.read		= dumb_read,
+	.write		= dumb_write,
+	.poll		= dumb_poll,
+	.unlocked_ioctl	= dumb_ioctl,
+};
+
+COBALT_SYSCALL(open, lostage,
+	       int, (const char __user *u_path, int oflag))
+{
+	char path[RTDM_MAX_DEVNAME_LEN + 1];
+	struct xnsys_ppd *ppd;
+	int ufd, ret;
+
+	if (__xn_safe_strncpy_from_user(path, u_path, sizeof(path)-1) < 0)
 		return -EFAULT;
 
-	krnl_path[sizeof(krnl_path) - 1] = '\0';
+	path[sizeof(path)-1] = '\0';
+	ppd = cobalt_ppd_get(0);
+	ufd = anon_inode_getfd("[rtdm-named]", &rtdm_dumb_fops, ppd, oflag);
 
-	return __rt_dev_open(cobalt_ppd_get(0), fd, krnl_path, oflag);
+	ret = __rt_dev_open(ppd, ufd, path, oflag);
+	if (ret < 0)
+		__close_fd(current->files, ufd);
+
+	return ret;
 }
 
 COBALT_SYSCALL(socket, lostage,
-	       int, (int fd, int protocol_family,
+	       int, (int protocol_family,
 		     int socket_type, int protocol))
 {
-	return __rt_dev_socket(cobalt_ppd_get(0), fd,
-			protocol_family, socket_type, protocol);
+	struct xnsys_ppd *ppd;
+	int ufd, ret;
+
+	ppd = cobalt_ppd_get(0);
+	ufd = anon_inode_getfd("[rtdm-proto]", &rtdm_dumb_fops, ppd, O_RDWR);
+
+	ret = __rt_dev_socket(cobalt_ppd_get(0), ufd,
+			      protocol_family, socket_type, protocol);
+	if (ret < 0)
+		__close_fd(current->files, ufd);
+
+	return ret;
 }
 
 COBALT_SYSCALL(close, lostage, int, (int fd))

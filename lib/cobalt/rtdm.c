@@ -41,53 +41,44 @@ static inline int set_errno(int ret)
 
 COBALT_IMPL(int, open, (const char *path, int oflag, ...))
 {
-	int ret, fd, oldtype;
+	int fd, oldtype;
 	va_list ap;
 
-	fd = __STD(open("/dev/null", O_RDONLY));
-	if (fd < 0)
-		return fd;
 	/*
 	 * Don't dereference path, as it might be invalid. Leave it to
 	 * the kernel service.
 	 */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-	ret = XENOMAI_SYSCALL3( sc_cobalt_open, fd, path, oflag);
+	fd = XENOMAI_SYSCALL2( sc_cobalt_open, path, oflag);
 	pthread_setcanceltype(oldtype, NULL);
-	if (ret == fd)
-		return fd;
+	if (fd < 0) {
+		if (fd != -ENODEV && fd != -ENOSYS)
+			return set_errno(fd);
 
-	__STD(close(fd));
+		va_start(ap, oflag);
+		fd = __STD(open(path, oflag, va_arg(ap, mode_t)));
+		va_end(ap);
+	}
 
-	if (ret != -ENODEV && ret != -ENOSYS)
-		return set_errno(ret);
-
-	va_start(ap, oflag);
-	ret = __STD(open(path, oflag, va_arg(ap, mode_t)));
-	va_end(ap);
-
-	return ret;
+	return fd;
 }
 
 COBALT_IMPL(int, socket, (int protocol_family, int socket_type, int protocol))
 {
-	int ret, fd;
+	int s;
 
-	fd = __STD(open("/dev/null", O_RDONLY));
-	if (fd < 0)
-		return fd;
+	s = XENOMAI_SYSCALL3(sc_cobalt_socket, protocol_family,
+			     socket_type, protocol);
+	if (s < 0) {
+		if (s != -EAFNOSUPPORT &&
+		    s != -EPROTONOSUPPORT &&
+		    s != -ENOSYS)
+			return set_errno(s);
 
-	ret = XENOMAI_SYSCALL4(sc_cobalt_socket, fd,
-			       protocol_family, socket_type, protocol);
-	if (ret == fd)
-		return fd;
+		s = __STD(socket(protocol_family, socket_type, protocol));
+	}
 
-	__STD(close(fd));
-
-	if (ret != -EAFNOSUPPORT && ret != -EPROTONOSUPPORT && ret != -ENOSYS)
-		return set_errno(ret);
-
-	return __STD(socket(protocol_family, socket_type, protocol));
+	return s;
 }
 
 COBALT_IMPL(int, close, (int fd))
