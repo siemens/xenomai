@@ -333,6 +333,25 @@ static int resolve_id(const char *s)
 	return -1;
 }
 
+static int glob_match(const char *s)
+{
+	struct smokey_test *t, *tmp;
+	int matches = 0;
+
+	if (pvlist_empty(&register_list))
+		return 0;
+
+	pvlist_for_each_entry_safe(t, tmp, &register_list, __reserved.next) {
+		if (!fnmatch(s, t->name, FNM_PATHNAME)) {
+			pvlist_remove(&t->__reserved.next);
+			pvlist_append(&t->__reserved.next, &smokey_test_list);
+			matches++;
+		}
+	}
+
+	return matches;
+}
+
 static int build_test_list(const char *test_enum)
 {
 	char *s = strdup(test_enum), *n, *range, *range_p = NULL, *id, *id_r;
@@ -347,6 +366,12 @@ static int build_test_list(const char *test_enum)
 			end = test_count - 1;
 		id = strtok_r(range, "-", &id_r);
 		if (id) {
+			if (glob_match(id)) {
+				if (strtok_r(NULL, "-", &id_r))
+					goto fail;
+				n = NULL;
+				continue;
+			}
 			start = resolve_id(id);
 			if (*range == '-') {
 				end = start;
