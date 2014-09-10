@@ -46,9 +46,6 @@
  * Cobalt provides an implementation of the POSIX and RTDM interfaces
  * based on a set of generic RTOS building blocks.
  */
-MODULE_DESCRIPTION("Cobalt kernel");
-MODULE_AUTHOR("rpm@xenomai.org");
-MODULE_LICENSE("GPL");
 
 static unsigned long timerfreq_arg;
 module_param_named(timerfreq, timerfreq_arg, ulong, 0444);

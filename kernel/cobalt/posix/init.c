@@ -30,10 +30,6 @@
 #include "monitor.h"
 #include "event.h"
 
-MODULE_DESCRIPTION("Xenomai/cobalt POSIX interface");
-MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
-MODULE_LICENSE("GPL");
-
 struct cobalt_kqueues cobalt_global_kqueues;
 
 void cobalt_cleanup(void)

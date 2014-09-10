@@ -34,10 +34,6 @@
  * to extend a device profile with more hardware-specific functions.
  */
 
-MODULE_DESCRIPTION("Real-Time Driver Model");
-MODULE_AUTHOR("jan.kiszka@web.de");
-MODULE_LICENSE("GPL");
-
 void rtdm_cleanup(void)
 {
 	rtdm_proc_cleanup();
