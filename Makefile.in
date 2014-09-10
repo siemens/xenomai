@@ -889,10 +889,7 @@ dev devices:
 @XENO_COBALT_TRUE@	   if test \! -c $$f ; then \
 @XENO_COBALT_TRUE@	      $$sudo mknod -m 666 $$f c 150 $$n ; \
 @XENO_COBALT_TRUE@	   fi ; \
-@XENO_COBALT_TRUE@	done ; \
-@XENO_COBALT_TRUE@	if test \! -c $(DESTDIR)/dev/rtheap ; then \
-@XENO_COBALT_TRUE@	  $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
-@XENO_COBALT_TRUE@	fi
+@XENO_COBALT_TRUE@	done
 
 install-exec-local: devices
 

@@ -67,10 +67,7 @@ echo '*** privileges.' ; \
 	   if test \! -c $$f ; then \
 	      $$sudo mknod -m 666 $$f c 150 $$n ; \
 	   fi ; \
-	done ; \
-	if test \! -c $(DESTDIR)/dev/rtheap ; then \
-	  $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
-	fi
+	done
 endif
 
 install-exec-local: devices
