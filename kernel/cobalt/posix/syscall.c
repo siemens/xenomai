@@ -107,10 +107,11 @@ static void prepare_for_signal(struct task_struct *p,
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	struct cobalt_process *process;
-	int nr, switched, ret, sigs;
+	int switched, ret, sigs;
 	struct xnthread *thread;
 	cobalt_syshand handler;
 	struct task_struct *p;
+	unsigned int nr;
 	int sysflags;
 
 	if (!__xn_syscall_p(regs))
@@ -121,7 +122,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 	trace_cobalt_head_sysentry(thread, nr);
 
-	if (nr < 0 || nr >= __NR_COBALT_SYSCALLS)
+	if (nr >= __NR_COBALT_SYSCALLS)
 		goto bad_syscall;
 
 	process = cobalt_current_process();
@@ -285,10 +286,11 @@ bad_syscall:
 
 static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
-	int nr, sysflags, switched, ret, sigs;
+	int sysflags, switched, ret, sigs;
 	struct xnthread *thread;
 	cobalt_syshand handler;
 	struct task_struct *p;
+	unsigned int nr;
 
 	/*
 	 * Catch cancellation requests pending for user shadows
