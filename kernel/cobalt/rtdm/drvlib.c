@@ -1476,13 +1476,9 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
 
 struct mmap_tramp_data {
 	struct rtdm_fd *fd;
+	struct file_operations *fops;
 	int (*mmap_handler)(struct rtdm_fd *fd,
 			    struct vm_area_struct *vma);
-	unsigned long
-	(*unmapped_area_handler)(struct file *filp,
-				 struct mmap_tramp_data *tramp_data,
-				 unsigned long addr, unsigned long len,
-				 unsigned long pgoff, unsigned long flags);
 };
 
 struct mmap_helper_data {
@@ -1495,51 +1491,43 @@ struct mmap_helper_data {
 
 static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 {
-	unsigned long vaddr, maddr, len;
-	phys_addr_t paddr;
+	unsigned long addr, len, pfn, to;
 	int ret;
-
-	vaddr = (unsigned long)va;
-	paddr = __pa(vaddr);
-	maddr = vma->vm_start;
+	
+	to = (unsigned long)va;
+	addr = vma->vm_start;
 	len = vma->vm_end - vma->vm_start;
 
-	if (!XENO_ASSERT(COBALT, vaddr == PAGE_ALIGN(vaddr)))
+	if (to != PAGE_ALIGN(to) || (len & ~PAGE_MASK) != 0)
 		return -EINVAL;
 
-#ifdef CONFIG_MMU
-	/* Catch vmalloc memory */
-	if (vaddr >= VMALLOC_START && vaddr < VMALLOC_END) {
-		if (!XENO_ASSERT(COBALT, (len & ~PAGE_MASK) == 0))
-			return -EINVAL;
-
-		while (len >= PAGE_SIZE) {
-			if (vm_insert_page(vma, maddr,
-					   vmalloc_to_page((void *)vaddr)))
+#ifndef CONFIG_MMU
+	pfn = __pa(to) >> PAGE_SHIFT;
+	ret = remap_pfn_range(vma, addr, pfn, len, PAGE_SHARED);
+#else
+	if (to < VMALLOC_START || to >= VMALLOC_END) {
+		/* logical address. */
+		pfn = __pa(to) >> PAGE_SHIFT;
+		ret = remap_pfn_range(vma, addr, pfn, len, PAGE_SHARED);
+		if (ret)
+			return ret;
+	} else {
+		/* vmalloc memory. */
+		while (len > 0) {
+			struct page *page = vmalloc_to_page((void *)to);
+			if (vm_insert_page(vma, addr, page))
 				return -EAGAIN;
-			maddr += PAGE_SIZE;
-			vaddr += PAGE_SIZE;
+			addr += PAGE_SIZE;
+			to += PAGE_SIZE;
 			len -= PAGE_SIZE;
 		}
-
-		if (xnarch_machdesc.prefault)
-			xnarch_machdesc.prefault(vma);
-
-		return 0;
 	}
-#else
-	vma->vm_pgoff = paddr >> PAGE_SHIFT;
-#endif /* CONFIG_MMU */
-
-	ret = remap_pfn_range(vma, maddr, paddr >> PAGE_SHIFT,
-			      len, PAGE_SHARED);
-	if (ret)
-		return ret;
 
 	if (xnarch_machdesc.prefault)
 		xnarch_machdesc.prefault(vma);
+#endif
 
-	return 0;
+	return ret;
 }
 
 static int mmap_iomem_helper(struct vm_area_struct *vma, phys_addr_t pa)
@@ -1584,20 +1572,25 @@ static int mmap_buffer_helper(struct rtdm_fd *fd, struct vm_area_struct *vma)
 static int mmap_trampoline(struct file *filp, struct vm_area_struct *vma)
 {
 	struct mmap_tramp_data *tramp_data = filp->private_data;
+	int ret;
 
 	vma->vm_private_data = tramp_data;
 
-	return tramp_data->mmap_handler(tramp_data->fd, vma);
+	ret = tramp_data->mmap_handler(tramp_data->fd, vma);
+	if (ret)
+		return ret;
+
+	return 0;
 }
 
 #ifndef CONFIG_MMU
 
-static
-unsigned long unmapped_area_helper(struct file *filp,
-				   struct mmap_tramp_data *tramp_data,
-				   unsigned long addr, unsigned long len,
-				   unsigned long pgoff, unsigned long flags)
+static unsigned long
+internal_get_unmapped_area(struct file *filp,
+			   unsigned long addr, unsigned long len,
+			   unsigned long pgoff, unsigned long flags)
 {
+	struct mmap_tramp_data *tramp_data = filp->private_data;
 	struct mmap_helper_data *helper_data;
 	unsigned long pa;
 
@@ -1609,29 +1602,34 @@ unsigned long unmapped_area_helper(struct file *filp,
 	return (unsigned long)helper_data->src_vaddr;
 }
 
-static unsigned long
-unmapped_area_trampoline(struct file *filp,
-			 unsigned long addr, unsigned long len,
-			 unsigned long pgoff, unsigned long flags)
+static int do_rtdm_mmap(struct mmap_tramp_data *tramp_data,
+			size_t len, off_t offset, int prot, int flags,
+			void **pptr)
 {
-	struct mmap_tramp_data *tramp_data = filp->private_data;
+	const struct file_operations *old_fops;
+	unsigned long u_addr;
+	struct file *filp;
 
-	if (tramp_data->unmapped_area_handler == NULL)
-		return -ENOSYS;	/* We don't know. */
+	filp = filp_open("/dev/mem", O_RDWR, 0);
+	if (IS_ERR(filp))
+		return PTR_ERR(filp);
 
-	return tramp_data->unmapped_area_handler(filp, tramp_data, addr,
-						 len, pgoff, flags);
+	old_fops = filp->f_op;
+	filp->f_op = tramp_data->fops;
+	filp->private_data = tramp_data;
+	u_addr = vm_mmap(filp, (unsigned long)*pptr, len, prot, flags, offset);
+	filp_close(filp, current->files);
+	filp->f_op = old_fops;
+
+	if (IS_ERR_VALUE(u_addr))
+		return (int)u_addr;
+
+	*pptr = (void *)u_addr;
+
+	return 0;
 }
 
-#else
-#define unmapped_area_helper      NULL
-#define unmapped_area_trampoline  NULL
-#endif
-
-static struct file_operations mmap_fops = {
-	.mmap = mmap_trampoline,
-	.get_unmapped_area = unmapped_area_trampoline
-};
+#else /* CONFIG_MMU */
 
 static int do_rtdm_mmap(struct mmap_tramp_data *tramp_data,
 			size_t len, off_t offset, int prot, int flags,
@@ -1640,10 +1638,7 @@ static int do_rtdm_mmap(struct mmap_tramp_data *tramp_data,
 	unsigned long u_addr;
 	struct file *filp;
 
-	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
-		return -EPERM;
-
-	filp = anon_inode_getfile("[rtdm]", &mmap_fops, tramp_data, O_RDWR);
+	filp = anon_inode_getfile("[rtdm]", tramp_data->fops, tramp_data, O_RDWR);
 	if (IS_ERR(filp))
 		return PTR_ERR(filp);
 
@@ -1658,14 +1653,64 @@ static int do_rtdm_mmap(struct mmap_tramp_data *tramp_data,
 	return 0;
 }
 
+#define internal_get_unmapped_area  NULL
+
+#endif /* CONFIG_MMU */
+
+static struct file_operations internal_mmap_fops = {
+	.mmap = mmap_trampoline,
+	.get_unmapped_area = internal_get_unmapped_area
+};
+
+static unsigned long
+driver_get_unmapped_area(struct file *filp,
+			 unsigned long addr, unsigned long len,
+			 unsigned long pgoff, unsigned long flags)
+{
+	struct mmap_tramp_data *tramp_data = filp->private_data;
+	struct rtdm_fd *fd = tramp_data->fd;
+
+	if (fd->ops->get_unmapped_area)
+		return fd->ops->get_unmapped_area(fd, len, pgoff, flags);
+
+#ifdef CONFIG_MMU
+	/* Run default handler. */
+	return current->mm->get_unmapped_area(filp, addr, len, pgoff, flags);
+#else
+	return -ENODEV;
+#endif
+}
+
+static struct file_operations driver_mmap_fops = {
+	.mmap = mmap_trampoline,
+	.get_unmapped_area = driver_get_unmapped_area
+};
+
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 			  int prot, int flags, void *__user *pptr)
 {
 	struct mmap_tramp_data tramp_data = {
 		.fd = fd,
+		.fops = &driver_mmap_fops,
 		.mmap_handler = fd->ops->mmap,
-		.unmapped_area_handler = NULL,
 	};
+
+#ifndef CONFIG_MMU
+	/*
+	 * XXX: A .get_unmapped_area handler must be provided in the
+	 * nommu case. We use this to force the memory management code
+	 * not to share VM regions for distinct areas to map to, as it
+	 * would otherwise do since all requests originate from the
+	 * same file (i.e. from /dev/mem, see do_mmap_pgoff() in the
+	 * nommu case).
+	 *
+	 * We could solve this by implementing a virtual filesystem
+	 * for RTDM devices, which would go a long way toward a better
+	 * integration with the regular device driver model.
+	 */
+	if (fd->ops->get_unmapped_area)
+		offset = fd->ops->get_unmapped_area(fd, len, 0, flags);
+#endif
 
 	return do_rtdm_mmap(&tramp_data, len, offset, prot, flags, pptr);
 }
@@ -1727,14 +1772,17 @@ int rtdm_mmap_to_user(struct rtdm_fd *fd,
 	struct mmap_helper_data helper_data = {
 		.tramp_data = {
 			.fd = fd,
+			.fops = &internal_mmap_fops,
 			.mmap_handler = mmap_buffer_helper,
-			.unmapped_area_handler = unmapped_area_helper,
 		},
 		.src_vaddr = src_addr,
 		.src_paddr = 0,
 		.vm_ops = vm_ops,
 		.vm_private_data = vm_private_data
 	};
+
+	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
+		return -EPERM;
 
 	return do_rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
 }
@@ -1793,14 +1841,17 @@ int rtdm_iomap_to_user(struct rtdm_fd *fd,
 	struct mmap_helper_data helper_data = {
 		.tramp_data = {
 			.fd = fd,
+			.fops = &internal_mmap_fops,
 			.mmap_handler = mmap_buffer_helper,
-			.unmapped_area_handler = unmapped_area_helper,
 		},
 		.src_vaddr = NULL,
 		.src_paddr = src_addr,
 		.vm_ops = vm_ops,
 		.vm_private_data = vm_private_data
 	};
+
+	if (!XENO_ASSERT(COBALT, xnsched_root_p()))
+		return -EPERM;
 
 	return do_rtdm_mmap(&helper_data.tramp_data, len, 0, prot, MAP_SHARED, pptr);
 }

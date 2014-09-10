@@ -169,7 +169,7 @@ COBALT_SYSCALL(mmap, lostage,
 		     void __user **u_addrp))
 {
 	struct _rtdm_mmap_request rma;
-	void *u_addr;
+	void *u_addr = NULL;
 	int ret;
 
 	if (__xn_copy_from_user(&rma, u_rma, sizeof(rma)))

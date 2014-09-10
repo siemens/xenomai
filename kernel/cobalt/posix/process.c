@@ -51,7 +51,7 @@
 #include <cobalt/uapi/signal.h>
 #include <cobalt/uapi/syscall.h>
 #include <trace/events/cobalt-core.h>
-#include <rtdm/fd.h>
+#include <rtdm/driver.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/mayday.h>
@@ -809,57 +809,7 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	return KEVENT_PROPAGATE;
 }
 
-#ifdef CONFIG_MMU
-
-#define mayday_unmapped_area  NULL
-
-#else /* !CONFIG_MMU */
-
-static unsigned long mayday_unmapped_area(struct file *file,
-					  unsigned long addr,
-					  unsigned long len,
-					  unsigned long pgoff,
-					  unsigned long flags)
-{
-	return (unsigned long)mayday_page;
-}
-
-#endif /* !CONFIG_MMU */
-
-static int mayday_map(struct file *filp, struct vm_area_struct *vma)
-{
-	struct page *page = vmalloc_to_page(mayday_page);
-
-	vma->vm_pgoff = (unsigned long)mayday_page >> PAGE_SHIFT;
-#ifdef CONFIG_MMU
-	return vm_insert_page(vma, vma->vm_start, page);
-#else
-	return remap_pfn_range(vma, vma->vm_start, page_to_pfn(page),
-			       PAGE_SHIFT, vma->vm_page_prot);
-#endif
-}
-
-static struct file_operations mayday_fops = {
-	.mmap = mayday_map,
-	.get_unmapped_area = mayday_unmapped_area
-};
-
-static unsigned long map_mayday_page(struct task_struct *p)
-{
-	unsigned long u_addr;
-	struct file *filp;
-
-	filp = anon_inode_getfile("[mayday]", &mayday_fops, NULL, O_RDONLY);
-	if (IS_ERR(filp))
-		return 0;
-
-	u_addr = vm_mmap(filp, 0, PAGE_SIZE, PROT_EXEC|PROT_READ, MAP_SHARED, 0);
-	filp_close(filp, p->files);
-
-	return IS_ERR_VALUE(u_addr) ? 0UL : u_addr;
-}
-
-static inline int mayday_init_page(void)
+static inline int init_mayday_page(void)
 {
 	mayday_page = vmalloc(PAGE_SIZE);
 	if (mayday_page == NULL) {
@@ -872,10 +822,23 @@ static inline int mayday_init_page(void)
 	return 0;
 }
 
-static inline void mayday_cleanup_page(void)
+static inline void free_mayday_page(void)
 {
 	if (mayday_page)
 		vfree(mayday_page);
+}
+
+static inline unsigned long map_mayday_page(void)
+{
+	void __user *u_addr = NULL;
+	int ret;
+
+	ret = rtdm_mmap_to_user(NULL, mayday_page, PAGE_SIZE,
+				PROT_READ|PROT_EXEC, &u_addr, NULL, NULL);
+	if (ret)
+		return 0UL;
+
+	return (unsigned long)u_addr;
 }
 
 #ifdef CONFIG_SMP
@@ -1350,7 +1313,7 @@ static int attach_process(struct cobalt_process *process)
 
 	cobalt_umm_set_name(&p->umm, "private heap[%d]", current->pid);
 
-	p->mayday_addr = map_mayday_page(current);
+	p->mayday_addr = map_mayday_page();
 	if (p->mayday_addr == 0) {
 		printk(XENO_WARN
 		       "%s[%d] cannot map MAYDAY page\n",
@@ -1471,7 +1434,7 @@ int cobalt_process_init(void)
 	 * Setup the mayday page early, before userland can mess with
 	 * real-time ops.
 	 */
-	ret = mayday_init_page();
+	ret = init_mayday_page();
 	if (ret)
 		goto fail_mayday;
 
@@ -1497,7 +1460,7 @@ fail_register:
 	cobalt_memdev_cleanup();
 fail_memdev:
 	xnsynch_destroy(&yield_sync);
-	mayday_cleanup_page();
+	free_mayday_page();
 fail_mayday:
 	xndebug_cleanup();
 fail_debug:
@@ -1514,7 +1477,7 @@ void cobalt_process_cleanup(void)
 	ipipe_set_hooks(&xnsched_realtime_domain, 0);
 	ipipe_set_hooks(ipipe_root_domain, 0);
 
-	mayday_cleanup_page();
+	free_mayday_page();
 	xndebug_cleanup();
 
 	if (process_hash) {

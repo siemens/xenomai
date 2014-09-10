@@ -227,9 +227,47 @@ int rtdm_select_handler(struct rtdm_fd *fd, struct xnselector *selector,
  *
  * @see @c mmap() in POSIX.1-2001,
  * http://pubs.opengroup.org/onlinepubs/7908799/xsh/mmap.html
+ *
+ * @note The address hint passed to the mmap() request is deliberately
+ * ignored by RTDM.
  */
 int rtdm_mmap_handler(struct rtdm_fd *fd, struct vm_area_struct *vma);
 
+/**
+ * Allocate mapping region in address space
+ *
+ * When present, this optional handler should return the start address
+ * of a free region in the process's address space, large enough to
+ * cover the ongoing mmap() operation. If unspecified, the default
+ * architecture-defined handler is invoked.
+ *
+ * Most drivers can omit this handler, except on MMU-less platforms
+ * (see second note).
+ *
+ * @param[in] fd File descriptor
+ * @param[in] len Length of the requested region
+ * @param[in] pgoff Page frame number to map to (see second note).
+ * @param[in] flags Requested mapping flags
+ *
+ * @return The start address of the mapping region on success. On
+ * failure, a negative error code should be returned, with -ENOSYS
+ * meaning that the driver does not want to provide such information,
+ * in which case the ongoing mmap() operation will fail.
+ *
+ * @note The address hint passed to the mmap() request is deliberately
+ * ignored by RTDM, and therefore not passed to this handler.
+ *
+ * @note On MMU-less platforms, this handler is required because RTDM
+ * issues mapping requests over a shareable character device
+ * internally. In such context, the RTDM core may pass a null @a pgoff
+ * argument to the handler, for probing for the logical start address
+ * of the memory region to map to. Otherwise, when @a pgoff is
+ * non-zero, pgoff << PAGE_SHIFT is usually returned.
+ */
+unsigned long
+rtdm_get_unmapped_area_handler(struct rtdm_fd *fd,
+			       unsigned long len, unsigned long pgoff,
+			       unsigned long flags);
 /**
  * @anchor rtdm_fd_ops
  * @brief RTDM file operation descriptor.
@@ -282,6 +320,11 @@ struct rtdm_fd_ops {
 	/** See rtdm_mmap_handler(). */
 	int (*mmap)(struct rtdm_fd *fd,
 		    struct vm_area_struct *vma);
+	/** See rtdm_get_unmapped_area_handler(). */
+	unsigned long (*get_unmapped_area)(struct rtdm_fd *fd,
+					   unsigned long len,
+					   unsigned long pgoff,
+					   unsigned long flags);
 };
 
 /** @} File operation handlers */

@@ -99,6 +99,27 @@ static int umm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 	return 0;
 }
 
+#ifndef CONFIG_MMU
+static unsigned long umm_get_unmapped_area(struct rtdm_fd *fd,
+					   unsigned long len,
+					   unsigned long pgoff,
+					   unsigned long flags)
+{
+	struct cobalt_umm *umm;
+
+	umm = umm_from_fd(fd);
+	if (umm == NULL)
+		return -ENODEV;
+
+	if (pgoff == 0)
+		return (unsigned long)xnheap_get_membase(&umm->heap);
+
+	return pgoff << PAGE_SHIFT;
+}
+#else
+#define umm_get_unmapped_area	NULL
+#endif
+
 static int stat_umm(struct rtdm_fd *fd,
 		    struct cobalt_umm __user *u_stat)
 {
@@ -189,13 +210,14 @@ static int sysmem_ioctl_nrt(struct rtdm_fd *fd,
 }
 
 static struct rtdm_device private_umm_device = {
-	.struct_version		=	RTDM_DEVICE_STRUCT_VER,
-	.device_flags		=	RTDM_NAMED_DEVICE,
-	.context_size		=	0,
+	.struct_version			=	RTDM_DEVICE_STRUCT_VER,
+	.device_flags			=	RTDM_NAMED_DEVICE,
+	.context_size			=	0,
 	.ops = {
-		.ioctl_rt	=	umm_ioctl_rt,
-		.ioctl_nrt	=	umm_ioctl_nrt,
-		.mmap		=	umm_mmap,
+		.ioctl_rt		=	umm_ioctl_rt,
+		.ioctl_nrt		=	umm_ioctl_nrt,
+		.mmap			=	umm_mmap,
+		.get_unmapped_area	=	umm_get_unmapped_area,
 	},
 	.device_class		=	RTDM_CLASS_MEMORY,
 	.device_sub_class	=	UMM_PRIVATE,
@@ -208,13 +230,14 @@ static struct rtdm_device private_umm_device = {
 };
 
 static struct rtdm_device shared_umm_device = {
-	.struct_version		=	RTDM_DEVICE_STRUCT_VER,
-	.device_flags		=	RTDM_NAMED_DEVICE,
-	.context_size		=	0,
+	.struct_version			=	RTDM_DEVICE_STRUCT_VER,
+	.device_flags			=	RTDM_NAMED_DEVICE,
+	.context_size			=	0,
 	.ops = {
-		.ioctl_rt	=	umm_ioctl_rt,
-		.ioctl_nrt	=	umm_ioctl_nrt,
-		.mmap		=	umm_mmap,
+		.ioctl_rt		=	umm_ioctl_rt,
+		.ioctl_nrt		=	umm_ioctl_nrt,
+		.mmap			=	umm_mmap,
+		.get_unmapped_area	=	umm_get_unmapped_area,
 	},
 	.device_class		=	RTDM_CLASS_MEMORY,
 	.device_sub_class	=	UMM_SHARED,
