@@ -248,7 +248,7 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 /**
  * Channel + range + reference + flags definition macro
  */
-#define PACK_FLAGS(a, b, c, d) (CHAN(a) | RNG(b) | AREF(c) | FLAGS(d))
+#define PACK_FLAGS(a, b, c, d) (PACK(a, b, c) | FLAGS(d))
 
 /**
  * Analog reference is analog ground
