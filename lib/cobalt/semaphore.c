@@ -459,8 +459,9 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
  *   named semaphore already exists;
  * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the named semaphore
  *   does not exist;
- * - ENOSPC, insufficient memory exists in the system heap to create the
- *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - ENOMEM, not enough memory to create the semaphore. A usual
+ *   suspect is a shortage in the Cobalt system heap, which may be
+ *   fixed by increasing CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
  *
  * @see
@@ -484,7 +485,7 @@ COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 
 	rsem = sem = malloc(sizeof(*sem));
 	if (rsem == NULL) {
-		err = -ENOSPC;
+		err = -ENOMEM;
 		goto error;
 	}
 
