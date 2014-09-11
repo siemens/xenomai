@@ -30,8 +30,6 @@
  */
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
-#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
-
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
 #define XNSYNCH_SPARE1  0x02000000
@@ -102,12 +100,6 @@ static inline struct xnthread *xnsynch_owner(struct xnsynch *synch)
 #define xnsynch_fastlock_p(synch)	((synch)->fastlock != NULL)
 #define xnsynch_owner_check(synch, thread) \
 	xnsynch_fast_owner_check((synch)->fastlock, thread->handle)
-
-#define xnsynch_fast_is_claimed(fastlock) \
-	xnhandle_test_spare(fastlock, XNSYNCH_FLCLAIM)
-#define xnsynch_fast_set_claimed(fastlock, enable) \
-	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
-#define xnsynch_fast_mask_claimed(fastlock) ((fastlock & ~XNSYNCH_FLCLAIM))
 
 #if XENO_DEBUG(USER)
 

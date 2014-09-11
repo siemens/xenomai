@@ -734,6 +734,12 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  * the specified amount of time.
  *
  * @coretags{primary-only, might-switch}
+ *
+ * @note xnregistry_bind() only returns the index portion of a handle,
+ * which might include other fixed bits to be complete
+ * (e.g. XNSYNCH_PSHARED). The caller is responsible for completing
+ * the handle returned with those bits if applicable, depending on the
+ * context.
  */
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)

@@ -138,6 +138,7 @@ static inline struct xnobject *xnregistry_validate(xnhandle_t handle)
 	 * unexported carries a NULL objaddr, so we have to check this
 	 * as well.
 	 */
+	handle = xnhandle_get_index(handle);
 	if (likely(handle && handle < CONFIG_XENO_OPT_REGISTRY_NRSLOTS)) {
 		object = &registry_obj_slots[handle];
 		return object->objaddr ? object : NULL;

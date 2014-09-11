@@ -29,20 +29,26 @@
 #define XNSYNCH_DREORD  0x4
 #define XNSYNCH_OWNER   0x8
 
-#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
-
-#define xnhandle_mask_spare(handle)  ((handle) & ~XN_HANDLE_SPARE_MASK)
-#define xnhandle_test_spare(handle, bits)  (!!((handle) & (bits)))
-#define xnhandle_set_spare(handle, bits) \
-	do { (handle) |= (bits); } while (0)
-#define xnhandle_clear_spare(handle, bits) \
-	do { (handle) &= ~(bits); } while (0)
-
 /* Fast lock API */
+static inline int xnsynch_fast_is_claimed(xnhandle_t handle)
+{
+	return (handle & XNSYNCH_FLCLAIM) != 0;
+}
+
+static inline xnhandle_t xnsynch_fast_claimed(xnhandle_t handle)
+{
+	return handle | XNSYNCH_FLCLAIM;
+}
+
+static inline xnhandle_t xnsynch_fast_not_claimed(xnhandle_t handle)
+{
+	return handle & ~XNSYNCH_FLCLAIM;
+}
+
 static inline int
 xnsynch_fast_owner_check(atomic_t *fastlock, xnhandle_t ownerh)
 {
-	return (xnhandle_mask_spare(atomic_read(fastlock)) == ownerh) ?
+	return (xnhandle_get_id(atomic_read(fastlock)) == ownerh) ?
 		0 : -EPERM;
 }
 
@@ -53,7 +59,7 @@ int xnsynch_fast_acquire(atomic_t *fastlock, xnhandle_t new_ownerh)
 
 	h = atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
 	if (h != XN_NO_HANDLE) {
-		if (xnhandle_mask_spare(h) == new_ownerh)
+		if (xnhandle_get_id(h) == new_ownerh)
 			return -EBUSY;
 
 		return -EAGAIN;

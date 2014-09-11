@@ -288,7 +288,7 @@ static inline
 struct xnthread *xnthread_lookup(xnhandle_t threadh)
 {
 	struct xnthread *thread = xnregistry_lookup(threadh, NULL);
-	return thread && thread->handle == threadh ? thread : NULL;
+	return thread && thread->handle == xnhandle_get_index(threadh) ? thread : NULL;
 }
 
 static inline void xnthread_sync_window(struct xnthread *thread)

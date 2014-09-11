@@ -375,7 +375,7 @@ redo:
 
 	do {
 		old = atomic_cmpxchg(lockp, fastlock,
-				     xnsynch_fast_set_claimed(fastlock, 1));
+				     xnsynch_fast_claimed(fastlock));
 		if (likely(old == fastlock))
 			break;
 	test_no_owner:
@@ -387,7 +387,7 @@ redo:
 		fastlock = old;
 	} while (!xnsynch_fast_is_claimed(fastlock));
 
-	owner = xnthread_lookup(xnsynch_fast_mask_claimed(fastlock));
+	owner = xnthread_lookup(fastlock);
 	if (owner == NULL) {
 		/*
 		 * The handle is broken, therefore pretend that the
@@ -464,7 +464,7 @@ block:
 		thread->res_count++;
 
 	if (xnsynch_pended_p(synch))
-		threadh = xnsynch_fast_set_claimed(threadh, 1);
+		threadh = xnsynch_fast_claimed(threadh);
 
 	/* Set new ownership for this mutex. */
 	atomic_set(lockp, threadh);
@@ -534,8 +534,9 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 	if (synch->status & XNSYNCH_CLAIMED)
 		clear_boost(synch, lastowner);
 
-	nextownerh = xnsynch_fast_set_claimed(nextowner->handle,
-					      xnsynch_pended_p(synch));
+	nextownerh = xnsynch_pended_p(synch) ?
+		xnsynch_fast_claimed(nextowner->handle) :
+		xnsynch_fast_not_claimed(nextowner->handle);
 	atomic_set(lockp, nextownerh);
 
 	xnlock_put_irqrestore(&nklock, s);

@@ -27,12 +27,30 @@ typedef __s64 xnsticks_t;
 
 typedef __u32 xnhandle_t;
 
-#define XN_NO_HANDLE ((xnhandle_t)0)
+#define XN_NO_HANDLE		((xnhandle_t)0)
+#define XN_HANDLE_INDEX_MASK	((xnhandle_t)0xf0000000)
 
-#define XN_HANDLE_SPARE0	((xnhandle_t)0x10000000)
-#define XN_HANDLE_SPARE1	((xnhandle_t)0x20000000)
-#define XN_HANDLE_SPARE2	((xnhandle_t)0x40000000)
-#define XN_HANDLE_SPARE3	((xnhandle_t)0x80000000)
-#define XN_HANDLE_SPARE_MASK	((xnhandle_t)0xf0000000)
+/* 3 spare special bits remaining. */
+#define XNSYNCH_FLCLAIM		((xnhandle_t)0x80000000)
+
+#define XN_HANDLE_TRANSIENT_MASK	XNSYNCH_FLCLAIM
+
+/*
+ * Strip all special bits from the handle, only retaining the object
+ * index value in the registry.
+ */
+static inline xnhandle_t xnhandle_get_index(xnhandle_t handle)
+{
+	return handle & ~XN_HANDLE_INDEX_MASK;
+}
+
+/*
+ * Strip the transient bits from the handle, only retaining the fixed
+ * part making the identifier.
+ */
+static inline xnhandle_t xnhandle_get_id(xnhandle_t handle)
+{
+	return handle & ~XN_HANDLE_TRANSIENT_MASK;
+}
 
 #endif /* !_COBALT_UAPI_KERNEL_TYPES_H */
