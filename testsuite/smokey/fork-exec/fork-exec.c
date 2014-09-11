@@ -19,6 +19,12 @@ smokey_test_plugin(fork_exec,
 		   "Check fork->exec sequence."
 );
 
+#ifdef HAVE_FORK
+#define do_fork fork
+#else
+#define do_fork vfork
+#endif
+
 /*
  * The purpose of this test is to check whether Cobalt detects and
  * handles a fork->exec sequence properly for Xenomai-enabled threads,
@@ -33,13 +39,9 @@ static int run_fork_exec(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct timespec req;
 
-	switch (fork()) {
+	switch (do_fork()) {
 	case -1:
-		if (errno == ENOSYS) {
-			smokey_note("fork() not available -- discarding test");
-			return 0;
-		}
-		error(1, errno, "fork");
+		error(1, errno, "fork/vfork");
 	case 0:
 		/*
 		 * Re-exec ourselves without running any test, this is
