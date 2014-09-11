@@ -22,19 +22,22 @@
 
 #define COBALT_COND_MAGIC 0x86860505
 
+struct cobalt_cond_state {
+	__u32 pending_signals;
+	union {
+		__u32 mutex_datp_offset;
+		struct mutex_dat *mutex_datp;
+	};
+};
+
 union cobalt_cond_union {
 	pthread_cond_t native_cond;
 	struct cobalt_cond_shadow {
 		__u32 magic;
-		struct cobalt_condattr attr;
 		xnhandle_t handle;
 		union {
-			__u32 pending_signals_offset;
-			__u32 *pending_signals;
-		};
-		union {
-			__u32 mutex_datp_offset;
-			struct mutex_dat *mutex_datp;
+			__u32 state_offset;
+			struct cobalt_cond_state *state;
 		};
 	} shadow_cond;
 };

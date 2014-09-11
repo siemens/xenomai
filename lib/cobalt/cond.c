@@ -55,33 +55,34 @@
 
 static pthread_condattr_t cobalt_default_condattr;
 
-static inline __u32 *cond_get_signalsp(struct cobalt_cond_shadow *shadow)
+static inline struct cobalt_cond_state *
+get_cond_state(struct cobalt_cond_shadow *shadow)
 {
-	if (shadow->attr.pshared)
-		return (__u32 *)(cobalt_umm_shared
-				 + shadow->pending_signals_offset);
-
-	return shadow->pending_signals;
+	if (xnsynch_is_shared(shadow->handle))
+		return (struct cobalt_cond_state *)(cobalt_umm_shared
+				 + shadow->state_offset);
+	return shadow->state;
 }
 
 static inline struct mutex_dat *
-cond_get_mutex_datp(struct cobalt_cond_shadow *shadow)
+get_mutex_state(struct cobalt_cond_shadow *shadow)
 {
-	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
+	struct cobalt_cond_state *cond_state = get_cond_state(shadow);
+
+	if (cond_state->mutex_datp == (struct mutex_dat *)~0UL)
 		return NULL;
 
-	if (shadow->attr.pshared)
+	if (xnsynch_is_shared(shadow->handle))
 		return (struct mutex_dat *)(cobalt_umm_shared
-					    + shadow->mutex_datp_offset);
+					    + cond_state->mutex_datp_offset);
 
-	return shadow->mutex_datp;
+	return cond_state->mutex_datp;
 }
 
 void cobalt_default_condattr_init(void)
 {
 	pthread_condattr_init(&cobalt_default_condattr);
 }
-
 
 /**
  * @fn int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
@@ -112,8 +113,8 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 				     const pthread_condattr_t * attr))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_cond_state *cond_state;
 	struct cobalt_condattr kcattr;
-	__u32 *pending_signalsp;
 	int err, tmp;
 
 	if (attr == NULL)
@@ -133,14 +134,19 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 	if (err)
 		return err;
 
-	if (!_cnd->attr.pshared) {
-		pending_signalsp = (__u32 *)
-			(cobalt_umm_private + _cnd->pending_signals_offset);
-		_cnd->pending_signals = pending_signalsp;
-	} else
-		pending_signalsp = cond_get_signalsp(_cnd);
+	if (kcattr.pshared)
+		cond_state = get_cond_state(_cnd);
+	else {
+		/*
+		 * This is condvar is local to the current process,
+		 * build a direct pointer for fast access.
+		 */
+		cond_state = (struct cobalt_cond_state *)
+			(cobalt_umm_private + _cnd->state_offset);
+		_cnd->state = cond_state;
+	}
 
-	cobalt_commit_memory(pending_signalsp);
+	cobalt_commit_memory(cond_state);
 
 	return 0;
 }
@@ -399,31 +405,33 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
-	__u32 pending_signals, *pending_signalsp;
-	struct mutex_dat *mutex_datp;
+	struct cobalt_cond_state *cond_state;
+	struct mutex_dat *mutex_state;
+	__u32 pending_signals;
 	xnhandle_t cur;
 	__u32 flags;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_datp = cond_get_mutex_datp(_cnd);
-	if (mutex_datp) {
-		flags = mutex_datp->flags;
-		if (flags & COBALT_MUTEX_ERRORCHECK) {
-			cur = cobalt_get_current();
-			if (cur == XN_NO_HANDLE)
-				return EPERM;
+	mutex_state = get_mutex_state(_cnd);
+	if (mutex_state == NULL)
+		return 0;	/* Fast path, no waiter. */
 
-			if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
-				return EPERM;
-		}
-		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
-		pending_signalsp = cond_get_signalsp(_cnd);
-		pending_signals = *pending_signalsp;
-		if (pending_signals != ~0U)
-			*pending_signalsp = pending_signals + 1;
+	flags = mutex_state->flags;
+	if (flags & COBALT_MUTEX_ERRORCHECK) {
+		cur = cobalt_get_current();
+		if (cur == XN_NO_HANDLE)
+			return EPERM;
+		if (xnsynch_fast_owner_check(&mutex_state->owner, cur) < 0)
+			return EPERM;
 	}
+
+	mutex_state->flags = flags | COBALT_MUTEX_COND_SIGNAL;
+	cond_state = get_cond_state(_cnd);
+	pending_signals = cond_state->pending_signals;
+	if (pending_signals != ~0U)
+		cond_state->pending_signals = pending_signals + 1;
 
 	return 0;
 }
@@ -449,27 +457,30 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
-	struct mutex_dat *mutex_datp;
+	struct cobalt_cond_state *cond_state;
+	struct mutex_dat *mutex_state;
 	xnhandle_t cur;
 	__u32 flags;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_datp = cond_get_mutex_datp(_cnd);
-	if (mutex_datp) {
-		flags = mutex_datp->flags ;
-		if (flags & COBALT_MUTEX_ERRORCHECK) {
-			cur = cobalt_get_current();
-			if (cur == XN_NO_HANDLE)
-				return EPERM;
+	mutex_state = get_mutex_state(_cnd);
+	if (mutex_state == NULL)
+		return 0;
 
-			if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
-				return EPERM;
-		}
-		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
-		*cond_get_signalsp(_cnd) = ~0U;
+	flags = mutex_state->flags;
+	if (flags & COBALT_MUTEX_ERRORCHECK) {
+		cur = cobalt_get_current();
+		if (cur == XN_NO_HANDLE)
+			return EPERM;
+		if (xnsynch_fast_owner_check(&mutex_state->owner, cur) < 0)
+			return EPERM;
 	}
+
+	mutex_state->flags = flags | COBALT_MUTEX_COND_SIGNAL;
+	cond_state = get_cond_state(_cnd);
+	cond_state->pending_signals = ~0U;
 
 	return 0;
 }

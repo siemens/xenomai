@@ -35,7 +35,7 @@ struct cobalt_cond {
 	/** cobalt_condq */
 	struct list_head link;
 	struct list_head mutex_link;
-	__u32 *pending_signals;
+	struct cobalt_cond_state *state;
 	struct cobalt_condattr attr;
 	struct cobalt_mutex *mutex;
 	struct cobalt_kqueues *owningq;

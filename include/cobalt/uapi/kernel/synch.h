@@ -75,4 +75,10 @@ int xnsynch_fast_release(atomic_t *fastlock, xnhandle_t cur_ownerh)
 		== cur_ownerh;
 }
 
+/* Local/shared property */
+static inline int xnsynch_is_shared(xnhandle_t handle)
+{
+	return (handle & XNSYNCH_PSHARED) != 0;
+}
+
 #endif /* !_COBALT_UAPI_KERNEL_SYNCH_H */

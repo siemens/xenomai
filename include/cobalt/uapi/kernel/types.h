@@ -30,7 +30,10 @@ typedef __u32 xnhandle_t;
 #define XN_NO_HANDLE		((xnhandle_t)0)
 #define XN_HANDLE_INDEX_MASK	((xnhandle_t)0xf0000000)
 
-/* 3 spare special bits remaining. */
+/* Fixed bits (part of the identifier) */
+#define XNSYNCH_PSHARED		((xnhandle_t)0x40000000)
+
+/* Transient bits (expressing a status) */
 #define XNSYNCH_FLCLAIM		((xnhandle_t)0x80000000)
 
 #define XN_HANDLE_TRANSIENT_MASK	XNSYNCH_FLCLAIM

@@ -37,24 +37,27 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
 	}
 	xnregistry_remove(handle);
 	list_del(&cond->link);
-	/* synchbase wait queue may not be empty only when this function is
-	   called from cobalt_cond_pkg_cleanup, hence the absence of
-	   xnsched_run(). */
+	/*
+	 * synchbase wait queue may not be empty only when this
+	 * function is called from cobalt_cond_pkg_cleanup, in which
+	 * case we don't have to reschedule.
+	 */
 	xnsynch_destroy(&cond->synchbase);
 	cobalt_mark_deleted(cond);
 	xnlock_put_irqrestore(&nklock, s);
 	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm,
-			cond->pending_signals);
+			cond->state);
 	xnfree(cond);
 }
 
 static inline int
 pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *attr)
 {
-	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, err;
+	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, ret;
 	struct cobalt_cond *cond, *old_cond;
-	struct list_head *condq;
+	struct cobalt_cond_state *state;
 	struct xnsys_ppd *sys_ppd;
+	struct list_head *condq;
 	spl_t s;
 
 	cond = xnmalloc(sizeof(*cond));
@@ -62,13 +65,14 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 		return -ENOMEM;
 
 	sys_ppd = cobalt_ppd_get(attr->pshared);
-	cond->pending_signals = cobalt_umm_alloc(&sys_ppd->umm,
-				sizeof(*cond->pending_signals));
-	if (cond->pending_signals == NULL) {
-		err = -EAGAIN;
-		goto err_free_cond;
+	state = cobalt_umm_alloc(&sys_ppd->umm, sizeof(*state));
+	if (state == NULL) {
+		ret = -EAGAIN;
+		goto fail_umm;
 	}
-	*cond->pending_signals = 0;
+	cond->state = state;
+	state->pending_signals = 0;
+	state->mutex_datp = (struct mutex_dat *)~0UL;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -88,25 +92,19 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 		goto do_init;
 
 	if (attr->pshared == 0) {
-		err = -EBUSY;
-		goto err_free_pending_signals;
+		ret = -EBUSY;
+		goto fail_register;
 	}
 	xnlock_put_irqrestore(&nklock, s);
 	cond_destroy_internal(cnd->handle, cobalt_kqueues(1));
 	xnlock_get_irqsave(&nklock, s);
 do_init:
-	err = xnregistry_enter_anon(cond, &cond->handle);
-	if (err < 0)
-		goto err_free_pending_signals;
+	ret = xnregistry_enter_anon(cond, &cond->handle);
+	if (ret < 0)
+		goto fail_register;
 
-	cnd->handle = cond->handle;
-	cnd->attr = *attr;
-	cnd->pending_signals_offset =
-		cobalt_umm_offset(&sys_ppd->umm, cond->pending_signals);
-	cnd->mutex_datp = (struct mutex_dat *)~0UL;
-
-	cnd->magic = COBALT_COND_MAGIC;
-
+	if (attr->pshared)
+		cond->handle |= XNSYNCH_PSHARED;
 	cond->magic = COBALT_COND_MAGIC;
 	xnsynch_init(&cond->synchbase, synch_flags, NULL);
 	cond->attr = *attr;
@@ -114,17 +112,20 @@ do_init:
 	cond->owningq = cobalt_kqueues(attr->pshared);
 	list_add_tail(&cond->link, condq);
 
+	cnd->handle = cond->handle;
+	cnd->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
+	cnd->magic = COBALT_COND_MAGIC;
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
-
-  err_free_pending_signals:
+fail_register:
 	xnlock_put_irqrestore(&nklock, s);
-	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm,
-			cond->pending_signals);
-  err_free_cond:
+	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm, state);
+fail_umm:
 	xnfree(cond);
-	return err;
+
+	return ret;
 }
 
 static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
@@ -324,7 +325,7 @@ COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
 		     struct timespec __user *u_ts))
 {
 	struct xnthread *cur = xnthread_current();
-	struct cobalt_cond *cnd;
+	struct cobalt_cond *cond;
 	struct cobalt_mutex *mx;
 	struct mutex_dat *datp;
 	struct us_cond_data d;
@@ -333,27 +334,27 @@ COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
 	int err, perr = 0;
 
 	handle = cobalt_get_handle_from_user(&u_cnd->handle);
-	cnd = xnregistry_lookup(handle, NULL);
+	cond = xnregistry_lookup(handle, NULL);
 
 	handle = cobalt_get_handle_from_user(&u_mx->handle);
 	mx = xnregistry_lookup(handle, NULL);
 
-	if (!cnd->mutex) {
+	if (cond->mutex == NULL) {
 		__xn_get_user(datp, &u_mx->dat);
-		__xn_put_user(datp, &u_cnd->mutex_datp);
+		cond->state->mutex_datp = datp;
 	}
 
 	if (timed) {
 		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?-EFAULT:0;
-		if (!err) {
+		if (err == 0) {
 			trace_cobalt_cond_timedwait(u_cnd, u_mx, &ts);
 			err = cobalt_cond_timedwait_prologue(cur,
-							     cnd, mx, timed,
+							     cond, mx, timed,
 							     ts2ns(&ts) + 1);
 		}
 	} else {
 		trace_cobalt_cond_wait(u_cnd, u_mx);
-		err = cobalt_cond_timedwait_prologue(cur, cnd,
+		err = cobalt_cond_timedwait_prologue(cur, cond,
 						     mx, timed,
 						     XN_INFINITE);
 	}
@@ -362,7 +363,7 @@ COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
 	case 0:
 	case -ETIMEDOUT:
 		perr = d.err = err;
-		err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
+		err = cobalt_cond_timedwait_epilogue(cur, cond, mx);
 		break;
 
 	case -EINTR:
@@ -376,10 +377,8 @@ COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
 		d.err = EINVAL;
 	}
 
-	if (!cnd->mutex) {
-		datp = (struct mutex_dat *)~0UL;
-		__xn_put_user(datp, &u_cnd->mutex_datp);
-	}
+	if (cond->mutex == NULL)
+		cond->state->mutex_datp = (struct mutex_dat *)~0UL;
 
 	if (err == -EINTR)
 		__xn_put_user(d.err, u_err);
@@ -392,37 +391,36 @@ COBALT_SYSCALL(cond_wait_epilogue, primary,
 		     struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct xnthread *cur = xnthread_current();
-	struct cobalt_cond *cnd;
+	struct cobalt_cond *cond;
 	struct cobalt_mutex *mx;
 	xnhandle_t handle;
 	int err;
 
 	handle = cobalt_get_handle_from_user(&u_cnd->handle);
-	cnd = xnregistry_lookup(handle, NULL);
+	cond = xnregistry_lookup(handle, NULL);
 
 	handle = cobalt_get_handle_from_user(&u_mx->handle);
 	mx = xnregistry_lookup(handle, NULL);
+	err = cobalt_cond_timedwait_epilogue(cur, cond, mx);
 
-	err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
-
-	if (!cnd->mutex) {
-		struct mutex_dat *datp = (struct mutex_dat *)~0UL;
-		__xn_put_user(datp, &u_cnd->mutex_datp);
-	}
+	if (cond->mutex == NULL)
+		cond->state->mutex_datp = (struct mutex_dat *)~0UL;
 
 	return err;
 }
 
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 {
+	struct cobalt_cond_state *state;
 	__u32 pending_signals;
 	int need_resched;
 
-	pending_signals = *cond->pending_signals;
+	state = cond->state;
+	pending_signals = state->pending_signals;
 
 	switch(pending_signals) {
 	default:
-		*cond->pending_signals = 0;
+		state->pending_signals = 0;
 		need_resched = xnsynch_wakeup_many_sleepers(&cond->synchbase,
 							    pending_signals);
 		break;
@@ -430,7 +428,7 @@ int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 	case ~0U:
 		need_resched =
 			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
-		*cond->pending_signals = 0;
+		state->pending_signals = 0;
 		break;
 
 	case 0:
