@@ -278,10 +278,10 @@ static const struct option smokey_options[] = {
 
 static void smokey_help(void)
 {
-        fprintf(stderr, "--keep-going               don't stop upon test error\n");
-        fprintf(stderr, "--quiet                    require tests to tame down verbosity\n");
-	fprintf(stderr, "--list                     list all tests\n");
-	fprintf(stderr, "--run[=<id[,id...]>]]      run [portion of] test list\n");
+        fprintf(stderr, "--keep-going               	don't stop upon test error\n");
+        fprintf(stderr, "--quiet                    	require tests to tame down verbosity\n");
+	fprintf(stderr, "--list                     	list all tests\n");
+	fprintf(stderr, "--run[=<id[,id...]>]]      	run [portion of] test list\n");
 }
 
 static inline void pick_test_range(int start, int end)
