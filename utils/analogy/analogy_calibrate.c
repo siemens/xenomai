@@ -31,7 +31,7 @@
 #include "analogy_calibrate.h"
 #include "calibration_ni_m.h"
 
-
+struct apply_calibration_params params = {.name = NULL,} ;
 struct timespec calibration_start_time;
 static const char *revision = "0.0.1";
 a4l_desc_t descriptor;
@@ -57,28 +57,65 @@ static const struct option options[] = {
 		.flag = NULL,
 	},
 	{
+#define apply_opt	3
+		.name = "apply",
+		.has_arg = 1,
+		.flag = NULL,
+	},
+	{
 		.name = NULL,
 	}
 };
 
-static void print_usage(void)
+static void
+print_usage(void)
 {
 	fprintf(stderr, "Usage: analogy_calibrate \n"
-	       "  --help 	     		: this menu \n"
-	       "  --device /dev/analogyX	: analogy device to calibrate \n"
-	       "  --output filename   		: calibration results \n"
+	       "  --help 	     				: this menu \n"
+	       "  --device /dev/analogyX			: analogy device to calibrate \n"
+	       "  --output filename   				: calibration results \n"
+	       "  --apply filename:subd,channel,range,aref 	: apply the calibration file \n"
+	       "          ex: /home/foo/calib.rc:0,1,255,255 - use 255 for dont care \n"
 	      );
+}
+
+static int
+apply_calibration_set_globals(char *info)
+{
+	char *p;
+
+	params.name = strtok(info, ":");
+	p = strtok(NULL, ",");
+	if (!p)
+		error(EXIT, 0, "missing --apply parameter \n");
+	params.subd = strtol(p, NULL, 0);
+
+	p = strtok(NULL, ",");
+	if (!p)
+		error(EXIT, 0, "missing --apply parameter \n");
+	params.channel = strtol(p, NULL, 0);
+
+	p = strtok(NULL, ",");
+	if (!p)
+		error(EXIT, 0, "missing --apply parameter \n");
+	params.range = strtol(p, NULL, 0);
+
+	p = strtok(NULL, "");
+	if (!p)
+		error(EXIT, 0, "missing --apply parameter \n");
+	params.aref = strtol(p, NULL, 0);
+
+	return 0;
 }
 
 static void __attribute__ ((constructor)) __analogy_calibrate_init(void)
 {
 	clock_gettime(CLOCK_MONOTONIC, &calibration_start_time);
 }
-
 int main(int argc, char *argv[])
 {
 	struct sched_param param = {.sched_priority = 99};
-	char *device = NULL, *file = NULL;
+	char *device = NULL, *file = NULL, *apply_info = NULL;
 	int v, i, fd, err = 0;
 	struct rlimit rl;
 
@@ -103,11 +140,17 @@ int main(int argc, char *argv[])
 				error(EXIT, errno, "calibration file");
 			__debug("calibration output: %s \n", file);
 			break;
+		case apply_opt:
+			apply_info = optarg;
+			break;
 		default:
 			print_usage();
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	if (apply_info)
+		apply_calibration_set_globals(apply_info);
 
 	err = getrlimit(RLIMIT_STACK, &rl);
 	if (!err) {

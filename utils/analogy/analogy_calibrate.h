@@ -38,8 +38,17 @@ extern struct timespec calibration_start_time;
 extern a4l_desc_t descriptor;
 extern FILE *cal;
 
-#define ARRAY_LEN(a)  (sizeof(a) / sizeof((a)[0]))
+struct apply_calibration_params {
+	int channel;
+	char *name;
+	int range;
+	int subd;
+	int aref;
+};
 
+extern struct apply_calibration_params params;
+
+#define ARRAY_LEN(a)  (sizeof(a) / sizeof((a)[0]))
 
 #define RETURN	 1
 #define CONT 	 0

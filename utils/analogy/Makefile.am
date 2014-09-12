@@ -12,7 +12,9 @@ bin_PROGRAMS = \
 CPPFLAGS = 						\
 	@XENO_USER_CFLAGS@ 				\
 	-ggdb						\
-	-I$(top_srcdir)/include
+	-I$(top_srcdir)/include                         \
+	-I$(top_srcdir)/lib/boilerplate	
+
 
 LDFLAGS =
 

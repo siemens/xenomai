@@ -26,9 +26,13 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
 #include <rtdm/analogy.h>
+#include <wordexp.h>
 #include <math.h>
 
 #include "calibration_ni_m.h"
+#include "iniparser/iniparser.h"
+
+extern char *apply_name;
 
 struct list ai_calibration_list;
 struct list ao_calibration_list;
@@ -41,6 +45,40 @@ static struct subdevice ai_subd;
 static struct subdev_ops ops;
 static struct eeprom eeprom;
 static struct gnumath math;
+
+
+static int
+apply_calibration(void)
+{
+	const char *filename;
+	dictionary *d;
+	wordexp_t exp;
+	int ret = 0;
+
+	if (params.name == NULL)
+		return 0;
+
+	ret = wordexp(params.name, &exp, WRDE_NOCMD|WRDE_UNDEF);
+	if (ret) {
+		ret = ret == WRDE_NOSPACE ? -ENOMEM : -EINVAL;
+		error(EXIT, 0, "cant apply calibration (%d) \n", ret);
+	}
+
+	if (exp.we_wordc != 1)
+		error(EXIT, 0, "weird expansion of %s as rc file \n", params.name);
+
+	filename = exp.we_wordv[0];
+	if (access(filename, R_OK))
+		error(EXIT, 0, "cant access %s for reading \n", params.name);
+
+	d = iniparser_load(filename);
+	wordfree(&exp);
+
+	if (d == NULL)
+		error(EXIT, 0, "iniparser loading error for %s \n", params.name);
+
+	return ret;
+}
 
 /*
  * generate the calibration file
@@ -1388,6 +1426,8 @@ int ni_m_software_calibrate(void)
 		error(EXIT, 0, "ao calibration error (%d)", err);
 
 	write_calibration(&ao_calibration_list, &ao_subd);
+
+	apply_calibration();
 
 	return 0;
 }
