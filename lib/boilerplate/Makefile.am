@@ -31,10 +31,25 @@ libboilerplate_la_CPPFLAGS =				\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
+libboilerplate_la_LIBADD = libiniparser.la
+noinst_LTLIBRARIES += libiniparser.la
+
+libiniparser_la_SOURCES	=	\
+	iniparser/dictionary.c	\
+	iniparser/dictionary.h	\
+	iniparser/iniparser.h	\
+	iniparser/iniparser.c
+
+libiniparser_la_CPPFLAGS	=		\
+	-Iiniparser @XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include
+
+EXTRA_DIST = iniparser/README iniparser/LICENSE
+
 # We always build the tlsf/malloc support. In the pshared case, it
 # will provide for private memory allocation.
 if XENO_TLSF
-libboilerplate_la_LIBADD =	libtlsf.la
+libboilerplate_la_LIBADD +=	libtlsf.la
 noinst_LTLIBRARIES += libtlsf.la
 endif
 
@@ -48,11 +63,11 @@ libtlsf_la_CPPFLAGS =					\
 	-I$(top_srcdir)/include				\
 	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
 
-EXTRA_DIST = tlsf/README
+EXTRA_DIST += tlsf/README
 
 SPARSE = sparse
 
 sparse:
-	@for i in $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES); do \
+	@for i in $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES) $(libiniparser_la_SOURCES; do \
 		$(SPARSE) $(CHECKFLAGS) $(srcdir)/$$i; \
 	done
