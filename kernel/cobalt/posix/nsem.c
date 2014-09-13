@@ -279,7 +279,7 @@ static void cleanup_named_sems(void *cookie, struct xnid *i)
 	cc = cookie;
 	u = container_of(i, struct named_sem, id);
 	u->refs = 1;
-	sem_close(cc, xnid_id(i));
+	sem_close(cc, xnid_key(i));
 }
 
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc)

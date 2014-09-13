@@ -33,7 +33,7 @@ void xntree_cleanup(struct rb_root *t, void *cookie,
 	}
 }
 
-int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long long id)
+int xnid_enter(struct rb_root *t, struct xnid *xnid, xnkey_t key)
 {
 	struct rb_node **new = &t->rb_node, *parent = NULL;
 
@@ -41,15 +41,15 @@ int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long long id)
 		struct xnid *i = container_of(*new, struct xnid, link);
 
 		parent = *new;
-		if (id < i->id)
+		if (key < i->key)
 			new = &((*new)->rb_left);
-		else if (id > i->id)
+		else if (key > i->key)
 			new = &((*new)->rb_right);
 		else
 			return -EEXIST;
 	}
 
-	xnid->id = id;
+	xnid->key = key;
 	rb_link_node(&xnid->link, parent, new);
 	rb_insert_color(&xnid->link, t);
 

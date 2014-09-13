@@ -22,8 +22,15 @@
 #include <linux/rbtree.h>
 #include <cobalt/kernel/assert.h>
 
+typedef unsigned long long xnkey_t;
+
+static inline xnkey_t PTR_KEY(void *p)
+{
+	return (xnkey_t)(long)p;
+}
+
 struct xnid {
-	unsigned long long id;
+	xnkey_t key;
 	struct rb_node link;
 };
 
@@ -48,24 +55,24 @@ static inline void xntree_init(struct rb_root *t)
 void xntree_cleanup(struct rb_root *t, void *cookie,
 		void (*destroy)(void *cookie, struct xnid *id));
 
-int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long long id);
+int xnid_enter(struct rb_root *t, struct xnid *xnid, xnkey_t key);
 
-static inline unsigned long long xnid_id(struct xnid *i)
+static inline xnkey_t xnid_key(struct xnid *i)
 {
-	return i->id;
+	return i->key;
 }
 
 static inline
-struct xnid *xnid_fetch(struct rb_root *t, unsigned long long id)
+struct xnid *xnid_fetch(struct rb_root *t, xnkey_t key)
 {
 	struct rb_node *node = t->rb_node;
 
 	while (node) {
 		struct xnid *i = container_of(node, struct xnid, link);
 
-		if (id < i->id)
+		if (key < i->key)
 			node = node->rb_left;
-		else if (id > i->id)
+		else if (key > i->key)
 			node = node->rb_right;
 		else
 			return i;
@@ -77,7 +84,7 @@ struct xnid *xnid_fetch(struct rb_root *t, unsigned long long id)
 static inline int xnid_remove(struct rb_root *t, struct xnid *xnid)
 {
 #if XENO_DEBUG(COBALT)
-	if (xnid_fetch(t, xnid->id) != xnid)
+	if (xnid_fetch(t, xnid->key) != xnid)
 		return -ENOENT;
 #endif
 	rb_erase(&xnid->link, t);

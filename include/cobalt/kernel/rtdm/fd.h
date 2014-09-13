@@ -338,11 +338,6 @@ struct rtdm_fd {
 	struct list_head cleanup;
 };
 
-struct rtdm_fd_index {
-	struct xnid id;
-	struct rtdm_fd *fd;
-};
-
 #define XNFD_MAGIC_ANY 0
 
 static inline struct xnsys_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
