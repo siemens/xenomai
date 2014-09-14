@@ -23,7 +23,7 @@
 #include <linux/semaphore.h>
 #include <linux/slab.h>
 #include <linux/ctype.h>
-#include <cobalt/kernel/apc.h>
+#include <linux/device.h>
 #include "rtdm/internal.h"
 #include <trace/events/cobalt-rtdm.h>
 
@@ -45,15 +45,15 @@ static int enosys(void)
 	return -ENOSYS;
 }
 
-static inline unsigned long long get_proto_id(int pf, int type)
+static inline xnkey_t get_proto_id(int pf, int type)
 {
-	unsigned long long llpf = (unsigned)pf;
-	return (llpf << 32) | (unsigned)type;
+	xnkey_t llpf = (unsigned int)pf;
+	return (llpf << 32) | (unsigned int)type;
 }
 
 static inline void rtdm_reference_device(struct rtdm_device *device)
 {
-	atomic_inc(&device->reserved.refcount);
+	atomic_inc(&device->refcount);
 }
 
 struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
@@ -105,8 +105,8 @@ struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 
 	device = xnregistry_lookup(handle, NULL);
 	if (device) {
-		if (device->reserved.magic == RTDM_DEVICE_MAGIC &&
-		    ((device->device_flags & RTDM_MINOR) != 0 ||
+		if (device->magic == RTDM_DEVICE_MAGIC &&
+		    ((device->class->device_flags & RTDM_MINOR) != 0 ||
 		     minor < 0)) {
 			rtdm_reference_device(device);
 			*minor_r = minor;
@@ -122,9 +122,9 @@ struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
 struct rtdm_device *
 __rtdm_get_protocol_device(int protocol_family, int socket_type)
 {
-	struct rtdm_device *device;
-	unsigned long long id;
+	struct rtdm_device *device = NULL;
 	struct xnid *xnid;
+	xnkey_t id;
 	spl_t s;
 
 	id = get_proto_id(protocol_family, socket_type);
@@ -133,11 +133,9 @@ __rtdm_get_protocol_device(int protocol_family, int socket_type)
 
 	xnid = xnid_fetch(&rtdm_protocol_devices, id);
 	if (xnid) {
-		device = container_of(xnid, struct rtdm_device, reserved.id);
-
+		device = container_of(xnid, struct rtdm_device, proto.id);
 		rtdm_reference_device(device);
-	} else
-		device = NULL;
+	}
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
@@ -150,21 +148,114 @@ __rtdm_get_protocol_device(int protocol_family, int socket_type)
  * @{
  */
 
+static char *rtdm_devnode(struct device *dev, umode_t *mode)
+{
+	return kasprintf(GFP_KERNEL, "rtdm/%s", dev_name(dev));
+}
+
+static int register_device_class(struct rtdm_device_class *class)
+{
+	struct class *kclass;
+	dev_t rdev;
+	int ret;
+
+	if (class->profile_info.magic == RTDM_CLASS_MAGIC) {
+		atomic_inc(&class->refcount);
+		return 0;
+	}
+
+	if (class->profile_info.magic != ~RTDM_CLASS_MAGIC)
+		return -EINVAL;
+
+	switch (class->device_flags & RTDM_DEVICE_TYPE_MASK) {
+	case RTDM_NAMED_DEVICE:
+	case RTDM_PROTOCOL_DEVICE:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	if (class->device_count <= 0)
+		return -EINVAL;
+
+	if ((class->device_flags & RTDM_NAMED_DEVICE) == 0)
+		goto done;
+
+	ret = alloc_chrdev_region(&rdev, 0, class->device_count,
+				  class->profile_info.name);
+	if (ret) {
+		printk(XENO_WARN "cannot allocate chrdev region %s[0..%d]\n",
+		       class->profile_info.name, class->device_count - 1);
+		return ret;
+	}
+
+	cdev_init(&class->named.cdev, &rtdm_dumb_fops);
+	ret = cdev_add(&class->named.cdev, rdev, class->device_count);
+	if (ret)
+		goto fail_cdev;
+
+	kclass = class_create(THIS_MODULE, class->profile_info.name);
+	if (IS_ERR(kclass)) {
+		printk(XENO_WARN "cannot create device class %s\n",
+		       class->profile_info.name);
+		ret = PTR_ERR(kclass);
+		goto fail_class;
+	}
+	kclass->devnode = rtdm_devnode;
+
+	class->named.kclass = kclass;
+	class->named.major = MAJOR(rdev);
+	atomic_set(&class->refcount, 1);
+done:
+	class->profile_info.magic = RTDM_CLASS_MAGIC;
+
+	return 0;
+
+fail_class:
+	cdev_del(&class->named.cdev);
+fail_cdev:
+	unregister_chrdev_region(rdev, class->device_count);
+
+	return ret;
+}
+
+static void unregister_device_class(struct rtdm_device_class *class)
+{
+	XENO_BUGON(COBALT, class->profile_info.magic != RTDM_CLASS_MAGIC);
+
+	if (!atomic_dec_and_test(&class->refcount))
+		return;
+
+	if (class->device_flags & RTDM_NAMED_DEVICE) {
+		class_destroy(class->named.kclass);
+		cdev_del(&class->named.cdev);
+		unregister_chrdev_region(MKDEV(class->named.major, 0),
+					 class->device_count);
+	}
+}
+
 /**
  * @brief Register a RTDM device
  *
- * @param[in] device Pointer to structure describing the new device.
+ * The device descriptor is initialized and registered in the RTDM
+ * namespace.
+ *
+ * @param[in] device Pointer to the device descriptor register.
+ * @param[in] class RTDM class the new device belongs to.
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if the device structure contains invalid entries.
- * Check kernel log in this case.
- *
- * - -ENOMEM is returned if a memory allocation failed in the process
- * of registering the device.
+ * - -EINVAL is returned if the descriptor contains invalid
+ * entries. RTDM_PROFILE_INFO() must appear in the list of
+ * initializers setting up the class properties.
  *
  * - -EEXIST is returned if the specified device name of protocol ID is
  * already in use.
+ *
+ * - -EAGAIN is returned if some /proc entry cannot be created.
+ *
+ * - -ENOMEM is returned if a memory allocation failed in the process
+ * of registering the device.
  *
  * - -EAGAIN is returned if some /proc entry cannot be created.
  *
@@ -172,121 +263,133 @@ __rtdm_get_protocol_device(int protocol_family, int socket_type)
  */
 int rtdm_dev_register(struct rtdm_device *device)
 {
-	unsigned long long id;
+	struct rtdm_device_class *class;
+	int ret, pos, major, minor;
+	struct device *kdev;
+	xnkey_t id;
 	spl_t s;
-	int ret;
 
 	if (!realtime_core_enabled())
 		return -ENOSYS;
 
-	/* Sanity check: structure version */
-	if (!XENO_ASSERT(COBALT, device->struct_version == RTDM_DEVICE_STRUCT_VER)) {
-		printk(XENO_ERR "invalid rtdm_device version (%d, "
-		       "required %d)\n", device->struct_version,
-		       RTDM_DEVICE_STRUCT_VER);
-		return -EINVAL;
-	}
-
-	/* Sanity check: proc_name specified? */
-	if (!XENO_ASSERT(COBALT, device->proc_name)) {
-		printk(XENO_ERR "no vfile (/proc) name specified for RTDM device\n");
-		return -EINVAL;
-	}
-
-	switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
-	case RTDM_NAMED_DEVICE:
-		device->ops.socket = (typeof(device->ops.socket))enosys;
-		break;
-
-	case RTDM_PROTOCOL_DEVICE:
-		device->ops.open = (typeof(device->ops.open))enosys;
-		break;
-
-	default:
-		return -EINVAL;
-	}
-
-	device->reserved.close = device->ops.close;
-	device->ops.close = __rt_dev_close;
-	atomic_set(&device->reserved.refcount, 0);
-	device->reserved.exclusive_context = NULL;
-
-	if (device->device_flags & RTDM_EXCLUSIVE) {
-		device->reserved.exclusive_context =
-		    kmalloc(sizeof(struct rtdm_dev_context) +
-			    device->context_size, GFP_KERNEL);
-		if (!device->reserved.exclusive_context) {
-			printk(XENO_ERR "no memory for exclusive context of RTDM device "
-			       "(context size: %ld)\n",
-				 (long)device->context_size);
-			return -ENOMEM;
-		}
-		/* mark exclusive context as unused */
-		device->reserved.exclusive_context->device = NULL;
-	}
-
 	down(&nrt_dev_lock);
 
-	trace_cobalt_device_register(device);
+	device->name = NULL;
+	device->exclusive_context = NULL;
+	class = device->class;
+	pos = atomic_read(&class->refcount);
+	ret = register_device_class(class);
+	if (ret) {
+		up(&nrt_dev_lock);
+		return ret;
+	}
 
-	device->reserved.magic = RTDM_DEVICE_MAGIC;
+	device->ops = class->ops;
+	if (class->device_flags & RTDM_NAMED_DEVICE)
+		device->ops.socket = (typeof(device->ops.socket))enosys;
+	else
+		device->ops.open = (typeof(device->ops.open))enosys;
 
-	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) ==
-		RTDM_NAMED_DEVICE) {
-		ret = rtdm_proc_register_device(device);
-		if (ret)
-			goto err;
+	device->ops.close = __rt_dev_close; /* Interpose on driver's handler. */
+	atomic_set(&device->refcount, 0);
 
-		ret = xnregistry_enter(device->device_name, device,
-				&device->reserved.handle, NULL);
-		if (ret) {
-			rtdm_proc_unregister_device(device);
-			goto err;
+	if (class->device_flags & RTDM_EXCLUSIVE) {
+		device->exclusive_context =
+			kmalloc(sizeof(struct rtdm_dev_context) +
+				class->context_size, GFP_KERNEL);
+		if (device->exclusive_context == NULL) {
+			ret = -ENOMEM;
+			goto fail;
+		}
+		/* mark exclusive context as unused */
+		device->exclusive_context->device = NULL;
+	}
+
+	device->magic = RTDM_DEVICE_MAGIC;
+
+	if (class->device_flags & RTDM_NAMED_DEVICE) {
+		major = class->named.major;
+		minor = pos;
+		device->named.minor = minor;
+		device->name = kasformat(device->label, minor);
+		if (device->name == NULL) {
+			ret = -ENOMEM;
+			goto fail;
 		}
 
+		kdev = device_create(class->named.kclass, NULL,
+				     MKDEV(major, minor),
+				     device, device->label, minor);
+		if (IS_ERR(kdev)) {
+			ret = PTR_ERR(kdev);
+			goto fail;
+		}
+
+		ret = xnregistry_enter(device->name, device,
+				       &device->named.handle, NULL);
+		if (ret)
+			goto fail_register;
+
 		xnlock_get_irqsave(&rt_dev_lock, s);
-		list_add_tail(&device->reserved.entry, &rtdm_named_devices);
+		list_add_tail(&device->named.entry, &rtdm_named_devices);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 
-		up(&nrt_dev_lock);
-	} else {
-		id = get_proto_id(device->protocol_family,
-				device->socket_type);
+		ret = rtdm_proc_register_device(device);
+		if (ret)
+			goto fail_proc;
 
+	} else {
+		device->name = kstrdup(device->label, GFP_KERNEL);
+		if (device->name == NULL) {
+			ret = -ENOMEM;
+			goto fail;
+		}
+		id = get_proto_id(class->protocol_family, class->socket_type);
 		xnlock_get_irqsave(&rt_dev_lock, s);
-		ret = xnid_enter(&rtdm_protocol_devices,
-				&device->reserved.id, id);
+		ret = xnid_enter(&rtdm_protocol_devices, &device->proto.id, id);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 		if (ret < 0)
-			goto err;
+			goto fail;
 
 		ret = rtdm_proc_register_device(device);
 		if (ret) {
 			xnlock_get_irqsave(&rt_dev_lock, s);
-			xnid_remove(&rtdm_protocol_devices,
-				&device->reserved.id);
+			xnid_remove(&rtdm_protocol_devices, &device->proto.id);
 			xnlock_put_irqrestore(&rt_dev_lock, s);
-			goto err;
+			goto fail;
 		}
-
-		up(&nrt_dev_lock);
 	}
-	return 0;
 
-err:
 	up(&nrt_dev_lock);
-	if (device->reserved.exclusive_context)
-		kfree(device->reserved.exclusive_context);
+
+	trace_cobalt_device_register(device);
+
+	return 0;
+fail_proc:
+	xnregistry_remove(device->named.handle);
+fail_register:
+	device_destroy(class->named.kclass, MKDEV(major, minor));
+fail:
+	unregister_device_class(class);
+
+	up(&nrt_dev_lock);
+
+	if (device->name)
+		kfree(device->name);
+
+	if (device->exclusive_context)
+		kfree(device->exclusive_context);
+
 	return ret;
 }
-
 EXPORT_SYMBOL_GPL(rtdm_dev_register);
 
 /**
- * @brief Unregisters a RTDM device
+ * @brief Unregister a RTDM device
  *
- * @param[in] device Pointer to structure describing the device to be
- * unregistered.
+ * The device descriptor removed from the RTDM namespace.
+ *
+ * @param[in] device Pointer to the device descriptor.
  * @param[in] poll_delay Polling delay in milliseconds to check repeatedly for
  * open instances of @a device, or 0 for non-blocking mode.
  *
@@ -299,12 +402,10 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  */
 int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 {
+	struct rtdm_device_class *class = device->class;
+	xnhandle_t handle = XN_NO_HANDLE;
 	unsigned long warned = 0;
-	xnhandle_t handle = 0;
 	spl_t s;
-
-	if (!realtime_core_enabled())
-		return -ENOSYS;
 
 	rtdm_reference_device(device);
 
@@ -313,7 +414,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 	down(&nrt_dev_lock);
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	while (atomic_read(&device->reserved.refcount) > 1) {
+	while (atomic_read(&device->refcount) > 1) {
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 		up(&nrt_dev_lock);
 
@@ -324,35 +425,42 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 
 		if (!__test_and_set_bit(0, &warned))
 			printk(XENO_WARN "RTDM device %s still in use - waiting for"
-			       " release...\n", device->device_name);
+			       " release...\n", device->name);
 		msleep(poll_delay);
 		down(&nrt_dev_lock);
 		xnlock_get_irqsave(&rt_dev_lock, s);
 	}
 
-	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) ==
-		RTDM_NAMED_DEVICE) {
-		handle = device->reserved.handle;
-		list_del(&device->reserved.entry);
+	if (class->device_flags & RTDM_NAMED_DEVICE) {
+		handle = device->named.handle;
+		list_del(&device->named.entry);
 	} else
-		xnid_remove(&rtdm_protocol_devices, &device->reserved.id);
+		xnid_remove(&rtdm_protocol_devices, &device->proto.id);
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
 	rtdm_proc_unregister_device(device);
 
-	if (handle)
+	if (handle) {
 		xnregistry_remove(handle);
+		device_destroy(class->named.kclass,
+			       MKDEV(class->named.major,
+				     device->named.minor));
+	}
+
+	unregister_device_class(class);
 
 	up(&nrt_dev_lock);
 
-	if (device->reserved.exclusive_context)
-		kfree(device->reserved.exclusive_context);
+	if (device->exclusive_context)
+		kfree(device->exclusive_context);
+
+	kfree(device->name);
 
 	return 0;
 }
-
 EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
+
 /** @} */
 
 int __init rtdm_dev_init(void)

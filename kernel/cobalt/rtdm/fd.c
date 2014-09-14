@@ -21,6 +21,7 @@
 #include <linux/err.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
+#include <linux/poll.h>
 #include <linux/kthread.h>
 #include <linux/semaphore.h>
 #include <cobalt/kernel/registry.h>
@@ -638,3 +639,45 @@ void rtdm_fd_init(void)
 	sema_init(&rtdm_fd_cleanup_sem, 0);
 	kthread_run(fd_cleanup_thread, NULL, "rtdm_fd");
 }
+
+static inline void warn_user(const char *name)
+{
+#ifdef CONFIG_XENO_OPT_DEBUG_USER
+	printk(XENO_WARN "%s[%d] called regular %s() with RTDM file/socket\n",
+	       current->comm, current->pid, name + 5);
+#endif
+}
+
+static ssize_t dumb_read(struct file *file, char  __user *buf,
+			 size_t count, loff_t __user *ppos)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+static ssize_t dumb_write(struct file *file,  const char __user *buf,
+			  size_t count, loff_t __user *ppos)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+static unsigned int dumb_poll(struct file *file, poll_table *pt)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+static long dumb_ioctl(struct file *file, unsigned int cmd,
+		       unsigned long arg)
+{
+	warn_user(__func__);
+	return -EINVAL;
+}
+
+const struct file_operations rtdm_dumb_fops = {
+	.read		= dumb_read,
+	.write		= dumb_write,
+	.poll		= dumb_poll,
+	.unlocked_ioctl	= dumb_ioctl,
+};

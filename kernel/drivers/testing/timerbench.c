@@ -24,6 +24,8 @@
 #include <rtdm/testing.h>
 #include <rtdm/driver.h>
 
+#define NR_DEVICES  4
+
 struct rt_tmbench_context {
 	int mode;
 	unsigned long period;
@@ -49,11 +51,6 @@ struct rt_tmbench_context {
 
 	struct semaphore nrt_mutex;
 };
-
-static unsigned int start_index;
-
-module_param(start_index, uint, 0400);
-MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("jan.kiszka@web.de");
@@ -296,7 +293,7 @@ static int rt_tmbench_start(struct rtdm_fd *fd,
 			ctx->mode = RTTST_TMBENCH_TASK;
 	} else {
 		rtdm_timer_init(&ctx->timer, timer_proc,
-				rtdm_fd_device(fd)->device_name);
+				rtdm_fd_device(fd)->name);
 
 		ctx->curr.test_loops = 0;
 
@@ -453,50 +450,63 @@ static int rt_tmbench_ioctl_rt(struct rtdm_fd *fd,
 	return err;
 }
 
-static struct rtdm_device device = {
-	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class timerbench = {
+	.profile_info		= RTDM_PROFILE_INFO(timerbench,
+						    RTDM_CLASS_TESTING,
+						    RTDM_SUBCLASS_TIMERBENCH,
+						    RTTST_PROFILE_VER),
 	.device_flags		= RTDM_NAMED_DEVICE,
+	.device_count		= 1,
 	.context_size		= sizeof(struct rt_tmbench_context),
-	.device_name		= "",
 	.ops = {
 		.open		= rt_tmbench_open,
 		.close		= rt_tmbench_close,
 		.ioctl_rt	= rt_tmbench_ioctl_rt,
 		.ioctl_nrt	= rt_tmbench_ioctl_nrt,
 	},
-	.device_class		= RTDM_CLASS_TESTING,
-	.device_sub_class	= RTDM_SUBCLASS_TIMERBENCH,
-	.profile_version	= RTTST_PROFILE_VER,
-	.driver_name		= "xeno_timerbench",
+	.driver_name		= "timerbench",
 	.driver_version		= RTDM_DRIVER_VER(0, 2, 1),
 	.peripheral_name	= "Timer Latency Benchmark",
 	.provider_name		= "Jan Kiszka",
-	.proc_name		= device.device_name,
+};
+
+static struct rtdm_device devices[NR_DEVICES] = {
+	[ 0 ... NR_DEVICES - 1] = {
+		.class = &timerbench,
+		.label = "timerbench%d",
+	},
 };
 
 static int __init __timerbench_init(void)
 {
-	int err;
+	int minor, ret;
 
 	if (!realtime_core_enabled())
 		return 0;
 
-	do {
-		ksformat(device.device_name, RTDM_MAX_DEVNAME_LEN,
-			 "rttest-timerbench%d",
-			 start_index);
-		err = rtdm_dev_register(&device);
+	for (minor = 0; minor < NR_DEVICES; minor++) {
+		ret = rtdm_dev_register(devices + minor);
+		if (ret)
+			goto fail;
+	}
 
-		start_index++;
-	} while (err == -EEXIST);
+	return 0;
+fail:
+	while (minor-- > 0)
+		rtdm_dev_unregister(devices + minor, 0);
 
-	return err;
+	return ret;
 }
 
 static void __timerbench_exit(void)
 {
-	if (realtime_core_enabled())
-		rtdm_dev_unregister(&device, 1000);
+	int minor;
+
+	if (!realtime_core_enabled())
+		return;
+
+	for (minor = 0; minor < NR_DEVICES; minor++)
+		rtdm_dev_unregister(devices + minor, 1000);
 }
 
 module_init(__timerbench_init);

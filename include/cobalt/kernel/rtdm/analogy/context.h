@@ -43,7 +43,7 @@ static inline int a4l_get_minor(struct a4l_device_context *cxt)
 	/* Get a pointer on the container structure */
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	/* Get the minor index */
-	return rtdm_fd_device(fd)->device_id;
+	return rtdm_fd_minor(fd);
 }
 
 #endif /* !_COBALT_RTDM_ANALOGY_CONTEXT_H */

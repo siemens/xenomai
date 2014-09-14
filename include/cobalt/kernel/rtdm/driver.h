@@ -27,7 +27,7 @@
 
 #include <asm/atomic.h>
 #include <linux/list.h>
-
+#include <linux/cdev.h>
 #include <xenomai/version.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/sched.h>
@@ -51,7 +51,7 @@
 #endif /* CONFIG_PCI */
 #include <asm/xenomai/syscall.h>
 
-struct rtdm_dev_context;
+struct class;
 typedef struct xnselector rtdm_selector_t;
 enum rtdm_selecttype;
 
@@ -81,23 +81,17 @@ enum rtdm_selecttype;
 
 /** Mask selecting the device type. */
 #define RTDM_DEVICE_TYPE_MASK		0x00F0
+
+/** Flag indicating a secure variant of RTDM (not supported here) */
+#define RTDM_SECURE_DEVICE		0x80000000
 /** @} Device Flags */
 
 /*!
  * @anchor drv_versioning @name Driver Versioning
- * Current revisions of RTDM structures, encoding of driver versions. See
+ * Encoding of driver versions. See
  * @ref rtdm_api_versioning "API Versioning" for the interface revision.
  * @{
  */
-/** Version of struct rtdm_device */
-#define RTDM_DEVICE_STRUCT_VER		7
-
-/** Version of struct rtdm_dev_context */
-#define RTDM_CONTEXT_STRUCT_VER		4
-
-/** Flag indicating a secure variant of RTDM (not supported here) */
-#define RTDM_SECURE_DEVICE		0x80000000
-
 /** Version code constructor for driver revisions */
 #define RTDM_DRIVER_VER(major, minor, patch) \
 	(((major & 0xFF) << 16) | ((minor & 0xFF) << 8) | (patch & 0xFF))
@@ -138,10 +132,6 @@ enum rtdm_selecttype {
 
 /** @} rtdm_sync */
 
-struct rtdm_devctx_reserved {
-	void (*close)(struct rtdm_fd *fd);
-};
-
 /**
  * @brief Device context
  *
@@ -149,9 +139,9 @@ struct rtdm_devctx_reserved {
  * RTDM takes care of its creation and destruction and passes it to the
  * operation handlers when being invoked.
  *
- * Drivers can attach arbitrary data immediately after the official structure.
- * The size of this data is provided via rtdm_device.context_size during
- * device registration.
+ * Drivers can attach arbitrary data immediately after the official
+ * structure.  The size of this data is provided via
+ * rtdm_device_class.context_size during device registration.
  */
 struct rtdm_dev_context {
 	struct rtdm_fd fd;
@@ -159,9 +149,6 @@ struct rtdm_dev_context {
 	/** Set of active device operation handlers */
 	/** Reference to owning device */
 	struct rtdm_device *device;
-
-	/** Data stored by RTDM inside a device context (internal use only) */
-	struct rtdm_devctx_reserved reserved;
 
 	/** Begin of driver defined context data structure */
 	char dev_private[0];
@@ -183,7 +170,7 @@ static inline struct rtdm_dev_context *rtdm_fd_to_context(struct rtdm_fd *fd)
  */
 static inline void *rtdm_fd_to_private(struct rtdm_fd *fd)
 {
-	return (void *)rtdm_fd_to_context(fd)->dev_private;
+	return &rtdm_fd_to_context(fd)->dev_private[0];
 }
 
 /**
@@ -227,79 +214,158 @@ static inline struct rtdm_device *rtdm_fd_device(struct rtdm_fd *fd)
 	return rtdm_fd_to_context(fd)->device;
 }
 
-struct rtdm_dev_reserved {
-	unsigned magic;
-	union {
-		struct {
-			struct list_head entry;
-			xnhandle_t handle;
-		};
-		struct xnid id;
-	};
-	atomic_t refcount;
-	struct rtdm_dev_context *exclusive_context;
-	void (*close)(struct rtdm_fd *);
-};
+/**
+ * @brief RTDM profile information
+ *
+ * This descriptor details the profile information associated to a
+ * RTDM device class.
+ *
+ * @anchor rtdm_profile_info @name RTDM profile information descriptor
+ */
+struct rtdm_profile_info {
+	/** Device class name */
+	const char *name;
+	/** Device class ID, see @ref RTDM_CLASS_xxx */
+	int class_id;
+	/** Device sub-class, see RTDM_SUBCLASS_xxx definition in the
+	 *  @ref rtdm_profiles "Device Profiles" */
+	int subclass_id;
+	/** Supported device profile version */
+	int version;
+	/** Reserved */
+	unsigned int magic;
+};	
 
 /**
- * @brief RTDM device
+ * @brief RTDM device class
  *
- * This structure specifies a RTDM device. As some fields, especially
- * the reserved area, will be modified by RTDM during runtime, the
- * structure must not reside in write-protected memory.
+ * This descriptor describes a RTDM device class. The structure holds
+ * runtime data, therefore it must reside in writable memory.
  */
-struct rtdm_device {
-	/** Data stored by RTDM inside a registered device (internal use only) */
-	struct rtdm_dev_reserved reserved;
-	/** Revision number of this structure, see
-	 *  @ref drv_versioning "Driver Versioning" defines */
-	int struct_version;
+struct rtdm_device_class {
+	/**
+	 * Class profile information. The RTDM_PROFILE_INFO() macro @b
+	 * must be used for filling up this field.
+	 */
+	struct rtdm_profile_info profile_info;
 	/** Device flags, see @ref dev_flags "Device Flags" for details */
 	int device_flags;
 	/** Size of driver defined appendix to struct rtdm_dev_context */
 	size_t context_size;
-	/** Named device identification (orthogonal to Linux device name space) */
-	char device_name[RTDM_MAX_DEVNAME_LEN + 1];
 	/** Protocol device identification: protocol family (PF_xxx) */
 	int protocol_family;
 	/** Protocol device identification: socket type (SOCK_xxx) */
 	int socket_type;
-	/** I/O operation handlers */
-	struct rtdm_fd_ops ops;
-	/** Device class ID, see @ref RTDM_CLASS_xxx */
-	int device_class;
-	/** Device sub-class, see RTDM_SUBCLASS_xxx definition in the
-	 *  @ref rtdm_profiles "Device Profiles" */
-	int device_sub_class;
-	/** Supported device profile version */
-	int profile_version;
 	/** Informational driver name (reported via /proc) */
 	const char *driver_name;
-	/** Driver version, see @ref drv_versioning "Driver Versioning" defines */
+	/** Driver version, see @ref drv_versioning "Driver Versioning" macros */
 	int driver_version;
 	/** Informational peripheral name the device is attached to
 	 *  (reported via /proc) */
 	const char *peripheral_name;
 	/** Informational driver provider name (reported via /proc) */
 	const char *provider_name;
-	/** Name of /proc entry for the device, must not be NULL */
-	const char *proc_name;
-#ifdef CONFIG_XENO_OPT_VFILE
-	/** Set to device's vfile data after registration, do not modify */
-	struct xnvfile_directory vfroot;
-	struct xnvfile_regular info_vfile;
-#endif
-	/** Driver definable device ID */
-	int device_id;
+	/** I/O operation handlers */
+	struct rtdm_fd_ops ops;
+	/** Count of devices which belong to this class. */
+	int device_count;
+	/** Reserved area */
+	struct {
+		union {
+			struct {
+				struct cdev cdev;
+				struct class *kclass;
+				int major;
+			} named;
+		};
+		atomic_t refcount;
+	};
+};
+
+#define RTDM_CLASS_MAGIC	0x8284636c
+
+/**
+ * @brief Initializer for class profile information.
+ *
+ * This macro must be used to fill in the @ref rtdm_profile_info
+ * "class profile information" field from a RTDM device class.
+ *
+ * @param __name Class name (unquoted).
+ *
+ * @param __id Class major identification number
+ * (profile_version.class_id).
+ *
+ * @param __subid Class minor identification number
+ * (profile_version.subclass_id).
+ *
+ * @param __version Profile version number.
+ *
+ * @note See @ref rtdm_profiles "Device Profiles".
+ */
+#define RTDM_PROFILE_INFO(__name, __id, __subid, __version)	\
+{								\
+	.name = ( # __name ), 					\
+	.class_id = (__id),					\
+	.subclass_id = (__subid),				\
+	.version = (__version),					\
+	.magic = ~RTDM_CLASS_MAGIC,				\
+}
+
+/**
+ * @brief RTDM device
+ *
+ * This descriptor describes a RTDM device instance. The structure
+ * holds runtime data, therefore it must reside in writable memory.
+ */
+struct rtdm_device {
+	/** Device class. */
+	struct rtdm_device_class *class;
 	/** Driver definable device data */
 	void *device_data;
+	/**
+	 * Device label template for composing the device name. A
+	 * limited printf-like format string is assumed, with a
+	 * provision for replacing the first %d/%i placeholder found
+	 * in the string by the device minor number.  It is up to the
+	 * driver to actually mention this placeholder or not,
+	 * depending on the naming convention for its devices.  For
+	 * named devices, the corresponding device node will
+	 * automatically appear in the /dev/rtdm hierachy with
+	 * hotplug-enabled device filesystems (DEVTMPFS).
+	 */
+	const char *label;
+	/** Reserved area. */
+	struct {
+		unsigned int magic;
+		char *name;
+		union {
+			struct {
+				struct list_head entry;
+				xnhandle_t handle;
+				int minor;
+			} named;
+			struct {
+				struct xnid id;
+			} proto;
+		};
+		atomic_t refcount;
+		struct rtdm_dev_context *exclusive_context;
+		struct rtdm_fd_ops ops;
+#ifdef CONFIG_XENO_OPT_VFILE
+		struct xnvfile_directory vfroot;
+		struct xnvfile_regular info_vfile;
+#endif
+	};
 };
+
 /** @} devregister */
 
 /* --- device registration --- */
 
 int rtdm_dev_register(struct rtdm_device *device);
-int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay);
+
+int rtdm_dev_unregister(struct rtdm_device *device,
+			unsigned int poll_delay);
 
 /* --- inter-driver API --- */
 

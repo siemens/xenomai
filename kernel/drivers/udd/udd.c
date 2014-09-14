@@ -280,30 +280,31 @@ static inline int check_memregion(struct udd_device *udd,
 
 static inline int register_mapper(struct udd_device *udd)
 {
-	struct rtdm_device *dev = &udd->__reserved.mapper;
 	struct udd_reserved *ur = &udd->__reserved;
+	struct rtdm_device *dev = &ur->mapper;
+	struct rtdm_device_class *class = &ur->mapper_class;
 
-	ur->mapper_name = kasformat("%s,mapper", udd->device_name);
+	ur->mapper_name = kasformat("%s,mapper%%d", udd->device_name);
 	if (ur->mapper_name == NULL)
 		return -ENOMEM;
 
-	memset(dev, 0, sizeof(*dev));
-	dev->struct_version = RTDM_DEVICE_STRUCT_VER;
-	dev->device_flags = RTDM_NAMED_DEVICE|RTDM_MINOR;
-	dev->context_size = 0;
-	dev->ops = (struct rtdm_fd_ops){
-		.open = mapper_open,
-		.close = mapper_close,
-		.mmap = mapper_mmap,
+	class->profile_info = (struct rtdm_profile_info)
+		RTDM_PROFILE_INFO("mapper", RTDM_CLASS_MEMORY,
+				  RTDM_SUBCLASS_GENERIC, 0);
+	class->device_flags = RTDM_NAMED_DEVICE|RTDM_MINOR;
+	class->device_count = UDD_NR_MAPS;
+	class->ops = (struct rtdm_fd_ops){
+		.open		=	mapper_open,
+		.close		=	mapper_close,
+		.mmap		=	mapper_mmap,
 	};
-	dev->device_class = RTDM_CLASS_MEMORY;
-	dev->device_sub_class = RTDM_SUBCLASS_GENERIC;
-	knamecpy(dev->device_name, ur->mapper_name);
-	dev->driver_name = "mapper";
-	dev->driver_version = RTDM_DRIVER_VER(1, 0, 0);
-	dev->peripheral_name = "UDD mapper";
-	dev->proc_name = ur->mapper_name;
-	dev->provider_name = "Philippe Gerum <rpm@xenomai.org>";
+	class->driver_name = "udd";
+	class->driver_version = RTDM_DRIVER_VER(1, 0, 0);
+	class->peripheral_name = "UDD mapper";
+	class->provider_name = "Philippe Gerum <rpm@xenomai.org>";
+	
+	dev->class = class;
+	dev->label = ur->mapper_name;
 
 	return rtdm_dev_register(dev);
 }
@@ -340,6 +341,7 @@ int udd_register_device(struct udd_device *udd)
 {
 	struct rtdm_device *dev = &udd->__reserved.device;
 	struct udd_reserved *ur = &udd->__reserved;
+	struct rtdm_device_class *class = &ur->class;
 	int ret, n;
 
 	if (!realtime_core_enabled())
@@ -357,11 +359,13 @@ int udd_register_device(struct udd_device *udd)
 			return ret;
 	}
 
-	memset(dev, 0, sizeof(*dev));
-	dev->struct_version = RTDM_DEVICE_STRUCT_VER;
-	dev->device_flags = RTDM_NAMED_DEVICE|udd->device_flags;
-	dev->context_size = sizeof(struct udd_context);
-	dev->ops = (struct rtdm_fd_ops){
+	class->profile_info = (struct rtdm_profile_info)
+		RTDM_PROFILE_INFO(udd->device_name, RTDM_CLASS_UDD,
+				  udd->device_subclass, 0);
+	class->device_flags = RTDM_NAMED_DEVICE|udd->device_flags;
+	class->device_count = 1;
+	class->context_size = sizeof(struct udd_context);
+	class->ops = (struct rtdm_fd_ops){
 		.open = udd_open,
 		.ioctl_rt = udd_ioctl_rt,
 		.read_rt = udd_read_rt,
@@ -369,19 +373,22 @@ int udd_register_device(struct udd_device *udd)
 		.close = udd_close,
 		.select = udd_select,
 	};
-	dev->device_class = RTDM_CLASS_UDD;
-	dev->device_sub_class = udd->device_subclass;
-	knamecpy(dev->device_name, udd->device_name);
-	dev->driver_name = "udd";
-	dev->driver_version = udd->driver_version;
-	dev->peripheral_name = udd->device_description;
-	dev->proc_name = udd->device_name;
-	dev->provider_name = udd->driver_author;
+	class->driver_name = "udd";
+	class->driver_version = udd->driver_version;
+	class->peripheral_name = udd->device_description;
+	class->provider_name = udd->driver_author;
+
+	dev->class = class;
+	dev->label = udd->device_name;
+
+	ret = rtdm_dev_register(dev);
+	if (ret)
+		return ret;
 
 	if (ur->nr_maps > 0) {
 		ret = register_mapper(udd);
 		if (ret)
-			return ret;
+			goto fail_mapper;
 	} else
 		ur->mapper_name = NULL;
 
@@ -392,22 +399,19 @@ int udd_register_device(struct udd_device *udd)
 	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM) {
 		ret = rtdm_irq_request(&ur->irqh, udd->irq,
 				       udd_irq_handler, 0,
-				       dev->device_name, udd);
+				       dev->name, udd);
 		if (ret)
 			goto fail_irq_request;
 	}
 
-	ret = rtdm_dev_register(&ur->device);
-	if (ret)
-		goto fail_dev_register;
-
 	return 0;
 
-fail_dev_register:
-	rtdm_irq_free(&ur->irqh);
 fail_irq_request:
 	rtdm_dev_unregister(&ur->mapper, 0);
-	kfree(ur->mapper_name);
+fail_mapper:
+	rtdm_dev_unregister(dev, 0);
+	if (ur->mapper_name)
+		kfree(ur->mapper_name);
 
 	return ret;
 }
@@ -591,7 +595,7 @@ struct udd_device *udd_get_device(struct rtdm_fd *fd)
 {
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 
-	if (dev->device_class == RTDM_CLASS_MEMORY)
+	if (dev->class->profile_info.class_id == RTDM_CLASS_MEMORY)
 		return container_of(dev, struct udd_device, __reserved.mapper);
 
 	return container_of(dev, struct udd_device, __reserved.device);

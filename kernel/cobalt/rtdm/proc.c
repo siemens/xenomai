@@ -46,15 +46,14 @@ static void *named_next(struct xnvfile_regular_iterator *it)
 	struct rtdm_device *device = priv->curr;
 	struct list_head *next;
 
-	next = device->reserved.entry.next;
+	next = device->named.entry.next;
 	if (next == &rtdm_named_devices) {
 		priv->curr = NULL; /* all done. */
 		goto out;
 	}
 
-	priv->curr = list_entry(next, struct rtdm_device, reserved.entry);
-
-  out:
+	priv->curr = list_entry(next, struct rtdm_device, named.entry);
+out:
 	return priv->curr;
 }
 
@@ -64,18 +63,18 @@ static void *named_begin(struct xnvfile_regular_iterator *it)
 	struct rtdm_device *device;
 	loff_t pos = 0;
 
-	list_for_each_entry(device, &rtdm_named_devices, reserved.entry)
+	list_for_each_entry(device, &rtdm_named_devices, named.entry)
 		if (pos++ >= it->pos)
 			break;
 
-	if (&device->reserved.entry == &rtdm_named_devices)
+	if (&device->named.entry == &rtdm_named_devices)
 		return NULL;	/* End of list. */
 
 	priv->curr = device;	/* Skip head. */
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
-		xnvfile_puts(it, "Name\t\t\t\tDriver\t\t/proc\n");
+		xnvfile_puts(it, "Name\t\t\t\tDriver\n");
 
 	return priv->curr;
 }
@@ -84,8 +83,8 @@ static int named_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct rtdm_device *device = data;
 
-	xnvfile_printf(it, "%-31s\t%-15s\t%s\n", device->device_name,
-		device->driver_name, device->proc_name);
+	xnvfile_printf(it, "%-31s\t%-15s\n", device->name,
+		device->class->driver_name);
 
 	return 0;
 }
@@ -110,7 +109,7 @@ static void *proto_next(struct xnvfile_regular_iterator *it)
 {
 	struct vfile_proto_data *priv = xnvfile_iterator_priv(it);
 
-	return priv->curr = xnid_next_entry(priv->curr, reserved.id);
+	return priv->curr = xnid_next_entry(priv->curr, proto.id);
 }
 
 static void *proto_begin(struct xnvfile_regular_iterator *it)
@@ -120,7 +119,7 @@ static void *proto_begin(struct xnvfile_regular_iterator *it)
 	struct rtdm_device *dev = NULL;
 	loff_t pos = 0;
 
-	xntree_for_each_entry(dev, &rtdm_protocol_devices, reserved.id)
+	xntree_for_each_entry(dev, &rtdm_protocol_devices, proto.id)
 		if (pos++ >= it->pos)
 			break;
 
@@ -131,7 +130,7 @@ static void *proto_begin(struct xnvfile_regular_iterator *it)
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
-		xnvfile_puts(it, "Name\t\t\t\tDriver\t\t/proc\n");
+		xnvfile_puts(it, "Name\t\t\t\tDriver\n");
 
 	return priv->curr;
 }
@@ -139,14 +138,15 @@ static void *proto_begin(struct xnvfile_regular_iterator *it)
 static int proto_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct rtdm_device *device = data;
+	struct rtdm_device_class *class = device->class;
 	char pnum[32];
 
 	ksformat(pnum, sizeof(pnum), "%u:%u",
-		 device->protocol_family, device->socket_type);
+		 class->protocol_family, class->socket_type);
 
 	xnvfile_printf(it, "%-31s\t%-15s\t%s\n",
-		       pnum, device->driver_name,
-		       device->proc_name);
+		       pnum, class->driver_name,
+		       device->name);
 	return 0;
 }
 
@@ -181,7 +181,6 @@ static void *openfd_next(struct xnvfile_regular_iterator *it)
 static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct rtdm_dev_context *context;
-	struct rtdm_device *device;
 	int close_lock_count, i;
 	struct rtdm_fd *fd;
 
@@ -198,13 +197,10 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 
 	context = rtdm_fd_to_context(fd);
 	close_lock_count = fd->refs;
-	device = context->device;
 
 	xnvfile_printf(it, "%d\t%d\t%d\t%s\n", i,
-		       close_lock_count,
-		       rtdm_fd_minor(fd),
-		       (device->device_flags & RTDM_NAMED_DEVICE) ?
-		       device->device_name : device->proc_name);
+		       close_lock_count, rtdm_fd_minor(fd),
+		       context->device->name);
 
 	rtdm_fd_put(fd);
 
@@ -256,6 +252,7 @@ static struct xnvfile_regular allfd_vfile = {
 
 static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
+	struct rtdm_device_class *class;
 	struct rtdm_device *device;
 
 	if (down_interruptible(&nrt_dev_lock))
@@ -265,11 +262,11 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	 * As the device may have disappeared while the handler was called,
 	 * first match the pointer against registered devices.
 	 */
-	list_for_each_entry(device, &rtdm_named_devices, reserved.entry)
+	list_for_each_entry(device, &rtdm_named_devices, named.entry)
 		if (device == xnvfile_priv(it->vfile))
 			goto found;
 
-	xntree_for_each_entry(device, &rtdm_protocol_devices, reserved.id)
+	xntree_for_each_entry(device, &rtdm_protocol_devices, proto.id)
 		if (device == xnvfile_priv(it->vfile))
 			goto found;
 
@@ -277,28 +274,31 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	return -ENODEV;
 
 found:
+	class = device->class;
+
 	xnvfile_printf(it, "driver:\t\t%s\nversion:\t%d.%d.%d\n",
-		       device->driver_name,
-		       RTDM_DRIVER_MAJOR_VER(device->driver_version),
-		       RTDM_DRIVER_MINOR_VER(device->driver_version),
-		       RTDM_DRIVER_PATCH_VER(device->driver_version));
+		       class->driver_name,
+		       RTDM_DRIVER_MAJOR_VER(class->driver_version),
+		       RTDM_DRIVER_MINOR_VER(class->driver_version),
+		       RTDM_DRIVER_PATCH_VER(class->driver_version));
 
 	xnvfile_printf(it, "peripheral:\t%s\nprovider:\t%s\n",
-		       device->peripheral_name, device->provider_name);
+		       class->peripheral_name, class->provider_name);
 
 	xnvfile_printf(it, "class:\t\t%d\nsub-class:\t%d\n",
-		       device->device_class, device->device_sub_class);
+		       class->profile_info.class_id,
+		       class->profile_info.subclass_id);
 
 	xnvfile_printf(it, "flags:\t\t%s%s%s\n",
-		       (device->device_flags & RTDM_EXCLUSIVE) ?
+		       (class->device_flags & RTDM_EXCLUSIVE) ?
 		       "EXCLUSIVE  " : "",
-		       (device->device_flags & RTDM_NAMED_DEVICE) ?
+		       (class->device_flags & RTDM_NAMED_DEVICE) ?
 		       "NAMED_DEVICE  " : "",
-		       (device->device_flags & RTDM_PROTOCOL_DEVICE) ?
+		       (class->device_flags & RTDM_PROTOCOL_DEVICE) ?
 		       "PROTOCOL_DEVICE  " : "");
 
 	xnvfile_printf(it, "lock count:\t%d\n",
-		       atomic_read(&device->reserved.refcount));
+		       atomic_read(&device->refcount));
 
 	up(&nrt_dev_lock);
 	return 0;
@@ -312,7 +312,7 @@ int rtdm_proc_register_device(struct rtdm_device *device)
 {
 	int ret;
 
-	ret = xnvfile_init_dir(device->proc_name,
+	ret = xnvfile_init_dir(device->name,
 			       &device->vfroot, &rtdm_vfroot);
 	if (ret)
 		goto err_out;

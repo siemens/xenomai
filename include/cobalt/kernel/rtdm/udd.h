@@ -129,10 +129,10 @@
  * the memory region array as follows:
  *
  * @code
+ * static struct udd_device udd;
+ *
  * static int foocard_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
  * {
- *      struct udd_device udd;
- *
  *      udd.device_name = "foocard";
  *      ...
  *      udd.mem_regions[2].name = "ADC";
@@ -189,7 +189,10 @@ struct udd_memregion {
  * mini-driver when registering via a call to udd_register_device().
  */
 struct udd_device {
-	/** Name of the device managed by the mini-driver. */
+	/**
+	 * Name of the device managed by the mini-driver, appears
+	 * automatically in the /dev namespace upon creation.
+	 */
 	const char *device_name;
 	/**
 	 * Additional device flags (e.g. RTDM_EXCLUSIVE,
@@ -289,7 +292,9 @@ struct udd_device {
 		atomic_t event;
 		struct udd_signotify signfy;
 		struct rtdm_event pulse;
+		struct rtdm_device_class class;
 		struct rtdm_device device;
+		struct rtdm_device_class mapper_class;
 		struct rtdm_device mapper;
 		char *mapper_name;
 		int nr_maps;

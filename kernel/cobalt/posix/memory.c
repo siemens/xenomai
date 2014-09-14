@@ -209,63 +209,78 @@ static int sysmem_ioctl_nrt(struct rtdm_fd *fd,
 	return do_sysmem_ioctls(fd, request, arg);
 }
 
-static struct rtdm_device private_umm_device = {
-	.struct_version			=	RTDM_DEVICE_STRUCT_VER,
-	.device_flags			=	RTDM_NAMED_DEVICE,
-	.context_size			=	0,
+static struct rtdm_device_class private_umm = {
+	.profile_info	=	RTDM_PROFILE_INFO(private_umm,
+						  RTDM_CLASS_MEMORY,
+						  UMM_PRIVATE,
+						  0),
+	.device_flags	=	RTDM_NAMED_DEVICE,
+	.device_count	=	1,
+	.context_size	=	0,
 	.ops = {
 		.ioctl_rt		=	umm_ioctl_rt,
 		.ioctl_nrt		=	umm_ioctl_nrt,
 		.mmap			=	umm_mmap,
 		.get_unmapped_area	=	umm_get_unmapped_area,
 	},
-	.device_class		=	RTDM_CLASS_MEMORY,
-	.device_sub_class	=	UMM_PRIVATE,
-	.device_name		=	COBALT_MEMDEV_PRIVATE,
 	.driver_name		=	"memdev",
 	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
 	.peripheral_name	=	"Private user-mapped heap",
-	.proc_name		=	private_umm_device.device_name,
+	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
+};
+
+static struct rtdm_device private_umm_device = {
+	.class = &private_umm,
+	.label = COBALT_MEMDEV_PRIVATE,
+};
+
+static struct rtdm_device_class shared_umm = {
+	.profile_info	=	RTDM_PROFILE_INFO(shared_umm,
+						  RTDM_CLASS_MEMORY,
+						  UMM_SHARED,
+						  0),
+	.device_flags	=	RTDM_NAMED_DEVICE,
+	.device_count	=	1,
+	.context_size	=	0,
+	.ops = {
+		.ioctl_rt		=	umm_ioctl_rt,
+		.ioctl_nrt		=	umm_ioctl_nrt,
+		.mmap			=	umm_mmap,
+		.get_unmapped_area	=	umm_get_unmapped_area,
+	},
+	.driver_name		=	"memdev",
+	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
+	.peripheral_name	=	"Shared user-mapped heap",
 	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
 };
 
 static struct rtdm_device shared_umm_device = {
-	.struct_version			=	RTDM_DEVICE_STRUCT_VER,
-	.device_flags			=	RTDM_NAMED_DEVICE,
-	.context_size			=	0,
-	.ops = {
-		.ioctl_rt		=	umm_ioctl_rt,
-		.ioctl_nrt		=	umm_ioctl_nrt,
-		.mmap			=	umm_mmap,
-		.get_unmapped_area	=	umm_get_unmapped_area,
-	},
-	.device_class		=	RTDM_CLASS_MEMORY,
-	.device_sub_class	=	UMM_SHARED,
- 	.device_name		=	COBALT_MEMDEV_SHARED,
-	.driver_name		=	"memdev",
-	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"Shared user-mapped heap",
-	.proc_name		=	shared_umm_device.device_name,
-	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
+	.class = &shared_umm,
+	.label = COBALT_MEMDEV_SHARED,
 };
 
-static struct rtdm_device sysmem_device = {
-	.struct_version		=	RTDM_DEVICE_STRUCT_VER,
-	.device_flags		=	RTDM_NAMED_DEVICE,
-	.context_size		=	0,
+static struct rtdm_device_class sysmem = {
+	.profile_info	=	RTDM_PROFILE_INFO(sysmem,
+						  RTDM_CLASS_MEMORY,
+						  SYS_GLOBAL,
+						  0),
+	.device_flags	=	RTDM_NAMED_DEVICE,
+	.device_count	=	1,
+	.context_size	=	0,
 	.ops = {
 		.open		=	sysmem_open,
 		.ioctl_rt	=	sysmem_ioctl_rt,
 		.ioctl_nrt	=	sysmem_ioctl_nrt,
 	},
-	.device_class		=	RTDM_CLASS_MEMORY,
-	.device_sub_class	=	SYS_GLOBAL,
- 	.device_name		=	COBALT_MEMDEV_SYS,
 	.driver_name		=	"memdev",
 	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
 	.peripheral_name	=	"System memory heap",
-	.proc_name		=	sysmem_device.device_name,
 	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
+};
+
+static struct rtdm_device sysmem_device = {
+	.class = &sysmem,
+	.label = COBALT_MEMDEV_SYS,
 };
 
 static inline void init_vdso(void)

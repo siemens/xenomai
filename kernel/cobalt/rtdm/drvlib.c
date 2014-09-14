@@ -1700,13 +1700,9 @@ int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 	 * XXX: A .get_unmapped_area handler must be provided in the
 	 * nommu case. We use this to force the memory management code
 	 * not to share VM regions for distinct areas to map to, as it
-	 * would otherwise do since all requests originate from the
-	 * same file (i.e. from /dev/mem, see do_mmap_pgoff() in the
-	 * nommu case).
-	 *
-	 * We could solve this by implementing a virtual filesystem
-	 * for RTDM devices, which would go a long way toward a better
-	 * integration with the regular device driver model.
+	 * would otherwise do since all requests currently apply to
+	 * the same file (i.e. from /dev/mem, see do_mmap_pgoff() in
+	 * the nommu case).
 	 */
 	if (fd->ops->get_unmapped_area)
 		offset = fd->ops->get_unmapped_area(fd, len, 0, flags);

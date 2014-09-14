@@ -252,13 +252,16 @@ static int rtipc_select(struct rtdm_fd *fd, struct xnselector *selector,
 	return ret;
 }
 
-static struct rtdm_device device = {
-	.struct_version =	RTDM_DEVICE_STRUCT_VER,
-	.device_flags	=	RTDM_PROTOCOL_DEVICE,
-	.context_size	=	sizeof(struct rtipc_private),
-	.device_name	=	"rtipc",
-	.protocol_family=	PF_RTIPC,
-	.socket_type	=	SOCK_DGRAM,
+static struct rtdm_device_class rtipc = {
+	.profile_info		=	RTDM_PROFILE_INFO(rtipc,
+							  RTDM_CLASS_RTIPC,
+							  RTDM_SUBCLASS_GENERIC,
+							  1),
+	.device_flags		=	RTDM_PROTOCOL_DEVICE,
+	.device_count		=	1,
+	.context_size		=	sizeof(struct rtipc_private),
+	.protocol_family	=	PF_RTIPC,
+	.socket_type		=	SOCK_DGRAM,
 	.ops = {
 		.socket		=	rtipc_socket,
 		.close		=	rtipc_close,
@@ -274,14 +277,15 @@ static struct rtdm_device device = {
 		.write_nrt	=	NULL,
 		.select		=	rtipc_select,
 	},
-	.device_class		=	RTDM_CLASS_RTIPC,
-	.device_sub_class	=	RTDM_SUBCLASS_GENERIC,
-	.profile_version	=	1,
 	.driver_name		=	"rtipc",
 	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
 	.peripheral_name	=	"Real-time IPC interface",
-	.proc_name		=	device.device_name,
-	.provider_name		=	"Philippe Gerum (xenomai.org)",
+	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
+};
+
+static struct rtdm_device device = {
+	.class = &rtipc,
+	.label = "rtipc",
 };
 
 int __init __rtipc_init(void)

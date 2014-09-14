@@ -47,7 +47,7 @@ struct rtdm_device *__rtdm_get_protocol_device(int protocol_family, int socket_t
 
 static inline void rtdm_dereference_device(struct rtdm_device *device)
 {
-	atomic_dec(&device->reserved.refcount);
+	atomic_dec(&device->refcount);
 }
 
 int __init rtdm_dev_init(void);

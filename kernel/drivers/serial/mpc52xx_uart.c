@@ -331,9 +331,9 @@ static inline int rt_mpc52xx_uart_tx_interrupt(struct rt_mpc52xx_uart_ctx *ctx)
 				ctx->mcr_status);
 			psc_set_mcr(ctx, ctx->mcr_status);
 		}
-		if ((ctx->config.rs485 ||
-		     (ctx->config.event_mask & RTSER_EVENT_TXEMPTY) &&
-		     (ctx->imr_status & MPC52xx_PSC_IMR_TXEMP) == 0) {
+		if (ctx->config.rs485 ||
+		    ((ctx->config.event_mask & RTSER_EVENT_TXEMPTY) &&
+		     (ctx->imr_status & MPC52xx_PSC_IMR_TXEMP) == 0)) {
 			/* enable tx-empty interrupt */
 			ctx->imr_status |= MPC52xx_PSC_IMR_TXEMP;
 			dev_dbg(ctx->port->dev, "Enable TXEMP interrupt, "
@@ -691,7 +691,7 @@ static int rt_mpc52xx_uart_open(struct rtdm_fd *fd, int oflags)
 
 	err = rtdm_irq_request(&ctx->irq_handle, ctx->port->irq,
 			       rt_mpc52xx_uart_interrupt, 0,
-			       rtdm_fd_device(fd)->proc_name, ctx);
+			       rtdm_fd_device(fd)->name, ctx);
 	if (err) {
 		psc_set_mcr(ctx, 0);
 		rt_mpc52xx_uart_cleanup_ctx(ctx);
@@ -740,7 +740,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_fd *fd,
 
 	switch (request) {
 	case RTSER_RTIOC_GET_CONFIG:
-		if (rtdm_is_user(fd))
+		if (rtdm_fd_is_user(fd))
 			err = rtdm_safe_copy_to_user(fd, arg,
 						     &ctx->config,
 						     sizeof(struct
@@ -756,7 +756,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_fd *fd,
 
 		config = (struct rtser_config *)arg;
 
-		if (rtdm_is_user(fd)) {
+		if (rtdm_fd_is_user(fd)) {
 			err = rtdm_safe_copy_from_user(fd, &config_buf,
 						       arg,
 						       sizeof(struct
@@ -767,7 +767,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_fd *fd,
 			config = &config_buf;
 		}
 
-		if (config->config_mask & RTSER_SET_BAUD) &&
+		if ((config->config_mask & RTSER_SET_BAUD) &&
 		    (config->baud_rate <= 0))
 			/* invalid baudrate for this port */
 			return -EINVAL;
@@ -806,7 +806,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_fd *fd,
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-		if (rtdm_is_user(fd)) {
+		if (rtdm_fd_is_user(fd)) {
 			struct rtser_status status_buf;
 
 			status_buf.line_status = status;
@@ -825,7 +825,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_fd *fd,
 	}
 
 	case RTSER_RTIOC_GET_CONTROL:
-		if (rtdm_is_user(fd))
+		if (rtdm_fd_is_user(fd))
 			err = rtdm_safe_copy_to_user(fd, arg,
 						     &ctx->mcr_status,
 						     sizeof(int));
@@ -889,7 +889,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_fd *fd,
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-		if (rtdm_is_user(fd))
+		if (rtdm_fd_is_user(fd))
 			err =
 			    rtdm_safe_copy_to_user(fd, arg, &ev,
 						   sizeof(struct
@@ -969,7 +969,7 @@ static ssize_t rt_mpc52xx_uart_read(struct rtdm_fd *fd, void *buf,
 	if (nbyte == 0)
 		return 0;
 
-	if (rtdm_is_user(fd) && !rtdm_rw_user_ok(fd, buf, nbyte))
+	if (rtdm_fd_is_user(fd) && !rtdm_rw_user_ok(fd, buf, nbyte))
 		return -EFAULT;
 
 	ctx = rtdm_fd_to_private(fd);
@@ -1012,7 +1012,7 @@ static ssize_t rt_mpc52xx_uart_read(struct rtdm_fd *fd, void *buf,
 				   separately. */
 				subblock = IN_BUFFER_SIZE - in_pos;
 
-				if (rtdm_is_user(fd)) {
+				if (rtdm_fd_is_user(fd)) {
 					if (rtdm_copy_to_user
 					    (fd, out_pos,
 					     &ctx->in_buf[in_pos],
@@ -1031,7 +1031,7 @@ static ssize_t rt_mpc52xx_uart_read(struct rtdm_fd *fd, void *buf,
 				in_pos = 0;
 			}
 
-			if (rtdm_is_user(fd)) {
+			if (rtdm_fd_is_user(fd)) {
 				if (rtdm_copy_to_user(fd, out_pos,
 						      &ctx->in_buf[in_pos],
 						      subblock) != 0) {
@@ -1125,7 +1125,7 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_fd *fd,
 	if (nbyte == 0)
 		return 0;
 
-	if (rtdm_is_user(fd) && !rtdm_read_user_ok(fd, buf, nbyte))
+	if (rtdm_fd_is_user(fd) && !rtdm_read_user_ok(fd, buf, nbyte))
 		return -EFAULT;
 
 	ctx = rtdm_fd_to_private(fd);
@@ -1155,7 +1155,7 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_fd *fd,
 				   end separately. */
 				subblock = OUT_BUFFER_SIZE - out_pos;
 
-				if (rtdm_is_user(fd)) {
+				if (rtdm_fd_is_user(fd)) {
 					if (rtdm_copy_from_user
 					    (fd,
 					     &ctx->out_buf[out_pos],
@@ -1174,7 +1174,7 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_fd *fd,
 				out_pos = 0;
 			}
 
-			if (rtdm_is_user(fd)) {
+			if (rtdm_fd_is_user(fd)) {
 				if (rtdm_copy_from_user
 				    (fd, &ctx->out_buf[out_pos],
 				     in_pos, subblock) != 0) {
@@ -1232,11 +1232,14 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_fd *fd,
 	return ret;
 }
 
-static const struct rtdm_device device_tmpl = {
-	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class mpc52xx_uart = {
+	.profile_info		= RTDM_PROFILE_INFO(imx_uart,
+						    RTDM_CLASS_SERIAL,
+						    RTDM_SUBCLASS_16550A,
+						    RTSER_PROFILE_VER),
+	.device_count		= MPC52xx_PSC_MAXNUM,
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
 	.context_size		= sizeof(struct rt_mpc52xx_uart_ctx),
-	.device_name		= "",
 	.ops = {
 		.open		= rt_mpc52xx_uart_open,
 		.close		= rt_mpc52xx_uart_close,
@@ -1245,9 +1248,6 @@ static const struct rtdm_device device_tmpl = {
 		.read_rt	= rt_mpc52xx_uart_read,
 		.write_rt	= rt_mpc52xx_uart_write,
 	},
-	.device_class		= RTDM_CLASS_SERIAL,
-	.device_sub_class	= RTDM_SUBCLASS_16550A,
-	.profile_version	= RTSER_PROFILE_VER,
 	.driver_name		= RT_MPC52XX_UART_DRVNAM,
 	.driver_version		= RTDM_DRIVER_VER(1, 0, 0),
 	.peripheral_name	= "MPC52xx UART",
@@ -1327,11 +1327,8 @@ static int rt_mpc52xx_uart_of_probe(struct platform_device *op)
 		goto out_dispose_irq_mapping;
 	}
 
-	memcpy(dev, &device_tmpl, sizeof(struct rtdm_device));
-	ksformat(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtserPSC%d",
-		 idx);
-	dev->device_id = idx;
-	dev->proc_name = dev->device_name;
+	dev->class = &mpc52xx_uart;
+	dev->label = "rtserPSC%d";
 	dev->device_data = port;
 
 	rt_mpc52xx_uart_init_hw(port);
@@ -1343,7 +1340,7 @@ static int rt_mpc52xx_uart_of_probe(struct platform_device *op)
 	dev_set_drvdata(&op->dev, dev);
 
 	dev_info(&op->dev, "%s on PSC%d at 0x%p, irq=%d, clk=%i\n",
-		 dev->device_name, port->num, port->psc, port->irq,
+		 dev->name, port->num, port->psc, port->irq,
 		 port->uartclk);
 
 	return 0;
@@ -1388,7 +1385,7 @@ static struct of_device_id rt_mpc52xx_uart_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, rt_mpc52xx_uart_of_match);
 
-static struct of_platform_driver rt_mpc52xx_uart_of_driver = {
+static struct platform_driver rt_mpc52xx_uart_of_driver = {
 	.probe = rt_mpc52xx_uart_of_probe,
 	.remove	=  rt_mpc52xx_uart_of_remove,
 	.driver = {
@@ -1422,7 +1419,7 @@ static int __init rt_mpc52xx_uart_init(void)
 
 	rt_mpc52xx_uart_of_enumerate();
 
-	ret = of_register_platform_driver(&rt_mpc52xx_uart_of_driver);
+	ret = platform_driver_register(&rt_mpc52xx_uart_of_driver);
 	if (ret) {
 		printk(KERN_ERR
 		       "%s; Could not register  driver (err=%d)\n",
@@ -1436,7 +1433,7 @@ static int __init rt_mpc52xx_uart_init(void)
 static void __exit rt_mpc52xx_uart_exit(void)
 {
 	if (realtime_core_enabled())
-		of_unregister_platform_driver(&rt_mpc52xx_uart_of_driver);
+		platform_driver_unregister(&rt_mpc52xx_uart_of_driver);
 }
 
 module_init(rt_mpc52xx_uart_init);

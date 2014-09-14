@@ -62,7 +62,7 @@ MODULE_LICENSE("GPL");
 void rtcan_tx_push(struct rtcan_device *dev, struct rtcan_socket *sock,
 		   can_frame_t *frame);
 
-static struct rtdm_device rtcan_proto_raw_dev;
+static struct rtdm_device_class rtcan_proto_raw;
 
 
 static inline int rtcan_accept_msg(uint32_t can_id, can_filter_t *filter)
@@ -128,7 +128,7 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
 	/* Overflow of socket's ring buffer! */
 	sock->rx_buf_full++;
 	RTCAN_RTDM_DBG("%s: socket buffer overflow, message discarded\n",
-		       rtcan_proto_raw_dev.driver_name);
+		       rtcan_proto_raw.driver_name);
     }
 
     rtdm_fd_unlock(fd);
@@ -976,9 +976,13 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 }
 
 
-static struct rtdm_device rtcan_proto_raw_dev = {
-	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class rtcan_proto_raw = {
+	.profile_info		= RTDM_PROFILE_INFO(rtcan_proto_raw,
+						    RTDM_CLASS_CAN,
+						    RTDM_SUBCLASS_GENERIC,
+						    RTCAN_PROFILE_VER),
 	.device_flags		= RTDM_PROTOCOL_DEVICE,
+	.device_count		= 1,
 	.context_size		= sizeof(struct rtcan_socket),
 	.protocol_family	= PF_CAN,
 	.socket_type		= SOCK_RAW,
@@ -990,24 +994,23 @@ static struct rtdm_device rtcan_proto_raw_dev = {
 		.recvmsg_rt	= rtcan_raw_recvmsg,
 		.sendmsg_rt	= rtcan_raw_sendmsg,
 	},
-	.device_class		= RTDM_CLASS_CAN,
-	.device_sub_class	= RTDM_SUBCLASS_GENERIC,
-	.profile_version	= RTCAN_PROFILE_VER,
 	.driver_name		= "rtcan",
 	.driver_version		= RTDM_DRIVER_VER(RTCAN_MAJOR_VER,
 						  RTCAN_MINOR_VER,
 						  RTCAN_BUGFIX_VER),
 	.peripheral_name	= "Real-Time CAN Raw Socket Interface",
 	.provider_name		= "RT-Socket-CAN development team",
-	.proc_name		= "rtcan"
 };
 
+static struct rtdm_device rtcan_proto_raw_dev = {
+	.class = &rtcan_proto_raw,
+	.label = "rtcan",
+};
 
 int __init rtcan_raw_proto_register(void)
 {
     return rtdm_dev_register(&rtcan_proto_raw_dev);
 }
-
 
 void __exit rtcan_raw_proto_unregister(void)
 {

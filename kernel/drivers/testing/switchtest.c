@@ -26,6 +26,8 @@
 #include <rtdm/driver.h>
 #include <asm/xenomai/fptest.h>
 
+#define NR_DEVICES  4
+
 #define RTSWITCH_RT      0x10000
 #define RTSWITCH_NRT     0
 #define RTSWITCH_KERNEL  0x20000
@@ -56,11 +58,6 @@ struct rtswitch_context {
 	struct rtswitch_task *utask;
 	rtdm_nrtsig_t wake_utask;
 };
-
-static unsigned int start_index;
-
-module_param(start_index, uint, 0400);
-MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
 static int fp_features;
 
@@ -720,52 +717,65 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 	}
 }
 
-static struct rtdm_device device = {
-	.struct_version = RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class switchtest = {
+	.profile_info = RTDM_PROFILE_INFO(switchtest,
+					  RTDM_CLASS_TESTING,
+					  RTDM_SUBCLASS_SWITCHTEST,
+					  RTTST_PROFILE_VER),
 	.device_flags = RTDM_NAMED_DEVICE,
+	.device_count =	1,
 	.context_size = sizeof(struct rtswitch_context),
-	.device_name = "",
 	.ops = {
 		.open = rtswitch_open,
 		.close = rtswitch_close,
 		.ioctl_rt = rtswitch_ioctl_rt,
 		.ioctl_nrt = rtswitch_ioctl_nrt,
 	},
-	.device_class = RTDM_CLASS_TESTING,
-	.device_sub_class = RTDM_SUBCLASS_SWITCHTEST,
-	.profile_version = RTTST_PROFILE_VER,
-	.driver_name = "xeno_switchtest",
+	.driver_name = "switchtest",
 	.driver_version = RTDM_DRIVER_VER(0, 1, 1),
 	.peripheral_name = "Context Switch Test",
 	.provider_name = "Gilles Chanteperdrix",
-	.proc_name = device.device_name,
+};
+
+static struct rtdm_device devices[NR_DEVICES] = {
+	[ 0 ... NR_DEVICES - 1] = {
+		.class = &switchtest,
+		.label = "switchtest%d",
+	},
 };
 
 int __init __switchtest_init(void)
 {
-	int err;
+	int minor, ret;
 
 	if (!realtime_core_enabled())
 		return 0;
 
 	fp_features = fp_detect();
 
-	do {
-		ksformat(device.device_name, RTDM_MAX_DEVNAME_LEN,
-			 "rttest-switchtest%d",
-			 start_index);
-		err = rtdm_dev_register(&device);
+	for (minor = 0; minor < NR_DEVICES; minor++) {
+		ret = rtdm_dev_register(devices + minor);
+		if (ret)
+			goto fail;
+	}
 
-		start_index++;
-	} while (err == -EEXIST);
+	return 0;
+fail:
+	while (minor-- > 0)
+		rtdm_dev_unregister(devices + minor, 0);
 
-	return err;
+	return ret;
 }
 
 void __switchtest_exit(void)
 {
-	if (realtime_core_enabled())
-		rtdm_dev_unregister(&device, 1000);
+	int minor;
+
+	if (!realtime_core_enabled())
+		return;
+
+	for (minor = 0; minor < NR_DEVICES; minor++)
+		rtdm_dev_unregister(devices + minor, 1000);
 }
 
 module_init(__switchtest_init);

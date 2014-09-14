@@ -187,10 +187,6 @@ static int tx_fifo[RT_IMX_UART_MAX];
 compat_module_param_array(tx_fifo, int, RT_IMX_UART_MAX, 0400);
 MODULE_PARM_DESC(tx_fifo, "Transmitter FIFO size");
 
-static unsigned int start_index;
-module_param(start_index, uint, 0400);
-MODULE_PARM_DESC(start_index, "First device instance number to be used");
-
 struct rt_imx_uart_port {
 	unsigned char __iomem *membase;	/* read/write[bwl] */
 	resource_size_t mapbase;	/* for ioremap */
@@ -792,7 +788,7 @@ static int rt_imx_uart_open(struct rtdm_fd *fd, int oflags)
 
 	retval = rtdm_irq_request(&ctx->irq_handle,
 				  port->irq, rt_imx_uart_int, 0,
-				  rtdm_fd_device(fd)->proc_name, ctx);
+				  rtdm_fd_device(fd)->name, ctx);
 	if (retval)
 		return retval;
 
@@ -1363,11 +1359,14 @@ static ssize_t rt_imx_uart_write(struct rtdm_fd *fd, const void *buf,
 	return ret;
 }
 
-static const struct rtdm_device __initdata device_tmpl = {
-	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device imx_uart = {
+	.profile_info		= RTDM_PROFILE_INFO(imx_uart,
+						    RTDM_CLASS_SERIAL,
+						    RTDM_SUBCLASS_16550A,
+						    RTSER_PROFILE_VER),
+	.device_count		= RT_IMX_UART_MAX,
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
 	.context_size		= sizeof(struct rt_imx_uart_ctx),
-	.device_name		= "",
 	.ops = {
 		.open		= rt_imx_uart_open,
 		.close		= rt_imx_uart_close,
@@ -1376,9 +1375,6 @@ static const struct rtdm_device __initdata device_tmpl = {
 		.read_rt	= rt_imx_uart_read,
 		.write_rt	= rt_imx_uart_write,
 	},
-	.device_class		= RTDM_CLASS_SERIAL,
-	.device_sub_class	= RTDM_SUBCLASS_16550A,
-	.profile_version	= RTSER_PROFILE_VER,
 	.driver_name		= DRIVER_NAME,
 	.driver_version		= RTDM_DRIVER_VER(1, 0, 0),
 	.peripheral_name	= "IMX UART",
@@ -1423,13 +1419,9 @@ static int rt_imx_uart_probe(struct platform_device *pdev)
 
 
 	dev = &port->rtdm_dev;
-	memcpy(dev, &device_tmpl, sizeof(struct rtdm_device));
-	ksformat(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtser%d",
-		 start_index + pdev->id);
-	dev->device_id = pdev->id;
+	dev->class = &imx_uart;
+	dev->label = "rtser%d";
 	dev->device_data = port;
-
-	dev->proc_name = dev->device_name;
 
 	if (!tx_fifo[pdev->id] || tx_fifo[pdev->id] > TX_FIFO_SIZE)
 		port->tx_fifo = TX_FIFO_SIZE;
@@ -1465,7 +1457,7 @@ static int rt_imx_uart_probe(struct platform_device *pdev)
 
 	printk(KERN_INFO
 	       "%s on IMX UART%d: membase=0x%p mapbase=%#x irq=%d uartclk=%d\n",
-	       dev->device_name, pdev->id, port->membase, (u32)port->mapbase,
+	       dev->name, pdev->id, port->membase, (u32)port->mapbase,
 	       port->irq, port->uartclk);
 
 	return 0;

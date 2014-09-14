@@ -213,50 +213,52 @@ int a4l_rt_select(struct rtdm_fd *fd,
 	return a4l_select(cxt, selector, type, fd_index);
 }
 
-static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
-{[0 ... A4L_NB_DEVICES - 1] = {
-		.struct_version =	RTDM_DEVICE_STRUCT_VER,
-		.device_flags =		RTDM_NAMED_DEVICE,
-		.context_size =		sizeof(struct a4l_device_context),
-		.device_name =		"",
-		.ops = {
-			.open =		a4l_open,
-			.close =	a4l_close,
-			.ioctl_rt =	a4l_ioctl,
-			.read_rt =	a4l_read,
-			.write_rt =	a4l_write,
-			.ioctl_nrt =	a4l_ioctl,
-			.read_nrt =	a4l_read,
-			.write_nrt =	a4l_write,
-			.select =	a4l_rt_select,
-		},
-		.device_class =		RTDM_CLASS_EXPERIMENTAL,
-		.device_sub_class =	RTDM_SUBCLASS_ANALOGY,
-		.driver_name =		"rtdm_analogy",
-		.driver_version =	RTDM_DRIVER_VER(1, 0, 0),
-		.peripheral_name =	"Analogy",
-		.provider_name =	"Alexis Berlemont",
+static struct rtdm_device_class analogy = {
+	.profile_info =		RTDM_PROFILE_INFO(analogy,
+						  RTDM_CLASS_EXPERIMENTAL,
+						  RTDM_SUBCLASS_ANALOGY,
+						  0),
+	.device_flags =		RTDM_NAMED_DEVICE,
+	.device_count =		A4L_NB_DEVICES,
+	.context_size =		sizeof(struct a4l_device_context),
+	.ops = {
+		.open =		a4l_open,
+		.close =	a4l_close,
+		.ioctl_rt =	a4l_ioctl,
+		.read_rt =	a4l_read,
+		.write_rt =	a4l_write,
+		.ioctl_nrt =	a4l_ioctl,
+		.read_nrt =	a4l_read,
+		.write_nrt =	a4l_write,
+		.select =	a4l_rt_select,
+	},
+	.driver_name =		"analogy",
+	.driver_version =	RTDM_DRIVER_VER(1, 0, 0),
+	.peripheral_name =	"Analogy",
+	.provider_name =	"Alexis Berlemont",
+};
+
+static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] = {
+	[0 ... A4L_NB_DEVICES - 1] = {
+		.class = &analogy,
+		.label = "analogy%d",
 	}
 };
 
 int a4l_register(void)
 {
-	int i, ret = 0;
+	int i, ret;
 
-	for (i = 0; i < A4L_NB_DEVICES && ret == 0; i++) {
-
-		/* Sets the device name through which
-		   user process can access the Analogy layer */
-		ksformat(rtdm_devs[i].device_name,
-			 RTDM_MAX_DEVNAME_LEN, "analogy%d", i);
-		rtdm_devs[i].proc_name = rtdm_devs[i].device_name;
-
-		/* To keep things simple, the RTDM device ID
-		   is the Analogy device index */
-		rtdm_devs[i].device_id = i;
-
-		ret = rtdm_dev_register(&(rtdm_devs[i]));
+	for (i = 0; i < A4L_NB_DEVICES; i++) {
+		ret = rtdm_dev_register(rtdm_devs + i);
+		if (ret)
+			goto fail;
 	}
+
+	return 0;
+fail:
+	while (i-- > 0)
+		rtdm_dev_unregister(rtdm_devs + i, 0);
 
 	return ret;
 }

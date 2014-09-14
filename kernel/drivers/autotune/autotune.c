@@ -628,9 +628,13 @@ static void autotune_close(struct rtdm_fd *fd)
 		tuner->destroy_tuner(tuner);
 }
 
-static struct rtdm_device device = {
-	.struct_version		=	RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class autotune = {
+	.profile_info		=	RTDM_PROFILE_INFO(autotune,
+							  RTDM_CLASS_AUTOTUNE,
+							  RTDM_SUBCLASS_AUTOTUNE,
+							  0),
 	.device_flags		=	RTDM_NAMED_DEVICE|RTDM_EXCLUSIVE,
+	.device_count		=	1,
 	.context_size		=	sizeof(struct autotune_context),
 	.ops = {
 		.open		=	autotune_open,
@@ -638,14 +642,15 @@ static struct rtdm_device device = {
 		.ioctl_nrt	=	autotune_ioctl_nrt,
 		.close		=	autotune_close,
 	},
-	.device_class		=	RTDM_CLASS_AUTOTUNE,
-	.device_sub_class	=	RTDM_SUBCLASS_AUTOTUNE,
-	.device_name		=	"autotune",
 	.driver_name		=	"autotune",
 	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
 	.peripheral_name	=	"Auto-tuning services",
-	.proc_name		=	device.device_name,
 	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
+};
+
+static struct rtdm_device device = {
+	.class = &autotune,
+	.label = "autotune",
 };
 
 static int __init autotune_init(void)

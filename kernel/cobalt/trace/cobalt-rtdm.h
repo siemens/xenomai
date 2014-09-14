@@ -151,29 +151,29 @@ TRACE_EVENT(cobalt_device_register,
 
 	TP_STRUCT__entry(
 		__field(struct rtdm_device *, device)
-		__string(device_name, device->device_name)
+		__string(device_name, device->name)
 		__field(int, flags)
-		__field(int, device_class)
-		__field(int, device_subclass)
+		__field(int, class_id)
+		__field(int, subclass_id)
 		__field(int, profile_version)
 		__field(int, driver_version)
 	),
 
 	TP_fast_assign(
 		__entry->device	= device;
-		__assign_str(device_name, device->device_name);
-		__entry->flags = device->device_flags;
-		__entry->device_class = device->device_class;
-		__entry->device_subclass = device->device_sub_class;
-		__entry->profile_version = device->profile_version;
-		__entry->driver_version = device->driver_version;
+		__assign_str(device_name, device->class->device_name);
+		__entry->flags = device->class->device_flags;
+		__entry->class_id = device->class->device_class;
+		__entry->subclass_id = device->class->device_sub_class;
+		__entry->profile_version = device->class->profile_version;
+		__entry->driver_version = device->class->driver_version;
 	),
 
 	TP_printk("%s device %s=%p version=%d flags=0x%x, class=%d.%d profile=%d",
 		  (__entry->flags & RTDM_DEVICE_TYPE_MASK)
 		  == RTDM_NAMED_DEVICE ? "named" : "protocol",
 		  __get_str(device_name), __entry->device, __entry->driver_version,
-		  __entry->flags, __entry->device_class, __entry->device_subclass,
+		  __entry->flags, __entry->class_id, __entry->subclass_id,
 		  __entry->profile_version)
 );
 
@@ -183,13 +183,13 @@ TRACE_EVENT(cobalt_device_unregister,
 
 	TP_STRUCT__entry(
 		__field(struct rtdm_device *, device)
-		__string(device_name, device->device_name)
+		__string(device_name, device->class->device_name)
 		__field(unsigned int, poll_delay)
 	),
 
 	TP_fast_assign(
 		__entry->device	= device;
-		__assign_str(device_name, device->device_name);
+		__assign_str(device_name, device->class->device_name);
 		__entry->poll_delay = poll_delay;
 	),
 

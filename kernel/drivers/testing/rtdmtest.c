@@ -21,11 +21,6 @@
 #include <rtdm/driver.h>
 #include <rtdm/testing.h>
 
-static unsigned int start_index;
-
-module_param(start_index, uint, 0400);
-MODULE_PARM_DESC(start_index, "First device instance number to be used");
-
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("jan.kiszka@web.de");
 
@@ -105,56 +100,52 @@ rtdm_test_ioctl(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 	return err;
 }
 
-static struct rtdm_device device[2] = { [0 ... 1] = {
-	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class rtdmtest = {
+	.profile_info		= RTDM_PROFILE_INFO(rtdmtest,
+						    RTDM_CLASS_TESTING,
+						    RTDM_SUBCLASS_RTDMTEST,
+						    RTTST_PROFILE_VER),
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
+	.device_count		= 2,
 	.context_size		= sizeof(struct rtdm_test_context),
-	.device_name		= "",
 	.ops = {
 		.open		= rtdm_test_open,
 		.close		= rtdm_test_close,
 		.ioctl_rt	= rtdm_test_ioctl,
 		.ioctl_nrt	= rtdm_test_ioctl,
 	},
-	.device_class		= RTDM_CLASS_TESTING,
-	.device_sub_class	= RTDM_SUBCLASS_RTDMTEST,
-	.profile_version	= RTTST_PROFILE_VER,
-	.driver_name		= "xeno_rtdmtest",
+	.driver_name		= "rtdmtest",
 	.driver_version		= RTDM_DRIVER_VER(0, 1, 0),
 	.peripheral_name	= "RTDM unit test",
 	.provider_name		= "Jan Kiszka",
-} };
+};
+
+static struct rtdm_device device[2] = {
+	[0 ... 1] = {
+		.class = &rtdmtest,
+		.label = "rttest-rtdm%d",
+	}
+};
 
 static int __init __rtdm_test_init(void)
 {
-	int dev = 0;
-	int err;
+	int i, ret;
 
 	if (!realtime_core_enabled())
 		return -ENODEV;
 
-	while (1) {
-		device[dev].proc_name = device[dev].device_name;
-
-		ksformat(device[dev].device_name, RTDM_MAX_DEVNAME_LEN,
-			 "rttest-rtdm%d",
-			 start_index);
-		err = rtdm_dev_register(&device[dev]);
-
-		start_index++;
-
-		if (!err) {
-			if (++dev >= ARRAY_SIZE(device))
-				break;
-		} else if (err != -EEXIST) {
-			while (dev > 0) {
-				dev--;
-				rtdm_dev_unregister(&device[dev], 1000);
-			}
-			return err;
-		}
+	for (i = 0; i < ARRAY_SIZE(device); i++) {
+		ret = rtdm_dev_register(device + i);
+		if (ret)
+			goto fail;
 	}
+
 	return 0;
+fail:
+	while (i-- > 0)
+		rtdm_dev_unregister(device + i, 1000);
+
+	return ret;
 }
 
 static void __exit __rtdm_test_exit(void)
@@ -162,7 +153,7 @@ static void __exit __rtdm_test_exit(void)
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(device); i++)
-		rtdm_dev_unregister(&device[i], 1000);
+		rtdm_dev_unregister(device + i, 1000);
 }
 
 module_init(__rtdm_test_init);

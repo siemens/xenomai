@@ -44,7 +44,7 @@ static void cleanup_instance(struct rtdm_device *device,
 			     struct rtdm_dev_context *context)
 {
 	if (context) {
-		if (device->reserved.exclusive_context)
+		if (device->exclusive_context)
 			context->device = NULL;
 		else
 			kfree(context);
@@ -56,9 +56,13 @@ static void cleanup_instance(struct rtdm_device *device,
 void __rt_dev_close(struct rtdm_fd *fd)
 {
 	struct rtdm_dev_context *context = rtdm_fd_to_context(fd);
-	if (context->reserved.close)
-		context->reserved.close(fd);
-	cleanup_instance(context->device, context);
+	struct rtdm_device *device = context->device;
+	struct rtdm_device_class *class = device->class;
+
+	if (class->ops.close)
+		class->ops.close(fd);
+
+	cleanup_instance(device, context);
 }
 
 void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx)
@@ -75,8 +79,8 @@ void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx)
 }
 
 static int create_instance(struct xnsys_ppd *p, int fd,
-			struct rtdm_device *device,
-			struct rtdm_dev_context **context_ptr)
+			   struct rtdm_device *device,
+			   struct rtdm_dev_context **context_ptr)
 {
 	struct rtdm_dev_context *context;
 	spl_t s;
@@ -103,7 +107,7 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 	}
 
-	context = device->reserved.exclusive_context;
+	context = device->exclusive_context;
 	if (context) {
 		xnlock_get_irqsave(&rt_dev_lock, s);
 
@@ -118,7 +122,7 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 	} else {
 		context = kmalloc(sizeof(struct rtdm_dev_context) +
-				device->context_size, GFP_KERNEL);
+				device->class->context_size, GFP_KERNEL);
 		if (unlikely(context == NULL)) {
 			err = -ENOMEM;
 			goto fail;
@@ -127,7 +131,6 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 		context->device = device;
 	}
 
-	context->reserved.close = device->reserved.close;
 	*context_ptr = context;
 
 	err = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
@@ -165,7 +168,10 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 		goto cleanup_out;
 
 	ufd = ret;
-	context->fd.minor = minor;
+	if (device->class->device_flags & RTDM_NAMED_DEVICE)
+		context->fd.minor = device->named.minor;
+	else
+		context->fd.minor = minor;
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
@@ -191,8 +197,8 @@ EXPORT_SYMBOL_GPL(__rt_dev_open);
 int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 		    int socket_type, int protocol)
 {
-	struct rtdm_device *device;
 	struct rtdm_dev_context *context;
+	struct rtdm_device *device;
 	int ret;
 
 	device = __rtdm_get_protocol_device(protocol_family, socket_type);
@@ -225,19 +231,20 @@ cleanup_out:
 }
 EXPORT_SYMBOL_GPL(__rt_dev_socket);
 
-int
-__rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request, void __user *arg)
+int __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request,
+			    void __user *arg)
 {
-	struct rtdm_device *dev = rtdm_fd_device(fd);
+	struct rtdm_device *device = rtdm_fd_device(fd);
+	struct rtdm_device_class *class = device->class;
 	struct rtdm_device_info dev_info;
 
 	if (fd->magic != RTDM_FD_MAGIC || request != RTIOC_DEVICE_INFO)
 		return -ENOSYS;
 
-	dev_info.device_flags = dev->device_flags;
-	dev_info.device_class = dev->device_class;
-	dev_info.device_sub_class = dev->device_sub_class;
-	dev_info.profile_version = dev->profile_version;
+	dev_info.device_flags = class->device_flags;
+	dev_info.device_class = class->profile_info.class_id;
+	dev_info.device_sub_class = class->profile_info.subclass_id;
+	dev_info.profile_version = class->profile_info.version;
 
 	return rtdm_safe_copy_to_user(fd, arg, &dev_info,  sizeof(dev_info));
 }

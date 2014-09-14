@@ -125,7 +125,6 @@ static unsigned long irqtype[MAX_DEVICES] = {
 };
 static unsigned int baud_base[MAX_DEVICES];
 static int tx_fifo[MAX_DEVICES];
-static unsigned int start_index;
 
 module_param_array(irq, uint, NULL, 0400);
 module_param_array(baud_base, uint, NULL, 0400);
@@ -135,9 +134,6 @@ MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
 MODULE_PARM_DESC(baud_base, "Maximum baud rate of the serial device "
 		 "(internal clock rate / 16)");
 MODULE_PARM_DESC(tx_fifo, "Transmitter FIFO size");
-
-module_param(start_index, uint, 0400);
-MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("jan.kiszka@web.de");
@@ -313,7 +309,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 	rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
 	if (config->config_mask & RTSER_SET_BAUD) {
-		int dev_id = rtdm_fd_device(rtdm_private_to_fd(ctx))->device_id;
+		int dev_id = rtdm_fd_minor(rtdm_private_to_fd(ctx));
 		int baud_div;
 
 		ctx->config.baud_rate = config->baud_rate;
@@ -441,7 +437,7 @@ void rt_16550_cleanup_ctx(struct rt_16550_context *ctx)
 int rt_16550_open(struct rtdm_fd *fd, int oflags)
 {
 	struct rt_16550_context *ctx;
-	int dev_id = rtdm_fd_device(fd)->device_id;
+	int dev_id = rtdm_fd_minor(fd);
 	int err;
 	uint64_t *dummy;
 	rtdm_lockctx_t lock_ctx;
@@ -479,7 +475,7 @@ int rt_16550_open(struct rtdm_fd *fd, int oflags)
 
 	err = rtdm_irq_request(&ctx->irq_handle, irq[dev_id],
 			rt_16550_interrupt, irqtype[dev_id],
-			rtdm_fd_device(fd)->proc_name, ctx);
+			rtdm_fd_device(fd)->name, ctx);
 	if (err) {
 		/* reset DTR and RTS */
 		rt_16550_reg_out(rt_16550_io_mode_from_ctx(ctx), ctx->base_addr,
@@ -584,7 +580,7 @@ int rt_16550_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
 
 		if ((config->config_mask & RTSER_SET_BAUD) &&
 		    (config->baud_rate >
-			    baud_base[rtdm_fd_device(fd)->device_id] ||
+			    baud_base[rtdm_fd_minor(fd)] ||
 			    config->baud_rate <= 0))
 			/* invalid baudrate for this port */
 			return -EINVAL;
@@ -1068,11 +1064,14 @@ ssize_t rt_16550_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
 	return ret;
 }
 
-static const struct rtdm_device __initdata device_tmpl = {
-	.struct_version		= RTDM_DEVICE_STRUCT_VER,
+static struct rtdm_device_class uart16550A = {
+	.profile_info		= RTDM_PROFILE_INFO(uart16550A,
+						    RTDM_CLASS_SERIAL,
+						    RTDM_SUBCLASS_16550A,
+						    RTSER_PROFILE_VER),
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
+	.device_count		= MAX_DEVICES,
 	.context_size		= sizeof(struct rt_16550_context),
-	.device_name		= "",
 	.ops = {
 		.open		= rt_16550_open,
 		.close		= rt_16550_close,
@@ -1081,9 +1080,6 @@ static const struct rtdm_device __initdata device_tmpl = {
 		.read_rt	= rt_16550_read,
 		.write_rt	= rt_16550_write,
 	},
-	.device_class		= RTDM_CLASS_SERIAL,
-	.device_sub_class	= RTDM_SUBCLASS_16550A,
-	.profile_version	= RTSER_PROFILE_VER,
 	.driver_name		= RT_16550_DRIVER_NAME,
 	.driver_version		= RTDM_DRIVER_VER(1, 5, 2),
 	.peripheral_name	= "UART 16550A",
@@ -1096,6 +1092,7 @@ int __init rt_16550_init(void)
 {
 	struct rtdm_device *dev;
 	unsigned long base;
+	char *name;
 	int mode;
 	int err;
 	int i;
@@ -1114,19 +1111,18 @@ int __init rt_16550_init(void)
 		if (!irq[i] || !rt_16550_addr_param_valid(i))
 			goto cleanup_out;
 
-		dev = kmalloc(sizeof(struct rtdm_device), GFP_KERNEL);
+		dev = kmalloc(sizeof(struct rtdm_device) +
+			      RTDM_MAX_DEVNAME_LEN, GFP_KERNEL);
 		err = -ENOMEM;
 		if (!dev)
 			goto cleanup_out;
 
-		memcpy(dev, &device_tmpl, sizeof(struct rtdm_device));
-		ksformat(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtser%d",
-			 start_index + i);
-		dev->device_id = i;
+		dev->class = &uart16550A;
+		dev->label = "rtser%d";
+		name = (char *)(dev + 1);
+		ksformat(name, RTDM_MAX_DEVNAME_LEN, dev->label, i);
 
-		dev->proc_name = dev->device_name;
-
-		err = rt_16550_init_io(i, dev->device_name);
+		err = rt_16550_init_io(i, name);
 		if (err)
 			goto kfree_out;
 
