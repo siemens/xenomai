@@ -619,11 +619,13 @@ dictionary * iniparser_load(const char * ininame)
 
 	case LINE_ERROR:
 #if 0
-            warning(anon_scope, "iniparser: syntax error in %s (%d):\n",
+            printf("iniparser: syntax error in %s (%d):\n",
                     ininame,
                     lineno);
-            warning(anon_scope, "-> %s\n", line);
+            printf( "-> %s\n", line);
+
 #endif
+
 	    ret = EINVAL;
             errs++ ;
             break;

@@ -31,7 +31,9 @@ extern const char *ni_m_boards[];
 extern const int nr_ni_m_boards;
 
 #define ni_m_board_supported(id) __array_search(id, ni_m_boards, nr_ni_m_boards)
+
 int ni_m_software_calibrate(void);
+int ni_m_apply_calibration(void);
 
 #define init_interface(a, b)  a = ((typeof(a)) INIT_##b);
 
@@ -115,7 +117,7 @@ struct eeprom {
 }
 
 typedef int (*data_read_async_function)(void *, struct subdevice *, unsigned , int , int);
-typedef int (*data_read_hint_function)(struct subdevice *s, int, int, int, unsigned);
+typedef int (*data_read_hint_function)(struct subdevice *s, int, int, int);
 typedef int (*data_read_function)(unsigned *, struct subdevice *, int, int, int);
 typedef int (*data_write_function)(long int *, struct subdevice *s, int, int, int);
 
@@ -219,8 +221,8 @@ struct gnumath {
 }
 
 typedef int (*reference_set_pwm_function)(struct subdevice *s, unsigned, unsigned, unsigned *, unsigned *);
-typedef int (*reference_read_reference_doubles_function)(double [], unsigned, int, int, unsigned);
-typedef int (*reference_read_reference_samples_function)(void *, unsigned, int, int, unsigned);
+typedef int (*reference_read_reference_doubles_function)(double [], unsigned, int, int);
+typedef int (*reference_read_reference_samples_function)(void *, unsigned, int, int);
 typedef int (*reference_get_min_sampling_period_function)(int *);
 typedef int (*reference_set_reference_channel_function)(void);
 typedef int (*reference_set_reference_src_function)(void);
@@ -257,7 +259,6 @@ struct pwm_info {
 #define NI_M_TARGET_PWM_PERIOD_TICKS	( 20 * NI_M_MIN_PWM_PULSE_TICKS )
 #define NI_M_NR_SAMPLES			( 15000 )
 #define NI_M_BASE_RANGE			( 0 )
-#define NI_M_SETTLE_TIME		( 1000000 )
 
 
 struct subdevice_calibration_node {

@@ -87,22 +87,22 @@ apply_calibration_set_globals(char *info)
 	params.name = strtok(info, ":");
 	p = strtok(NULL, ",");
 	if (!p)
-		error(EXIT, 0, "missing --apply parameter \n");
+		error(EXIT, 0, "missing --apply parameter subd \n");
 	params.subd = strtol(p, NULL, 0);
 
 	p = strtok(NULL, ",");
 	if (!p)
-		error(EXIT, 0, "missing --apply parameter \n");
+		error(EXIT, 0, "missing --apply parameter channel \n");
 	params.channel = strtol(p, NULL, 0);
 
 	p = strtok(NULL, ",");
 	if (!p)
-		error(EXIT, 0, "missing --apply parameter \n");
+		error(EXIT, 0, "missing --apply parameter range \n");
 	params.range = strtol(p, NULL, 0);
 
 	p = strtok(NULL, "");
 	if (!p)
-		error(EXIT, 0, "missing --apply parameter \n");
+		error(EXIT, 0, "missing --apply parameter aref \n");
 	params.aref = strtol(p, NULL, 0);
 
 	return 0;
@@ -114,10 +114,8 @@ static void __attribute__ ((constructor)) __analogy_calibrate_init(void)
 }
 int main(int argc, char *argv[])
 {
-	struct sched_param param = {.sched_priority = 99};
 	char *device = NULL, *file = NULL, *apply_info = NULL;
 	int v, i, fd, err = 0;
-	struct rlimit rl;
 
 	__debug("version: git commit %s, revision %s \n", GIT_STAMP, revision);
 
@@ -152,26 +150,6 @@ int main(int argc, char *argv[])
 	if (apply_info)
 		apply_calibration_set_globals(apply_info);
 
-	err = getrlimit(RLIMIT_STACK, &rl);
-	if (!err) {
-		if (rl.rlim_cur < rl.rlim_max) {
-			rl.rlim_cur = rl.rlim_max;
-			err = setrlimit(RLIMIT_STACK, &rl);
-			if (err)
-				__debug("setrlimit errno (%d) \n", errno);
-			else
-				__debug("Program Stack Size: %ld MB \n\n", rl.rlim_cur/(1024*1024));
-		}
-	}
-
-	err = mlockall(MCL_CURRENT | MCL_FUTURE);
-	if (err < 0)
-		error(EXIT, errno, "mlockall error");
-
-	err = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-	if (err)
-		error(EXIT, 0, "pthread_setschedparam failed (0x%x)", err);
-
 	fd = a4l_open(&descriptor, device);
 	if (fd < 0)
 		error(EXIT, 0, "open %s failed (%d)", device, fd);
@@ -184,17 +162,19 @@ int main(int argc, char *argv[])
 	/*
 	 * TODO: modify the meaning of board/driver in the proc
 	 */
-	push_to_cal_file("[platform] \n");
-	push_to_cal_file("driver_name: %s \n", descriptor.board_name);
-	push_to_cal_file("board_name: %s \n", descriptor.driver_name);
+	push_to_cal_file("[%s] \n",PLATFORM_STR);
+	push_to_cal_file(DRIVER_STR" = %s;\n", descriptor.board_name);
+	push_to_cal_file(BOARD_STR" = %s;\n", descriptor.driver_name);
 
 	err = ni_m_software_calibrate();
 	if (err)
 		error(CONT, 0, "software calibration failed (%d)", err);
 
+	err = ni_m_apply_calibration();
+	if (err)
+		error(CONT, 0, "applying calibration failed (%d)", err);
+
 	a4l_close(&descriptor);
-	if (cal)
-		fclose(cal);
 
 	return err;
 }

@@ -30,7 +30,6 @@
 #include <math.h>
 
 #include "calibration_ni_m.h"
-#include "iniparser/iniparser.h"
 
 extern char *apply_name;
 
@@ -46,19 +45,18 @@ static struct subdev_ops ops;
 static struct eeprom eeprom;
 static struct gnumath math;
 
-
 static int
-apply_calibration(void)
+parse_calibration_file(char *name, struct calibration_data *data)
 {
+	const char *subdevice[2] = { AI_SUBD_STR, AO_SUBD_STR };
+	int i, j, k, index, nb_elements;
+	struct subd_data *p = NULL;
+	struct _dictionary_ *d;
 	const char *filename;
-	dictionary *d;
 	wordexp_t exp;
 	int ret = 0;
 
-	if (params.name == NULL)
-		return 0;
-
-	ret = wordexp(params.name, &exp, WRDE_NOCMD|WRDE_UNDEF);
+	ret = wordexp(name, &exp, WRDE_NOCMD|WRDE_UNDEF);
 	if (ret) {
 		ret = ret == WRDE_NOSPACE ? -ENOMEM : -EINVAL;
 		error(EXIT, 0, "cant apply calibration (%d) \n", ret);
@@ -71,13 +69,68 @@ apply_calibration(void)
 	if (access(filename, R_OK))
 		error(EXIT, 0, "cant access %s for reading \n", params.name);
 
+	__debug("using calibration file: %s \n", params.name);
+
 	d = iniparser_load(filename);
+	if (d == NULL)
+		error(EXIT, 0, "iniparser loading error for %s (%d)\n", params.name, errno);
+
+	read_calfile_str(&data->driver_name, d, PLATFORM_STR, DRIVER_STR);
+	read_calfile_str(&data->board_name, d, PLATFORM_STR, BOARD_STR);
+	for (k = 0; k < ARRAY_LEN(subdevice); k++) {
+		read_calfile_integer(&nb_elements, d, subdevice[k], -1,
+				     ELEMENTS_STR);
+		read_calfile_integer(&index, d, subdevice[k], -1,
+				     INDEX_STR);
+
+		if (strncmp(subdevice[k], AI_SUBD_STR, strlen(AI_SUBD_STR)) == 0) {
+			data->ai = malloc(nb_elements * sizeof(struct subd_data));
+			data->nb_ai = nb_elements;
+			p  = data->ai;
+		}
+		if (strncmp(subdevice[k], AO_SUBD_STR, strlen(AO_SUBD_STR)) == 0) {
+			data->ao = malloc(nb_elements * sizeof(struct subd_data));
+			data->nb_ao = nb_elements;
+			p = data->ao;
+		}
+		for (i = 0; i < nb_elements; i++) {
+			read_calfile_integer(&p->expansion, d, subdevice[k], i,
+					     EXPANSION_STR);
+			read_calfile_integer(&p->nb_coeff, d, subdevice[k], i,
+					     NBCOEFF_STR);
+			read_calfile_integer(&p->channel, d, subdevice[k], i,
+					     CHANNEL_STR);
+			read_calfile_integer(&p->range, d, subdevice[k], i,
+					     RANGE_STR);
+			p->coeff = malloc(p->nb_coeff * sizeof(double));
+			for (j = 0; j < p->nb_coeff; j++) {
+				read_calfile_double(&p->coeff[j], d, subdevice[k],
+						    i, COEFF_STR, j);
+			}
+			p->index = index;
+			p++;
+		}
+	}
 	wordfree(&exp);
 
-	if (d == NULL)
-		error(EXIT, 0, "iniparser loading error for %s \n", params.name);
+	return 0;
+}
 
-	return ret;
+
+int
+ni_m_apply_calibration(void)
+{
+	struct calibration_data cal_data;
+
+	if (params.name == NULL)
+		return 0;
+
+	parse_calibration_file(params.name, &cal_data);
+	/*
+	 * TODO: apply the calibration file.
+	 */
+
+	return 0;
 }
 
 /*
@@ -93,31 +146,26 @@ write_calibration(struct list *calibration_list, struct subdevice *subd)
 		return;
 
 	push_to_cal_file("\n[%s] \n", subd->name);
-	push_to_cal_file("index: %d \n", subd->idx);
-	list_for_each_entry_safe(e, t, calibration_list, node)
-	j++;
-	push_to_cal_file("elements: %d \n", j);
+	push_to_cal_file(INDEX_STR" = %d;\n", subd->idx);
+	list_for_each_entry_safe(e, t, calibration_list, node) {
+		j++;
+	}
+	push_to_cal_file(ELEMENTS_STR" = %d;\n", j);
 
 	j = 0;
 	list_for_each_entry_safe(e, t, calibration_list, node) {
 		push_to_cal_file("[%s_%d] \n", subd->name, j);
-		push_to_cal_file("channel: %d \n", e->channel);
-		push_to_cal_file("range: %d \n", e->range);
-		push_to_cal_file("expansion_origin: %g \n",
+		push_to_cal_file(CHANNEL_STR" = %d;\n", e->channel);
+		push_to_cal_file(RANGE_STR" = %d;\n", e->range);
+		push_to_cal_file(EXPANSION_STR" = %g;\n",
 				 e->polynomial->expansion_origin);
-		push_to_cal_file("nbcoeff: %d \n",
+		push_to_cal_file(NBCOEFF_STR"= %d;\n",
 				 e->polynomial->nb_coefficients);
-		push_to_cal_file("coefficients: ");
 
-		for (i = 0;;) {
-			push_to_cal_file("%g", e->polynomial->coefficients[i]);
-			i++;
-			if (i == e->polynomial->nb_coefficients) {
-				push_to_cal_file(" \n");
-				break;
-			}
-			push_to_cal_file(", ");
-		}
+		for (i = 0; i < e->polynomial->nb_coefficients; i++)
+			push_to_cal_file(COEFF_STR"_%d = %g;\n",
+					 i,
+					 e->polynomial->coefficients[i]);
 		j++;
 	}
 
@@ -208,8 +256,7 @@ eeprom_read_reference_voltage(float *val)
  * subdevice operations
  */
 static int
-data_read_hint(struct subdevice *s, int channel, int range, int aref,
-	       unsigned int delay)
+data_read_hint(struct subdevice *s, int channel, int range, int aref)
 {
 	sampl_t dummy_data;
 	a4l_insn_t insn;
@@ -434,7 +481,7 @@ polynomial_linearize(double *dst, struct polynomial *p, double val)
 static int
 reference_get_min_sampling_period(int *val)
 {
-	unsigned int chan_descs[] = { 0 };
+	unsigned int chan_descs[] = { 0};
 	a4l_cmd_t cmd;
 	int err;
 
@@ -466,7 +513,7 @@ reference_get_min_sampling_period(int *val)
 static int
 reference_set_bits(unsigned int bits)
 {
-	unsigned int data[2] = { A4L_INSN_CONFIG_ALT_SOURCE, bits };
+	unsigned int data[2] = { A4L_INSN_CONFIG_ALT_SOURCE, bits};
 	a4l_insn_t insn;
 	int err;
 
@@ -515,7 +562,7 @@ reference_set_pwm(struct subdevice *s, unsigned int h, unsigned int d,
 
 static int
 reference_read_doubles(double dst[], unsigned int nb_samples,
-		       int speriod, int irange, unsigned int settle_time)
+		       int speriod, int irange)
 {
 	int i, err = 0;
 	sampl_t *p;
@@ -524,8 +571,7 @@ reference_read_doubles(double dst[], unsigned int nb_samples,
 	if (!p)
 		error(EXIT, 0, "malloc");
 
-	err = references.read_samples(p, nb_samples, speriod, irange,
-				      settle_time);
+	err = references.read_samples(p, nb_samples, speriod, irange);
 	if (err) {
 		free(p);
 		error(EXIT, 0, "read_samples");
@@ -540,19 +586,15 @@ reference_read_doubles(double dst[], unsigned int nb_samples,
 }
 
 static int
-reference_read_samples(void *dst, unsigned int nb_samples, int speriod,
-		       int irange, unsigned int settle_time)
+reference_read_samples(void *dst, unsigned int nb_samples, int speriod, int irange)
 {
 	int err;
-
-	if (settle_time > 1000000000)
-		error(EXIT, 0, "invalid argument (%d)", settle_time);
 
 	if (!nb_samples)
 		error(EXIT, 0, "invalid nb samples (%d)", nb_samples);
 
 	err = ops.data.read_hint(&ai_subd, CR_ALT_SOURCE|CR_ALT_FILTER,
-				 irange, AREF_DIFF, settle_time);
+				 irange, AREF_DIFF);
 	if (err)
 		error(EXIT, 0, "read_hint (%d)", err);
 
@@ -672,8 +714,7 @@ characterize_pwm(struct pwm_info *dst, int pref, unsigned range)
 		if (err)
 			error(EXIT, 0, "get_min_speriod");
 
-		err = references.read_doubles(p, len/sizeof(*p), speriod, range,
-					      NI_M_SETTLE_TIME);
+		err = references.read_doubles(p, len/sizeof(*p), speriod, range);
 		if (err)
 			error(EXIT, 0, "read_doubles");
 
@@ -765,8 +806,7 @@ calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
 	err = references.get_min_speriod(&speriod);
 	if (err)
 		error(EXIT, 0, "get_min_speriod");
-	err = references.read_doubles(p, len/sizeof(*p), speriod, range,
-				      NI_M_SETTLE_TIME);
+	err = references.read_doubles(p, len/sizeof(*p), speriod, range);
 	if (err)
 		error(EXIT, 0, "read_doubles");
 	math.stats.mean(&measured_ground_code, p, len/sizeof(*p));
@@ -778,8 +818,7 @@ calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
 	err = references.get_min_speriod(&speriod);
 	if (err)
 		error(EXIT, 0, "get_min_speriod");
-	err = references.read_doubles(p, len/sizeof(*p), speriod, range,
-				      NI_M_SETTLE_TIME);
+	err = references.read_doubles(p, len/sizeof(*p), speriod, range);
 	if (err)
 		error(EXIT, 0, "read_doubles");
 	math.stats.mean(&measured_reference_code, p, len/sizeof(*p));
@@ -847,11 +886,9 @@ get_calibration_node(struct list *l, unsigned channel, unsigned range) {
 		return NULL;
 
 	list_for_each_entry_safe(e, t, l, node) {
-		if (e->channel == channel ||
-		    e->channel == ALL_CHANNELS ||
+		if (e->channel == channel || e->channel == ALL_CHANNELS ||
 		    channel == ALL_CHANNELS) {
-			if (e->range == range ||
-			    e->range == ALL_RANGES ||
+			if (e->range == range || e->range == ALL_RANGES ||
 			    range == ALL_RANGES) {
 				return e;
 			}
@@ -1086,6 +1123,7 @@ ni_m_calibrate_ai(void)
 			.range = -1,
 		},
 
+
 	};
 
 	list_init(&ai_calibration_list);
@@ -1142,7 +1180,6 @@ ni_m_calibrate_ai(void)
 	 * calibrate low, medium and high gain ranges
 	 */
 	for (i = 0; i < ARRAY_LEN(calibration_info); i++) {
-
 		__debug("Calibrating AI: %s \n", calibration_info[i]);
 
 		if (calibration_info[i].range >= 0)
@@ -1153,7 +1190,8 @@ ni_m_calibrate_ai(void)
 		if (!calibrated.ranges[calibration_info[i].range])
 			error(EXIT, 0, "not calibrated yet \n" );
 
-		err = characterize_pwm(&pwm_info, calibration_info[i].ref_pos,
+		err = characterize_pwm(&pwm_info,
+				       calibration_info[i].ref_pos,
 				       calibration_info[i].range);
 		if (err)
 			error(EXIT, 0, "characterize_pwm \n");
@@ -1176,7 +1214,6 @@ calibrate:
 						       calibration_info[i].threshold);
 		if (err)
 			error(EXIT, 0, "calibrate_ranges_above_threshold \n");
-
 	}
 
 	return 0;
@@ -1277,23 +1314,31 @@ calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao
 
 	/* low nominals */
 	data.codes[0].nominal = low_code;
+
 	ops.data.write(&low_code, &ao_subd, ao_channel, ao_rng, AREF_GROUND);
 	references.get_min_speriod(&speriod);
-	references.read_doubles(readings, NI_M_NR_SAMPLES, speriod, ai_rng,
-				NI_M_SETTLE_TIME);
+	references.read_doubles(readings,
+				NI_M_NR_SAMPLES,
+				speriod,
+				ai_rng);
 	math.stats.mean(&measured_low_code, readings, NI_M_NR_SAMPLES);
-	math.polynomial.linearize(&data.codes[0].measured, node->polynomial,
+	math.polynomial.linearize(&data.codes[0].measured,
+				  node->polynomial,
 				  measured_low_code);
 
 	/* high nominals */
 	high_code = get_high_code(ai_rng, ao_rng);
 	data.codes[1].nominal = (1.0) * (double) high_code;
+
 	ops.data.write(&high_code, &ao_subd, ao_channel, ao_rng, AREF_GROUND);
 	references.get_min_speriod(&speriod);
-	references.read_doubles(readings, NI_M_NR_SAMPLES, speriod, ai_rng,
-				NI_M_SETTLE_TIME);
+	references.read_doubles(readings,
+				NI_M_NR_SAMPLES,
+				speriod,
+				ai_rng);
 	math.stats.mean(&measured_high_code, readings, NI_M_NR_SAMPLES);
-	math.polynomial.linearize(&data.codes[1].measured, node->polynomial,
+	math.polynomial.linearize(&data.codes[1].measured,
+				  node->polynomial,
 				  measured_high_code);
 
 	poly.expansion_origin = 0.0;
@@ -1301,7 +1346,8 @@ calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao
 	__debug("AO calibration for channel %d, range %d \n", ao_channel, ao_rng);
 
 	for (i = 0; i < data.nb_codes ; i++)
-		__debug("set ao to %g, measured %g \n", data.codes[i].nominal,
+		__debug("set ao to %g, measured %g \n",
+			data.codes[i].nominal,
 			data.codes[i].measured);
 
 	/*----------------------------------------------------------------------
@@ -1317,7 +1363,6 @@ calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao
 	math.polynomial.fit(&poly, &data);
 
 	append_calibration_node(&ao_calibration_list, &poly, ao_channel, ao_rng);
-
 	print_polynomial(&poly);
 	free(data.codes);
 
@@ -1392,16 +1437,16 @@ int ni_m_software_calibrate(void)
 
 		switch (sbinfo->flags & A4L_SUBD_TYPES) {
 		case A4L_SUBD_CALIB:
-			SET_SUBD(cal, i, sbinfo, "calibration");
+			SET_SUBD(cal, i, sbinfo, CALIBRATION_SUBD_STR);
 			break;
 		case A4L_SUBD_AI:
-			SET_SUBD(ai, i, sbinfo, "analog_input");
+			SET_SUBD(ai, i, sbinfo, AI_SUBD_STR);
 			break;
 		case A4L_SUBD_AO:
-			SET_SUBD(ao, i, sbinfo, "analog_output");
+			SET_SUBD(ao, i, sbinfo, AO_SUBD_STR);
 			break;
 		case A4L_SUBD_MEMORY:
-			SET_SUBD(mem, i, sbinfo, "memory");
+			SET_SUBD(mem, i, sbinfo, MEMORY_SUBD_STR);
 			break;
 		}
 	}
@@ -1427,8 +1472,6 @@ int ni_m_software_calibrate(void)
 
 	write_calibration(&ao_calibration_list, &ao_subd);
 
-	apply_calibration();
-
 	return 0;
 }
 
@@ -1443,4 +1486,5 @@ static void __attribute__ ((constructor)) __ni_m_calibrate_init(void)
 	init_interface(ao_subd, SUBD);
 	init_interface(ai_subd, SUBD);
 }
+
 
