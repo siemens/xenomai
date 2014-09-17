@@ -56,71 +56,39 @@ static inline void rtdm_reference_device(struct rtdm_device *device)
 	atomic_inc(&device->refcount);
 }
 
-struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r)
+struct rtdm_device *__rtdm_get_namedev(const char *path)
 {
 	struct rtdm_device *device;
-	const char *p = NULL;
-	int ret, minor = -1;
 	xnhandle_t handle;
-	char *base = NULL;
+	int ret;
 	spl_t s;
 
-	/*
-	 * First we look for an exact match. If this fails, we look
-	 * for a device minor specification. If we find one, we redo
-	 * the search only looking for the device base name. The
-	 * default minor value if unspecified is -1.
-	 */
-	for (;;) {
-		ret = xnregistry_bind(name, XN_NONBLOCK, XN_RELATIVE, &handle);
-		if (base)
-			kfree(base);
-		if (ret != -EWOULDBLOCK)
-			break;
-		if (p)	/* Look for minor only once. */
-			return NULL;
-		p = name + strlen(name);
-		while (--p >= name) {
-			if (!isdigit(*p))
-				break;
-		}
-		if (p < name)	/* no minor spec. */
-			return NULL;
-		if (p[1] == '\0')
-			return NULL;
-		ret = kstrtoint(p + 1, 10, &minor);
-		if (ret || minor < 0)
-			return NULL;
-		base = kstrdup(name, GFP_KERNEL);
-		if (base == NULL)
-			return NULL;
-		if (*p == '@')
-			base[p - name] = '\0';
-		else
-			base[p - name + 1] = '\0';
-		name = base;
-	}
+	/* skip common /dev prefix */
+	if (strncmp(path, "/dev/", 5) == 0)
+		path += 5;
+
+	/* skip RTDM devnode root */
+	if (strncmp(path, "rtdm/", 5) == 0)
+		path += 5;
+
+	ret = xnregistry_bind(path, XN_NONBLOCK, XN_RELATIVE, &handle);
+	if (ret)
+		return NULL;
 
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
 	device = xnregistry_lookup(handle, NULL);
-	if (device) {
-		if (device->magic == RTDM_DEVICE_MAGIC &&
-		    ((device->class->device_flags & RTDM_MINOR) != 0 ||
-		     minor < 0)) {
-			rtdm_reference_device(device);
-			*minor_r = minor;
-		} else
-			device = NULL;
-	}
+	if (device && device->magic == RTDM_DEVICE_MAGIC)
+		rtdm_reference_device(device);
+	else
+		device = NULL;
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
 	return device;
 }
 
-struct rtdm_device *
-__rtdm_get_protocol_device(int protocol_family, int socket_type)
+struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type)
 {
 	struct rtdm_device *device = NULL;
 	struct xnid *xnid;
@@ -140,19 +108,6 @@ __rtdm_get_protocol_device(int protocol_family, int socket_type)
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
 	return device;
-}
-
-struct rtdm_device *__rtdm_get_namedev(const char *path)
-{
-	/* skip common /dev prefix */
-	if (strncmp(path, "/dev/", 5) == 0)
-		path += 5;
-
-	/* skip RTDM devnode root */
-	if (strncmp(path, "rtdm/", 5) == 0)
-		path += 5;
-
-	return __rtdm_get_named_device(path);
 }
 
 /**

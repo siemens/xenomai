@@ -195,8 +195,8 @@ struct udd_device {
 	 */
 	const char *device_name;
 	/**
-	 * Additional device flags (e.g. RTDM_EXCLUSIVE,
-	 * RTDM_MINOR. RTDM_NAMED_DEVICE may be omitted).
+	 * Additional device flags (e.g. RTDM_EXCLUSIVE)
+	 * RTDM_NAMED_DEVICE may be omitted).
 	 */
 	int device_flags;
 	/**

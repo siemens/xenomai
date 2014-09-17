@@ -42,9 +42,6 @@ extern struct semaphore nrt_dev_lock;
 extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
 
-struct rtdm_device *__rtdm_get_named_device(const char *name, int *minor_r);
-struct rtdm_device *__rtdm_get_protocol_device(int protocol_family, int socket_type);
-
 static inline void rtdm_dereference_device(struct rtdm_device *device)
 {
 	atomic_dec(&device->refcount);
@@ -78,6 +75,8 @@ int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 			  int prot, int flags, void *__user *pptr);
 
 struct rtdm_device *__rtdm_get_namedev(const char *path);
+
+struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type);
 
 int rtdm_init(void);
 

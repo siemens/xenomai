@@ -153,7 +153,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 {
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
-	int ret, minor;
+	int ret;
 
 	device = __rtdm_get_namedev(path);
 	if (device == NULL)
@@ -167,7 +167,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 	if (device->class->device_flags & RTDM_NAMED_DEVICE)
 		context->fd.minor = device->named.minor;
 	else
-		context->fd.minor = minor;
+		context->fd.minor = 0;
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
@@ -197,7 +197,7 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 	struct rtdm_device *device;
 	int ret;
 
-	device = __rtdm_get_protocol_device(protocol_family, socket_type);
+	device = __rtdm_get_protodev(protocol_family, socket_type);
 	if (device == NULL)
 		return -EAFNOSUPPORT;
 

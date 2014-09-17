@@ -69,9 +69,6 @@ enum rtdm_selecttype;
  *  application. */
 #define RTDM_EXCLUSIVE			0x0001
 
-/** If set, the device supports minor specification. */
-#define RTDM_MINOR			0x0002
-
 /** If set, the device is addressed via a clear-text name. */
 #define RTDM_NAMED_DEVICE		0x0010
 
@@ -267,7 +264,10 @@ struct rtdm_device_class {
 	const char *provider_name;
 	/** I/O operation handlers */
 	struct rtdm_fd_ops ops;
-	/** Count of devices which belong to this class. */
+	/**
+	 * Count of devices which belong to this class. This value is
+	 * used to allocate a chrdev region for named devices.
+	 */
 	int device_count;
 	/** Reserved area */
 	struct {

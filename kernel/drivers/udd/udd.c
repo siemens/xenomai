@@ -291,7 +291,7 @@ static inline int register_mapper(struct udd_device *udd)
 	class->profile_info = (struct rtdm_profile_info)
 		RTDM_PROFILE_INFO("mapper", RTDM_CLASS_MEMORY,
 				  RTDM_SUBCLASS_GENERIC, 0);
-	class->device_flags = RTDM_NAMED_DEVICE|RTDM_MINOR;
+	class->device_flags = RTDM_NAMED_DEVICE;
 	class->device_count = UDD_NR_MAPS;
 	class->ops = (struct rtdm_fd_ops){
 		.open		=	mapper_open,
