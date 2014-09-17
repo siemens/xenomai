@@ -34,10 +34,6 @@
 struct xnvdso *nkvdso;
 EXPORT_SYMBOL_GPL(nkvdso);
 
-static struct rtdm_device private_umm_device;
-
-static struct rtdm_device shared_umm_device;
-
 static void umm_vmopen(struct vm_area_struct *vma)
 {
 	struct cobalt_umm *umm = vma->vm_private_data;
@@ -65,7 +61,7 @@ static struct cobalt_umm *umm_from_fd(struct rtdm_fd *fd)
 	if (process == NULL)
 		return NULL;
 
-	if (rtdm_fd_device(fd) == &private_umm_device)
+	if (rtdm_fd_minor(fd) == UMM_PRIVATE)
 		return &process->sys_ppd.umm;
 
 	return &__xnsys_global_ppd.umm;
@@ -209,13 +205,13 @@ static int sysmem_ioctl_nrt(struct rtdm_fd *fd,
 	return do_sysmem_ioctls(fd, request, arg);
 }
 
-static struct rtdm_device_class private_umm = {
-	.profile_info	=	RTDM_PROFILE_INFO(private_umm,
+static struct rtdm_device_class umm = {
+	.profile_info	=	RTDM_PROFILE_INFO(umm,
 						  RTDM_CLASS_MEMORY,
-						  UMM_PRIVATE,
+						  RTDM_SUBCLASS_GENERIC,
 						  0),
 	.device_flags	=	RTDM_NAMED_DEVICE,
-	.device_count	=	1,
+	.device_count	=	2,
 	.context_size	=	0,
 	.ops = {
 		.ioctl_rt		=	umm_ioctl_rt,
@@ -225,38 +221,19 @@ static struct rtdm_device_class private_umm = {
 	},
 	.driver_name		=	"memdev",
 	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"Private user-mapped heap",
+	.peripheral_name	=	"User-mapped heap",
 	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
 };
 
-static struct rtdm_device private_umm_device = {
-	.class = &private_umm,
-	.label = COBALT_MEMDEV_PRIVATE,
-};
-
-static struct rtdm_device_class shared_umm = {
-	.profile_info	=	RTDM_PROFILE_INFO(shared_umm,
-						  RTDM_CLASS_MEMORY,
-						  UMM_SHARED,
-						  0),
-	.device_flags	=	RTDM_NAMED_DEVICE,
-	.device_count	=	1,
-	.context_size	=	0,
-	.ops = {
-		.ioctl_rt		=	umm_ioctl_rt,
-		.ioctl_nrt		=	umm_ioctl_nrt,
-		.mmap			=	umm_mmap,
-		.get_unmapped_area	=	umm_get_unmapped_area,
+static struct rtdm_device umm_devices[] = {
+	[ UMM_PRIVATE ] = {
+		.class = &umm,
+		.label = COBALT_MEMDEV_PRIVATE,
 	},
-	.driver_name		=	"memdev",
-	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"Shared user-mapped heap",
-	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
-};
-
-static struct rtdm_device shared_umm_device = {
-	.class = &shared_umm,
-	.label = COBALT_MEMDEV_SHARED,
+	[ UMM_SHARED ] = {
+		.class = &umm,
+		.label = COBALT_MEMDEV_SHARED,
+	},
 };
 
 static struct rtdm_device_class sysmem = {
@@ -308,11 +285,11 @@ int cobalt_memdev_init(void)
 
 	init_vdso();
 
-	ret = rtdm_dev_register(&private_umm_device);
+	ret = rtdm_dev_register(umm_devices + UMM_PRIVATE);
 	if (ret)
 		goto fail_private;
 
-	ret = rtdm_dev_register(&shared_umm_device);
+	ret = rtdm_dev_register(umm_devices + UMM_SHARED);
 	if (ret)
 		goto fail_shared;
 
@@ -323,9 +300,9 @@ int cobalt_memdev_init(void)
 	return 0;
 
 fail_sysmem:
-	rtdm_dev_unregister(&shared_umm_device, 0);
+	rtdm_dev_unregister(umm_devices + UMM_SHARED, 0);
 fail_shared:
-	rtdm_dev_unregister(&private_umm_device, 0);
+	rtdm_dev_unregister(umm_devices + UMM_PRIVATE, 0);
 fail_private:
 	cobalt_umm_free(&__xnsys_global_ppd.umm, nkvdso);
 fail_vdso:
@@ -337,8 +314,8 @@ fail_vdso:
 void cobalt_memdev_cleanup(void)
 {
 	rtdm_dev_unregister(&sysmem_device, 0);
-	rtdm_dev_unregister(&shared_umm_device, 0);
-	rtdm_dev_unregister(&private_umm_device, 0);
+	rtdm_dev_unregister(umm_devices + UMM_SHARED, 0);
+	rtdm_dev_unregister(umm_devices + UMM_PRIVATE, 0);
 	cobalt_umm_free(&__xnsys_global_ppd.umm, nkvdso);
 	cobalt_umm_destroy(&__xnsys_global_ppd.umm);
 }
