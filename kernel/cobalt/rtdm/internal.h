@@ -77,6 +77,8 @@ void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx);
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 			  int prot, int flags, void *__user *pptr);
 
+struct rtdm_device *__rtdm_get_namedev(const char *path);
+
 int rtdm_init(void);
 
 void rtdm_cleanup(void);

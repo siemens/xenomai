@@ -70,8 +70,8 @@ static void check_sleep_inner(const char *fn, int line,
 #define check_sleep(msg, start) \
 	check_sleep_inner(__FUNCTION__, __LINE__, msg, start)
 
-static const char *devname = "/dev/rttest-rtdm0";
-static const char *devname2 = "/dev/rttest-rtdm1";
+static const char *devname = "/dev/rtdm/rtdm0";
+static const char *devname2 = "/dev/rtdm/rtdm1";
 
 static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 {

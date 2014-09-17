@@ -266,7 +266,7 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	fd = open("/dev/autotune", O_RDONLY);
+	fd = open("/dev/rtdm/autotune", O_RDONLY);
 	if (fd < 0)
 		error(1, errno, "cannot open autotune device");
 

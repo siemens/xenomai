@@ -34,12 +34,14 @@
 			fprintf(stderr, object ": OK\n");		\
 	})
 
+#define devnode_root "/dev/rtdm/"
+
 static unsigned long long get_used(void)
 {
 	const char *memdev[] = {
-		COBALT_MEMDEV_PRIVATE,
-		COBALT_MEMDEV_SHARED,
-		COBALT_MEMDEV_SYS,
+		devnode_root COBALT_MEMDEV_PRIVATE,
+		devnode_root COBALT_MEMDEV_SHARED,
+		devnode_root COBALT_MEMDEV_SYS,
 		NULL,
 	};
 	struct cobalt_memdev_stat statbuf;

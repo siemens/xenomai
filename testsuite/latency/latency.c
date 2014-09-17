@@ -745,14 +745,15 @@ int main(int argc, char *const *argv)
 	if (test_mode != USER_TASK) {
 		char devname[RTDM_MAX_DEVNAME_LEN];
 
-		snprintf(devname, RTDM_MAX_DEVNAME_LEN, "rttest-timerbench%d",
+		snprintf(devname, RTDM_MAX_DEVNAME_LEN,
+			 "/dev/rtdm/timerbench%d",
 			 benchdev_no);
 		benchdev = open(devname, O_RDWR);
 
 		if (benchdev < 0) {
 			fprintf(stderr,
-				"latency: failed to open benchmark device, code %d\n"
-				"(modprobe xeno_timerbench?)\n", errno);
+				"latency: cannot open %s: %m\n"
+				"(modprobe xeno_timerbench?)\n", devname);
 			return 0;
 		}
 	}

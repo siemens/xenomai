@@ -32,20 +32,55 @@
 COBALT_SYSCALL(open, lostage,
 	       int, (const char __user *u_path, int oflag))
 {
-	char path[RTDM_MAX_DEVNAME_LEN + 1];
+	struct rtdm_device *device;
+	struct filename *filename;
 	struct xnsys_ppd *ppd;
+	struct file *filp;
 	int ufd, ret;
 
-	if (__xn_safe_strncpy_from_user(path, u_path, sizeof(path)-1) < 0)
-		return -EFAULT;
+	filename = getname(u_path);
+	if (IS_ERR(filename))
+		return PTR_ERR(filename);
 
-	path[sizeof(path)-1] = '\0';
+	/*
+	 * Lookup for the device into the RTDM registry: if we don't
+	 * own the device, tell userland to forward to the regular
+	 * open() service.
+	 */
+	device = __rtdm_get_namedev(filename->name);
+	if (device == NULL) {
+		ret = -ENODEV;
+		goto fail_lookup;
+	}
+
+	ufd = get_unused_fd_flags(oflag);
+	if (ufd < 0) {
+		ret = ufd;
+		goto fail_ufd;
+	}
+
+	filp = filp_open(filename->name, oflag, 0);
+	if (IS_ERR(filp)) {
+		ret = PTR_ERR(filp);
+		goto fail;
+	}
+
 	ppd = cobalt_ppd_get(0);
-	ufd = anon_inode_getfd("[rtdm-named]", &rtdm_dumb_fops, ppd, oflag);
-
-	ret = __rt_dev_open(ppd, ufd, path, oflag);
+	ret = __rt_dev_open(ppd, ufd, filename->name, oflag);
 	if (ret < 0)
-		__close_fd(current->files, ufd);
+		goto fail;
+
+	rtdm_dereference_device(device);
+	fd_install(ufd, filp);
+	putname(filename);
+
+	return ufd;
+fail:
+	put_unused_fd(ufd);
+fail_ufd:
+	rtdm_dereference_device(device);
+fail_lookup:
+	putname(filename);
 
 	return ret;
 }

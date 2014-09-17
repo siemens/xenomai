@@ -123,7 +123,7 @@ static struct rtdm_device_class rtdmtest = {
 static struct rtdm_device device[2] = {
 	[0 ... 1] = {
 		.class = &rtdmtest,
-		.label = "rttest-rtdm%d",
+		.label = "rtdm%d",
 	}
 };
 

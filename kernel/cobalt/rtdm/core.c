@@ -155,11 +155,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 	struct rtdm_device *device;
 	int ret, minor;
 
-	/* skip common /dev prefix */
-	if (strncmp(path, "/dev/", 5) == 0)
-		path += 5;
-
-	device = __rtdm_get_named_device(path, &minor);
+	device = __rtdm_get_namedev(path);
 	if (device == NULL)
 		return -ENODEV;
 

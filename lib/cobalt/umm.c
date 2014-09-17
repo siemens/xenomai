@@ -44,7 +44,7 @@ static pthread_once_t init_bind_once = PTHREAD_ONCE_INIT;
 
 static uint32_t private_size;
 
-static void *map_umm(const char *name, uint32_t *size_r)
+static void *__map_umm(const char *name, uint32_t *size_r)
 {
 	struct cobalt_memdev_stat statbuf;
 	int fd, ret;
@@ -72,6 +72,8 @@ static void *map_umm(const char *name, uint32_t *size_r)
 
 	return addr;
 }
+
+#define map_umm(__name, __size_r)  __map_umm("/dev/rtdm/" __name, __size_r)
 
 static void unmap_on_fork(void)
 {

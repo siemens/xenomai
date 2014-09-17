@@ -142,6 +142,19 @@ __rtdm_get_protocol_device(int protocol_family, int socket_type)
 	return device;
 }
 
+struct rtdm_device *__rtdm_get_namedev(const char *path)
+{
+	/* skip common /dev prefix */
+	if (strncmp(path, "/dev/", 5) == 0)
+		path += 5;
+
+	/* skip RTDM devnode root */
+	if (strncmp(path, "rtdm/", 5) == 0)
+		path += 5;
+
+	return __rtdm_get_named_device(path);
+}
+
 /**
  * @ingroup rtdm_driver_interface
  * @defgroup rtdm_device_register Device Registration Services

@@ -899,7 +899,7 @@ static int open_rttest(char *buf, size_t size, unsigned count)
 	int fd, status;
 
 	do {
-		snprintf(buf, size, "/dev/rttest-switchtest%d", dev_nr);
+		snprintf(buf, size, "/dev/rtdm/switchtest%d", dev_nr);
 
 		status = fd = open(buf, O_RDWR);
 
@@ -912,7 +912,7 @@ static int open_rttest(char *buf, size_t size, unsigned count)
 			break;
 
 		if (errno != ENOSYS && errno != ENOTTY) {
-			fprintf(stderr, "switchtest: open: %m\n");
+			fprintf(stderr, "switchtest: ioctl: %m\n");
 			return -1;
 		}
 
@@ -923,8 +923,8 @@ static int open_rttest(char *buf, size_t size, unsigned count)
 		if (++dev_nr != DEV_NR_MAX)
 			continue;
 
-		fprintf(stderr, "switchtest: Unable to open switchtest device.\n"
-			"(modprobe xeno_switchtest ?)\n");
+		fprintf(stderr, "switchtest: cannot open %s\n"
+			"(modprobe xeno_switchtest?)\n", buf);
 
 		return -1;
 	} while (status == -1);
