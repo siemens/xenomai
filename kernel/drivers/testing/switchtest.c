@@ -26,8 +26,6 @@
 #include <rtdm/driver.h>
 #include <asm/xenomai/fptest.h>
 
-#define NR_DEVICES  4
-
 #define RTSWITCH_RT      0x10000
 #define RTSWITCH_NRT     0
 #define RTSWITCH_KERNEL  0x20000
@@ -37,22 +35,22 @@ struct rtswitch_task {
 	rtdm_event_t rt_synch;
 	struct semaphore nrt_synch;
 	struct xnthread ktask;          /* For kernel-space real-time tasks. */
-	unsigned last_switch;
+	unsigned int last_switch;
 };
 
 struct rtswitch_context {
 	struct rtswitch_task *tasks;
-	unsigned tasks_count;
-	unsigned next_index;
+	unsigned int tasks_count;
+	unsigned int next_index;
 	struct semaphore lock;
-	unsigned cpu;
-	unsigned switches_count;
+	unsigned int cpu;
+	unsigned int switches_count;
 
 	unsigned long pause_us;
-	unsigned next_task;
+	unsigned int next_task;
 	rtdm_timer_t wake_up_delay;
 
-	unsigned failed;
+	unsigned int failed;
 	struct rttst_swtest_error error;
 
 	struct rtswitch_task *utask;
@@ -76,10 +74,10 @@ static int report(const char *fmt, ...)
 	return ret;
 }
 
-static void handle_ktask_error(struct rtswitch_context *ctx, unsigned fp_val)
+static void handle_ktask_error(struct rtswitch_context *ctx, unsigned int fp_val)
 {
 	struct rtswitch_task *cur = &ctx->tasks[ctx->error.last_switch.to];
-	unsigned i;
+	unsigned int i;
 
 	ctx->failed = 1;
 	ctx->error.fp_val = fp_val;
@@ -110,7 +108,7 @@ static void handle_ktask_error(struct rtswitch_context *ctx, unsigned fp_val)
 }
 
 static int rtswitch_pend_rt(struct rtswitch_context *ctx,
-			    unsigned idx)
+			    unsigned int idx)
 {
 	struct rtswitch_task *task;
 	int rc;
@@ -151,8 +149,8 @@ static void timed_wake_up(rtdm_timer_t *timer)
 }
 
 static int rtswitch_to_rt(struct rtswitch_context *ctx,
-			  unsigned from_idx,
-			  unsigned to_idx)
+			  unsigned int from_idx,
+			  unsigned int to_idx)
 {
 	struct rtswitch_task *from, *to;
 	int rc;
@@ -212,7 +210,7 @@ static int rtswitch_to_rt(struct rtswitch_context *ctx,
 }
 
 static int rtswitch_pend_nrt(struct rtswitch_context *ctx,
-			     unsigned idx)
+			     unsigned int idx)
 {
 	struct rtswitch_task *task;
 
@@ -233,11 +231,11 @@ static int rtswitch_pend_nrt(struct rtswitch_context *ctx,
 }
 
 static int rtswitch_to_nrt(struct rtswitch_context *ctx,
-			   unsigned from_idx,
-			   unsigned to_idx)
+			   unsigned int from_idx,
+			   unsigned int to_idx)
 {
 	struct rtswitch_task *from, *to;
-	unsigned expected, fp_val;
+	unsigned int expected, fp_val;
 	int fp_check;
 
 	if (from_idx > ctx->tasks_count || to_idx > ctx->tasks_count)
@@ -348,7 +346,7 @@ static int rtswitch_to_nrt(struct rtswitch_context *ctx,
 	return 0;
 }
 
-static int rtswitch_set_tasks_count(struct rtswitch_context *ctx, unsigned count)
+static int rtswitch_set_tasks_count(struct rtswitch_context *ctx, unsigned int count)
 {
 	struct rtswitch_task *tasks;
 
@@ -550,7 +548,7 @@ static int rtswitch_open(struct rtdm_fd *fd, int oflags)
 static void rtswitch_close(struct rtdm_fd *fd)
 {
 	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
-	unsigned i;
+	unsigned int i;
 
 	if (ctx->tasks) {
 		set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
@@ -737,45 +735,27 @@ static struct rtdm_device_class switchtest = {
 	.provider_name = "Gilles Chanteperdrix",
 };
 
-static struct rtdm_device devices[NR_DEVICES] = {
-	[ 0 ... NR_DEVICES - 1] = {
-		.class = &switchtest,
-		.label = "switchtest%d",
-	},
+static struct rtdm_device device = {
+	.class = &switchtest,
+	.label = "switchtest",
 };
 
 int __init __switchtest_init(void)
 {
-	int minor, ret;
-
 	if (!realtime_core_enabled())
 		return 0;
 
 	fp_features = fp_detect();
 
-	for (minor = 0; minor < NR_DEVICES; minor++) {
-		ret = rtdm_dev_register(devices + minor);
-		if (ret)
-			goto fail;
-	}
-
-	return 0;
-fail:
-	while (minor-- > 0)
-		rtdm_dev_unregister(devices + minor, 0);
-
-	return ret;
+	return rtdm_dev_register(&device);
 }
 
 void __switchtest_exit(void)
 {
-	int minor;
-
 	if (!realtime_core_enabled())
 		return;
 
-	for (minor = 0; minor < NR_DEVICES; minor++)
-		rtdm_dev_unregister(devices + minor, 1000);
+	rtdm_dev_unregister(&device, 1000);
 }
 
 module_init(__switchtest_init);

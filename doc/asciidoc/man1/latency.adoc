@@ -64,9 +64,6 @@ default=0, so ^C to end
 *-q*::
 suppresses RTD, RTH lines if -T is used
 
-*-D <testing_device_no>*::
-number of testing device, default=0
-
 *-t <test_mode>*::
 0=user task (default), 1=kernel task, 2=timer IRQ
 

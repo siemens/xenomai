@@ -35,7 +35,6 @@ long long period_ns = 0;
 int test_duration = 0;		/* sec of testing, via -T <sec>, 0 is inf */
 int data_lines = 21;		/* data lines per header line, -l <lines> to change */
 int quiet = 0;			/* suppress printing of RTH, RTD lines when -T given */
-int benchdev_no = 0;
 int benchdev = -1;
 int freeze_max = 0;
 int priority = HIPRIO;
@@ -630,11 +629,6 @@ int main(int argc, char *const *argv)
 			quiet = 1;
 			break;
 
-		case 'D':
-
-			benchdev_no = atoi(optarg);
-			break;
-
 		case 't':
 
 			test_mode = atoi(optarg);
@@ -743,17 +737,11 @@ int main(int argc, char *const *argv)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	if (test_mode != USER_TASK) {
-		char devname[RTDM_MAX_DEVNAME_LEN];
-
-		snprintf(devname, RTDM_MAX_DEVNAME_LEN,
-			 "/dev/rtdm/timerbench%d",
-			 benchdev_no);
-		benchdev = open(devname, O_RDWR);
-
+		benchdev = open("/dev/rtdm/timerbench", O_RDWR);
 		if (benchdev < 0) {
 			fprintf(stderr,
-				"latency: cannot open %s: %m\n"
-				"(modprobe xeno_timerbench?)\n", devname);
+				"latency: cannot open /dev/rtdm/timerbench: %m\n"
+				"(modprobe xeno_timerbench?)\n");
 			return 0;
 		}
 	}

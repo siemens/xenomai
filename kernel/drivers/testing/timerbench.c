@@ -24,8 +24,6 @@
 #include <rtdm/testing.h>
 #include <rtdm/driver.h>
 
-#define NR_DEVICES  4
-
 struct rt_tmbench_context {
 	int mode;
 	unsigned long period;
@@ -470,43 +468,25 @@ static struct rtdm_device_class timerbench = {
 	.provider_name		= "Jan Kiszka",
 };
 
-static struct rtdm_device devices[NR_DEVICES] = {
-	[ 0 ... NR_DEVICES - 1] = {
-		.class = &timerbench,
-		.label = "timerbench%d",
-	},
+static struct rtdm_device device = {
+	.class = &timerbench,
+	.label = "timerbench",
 };
 
 static int __init __timerbench_init(void)
 {
-	int minor, ret;
-
 	if (!realtime_core_enabled())
 		return 0;
 
-	for (minor = 0; minor < NR_DEVICES; minor++) {
-		ret = rtdm_dev_register(devices + minor);
-		if (ret)
-			goto fail;
-	}
-
-	return 0;
-fail:
-	while (minor-- > 0)
-		rtdm_dev_unregister(devices + minor, 0);
-
-	return ret;
+	return rtdm_dev_register(&device);
 }
 
 static void __timerbench_exit(void)
 {
-	int minor;
-
 	if (!realtime_core_enabled())
 		return;
 
-	for (minor = 0; minor < NR_DEVICES; minor++)
-		rtdm_dev_unregister(devices + minor, 1000);
+	rtdm_dev_unregister(&device, 1000);
 }
 
 module_init(__timerbench_init);

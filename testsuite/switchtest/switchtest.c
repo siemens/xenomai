@@ -891,43 +891,22 @@ static int task_create(struct cpu_tasks *cpu,
 	return err;
 }
 
-#define DEV_NR_MAX 256
-
 static int open_rttest(char *buf, size_t size, unsigned count)
 {
-	static unsigned dev_nr = 0;
-	int fd, status;
+	int fd, ret;
 
-	do {
-		snprintf(buf, size, "/dev/rtdm/switchtest%d", dev_nr);
-
-		status = fd = open(buf, O_RDWR);
-
-		if (fd == -1)
-			goto next_dev;
-
-		status = ioctl(fd, RTTST_RTIOC_SWTEST_SET_TASKS_COUNT, count);
-
-		if (status == 0)
-			break;
-
-		if (errno != ENOSYS && errno != ENOTTY) {
-			fprintf(stderr, "switchtest: ioctl: %m\n");
-			return -1;
-		}
-
-	  next_dev:
-		if (fd != -1)
-			close(fd);
-
-		if (++dev_nr != DEV_NR_MAX)
-			continue;
-
-		fprintf(stderr, "switchtest: cannot open %s\n"
-			"(modprobe xeno_switchtest?)\n", buf);
-
+	fd = open("/dev/rtdm/switchtest", O_RDWR);
+	if (fd < 0) {
+		fprintf(stderr, "switchtest: cannot open /dev/rtdm/switchtest\n"
+			"(modprobe xeno_switchtest?)\n");
 		return -1;
-	} while (status == -1);
+	}
+
+	ret = ioctl(fd, RTTST_RTIOC_SWTEST_SET_TASKS_COUNT, count);
+	if (ret) {
+		fprintf(stderr, "switchtest: ioctl: %m\n");
+		return -1;
+	}
 
 	return fd;
 }
