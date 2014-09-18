@@ -27,6 +27,7 @@
 
 #include <asm/atomic.h>
 #include <linux/list.h>
+#include <linux/module.h>
 #include <linux/cdev.h>
 #include <xenomai/version.h>
 #include <cobalt/kernel/heap.h>
@@ -82,26 +83,6 @@ enum rtdm_selecttype;
 /** Flag indicating a secure variant of RTDM (not supported here) */
 #define RTDM_SECURE_DEVICE		0x80000000
 /** @} Device Flags */
-
-/*!
- * @anchor drv_versioning @name Driver Versioning
- * Encoding of driver versions. See
- * @ref rtdm_api_versioning "API Versioning" for the interface revision.
- * @{
- */
-/** Version code constructor for driver revisions */
-#define RTDM_DRIVER_VER(major, minor, patch) \
-	(((major & 0xFF) << 16) | ((minor & 0xFF) << 8) | (patch & 0xFF))
-
-/** Get major version number from driver revision code */
-#define RTDM_DRIVER_MAJOR_VER(ver)	(((ver) >> 16) & 0xFF)
-
-/** Get minor version number from driver revision code */
-#define RTDM_DRIVER_MINOR_VER(ver)	(((ver) >> 8) & 0xFF)
-
-/** Get patch version number from driver revision code */
-#define RTDM_DRIVER_PATCH_VER(ver)	((ver) & 0xFF)
-/** @} Driver Versioning */
 
 /** @} rtdm_device_register */
 
@@ -231,6 +212,7 @@ struct rtdm_profile_info {
 	int version;
 	/** Reserved */
 	unsigned int magic;
+	struct module *owner;
 };	
 
 /**
@@ -253,15 +235,6 @@ struct rtdm_device_class {
 	int protocol_family;
 	/** Protocol device identification: socket type (SOCK_xxx) */
 	int socket_type;
-	/** Informational driver name (reported via /proc) */
-	const char *driver_name;
-	/** Driver version, see @ref drv_versioning "Driver Versioning" macros */
-	int driver_version;
-	/** Informational peripheral name the device is attached to
-	 *  (reported via /proc) */
-	const char *peripheral_name;
-	/** Informational driver provider name (reported via /proc) */
-	const char *provider_name;
 	/** I/O operation handlers */
 	struct rtdm_fd_ops ops;
 	/**
@@ -309,6 +282,7 @@ struct rtdm_device_class {
 	.subclass_id = (__subid),				\
 	.version = (__version),					\
 	.magic = ~RTDM_CLASS_MAGIC,				\
+	.owner = THIS_MODULE,					\
 }
 
 /**

@@ -26,6 +26,11 @@
 #include <rtdm/driver.h>
 #include <asm/xenomai/fptest.h>
 
+MODULE_DESCRIPTION("Cobalt context switch test helper");
+MODULE_AUTHOR("Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>");
+MODULE_VERSION("0.1.1");
+MODULE_LICENSE("GPL");
+
 #define RTSWITCH_RT      0x10000
 #define RTSWITCH_NRT     0
 #define RTSWITCH_KERNEL  0x20000
@@ -58,9 +63,6 @@ struct rtswitch_context {
 };
 
 static int fp_features;
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Gilles.Chanteperdrix@laposte.net");
 
 static int report(const char *fmt, ...)
 {
@@ -729,10 +731,6 @@ static struct rtdm_device_class switchtest = {
 		.ioctl_rt = rtswitch_ioctl_rt,
 		.ioctl_nrt = rtswitch_ioctl_nrt,
 	},
-	.driver_name = "switchtest",
-	.driver_version = RTDM_DRIVER_VER(0, 1, 1),
-	.peripheral_name = "Context Switch Test",
-	.provider_name = "Gilles Chanteperdrix",
 };
 
 static struct rtdm_device device = {

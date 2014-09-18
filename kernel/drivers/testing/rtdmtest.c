@@ -21,8 +21,10 @@
 #include <rtdm/driver.h>
 #include <rtdm/testing.h>
 
+MODULE_DESCRIPTION("RTDM test helper module");
+MODULE_AUTHOR("Jan Kiszka <jan.kiszka@web.de>");
+MODULE_VERSION("0.1.0");
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("jan.kiszka@web.de");
 
 struct rtdm_test_context {
 	rtdm_timer_t close_timer;
@@ -114,10 +116,6 @@ static struct rtdm_device_class rtdmtest = {
 		.ioctl_rt	= rtdm_test_ioctl,
 		.ioctl_nrt	= rtdm_test_ioctl,
 	},
-	.driver_name		= "rtdmtest",
-	.driver_version		= RTDM_DRIVER_VER(0, 1, 0),
-	.peripheral_name	= "RTDM unit test",
-	.provider_name		= "Jan Kiszka",
 };
 
 static struct rtdm_device device[2] = {

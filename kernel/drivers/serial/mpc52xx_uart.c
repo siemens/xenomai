@@ -29,7 +29,9 @@
 #include <rtdm/serial.h>
 #include <rtdm/driver.h>
 
+MODULE_DESCRIPTION("RTDM-based driver for MPC52xx UARTs");
 MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>");
+MODULE_VERSION("1.0.0");
 MODULE_LICENSE("GPL");
 
 #define RT_MPC52XX_UART_DRVNAM	"xeno_mpc52xx_uart"
@@ -1248,10 +1250,6 @@ static struct rtdm_device_class mpc52xx_uart = {
 		.read_rt	= rt_mpc52xx_uart_read,
 		.write_rt	= rt_mpc52xx_uart_write,
 	},
-	.driver_name		= RT_MPC52XX_UART_DRVNAM,
-	.driver_version		= RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	= "MPC52xx UART",
-	.provider_name		= "Wolfgang Grandegger",
 };
 
 static int rt_mpc52xx_uart_of_probe(struct platform_device *op)

@@ -17,13 +17,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#include <linux/module.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <cobalt/kernel/arith.h>
 #include <rtdm/driver.h>
 #include <rtdm/autotune.h>
 
+/*
+ * Auto-tuning services for the Cobalt core clock.  This driver is
+ * always built statically into the kernel when enabled.
+ */
 #define AUTOTUNE_STEPS  60
 #define ONE_SECOND	1000000000UL
 #define H2G2_FACTOR(g)	((g) * 4 / 5)	/* 42 would be too pessimistic */
@@ -642,10 +645,6 @@ static struct rtdm_device_class autotune = {
 		.ioctl_nrt	=	autotune_ioctl_nrt,
 		.close		=	autotune_close,
 	},
-	.driver_name		=	"autotune",
-	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"Auto-tuning services",
-	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
 };
 
 static struct rtdm_device device = {
@@ -655,18 +654,10 @@ static struct rtdm_device device = {
 
 static int __init autotune_init(void)
 {
-	int ret;
-
 	if (!realtime_core_enabled())
 		return 0;
 
-	ret = rtdm_dev_register(&device);
-	if (ret)
-		return ret;
-
-	return 0;
+	return rtdm_dev_register(&device);
 }
 
 device_initcall(autotune_init);
-
-MODULE_LICENSE("GPL");

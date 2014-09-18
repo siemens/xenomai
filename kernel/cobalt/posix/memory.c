@@ -219,10 +219,6 @@ static struct rtdm_device_class umm = {
 		.mmap			=	umm_mmap,
 		.get_unmapped_area	=	umm_get_unmapped_area,
 	},
-	.driver_name		=	"memdev",
-	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"User-mapped heap",
-	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
 };
 
 static struct rtdm_device umm_devices[] = {
@@ -249,10 +245,6 @@ static struct rtdm_device_class sysmem = {
 		.ioctl_rt	=	sysmem_ioctl_rt,
 		.ioctl_nrt	=	sysmem_ioctl_nrt,
 	},
-	.driver_name		=	"memdev",
-	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"System memory heap",
-	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
 };
 
 static struct rtdm_device sysmem_device = {

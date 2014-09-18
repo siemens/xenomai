@@ -24,6 +24,11 @@
 #include <rtdm/testing.h>
 #include <rtdm/driver.h>
 
+MODULE_DESCRIPTION("Timer latency test helper");
+MODULE_AUTHOR("Jan Kiszka <jan.kiszka@web.de>");
+MODULE_VERSION("0.2.1");
+MODULE_LICENSE("GPL");
+
 struct rt_tmbench_context {
 	int mode;
 	unsigned long period;
@@ -49,9 +54,6 @@ struct rt_tmbench_context {
 
 	struct semaphore nrt_mutex;
 };
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("jan.kiszka@web.de");
 
 static inline void add_histogram(struct rt_tmbench_context *ctx,
 				 long *histogram, long addval)
@@ -462,10 +464,6 @@ static struct rtdm_device_class timerbench = {
 		.ioctl_rt	= rt_tmbench_ioctl_rt,
 		.ioctl_nrt	= rt_tmbench_ioctl_nrt,
 	},
-	.driver_name		= "timerbench",
-	.driver_version		= RTDM_DRIVER_VER(0, 2, 1),
-	.peripheral_name	= "Timer Latency Benchmark",
-	.provider_name		= "Jan Kiszka",
 };
 
 static struct rtdm_device device = {

@@ -26,6 +26,10 @@
 #include <rtdm/driver.h>
 #include <rtdm/analogy/device.h>
 
+MODULE_AUTHOR("Alexis Berlemont");
+MODULE_DESCRIPTION("Analogy core driver");
+MODULE_LICENSE("GPL");
+
 int (* const a4l_ioctl_functions[]) (struct a4l_device_context *, void *) = {
 	[_IOC_NR(A4L_DEVCFG)] = a4l_ioctl_devcfg,
 	[_IOC_NR(A4L_DEVINFO)] = a4l_ioctl_devinfo,
@@ -232,10 +236,6 @@ static struct rtdm_device_class analogy = {
 		.write_nrt =	a4l_write,
 		.select =	a4l_rt_select,
 	},
-	.driver_name =		"analogy",
-	.driver_version =	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name =	"Analogy",
-	.provider_name =	"Alexis Berlemont",
 };
 
 static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] = {
@@ -269,9 +269,6 @@ void a4l_unregister(void)
 	for (i = 0; i < A4L_NB_DEVICES; i++)
 		rtdm_dev_unregister(&(rtdm_devs[i]), 1000);
 }
-
-MODULE_DESCRIPTION("Analogy");
-MODULE_LICENSE("GPL");
 
 static int __init a4l_init(void)
 {

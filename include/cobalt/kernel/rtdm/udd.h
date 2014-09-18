@@ -191,7 +191,7 @@ struct udd_memregion {
 struct udd_device {
 	/**
 	 * Name of the device managed by the mini-driver, appears
-	 * automatically in the /dev namespace upon creation.
+	 * automatically in the /dev/rtdm namespace upon creation.
 	 */
 	const char *device_name;
 	/**
@@ -200,21 +200,12 @@ struct udd_device {
 	 */
 	int device_flags;
 	/**
-	 * Textual description of the device managed by the
-	 * mini-driver.
-	 */
-	const char *device_description;
-	/**
 	 * Subclass code of the device managed by the mini-driver (see
 	 * RTDM_SUBCLASS_xxx definition in the @ref rtdm_profiles
 	 * "Device Profiles"). The main class code is forced to
 	 * RTDM_CLASS_UDD.
 	 */
 	int device_subclass;
-	/** @ref drv_versioning "Driver version. */
-	int driver_version;
-	/** Driver author/provider (exposed via /proc/xenomai/rtdm) */
-	const char *driver_author;
 	struct {
 		/**
 		 * Ancillary open() handler, optional. See

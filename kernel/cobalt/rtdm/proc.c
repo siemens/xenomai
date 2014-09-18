@@ -74,7 +74,7 @@ static void *named_begin(struct xnvfile_regular_iterator *it)
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
-		xnvfile_puts(it, "Name\t\t\t\tDriver\n");
+		xnvfile_printf(it, "%-20s  %s\n", "NODE", "CLASS");
 
 	return priv->curr;
 }
@@ -83,8 +83,8 @@ static int named_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct rtdm_device *device = data;
 
-	xnvfile_printf(it, "%-31s\t%-15s\n", device->name,
-		device->class->driver_name);
+	xnvfile_printf(it, "%-20s  %s\n",
+		       device->name, device->class->profile_info.name);
 
 	return 0;
 }
@@ -130,7 +130,7 @@ static void *proto_begin(struct xnvfile_regular_iterator *it)
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
-		xnvfile_puts(it, "Name\t\t\t\tDriver\n");
+		xnvfile_printf(it, "%-12s  %s\n", "NODE", "CLASS");
 
 	return priv->curr;
 }
@@ -144,9 +144,8 @@ static int proto_show(struct xnvfile_regular_iterator *it, void *data)
 	ksformat(pnum, sizeof(pnum), "%u:%u",
 		 class->protocol_family, class->socket_type);
 
-	xnvfile_printf(it, "%-31s\t%-15s\t%s\n",
-		       pnum, class->driver_name,
-		       device->name);
+	xnvfile_printf(it, "%-12s  %s\n",
+		       pnum, class->profile_info.name);
 	return 0;
 }
 
@@ -275,15 +274,6 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 found:
 	class = device->class;
-
-	xnvfile_printf(it, "driver:\t\t%s\nversion:\t%d.%d.%d\n",
-		       class->driver_name,
-		       RTDM_DRIVER_MAJOR_VER(class->driver_version),
-		       RTDM_DRIVER_MINOR_VER(class->driver_version),
-		       RTDM_DRIVER_PATCH_VER(class->driver_version));
-
-	xnvfile_printf(it, "peripheral:\t%s\nprovider:\t%s\n",
-		       class->peripheral_name, class->provider_name);
 
 	xnvfile_printf(it, "class:\t\t%d\nsub-class:\t%d\n",
 		       class->profile_info.class_id,

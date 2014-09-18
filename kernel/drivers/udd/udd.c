@@ -298,11 +298,6 @@ static inline int register_mapper(struct udd_device *udd)
 		.close		=	mapper_close,
 		.mmap		=	mapper_mmap,
 	};
-	class->driver_name = "udd";
-	class->driver_version = RTDM_DRIVER_VER(1, 0, 0);
-	class->peripheral_name = "UDD mapper";
-	class->provider_name = "Philippe Gerum <rpm@xenomai.org>";
-	
 	dev->class = class;
 	dev->label = ur->mapper_name;
 
@@ -373,10 +368,6 @@ int udd_register_device(struct udd_device *udd)
 		.close = udd_close,
 		.select = udd_select,
 	};
-	class->driver_name = "udd";
-	class->driver_version = udd->driver_version;
-	class->peripheral_name = udd->device_description;
-	class->provider_name = udd->driver_author;
 
 	dev->class = class;
 	dev->label = udd->device_name;

@@ -42,6 +42,11 @@
 #include <rtdm/serial.h>
 #include <rtdm/driver.h>
 
+MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>");
+MODULE_DESCRIPTION("RTDM-based driver for IMX UARTs");
+MODULE_VERSION("1.0.0");
+MODULE_LICENSE("GPL");
+
 #define DRIVER_NAME	"xeno_imx_uart"
 
 /* Register definitions */
@@ -1375,10 +1380,6 @@ static struct rtdm_device imx_uart = {
 		.read_rt	= rt_imx_uart_read,
 		.write_rt	= rt_imx_uart_write,
 	},
-	.driver_name		= DRIVER_NAME,
-	.driver_version		= RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	= "IMX UART",
-	.provider_name		= "Wolfgang Grandegger",
 };
 
 static int rt_imx_uart_probe(struct platform_device *pdev)
@@ -1535,7 +1536,3 @@ static void __exit rt_imx_uart_exit(void)
 
 module_init(rt_imx_uart_init);
 module_exit(rt_imx_uart_exit);
-
-MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>");
-MODULE_DESCRIPTION("IMX RTserial port driver");
-MODULE_LICENSE("GPL");

@@ -36,6 +36,7 @@
 
 #include <linux/module.h>
 #include <linux/delay.h>
+#include <linux/stringify.h>
 
 #include <rtdm/driver.h>
 
@@ -57,13 +58,13 @@
 
 MODULE_AUTHOR("RT-Socket-CAN Development Team");
 MODULE_DESCRIPTION("RTDM CAN raw socket device driver");
+MODULE_VERSION(__stringify(RTCAN_MAJOR_VER)
+	       __stringify(RTCAN_MINOR_VER)
+	       __stringify(RTCAN_BUGFIX_VER));
 MODULE_LICENSE("GPL");
 
 void rtcan_tx_push(struct rtcan_device *dev, struct rtcan_socket *sock,
 		   can_frame_t *frame);
-
-static struct rtdm_device_class rtcan_proto_raw;
-
 
 static inline int rtcan_accept_msg(uint32_t can_id, can_filter_t *filter)
 {
@@ -127,8 +128,7 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
     } else {
 	/* Overflow of socket's ring buffer! */
 	sock->rx_buf_full++;
-	RTCAN_RTDM_DBG("%s: socket buffer overflow, message discarded\n",
-		       rtcan_proto_raw.driver_name);
+	RTCAN_RTDM_DBG("rtcan: socket buffer overflow, message discarded\n");
     }
 
     rtdm_fd_unlock(fd);
@@ -976,8 +976,8 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 }
 
 
-static struct rtdm_device_class rtcan_proto_raw = {
-	.profile_info		= RTDM_PROFILE_INFO(rtcan_proto_raw,
+static struct rtdm_device_class rtcan = {
+	.profile_info		= RTDM_PROFILE_INFO(rtcan,
 						    RTDM_CLASS_CAN,
 						    RTDM_SUBCLASS_GENERIC,
 						    RTCAN_PROFILE_VER),
@@ -994,27 +994,21 @@ static struct rtdm_device_class rtcan_proto_raw = {
 		.recvmsg_rt	= rtcan_raw_recvmsg,
 		.sendmsg_rt	= rtcan_raw_sendmsg,
 	},
-	.driver_name		= "rtcan",
-	.driver_version		= RTDM_DRIVER_VER(RTCAN_MAJOR_VER,
-						  RTCAN_MINOR_VER,
-						  RTCAN_BUGFIX_VER),
-	.peripheral_name	= "Real-Time CAN Raw Socket Interface",
-	.provider_name		= "RT-Socket-CAN development team",
 };
 
-static struct rtdm_device rtcan_proto_raw_dev = {
-	.class = &rtcan_proto_raw,
+static struct rtdm_device rtcan_device = {
+	.class = &rtcan,
 	.label = "rtcan",
 };
 
 int __init rtcan_raw_proto_register(void)
 {
-    return rtdm_dev_register(&rtcan_proto_raw_dev);
+    return rtdm_dev_register(&rtcan_device);
 }
 
 void __exit rtcan_raw_proto_unregister(void)
 {
-    rtdm_dev_unregister(&rtcan_proto_raw_dev, 1000);
+    rtdm_dev_unregister(&rtcan_device, 1000);
 }
 
 

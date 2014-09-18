@@ -24,6 +24,10 @@
 #include <rtdm/ipc.h>
 #include "internal.h"
 
+MODULE_DESCRIPTION("Real-time IPC interface");
+MODULE_AUTHOR("Philippe Gerum <rpm@xenomai.org>");
+MODULE_LICENSE("GPL");
+
 static struct rtipc_protocol *protocols[IPCPROTO_MAX] = {
 #ifdef CONFIG_XENO_DRIVERS_RTIPC_XDDP
 	[IPCPROTO_XDDP - 1] = &xddp_proto_driver,
@@ -277,10 +281,6 @@ static struct rtdm_device_class rtipc = {
 		.write_nrt	=	NULL,
 		.select		=	rtipc_select,
 	},
-	.driver_name		=	"rtipc",
-	.driver_version		=	RTDM_DRIVER_VER(1, 0, 0),
-	.peripheral_name	=	"Real-time IPC interface",
-	.provider_name		=	"Philippe Gerum <rpm@xenomai.org>",
 };
 
 static struct rtdm_device device = {
@@ -323,5 +323,3 @@ void __exit __rtipc_exit(void)
 
 module_init(__rtipc_init);
 module_exit(__rtipc_exit);
-
-MODULE_LICENSE("GPL");

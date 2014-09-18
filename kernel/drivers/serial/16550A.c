@@ -25,6 +25,11 @@
 #include <rtdm/serial.h>
 #include <rtdm/driver.h>
 
+MODULE_DESCRIPTION("RTDM-based driver for 16550A UARTs");
+MODULE_AUTHOR("Jan Kiszka <jan.kiszka@web.de>");
+MODULE_VERSION("1.5.2");
+MODULE_LICENSE("GPL");
+
 #define RT_16550_DRIVER_NAME	"xeno_16550A"
 
 #define MAX_DEVICES		8
@@ -134,9 +139,6 @@ MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
 MODULE_PARM_DESC(baud_base, "Maximum baud rate of the serial device "
 		 "(internal clock rate / 16)");
 MODULE_PARM_DESC(tx_fifo, "Transmitter FIFO size");
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("jan.kiszka@web.de");
 
 #include "16550A_io.h"
 #include "16550A_pnp.h"
@@ -1080,10 +1082,6 @@ static struct rtdm_device_class uart16550A = {
 		.read_rt	= rt_16550_read,
 		.write_rt	= rt_16550_write,
 	},
-	.driver_name		= RT_16550_DRIVER_NAME,
-	.driver_version		= RTDM_DRIVER_VER(1, 5, 2),
-	.peripheral_name	= "UART 16550A",
-	.provider_name		= "Jan Kiszka",
 };
 
 void rt_16550_exit(void);
