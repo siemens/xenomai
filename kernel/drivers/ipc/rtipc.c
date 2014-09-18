@@ -313,7 +313,7 @@ void __exit __rtipc_exit(void)
 	if (!realtime_core_enabled())
 		return;
 
-	rtdm_dev_unregister(&device, 1000);
+	rtdm_dev_unregister(&device);
 
 	for (n = 0; n < IPCPROTO_MAX; n++) {
 		if (protocols[n] && protocols[n]->proto_exit)

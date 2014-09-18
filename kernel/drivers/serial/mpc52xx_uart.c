@@ -1365,7 +1365,7 @@ static int rt_mpc52xx_uart_of_remove(struct platform_device *op)
 
 	dev_set_drvdata(&op->dev, NULL);
 
-	rtdm_dev_unregister(dev, 1000);
+	rtdm_dev_unregister(dev);
 	irq_dispose_mapping(port->irq);
 	iounmap(port->psc);
 	if (!of_address_to_resource(op->dev.of_node, 0, &res))

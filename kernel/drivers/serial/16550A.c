@@ -1170,7 +1170,7 @@ void rt_16550_exit(void)
 
 	for (i = 0; i < MAX_DEVICES; i++)
 		if (device[i]) {
-			rtdm_dev_unregister(device[i], 1000);
+			rtdm_dev_unregister(device[i]);
 			rt_16550_release_io(i);
 			kfree(device[i]);
 		}

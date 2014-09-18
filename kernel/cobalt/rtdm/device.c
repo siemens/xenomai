@@ -45,15 +45,18 @@ static int enosys(void)
 	return -ENOSYS;
 }
 
+void __rtdm_put_device(struct rtdm_device *device)
+{
+	secondary_mode_only();
+
+	if (atomic_dec_and_test(&device->refcount))
+		wake_up(&device->putwq);
+}
+
 static inline xnkey_t get_proto_id(int pf, int type)
 {
 	xnkey_t llpf = (unsigned int)pf;
 	return (llpf << 32) | (unsigned int)type;
-}
-
-static inline void rtdm_reference_device(struct rtdm_device *device)
-{
-	atomic_inc(&device->refcount);
 }
 
 struct rtdm_device *__rtdm_get_namedev(const char *path)
@@ -79,7 +82,7 @@ struct rtdm_device *__rtdm_get_namedev(const char *path)
 
 	device = xnregistry_lookup(handle, NULL);
 	if (device && device->magic == RTDM_DEVICE_MAGIC)
-		rtdm_reference_device(device);
+		__rtdm_get_device(device);
 	else
 		device = NULL;
 
@@ -102,7 +105,7 @@ struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type)
 	xnid = xnid_fetch(&rtdm_protocol_devices, id);
 	if (xnid) {
 		device = container_of(xnid, struct rtdm_device, proto.id);
-		rtdm_reference_device(device);
+		__rtdm_get_device(device);
 	}
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
@@ -268,11 +271,9 @@ static void unregister_device_class(struct rtdm_device_class *class)
 /**
  * @brief Register a RTDM device
  *
- * The device descriptor is initialized and registered in the RTDM
- * namespace.
+ * Registers a device in the RTDM namespace.
  *
- * @param[in] device Pointer to the device descriptor register.
- * @param[in] class RTDM class the new device belongs to.
+ * @param[in] device Device descriptor.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -297,6 +298,8 @@ int rtdm_dev_register(struct rtdm_device *device)
 	dev_t rdev;
 	spl_t s;
 
+	secondary_mode_only();
+
 	if (!realtime_core_enabled())
 		return -ENOSYS;
 
@@ -318,6 +321,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 	else
 		device->ops.open = (typeof(device->ops.open))enosys;
 
+	init_waitqueue_head(&device->putwq);
 	device->ops.close = __rt_dev_close; /* Interpose on driver's handler. */
 	atomic_set(&device->refcount, 0);
 
@@ -333,11 +337,13 @@ int rtdm_dev_register(struct rtdm_device *device)
 		device->exclusive_context->device = NULL;
 	}
 
-	device->magic = RTDM_DEVICE_MAGIC;
-
-	if (class->device_flags & RTDM_FIXED_MINOR)
+	if (class->device_flags & RTDM_FIXED_MINOR) {
 		minor = device->minor;
-	else
+		if (minor < 0 || minor >= class->device_count) {
+			ret = -EINVAL;
+			goto fail;
+		}
+	} else
 		device->minor = minor = pos;
 
 	if (class->device_flags & RTDM_NAMED_DEVICE) {
@@ -348,18 +354,19 @@ int rtdm_dev_register(struct rtdm_device *device)
 			goto fail;
 		}
 
-		rdev = MKDEV(major, minor);
-		kdev = device_create(class->kclass, NULL, rdev,
-				     device, device->label, minor);
-		if (IS_ERR(kdev)) {
-			ret = PTR_ERR(kdev);
-			goto fail;
-		}
-
 		ret = xnregistry_enter(device->name, device,
 				       &device->named.handle, NULL);
 		if (ret)
 			goto fail;
+
+		rdev = MKDEV(major, minor);
+		kdev = device_create(class->kclass, NULL, rdev,
+				     device, device->label, minor);
+		if (IS_ERR(kdev)) {
+			xnregistry_remove(device->named.handle);
+			ret = PTR_ERR(kdev);
+			goto fail;
+		}
 
 		xnlock_get_irqsave(&rt_dev_lock, s);
 		list_add_tail(&device->named.entry, &rtdm_named_devices);
@@ -389,6 +396,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	device->rdev = rdev;
 	device->kdev = kdev;
+	device->magic = RTDM_DEVICE_MAGIC;
 
 	up(&nrt_dev_lock);
 
@@ -416,49 +424,32 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
 /**
  * @brief Unregister a RTDM device
  *
- * The device descriptor removed from the RTDM namespace.
+ * Removes the device from the RTDM namespace. This routine waits until
+ * all connections to @a device have been closed prior to unregistering.
  *
- * @param[in] device Pointer to the device descriptor.
- * @param[in] poll_delay Polling delay in milliseconds to check repeatedly for
- * open instances of @a device, or 0 for non-blocking mode.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EAGAIN is returned if the device is busy with open instances and
- * 0 has been passed for @a poll_delay.
+ * @param[in] device Device descriptor.
  *
  * @coretags{secondary-only}
  */
-int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
+void rtdm_dev_unregister(struct rtdm_device *device)
 {
 	struct rtdm_device_class *class = device->class;
 	xnhandle_t handle = XN_NO_HANDLE;
-	unsigned long warned = 0;
 	spl_t s;
 
-	rtdm_reference_device(device);
+	secondary_mode_only();
 
-	trace_cobalt_device_unregister(device, poll_delay);
+	trace_cobalt_device_unregister(device);
+
+	/* Lock out any further connection. */
+	device->magic = ~RTDM_DEVICE_MAGIC;
+
+	/* Then wait for the ongoing connections to finish. */
+	wait_event(device->putwq,
+		   atomic_read(&device->refcount) == 0);
 
 	down(&nrt_dev_lock);
 	xnlock_get_irqsave(&rt_dev_lock, s);
-
-	while (atomic_read(&device->refcount) > 1) {
-		xnlock_put_irqrestore(&rt_dev_lock, s);
-		up(&nrt_dev_lock);
-
-		if (!poll_delay) {
-			rtdm_dereference_device(device);
-			return -EAGAIN;
-		}
-
-		if (!__test_and_set_bit(0, &warned))
-			printk(XENO_WARN "RTDM device %s still in use - waiting for"
-			       " release...\n", device->name);
-		msleep(poll_delay);
-		down(&nrt_dev_lock);
-		xnlock_get_irqsave(&rt_dev_lock, s);
-	}
 
 	if (class->device_flags & RTDM_NAMED_DEVICE) {
 		handle = device->named.handle;
@@ -481,8 +472,6 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 		kfree(device->exclusive_context);
 
 	kfree(device->name);
-
-	return 0;
 }
 EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 

@@ -32,8 +32,6 @@
  * @{
  */
 
-#define CLOSURE_RETRY_PERIOD_MS	100
-
 #define FD_BITMAP_SIZE  ((RTDM_FD_MAX + BITS_PER_LONG-1) / BITS_PER_LONG)
 static unsigned long used_fildes[FD_BITMAP_SIZE];
 int open_fildes;       /* number of used descriptors */
@@ -50,7 +48,7 @@ static void cleanup_instance(struct rtdm_device *device,
 			kfree(context);
 	}
 
-	rtdm_dereference_device(device);
+	__rtdm_put_device(device);
 }
 
 void __rt_dev_close(struct rtdm_fd *fd)

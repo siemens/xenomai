@@ -29,6 +29,7 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/cdev.h>
+#include <linux/wait.h>
 #include <xenomai/version.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/sched.h>
@@ -348,6 +349,7 @@ struct rtdm_device {
 		atomic_t refcount;
 		struct rtdm_dev_context *exclusive_context;
 		struct rtdm_fd_ops ops;
+		wait_queue_head_t putwq;
 	};
 };
 
@@ -357,8 +359,7 @@ struct rtdm_device {
 
 int rtdm_dev_register(struct rtdm_device *device);
 
-int rtdm_dev_unregister(struct rtdm_device *device,
-			unsigned int poll_delay);
+void rtdm_dev_unregister(struct rtdm_device *device);
 
 /* --- inter-driver API --- */
 

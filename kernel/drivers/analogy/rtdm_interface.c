@@ -258,7 +258,7 @@ int a4l_register(void)
 	return 0;
 fail:
 	while (i-- > 0)
-		rtdm_dev_unregister(rtdm_devs + i, 0);
+		rtdm_dev_unregister(rtdm_devs + i);
 
 	return ret;
 }
@@ -267,7 +267,7 @@ void a4l_unregister(void)
 {
 	int i;
 	for (i = 0; i < A4L_NB_DEVICES; i++)
-		rtdm_dev_unregister(&(rtdm_devs[i]), 1000);
+		rtdm_dev_unregister(&(rtdm_devs[i]));
 }
 
 static int __init a4l_init(void)

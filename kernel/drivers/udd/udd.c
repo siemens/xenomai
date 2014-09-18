@@ -309,7 +309,7 @@ static inline int register_mapper(struct udd_device *udd)
  *
  * This routine registers a mini-driver at the UDD core.
  *
- * @param udd The @ref udd_device "UDD device descriptor" which should
+ * @param udd @ref udd_device "UDD device descriptor" which should
  * describe the new device properties.
  *
  * @return Zero is returned upon success, otherwise a negative error
@@ -398,9 +398,9 @@ int udd_register_device(struct udd_device *udd)
 	return 0;
 
 fail_irq_request:
-	rtdm_dev_unregister(&ur->mapper, 0);
+	rtdm_dev_unregister(&ur->mapper);
 fail_mapper:
-	rtdm_dev_unregister(dev, 0);
+	rtdm_dev_unregister(dev);
 	if (ur->mapper_name)
 		kfree(ur->mapper_name);
 
@@ -411,22 +411,18 @@ EXPORT_SYMBOL_GPL(udd_register_device);
 /**
  * @brief Unregister a UDD device
  *
- * This routine unregisters a mini-driver from the UDD core.
+ * This routine unregisters a mini-driver from the UDD core. This
+ * routine waits until all connections to @a udd have been closed
+ * prior to unregistering.
  *
- * @param udd The UDD device descriptor
+ * @param udd UDD device descriptor
  *
- * @param poll_delay Polling delay in milliseconds to check repeatedly
- * for open instances of @a udd, or 0 for non-blocking mode.
- *
- * @return Zero is returned upon success, otherwise a negative error
- * code is received, from the set of error codes defined by
- * rtdm_dev_unregister(). In addition, -ENXIO can be received if this
- * service is called while the Cobalt kernel is disabled.
+ * @return Zero is returned upon success, otherwise -ENXIO is received
+ * if this service is called while the Cobalt kernel is disabled.
  *
  * @coretags{secondary-only}
  */
-int udd_unregister_device(struct udd_device *udd,
-			  unsigned int poll_delay)
+int udd_unregister_device(struct udd_device *udd)
 {
 	struct udd_reserved *ur = &udd->__reserved;
 
@@ -438,12 +434,14 @@ int udd_unregister_device(struct udd_device *udd,
 	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM)
 		rtdm_irq_free(&ur->irqh);
 
-	rtdm_dev_unregister(&ur->mapper, poll_delay);
+	rtdm_dev_unregister(&ur->mapper);
 
 	if (ur->mapper_name)
 		kfree(ur->mapper_name);
 
-	return rtdm_dev_unregister(&ur->device, poll_delay);
+	rtdm_dev_unregister(&ur->device);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(udd_unregister_device);
 
@@ -458,7 +456,7 @@ EXPORT_SYMBOL_GPL(udd_unregister_device);
  * As a result, the UDD core wakes up any Cobalt thread waiting for
  * interrupts on the device via a read(2) or select(2) call.
  *
- * @param udd The UDD device descriptor receiving the IRQ.
+ * @param udd UDD device descriptor receiving the IRQ.
  *
  * @coretags{coreirq-only}
  *
@@ -532,7 +530,7 @@ static void switch_irq_line(int irq, int enable)
  * request is scheduled but deferred until the current CPU leaves the
  * real-time domain. Otherwise, the request is immediately handled.
  *
- * @param irq The IRQ line to enable.
+ * @param irq IRQ line to enable.
  *
  * @coretags{unrestricted}
  *
@@ -554,13 +552,13 @@ EXPORT_SYMBOL_GPL(udd_post_irq_enable);
  * request is scheduled but deferred until the current CPU leaves the
  * real-time domain. Otherwise, the request is immediately handled.
  *
- * @param irq The IRQ line to enable.
+ * @param irq IRQ line to disable.
  *
  * @coretags{unrestricted}
  *
  * @note The deferral is required as some interrupt management code
- * involved in disable interrupt lines may not be safely executed from
- * primary mode.
+ * involved in disabling interrupt lines may not be safely executed
+ * from primary mode.
  */
 void udd_post_irq_disable(int irq)
 {
@@ -569,9 +567,11 @@ void udd_post_irq_disable(int irq)
 EXPORT_SYMBOL_GPL(udd_post_irq_disable);
 
 /**
- * @brief Retrieve the UDD device descriptor from a file descriptor
+ * @brief RTDM file descriptor to target UDD device
  *
- * @param fd The file descriptor received by an ancillary I/O handler
+ * Retrieves the UDD device from a RTDM file descriptor.
+ *
+ * @param fd File descriptor received by an ancillary I/O handler
  * from a mini-driver based on the UDD core.
  *
  * @return A pointer to the UDD device to which @a fd refers to.

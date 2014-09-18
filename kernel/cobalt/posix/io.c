@@ -62,23 +62,25 @@ COBALT_SYSCALL(open, lostage,
 	filp = filp_open(filename->name, oflag, 0);
 	if (IS_ERR(filp)) {
 		ret = PTR_ERR(filp);
-		goto fail;
+		goto fail_fopen;
 	}
 
 	ppd = cobalt_ppd_get(0);
 	ret = __rt_dev_open(ppd, ufd, filename->name, oflag);
 	if (ret < 0)
-		goto fail;
+		goto fail_devopen;
 
-	rtdm_dereference_device(device);
+	__rtdm_put_device(device);
 	fd_install(ufd, filp);
 	putname(filename);
 
 	return ufd;
-fail:
+fail_devopen:
+	filp_close(filp, current->files);
+fail_fopen:
 	put_unused_fd(ufd);
 fail_ufd:
-	rtdm_dereference_device(device);
+	__rtdm_put_device(device);
 fail_lookup:
 	putname(filename);
 

@@ -292,9 +292,9 @@ int cobalt_memdev_init(void)
 	return 0;
 
 fail_sysmem:
-	rtdm_dev_unregister(umm_devices + UMM_SHARED, 0);
+	rtdm_dev_unregister(umm_devices + UMM_SHARED);
 fail_shared:
-	rtdm_dev_unregister(umm_devices + UMM_PRIVATE, 0);
+	rtdm_dev_unregister(umm_devices + UMM_PRIVATE);
 fail_private:
 	cobalt_umm_free(&__xnsys_global_ppd.umm, nkvdso);
 fail_vdso:
@@ -305,9 +305,9 @@ fail_vdso:
 
 void cobalt_memdev_cleanup(void)
 {
-	rtdm_dev_unregister(&sysmem_device, 0);
-	rtdm_dev_unregister(umm_devices + UMM_SHARED, 0);
-	rtdm_dev_unregister(umm_devices + UMM_PRIVATE, 0);
+	rtdm_dev_unregister(&sysmem_device);
+	rtdm_dev_unregister(umm_devices + UMM_SHARED);
+	rtdm_dev_unregister(umm_devices + UMM_PRIVATE);
 	cobalt_umm_free(&__xnsys_global_ppd.umm, nkvdso);
 	cobalt_umm_destroy(&__xnsys_global_ppd.umm);
 }

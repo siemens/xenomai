@@ -753,7 +753,7 @@ void __switchtest_exit(void)
 	if (!realtime_core_enabled())
 		return;
 
-	rtdm_dev_unregister(&device, 1000);
+	rtdm_dev_unregister(&device);
 }
 
 module_init(__switchtest_init);

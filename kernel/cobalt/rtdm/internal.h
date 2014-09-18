@@ -23,6 +23,7 @@
 #include <linux/list.h>
 #include <linux/sem.h>
 #include <linux/mutex.h>
+#include <linux/atomic.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/tree.h>
 #include <rtdm/driver.h>
@@ -42,21 +43,12 @@ extern struct semaphore nrt_dev_lock;
 extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
 
-static inline void rtdm_dereference_device(struct rtdm_device *device)
+static inline void __rtdm_get_device(struct rtdm_device *device)
 {
-	atomic_dec(&device->refcount);
+	atomic_inc(&device->refcount);
 }
 
-int __init rtdm_dev_init(void);
-void rtdm_dev_cleanup(void);
-
-#ifdef CONFIG_XENO_OPT_VFILE
-int rtdm_proc_init(void);
-void rtdm_proc_cleanup(void);
-#else
-static inline int rtdm_proc_init(void) { return 0; }
-static void inline rtdm_proc_cleanup(void) { }
-#endif
+void __rtdm_put_device(struct rtdm_device *device);
 
 void __rt_dev_close(struct rtdm_fd *fd);
 
@@ -75,5 +67,17 @@ struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type);
 int rtdm_init(void);
 
 void rtdm_cleanup(void);
+
+#ifdef CONFIG_XENO_OPT_VFILE
+int rtdm_proc_init(void);
+void rtdm_proc_cleanup(void);
+#else
+static inline int rtdm_proc_init(void) { return 0; }
+static void inline rtdm_proc_cleanup(void) { }
+#endif
+
+int __init rtdm_dev_init(void);
+
+void rtdm_dev_cleanup(void);
 
 #endif /* _RTDM_INTERNAL_H */

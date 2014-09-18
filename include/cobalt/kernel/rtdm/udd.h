@@ -294,8 +294,7 @@ struct udd_device {
 
 int udd_register_device(struct udd_device *udd);
 
-int udd_unregister_device(struct udd_device *udd,
-			  unsigned int poll_delay);
+int udd_unregister_device(struct udd_device *udd);
 
 struct udd_device *udd_get_device(struct rtdm_fd *fd);
 

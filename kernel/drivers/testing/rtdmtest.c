@@ -141,7 +141,7 @@ static int __init __rtdm_test_init(void)
 	return 0;
 fail:
 	while (i-- > 0)
-		rtdm_dev_unregister(device + i, 1000);
+		rtdm_dev_unregister(device + i);
 
 	return ret;
 }
@@ -151,7 +151,7 @@ static void __exit __rtdm_test_exit(void)
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(device); i++)
-		rtdm_dev_unregister(device + i, 1000);
+		rtdm_dev_unregister(device + i);
 }
 
 module_init(__rtdm_test_init);

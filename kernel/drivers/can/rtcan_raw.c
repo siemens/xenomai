@@ -1008,7 +1008,7 @@ int __init rtcan_raw_proto_register(void)
 
 void __exit rtcan_raw_proto_unregister(void)
 {
-    rtdm_dev_unregister(&rtcan_device, 1000);
+    rtdm_dev_unregister(&rtcan_device);
 }
 
 

@@ -1488,7 +1488,7 @@ static int rt_imx_uart_remove(struct platform_device *pdev)
 	pdata = pdev->dev.platform_data;
 	platform_set_drvdata(pdev, NULL);
 
-	rtdm_dev_unregister(dev, 1000);
+	rtdm_dev_unregister(dev);
 
 	if (port->clk) {
 		clk_put(port->clk);

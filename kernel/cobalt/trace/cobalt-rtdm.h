@@ -176,23 +176,21 @@ TRACE_EVENT(cobalt_device_register,
 );
 
 TRACE_EVENT(cobalt_device_unregister,
-	TP_PROTO(struct rtdm_device *device, unsigned int poll_delay),
-	TP_ARGS(device, poll_delay),
+	TP_PROTO(struct rtdm_device *device),
+	TP_ARGS(device),
 
 	TP_STRUCT__entry(
 		__field(struct rtdm_device *, device)
 		__string(device_name, device->name)
-		__field(unsigned int, poll_delay)
 	),
 
 	TP_fast_assign(
 		__entry->device	= device;
 		__assign_str(device_name, device->name);
-		__entry->poll_delay = poll_delay;
 	),
 
-	TP_printk("device %s=%p poll_delay=%u",
-		  __get_str(device_name), __entry->device, __entry->poll_delay)
+	TP_printk("device %s=%p",
+		  __get_str(device_name), __entry->device)
 );
 
 DEFINE_EVENT(fd_event, cobalt_fd_created,
