@@ -121,6 +121,67 @@ static char *rtdm_devnode(struct device *dev, umode_t *mode)
 	return kasprintf(GFP_KERNEL, "rtdm/%s", dev_name(dev));
 }
 
+static ssize_t class_id_show(struct device *dev,
+			     struct device_attribute *attr, char *buf)
+{
+	struct rtdm_device *device = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d/%d\n",
+		       device->class->profile_info.class_id,
+		       device->class->profile_info.subclass_id);
+}
+static DEVICE_ATTR_RO(class_id);
+
+static ssize_t refcount_show(struct device *dev,
+			     struct device_attribute *attr, char *buf)
+{
+	struct rtdm_device *device = dev_get_drvdata(dev);
+
+	return sprintf(buf, "%d\n", atomic_read(&device->refcount));
+}
+static DEVICE_ATTR_RO(refcount);
+
+#define cat_count(__buf, __str)			\
+	({					\
+		int __ret = sizeof(__str) - 1;	\
+		strcat(__buf, __str);		\
+		__ret;				\
+	})
+
+static ssize_t flags_show(struct device *dev,
+			  struct device_attribute *attr, char *buf)
+{
+	struct rtdm_device *device = dev_get_drvdata(dev);
+	struct rtdm_device_class *class = device->class;
+	int ret;
+
+	ret = sprintf(buf, "%#x (", class->device_flags);
+	if (class->device_flags & RTDM_NAMED_DEVICE)
+		ret += cat_count(buf, "named");
+	else
+		ret += cat_count(buf, "protocol");
+
+	if (class->device_flags & RTDM_EXCLUSIVE)
+		ret += cat_count(buf, ", exclusive");
+		
+	if (class->device_flags & RTDM_SECURE_DEVICE)
+		ret += cat_count(buf, ", secure");
+		
+	ret += cat_count(buf, ")\n");
+
+	return ret;
+
+}
+static DEVICE_ATTR_RO(flags);
+
+static struct attribute *rtdm_attrs[] = {
+	&dev_attr_class_id.attr,
+	&dev_attr_refcount.attr,
+	&dev_attr_flags.attr,
+	NULL,
+};
+ATTRIBUTE_GROUPS(rtdm);
+
 static int register_device_class(struct rtdm_device_class *class)
 {
 	struct class *kclass;
@@ -146,15 +207,26 @@ static int register_device_class(struct rtdm_device_class *class)
 	if (class->device_count <= 0)
 		return -EINVAL;
 
+	kclass = class_create(THIS_MODULE, class->profile_info.name);
+	if (IS_ERR(kclass)) {
+		printk(XENO_WARN "cannot create device class %s\n",
+		       class->profile_info.name);
+		return PTR_ERR(kclass);
+	}
+	kclass->dev_groups = rtdm_groups;
+	class->kclass = kclass;
+
 	if ((class->device_flags & RTDM_NAMED_DEVICE) == 0)
 		goto done;
+
+	kclass->devnode = rtdm_devnode;
 
 	ret = alloc_chrdev_region(&rdev, 0, class->device_count,
 				  class->profile_info.name);
 	if (ret) {
 		printk(XENO_WARN "cannot allocate chrdev region %s[0..%d]\n",
 		       class->profile_info.name, class->device_count - 1);
-		return ret;
+		goto fail_chrdev;
 	}
 
 	cdev_init(&class->named.cdev, &rtdm_dumb_fops);
@@ -162,16 +234,6 @@ static int register_device_class(struct rtdm_device_class *class)
 	if (ret)
 		goto fail_cdev;
 
-	kclass = class_create(THIS_MODULE, class->profile_info.name);
-	if (IS_ERR(kclass)) {
-		printk(XENO_WARN "cannot create device class %s\n",
-		       class->profile_info.name);
-		ret = PTR_ERR(kclass);
-		goto fail_class;
-	}
-	kclass->devnode = rtdm_devnode;
-
-	class->named.kclass = kclass;
 	class->named.major = MAJOR(rdev);
 	atomic_set(&class->refcount, 1);
 done:
@@ -179,10 +241,10 @@ done:
 
 	return 0;
 
-fail_class:
-	cdev_del(&class->named.cdev);
 fail_cdev:
 	unregister_chrdev_region(rdev, class->device_count);
+fail_chrdev:
+	class_destroy(kclass);
 
 	return ret;
 }
@@ -195,11 +257,12 @@ static void unregister_device_class(struct rtdm_device_class *class)
 		return;
 
 	if (class->device_flags & RTDM_NAMED_DEVICE) {
-		class_destroy(class->named.kclass);
 		cdev_del(&class->named.cdev);
 		unregister_chrdev_region(MKDEV(class->named.major, 0),
 					 class->device_count);
 	}
+
+	class_destroy(class->kclass);
 }
 
 /**
@@ -233,8 +296,9 @@ int rtdm_dev_register(struct rtdm_device *device)
 {
 	struct rtdm_device_class *class;
 	int ret, pos, major, minor;
-	struct device *kdev;
+	struct device *kdev = NULL;
 	xnkey_t id;
+	dev_t rdev;
 	spl_t s;
 
 	if (!realtime_core_enabled())
@@ -288,8 +352,8 @@ int rtdm_dev_register(struct rtdm_device *device)
 			goto fail;
 		}
 
-		kdev = device_create(class->named.kclass, NULL,
-				     MKDEV(major, minor),
+		rdev = MKDEV(major, minor);
+		kdev = device_create(class->kclass, NULL, rdev,
 				     device, device->label, minor);
 		if (IS_ERR(kdev)) {
 			ret = PTR_ERR(kdev);
@@ -299,7 +363,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 		ret = xnregistry_enter(device->name, device,
 				       &device->named.handle, NULL);
 		if (ret)
-			goto fail_register;
+			goto fail;
 
 		xnlock_get_irqsave(&rt_dev_lock, s);
 		list_add_tail(&device->named.entry, &rtdm_named_devices);
@@ -315,6 +379,15 @@ int rtdm_dev_register(struct rtdm_device *device)
 			ret = -ENOMEM;
 			goto fail;
 		}
+
+		rdev = MKDEV(0, 0);
+		kdev = device_create(class->kclass, NULL, rdev,
+				     device, device->name);
+		if (IS_ERR(kdev)) {
+			ret = PTR_ERR(kdev);
+			goto fail;
+		}
+
 		id = get_proto_id(class->protocol_family, class->socket_type);
 		xnlock_get_irqsave(&rt_dev_lock, s);
 		ret = xnid_enter(&rtdm_protocol_devices, &device->proto.id, id);
@@ -331,6 +404,9 @@ int rtdm_dev_register(struct rtdm_device *device)
 		}
 	}
 
+	device->rdev = rdev;
+	device->kdev = kdev;
+
 	up(&nrt_dev_lock);
 
 	trace_cobalt_device_register(device);
@@ -338,9 +414,10 @@ int rtdm_dev_register(struct rtdm_device *device)
 	return 0;
 fail_proc:
 	xnregistry_remove(device->named.handle);
-fail_register:
-	device_destroy(class->named.kclass, MKDEV(major, minor));
 fail:
+	if (kdev)
+		device_destroy(class->kclass, rdev);
+
 	unregister_device_class(class);
 
 	up(&nrt_dev_lock);
@@ -412,12 +489,10 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 
 	rtdm_proc_unregister_device(device);
 
-	if (handle) {
+	if (handle)
 		xnregistry_remove(handle);
-		device_destroy(class->named.kclass,
-			       MKDEV(class->named.major,
-				     device->minor));
-	}
+
+	device_destroy(class->kclass, device->rdev);
 
 	unregister_device_class(class);
 

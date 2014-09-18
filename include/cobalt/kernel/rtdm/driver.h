@@ -255,10 +255,10 @@ struct rtdm_device_class {
 		union {
 			struct {
 				struct cdev cdev;
-				struct class *kclass;
 				int major;
 			} named;
 		};
+		struct class *kclass;
 		atomic_t refcount;
 	};
 };
@@ -344,6 +344,8 @@ struct rtdm_device {
 				struct xnid id;
 			} proto;
 		};
+		dev_t rdev;
+		struct device *kdev;
 		atomic_t refcount;
 		struct rtdm_dev_context *exclusive_context;
 		struct rtdm_fd_ops ops;
