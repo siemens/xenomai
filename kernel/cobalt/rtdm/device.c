@@ -283,12 +283,8 @@ static void unregister_device_class(struct rtdm_device_class *class)
  * - -EEXIST is returned if the specified device name of protocol ID is
  * already in use.
  *
- * - -EAGAIN is returned if some /proc entry cannot be created.
- *
  * - -ENOMEM is returned if a memory allocation failed in the process
  * of registering the device.
- *
- * - -EAGAIN is returned if some /proc entry cannot be created.
  *
  * @coretags{secondary-only}
  */
@@ -368,11 +364,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 		xnlock_get_irqsave(&rt_dev_lock, s);
 		list_add_tail(&device->named.entry, &rtdm_named_devices);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
-
-		ret = rtdm_proc_register_device(device);
-		if (ret)
-			goto fail_proc;
-
 	} else {
 		device->name = kstrdup(device->label, GFP_KERNEL);
 		if (device->name == NULL) {
@@ -394,14 +385,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 		if (ret < 0)
 			goto fail;
-
-		ret = rtdm_proc_register_device(device);
-		if (ret) {
-			xnlock_get_irqsave(&rt_dev_lock, s);
-			xnid_remove(&rtdm_protocol_devices, &device->proto.id);
-			xnlock_put_irqrestore(&rt_dev_lock, s);
-			goto fail;
-		}
 	}
 
 	device->rdev = rdev;
@@ -412,8 +395,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 	trace_cobalt_device_register(device);
 
 	return 0;
-fail_proc:
-	xnregistry_remove(device->named.handle);
 fail:
 	if (kdev)
 		device_destroy(class->kclass, rdev);
@@ -486,8 +467,6 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 		xnid_remove(&rtdm_protocol_devices, &device->proto.id);
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
-
-	rtdm_proc_unregister_device(device);
 
 	if (handle)
 		xnregistry_remove(handle);

@@ -53,15 +53,9 @@ void rtdm_dev_cleanup(void);
 #ifdef CONFIG_XENO_OPT_VFILE
 int rtdm_proc_init(void);
 void rtdm_proc_cleanup(void);
-int rtdm_proc_register_device(struct rtdm_device *device);
-void rtdm_proc_unregister_device(struct rtdm_device *device);
 #else
 static inline int rtdm_proc_init(void) { return 0; }
 static void inline rtdm_proc_cleanup(void) { }
-static inline int
-rtdm_proc_register_device(struct rtdm_device *device) { return 0; }
-static inline void
-rtdm_proc_unregister_device(struct rtdm_device *device) { }
 #endif
 
 void __rt_dev_close(struct rtdm_fd *fd);

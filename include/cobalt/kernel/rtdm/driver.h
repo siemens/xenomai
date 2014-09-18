@@ -35,7 +35,6 @@
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/select.h>
-#include <cobalt/kernel/vfile.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/apc.h>
 #include <cobalt/kernel/init.h>
@@ -349,10 +348,6 @@ struct rtdm_device {
 		atomic_t refcount;
 		struct rtdm_dev_context *exclusive_context;
 		struct rtdm_fd_ops ops;
-#ifdef CONFIG_XENO_OPT_VFILE
-		struct xnvfile_directory vfroot;
-		struct xnvfile_regular info_vfile;
-#endif
 	};
 };
 
