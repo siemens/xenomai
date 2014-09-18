@@ -70,6 +70,14 @@ enum rtdm_selecttype;
  *  application. */
 #define RTDM_EXCLUSIVE			0x0001
 
+/**
+ * Use fixed minor provided in the rtdm_device description for
+ * registering. If this flag is absent, the RTDM core assigns minor
+ * numbers to devices in order of registration within the class they
+ * belong to.
+ */
+#define RTDM_FIXED_MINOR		0x0002
+
 /** If set, the device is addressed via a clear-text name. */
 #define RTDM_NAMED_DEVICE		0x0010
 
@@ -308,6 +316,21 @@ struct rtdm_device {
 	 * hotplug-enabled device filesystems (DEVTMPFS).
 	 */
 	const char *label;
+	/**
+	 * Minor number of the device. If RTDM_FIXED_MINOR is present
+	 * in the device class flags, the value stored in this field
+	 * at registration time is read and used verbatim. Otherwise,
+	 * the RTDM core automatically assigns minor numbers to
+	 * devices in order of registration within the class they
+	 * belong to, storing the resulting values into this field.
+	 *
+	 * Device nodes created for named devices in the Linux /dev
+	 * hierarchy are assigned this minor number.
+	 *
+	 * The minor number of the current device handling an I/O
+	 * request can be retreived by a call to rtdm_fd_minor().
+	 */
+	int minor;
 	/** Reserved area. */
 	struct {
 		unsigned int magic;
@@ -316,7 +339,6 @@ struct rtdm_device {
 			struct {
 				struct list_head entry;
 				xnhandle_t handle;
-				int minor;
 			} named;
 			struct {
 				struct xnid id;

@@ -164,10 +164,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 		goto cleanup_out;
 
 	ufd = ret;
-	if (device->class->device_flags & RTDM_NAMED_DEVICE)
-		context->fd.minor = device->named.minor;
-	else
-		context->fd.minor = 0;
+	context->fd.minor = device->minor;
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 

@@ -275,10 +275,13 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	device->magic = RTDM_DEVICE_MAGIC;
 
+	if (class->device_flags & RTDM_FIXED_MINOR)
+		minor = device->minor;
+	else
+		device->minor = minor = pos;
+
 	if (class->device_flags & RTDM_NAMED_DEVICE) {
 		major = class->named.major;
-		minor = pos;
-		device->named.minor = minor;
 		device->name = kasformat(device->label, minor);
 		if (device->name == NULL) {
 			ret = -ENOMEM;
@@ -413,7 +416,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 		xnregistry_remove(handle);
 		device_destroy(class->named.kclass,
 			       MKDEV(class->named.major,
-				     device->named.minor));
+				     device->minor));
 	}
 
 	unregister_device_class(class);
