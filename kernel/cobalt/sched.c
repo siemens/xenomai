@@ -1008,7 +1008,7 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
 
 		xnvfile_printf(it,
-			       "%3u  %-6d %-5s  %-8s  %-5s %-8s  %-10s %s\n",
+			       "%3u  %-6d %-5s  %-8s  %-5s %-8s  %-10s %s%s%s\n",
 			       p->cpu,
 			       p->pid,
 			       p->sched_class,
@@ -1016,7 +1016,9 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 			       pbuf,
 			       tbuf,
 			       sbuf,
-			       p->name);
+			       (p->state & XNUSER) ? "" : "[",
+			       p->name,
+			       (p->state & XNUSER) ? "" : "]");
 	}
 
 	return 0;
@@ -1210,9 +1212,12 @@ static int vfile_schedstat_show(struct xnvfile_snapshot_iterator *it,
 		}
 		xnvfile_printf(it,
 			       "%3u  %-6d %-10lu %-10lu %-10lu %-4lu  %.8x  %3u.%u"
-			       "  %s\n",
+			       "  %s%s%s\n",
 			       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
-			       usage / 10, usage % 10, p->name);
+			       usage / 10, usage % 10,
+			       (p->state & XNUSER) ? "" : "[",
+			       p->name,
+			       (p->state & XNUSER) ? "" : "]");
 	}
 
 	return 0;
