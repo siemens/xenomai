@@ -115,10 +115,11 @@ static struct rtdm_fd *fetch_fd(struct xnsys_ppd *p, int ufd)
 		}							\
 	while (0)
 
-int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
-		  unsigned int magic, struct rtdm_fd_ops *ops)
+int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
+		  struct rtdm_fd_ops *ops)
 {
 	struct rtdm_fd_index *idx;
+	struct xnsys_ppd *ppd;
 	spl_t s;
 	int ret;
 
@@ -140,15 +141,16 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 	assign_invalid_default_handler(ops->mmap);
 	__assign_default_handler(ops->close, nop_close);
 
+	ppd = cobalt_ppd_get(0);
 	fd->magic = magic;
 	fd->ops = ops;
-	fd->cont = p;
+	fd->owner = ppd;
 	fd->refs = 1;
 
 	idx->fd = fd;
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-	ret = xnid_enter(&p->fds, &idx->id, ufd);
+	ret = xnid_enter(&ppd->fds, &idx->id, ufd);
 	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
 	if (ret < 0) {
 		kfree(idx);
@@ -161,7 +163,6 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 /**
  * @brief Retrieve and lock a RTDM file descriptor
  *
- * @param[in] p PPD descriptor of the calling process
  * @param[in] ufd User-side file descriptor
  * @param[in] magic Magic word for lookup validation
  *
@@ -173,8 +174,9 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
  *
  * @coretags{unrestricted}
  */
-struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p, int ufd, unsigned int magic)
+struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic)
 {
+	struct xnsys_ppd *p = cobalt_ppd_get(0);
 	struct rtdm_fd *res;
 	spl_t s;
 
@@ -328,7 +330,7 @@ void rtdm_fd_unlock(struct rtdm_fd *fd)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_unlock);
 
-int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...)
+int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 {
 	void __user *arg;
 	struct rtdm_fd *fd;
@@ -339,7 +341,7 @@ int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...)
 	arg = va_arg(args, void __user *);
 	va_end(args);
 
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -371,12 +373,12 @@ int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...)
 EXPORT_SYMBOL_GPL(rtdm_fd_ioctl);
 
 ssize_t
-rtdm_fd_read(struct xnsys_ppd *p, int ufd, void __user *buf, size_t size)
+rtdm_fd_read(int ufd, void __user *buf, size_t size)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -402,13 +404,12 @@ rtdm_fd_read(struct xnsys_ppd *p, int ufd, void __user *buf, size_t size)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_read);
 
-ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
-		      const void __user *buf, size_t size)
+ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -434,13 +435,12 @@ ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_write);
 
-ssize_t
-rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd, struct msghdr *msg, int flags)
+ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -457,8 +457,7 @@ rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd, struct msghdr *msg, int flags)
 		    splnone();
 
 	rtdm_fd_put(fd);
-
-  out:
+out:
 	if (err < 0)
 		trace_cobalt_fd_recvmsg_status(current, fd, ufd, err);
 
@@ -466,13 +465,12 @@ rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd, struct msghdr *msg, int flags)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_recvmsg);
 
-ssize_t
-rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd, const struct msghdr *msg, int flags)
+ssize_t rtdm_fd_sendmsg(int ufd, const struct msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -489,8 +487,7 @@ rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd, const struct msghdr *msg, int flag
 		    splnone();
 
 	rtdm_fd_put(fd);
-
-  out:
+out:
 	if (err < 0)
 		trace_cobalt_fd_sendmsg_status(current, fd, ufd, err);
 
@@ -507,14 +504,14 @@ __fd_close(struct xnsys_ppd *p, struct rtdm_fd_index *idx, spl_t s)
 	kfree(idx);
 }
 
-int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned int magic)
+int __rtdm_fd_close(struct xnsys_ppd *ppd, int ufd, unsigned int magic)
 {
 	struct rtdm_fd_index *idx;
 	struct rtdm_fd *fd;
 	spl_t s;
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-	idx = fetch_fd_index(p, ufd);
+	idx = fetch_fd_index(ppd, ufd);
 	if (idx == NULL)
 		goto ebadf;
 
@@ -528,20 +525,24 @@ int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned int magic)
 	trace_cobalt_fd_close(current, fd, ufd, fd->refs);
 
 	__rt_dev_unref(fd, xnid_key(&idx->id));
-	__fd_close(p, idx, s);
+	__fd_close(ppd, idx, s);
 
 	return 0;
 }
+
+int rtdm_fd_close(int ufd, unsigned int magic)
+{
+	return __rtdm_fd_close(cobalt_ppd_get(0), ufd, magic);
+}
 EXPORT_SYMBOL_GPL(rtdm_fd_close);
 
-int rtdm_fd_mmap(struct xnsys_ppd *p, int ufd,
-		 struct _rtdm_mmap_request *rma,
+int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 		 void * __user *u_addrp)
 {
 	struct rtdm_fd *fd;
 	int ret;
 
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd)) {
 		ret = PTR_ERR(fd);
 		goto out;
@@ -599,12 +600,10 @@ int rtdm_fd_valid_p(int ufd)
 int rtdm_fd_select(int ufd, struct xnselector *selector,
 		   unsigned int type)
 {
-	struct xnsys_ppd *p;
 	struct rtdm_fd *fd;
 	int rc;
 
-	p = cobalt_ppd_get(0);
-	fd = rtdm_fd_get(p, ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
 	if (IS_ERR(fd))
 		return PTR_ERR(fd);
 

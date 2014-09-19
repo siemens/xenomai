@@ -198,8 +198,7 @@ COBALT_SYSCALL(timerfd_create, lostage,
 	xnselect_init(&tfd->read_select);
 	tfd->target = NULL;
 
-	ret = rtdm_fd_enter(ppd, &tfd->fd, ufd, COBALT_TIMERFD_MAGIC,
-			    &timerfd_ops);
+	ret = rtdm_fd_enter(&tfd->fd, ufd, COBALT_TIMERFD_MAGIC, &timerfd_ops);
 	if (ret < 0)
 		goto fail;
 
@@ -219,7 +218,7 @@ static inline struct cobalt_tfd *tfd_get(int ufd)
 {
 	struct rtdm_fd *fd;
 
-	fd = rtdm_fd_get(cobalt_ppd_get(0), ufd, COBALT_TIMERFD_MAGIC);
+	fd = rtdm_fd_get(ufd, COBALT_TIMERFD_MAGIC);
 	if (IS_ERR(fd)) {
 		int err = PTR_ERR(fd);
 		if (err == -EBADF && cobalt_current_process() == NULL)

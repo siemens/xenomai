@@ -296,7 +296,7 @@ struct rtdm_fd_ops {
 struct rtdm_fd {
 	unsigned int magic;
 	struct rtdm_fd_ops *ops;
-	struct xnsys_ppd *cont;
+	struct xnsys_ppd *owner;
 	unsigned int refs;
 	int minor;
 	struct list_head cleanup;
@@ -306,7 +306,7 @@ struct rtdm_fd {
 
 static inline struct xnsys_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
 {
-	return fd->cont;
+	return fd->owner;
 }
 
 static inline int rtdm_fd_minor(struct rtdm_fd *fd)
@@ -314,11 +314,10 @@ static inline int rtdm_fd_minor(struct rtdm_fd *fd)
 	return fd->minor;
 }
 
-int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *rtdm_fd, int ufd,
+int rtdm_fd_enter(struct rtdm_fd *rtdm_fd, int ufd,
 		  unsigned int magic, struct rtdm_fd_ops *ops);
 
-struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p,
-			    int ufd, unsigned int magic);
+struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic);
 
 int rtdm_fd_lock(struct rtdm_fd *fd);
 
@@ -326,24 +325,23 @@ void rtdm_fd_put(struct rtdm_fd *fd);
 
 void rtdm_fd_unlock(struct rtdm_fd *fd);
 
-int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...);
+int rtdm_fd_ioctl(int ufd, unsigned int request, ...);
 
-ssize_t rtdm_fd_read(struct xnsys_ppd *p, int ufd,
-		     void __user *buf, size_t size);
+ssize_t rtdm_fd_read(int ufd, void __user *buf, size_t size);
 
-ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
-		      const void __user *buf, size_t size);
+ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size);
 
-int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned int magic);
+int __rtdm_fd_close(struct xnsys_ppd *ppd,
+		    int ufd, unsigned int magic);
 
-ssize_t rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd,
-			struct msghdr *msg, int flags);
+int rtdm_fd_close(int ufd, unsigned int magic);
 
-ssize_t rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd,
-			const struct msghdr *msg, int flags);
+ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags);
 
-int rtdm_fd_mmap(struct xnsys_ppd *p, int ufd,
-		 struct _rtdm_mmap_request *rma,
+ssize_t rtdm_fd_sendmsg(int ufd, const struct msghdr *msg,
+			int flags);
+
+int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 		 void * __user *u_addrp);
 
 int rtdm_fd_valid_p(int ufd);

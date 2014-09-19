@@ -120,8 +120,7 @@ static int create_kinstance(struct rtdm_device *device,
 	context->device = device;
 	*context_ptr = context;
 
-	ret = rtdm_fd_enter(&__xnsys_global_ppd, &context->fd, ufd,
-			    RTDM_FD_MAGIC, &device->ops);
+	ret = rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
 	if (ret < 0)
 		goto fail;
 
@@ -135,8 +134,7 @@ fail:
 	return ret;
 }
 
-static int create_instance(struct xnsys_ppd *ppd, int ufd,
-			   struct rtdm_device *device,
+static int create_instance(int ufd, struct rtdm_device *device,
 			   struct rtdm_dev_context **context_ptr)
 {
 	struct rtdm_device_class *class = device->class;
@@ -160,7 +158,7 @@ static int create_instance(struct xnsys_ppd *ppd, int ufd,
 	context->device = device;
 	*context_ptr = context;
 
-	return rtdm_fd_enter(ppd, &context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
+	return rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
 }
 
 int __rtdm_dev_kopen(const char *path, int oflag)
@@ -168,6 +166,8 @@ int __rtdm_dev_kopen(const char *path, int oflag)
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
 	int ufd, ret;
+
+	secondary_mode_only();
 
 	device = __rtdm_get_namedev(path);
 	if (device == NULL)
@@ -205,9 +205,10 @@ int __rtdm_dev_open(const char *path, int oflag)
 {
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
-	struct xnsys_ppd *ppd;
 	struct file *filp;
 	int ufd, ret;
+
+	secondary_mode_only();
 
 	device = __rtdm_get_namedev(path);
 	if (device == NULL)
@@ -225,8 +226,7 @@ int __rtdm_dev_open(const char *path, int oflag)
 		goto fail_fopen;
 	}
 
-	ppd = cobalt_ppd_get(0);
-	ret = create_instance(ppd, ufd, device, &context);
+	ret = create_instance(ufd, device, &context);
 	if (ret < 0)
 		goto fail_create;
 
@@ -268,6 +268,8 @@ int __rtdm_dev_ksocket(int protocol_family, int socket_type,
 	struct rtdm_device *device;
 	int ufd, ret;
 
+	secondary_mode_only();
+
 	device = __rtdm_get_protodev(protocol_family, socket_type);
 	if (device == NULL)
 		return -EAFNOSUPPORT;
@@ -306,6 +308,8 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 	struct xnsys_ppd *ppd;
 	int ufd, ret;
 
+	secondary_mode_only();
+
 	device = __rtdm_get_protodev(protocol_family, socket_type);
 	if (device == NULL)
 		return -EAFNOSUPPORT;
@@ -317,7 +321,7 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 		goto fail_getfd;
 	}
 
-	ret = create_instance(ppd, ufd, device, &context);
+	ret = create_instance(ufd, device, &context);
 	if (ret < 0)
 		goto fail_create;
 

@@ -53,22 +53,22 @@ __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
 	__rtdm_dev_ksocket(protocol_family, socket_type, protocol)
 
 #define rt_dev_close(fd)					\
-	rtdm_fd_close(&__xnsys_global_ppd, fd, RTDM_FD_MAGIC)
+	rtdm_fd_close(fd, RTDM_FD_MAGIC)
 
 #define rt_dev_ioctl(fd, request, ...)				\
-	rtdm_fd_ioctl(&__xnsys_global_ppd, fd, request, __VA_ARGS__)
+	rtdm_fd_ioctl(fd, request, __VA_ARGS__)
 
 #define rt_dev_read(fd, buf, nbyte)				\
-	rtdm_fd_read(&__xnsys_global_ppd, fd, buf, nbyte)
+	rtdm_fd_read(fd, buf, nbyte)
 
 #define rt_dev_write(fd, buf, nbyte)				\
-	rtdm_fd_write(&__xnsys_global_ppd, fd, buf, nbyte)
+	rtdm_fd_write(fd, buf, nbyte)
 
 #define rt_dev_recvmsg(fd, msg, flags)				\
-	rtdm_fd_recvmsg(&__xnsys_global_ppd, fd, msg, flags)
+	rtdm_fd_recvmsg(fd, msg, flags)
 
 #define rt_dev_sendmsg(fd, msg, flags)				\
-	rtdm_fd_sendmsg(&__xnsys_global_ppd, fd, msg, flags)
+	rtdm_fd_sendmsg(fd, msg, flags)
 
 static inline
 ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,

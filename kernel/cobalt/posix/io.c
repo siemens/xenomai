@@ -51,25 +51,25 @@ COBALT_SYSCALL(socket, lostage,
 
 COBALT_SYSCALL(close, lostage, int, (int fd))
 {
-	return rtdm_fd_close(cobalt_ppd_get(0), fd, XNFD_MAGIC_ANY);
+	return rtdm_fd_close(fd, XNFD_MAGIC_ANY);
 }
 
 COBALT_SYSCALL(ioctl, probing,
 	       int, (int fd, unsigned int request, void __user *arg))
 {
-	return rtdm_fd_ioctl(cobalt_ppd_get(0), fd, request, arg);
+	return rtdm_fd_ioctl(fd, request, arg);
 }
 
 COBALT_SYSCALL(read, probing,
 	       ssize_t, (int fd, void __user *buf, size_t size))
 {
-	return rtdm_fd_read(cobalt_ppd_get(0), fd, buf, size);
+	return rtdm_fd_read(fd, buf, size);
 }
 
 COBALT_SYSCALL(write, probing,
 	       ssize_t, (int fd, const void __user *buf, size_t size))
 {
-	return rtdm_fd_write(cobalt_ppd_get(0), fd, buf, size);
+	return rtdm_fd_write(fd, buf, size);
 }
 
 COBALT_SYSCALL(recvmsg, probing,
@@ -81,7 +81,7 @@ COBALT_SYSCALL(recvmsg, probing,
 	if (__xn_copy_from_user(&m, umsg, sizeof(m)))
 		return -EFAULT;
 
-	ret = rtdm_fd_recvmsg(cobalt_ppd_get(0), fd, &m, flags);
+	ret = rtdm_fd_recvmsg(fd, &m, flags);
 	if (ret < 0)
 		return ret;
 
@@ -99,7 +99,7 @@ COBALT_SYSCALL(sendmsg, probing,
 	if (__xn_copy_from_user(&m, umsg, sizeof(m)))
 		return -EFAULT;
 
-	return rtdm_fd_sendmsg(cobalt_ppd_get(0), fd, &m, flags);
+	return rtdm_fd_sendmsg(fd, &m, flags);
 }
 
 COBALT_SYSCALL(mmap, lostage,
@@ -113,7 +113,7 @@ COBALT_SYSCALL(mmap, lostage,
 	if (__xn_copy_from_user(&rma, u_rma, sizeof(rma)))
 		return -EFAULT;
 
-	ret = rtdm_fd_mmap(cobalt_ppd_get(0), fd, &rma, &u_addr);
+	ret = rtdm_fd_mmap(fd, &rma, &u_addr);
 	if (ret)
 		return ret;
 

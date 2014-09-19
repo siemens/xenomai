@@ -190,7 +190,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 
 	i = (int)it->pos - 1;
 
-	fd = rtdm_fd_get(&__xnsys_global_ppd, i, RTDM_FD_MAGIC);
+	fd = rtdm_fd_get(i, RTDM_FD_MAGIC);
 	if (IS_ERR(fd))
 		return VFILE_SEQ_SKIP;
 
@@ -215,7 +215,11 @@ static ssize_t openfd_store(struct xnvfile_input *input)
 	if (ret < 0)
 		return ret;
 
-	cret = rtdm_fd_close(&__xnsys_global_ppd, (int)val, RTDM_FD_MAGIC);
+	/*
+	 * This ugly beast allows to force a close on a
+	 * kernel-originated connection.
+	 */
+	cret = __rtdm_fd_close(&__xnsys_global_ppd, (int)val, RTDM_FD_MAGIC);
 	if (cret < 0)
 		return cret;
 
