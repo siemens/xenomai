@@ -292,7 +292,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 	down(&nrt_dev_lock);
 
 	device->name = NULL;
-	device->exclusive_context = NULL;
 	class = device->class;
 	pos = atomic_read(&class->refcount);
 	ret = register_device_class(class);
@@ -310,18 +309,6 @@ int rtdm_dev_register(struct rtdm_device *device)
 	init_waitqueue_head(&device->putwq);
 	device->ops.close = __rt_dev_close; /* Interpose on driver's handler. */
 	atomic_set(&device->refcount, 0);
-
-	if (class->device_flags & RTDM_EXCLUSIVE) {
-		device->exclusive_context =
-			kmalloc(sizeof(struct rtdm_dev_context) +
-				class->context_size, GFP_KERNEL);
-		if (device->exclusive_context == NULL) {
-			ret = -ENOMEM;
-			goto fail;
-		}
-		/* mark exclusive context as unused */
-		device->exclusive_context->device = NULL;
-	}
 
 	if (class->device_flags & RTDM_FIXED_MINOR) {
 		minor = device->minor;
@@ -400,9 +387,6 @@ fail:
 	if (device->name)
 		kfree(device->name);
 
-	if (device->exclusive_context)
-		kfree(device->exclusive_context);
-
 	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_dev_register);
@@ -453,9 +437,6 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 	unregister_device_class(class);
 
 	up(&nrt_dev_lock);
-
-	if (device->exclusive_context)
-		kfree(device->exclusive_context);
 
 	kfree(device->name);
 }

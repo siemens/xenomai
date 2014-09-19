@@ -346,7 +346,6 @@ struct rtdm_device {
 		dev_t rdev;
 		struct device *kdev;
 		atomic_t refcount;
-		struct rtdm_dev_context *exclusive_context;
 		struct rtdm_fd_ops ops;
 		wait_queue_head_t putwq;
 	};

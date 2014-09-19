@@ -41,12 +41,8 @@ DEFINE_XNLOCK(rt_fildes_lock);
 static void cleanup_instance(struct rtdm_device *device,
 			     struct rtdm_dev_context *context)
 {
-	if (context) {
-		if (device->exclusive_context)
-			context->device = NULL;
-		else
-			kfree(context);
-	}
+	if (context)
+		kfree(context);
 
 	__rtdm_put_device(device);
 }
@@ -80,9 +76,10 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 			   struct rtdm_device *device,
 			   struct rtdm_dev_context **context_ptr)
 {
+	struct rtdm_device_class *class = device->class;
 	struct rtdm_dev_context *context;
 	spl_t s;
-	int err;
+	int ret;
 
 	/*
 	 * Reset to NULL so that we can always use cleanup_files/instance to
@@ -105,34 +102,24 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 	}
 
-	context = device->exclusive_context;
-	if (context) {
-		xnlock_get_irqsave(&rt_dev_lock, s);
-
-		if (unlikely(context->device != NULL)) {
-			xnlock_put_irqrestore(&rt_dev_lock, s);
-			err = -EBUSY;
-			goto fail;
-		}
-
-		context->device = device;
-
-		xnlock_put_irqrestore(&rt_dev_lock, s);
-	} else {
-		context = kmalloc(sizeof(struct rtdm_dev_context) +
-				device->class->context_size, GFP_KERNEL);
-		if (unlikely(context == NULL)) {
-			err = -ENOMEM;
-			goto fail;
-		}
-
-		context->device = device;
+	if ((class->device_flags & RTDM_EXCLUSIVE) != 0 &&
+	    atomic_read(&device->refcount) > 1) {
+		ret = -EBUSY;
+		goto fail;
 	}
 
+	context = kmalloc(sizeof(struct rtdm_dev_context) +
+			  class->context_size, GFP_KERNEL);
+	if (unlikely(context == NULL)) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	context->device = device;
 	*context_ptr = context;
 
-	err = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
-	if (err < 0)
+	ret = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
+	if (ret < 0)
 		goto fail;
 
 	return fd;
@@ -144,7 +131,7 @@ fail:
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 	}
 
-	return err;
+	return ret;
 }
 
 int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)

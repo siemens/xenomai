@@ -50,13 +50,15 @@ COBALT_SYSCALL(open, lostage,
 	device = __rtdm_get_namedev(filename->name);
 	if (device == NULL) {
 		ret = -ENODEV;
-		goto fail_lookup;
+		goto fail;
 	}
+	/* __rt_dev_open() will revalidate. */
+	__rtdm_put_device(device);
 
 	ufd = get_unused_fd_flags(oflag);
 	if (ufd < 0) {
 		ret = ufd;
-		goto fail_ufd;
+		goto fail;
 	}
 
 	filp = filp_open(filename->name, oflag, 0);
@@ -70,7 +72,6 @@ COBALT_SYSCALL(open, lostage,
 	if (ret < 0)
 		goto fail_devopen;
 
-	__rtdm_put_device(device);
 	fd_install(ufd, filp);
 	putname(filename);
 
@@ -79,9 +80,7 @@ fail_devopen:
 	filp_close(filp, current->files);
 fail_fopen:
 	put_unused_fd(ufd);
-fail_ufd:
-	__rtdm_put_device(device);
-fail_lookup:
+fail:
 	putname(filename);
 
 	return ret;
