@@ -50,6 +50,16 @@ static inline void __rtdm_get_device(struct rtdm_device *device)
 
 void __rtdm_put_device(struct rtdm_device *device);
 
+int __rtdm_dev_open(const char *path, int oflag);
+
+int __rtdm_dev_socket(int protocol_family,
+		      int socket_type, int protocol);
+
+struct rtdm_device *__rtdm_get_namedev(const char *path);
+
+struct rtdm_device *__rtdm_get_protodev(int protocol_family,
+					int socket_type);
+
 void __rt_dev_close(struct rtdm_fd *fd);
 
 int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
@@ -59,10 +69,6 @@ void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx);
 
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 			  int prot, int flags, void *__user *pptr);
-
-struct rtdm_device *__rtdm_get_namedev(const char *path);
-
-struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type);
 
 int rtdm_init(void);
 

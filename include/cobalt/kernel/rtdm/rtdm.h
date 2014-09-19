@@ -32,10 +32,10 @@
 
 typedef u32 socklen_t;
 
-int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag);
+int __rtdm_dev_kopen(const char *path, int oflag);
 
-int __rt_dev_socket(struct xnsys_ppd *p, int ufd,
-		int protocol_family, int socket_type, int protocol);
+int __rtdm_dev_ksocket(int protocol_family, int socket_type,
+		       int protocol);
 
 int
 __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
@@ -47,10 +47,10 @@ __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
 #ifndef RTDM_NO_DEFAULT_USER_API
 
 #define rt_dev_open(path, oflag, ...)				\
-	__rt_dev_open(&__xnsys_global_ppd, -1, path, oflag)
+	__rtdm_dev_kopen(path, oflag)
 
 #define rt_dev_socket(protocol_family, socket_type, protocol)	\
-	__rt_dev_socket(&__xnsys_global_ppd, -1, protocol_family, socket_type, protocol)
+	__rtdm_dev_ksocket(protocol_family, socket_type, protocol)
 
 #define rt_dev_close(fd)					\
 	rtdm_fd_close(&__xnsys_global_ppd, fd, RTDM_FD_MAGIC)

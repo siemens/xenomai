@@ -18,10 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <linux/err.h>
-#include <linux/file.h>
 #include <linux/fs.h>
-#include <linux/fdtable.h>
-#include <linux/anon_inodes.h>
 #include <cobalt/kernel/ppd.h>
 #include <xenomai/rtdm/internal.h>
 #include "process.h"
@@ -32,76 +29,24 @@
 COBALT_SYSCALL(open, lostage,
 	       int, (const char __user *u_path, int oflag))
 {
-	struct rtdm_device *device;
 	struct filename *filename;
-	struct xnsys_ppd *ppd;
-	struct file *filp;
-	int ufd, ret;
+	int ufd;
 
 	filename = getname(u_path);
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
 
-	/*
-	 * Lookup for the device into the RTDM registry: if we don't
-	 * own the device, tell userland to forward to the regular
-	 * open() service.
-	 */
-	device = __rtdm_get_namedev(filename->name);
-	if (device == NULL) {
-		ret = -ENODEV;
-		goto fail;
-	}
-	/* __rt_dev_open() will revalidate. */
-	__rtdm_put_device(device);
-
-	ufd = get_unused_fd_flags(oflag);
-	if (ufd < 0) {
-		ret = ufd;
-		goto fail;
-	}
-
-	filp = filp_open(filename->name, oflag, 0);
-	if (IS_ERR(filp)) {
-		ret = PTR_ERR(filp);
-		goto fail_fopen;
-	}
-
-	ppd = cobalt_ppd_get(0);
-	ret = __rt_dev_open(ppd, ufd, filename->name, oflag);
-	if (ret < 0)
-		goto fail_devopen;
-
-	fd_install(ufd, filp);
+	ufd = __rtdm_dev_open(filename->name, oflag);
 	putname(filename);
 
 	return ufd;
-fail_devopen:
-	filp_close(filp, current->files);
-fail_fopen:
-	put_unused_fd(ufd);
-fail:
-	putname(filename);
-
-	return ret;
 }
 
 COBALT_SYSCALL(socket, lostage,
 	       int, (int protocol_family,
 		     int socket_type, int protocol))
 {
-	struct xnsys_ppd *ppd;
-	int ufd, ret;
-
-	ppd = cobalt_ppd_get(0);
-	ufd = anon_inode_getfd("[rtdm-proto]", &rtdm_dumb_fops, ppd, O_RDWR);
-
-	ret = __rt_dev_socket(cobalt_ppd_get(0), ufd,
-			      protocol_family, socket_type, protocol);
-	if (ret < 0)
-		__close_fd(current->files, ufd);
-
-	return ret;
+	return __rtdm_dev_socket(protocol_family, socket_type, protocol);
 }
 
 COBALT_SYSCALL(close, lostage, int, (int fd))

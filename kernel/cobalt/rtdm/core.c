@@ -18,12 +18,17 @@
  */
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+#include <linux/file.h>
+#include <linux/fs.h>
+#include <linux/fdtable.h>
+#include <linux/anon_inodes.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/apc.h>
 #include "rtdm/internal.h"
 #define CREATE_TRACE_POINTS
 #include <trace/events/cobalt-rtdm.h>
+#include "posix/process.h"
 
 /**
  * @ingroup rtdm
@@ -72,14 +77,13 @@ void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx)
 	xnlock_put(&rt_fildes_lock);
 }
 
-static int create_instance(struct xnsys_ppd *p, int fd,
-			   struct rtdm_device *device,
-			   struct rtdm_dev_context **context_ptr)
+static int create_kinstance(struct rtdm_device *device,
+			    struct rtdm_dev_context **context_ptr)
 {
 	struct rtdm_device_class *class = device->class;
 	struct rtdm_dev_context *context;
+	int ufd, ret;
 	spl_t s;
-	int ret;
 
 	/*
 	 * Reset to NULL so that we can always use cleanup_files/instance to
@@ -87,20 +91,18 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 	 */
 	*context_ptr = NULL;
 
-	if (p == &__xnsys_global_ppd) {
-		xnlock_get_irqsave(&rt_fildes_lock, s);
+	xnlock_get_irqsave(&rt_fildes_lock, s);
 
-		if (unlikely(open_fildes >= RTDM_FD_MAX)) {
-			xnlock_put_irqrestore(&rt_fildes_lock, s);
-			return -ENFILE;
-		}
-
-		fd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
-		__set_bit(fd, used_fildes);
-		open_fildes++;
-
+	if (unlikely(open_fildes >= RTDM_FD_MAX)) {
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
+		return -ENFILE;
 	}
+
+	ufd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
+	__set_bit(ufd, used_fildes);
+	open_fildes++;
+
+	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
 	if ((class->device_flags & RTDM_EXCLUSIVE) != 0 &&
 	    atomic_read(&device->refcount) > 1) {
@@ -118,37 +120,65 @@ static int create_instance(struct xnsys_ppd *p, int fd,
 	context->device = device;
 	*context_ptr = context;
 
-	ret = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
+	ret = rtdm_fd_enter(&__xnsys_global_ppd, &context->fd, ufd,
+			    RTDM_FD_MAGIC, &device->ops);
 	if (ret < 0)
 		goto fail;
 
-	return fd;
+	return ufd;
 fail:
-	if (p == &__xnsys_global_ppd) {
-		xnlock_get_irqsave(&rt_fildes_lock, s);
-		__clear_bit(fd, used_fildes);
-		open_fildes--;
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-	}
+	xnlock_get_irqsave(&rt_fildes_lock, s);
+	__clear_bit(ufd, used_fildes);
+	open_fildes--;
+	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
 	return ret;
 }
 
-int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
+static int create_instance(struct xnsys_ppd *ppd, int ufd,
+			   struct rtdm_device *device,
+			   struct rtdm_dev_context **context_ptr)
+{
+	struct rtdm_device_class *class = device->class;
+	struct rtdm_dev_context *context;
+
+	/*
+	 * Reset to NULL so that we can always use cleanup_files/instance to
+	 * revert also partially successful allocations.
+	 */
+	*context_ptr = NULL;
+
+	if ((class->device_flags & RTDM_EXCLUSIVE) != 0 &&
+	    atomic_read(&device->refcount) > 1)
+		return -EBUSY;
+
+	context = kmalloc(sizeof(struct rtdm_dev_context) +
+			  class->context_size, GFP_KERNEL);
+	if (unlikely(context == NULL))
+		return -ENOMEM;
+
+	context->device = device;
+	*context_ptr = context;
+
+	return rtdm_fd_enter(ppd, &context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
+}
+
+int __rtdm_dev_kopen(const char *path, int oflag)
 {
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
-	int ret;
+	int ufd, ret;
 
 	device = __rtdm_get_namedev(path);
 	if (device == NULL)
 		return -ENODEV;
 
-	ret = create_instance(p, ufd, device, &context);
-	if (ret < 0)
-		goto cleanup_out;
+	ufd = create_kinstance(device, &context);
+	if (ufd < 0) {
+		ret = ufd;
+		goto fail;
+	}
 
-	ufd = ret;
 	context->fd.minor = device->minor;
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
@@ -158,35 +188,95 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 		if (!XENO_ASSERT(COBALT, !spltest()))
 			splnone();
 		if (ret < 0)
-			goto cleanup_out;
+			goto fail;
 	}
 
 	trace_cobalt_fd_created(&context->fd, ufd);
 
 	return ufd;
-
-cleanup_out:
+fail:
 	cleanup_instance(device, context);
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(__rt_dev_open);
+EXPORT_SYMBOL_GPL(__rtdm_dev_kopen);
 
-int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
-		    int socket_type, int protocol)
+int __rtdm_dev_open(const char *path, int oflag)
 {
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
-	int ret;
+	struct xnsys_ppd *ppd;
+	struct file *filp;
+	int ufd, ret;
+
+	device = __rtdm_get_namedev(path);
+	if (device == NULL)
+		return -ENODEV;
+
+	ufd = get_unused_fd_flags(oflag);
+	if (ufd < 0) {
+		ret = ufd;
+		goto fail_fd;
+	}
+
+	filp = filp_open(path, oflag, 0);
+	if (IS_ERR(filp)) {
+		ret = PTR_ERR(filp);
+		goto fail_fopen;
+	}
+
+	ppd = cobalt_ppd_get(0);
+	ret = create_instance(ppd, ufd, device, &context);
+	if (ret < 0)
+		goto fail_create;
+
+	context->fd.minor = device->minor;
+
+	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
+
+	if (device->ops.open) {
+		ret = device->ops.open(&context->fd, oflag);
+		if (!XENO_ASSERT(COBALT, !spltest()))
+			splnone();
+		if (ret < 0)
+			goto fail_open;
+	}
+
+	fd_install(ufd, filp);
+
+	trace_cobalt_fd_created(&context->fd, ufd);
+
+	return ufd;
+
+fail_open:
+	cleanup_instance(device, context);
+fail_create:
+	filp_close(filp, current->files);
+fail_fopen:
+	put_unused_fd(ufd);
+fail_fd:
+	__rtdm_put_device(device);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(__rtdm_dev_open);
+
+int __rtdm_dev_ksocket(int protocol_family, int socket_type,
+		       int protocol)
+{
+	struct rtdm_dev_context *context;
+	struct rtdm_device *device;
+	int ufd, ret;
 
 	device = __rtdm_get_protodev(protocol_family, socket_type);
 	if (device == NULL)
 		return -EAFNOSUPPORT;
 
-	ret = create_instance(p, ufd, device, &context);
-	if (ret < 0)
-		goto cleanup_out;
-	ufd = ret;
+	ufd = create_kinstance(device, &context);
+	if (ufd < 0) {
+		ret = ufd;
+		goto fail;
+	}
 
 	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
 
@@ -195,19 +285,66 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 		if (!XENO_ASSERT(COBALT, !spltest()))
 			splnone();
 		if (ret < 0)
-			goto cleanup_out;
+			goto fail;
+	}
+
+	trace_cobalt_fd_created(&context->fd, ufd);
+
+	return ufd;
+fail:
+	cleanup_instance(device, context);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(__rtdm_dev_ksocket);
+
+int __rtdm_dev_socket(int protocol_family, int socket_type,
+		      int protocol)
+{
+	struct rtdm_dev_context *context;
+	struct rtdm_device *device;
+	struct xnsys_ppd *ppd;
+	int ufd, ret;
+
+	device = __rtdm_get_protodev(protocol_family, socket_type);
+	if (device == NULL)
+		return -EAFNOSUPPORT;
+
+	ppd = cobalt_ppd_get(0);
+	ufd = anon_inode_getfd("[rtdm-proto]", &rtdm_dumb_fops, ppd, O_RDWR);
+	if (ufd < 0) {
+		ret = ufd;
+		goto fail_getfd;
+	}
+
+	ret = create_instance(ppd, ufd, device, &context);
+	if (ret < 0)
+		goto fail_create;
+
+	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
+
+	if (device->ops.socket) {
+		ret = device->ops.socket(&context->fd, protocol);
+		if (!XENO_ASSERT(COBALT, !spltest()))
+			splnone();
+		if (ret < 0)
+			goto fail_socket;
 	}
 
 	trace_cobalt_fd_created(&context->fd, ufd);
 
 	return ufd;
 
-cleanup_out:
+fail_socket:
 	cleanup_instance(device, context);
+fail_create:
+	__close_fd(current->files, ufd);
+fail_getfd:
+	__rtdm_put_device(device);
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(__rt_dev_socket);
+EXPORT_SYMBOL_GPL(__rtdm_dev_socket);
 
 int __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request,
 			    void __user *arg)
