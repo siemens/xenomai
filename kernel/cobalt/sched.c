@@ -859,14 +859,9 @@ reschedule:
 
 	/*
 	 * Test whether we transitioned from primary mode to secondary
-	 * over a shadow thread. This may happen in two cases:
-	 *
-	 * 1) the shadow thread just relaxed.
-	 * 2) the shadow TCB has just been deleted, in which case
-	 * we have to reap the mated Linux side as well.
-	 *
-	 * In both cases, we are running over the epilogue of Linux's
-	 * schedule, and should skip our epilogue code.
+	 * over a shadow thread, caused by a call to xnthread_relax().
+	 * In such a case, we are running over the regular schedule()
+	 * tail code, so we have to skip our tail code.
 	 */
 	if (shadow && ipipe_root_p)
 		goto shadow_epilogue;
@@ -880,7 +875,6 @@ reschedule:
 	curr = sched->curr;
 	xnthread_switch_fpu(sched);
 	xntrace_pid(current->pid, xnthread_current_priority(curr));
-
 out:
 	if (switched &&
 	    xnsched_maybe_resched_after_unlocked_switch(sched))
@@ -894,19 +888,9 @@ out:
 	return switched;
 
 shadow_epilogue:
-
 	__ipipe_complete_domain_migration();
-	/*
-	 * Shadow on entry and root without shadow extension on exit?
-	 * Mmmm... This must be the user-space mate of a deleted
-	 * real-time shadow we've just rescheduled in the Linux domain
-	 * to have it exit properly.  Reap it now.
-	 */
-	if (xnthread_current() == NULL) {
-		splnone();
-		__ipipe_reenter_root();
-		do_exit(0);
-	}
+
+	XENO_BUGON(COBALT, xnthread_current() == NULL);
 
 	/*
 	 * Interrupts must be disabled here (has to be done on entry
