@@ -258,7 +258,6 @@ struct rtdm_device_class {
 				int major;
 			} named;
 		};
-		struct class *kclass;
 		atomic_t refcount;
 	};
 };

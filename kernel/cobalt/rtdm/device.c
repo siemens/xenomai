@@ -40,6 +40,8 @@ struct rb_root rtdm_protocol_devices;
 struct semaphore nrt_dev_lock;
 DEFINE_XNLOCK(rt_dev_lock);
 
+static struct class *rtdm_class;
+
 static int enosys(void)
 {
 	return -ENOSYS;
@@ -187,7 +189,6 @@ ATTRIBUTE_GROUPS(rtdm);
 
 static int register_device_class(struct rtdm_device_class *class)
 {
-	struct class *kclass;
 	dev_t rdev;
 	int ret;
 
@@ -210,26 +211,15 @@ static int register_device_class(struct rtdm_device_class *class)
 	if (class->device_count <= 0)
 		return -EINVAL;
 
-	kclass = class_create(THIS_MODULE, class->profile_info.name);
-	if (IS_ERR(kclass)) {
-		printk(XENO_WARN "cannot create device class %s\n",
-		       class->profile_info.name);
-		return PTR_ERR(kclass);
-	}
-	kclass->dev_groups = rtdm_groups;
-	class->kclass = kclass;
-
 	if ((class->device_flags & RTDM_NAMED_DEVICE) == 0)
 		goto done;
-
-	kclass->devnode = rtdm_devnode;
 
 	ret = alloc_chrdev_region(&rdev, 0, class->device_count,
 				  class->profile_info.name);
 	if (ret) {
 		printk(XENO_WARN "cannot allocate chrdev region %s[0..%d]\n",
 		       class->profile_info.name, class->device_count - 1);
-		goto fail_chrdev;
+		return ret;
 	}
 
 	cdev_init(&class->named.cdev, &rtdm_dumb_fops);
@@ -246,8 +236,6 @@ done:
 
 fail_cdev:
 	unregister_chrdev_region(rdev, class->device_count);
-fail_chrdev:
-	class_destroy(kclass);
 
 	return ret;
 }
@@ -264,8 +252,6 @@ static void unregister_device_class(struct rtdm_device_class *class)
 		unregister_chrdev_region(MKDEV(class->named.major, 0),
 					 class->device_count);
 	}
-
-	class_destroy(class->kclass);
 }
 
 /**
@@ -360,7 +346,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 			goto fail;
 
 		rdev = MKDEV(major, minor);
-		kdev = device_create(class->kclass, NULL, rdev,
+		kdev = device_create(rtdm_class, NULL, rdev,
 				     device, device->label, minor);
 		if (IS_ERR(kdev)) {
 			xnregistry_remove(device->named.handle);
@@ -379,7 +365,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 		}
 
 		rdev = MKDEV(0, 0);
-		kdev = device_create(class->kclass, NULL, rdev,
+		kdev = device_create(rtdm_class, NULL, rdev,
 				     device, device->name);
 		if (IS_ERR(kdev)) {
 			ret = PTR_ERR(kdev);
@@ -405,7 +391,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 	return 0;
 fail:
 	if (kdev)
-		device_destroy(class->kclass, rdev);
+		device_destroy(rtdm_class, rdev);
 
 	unregister_device_class(class);
 
@@ -462,7 +448,7 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 	if (handle)
 		xnregistry_remove(handle);
 
-	device_destroy(class->kclass, device->rdev);
+	device_destroy(rtdm_class, device->rdev);
 
 	unregister_device_class(class);
 
@@ -484,14 +470,23 @@ int __init rtdm_dev_init(void)
 	INIT_LIST_HEAD(&rtdm_named_devices);
 	xntree_init(&rtdm_protocol_devices);
 
+	rtdm_class = class_create(THIS_MODULE, "rtdm");
+	if (IS_ERR(rtdm_class)) {
+		printk(XENO_ERR "cannot create RTDM sysfs class\n");
+		return PTR_ERR(rtdm_class);
+	}
+	rtdm_class->dev_groups = rtdm_groups;
+	rtdm_class->devnode = rtdm_devnode;
+
 	return 0;
 }
 
 void rtdm_dev_cleanup(void)
 {
+	class_destroy(rtdm_class);
 	/*
-	 * Note: no need to flush the cleanup_queue as no device is allowed
-	 * to deregister as long as there are references.
+	 * NOTE: no need to flush the cleanup_queue as no device is
+	 * allowed to unregister as long as there are references.
 	 */
 }
 
