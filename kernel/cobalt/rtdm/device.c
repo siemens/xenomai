@@ -47,11 +47,10 @@
 
 #define RTDM_DEVICE_MAGIC	0x82846877
 
-struct list_head rtdm_named_devices;	/* hash table */
-struct rb_root rtdm_protocol_devices;
-
-struct semaphore nrt_dev_lock;
-DEFINE_XNLOCK(rt_dev_lock);
+static struct list_head named_devices;
+static struct rb_root protocol_devices;
+static struct semaphore nrt_dev_lock;
+DEFINE_PRIVATE_XNLOCK(rt_dev_lock);
 
 static struct class *rtdm_class;
 
@@ -117,7 +116,7 @@ struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type)
 
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	xnid = xnid_fetch(&rtdm_protocol_devices, id);
+	xnid = xnid_fetch(&protocol_devices, id);
 	if (xnid) {
 		device = container_of(xnid, struct rtdm_device, proto.id);
 		__rtdm_get_device(device);
@@ -358,7 +357,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 		}
 
 		xnlock_get_irqsave(&rt_dev_lock, s);
-		list_add_tail(&device->named.entry, &rtdm_named_devices);
+		list_add_tail(&device->named.entry, &named_devices);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 	} else {
 		device->name = kstrdup(device->label, GFP_KERNEL);
@@ -377,7 +376,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 		id = get_proto_id(drv->protocol_family, drv->socket_type);
 		xnlock_get_irqsave(&rt_dev_lock, s);
-		ret = xnid_enter(&rtdm_protocol_devices, &device->proto.id, id);
+		ret = xnid_enter(&protocol_devices, &device->proto.id, id);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 		if (ret < 0)
 			goto fail;
@@ -441,7 +440,7 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 		handle = device->named.handle;
 		list_del(&device->named.entry);
 	} else
-		xnid_remove(&rtdm_protocol_devices, &device->proto.id);
+		xnid_remove(&protocol_devices, &device->proto.id);
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
@@ -464,8 +463,8 @@ int __init rtdm_init(void)
 {
 	sema_init(&nrt_dev_lock, 1);
 
-	INIT_LIST_HEAD(&rtdm_named_devices);
-	xntree_init(&rtdm_protocol_devices);
+	INIT_LIST_HEAD(&named_devices);
+	xntree_init(&protocol_devices);
 
 	rtdm_class = class_create(THIS_MODULE, "rtdm");
 	if (IS_ERR(rtdm_class)) {

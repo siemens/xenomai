@@ -29,12 +29,6 @@
 #include <cobalt/kernel/lock.h>
 #include <rtdm/driver.h>
 
-DECLARE_EXTERN_XNLOCK(rt_dev_lock);
-
-extern struct semaphore nrt_dev_lock;
-extern struct list_head rtdm_named_devices;
-extern struct rb_root rtdm_protocol_devices;
-
 static inline void __rtdm_get_device(struct rtdm_device *device)
 {
 	atomic_inc(&device->refcount);
