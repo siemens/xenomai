@@ -23,7 +23,6 @@
 #include <linux/mm.h>
 #include <linux/poll.h>
 #include <linux/kthread.h>
-#include <linux/semaphore.h>
 #include <linux/fdtable.h>
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/lock.h>

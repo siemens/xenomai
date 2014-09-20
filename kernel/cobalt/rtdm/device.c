@@ -20,9 +20,8 @@
  */
 #include <linux/module.h>
 #include <linux/delay.h>
-#include <linux/semaphore.h>
+#include <linux/mutex.h>
 #include <linux/slab.h>
-#include <linux/ctype.h>
 #include <linux/device.h>
 #include "rtdm/internal.h"
 #include <trace/events/cobalt-rtdm.h>
@@ -49,7 +48,7 @@
 
 static struct list_head named_devices;
 static struct rb_root protocol_devices;
-static struct semaphore nrt_dev_lock;
+static DEFINE_MUTEX(register_lock);
 DEFINE_PRIVATE_XNLOCK(rt_dev_lock);
 
 static struct class *rtdm_class;
@@ -304,14 +303,14 @@ int rtdm_dev_register(struct rtdm_device *device)
 	if (!realtime_core_enabled())
 		return -ENOSYS;
 
-	down(&nrt_dev_lock);
+	mutex_lock(&register_lock);
 
 	device->name = NULL;
 	drv = device->driver;
 	pos = atomic_read(&drv->refcount);
 	ret = register_driver(drv);
 	if (ret) {
-		up(&nrt_dev_lock);
+		mutex_unlock(&register_lock);
 		return ret;
 	}
 
@@ -386,7 +385,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 	device->kdev = kdev;
 	device->magic = RTDM_DEVICE_MAGIC;
 
-	up(&nrt_dev_lock);
+	mutex_unlock(&register_lock);
 
 	trace_cobalt_device_register(device);
 
@@ -397,7 +396,7 @@ fail:
 
 	unregister_driver(drv);
 
-	up(&nrt_dev_lock);
+	mutex_unlock(&register_lock);
 
 	if (device->name)
 		kfree(device->name);
@@ -433,7 +432,7 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 	wait_event(device->putwq,
 		   atomic_read(&device->refcount) == 0);
 
-	down(&nrt_dev_lock);
+	mutex_lock(&register_lock);
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
@@ -451,7 +450,7 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 
 	unregister_driver(drv);
 
-	up(&nrt_dev_lock);
+	mutex_unlock(&register_lock);
 
 	kfree(device->name);
 }
@@ -461,8 +460,6 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 
 int __init rtdm_init(void)
 {
-	sema_init(&nrt_dev_lock, 1);
-
 	INIT_LIST_HEAD(&named_devices);
 	xntree_init(&protocol_devices);
 
