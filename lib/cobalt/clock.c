@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <cobalt/uapi/time.h>
 #include <cobalt/ticks.h>
 #include <asm/xenomai/syscall.h>
@@ -356,4 +357,26 @@ COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
 	return 0;
 }
 
+COBALT_IMPL(int, gettimeofday, (struct timeval *tv, struct timezone *tz))
+{
+	struct timespec ts;
+	int ret = __WRAP(clock_gettime(CLOCK_REALTIME, &ts));
+	if (ret == 0) {
+		tv->tv_sec = ts.tv_sec;
+		tv->tv_usec = ts.tv_nsec / 1000;
+	}
+	return ret;
+}
+
+COBALT_IMPL(time_t, time, (time_t *t))
+{
+	struct timespec ts;
+	int ret = __WRAP(clock_gettime(CLOCK_REALTIME, &ts));
+	if (ret)
+		return (time_t)-1;
+
+	if (t)
+		*t = ts.tv_sec;
+	return ts.tv_sec;
+}
 /** @} */

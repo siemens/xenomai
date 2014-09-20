@@ -75,10 +75,3 @@ COBALT_IMPL(void, free, (void *ptr))
 	assert_nrt();
 	__STD(free(ptr));
 }
-
-/* vsyscall-based services */
-COBALT_IMPL(int, gettimeofday, (struct timeval *tv, struct timezone *tz))
-{
-	assert_nrt();
-	return __STD(gettimeofday(tv, tz));
-}

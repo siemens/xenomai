@@ -44,6 +44,8 @@ COBALT_DECL(int, clock_nanosleep(clockid_t clock_id,
 				 const struct timespec *rqtp,
 				 struct timespec *rmtp));
 
+COBALT_DECL(time_t, time(time_t *t));
+
 COBALT_DECL(int, nanosleep(const struct timespec *rqtp,
 			   struct timespec *rmtp));
 

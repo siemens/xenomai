@@ -104,3 +104,4 @@
 --wrap kill
 --wrap sleep
 --wrap mmap
+--wrap time
