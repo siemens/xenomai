@@ -205,7 +205,7 @@ static int sysmem_ioctl_nrt(struct rtdm_fd *fd,
 	return do_sysmem_ioctls(fd, request, arg);
 }
 
-static struct rtdm_device_class umm = {
+static struct rtdm_driver umm_driver = {
 	.profile_info	=	RTDM_PROFILE_INFO(umm,
 						  RTDM_CLASS_MEMORY,
 						  RTDM_SUBCLASS_GENERIC,
@@ -223,16 +223,16 @@ static struct rtdm_device_class umm = {
 
 static struct rtdm_device umm_devices[] = {
 	[ UMM_PRIVATE ] = {
-		.class = &umm,
+		.driver = &umm_driver,
 		.label = COBALT_MEMDEV_PRIVATE,
 	},
 	[ UMM_SHARED ] = {
-		.class = &umm,
+		.driver = &umm_driver,
 		.label = COBALT_MEMDEV_SHARED,
 	},
 };
 
-static struct rtdm_device_class sysmem = {
+static struct rtdm_driver sysmem_driver = {
 	.profile_info	=	RTDM_PROFILE_INFO(sysmem,
 						  RTDM_CLASS_MEMORY,
 						  SYS_GLOBAL,
@@ -248,7 +248,7 @@ static struct rtdm_device_class sysmem = {
 };
 
 static struct rtdm_device sysmem_device = {
-	.class = &sysmem,
+	.driver = &sysmem_driver,
 	.label = COBALT_MEMDEV_SYS,
 };
 

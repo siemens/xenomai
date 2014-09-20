@@ -283,9 +283,9 @@ struct udd_device {
 		atomic_t event;
 		struct udd_signotify signfy;
 		struct rtdm_event pulse;
-		struct rtdm_device_class class;
+		struct rtdm_driver driver;
 		struct rtdm_device device;
-		struct rtdm_device_class mapper_class;
+		struct rtdm_driver mapper_driver;
 		struct rtdm_device mapper;
 		char *mapper_name;
 		int nr_maps;

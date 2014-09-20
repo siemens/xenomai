@@ -976,7 +976,7 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 }
 
 
-static struct rtdm_device_class rtcan = {
+static struct rtdm_driver rtcan_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(rtcan,
 						    RTDM_CLASS_CAN,
 						    RTDM_SUBCLASS_GENERIC,
@@ -997,7 +997,7 @@ static struct rtdm_device_class rtcan = {
 };
 
 static struct rtdm_device rtcan_device = {
-	.class = &rtcan,
+	.driver = &rtcan_driver,
 	.label = "rtcan",
 };
 

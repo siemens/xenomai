@@ -73,8 +73,7 @@ enum rtdm_selecttype;
 /**
  * Use fixed minor provided in the rtdm_device description for
  * registering. If this flag is absent, the RTDM core assigns minor
- * numbers to devices in order of registration within the class they
- * belong to.
+ * numbers to devices managed by a driver in order of registration.
  */
 #define RTDM_FIXED_MINOR		0x0002
 
@@ -127,7 +126,7 @@ enum rtdm_selecttype {
  *
  * Drivers can attach arbitrary data immediately after the official
  * structure.  The size of this data is provided via
- * rtdm_device_class.context_size during device registration.
+ * rtdm_driver.context_size during device registration.
  */
 struct rtdm_dev_context {
 	struct rtdm_fd fd;
@@ -204,7 +203,7 @@ static inline struct rtdm_device *rtdm_fd_device(struct rtdm_fd *fd)
  * @brief RTDM profile information
  *
  * This descriptor details the profile information associated to a
- * RTDM device class.
+ * RTDM class of device managed by a driver.
  *
  * @anchor rtdm_profile_info @name RTDM profile information descriptor
  */
@@ -224,12 +223,12 @@ struct rtdm_profile_info {
 };	
 
 /**
- * @brief RTDM device class
+ * @brief RTDM driver
  *
- * This descriptor describes a RTDM device class. The structure holds
+ * This descriptor describes a RTDM device driver. The structure holds
  * runtime data, therefore it must reside in writable memory.
  */
-struct rtdm_device_class {
+struct rtdm_driver {
 	/**
 	 * Class profile information. The RTDM_PROFILE_INFO() macro @b
 	 * must be used for filling up this field.
@@ -246,8 +245,8 @@ struct rtdm_device_class {
 	/** I/O operation handlers */
 	struct rtdm_fd_ops ops;
 	/**
-	 * Count of devices which belong to this class. This value is
-	 * used to allocate a chrdev region for named devices.
+	 * Count of devices this driver manages. This value is used to
+	 * allocate a chrdev region for named devices.
 	 */
 	int device_count;
 	/** Reserved area */
@@ -268,7 +267,7 @@ struct rtdm_device_class {
  * @brief Initializer for class profile information.
  *
  * This macro must be used to fill in the @ref rtdm_profile_info
- * "class profile information" field from a RTDM device class.
+ * "class profile information" field from a RTDM driver.
  *
  * @param __name Class name (unquoted).
  *
@@ -299,8 +298,8 @@ struct rtdm_device_class {
  * holds runtime data, therefore it must reside in writable memory.
  */
 struct rtdm_device {
-	/** Device class. */
-	struct rtdm_device_class *class;
+	/** Device driver. */
+	struct rtdm_driver *driver;
 	/** Driver definable device data */
 	void *device_data;
 	/**
@@ -317,11 +316,11 @@ struct rtdm_device {
 	const char *label;
 	/**
 	 * Minor number of the device. If RTDM_FIXED_MINOR is present
-	 * in the device class flags, the value stored in this field
-	 * at registration time is read and used verbatim. Otherwise,
-	 * the RTDM core automatically assigns minor numbers to
-	 * devices in order of registration within the class they
-	 * belong to, storing the resulting values into this field.
+	 * in the driver flags, the value stored in this field is used
+	 * verbatim by rtdm_dev_register(). Otherwise, the RTDM core
+	 * automatically assigns minor numbers to all devices managed
+	 * by the driver referred to by @a driver, in order of
+	 * registration, storing the resulting values into this field.
 	 *
 	 * Device nodes created for named devices in the Linux /dev
 	 * hierarchy are assigned this minor number.

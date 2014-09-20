@@ -46,8 +46,7 @@ struct xnsys_ppd;
  *
  * The file descriptor carries a device minor information which can be
  * retrieved by a call to rtdm_fd_minor(fd). The minor number can be
- * used for distinguishing several instances of the same rtdm_device
- * class.
+ * used for distinguishing devices managed by a driver.
  *
  * @return 0 on success. On failure, a negative error code is returned.
  *

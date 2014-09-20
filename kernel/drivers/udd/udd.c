@@ -282,23 +282,23 @@ static inline int register_mapper(struct udd_device *udd)
 {
 	struct udd_reserved *ur = &udd->__reserved;
 	struct rtdm_device *dev = &ur->mapper;
-	struct rtdm_device_class *class = &ur->mapper_class;
+	struct rtdm_driver *drv = &ur->mapper_driver;
 
 	ur->mapper_name = kasformat("%s,mapper%%d", udd->device_name);
 	if (ur->mapper_name == NULL)
 		return -ENOMEM;
 
-	class->profile_info = (struct rtdm_profile_info)
+	drv->profile_info = (struct rtdm_profile_info)
 		RTDM_PROFILE_INFO("mapper", RTDM_CLASS_MEMORY,
 				  RTDM_SUBCLASS_GENERIC, 0);
-	class->device_flags = RTDM_NAMED_DEVICE;
-	class->device_count = UDD_NR_MAPS;
-	class->ops = (struct rtdm_fd_ops){
+	drv->device_flags = RTDM_NAMED_DEVICE;
+	drv->device_count = UDD_NR_MAPS;
+	drv->ops = (struct rtdm_fd_ops){
 		.open		=	mapper_open,
 		.close		=	mapper_close,
 		.mmap		=	mapper_mmap,
 	};
-	dev->class = class;
+	dev->driver = drv;
 	dev->label = ur->mapper_name;
 
 	return rtdm_dev_register(dev);
@@ -336,7 +336,7 @@ int udd_register_device(struct udd_device *udd)
 {
 	struct rtdm_device *dev = &udd->__reserved.device;
 	struct udd_reserved *ur = &udd->__reserved;
-	struct rtdm_device_class *class = &ur->class;
+	struct rtdm_driver *drv = &ur->driver;
 	int ret, n;
 
 	if (!realtime_core_enabled())
@@ -354,13 +354,13 @@ int udd_register_device(struct udd_device *udd)
 			return ret;
 	}
 
-	class->profile_info = (struct rtdm_profile_info)
+	drv->profile_info = (struct rtdm_profile_info)
 		RTDM_PROFILE_INFO(udd->device_name, RTDM_CLASS_UDD,
 				  udd->device_subclass, 0);
-	class->device_flags = RTDM_NAMED_DEVICE|udd->device_flags;
-	class->device_count = 1;
-	class->context_size = sizeof(struct udd_context);
-	class->ops = (struct rtdm_fd_ops){
+	drv->device_flags = RTDM_NAMED_DEVICE|udd->device_flags;
+	drv->device_count = 1;
+	drv->context_size = sizeof(struct udd_context);
+	drv->ops = (struct rtdm_fd_ops){
 		.open = udd_open,
 		.ioctl_rt = udd_ioctl_rt,
 		.read_rt = udd_read_rt,
@@ -369,7 +369,7 @@ int udd_register_device(struct udd_device *udd)
 		.select = udd_select,
 	};
 
-	dev->class = class;
+	dev->driver = drv;
 	dev->label = udd->device_name;
 
 	ret = rtdm_dev_register(dev);
@@ -586,7 +586,7 @@ struct udd_device *udd_get_device(struct rtdm_fd *fd)
 {
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 
-	if (dev->class->profile_info.class_id == RTDM_CLASS_MEMORY)
+	if (dev->driver->profile_info.class_id == RTDM_CLASS_MEMORY)
 		return container_of(dev, struct udd_device, __reserved.mapper);
 
 	return container_of(dev, struct udd_device, __reserved.device);

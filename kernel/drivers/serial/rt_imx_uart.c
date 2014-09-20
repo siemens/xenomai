@@ -1364,7 +1364,7 @@ static ssize_t rt_imx_uart_write(struct rtdm_fd *fd, const void *buf,
 	return ret;
 }
 
-static struct rtdm_device imx_uart = {
+static struct rtdm_driver imx_uart_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(imx_uart,
 						    RTDM_CLASS_SERIAL,
 						    RTDM_SUBCLASS_16550A,
@@ -1420,7 +1420,7 @@ static int rt_imx_uart_probe(struct platform_device *pdev)
 
 
 	dev = &port->rtdm_dev;
-	dev->class = &imx_uart;
+	dev->driver = &imx_uart_driver;
 	dev->label = "rtser%d";
 	dev->device_data = port;
 

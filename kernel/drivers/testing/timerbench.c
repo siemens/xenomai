@@ -450,7 +450,7 @@ static int rt_tmbench_ioctl_rt(struct rtdm_fd *fd,
 	return err;
 }
 
-static struct rtdm_device_class timerbench = {
+static struct rtdm_driver timerbench_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(timerbench,
 						    RTDM_CLASS_TESTING,
 						    RTDM_SUBCLASS_TIMERBENCH,
@@ -467,7 +467,7 @@ static struct rtdm_device_class timerbench = {
 };
 
 static struct rtdm_device device = {
-	.class = &timerbench,
+	.driver = &timerbench_driver,
 	.label = "timerbench",
 };
 

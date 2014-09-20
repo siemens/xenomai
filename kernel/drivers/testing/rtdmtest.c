@@ -102,7 +102,7 @@ rtdm_test_ioctl(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 	return err;
 }
 
-static struct rtdm_device_class rtdmtest = {
+static struct rtdm_driver rtdmtest_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(rtdmtest,
 						    RTDM_CLASS_TESTING,
 						    RTDM_SUBCLASS_RTDMTEST,
@@ -120,7 +120,7 @@ static struct rtdm_device_class rtdmtest = {
 
 static struct rtdm_device device[2] = {
 	[0 ... 1] = {
-		.class = &rtdmtest,
+		.driver = &rtdmtest_driver,
 		.label = "rtdm%d",
 	}
 };

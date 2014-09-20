@@ -47,10 +47,10 @@ struct rtdm_device *__rtdm_get_namedev(const char *path);
 struct rtdm_device *__rtdm_get_protodev(int protocol_family,
 					int socket_type);
 
-void __rt_dev_close(struct rtdm_fd *fd);
+void __rtdm_dev_close(struct rtdm_fd *fd);
 
-int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
-			    unsigned int request, void __user *arg);
+int __rtdm_dev_ioctl_core(struct rtdm_fd *fd,
+			  unsigned int request, void __user *arg);
 
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 			  int prot, int flags, void *__user *pptr);

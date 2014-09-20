@@ -33,10 +33,11 @@
  *
  * Pre-defined classes of real-time devices
  *
- * Device profiles define which operation handlers a driver of a certain class
- * has to implement, which name or protocol it has to register, which IOCTLs
- * it has to provide, and further details. Sub-classes can be defined in order
- * to extend a device profile with more hardware-specific functions.
+ * Device profiles define which operation handlers a driver of a
+ * certain class of devices has to implement, which name or protocol
+ * it has to register, which IOCTLs it has to provide, and further
+ * details. Sub-classes can be defined in order to extend a device
+ * profile with more hardware-specific functions.
  */
 
 /**
@@ -138,21 +139,21 @@ static char *rtdm_devnode(struct device *dev, umode_t *mode)
 	return kasprintf(GFP_KERNEL, "rtdm/%s", dev_name(dev));
 }
 
-static ssize_t class_id_show(struct device *dev,
-			     struct device_attribute *attr, char *buf)
+static ssize_t profile_show(struct device *kdev,
+			    struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(dev);
+	struct rtdm_device *device = dev_get_drvdata(kdev);
 
-	return sprintf(buf, "%d/%d\n",
-		       device->class->profile_info.class_id,
-		       device->class->profile_info.subclass_id);
+	return sprintf(buf, "%d,%d\n",
+		       device->driver->profile_info.class_id,
+		       device->driver->profile_info.subclass_id);
 }
-static DEVICE_ATTR_RO(class_id);
+static DEVICE_ATTR_RO(profile);
 
-static ssize_t refcount_show(struct device *dev,
+static ssize_t refcount_show(struct device *kdev,
 			     struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(dev);
+	struct rtdm_device *device = dev_get_drvdata(kdev);
 
 	return sprintf(buf, "%d\n", atomic_read(&device->refcount));
 }
@@ -165,54 +166,57 @@ static DEVICE_ATTR_RO(refcount);
 		__ret;				\
 	})
 
-static ssize_t flags_show(struct device *dev,
+static ssize_t flags_show(struct device *kdev,
 			  struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(dev);
-	struct rtdm_device_class *class = device->class;
-	int ret;
+	struct rtdm_device *device = dev_get_drvdata(kdev);
+	struct rtdm_driver *drv = device->driver;
 
-	ret = sprintf(buf, "%#x (", class->device_flags);
-	if (class->device_flags & RTDM_NAMED_DEVICE)
-		ret += cat_count(buf, "named");
-	else
-		ret += cat_count(buf, "protocol");
-
-	if (class->device_flags & RTDM_EXCLUSIVE)
-		ret += cat_count(buf, ", exclusive");
-		
-	if (class->device_flags & RTDM_SECURE_DEVICE)
-		ret += cat_count(buf, ", secure");
-		
-	ret += cat_count(buf, ")\n");
-
-	return ret;
+	return sprintf(buf, "%#x\n", drv->device_flags);
 
 }
 static DEVICE_ATTR_RO(flags);
 
+static ssize_t type_show(struct device *kdev,
+			 struct device_attribute *attr, char *buf)
+{
+	struct rtdm_device *device = dev_get_drvdata(kdev);
+	struct rtdm_driver *drv = device->driver;
+	int ret;
+
+	if (drv->device_flags & RTDM_NAMED_DEVICE)
+		ret = cat_count(buf, "named\n");
+	else
+		ret = cat_count(buf, "protocol\n");
+
+	return ret;
+
+}
+static DEVICE_ATTR_RO(type);
+
 static struct attribute *rtdm_attrs[] = {
-	&dev_attr_class_id.attr,
+	&dev_attr_profile.attr,
 	&dev_attr_refcount.attr,
 	&dev_attr_flags.attr,
+	&dev_attr_type.attr,
 	NULL,
 };
 ATTRIBUTE_GROUPS(rtdm);
 
-static int register_device_class(struct rtdm_device_class *class)
+static int register_driver(struct rtdm_driver *drv)
 {
 	dev_t rdev;
 	int ret;
 
-	if (class->profile_info.magic == RTDM_CLASS_MAGIC) {
-		atomic_inc(&class->refcount);
+	if (drv->profile_info.magic == RTDM_CLASS_MAGIC) {
+		atomic_inc(&drv->refcount);
 		return 0;
 	}
 
-	if (class->profile_info.magic != ~RTDM_CLASS_MAGIC)
+	if (drv->profile_info.magic != ~RTDM_CLASS_MAGIC)
 		return -EINVAL;
 
-	switch (class->device_flags & RTDM_DEVICE_TYPE_MASK) {
+	switch (drv->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
 	case RTDM_PROTOCOL_DEVICE:
 		break;
@@ -220,49 +224,49 @@ static int register_device_class(struct rtdm_device_class *class)
 		return -EINVAL;
 	}
 
-	if (class->device_count <= 0)
+	if (drv->device_count <= 0)
 		return -EINVAL;
 
-	if ((class->device_flags & RTDM_NAMED_DEVICE) == 0)
+	if ((drv->device_flags & RTDM_NAMED_DEVICE) == 0)
 		goto done;
 
-	ret = alloc_chrdev_region(&rdev, 0, class->device_count,
-				  class->profile_info.name);
+	ret = alloc_chrdev_region(&rdev, 0, drv->device_count,
+				  drv->profile_info.name);
 	if (ret) {
 		printk(XENO_WARN "cannot allocate chrdev region %s[0..%d]\n",
-		       class->profile_info.name, class->device_count - 1);
+		       drv->profile_info.name, drv->device_count - 1);
 		return ret;
 	}
 
-	cdev_init(&class->named.cdev, &rtdm_dumb_fops);
-	ret = cdev_add(&class->named.cdev, rdev, class->device_count);
+	cdev_init(&drv->named.cdev, &rtdm_dumb_fops);
+	ret = cdev_add(&drv->named.cdev, rdev, drv->device_count);
 	if (ret)
 		goto fail_cdev;
 
-	class->named.major = MAJOR(rdev);
-	atomic_set(&class->refcount, 1);
+	drv->named.major = MAJOR(rdev);
+	atomic_set(&drv->refcount, 1);
 done:
-	class->profile_info.magic = RTDM_CLASS_MAGIC;
+	drv->profile_info.magic = RTDM_CLASS_MAGIC;
 
 	return 0;
 
 fail_cdev:
-	unregister_chrdev_region(rdev, class->device_count);
+	unregister_chrdev_region(rdev, drv->device_count);
 
 	return ret;
 }
 
-static void unregister_device_class(struct rtdm_device_class *class)
+static void unregister_driver(struct rtdm_driver *drv)
 {
-	XENO_BUGON(COBALT, class->profile_info.magic != RTDM_CLASS_MAGIC);
+	XENO_BUGON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
 
-	if (!atomic_dec_and_test(&class->refcount))
+	if (!atomic_dec_and_test(&drv->refcount))
 		return;
 
-	if (class->device_flags & RTDM_NAMED_DEVICE) {
-		cdev_del(&class->named.cdev);
-		unregister_chrdev_region(MKDEV(class->named.major, 0),
-					 class->device_count);
+	if (drv->device_flags & RTDM_NAMED_DEVICE) {
+		cdev_del(&drv->named.cdev);
+		unregister_chrdev_region(MKDEV(drv->named.major, 0),
+					 drv->device_count);
 	}
 }
 
@@ -277,7 +281,7 @@ static void unregister_device_class(struct rtdm_device_class *class)
  *
  * - -EINVAL is returned if the descriptor contains invalid
  * entries. RTDM_PROFILE_INFO() must appear in the list of
- * initializers setting up the class properties.
+ * initializers for the driver properties.
  *
  * - -EEXIST is returned if the specified device name of protocol ID is
  * already in use.
@@ -289,9 +293,9 @@ static void unregister_device_class(struct rtdm_device_class *class)
  */
 int rtdm_dev_register(struct rtdm_device *device)
 {
-	struct rtdm_device_class *class;
 	int ret, pos, major, minor;
 	struct device *kdev = NULL;
+	struct rtdm_driver *drv;
 	xnkey_t id;
 	dev_t rdev;
 	spl_t s;
@@ -304,35 +308,35 @@ int rtdm_dev_register(struct rtdm_device *device)
 	down(&nrt_dev_lock);
 
 	device->name = NULL;
-	class = device->class;
-	pos = atomic_read(&class->refcount);
-	ret = register_device_class(class);
+	drv = device->driver;
+	pos = atomic_read(&drv->refcount);
+	ret = register_driver(drv);
 	if (ret) {
 		up(&nrt_dev_lock);
 		return ret;
 	}
 
-	device->ops = class->ops;
-	if (class->device_flags & RTDM_NAMED_DEVICE)
+	device->ops = drv->ops;
+	if (drv->device_flags & RTDM_NAMED_DEVICE)
 		device->ops.socket = (typeof(device->ops.socket))enosys;
 	else
 		device->ops.open = (typeof(device->ops.open))enosys;
 
 	init_waitqueue_head(&device->putwq);
-	device->ops.close = __rt_dev_close; /* Interpose on driver's handler. */
+	device->ops.close = __rtdm_dev_close; /* Interpose on driver's handler. */
 	atomic_set(&device->refcount, 0);
 
-	if (class->device_flags & RTDM_FIXED_MINOR) {
+	if (drv->device_flags & RTDM_FIXED_MINOR) {
 		minor = device->minor;
-		if (minor < 0 || minor >= class->device_count) {
+		if (minor < 0 || minor >= drv->device_count) {
 			ret = -EINVAL;
 			goto fail;
 		}
 	} else
 		device->minor = minor = pos;
 
-	if (class->device_flags & RTDM_NAMED_DEVICE) {
-		major = class->named.major;
+	if (drv->device_flags & RTDM_NAMED_DEVICE) {
+		major = drv->named.major;
 		device->name = kasformat(device->label, minor);
 		if (device->name == NULL) {
 			ret = -ENOMEM;
@@ -371,7 +375,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 			goto fail;
 		}
 
-		id = get_proto_id(class->protocol_family, class->socket_type);
+		id = get_proto_id(drv->protocol_family, drv->socket_type);
 		xnlock_get_irqsave(&rt_dev_lock, s);
 		ret = xnid_enter(&rtdm_protocol_devices, &device->proto.id, id);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
@@ -392,7 +396,7 @@ fail:
 	if (kdev)
 		device_destroy(rtdm_class, rdev);
 
-	unregister_device_class(class);
+	unregister_driver(drv);
 
 	up(&nrt_dev_lock);
 
@@ -415,7 +419,7 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  */
 void rtdm_dev_unregister(struct rtdm_device *device)
 {
-	struct rtdm_device_class *class = device->class;
+	struct rtdm_driver *drv = device->driver;
 	xnhandle_t handle = XN_NO_HANDLE;
 	spl_t s;
 
@@ -433,7 +437,7 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 	down(&nrt_dev_lock);
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	if (class->device_flags & RTDM_NAMED_DEVICE) {
+	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		handle = device->named.handle;
 		list_del(&device->named.entry);
 	} else
@@ -446,7 +450,7 @@ void rtdm_dev_unregister(struct rtdm_device *device)
 
 	device_destroy(rtdm_class, device->rdev);
 
-	unregister_device_class(class);
+	unregister_driver(drv);
 
 	up(&nrt_dev_lock);
 

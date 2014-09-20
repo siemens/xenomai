@@ -217,7 +217,7 @@ int a4l_rt_select(struct rtdm_fd *fd,
 	return a4l_select(cxt, selector, type, fd_index);
 }
 
-static struct rtdm_device_class analogy = {
+static struct rtdm_driver analogy_driver = {
 	.profile_info =		RTDM_PROFILE_INFO(analogy,
 						  RTDM_CLASS_EXPERIMENTAL,
 						  RTDM_SUBCLASS_ANALOGY,
@@ -240,7 +240,7 @@ static struct rtdm_device_class analogy = {
 
 static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] = {
 	[0 ... A4L_NB_DEVICES - 1] = {
-		.class = &analogy,
+		.driver = &analogy_driver,
 		.label = "analogy%d",
 	}
 };

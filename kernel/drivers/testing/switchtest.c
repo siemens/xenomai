@@ -717,7 +717,7 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 	}
 }
 
-static struct rtdm_device_class switchtest = {
+static struct rtdm_driver switchtest_driver = {
 	.profile_info = RTDM_PROFILE_INFO(switchtest,
 					  RTDM_CLASS_TESTING,
 					  RTDM_SUBCLASS_SWITCHTEST,
@@ -734,7 +734,7 @@ static struct rtdm_device_class switchtest = {
 };
 
 static struct rtdm_device device = {
-	.class = &switchtest,
+	.driver = &switchtest_driver,
 	.label = "switchtest",
 };
 

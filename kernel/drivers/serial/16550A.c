@@ -1066,7 +1066,7 @@ ssize_t rt_16550_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
 	return ret;
 }
 
-static struct rtdm_device_class uart16550A = {
+static struct rtdm_driver uart16550A_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(uart16550A,
 						    RTDM_CLASS_SERIAL,
 						    RTDM_SUBCLASS_16550A,
@@ -1115,7 +1115,7 @@ int __init rt_16550_init(void)
 		if (!dev)
 			goto cleanup_out;
 
-		dev->class = &uart16550A;
+		dev->driver = &uart16550A_driver;
 		dev->label = "rtser%d";
 		name = (char *)(dev + 1);
 		ksformat(name, RTDM_MAX_DEVNAME_LEN, dev->label, i);

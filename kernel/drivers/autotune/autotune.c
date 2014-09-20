@@ -631,7 +631,7 @@ static void autotune_close(struct rtdm_fd *fd)
 		tuner->destroy_tuner(tuner);
 }
 
-static struct rtdm_device_class autotune = {
+static struct rtdm_driver autotune_driver = {
 	.profile_info		=	RTDM_PROFILE_INFO(autotune,
 							  RTDM_CLASS_AUTOTUNE,
 							  RTDM_SUBCLASS_AUTOTUNE,
@@ -648,7 +648,7 @@ static struct rtdm_device_class autotune = {
 };
 
 static struct rtdm_device device = {
-	.class = &autotune,
+	.driver = &autotune_driver,
 	.label = "autotune",
 };
 

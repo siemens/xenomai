@@ -21,17 +21,17 @@ DECLARE_EVENT_CLASS(fd_event,
 	TP_ARGS(fd, ufd),
 
 	TP_STRUCT__entry(
-		__field(struct rtdm_device *, device)
+		__field(struct rtdm_device *, dev)
 		__field(int, ufd)
 	),
 
 	TP_fast_assign(
-		__entry->device = rtdm_fd_to_context(fd)->device;
+		__entry->dev = rtdm_fd_to_context(fd)->device;
 		__entry->ufd = ufd;
 	),
 
 	TP_printk("device=%p fd=%d",
-		  __entry->device, __entry->ufd)
+		  __entry->dev, __entry->ufd)
 );
 
 DECLARE_EVENT_CLASS(fd_request,
@@ -42,7 +42,7 @@ DECLARE_EVENT_CLASS(fd_request,
 	TP_STRUCT__entry(
 		__array(char, comm, TASK_COMM_LEN)
 		__field(pid_t, pid)
-		__field(struct rtdm_device *, device)
+		__field(struct rtdm_device *, dev)
 		__field(int, ufd)
 		__field(unsigned long, arg)
 	),
@@ -50,13 +50,13 @@ DECLARE_EVENT_CLASS(fd_request,
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid = task->pid;
-		__entry->device = rtdm_fd_to_context(fd)->device;
+		__entry->dev = rtdm_fd_to_context(fd)->device;
 		__entry->ufd = ufd;
 		__entry->arg = arg;
 	),
 
 	TP_printk("device=%p fd=%d arg=%#lx pid=%d comm=%s",
-		  __entry->device, __entry->ufd, __entry->arg,
+		  __entry->dev, __entry->ufd, __entry->arg,
 		  __entry->pid, __entry->comm)
 );
 
@@ -68,19 +68,19 @@ DECLARE_EVENT_CLASS(fd_request_status,
 	TP_STRUCT__entry(
 		__array(char, comm, TASK_COMM_LEN)
 		__field(pid_t, pid)
-		__field(struct rtdm_device *, device)
+		__field(struct rtdm_device *, dev)
 		__field(int, ufd)
 	),
 
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid = task->pid;
-		__entry->device	= rtdm_fd_to_context(fd)->device;
+		__entry->dev	= rtdm_fd_to_context(fd)->device;
 		__entry->ufd = ufd;
 	),
 
 	TP_printk("device=%p fd=%d pid=%d comm=%s",
-		  __entry->device, __entry->ufd, __entry->pid, __entry->comm)
+		  __entry->dev, __entry->ufd, __entry->pid, __entry->comm)
 );
 
 DECLARE_EVENT_CLASS(task_op,
@@ -146,12 +146,12 @@ DECLARE_EVENT_CLASS(mutex_op,
 );
 
 TRACE_EVENT(cobalt_device_register,
-	TP_PROTO(struct rtdm_device *device),
-	TP_ARGS(device),
+	TP_PROTO(struct rtdm_device *dev),
+	TP_ARGS(dev),
 
 	TP_STRUCT__entry(
-		__field(struct rtdm_device *, device)
-		__string(device_name, device->name)
+		__field(struct rtdm_device *, dev)
+		__string(device_name, dev->name)
 		__field(int, flags)
 		__field(int, class_id)
 		__field(int, subclass_id)
@@ -159,38 +159,38 @@ TRACE_EVENT(cobalt_device_register,
 	),
 
 	TP_fast_assign(
-		__entry->device	= device;
-		__assign_str(device_name, device->name);
-		__entry->flags = device->class->device_flags;
-		__entry->class_id = device->class->profile_info.class_id;
-		__entry->subclass_id = device->class->profile_info.subclass_id;
-		__entry->profile_version = device->class->profile_info.version;
+		__entry->dev	= dev;
+		__assign_str(device_name, dev->name);
+		__entry->flags = dev->driver->device_flags;
+		__entry->class_id = dev->driver->profile_info.class_id;
+		__entry->subclass_id = dev->driver->profile_info.subclass_id;
+		__entry->profile_version = dev->driver->profile_info.version;
 	),
 
 	TP_printk("%s device %s=%p flags=0x%x, class=%d.%d profile=%d",
 		  (__entry->flags & RTDM_DEVICE_TYPE_MASK)
 		  == RTDM_NAMED_DEVICE ? "named" : "protocol",
-		  __get_str(device_name), __entry->device,
+		  __get_str(device_name), __entry->dev,
 		  __entry->flags, __entry->class_id, __entry->subclass_id,
 		  __entry->profile_version)
 );
 
 TRACE_EVENT(cobalt_device_unregister,
-	TP_PROTO(struct rtdm_device *device),
-	TP_ARGS(device),
+	TP_PROTO(struct rtdm_device *dev),
+	TP_ARGS(dev),
 
 	TP_STRUCT__entry(
-		__field(struct rtdm_device *, device)
-		__string(device_name, device->name)
+		__field(struct rtdm_device *, dev)
+		__string(device_name, dev->name)
 	),
 
 	TP_fast_assign(
-		__entry->device	= device;
-		__assign_str(device_name, device->name);
+		__entry->dev	= dev;
+		__assign_str(device_name, dev->name);
 	),
 
 	TP_printk("device %s=%p",
-		  __get_str(device_name), __entry->device)
+		  __get_str(device_name), __entry->dev)
 );
 
 DEFINE_EVENT(fd_event, cobalt_fd_created,
@@ -280,7 +280,7 @@ TRACE_EVENT(cobalt_fd_mmap,
 	TP_STRUCT__entry(
 		__array(char, comm, TASK_COMM_LEN)
 		__field(pid_t, pid)
-		__field(struct rtdm_device *, device)
+		__field(struct rtdm_device *, dev)
 		__field(int, ufd)
 		__field(size_t, length)
 		__field(off_t, offset)
@@ -291,7 +291,7 @@ TRACE_EVENT(cobalt_fd_mmap,
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid = task->pid;
-		__entry->device = rtdm_fd_to_context(fd)->device;
+		__entry->dev = rtdm_fd_to_context(fd)->device;
 		__entry->ufd = ufd;
 		__entry->length = rma->length;
 		__entry->offset = rma->offset;
@@ -301,7 +301,7 @@ TRACE_EVENT(cobalt_fd_mmap,
 
 	TP_printk("device=%p fd=%d area={ len:%Zu, off:%Lu }"
 		  " prot=%#x(%s) flags=%#x(%s) pid=%d comm=%s",
-		  __entry->device, __entry->ufd, __entry->length,
+		  __entry->dev, __entry->ufd, __entry->length,
 		  (unsigned long long)__entry->offset,
 		  __entry->prot, cobalt_print_protbits(__entry->prot),
 		  __entry->flags, cobalt_print_mapbits(__entry->flags),

@@ -33,7 +33,7 @@
 #include "internal.h"
 #include "posix/process.h"
 
-DEFINE_PRIVATE_XNLOCK(__rtdm_fd_lock);
+DEFINE_PRIVATE_XNLOCK(fdtree_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
 static struct semaphore rtdm_fd_cleanup_sem;
 
@@ -150,9 +150,9 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 
 	idx->fd = fd;
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	ret = xnid_enter(&ppd->fds, &idx->id, ufd);
-	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+	xnlock_put_irqrestore(&fdtree_lock, s);
 	if (ret < 0) {
 		kfree(idx);
 		ret = -EBUSY;
@@ -181,7 +181,7 @@ struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic)
 	struct rtdm_fd *fd;
 	spl_t s;
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	fd = fetch_fd(p, ufd);
 	if (fd == NULL || (magic != 0 && fd->magic != magic)) {
 		fd = ERR_PTR(-EBADF);
@@ -190,7 +190,7 @@ struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic)
 
 	++fd->refs;
 out:
-	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+	xnlock_put_irqrestore(&fdtree_lock, s);
 
 	return fd;
 }
@@ -216,11 +216,11 @@ static int fd_cleanup_thread(void *data)
 		if (kthread_should_stop())
 			break;
 
-		xnlock_get_irqsave(&__rtdm_fd_lock, s);
+		xnlock_get_irqsave(&fdtree_lock, s);
 		fd = list_first_entry(&rtdm_fd_cleanup_queue,
 				struct rtdm_fd, cleanup);
 		list_del(&fd->cleanup);
-		xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+		xnlock_put_irqrestore(&fdtree_lock, s);
 
 		fd->ops->close(fd);
 	}
@@ -238,7 +238,7 @@ static void __put_fd(struct rtdm_fd *fd, spl_t s)
 	int destroy;
 
 	destroy = --fd->refs == 0;
-	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+	xnlock_put_irqrestore(&fdtree_lock, s);
 
 	if (!destroy)
 		return;
@@ -253,9 +253,9 @@ static void __put_fd(struct rtdm_fd *fd, spl_t s)
 			},
 		};
 
-		xnlock_get_irqsave(&__rtdm_fd_lock, s);
+		xnlock_get_irqsave(&fdtree_lock, s);
 		list_add_tail(&fd->cleanup, &rtdm_fd_cleanup_queue);
-		xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+		xnlock_put_irqrestore(&fdtree_lock, s);
 
 		ipipe_post_work_root(&closework, work);
 	}
@@ -275,7 +275,7 @@ void rtdm_fd_put(struct rtdm_fd *fd)
 {
 	spl_t s;
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	__put_fd(fd, s);
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_put);
@@ -298,13 +298,13 @@ int rtdm_fd_lock(struct rtdm_fd *fd)
 {
 	spl_t s;
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	if (fd->refs == 0) {
-		xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+		xnlock_put_irqrestore(&fdtree_lock, s);
 		return -EIDRM;
 	}
 	++fd->refs;
-	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+	xnlock_put_irqrestore(&fdtree_lock, s);
 
 	return 0;
 }
@@ -324,7 +324,7 @@ void rtdm_fd_unlock(struct rtdm_fd *fd)
 {
 	spl_t s;
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	/* Warn if fd was unreferenced. */
 	XENO_ASSERT(COBALT, fd->refs > 0);
 	__put_fd(fd, s);
@@ -336,7 +336,7 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 	void __user *arg;
 	struct rtdm_fd *fd;
 	va_list args;
-	int err;
+	int err, ret;
 
 	va_start(args, request);
 	arg = va_arg(args, void __user *);
@@ -359,7 +359,7 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 		    splnone();
 
 	if (err < 0) {
-		int ret = __rt_dev_ioctl_fallback(fd, request, arg);
+		ret = __rtdm_dev_ioctl_core(fd, request, arg);
 		if (ret != -ENOSYS)
 			err = ret;
 	}
@@ -516,7 +516,7 @@ int rtdm_fd_close(int ufd, unsigned int magic)
 
 	ppd = cobalt_ppd_get(0);
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	idx = fetch_fd_index(ppd, ufd);
 	if (idx == NULL)
 		goto ebadf;
@@ -524,7 +524,7 @@ int rtdm_fd_close(int ufd, unsigned int magic)
 	fd = idx->fd;
 	if (magic != 0 && fd->magic != magic) {
 ebadf:
-		xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+		xnlock_put_irqrestore(&fdtree_lock, s);
 		return -EBADF;
 	}
 
@@ -581,9 +581,9 @@ int rtdm_fd_valid_p(int ufd)
 	struct rtdm_fd *fd;
 	spl_t s;
 
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	fd = fetch_fd(cobalt_ppd_get(0), ufd);
-	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
+	xnlock_put_irqrestore(&fdtree_lock, s);
 
 	return fd != NULL;
 }
@@ -634,7 +634,7 @@ static void destroy_fd(void *cookie, struct xnid *id)
 	spl_t s;
 
 	idx = container_of(id, struct rtdm_fd_index, id);
-	xnlock_get_irqsave(&__rtdm_fd_lock, s);
+	xnlock_get_irqsave(&fdtree_lock, s);
 	__fd_close(p, idx, 0);
 }
 

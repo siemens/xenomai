@@ -35,9 +35,6 @@ int __rtdm_dev_open(const char *path, int oflag);
 int __rtdm_dev_socket(int protocol_family,
 		      int socket_type, int protocol);
 
-int
-__rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
-
 /*
  * Define RTDM_NO_DEFAULT_USER_API to switch off the default
  * rt_dev_xxx interface when providing a customised user API.

@@ -256,7 +256,7 @@ static int rtipc_select(struct rtdm_fd *fd, struct xnselector *selector,
 	return ret;
 }
 
-static struct rtdm_device_class rtipc = {
+static struct rtdm_driver rtipc_driver = {
 	.profile_info		=	RTDM_PROFILE_INFO(rtipc,
 							  RTDM_CLASS_RTIPC,
 							  RTDM_SUBCLASS_GENERIC,
@@ -284,7 +284,7 @@ static struct rtdm_device_class rtipc = {
 };
 
 static struct rtdm_device device = {
-	.class = &rtipc,
+	.driver = &rtipc_driver,
 	.label = "rtipc",
 };
 

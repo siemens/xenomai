@@ -37,25 +37,25 @@
  * @{
  */
 
-static void cleanup_instance(struct rtdm_device *device,
+static void cleanup_instance(struct rtdm_device *dev,
 			     struct rtdm_dev_context *context)
 {
 	if (context)
 		kfree(context);
 
-	__rtdm_put_device(device);
+	__rtdm_put_device(dev);
 }
 
-void __rt_dev_close(struct rtdm_fd *fd)
+void __rtdm_dev_close(struct rtdm_fd *fd)
 {
 	struct rtdm_dev_context *context = rtdm_fd_to_context(fd);
-	struct rtdm_device *device = context->device;
-	struct rtdm_device_class *class = device->class;
+	struct rtdm_device *dev = context->device;
+	struct rtdm_driver *drv = dev->driver;
 
-	if (class->ops.close)
-		class->ops.close(fd);
+	if (drv->ops.close)
+		drv->ops.close(fd);
 
-	cleanup_instance(device, context);
+	cleanup_instance(dev, context);
 }
 
 int __rtdm_anon_getfd(const char *name, int flags)
@@ -68,10 +68,10 @@ void __rtdm_anon_putfd(int ufd)
 	__close_fd(current->files, ufd);
 }
 
-static int create_instance(int ufd, struct rtdm_device *device,
+static int create_instance(int ufd, struct rtdm_device *dev,
 			   struct rtdm_dev_context **context_ptr)
 {
-	struct rtdm_device_class *class = device->class;
+	struct rtdm_driver *drv = dev->driver;
 	struct rtdm_dev_context *context;
 
 	/*
@@ -80,32 +80,32 @@ static int create_instance(int ufd, struct rtdm_device *device,
 	 */
 	*context_ptr = NULL;
 
-	if ((class->device_flags & RTDM_EXCLUSIVE) != 0 &&
-	    atomic_read(&device->refcount) > 1)
+	if ((drv->device_flags & RTDM_EXCLUSIVE) != 0 &&
+	    atomic_read(&dev->refcount) > 1)
 		return -EBUSY;
 
 	context = kmalloc(sizeof(struct rtdm_dev_context) +
-			  class->context_size, GFP_KERNEL);
+			  drv->context_size, GFP_KERNEL);
 	if (unlikely(context == NULL))
 		return -ENOMEM;
 
-	context->device = device;
+	context->device = dev;
 	*context_ptr = context;
 
-	return rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
+	return rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &dev->ops);
 }
 
 int __rtdm_dev_open(const char *path, int oflag)
 {
 	struct rtdm_dev_context *context;
-	struct rtdm_device *device;
+	struct rtdm_device *dev;
 	struct file *filp;
 	int ufd, ret;
 
 	secondary_mode_only();
 
-	device = __rtdm_get_namedev(path);
-	if (device == NULL)
+	dev = __rtdm_get_namedev(path);
+	if (dev == NULL)
 		return -ENODEV;
 
 	ufd = get_unused_fd_flags(oflag);
@@ -120,16 +120,16 @@ int __rtdm_dev_open(const char *path, int oflag)
 		goto fail_fopen;
 	}
 
-	ret = create_instance(ufd, device, &context);
+	ret = create_instance(ufd, dev, &context);
 	if (ret < 0)
 		goto fail_create;
 
-	context->fd.minor = device->minor;
+	context->fd.minor = dev->minor;
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
-	if (device->ops.open) {
-		ret = device->ops.open(&context->fd, oflag);
+	if (dev->ops.open) {
+		ret = dev->ops.open(&context->fd, oflag);
 		if (!XENO_ASSERT(COBALT, !spltest()))
 			splnone();
 		if (ret < 0)
@@ -143,13 +143,13 @@ int __rtdm_dev_open(const char *path, int oflag)
 	return ufd;
 
 fail_open:
-	cleanup_instance(device, context);
+	cleanup_instance(dev, context);
 fail_create:
 	filp_close(filp, current->files);
 fail_fopen:
 	put_unused_fd(ufd);
 fail_fd:
-	__rtdm_put_device(device);
+	__rtdm_put_device(dev);
 
 	return ret;
 }
@@ -159,13 +159,13 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 		      int protocol)
 {
 	struct rtdm_dev_context *context;
-	struct rtdm_device *device;
+	struct rtdm_device *dev;
 	int ufd, ret;
 
 	secondary_mode_only();
 
-	device = __rtdm_get_protodev(protocol_family, socket_type);
-	if (device == NULL)
+	dev = __rtdm_get_protodev(protocol_family, socket_type);
+	if (dev == NULL)
 		return -EAFNOSUPPORT;
 
 	ufd = __rtdm_anon_getfd("[rtdm-socket]", O_RDWR);
@@ -174,14 +174,14 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 		goto fail_getfd;
 	}
 
-	ret = create_instance(ufd, device, &context);
+	ret = create_instance(ufd, dev, &context);
 	if (ret < 0)
 		goto fail_create;
 
 	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
 
-	if (device->ops.socket) {
-		ret = device->ops.socket(&context->fd, protocol);
+	if (dev->ops.socket) {
+		ret = dev->ops.socket(&context->fd, protocol);
 		if (!XENO_ASSERT(COBALT, !spltest()))
 			splnone();
 		if (ret < 0)
@@ -193,30 +193,30 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 	return ufd;
 
 fail_socket:
-	cleanup_instance(device, context);
+	cleanup_instance(dev, context);
 fail_create:
 	__close_fd(current->files, ufd);
 fail_getfd:
-	__rtdm_put_device(device);
+	__rtdm_put_device(dev);
 
 	return ret;
 }
 EXPORT_SYMBOL_GPL(__rtdm_dev_socket);
 
-int __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request,
-			    void __user *arg)
+int __rtdm_dev_ioctl_core(struct rtdm_fd *fd, unsigned int request,
+			  void __user *arg)
 {
-	struct rtdm_device *device = rtdm_fd_device(fd);
-	struct rtdm_device_class *class = device->class;
+	struct rtdm_device *dev = rtdm_fd_device(fd);
+	struct rtdm_driver *drv = dev->driver;
 	struct rtdm_device_info dev_info;
 
 	if (fd->magic != RTDM_FD_MAGIC || request != RTIOC_DEVICE_INFO)
 		return -ENOSYS;
 
-	dev_info.device_flags = class->device_flags;
-	dev_info.device_class = class->profile_info.class_id;
-	dev_info.device_sub_class = class->profile_info.subclass_id;
-	dev_info.profile_version = class->profile_info.version;
+	dev_info.device_flags = drv->device_flags;
+	dev_info.device_class = drv->profile_info.class_id;
+	dev_info.device_sub_class = drv->profile_info.subclass_id;
+	dev_info.profile_version = drv->profile_info.version;
 
 	return rtdm_safe_copy_to_user(fd, arg, &dev_info,  sizeof(dev_info));
 }

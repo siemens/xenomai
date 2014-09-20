@@ -1234,7 +1234,7 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_fd *fd,
 	return ret;
 }
 
-static struct rtdm_device_class mpc52xx_uart = {
+static struct rtdm_driver mpc52xx_uart_driver = {
 	.profile_info		= RTDM_PROFILE_INFO(imx_uart,
 						    RTDM_CLASS_SERIAL,
 						    RTDM_SUBCLASS_16550A,
@@ -1325,7 +1325,7 @@ static int rt_mpc52xx_uart_of_probe(struct platform_device *op)
 		goto out_dispose_irq_mapping;
 	}
 
-	dev->class = &mpc52xx_uart;
+	dev->driver = &mpc52xx_uart_driver;
 	dev->label = "rtserPSC%d";
 	dev->device_data = port;
 
