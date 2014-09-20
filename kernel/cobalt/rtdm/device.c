@@ -47,10 +47,9 @@
 
 #define RTDM_DEVICE_MAGIC	0x82846877
 
-static struct list_head named_devices;
 static struct rb_root protocol_devices;
+
 static DEFINE_MUTEX(register_lock);
-DEFINE_PRIVATE_XNLOCK(rt_dev_lock);
 
 static struct class *rtdm_class;
 
@@ -59,12 +58,12 @@ static int enosys(void)
 	return -ENOSYS;
 }
 
-void __rtdm_put_device(struct rtdm_device *device)
+void __rtdm_put_device(struct rtdm_device *dev)
 {
 	secondary_mode_only();
 
-	if (atomic_dec_and_test(&device->refcount))
-		wake_up(&device->putwq);
+	if (atomic_dec_and_test(&dev->refcount))
+		wake_up(&dev->putwq);
 }
 
 static inline xnkey_t get_proto_id(int pf, int type)
@@ -75,10 +74,11 @@ static inline xnkey_t get_proto_id(int pf, int type)
 
 struct rtdm_device *__rtdm_get_namedev(const char *path)
 {
-	struct rtdm_device *device;
+	struct rtdm_device *dev;
 	xnhandle_t handle;
 	int ret;
-	spl_t s;
+
+	secondary_mode_only();
 
 	/* skip common /dev prefix */
 	if (strncmp(path, "/dev/", 5) == 0)
@@ -92,39 +92,40 @@ struct rtdm_device *__rtdm_get_namedev(const char *path)
 	if (ret)
 		return NULL;
 
-	xnlock_get_irqsave(&rt_dev_lock, s);
+	mutex_lock(&register_lock);
 
-	device = xnregistry_lookup(handle, NULL);
-	if (device && device->magic == RTDM_DEVICE_MAGIC)
-		__rtdm_get_device(device);
+	dev = xnregistry_lookup(handle, NULL);
+	if (dev && dev->magic == RTDM_DEVICE_MAGIC)
+		__rtdm_get_device(dev);
 	else
-		device = NULL;
+		dev = NULL;
 
-	xnlock_put_irqrestore(&rt_dev_lock, s);
+	mutex_unlock(&register_lock);
 
-	return device;
+	return dev;
 }
 
 struct rtdm_device *__rtdm_get_protodev(int protocol_family, int socket_type)
 {
-	struct rtdm_device *device = NULL;
+	struct rtdm_device *dev = NULL;
 	struct xnid *xnid;
 	xnkey_t id;
-	spl_t s;
+
+	secondary_mode_only();
 
 	id = get_proto_id(protocol_family, socket_type);
 
-	xnlock_get_irqsave(&rt_dev_lock, s);
+	mutex_lock(&register_lock);
 
 	xnid = xnid_fetch(&protocol_devices, id);
 	if (xnid) {
-		device = container_of(xnid, struct rtdm_device, proto.id);
-		__rtdm_get_device(device);
+		dev = container_of(xnid, struct rtdm_device, proto.id);
+		__rtdm_get_device(dev);
 	}
 
-	xnlock_put_irqrestore(&rt_dev_lock, s);
+	mutex_unlock(&register_lock);
 
-	return device;
+	return dev;
 }
 
 /**
@@ -141,20 +142,20 @@ static char *rtdm_devnode(struct device *dev, umode_t *mode)
 static ssize_t profile_show(struct device *kdev,
 			    struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(kdev);
+	struct rtdm_device *dev = dev_get_drvdata(kdev);
 
 	return sprintf(buf, "%d,%d\n",
-		       device->driver->profile_info.class_id,
-		       device->driver->profile_info.subclass_id);
+		       dev->driver->profile_info.class_id,
+		       dev->driver->profile_info.subclass_id);
 }
 static DEVICE_ATTR_RO(profile);
 
 static ssize_t refcount_show(struct device *kdev,
 			     struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(kdev);
+	struct rtdm_device *dev = dev_get_drvdata(kdev);
 
-	return sprintf(buf, "%d\n", atomic_read(&device->refcount));
+	return sprintf(buf, "%d\n", atomic_read(&dev->refcount));
 }
 static DEVICE_ATTR_RO(refcount);
 
@@ -168,8 +169,8 @@ static DEVICE_ATTR_RO(refcount);
 static ssize_t flags_show(struct device *kdev,
 			  struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(kdev);
-	struct rtdm_driver *drv = device->driver;
+	struct rtdm_device *dev = dev_get_drvdata(kdev);
+	struct rtdm_driver *drv = dev->driver;
 
 	return sprintf(buf, "%#x\n", drv->device_flags);
 
@@ -179,8 +180,8 @@ static DEVICE_ATTR_RO(flags);
 static ssize_t type_show(struct device *kdev,
 			 struct device_attribute *attr, char *buf)
 {
-	struct rtdm_device *device = dev_get_drvdata(kdev);
-	struct rtdm_driver *drv = device->driver;
+	struct rtdm_device *dev = dev_get_drvdata(kdev);
+	struct rtdm_driver *drv = dev->driver;
 	int ret;
 
 	if (drv->device_flags & RTDM_NAMED_DEVICE)
@@ -290,14 +291,13 @@ static void unregister_driver(struct rtdm_driver *drv)
  *
  * @coretags{secondary-only}
  */
-int rtdm_dev_register(struct rtdm_device *device)
+int rtdm_dev_register(struct rtdm_device *dev)
 {
 	int ret, pos, major, minor;
 	struct device *kdev = NULL;
 	struct rtdm_driver *drv;
 	xnkey_t id;
 	dev_t rdev;
-	spl_t s;
 
 	secondary_mode_only();
 
@@ -306,8 +306,8 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	mutex_lock(&register_lock);
 
-	device->name = NULL;
-	drv = device->driver;
+	dev->name = NULL;
+	drv = dev->driver;
 	pos = atomic_read(&drv->refcount);
 	ret = register_driver(drv);
 	if (ret) {
@@ -315,80 +315,74 @@ int rtdm_dev_register(struct rtdm_device *device)
 		return ret;
 	}
 
-	device->ops = drv->ops;
+	dev->ops = drv->ops;
 	if (drv->device_flags & RTDM_NAMED_DEVICE)
-		device->ops.socket = (typeof(device->ops.socket))enosys;
+		dev->ops.socket = (typeof(dev->ops.socket))enosys;
 	else
-		device->ops.open = (typeof(device->ops.open))enosys;
+		dev->ops.open = (typeof(dev->ops.open))enosys;
 
-	init_waitqueue_head(&device->putwq);
-	device->ops.close = __rtdm_dev_close; /* Interpose on driver's handler. */
-	atomic_set(&device->refcount, 0);
+	init_waitqueue_head(&dev->putwq);
+	dev->ops.close = __rtdm_dev_close; /* Interpose on driver's handler. */
+	atomic_set(&dev->refcount, 0);
 
 	if (drv->device_flags & RTDM_FIXED_MINOR) {
-		minor = device->minor;
+		minor = dev->minor;
 		if (minor < 0 || minor >= drv->device_count) {
 			ret = -EINVAL;
 			goto fail;
 		}
 	} else
-		device->minor = minor = pos;
+		dev->minor = minor = pos;
 
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		major = drv->named.major;
-		device->name = kasformat(device->label, minor);
-		if (device->name == NULL) {
+		dev->name = kasformat(dev->label, minor);
+		if (dev->name == NULL) {
 			ret = -ENOMEM;
 			goto fail;
 		}
 
-		ret = xnregistry_enter(device->name, device,
-				       &device->named.handle, NULL);
+		ret = xnregistry_enter(dev->name, dev,
+				       &dev->named.handle, NULL);
 		if (ret)
 			goto fail;
 
 		rdev = MKDEV(major, minor);
 		kdev = device_create(rtdm_class, NULL, rdev,
-				     device, device->label, minor);
+				     dev, dev->label, minor);
 		if (IS_ERR(kdev)) {
-			xnregistry_remove(device->named.handle);
+			xnregistry_remove(dev->named.handle);
 			ret = PTR_ERR(kdev);
 			goto fail;
 		}
-
-		xnlock_get_irqsave(&rt_dev_lock, s);
-		list_add_tail(&device->named.entry, &named_devices);
-		xnlock_put_irqrestore(&rt_dev_lock, s);
 	} else {
-		device->name = kstrdup(device->label, GFP_KERNEL);
-		if (device->name == NULL) {
+		dev->name = kstrdup(dev->label, GFP_KERNEL);
+		if (dev->name == NULL) {
 			ret = -ENOMEM;
 			goto fail;
 		}
 
 		rdev = MKDEV(0, 0);
 		kdev = device_create(rtdm_class, NULL, rdev,
-				     device, device->name);
+				     dev, dev->name);
 		if (IS_ERR(kdev)) {
 			ret = PTR_ERR(kdev);
 			goto fail;
 		}
 
 		id = get_proto_id(drv->protocol_family, drv->socket_type);
-		xnlock_get_irqsave(&rt_dev_lock, s);
-		ret = xnid_enter(&protocol_devices, &device->proto.id, id);
-		xnlock_put_irqrestore(&rt_dev_lock, s);
+		ret = xnid_enter(&protocol_devices, &dev->proto.id, id);
 		if (ret < 0)
 			goto fail;
 	}
 
-	device->rdev = rdev;
-	device->kdev = kdev;
-	device->magic = RTDM_DEVICE_MAGIC;
+	dev->rdev = rdev;
+	dev->kdev = kdev;
+	dev->magic = RTDM_DEVICE_MAGIC;
 
 	mutex_unlock(&register_lock);
 
-	trace_cobalt_device_register(device);
+	trace_cobalt_device_register(dev);
 
 	return 0;
 fail:
@@ -399,8 +393,8 @@ fail:
 
 	mutex_unlock(&register_lock);
 
-	if (device->name)
-		kfree(device->name);
+	if (dev->name)
+		kfree(dev->name);
 
 	return ret;
 }
@@ -416,44 +410,35 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  *
  * @coretags{secondary-only}
  */
-void rtdm_dev_unregister(struct rtdm_device *device)
+void rtdm_dev_unregister(struct rtdm_device *dev)
 {
-	struct rtdm_driver *drv = device->driver;
-	xnhandle_t handle = XN_NO_HANDLE;
-	spl_t s;
+	struct rtdm_driver *drv = dev->driver;
 
 	secondary_mode_only();
 
-	trace_cobalt_device_unregister(device);
+	trace_cobalt_device_unregister(dev);
 
 	/* Lock out any further connection. */
-	device->magic = ~RTDM_DEVICE_MAGIC;
+	dev->magic = ~RTDM_DEVICE_MAGIC;
 
 	/* Then wait for the ongoing connections to finish. */
-	wait_event(device->putwq,
-		   atomic_read(&device->refcount) == 0);
+	wait_event(dev->putwq,
+		   atomic_read(&dev->refcount) == 0);
 
 	mutex_lock(&register_lock);
-	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	if (drv->device_flags & RTDM_NAMED_DEVICE) {
-		handle = device->named.handle;
-		list_del(&device->named.entry);
-	} else
-		xnid_remove(&protocol_devices, &device->proto.id);
+	if (drv->device_flags & RTDM_NAMED_DEVICE)
+		xnregistry_remove(dev->named.handle);
+	else
+		xnid_remove(&protocol_devices, &dev->proto.id);
 
-	xnlock_put_irqrestore(&rt_dev_lock, s);
-
-	if (handle)
-		xnregistry_remove(handle);
-
-	device_destroy(rtdm_class, device->rdev);
+	device_destroy(rtdm_class, dev->rdev);
 
 	unregister_driver(drv);
 
 	mutex_unlock(&register_lock);
 
-	kfree(device->name);
+	kfree(dev->name);
 }
 EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 
@@ -461,7 +446,6 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 
 int __init rtdm_init(void)
 {
-	INIT_LIST_HEAD(&named_devices);
 	xntree_init(&protocol_devices);
 
 	rtdm_class = class_create(THIS_MODULE, "rtdm");

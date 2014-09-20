@@ -336,7 +336,6 @@ struct rtdm_device {
 		char *name;
 		union {
 			struct {
-				struct list_head entry;
 				xnhandle_t handle;
 			} named;
 			struct {
