@@ -29,7 +29,6 @@
 #include <xeno_config.h>
 #include <rtdm/analogy.h>
 
-#define RTDM_DEVICES_PROC    "/proc/xenomai/rtdm/named_devices"
 #define ANALOGY_DRIVERS_PROC "/proc/analogy/drivers"
 #define ANALOGY_DEVICES_PROC "/proc/analogy/devices"
 
@@ -294,11 +293,9 @@ int main(int argc, char *argv[])
 done:
         if (err < 0)
 		fprintf(stderr,
-			"analogy_config: chek the rtdm and analogy procs \n"
-			" - rtdm devices:    %s \n"
+			"analogy_config: check the procfs information:\n"
 			" - analogy devices: %s \n"
 			" - analogy drivers: %s \n",
-			RTDM_DEVICES_PROC,
 			ANALOGY_DEVICES_PROC,
 			ANALOGY_DRIVERS_PROC);
 
