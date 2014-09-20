@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
  * Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  * Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
+ * Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
