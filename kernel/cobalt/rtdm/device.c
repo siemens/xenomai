@@ -28,6 +28,18 @@
 #include <trace/events/cobalt-rtdm.h>
 
 /**
+ * @ingroup rtdm
+ * @defgroup rtdm_profiles Device Profiles
+ *
+ * Pre-defined classes of real-time devices
+ *
+ * Device profiles define which operation handlers a driver of a certain class
+ * has to implement, which name or protocol it has to register, which IOCTLs
+ * it has to provide, and further details. Sub-classes can be defined in order
+ * to extend a device profile with more hardware-specific functions.
+ */
+
+/**
  * @addtogroup rtdm_driver_interface
  * @{
  */
@@ -444,7 +456,7 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 
 /** @} */
 
-int __init rtdm_dev_init(void)
+int __init rtdm_init(void)
 {
 	sema_init(&nrt_dev_lock, 1);
 
@@ -462,7 +474,7 @@ int __init rtdm_dev_init(void)
 	return 0;
 }
 
-void rtdm_dev_cleanup(void)
+void rtdm_cleanup(void)
 {
 	class_destroy(rtdm_class);
 	/*

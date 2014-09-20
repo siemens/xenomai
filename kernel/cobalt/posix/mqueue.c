@@ -17,9 +17,6 @@
  */
 
 #include <stdarg.h>
-#include <linux/fs.h>
-#include <linux/fdtable.h>
-#include <linux/anon_inodes.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
 #include <cobalt/kernel/select.h>
@@ -789,7 +786,6 @@ COBALT_SYSCALL(mq_open, lostage,
 {
 	struct mq_attr locattr, *attr;
 	char name[COBALT_MAXNAME];
-	struct xnsys_ppd *ppd;
 	unsigned int len;
 	mqd_t uqd;
 	int ret;
@@ -814,14 +810,13 @@ COBALT_SYSCALL(mq_open, lostage,
 
 	trace_cobalt_mq_open(name, oflags, mode);
 
-	ppd = cobalt_ppd_get(0);
-	uqd = anon_inode_getfd("[cobalt-mq]", &rtdm_dumb_fops, ppd, oflags);
+	uqd = __rtdm_anon_getfd("[cobalt-mq]", oflags);
 	if (uqd < 0)
 		return uqd;
 
 	ret = mq_open(uqd, name, oflags, mode, attr);
 	if (ret < 0) {
-		__close_fd(current->files, uqd);
+		__rtdm_anon_putfd(uqd);
 		return ret;
 	}
 

@@ -24,6 +24,7 @@
 #include <linux/poll.h>
 #include <linux/kthread.h>
 #include <linux/semaphore.h>
+#include <linux/fdtable.h>
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/ppd.h>
@@ -125,7 +126,7 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 
 	secondary_mode_only();
 
-	if (magic == XNFD_MAGIC_ANY)
+	if (magic == 0)
 		return -EINVAL;
 
 	idx = kmalloc(sizeof(*idx), GFP_KERNEL);
@@ -177,21 +178,21 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic)
 {
 	struct xnsys_ppd *p = cobalt_ppd_get(0);
-	struct rtdm_fd *res;
+	struct rtdm_fd *fd;
 	spl_t s;
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-	res = fetch_fd(p, ufd);
-	if (res == NULL || (magic != XNFD_MAGIC_ANY && res->magic != magic)) {
-		res = ERR_PTR(-EBADF);
-		goto err_unlock;
+	fd = fetch_fd(p, ufd);
+	if (fd == NULL || (magic != 0 && fd->magic != magic)) {
+		fd = ERR_PTR(-EBADF);
+		goto out;
 	}
 
-	++res->refs;
-  err_unlock:
+	++fd->refs;
+out:
 	xnlock_put_irqrestore(&__rtdm_fd_lock, s);
 
-	return res;
+	return fd;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_get);
 
@@ -341,7 +342,7 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 	arg = va_arg(args, void __user *);
 	va_end(args);
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -378,7 +379,7 @@ rtdm_fd_read(int ufd, void __user *buf, size_t size)
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -409,7 +410,7 @@ ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -440,7 +441,7 @@ ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags)
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -470,7 +471,7 @@ ssize_t rtdm_fd_sendmsg(int ufd, const struct msghdr *msg, int flags)
 	struct rtdm_fd *fd;
 	ssize_t err;
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd)) {
 		err = PTR_ERR(fd);
 		goto out;
@@ -504,11 +505,16 @@ __fd_close(struct xnsys_ppd *p, struct rtdm_fd_index *idx, spl_t s)
 	kfree(idx);
 }
 
-int __rtdm_fd_close(struct xnsys_ppd *ppd, int ufd, unsigned int magic)
+int rtdm_fd_close(int ufd, unsigned int magic)
 {
 	struct rtdm_fd_index *idx;
+	struct xnsys_ppd *ppd;
 	struct rtdm_fd *fd;
 	spl_t s;
+
+	secondary_mode_only();
+
+	ppd = cobalt_ppd_get(0);
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
 	idx = fetch_fd_index(ppd, ufd);
@@ -516,23 +522,25 @@ int __rtdm_fd_close(struct xnsys_ppd *ppd, int ufd, unsigned int magic)
 		goto ebadf;
 
 	fd = idx->fd;
-	if (magic != XNFD_MAGIC_ANY && fd->magic != magic) {
-	  ebadf:
+	if (magic != 0 && fd->magic != magic) {
+ebadf:
 		xnlock_put_irqrestore(&__rtdm_fd_lock, s);
 		return -EBADF;
 	}
 
 	trace_cobalt_fd_close(current, fd, ufd, fd->refs);
 
-	__rt_dev_unref(fd, xnid_key(&idx->id));
+	/*
+	 * In dual kernel mode, the linux-side fdtable and the RTDM
+	 * ->close() handler are asynchronously managed, i.e.  the
+	 * handler execution may be deferred after the regular file
+	 * descriptor was removed from the fdtable if some refs on
+	 * rtdm_fd are still pending.
+	 */
 	__fd_close(ppd, idx, s);
+	__close_fd(current->files, ufd);
 
 	return 0;
-}
-
-int rtdm_fd_close(int ufd, unsigned int magic)
-{
-	return __rtdm_fd_close(cobalt_ppd_get(0), ufd, magic);
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_close);
 
@@ -542,7 +550,9 @@ int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 	struct rtdm_fd *fd;
 	int ret;
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	secondary_mode_only();
+
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd)) {
 		ret = PTR_ERR(fd);
 		goto out;
@@ -603,7 +613,7 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 	struct rtdm_fd *fd;
 	int rc;
 
-	fd = rtdm_fd_get(ufd, XNFD_MAGIC_ANY);
+	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd))
 		return PTR_ERR(fd);
 
@@ -625,11 +635,16 @@ static void destroy_fd(void *cookie, struct xnid *id)
 
 	idx = container_of(id, struct rtdm_fd_index, id);
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-	__fd_close(p, idx, XNFD_MAGIC_ANY);
+	__fd_close(p, idx, 0);
 }
 
 void rtdm_fd_cleanup(struct xnsys_ppd *p)
 {
+	/*
+	 * This is called on behalf of a (userland) task exit handler,
+	 * so we don't have to deal with the regular file descriptors,
+	 * we only have to empty our own index.
+	 */
 	xntree_cleanup(&p->fds, p, destroy_fd);
 }
 

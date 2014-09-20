@@ -28,14 +28,12 @@
 #include <cobalt/kernel/ppd.h>
 #include <rtdm/fd.h>
 
-#define RTDM_FD_MAGIC 0x52544446
-
 typedef u32 socklen_t;
 
-int __rtdm_dev_kopen(const char *path, int oflag);
+int __rtdm_dev_open(const char *path, int oflag);
 
-int __rtdm_dev_ksocket(int protocol_family, int socket_type,
-		       int protocol);
+int __rtdm_dev_socket(int protocol_family,
+		      int socket_type, int protocol);
 
 int
 __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
@@ -47,10 +45,10 @@ __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
 #ifndef RTDM_NO_DEFAULT_USER_API
 
 #define rt_dev_open(path, oflag, ...)				\
-	__rtdm_dev_kopen(path, oflag)
+	__rtdm_dev_open(path, oflag)
 
 #define rt_dev_socket(protocol_family, socket_type, protocol)	\
-	__rtdm_dev_ksocket(protocol_family, socket_type, protocol)
+	__rtdm_dev_socket(protocol_family, socket_type, protocol)
 
 #define rt_dev_close(fd)					\
 	rtdm_fd_close(fd, RTDM_FD_MAGIC)

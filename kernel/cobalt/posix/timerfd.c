@@ -18,8 +18,6 @@
 
 #include <linux/timerfd.h>
 #include <linux/err.h>
-#include <linux/fdtable.h>
-#include <linux/anon_inodes.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/select.h>
 #include <rtdm/fd.h>
@@ -168,7 +166,6 @@ COBALT_SYSCALL(timerfd_create, lostage,
 {
 	struct cobalt_tfd *tfd;
 	struct xnthread *curr;
-	struct xnsys_ppd *ppd;
 	int ret, ufd;
 
 	if (clockid != CLOCK_REALTIME && clockid != CLOCK_MONOTONIC)
@@ -181,9 +178,8 @@ COBALT_SYSCALL(timerfd_create, lostage,
 	if (tfd == NULL)
 		return -ENOMEM;
 
-	ppd = cobalt_ppd_get(0);
-	ufd = anon_inode_getfd("[cobalt-timerfd]", &rtdm_dumb_fops, ppd,
-			       O_RDWR | (flags & TFD_SHARED_FCNTL_FLAGS));
+	ufd = __rtdm_anon_getfd("[cobalt-timerfd]",
+				O_RDWR | (flags & TFD_SHARED_FCNTL_FLAGS));
 	if (ufd < 0) {
 		ret = ufd;
 		goto fail_getfd;
@@ -207,7 +203,7 @@ fail:
 	xnselect_destroy(&tfd->read_select);
 	xnsynch_destroy(&tfd->readers);
 	xntimer_destroy(&tfd->timer);
-	__close_fd(current->files, ufd);
+	__rtdm_anon_putfd(ufd);
 fail_getfd:
 	xnfree(tfd);
 

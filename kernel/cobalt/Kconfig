@@ -340,16 +340,6 @@ config XENO_OPT_NRTIMERS
        given time for each Cobalt process (a timer is created by a
        call to the timer_create() service of the Cobalt/POSIX API).
 
-config XENO_OPT_RTDM_FILDES
-	int "Maximum number of RTDM file descriptors"
-	default 128
-	help
-
-	This option defines the system-wide maximum number of RTDM
-	file descriptors which can be opened at the same time (a file
-	descriptor is created by each successful call to the open()
-	service of the Cobalt/POSIX API).
-
 config XENO_OPT_DEBUG_TRACE_LOGSZ
        int "Trace log size"
        depends on XENO_OPT_DEBUG_TRACE_RELAX

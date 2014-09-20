@@ -92,16 +92,13 @@ COBALT_IMPL(int, close, (int fd))
 
 	pthread_setcanceltype(oldtype, NULL);
 
-	if (ret != -EBADF && ret != -ENOSYS) {
-		if (ret == 0)
-			__STD(close(fd));
+	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
-	}
 
 	return __STD(close(fd));
 }
 
-static int __xn_ioctl(int fd, unsigned long request, void *arg)
+static int do_ioctl(int fd, unsigned long request, void *arg)
 {
 	int ret, oldtype;
 
@@ -124,7 +121,7 @@ COBALT_IMPL(int, ioctl, (int fd, unsigned long int request, ...))
 	arg = va_arg(ap, void *);
 	va_end(ap);
 
-	ret = __xn_ioctl(fd, request, arg);
+	ret = do_ioctl(fd, request, arg);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -163,7 +160,7 @@ COBALT_IMPL(ssize_t, write, (int fd, const void *buf, size_t nbyte))
 	return __STD(write(fd, buf, nbyte));
 }
 
-static ssize_t __xn_recvmsg(int fd, struct msghdr *msg, int flags)
+static ssize_t do_recvmsg(int fd, struct msghdr *msg, int flags)
 {
 	int ret, oldtype;
 
@@ -180,14 +177,14 @@ COBALT_IMPL(ssize_t, recvmsg, (int fd, struct msghdr *msg, int flags))
 {
 	int ret;
 
-	ret = __xn_recvmsg(fd, msg, flags);
+	ret = do_recvmsg(fd, msg, flags);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
 	return __STD(recvmsg(fd, msg, flags));
 }
 
-static ssize_t __xn_sendmsg(int fd, const struct msghdr *msg, int flags)
+static ssize_t do_sendmsg(int fd, const struct msghdr *msg, int flags)
 {
 	int ret, oldtype;
 
@@ -204,7 +201,7 @@ COBALT_IMPL(ssize_t, sendmsg, (int fd, const struct msghdr *msg, int flags))
 {
 	int ret;
 
-	ret = __xn_sendmsg(fd, msg, flags);
+	ret = do_sendmsg(fd, msg, flags);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -219,7 +216,7 @@ COBALT_IMPL(ssize_t, recvfrom, (int fd, void *buf, size_t len, int flags,
 		{ from, (from != NULL) ? *fromlen : 0, &iov, 1, NULL, 0 };
 	int ret;
 
-	ret = __xn_recvmsg(fd, &msg, flags);
+	ret = do_recvmsg(fd, &msg, flags);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -234,7 +231,7 @@ COBALT_IMPL(ssize_t, sendto, (int fd, const void *buf, size_t len, int flags,
 		{ (struct sockaddr *)to, tolen, &iov, 1, NULL, 0 };
 	int ret;
 
-	ret = __xn_sendmsg(fd, &msg, flags);
+	ret = do_sendmsg(fd, &msg, flags);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -247,7 +244,7 @@ COBALT_IMPL(ssize_t, recv, (int fd, void *buf, size_t len, int flags))
 	struct msghdr msg = { NULL, 0, &iov, 1, NULL, 0 };
 	int ret;
 
-	ret = __xn_recvmsg(fd, &msg, flags);
+	ret = do_recvmsg(fd, &msg, flags);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -260,7 +257,7 @@ COBALT_IMPL(ssize_t, send, (int fd, const void *buf, size_t len, int flags))
 	struct msghdr msg = { NULL, 0, &iov, 1, NULL, 0 };
 	int ret;
 
-	ret = __xn_sendmsg(fd, &msg, flags);
+	ret = do_sendmsg(fd, &msg, flags);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -273,7 +270,7 @@ COBALT_IMPL(int, getsockopt, (int fd, int level, int optname, void *optval,
 	struct _rtdm_getsockopt_args args = { level, optname, optval, optlen };
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_GETSOCKOPT, &args);
+	ret = do_ioctl(fd, _RTIOC_GETSOCKOPT, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -288,7 +285,7 @@ COBALT_IMPL(int, setsockopt, (int fd, int level, int optname, const void *optval
 	};
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_SETSOCKOPT, &args);
+	ret = do_ioctl(fd, _RTIOC_SETSOCKOPT, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -300,7 +297,7 @@ COBALT_IMPL(int, bind, (int fd, const struct sockaddr *my_addr, socklen_t addrle
 	struct _rtdm_setsockaddr_args args = { my_addr, addrlen };
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_BIND, &args);
+	ret = do_ioctl(fd, _RTIOC_BIND, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -312,7 +309,7 @@ COBALT_IMPL(int, connect, (int fd, const struct sockaddr *serv_addr, socklen_t a
 	struct _rtdm_setsockaddr_args args = { serv_addr, addrlen };
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_CONNECT, &args);
+	ret = do_ioctl(fd, _RTIOC_CONNECT, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -323,7 +320,7 @@ COBALT_IMPL(int, listen, (int fd, int backlog))
 {
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_LISTEN, (void *)(long)backlog);
+	ret = do_ioctl(fd, _RTIOC_LISTEN, (void *)(long)backlog);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -335,7 +332,7 @@ COBALT_IMPL(int, accept, (int fd, struct sockaddr *addr, socklen_t *addrlen))
 	struct _rtdm_getsockaddr_args args = { addr, addrlen };
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_ACCEPT, &args);
+	ret = do_ioctl(fd, _RTIOC_ACCEPT, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -347,7 +344,7 @@ COBALT_IMPL(int, getsockname, (int fd, struct sockaddr *name, socklen_t *namelen
 	struct _rtdm_getsockaddr_args args = { name, namelen };
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_GETSOCKNAME, &args);
+	ret = do_ioctl(fd, _RTIOC_GETSOCKNAME, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -359,7 +356,7 @@ COBALT_IMPL(int, getpeername, (int fd, struct sockaddr *name, socklen_t *namelen
 	struct _rtdm_getsockaddr_args args = { name, namelen };
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_GETPEERNAME, &args);
+	ret = do_ioctl(fd, _RTIOC_GETPEERNAME, &args);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 
@@ -370,7 +367,7 @@ COBALT_IMPL(int, shutdown, (int fd, int how))
 {
 	int ret;
 
-	ret = __xn_ioctl(fd, _RTIOC_SHUTDOWN, (void *)(long)how);
+	ret = do_ioctl(fd, _RTIOC_SHUTDOWN, (void *)(long)how);
 	if (ret != -EBADF && ret != -ENOSYS)
 		return set_errno(ret);
 

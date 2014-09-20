@@ -302,7 +302,11 @@ struct rtdm_fd {
 	struct list_head cleanup;
 };
 
-#define XNFD_MAGIC_ANY 0
+#define RTDM_FD_MAGIC 0x52544446
+
+int __rtdm_anon_getfd(const char *name, int flags);
+
+void __rtdm_anon_putfd(int ufd);
 
 static inline struct xnsys_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
 {
@@ -331,9 +335,6 @@ ssize_t rtdm_fd_read(int ufd, void __user *buf, size_t size);
 
 ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size);
 
-int __rtdm_fd_close(struct xnsys_ppd *ppd,
-		    int ufd, unsigned int magic);
-
 int rtdm_fd_close(int ufd, unsigned int magic);
 
 ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags);
@@ -352,7 +353,5 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 void rtdm_fd_cleanup(struct xnsys_ppd *p);
 
 void rtdm_fd_init(void);
-
-extern const struct file_operations rtdm_dumb_fops;
 
 #endif /* _COBALT_KERNEL_FD_H */

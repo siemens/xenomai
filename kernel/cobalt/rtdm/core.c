@@ -37,12 +37,6 @@
  * @{
  */
 
-#define FD_BITMAP_SIZE  ((RTDM_FD_MAX + BITS_PER_LONG-1) / BITS_PER_LONG)
-static unsigned long used_fildes[FD_BITMAP_SIZE];
-int open_fildes;       /* number of used descriptors */
-
-DEFINE_XNLOCK(rt_fildes_lock);
-
 static void cleanup_instance(struct rtdm_device *device,
 			     struct rtdm_dev_context *context)
 {
@@ -64,74 +58,14 @@ void __rt_dev_close(struct rtdm_fd *fd)
 	cleanup_instance(device, context);
 }
 
-void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx)
+int __rtdm_anon_getfd(const char *name, int flags)
 {
-	if (fd->magic != RTDM_FD_MAGIC)
-		return;
-
-	xnlock_get(&rt_fildes_lock);
-	if (rtdm_fd_owner(fd) == &__xnsys_global_ppd) {
-		clear_bit(idx, used_fildes);
-		--open_fildes;
-	}
-	xnlock_put(&rt_fildes_lock);
+	return anon_inode_getfd(name, &rtdm_dumb_fops, NULL, flags);
 }
 
-static int create_kinstance(struct rtdm_device *device,
-			    struct rtdm_dev_context **context_ptr)
+void __rtdm_anon_putfd(int ufd)
 {
-	struct rtdm_device_class *class = device->class;
-	struct rtdm_dev_context *context;
-	int ufd, ret;
-	spl_t s;
-
-	/*
-	 * Reset to NULL so that we can always use cleanup_files/instance to
-	 * revert also partially successful allocations.
-	 */
-	*context_ptr = NULL;
-
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	if (unlikely(open_fildes >= RTDM_FD_MAX)) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-		return -ENFILE;
-	}
-
-	ufd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
-	__set_bit(ufd, used_fildes);
-	open_fildes++;
-
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	if ((class->device_flags & RTDM_EXCLUSIVE) != 0 &&
-	    atomic_read(&device->refcount) > 1) {
-		ret = -EBUSY;
-		goto fail;
-	}
-
-	context = kmalloc(sizeof(struct rtdm_dev_context) +
-			  class->context_size, GFP_KERNEL);
-	if (unlikely(context == NULL)) {
-		ret = -ENOMEM;
-		goto fail;
-	}
-
-	context->device = device;
-	*context_ptr = context;
-
-	ret = rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
-	if (ret < 0)
-		goto fail;
-
-	return ufd;
-fail:
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-	__clear_bit(ufd, used_fildes);
-	open_fildes--;
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	return ret;
+	__close_fd(current->files, ufd);
 }
 
 static int create_instance(int ufd, struct rtdm_device *device,
@@ -160,46 +94,6 @@ static int create_instance(int ufd, struct rtdm_device *device,
 
 	return rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &device->ops);
 }
-
-int __rtdm_dev_kopen(const char *path, int oflag)
-{
-	struct rtdm_dev_context *context;
-	struct rtdm_device *device;
-	int ufd, ret;
-
-	secondary_mode_only();
-
-	device = __rtdm_get_namedev(path);
-	if (device == NULL)
-		return -ENODEV;
-
-	ufd = create_kinstance(device, &context);
-	if (ufd < 0) {
-		ret = ufd;
-		goto fail;
-	}
-
-	context->fd.minor = device->minor;
-
-	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
-
-	if (device->ops.open) {
-		ret = device->ops.open(&context->fd, oflag);
-		if (!XENO_ASSERT(COBALT, !spltest()))
-			splnone();
-		if (ret < 0)
-			goto fail;
-	}
-
-	trace_cobalt_fd_created(&context->fd, ufd);
-
-	return ufd;
-fail:
-	cleanup_instance(device, context);
-
-	return ret;
-}
-EXPORT_SYMBOL_GPL(__rtdm_dev_kopen);
 
 int __rtdm_dev_open(const char *path, int oflag)
 {
@@ -261,51 +155,11 @@ fail_fd:
 }
 EXPORT_SYMBOL_GPL(__rtdm_dev_open);
 
-int __rtdm_dev_ksocket(int protocol_family, int socket_type,
-		       int protocol)
-{
-	struct rtdm_dev_context *context;
-	struct rtdm_device *device;
-	int ufd, ret;
-
-	secondary_mode_only();
-
-	device = __rtdm_get_protodev(protocol_family, socket_type);
-	if (device == NULL)
-		return -EAFNOSUPPORT;
-
-	ufd = create_kinstance(device, &context);
-	if (ufd < 0) {
-		ret = ufd;
-		goto fail;
-	}
-
-	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
-
-	if (device->ops.socket) {
-		ret = device->ops.socket(&context->fd, protocol);
-		if (!XENO_ASSERT(COBALT, !spltest()))
-			splnone();
-		if (ret < 0)
-			goto fail;
-	}
-
-	trace_cobalt_fd_created(&context->fd, ufd);
-
-	return ufd;
-fail:
-	cleanup_instance(device, context);
-
-	return ret;
-}
-EXPORT_SYMBOL_GPL(__rtdm_dev_ksocket);
-
 int __rtdm_dev_socket(int protocol_family, int socket_type,
 		      int protocol)
 {
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
-	struct xnsys_ppd *ppd;
 	int ufd, ret;
 
 	secondary_mode_only();
@@ -314,8 +168,7 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 	if (device == NULL)
 		return -EAFNOSUPPORT;
 
-	ppd = cobalt_ppd_get(0);
-	ufd = anon_inode_getfd("[rtdm-proto]", &rtdm_dumb_fops, ppd, O_RDWR);
+	ufd = __rtdm_anon_getfd("[rtdm-socket]", O_RDWR);
 	if (ufd < 0) {
 		ret = ufd;
 		goto fail_getfd;

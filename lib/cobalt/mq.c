@@ -146,11 +146,12 @@ COBALT_IMPL(int, mq_close, (mqd_t mqd))
 	int err;
 
 	err = XENOMAI_SYSCALL1(sc_cobalt_mq_close, mqd);
-	if (!err)
-		return __STD(close(mqd));
+	if (err) {
+		errno = -err;
+		return -1;
+	}
 
-	errno = -err;
-	return -1;
+	return 0;
 }
 
 /**

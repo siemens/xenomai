@@ -51,7 +51,7 @@ COBALT_SYSCALL(socket, lostage,
 
 COBALT_SYSCALL(close, lostage, int, (int fd))
 {
-	return rtdm_fd_close(fd, XNFD_MAGIC_ANY);
+	return rtdm_fd_close(fd, 0);
 }
 
 COBALT_SYSCALL(ioctl, probing,

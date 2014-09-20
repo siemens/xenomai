@@ -20,25 +20,17 @@
 #ifndef _RTDM_INTERNAL_H
 #define _RTDM_INTERNAL_H
 
+#include <linux/types.h>
 #include <linux/list.h>
 #include <linux/sem.h>
-#include <linux/mutex.h>
+#include <linux/file.h>
 #include <linux/atomic.h>
-#include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/tree.h>
+#include <cobalt/kernel/lock.h>
 #include <rtdm/driver.h>
 
-#define RTDM_FD_MAX			CONFIG_XENO_OPT_RTDM_FILDES
-
-#define DEF_DEVNAME_HASHTAB_SIZE	256	/* entries in name hash table */
-#define DEF_PROTO_HASHTAB_SIZE		256	/* entries in protocol hash table */
-
-struct rtdm_fd;
-
-DECLARE_EXTERN_XNLOCK(rt_fildes_lock);
 DECLARE_EXTERN_XNLOCK(rt_dev_lock);
 
-extern int open_fildes;
 extern struct semaphore nrt_dev_lock;
 extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
@@ -50,11 +42,6 @@ static inline void __rtdm_get_device(struct rtdm_device *device)
 
 void __rtdm_put_device(struct rtdm_device *device);
 
-int __rtdm_dev_open(const char *path, int oflag);
-
-int __rtdm_dev_socket(int protocol_family,
-		      int socket_type, int protocol);
-
 struct rtdm_device *__rtdm_get_namedev(const char *path);
 
 struct rtdm_device *__rtdm_get_protodev(int protocol_family,
@@ -65,8 +52,6 @@ void __rt_dev_close(struct rtdm_fd *fd);
 int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
 			    unsigned int request, void __user *arg);
 
-void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx);
-
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
 			  int prot, int flags, void *__user *pptr);
 
@@ -74,16 +59,6 @@ int rtdm_init(void);
 
 void rtdm_cleanup(void);
 
-#ifdef CONFIG_XENO_OPT_VFILE
-int rtdm_proc_init(void);
-void rtdm_proc_cleanup(void);
-#else
-static inline int rtdm_proc_init(void) { return 0; }
-static void inline rtdm_proc_cleanup(void) { }
-#endif
-
-int __init rtdm_dev_init(void);
-
-void rtdm_dev_cleanup(void);
+extern const struct file_operations rtdm_dumb_fops;
 
 #endif /* _RTDM_INTERNAL_H */
