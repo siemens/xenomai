@@ -96,6 +96,40 @@ static int create_instance(int ufd, struct rtdm_device *dev,
 	return rtdm_fd_enter(&context->fd, ufd, RTDM_FD_MAGIC, &dev->ops);
 }
 
+#ifdef CONFIG_XENO_OPT_RTDM_COMPAT_DEVNODE
+
+static inline struct file *
+open_devnode(struct rtdm_device *dev, const char *path, int oflag)
+{
+	struct file *filp;
+	char *filename;
+
+#ifdef CONFIG_XENO_OPT_DEBUG_USER
+	if (strncmp(path, "/dev/rtdm/", 10))
+		printk(XENO_WARN
+		       "%s[%d] opens obsolete device path: %s\n",
+		       current->comm, current->pid, path);
+#endif
+	filename = kasprintf(GFP_KERNEL, "/dev/rtdm/%s", dev->name);
+	if (filename == NULL)
+		return ERR_PTR(-ENOMEM);
+
+	filp = filp_open(filename, oflag, 0);
+	kfree(filename);
+
+	return filp;
+}
+
+#else /* !CONFIG_XENO_OPT_RTDM_COMPAT_DEVNODE */
+
+static inline struct file *
+open_devnode(struct rtdm_device *dev, const char *path, int oflag)
+{
+	return filp_open(path, oflag, 0);
+}
+
+#endif /* !CONFIG_XENO_OPT_RTDM_COMPAT_DEVNODE */
+
 int __rtdm_dev_open(const char *path, int oflag)
 {
 	struct rtdm_dev_context *context;
@@ -105,6 +139,18 @@ int __rtdm_dev_open(const char *path, int oflag)
 
 	secondary_mode_only();
 
+	/*
+	 * CAUTION: we do want a lookup into the registry to happen
+	 * before any attempt is made to open the devnode, so that we
+	 * don't inadvertently open a regular (i.e. non-RTDM) device.
+	 * Reason is that opening, then closing a device - because we
+	 * don't manage it - may incur side-effects we don't want,
+	 * e.g. opening then closing one end of a pipe would cause the
+	 * other side to read the EOF condition.  This is basically
+	 * why we keep a RTDM registry for named devices, so that we
+	 * can figure out whether an open() request is going to be
+	 * valid, without having to open the devnode yet.
+	 */
 	dev = __rtdm_get_namedev(path);
 	if (dev == NULL)
 		return -ENODEV;
@@ -115,7 +161,7 @@ int __rtdm_dev_open(const char *path, int oflag)
 		goto fail_fd;
 	}
 
-	filp = filp_open(path, oflag, 0);
+	filp = open_devnode(dev, path, oflag);
 	if (IS_ERR(filp)) {
 		ret = PTR_ERR(filp);
 		goto fail_fopen;
