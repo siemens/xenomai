@@ -1,10 +1,8 @@
 var group__cobalt__core__heap =
 [
-    [ "xnheap_alloc", "group__cobalt__core__heap.html#ga82304bf6434465e7591b6b774028c1de", null ],
-    [ "xnheap_destroy", "group__cobalt__core__heap.html#gac07ec12e4bdb1f1ff63f2727fb430748", null ],
-    [ "xnheap_extend", "group__cobalt__core__heap.html#ga080f13d224800f54fc0382f401ca17bf", null ],
-    [ "xnheap_free", "group__cobalt__core__heap.html#ga3f8f9ad974282669efcfe4e71d859173", null ],
-    [ "xnheap_init", "group__cobalt__core__heap.html#ga46ec3f0391885e558897d3d6247371d2", null ],
-    [ "xnheap_set_label", "group__cobalt__core__heap.html#ga485ed258772616fd14c0103a6a878bad", null ],
-    [ "xnheap_test_and_free", "group__cobalt__core__heap.html#gaa7f31608030ac6a38b2e8840903293f2", null ]
+    [ "xnheap_alloc", "group__cobalt__core__heap.html#gaaa0850d61e5171f23b1cee7c061c9384", null ],
+    [ "xnheap_destroy", "group__cobalt__core__heap.html#ga01d9244e1b1679044c3609542000aa35", null ],
+    [ "xnheap_free", "group__cobalt__core__heap.html#ga0122042832915639a762e0b1a4a6eff1", null ],
+    [ "xnheap_init", "group__cobalt__core__heap.html#ga3772bba609e1cd11cb1a5d783113a6aa", null ],
+    [ "xnheap_set_name", "group__cobalt__core__heap.html#gadfd3dd9f371b5e19dcf106e75af1dcf9", null ]
 ];

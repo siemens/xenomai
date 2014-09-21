@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -99,15 +99,15 @@ Collaboration diagram for Serial Devices:</div>
 </td></tr></table></center>
 </div>
 <p>This is the common interface a RTDM-compliant serial device has to provide. </p>
-<p>Feel free to comment on this profile via the Xenomai mailing list (<a href="#" onclick="location.href='mai'+'lto:'+'Xen'+'om'+'ai-'+'co'+'re@'+'gn'+'a.o'+'rg'; return false;">Xenom<span style="display: none;">.nosp@m.</span>ai-c<span style="display: none;">.nosp@m.</span>ore@g<span style="display: none;">.nosp@m.</span>na.o<span style="display: none;">.nosp@m.</span>rg</a>) or directly to the author (<a href="#" onclick="location.href='mai'+'lto:'+'jan'+'.k'+'isz'+'ka'+'@we'+'b.'+'de'; return false;">jan.k<span style="display: none;">.nosp@m.</span>iszk<span style="display: none;">.nosp@m.</span>a@web<span style="display: none;">.nosp@m.</span>.de</a>).</p>
+<p>Feel free to comment on this profile via the Xenomai mailing list <a href="#" onclick="location.href='mai'+'lto:'+'xen'+'om'+'ai@'+'xe'+'nom'+'ai'+'.or'+'g'; return false;">xenom<span style="display: none;">.nosp@m.</span>ai@x<span style="display: none;">.nosp@m.</span>enoma<span style="display: none;">.nosp@m.</span>i.or<span style="display: none;">.nosp@m.</span>g</a> or directly to the author <a href="#" onclick="location.href='mai'+'lto:'+'jan'+'.k'+'isz'+'ka'+'@we'+'b.'+'de'; return false;">jan.k<span style="display: none;">.nosp@m.</span>iszk<span style="display: none;">.nosp@m.</span>a@web<span style="display: none;">.nosp@m.</span>.de</a>.</p>
 <p><b>Profile</b> <b>Revision:</b> 3 <br/>
 <br/>
 </p>
-<dl class="section user"><dt>Device Characteristics</dt><dd><a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">Device Flags</a>: <code>RTDM_NAMED_DEVICE</code>, <code>RTDM_EXCLUSIVE</code> <br/>
+<dl class="section user"><dt>Device Characteristics</dt><dd><a class="el" href="structrtdm__driver.html#rtdm_driver_flags">Device Flags</a>: <code>RTDM_NAMED_DEVICE</code>, <code>RTDM_EXCLUSIVE</code> <br/>
 <br/>
-<a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">Device Name</a>: <code>"rtser&lt;N&gt;"</code>, N &gt;= 0 <br/>
+<a class="el" href="structrtdm__driver.html#rtdm_driver_profile">Device Class</a>: <code>RTDM_CLASS_SERIAL</code> <br/>
 <br/>
-<a class="el" href="structrtdm__device.html#a94aa3100258b43c812c5240b55777f07">Device Class</a>: <code>RTDM_CLASS_SERIAL</code> <br/>
+Device Name: <code>"/dev/rtdm/rtser&lt;N&gt;"</code>, N &gt;= 0 <br/>
 <br/>
  </dd></dl>
 <dl class="section user"><dt>Supported Operations</dt><dd><b>Open</b> <br/>

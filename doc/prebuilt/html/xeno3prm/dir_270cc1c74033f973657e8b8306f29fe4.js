@@ -1,6 +1,7 @@
 var dir_270cc1c74033f973657e8b8306f29fe4 =
 [
     [ "ancillaries.h", "boilerplate_2ancillaries_8h_source.html", null ],
+    [ "atomic.h", "atomic_8h_source.html", null ],
     [ "compiler.h", "compiler_8h_source.html", null ],
     [ "debug.h", "include_2boilerplate_2debug_8h_source.html", null ],
     [ "hash.h", "hash_8h_source.html", null ],

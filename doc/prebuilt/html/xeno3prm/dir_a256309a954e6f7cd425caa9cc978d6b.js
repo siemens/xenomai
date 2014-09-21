@@ -4,5 +4,5 @@ var dir_a256309a954e6f7cd425caa9cc978d6b =
     [ "current.h", "current_8h_source.html", null ],
     [ "init.h", "lib_2cobalt_2init_8h_source.html", null ],
     [ "internal.h", "lib_2cobalt_2internal_8h_source.html", null ],
-    [ "sem_heap.h", "sem__heap_8h_source.html", null ]
+    [ "umm.h", "umm_8h_source.html", null ]
 ];

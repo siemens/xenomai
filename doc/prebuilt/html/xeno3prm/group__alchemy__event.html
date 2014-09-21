@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -120,27 +120,18 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga8b0fbb2b816c62081afe86bf897c503c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c">rt_event_create</a> (RT_EVENT *event, const char *name, unsigned long ivalue, int mode)</td></tr>
-<tr class="memdesc:ga8b0fbb2b816c62081afe86bf897c503c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an event flag group.  <a href="#ga8b0fbb2b816c62081afe86bf897c503c">More...</a><br/></td></tr>
-<tr class="separator:ga8b0fbb2b816c62081afe86bf897c503c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabccfea1cd018493ef5a28c6fe8e90d7c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a> (RT_EVENT *event)</td></tr>
 <tr class="memdesc:gabccfea1cd018493ef5a28c6fe8e90d7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Delete an event flag group.  <a href="#gabccfea1cd018493ef5a28c6fe8e90d7c">More...</a><br/></td></tr>
 <tr class="separator:gabccfea1cd018493ef5a28c6fe8e90d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gafda4c544f2429005c4b15de3a7ffc902"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#gafda4c544f2429005c4b15de3a7ffc902">rt_event_signal</a> (RT_EVENT *event, unsigned long mask)</td></tr>
-<tr class="memdesc:gafda4c544f2429005c4b15de3a7ffc902"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal an event.  <a href="#gafda4c544f2429005c4b15de3a7ffc902">More...</a><br/></td></tr>
-<tr class="separator:gafda4c544f2429005c4b15de3a7ffc902"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga37bf24b429dd62f48bd0ca024115f6f8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, const struct timespec *abs_timeout)</td></tr>
-<tr class="memdesc:ga37bf24b429dd62f48bd0ca024115f6f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an arbitrary set of events.  <a href="#ga37bf24b429dd62f48bd0ca024115f6f8">More...</a><br/></td></tr>
-<tr class="separator:ga37bf24b429dd62f48bd0ca024115f6f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga81e2c7a3346b2364a153a24be291b204"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga81e2c7a3346b2364a153a24be291b204">rt_event_wait_until</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)</td></tr>
-<tr class="memdesc:ga81e2c7a3346b2364a153a24be291b204"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an arbitrary set of events (with absolute scalar timeout).  <a href="#ga81e2c7a3346b2364a153a24be291b204">More...</a><br/></td></tr>
-<tr class="separator:ga81e2c7a3346b2364a153a24be291b204"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga6e9f775275661d9258f8b1eb02fe4681"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga6e9f775275661d9258f8b1eb02fe4681">rt_event_wait</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)</td></tr>
-<tr class="memdesc:ga6e9f775275661d9258f8b1eb02fe4681"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an arbitrary set of events (with relative scalar timeout).  <a href="#ga6e9f775275661d9258f8b1eb02fe4681">More...</a><br/></td></tr>
-<tr class="separator:ga6e9f775275661d9258f8b1eb02fe4681"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga448889bcfd01ed892d97a0b00fdaf553"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga448889bcfd01ed892d97a0b00fdaf553">rt_event_clear</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r)</td></tr>
-<tr class="memdesc:ga448889bcfd01ed892d97a0b00fdaf553"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear event flags.  <a href="#ga448889bcfd01ed892d97a0b00fdaf553">More...</a><br/></td></tr>
-<tr class="separator:ga448889bcfd01ed892d97a0b00fdaf553"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4e22ecfdac06b221ba49d4f383f3ce07"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed</a> (RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, const struct timespec *abs_timeout)</td></tr>
+<tr class="memdesc:ga4e22ecfdac06b221ba49d4f383f3ce07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an arbitrary set of events.  <a href="#ga4e22ecfdac06b221ba49d4f383f3ce07">More...</a><br/></td></tr>
+<tr class="separator:ga4e22ecfdac06b221ba49d4f383f3ce07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6b2003500370ccfb6c5dd42674ec83a6"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga6b2003500370ccfb6c5dd42674ec83a6">rt_event_wait_until</a> (RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, RTIME timeout)</td></tr>
+<tr class="memdesc:ga6b2003500370ccfb6c5dd42674ec83a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an arbitrary set of events (with absolute scalar timeout).  <a href="#ga6b2003500370ccfb6c5dd42674ec83a6">More...</a><br/></td></tr>
+<tr class="separator:ga6b2003500370ccfb6c5dd42674ec83a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga091f055040598a9b4da1122ffaaafeae"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga091f055040598a9b4da1122ffaaafeae">rt_event_wait</a> (RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, RTIME timeout)</td></tr>
+<tr class="memdesc:ga091f055040598a9b4da1122ffaaafeae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for an arbitrary set of events (with relative scalar timeout).  <a href="#ga091f055040598a9b4da1122ffaaafeae">More...</a><br/></td></tr>
+<tr class="separator:ga091f055040598a9b4da1122ffaaafeae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabecddf3846622df42bf95f94871f8e62"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#gabecddf3846622df42bf95f94871f8e62">rt_event_inquire</a> (RT_EVENT *event, <a class="el" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> *info)</td></tr>
 <tr class="memdesc:gabecddf3846622df42bf95f94871f8e62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query event flag group status.  <a href="#gabecddf3846622df42bf95f94871f8e62">More...</a><br/></td></tr>
 <tr class="separator:gabecddf3846622df42bf95f94871f8e62"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,6 +141,15 @@ Functions</h2></td></tr>
 <tr class="memitem:gae985bb0e671e2a5e07b575fd793fde22"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#gae985bb0e671e2a5e07b575fd793fde22">rt_event_unbind</a> (RT_EVENT *event)</td></tr>
 <tr class="memdesc:gae985bb0e671e2a5e07b575fd793fde22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unbind from an event flag group.  <a href="#gae985bb0e671e2a5e07b575fd793fde22">More...</a><br/></td></tr>
 <tr class="separator:gae985bb0e671e2a5e07b575fd793fde22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga563bd4034fc1a8ce45b3f82bf09712f3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3">rt_event_create</a> (RT_EVENT *event, const char *name, unsigned int ivalue, int mode)</td></tr>
+<tr class="memdesc:ga563bd4034fc1a8ce45b3f82bf09712f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an event flag group.  <a href="#ga563bd4034fc1a8ce45b3f82bf09712f3">More...</a><br/></td></tr>
+<tr class="separator:ga563bd4034fc1a8ce45b3f82bf09712f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa80008e6b15eabf76b7b48fa22edd1e9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#gaa80008e6b15eabf76b7b48fa22edd1e9">rt_event_signal</a> (RT_EVENT *event, unsigned int mask)</td></tr>
+<tr class="memdesc:gaa80008e6b15eabf76b7b48fa22edd1e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal an event.  <a href="#gaa80008e6b15eabf76b7b48fa22edd1e9">More...</a><br/></td></tr>
+<tr class="separator:gaa80008e6b15eabf76b7b48fa22edd1e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f4c2b3ab613680f11a2ffd2a51d80ab"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__event.html#ga7f4c2b3ab613680f11a2ffd2a51d80ab">rt_event_clear</a> (RT_EVENT *event, unsigned int mask, unsigned int *mask_r)</td></tr>
+<tr class="memdesc:ga7f4c2b3ab613680f11a2ffd2a51d80ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear event flags.  <a href="#ga7f4c2b3ab613680f11a2ffd2a51d80ab">More...</a><br/></td></tr>
+<tr class="separator:ga7f4c2b3ab613680f11a2ffd2a51d80ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Inter-task notification mechanism based on discrete flags. </p>
@@ -169,7 +169,7 @@ Functions</h2></td></tr>
 
 <p>Operation flags. </p>
 
-<p>Referenced by <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed()</a>.</p>
 
 </div>
 </div>
@@ -185,7 +185,7 @@ Functions</h2></td></tr>
 
 <p>Creation flags. </p>
 
-<p>Referenced by <a class="el" href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c">rt_event_create()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3">rt_event_create()</a>.</p>
 
 </div>
 </div>
@@ -225,7 +225,7 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">event</td><td>The address of an event flag group descriptor filled in by the operation. Contents of this memory is undefined upon failure.</td></tr>
-    <tr><td class="paramname">name</td><td>A valid NULL-terminated name which identifies the event flag group to bind to. This string should match the object name argument passed to <a class="el" href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c" title="Create an event flag group. ">rt_event_create()</a>.</td></tr>
+    <tr><td class="paramname">name</td><td>A valid NULL-terminated name which identifies the event flag group to bind to. This string should match the object name argument passed to <a class="el" href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3" title="Create an event flag group. ">rt_event_create()</a>.</td></tr>
     <tr><td class="paramname">timeout</td><td>The number of clock ticks to wait for the registration to occur (see note). Passing TM_INFINITE causes the caller to block indefinitely until the object is registered. Passing TM_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry.</td></tr>
   </table>
   </dd>
@@ -242,7 +242,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga448889bcfd01ed892d97a0b00fdaf553"></a>
+<a class="anchor" id="ga7f4c2b3ab613680f11a2ffd2a51d80ab"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -255,13 +255,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>mask</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>mask_r</em>&#160;</td>
         </tr>
         <tr>
@@ -290,7 +290,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga8b0fbb2b816c62081afe86bf897c503c"></a>
+<a class="anchor" id="ga563bd4034fc1a8ce45b3f82bf09712f3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -309,7 +309,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>ivalue</em>, </td>
         </tr>
         <tr>
@@ -370,7 +370,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Delete an event flag group. </p>
-<p>This routine deletes a event flag group previously created by a call to <a class="el" href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c" title="Create an event flag group. ">rt_event_create()</a>.</p>
+<p>This routine deletes a event flag group previously created by a call to <a class="el" href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3" title="Create an event flag group. ">rt_event_create()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
@@ -425,11 +425,11 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a> </dd></dl>
 
-<p>References <a class="el" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">RT_EVENT_INFO::name</a>, <a class="el" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">RT_EVENT_INFO::nwaiters</a>, and <a class="el" href="structRT__EVENT__INFO.html#adbf286bbacfacdf430e72dc930356e24">RT_EVENT_INFO::value</a>.</p>
+<p>References <a class="el" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">RT_EVENT_INFO::name</a>, <a class="el" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">RT_EVENT_INFO::nwaiters</a>, and <a class="el" href="structRT__EVENT__INFO.html#a6959309af1887ae4539850a06e5ce285">RT_EVENT_INFO::value</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="gafda4c544f2429005c4b15de3a7ffc902"></a>
+<a class="anchor" id="gaa80008e6b15eabf76b7b48fa22edd1e9"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -442,7 +442,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>mask</em>&#160;</td>
         </tr>
         <tr>
@@ -496,7 +496,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga6e9f775275661d9258f8b1eb02fe4681"></a>
+<a class="anchor" id="ga091f055040598a9b4da1122ffaaafeae"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -512,13 +512,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>mask</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>mask_r</em>, </td>
         </tr>
         <tr>
@@ -547,7 +547,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Wait for an arbitrary set of events (with relative scalar timeout). </p>
-<p>This routine is a variant of <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8" title="Wait for an arbitrary set of events. ">rt_event_wait_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
+<p>This routine is a variant of <a class="el" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07" title="Wait for an arbitrary set of events. ">rt_event_wait_timed()</a> accepting a relative timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
@@ -560,11 +560,11 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
-<p>References <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed()</a>.</p>
+<p>References <a class="el" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed()</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ga37bf24b429dd62f48bd0ca024115f6f8"></a>
+<a class="anchor" id="ga4e22ecfdac06b221ba49d4f383f3ce07"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -577,13 +577,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>mask</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>mask_r</em>, </td>
         </tr>
         <tr>
@@ -641,11 +641,11 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__alchemy__event.html#ga1bbb8e9b7c802aded726ad136fd6444c">EV_ANY</a>.</p>
 
-<p>Referenced by <a class="el" href="group__alchemy__event.html#ga6e9f775275661d9258f8b1eb02fe4681">rt_event_wait()</a>, and <a class="el" href="group__alchemy__event.html#ga81e2c7a3346b2364a153a24be291b204">rt_event_wait_until()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__event.html#ga091f055040598a9b4da1122ffaaafeae">rt_event_wait()</a>, and <a class="el" href="group__alchemy__event.html#ga6b2003500370ccfb6c5dd42674ec83a6">rt_event_wait_until()</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ga81e2c7a3346b2364a153a24be291b204"></a>
+<a class="anchor" id="ga6b2003500370ccfb6c5dd42674ec83a6"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -661,13 +661,13 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramtype">unsigned int&#160;</td>
           <td class="paramname"><em>mask</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long *&#160;</td>
+          <td class="paramtype">unsigned int *&#160;</td>
           <td class="paramname"><em>mask_r</em>, </td>
         </tr>
         <tr>
@@ -696,7 +696,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Wait for an arbitrary set of events (with absolute scalar timeout). </p>
-<p>This routine is a variant of <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8" title="Wait for an arbitrary set of events. ">rt_event_wait_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
+<p>This routine is a variant of <a class="el" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07" title="Wait for an arbitrary set of events. ">rt_event_wait_timed()</a> accepting an absolute timeout specification expressed as a scalar value.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
@@ -709,7 +709,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a> </dd></dl>
 
-<p>References <a class="el" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed()</a>.</p>
+<p>References <a class="el" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed()</a>.</p>
 
 </div>
 </div>

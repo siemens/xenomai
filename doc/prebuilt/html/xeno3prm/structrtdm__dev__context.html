@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -103,7 +103,7 @@ Collaboration diagram for rtdm_dev_context:</div>
 <div class="dyncontent">
 <div class="center"><img src="structrtdm__dev__context__coll__graph.png" border="0" usemap="#rtdm__dev__context_coll__map" alt="Collaboration graph"/></div>
 <map name="rtdm__dev__context_coll__map" id="rtdm__dev__context_coll__map">
-<area shape="rect" id="node2" href="structrtdm__device.html" title="RTDM device. " alt="" coords="21,96,115,123"/><area shape="rect" id="node3" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="21,5,115,32"/></map>
+<area shape="rect" id="node2" href="structrtdm__device.html" title="RTDM device. " alt="" coords="95,187,188,213"/><area shape="rect" id="node3" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="5,5,99,32"/><area shape="rect" id="node4" href="structrtdm__driver.html" title="RTDM driver. " alt="" coords="98,96,184,123"/><area shape="rect" id="node5" href="structatomic__t.html" title="Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. " alt="" coords="127,5,199,32"/></map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -111,10 +111,6 @@ Data Fields</h2></td></tr>
 <tr class="memitem:a8fea6f19169a166aa183d2e9da09df51"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html#a8fea6f19169a166aa183d2e9da09df51">device</a></td></tr>
 <tr class="memdesc:a8fea6f19169a166aa183d2e9da09df51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set of active device operation handlers.  <a href="#a8fea6f19169a166aa183d2e9da09df51">More...</a><br/></td></tr>
 <tr class="separator:a8fea6f19169a166aa183d2e9da09df51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35602d44d821195ba42acb1e280a4851"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35602d44d821195ba42acb1e280a4851"></a>
-struct rtdm_devctx_reserved&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html#a35602d44d821195ba42acb1e280a4851">reserved</a></td></tr>
-<tr class="memdesc:a35602d44d821195ba42acb1e280a4851"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data stored by RTDM inside a device context (internal use only) <br/></td></tr>
-<tr class="separator:a35602d44d821195ba42acb1e280a4851"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a720bc9395d80f0dea40c7ac3e449ea25"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a720bc9395d80f0dea40c7ac3e449ea25"></a>
 char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__dev__context.html#a720bc9395d80f0dea40c7ac3e449ea25">dev_private</a> [0]</td></tr>
 <tr class="memdesc:a720bc9395d80f0dea40c7ac3e449ea25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin of driver defined context data structure. <br/></td></tr>
@@ -123,7 +119,7 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Device context. </p>
 <p>A device context structure is associated with every open device instance. RTDM takes care of its creation and destruction and passes it to the operation handlers when being invoked.</p>
-<p>Drivers can attach arbitrary data immediately after the official structure. The size of this data is provided via <a class="el" href="structrtdm__device.html#a48d67f835c341c5d27bc5886920a11da" title="Size of driver defined appendix to struct rtdm_dev_context. ">rtdm_device.context_size</a> during device registration. </p>
+<p>Drivers can attach arbitrary data immediately after the official structure. The size of this data is provided via <a class="el" href="structrtdm__driver.html#aa0ccb96768a1cac30f34ccfd4ad9c1a6" title="Size of driver defined appendix to struct rtdm_dev_context. ">rtdm_driver.context_size</a> during device registration. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="a8fea6f19169a166aa183d2e9da09df51"></a>
 <div class="memitem">

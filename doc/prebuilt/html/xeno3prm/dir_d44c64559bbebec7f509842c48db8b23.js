@@ -5,7 +5,6 @@ var dir_d44c64559bbebec7f509842c48db8b23 =
     [ "cobalt", "dir_727d51ab6cd8bd91d7c75c1be5676510.html", "dir_727d51ab6cd8bd91d7c75c1be5676510" ],
     [ "copperplate", "dir_40a26fbf8530e8040f677e2cbc8d1bf7.html", "dir_40a26fbf8530e8040f677e2cbc8d1bf7" ],
     [ "mercury", "dir_4bc8d021f790d027bf9b049713eeff23.html", "dir_4bc8d021f790d027bf9b049713eeff23" ],
-    [ "nocore", "dir_8beae76a177bb352c0c7232581048ab6.html", "dir_8beae76a177bb352c0c7232581048ab6" ],
     [ "psos", "dir_4a497e8235a96d784c2c929acecceb4b.html", "dir_4a497e8235a96d784c2c929acecceb4b" ],
     [ "rtdm", "dir_03dba7e891ad9b6681428c00d78e5ff7.html", "dir_03dba7e891ad9b6681428c00d78e5ff7" ],
     [ "smokey", "dir_b480b7cbb3b3a28b243b157d8610e184.html", "dir_b480b7cbb3b3a28b243b157d8610e184" ],

@@ -1,11 +1,12 @@
 var fd_8h =
 [
     [ "rtdm_close_handler", "fd_8h.html#ga4c1849624a5c3358a3b9cbab3f6468a7", null ],
-    [ "rtdm_fd_get", "fd_8h.html#a0a8fc8420cd4fbf355b89c627d38eb8e", null ],
+    [ "rtdm_fd_get", "fd_8h.html#a24bb11700c627fca3ea4f8433a5cbc00", null ],
     [ "rtdm_fd_lock", "fd_8h.html#a4cb9270d8f0153a2903f55004b9a0e2a", null ],
     [ "rtdm_fd_put", "fd_8h.html#a998aa7dd77e8a9784ae713b486c4d494", null ],
     [ "rtdm_fd_select", "fd_8h.html#a3feba2db3d6f8619ce4720f24d84bfe8", null ],
     [ "rtdm_fd_unlock", "fd_8h.html#a4bba9f5f7c0ebf230c088d2135c83164", null ],
+    [ "rtdm_get_unmapped_area_handler", "fd_8h.html#ga7253e128ed93d99b824a36453f402476", null ],
     [ "rtdm_ioctl_handler", "fd_8h.html#gab188dd6270100e4252ecefb9553ae659", null ],
     [ "rtdm_mmap_handler", "fd_8h.html#ga4d376f88ed220a34961d8390edb20c0e", null ],
     [ "rtdm_open_handler", "fd_8h.html#ga0ef51b797df99c754eed7581f7868d44", null ],

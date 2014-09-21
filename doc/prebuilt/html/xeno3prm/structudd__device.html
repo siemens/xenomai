@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -101,7 +101,7 @@ Collaboration diagram for udd_device:</div>
 <div class="dyncontent">
 <div class="center"><img src="structudd__device__coll__graph.png" border="0" usemap="#udd__device_coll__map" alt="Collaboration graph"/></div>
 <map name="udd__device_coll__map" id="udd__device_coll__map">
-<area shape="rect" id="node2" href="structudd__device_1_1udd__reserved.html" title="Reserved to the UDD core. " alt="" coords="5,200,179,227"/><area shape="rect" id="node3" href="structudd__signotify.html" title="UDD event notification descriptor. " alt="" coords="8,96,107,123"/><area shape="rect" id="node4" href="structrtdm__device.html" title="RTDM device. " alt="" coords="131,96,224,123"/><area shape="rect" id="node5" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="130,5,224,32"/><area shape="rect" id="node6" href="structudd__memregion.html" title="udd_memregion" alt="" coords="204,200,319,227"/></map>
+<area shape="rect" id="node2" href="structudd__device_1_1udd__reserved.html" title="Reserved to the UDD core. " alt="" coords="101,293,275,320"/><area shape="rect" id="node3" href="structudd__signotify.html" title="UDD event notification descriptor. " alt="" coords="5,188,104,215"/><area shape="rect" id="node4" href="structrtdm__device.html" title="RTDM device. " alt="" coords="347,188,440,215"/><area shape="rect" id="node5" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="339,5,433,32"/><area shape="rect" id="node6" href="structrtdm__driver.html" title="RTDM driver. " alt="" coords="279,96,365,123"/><area shape="rect" id="node7" href="structatomic__t.html" title="Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. " alt="" coords="167,5,239,32"/><area shape="rect" id="node8" href="structudd__memregion.html" title="udd_memregion" alt="" coords="300,293,415,320"/></map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
@@ -112,23 +112,16 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a8f5d7d94ba891771a3d5dfbc308fdcad"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#a8f5d7d94ba891771a3d5dfbc308fdcad">device_name</a></td></tr>
-<tr class="memdesc:a8f5d7d94ba891771a3d5dfbc308fdcad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Name of the device managed by the mini-driver.  <a href="#a8f5d7d94ba891771a3d5dfbc308fdcad">More...</a><br/></td></tr>
+<tr class="memitem:a8f5d7d94ba891771a3d5dfbc308fdcad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8f5d7d94ba891771a3d5dfbc308fdcad"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#a8f5d7d94ba891771a3d5dfbc308fdcad">device_name</a></td></tr>
+<tr class="memdesc:a8f5d7d94ba891771a3d5dfbc308fdcad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Name of the device managed by the mini-driver, appears automatically in the /dev/rtdm namespace upon creation. <br/></td></tr>
 <tr class="separator:a8f5d7d94ba891771a3d5dfbc308fdcad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77ed5470016a191707476602d110fe80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77ed5470016a191707476602d110fe80"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#a77ed5470016a191707476602d110fe80">device_description</a></td></tr>
-<tr class="memdesc:a77ed5470016a191707476602d110fe80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Textual description of the device managed by the mini-driver. <br/></td></tr>
-<tr class="separator:a77ed5470016a191707476602d110fe80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc143e9af9f5a1a6de12a09730370e4c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#acc143e9af9f5a1a6de12a09730370e4c">device_flags</a></td></tr>
+<tr class="memdesc:acc143e9af9f5a1a6de12a09730370e4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional device flags (e.g.  <a href="#acc143e9af9f5a1a6de12a09730370e4c">More...</a><br/></td></tr>
+<tr class="separator:acc143e9af9f5a1a6de12a09730370e4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2be25937198705a92f5e179d6c48192"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#ae2be25937198705a92f5e179d6c48192">device_subclass</a></td></tr>
 <tr class="memdesc:ae2be25937198705a92f5e179d6c48192"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subclass code of the device managed by the mini-driver (see RTDM_SUBCLASS_xxx definition in the <a class="el" href="group__rtdm__profiles.html">Device Profiles</a>).  <a href="#ae2be25937198705a92f5e179d6c48192">More...</a><br/></td></tr>
 <tr class="separator:ae2be25937198705a92f5e179d6c48192"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05c8b9b7cb84386162044193bd9a78fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#a05c8b9b7cb84386162044193bd9a78fc">driver_version</a></td></tr>
-<tr class="memdesc:a05c8b9b7cb84386162044193bd9a78fc"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="group__rtdm__device__register.html#drv_versioning">Driver version.</a> <a href="#a05c8b9b7cb84386162044193bd9a78fc">More...</a><br/></td></tr>
-<tr class="separator:a05c8b9b7cb84386162044193bd9a78fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab00aaf8cf5df4f32790fb12cad3879f0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab00aaf8cf5df4f32790fb12cad3879f0"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#ab00aaf8cf5df4f32790fb12cad3879f0">driver_author</a></td></tr>
-<tr class="memdesc:ab00aaf8cf5df4f32790fb12cad3879f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Driver author/provider (exposed via /proc/xenomai/rtdm) <br/></td></tr>
-<tr class="separator:ab00aaf8cf5df4f32790fb12cad3879f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab89d90525c1e515756a87116c8adf09"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structudd__device.html#aab89d90525c1e515756a87116c8adf09">irq</a></td></tr>
 <tr class="memdesc:aab89d90525c1e515756a87116c8adf09"><td class="mdescLeft">&#160;</td><td class="mdescRight">IRQ number.  <a href="#aab89d90525c1e515756a87116c8adf09">More...</a><br/></td></tr>
 <tr class="separator:aab89d90525c1e515756a87116c8adf09"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,17 +162,18 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 
 </div>
 </div>
-<a class="anchor" id="a8f5d7d94ba891771a3d5dfbc308fdcad"></a>
+<a class="anchor" id="acc143e9af9f5a1a6de12a09730370e4c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* udd_device::device_name</td>
+          <td class="memname">int udd_device::device_flags</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Name of the device managed by the mini-driver. </p>
+<p>Additional device flags (e.g. </p>
+<p>RTDM_EXCLUSIVE) RTDM_NAMED_DEVICE may be omitted). </p>
 
 <p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
 
@@ -197,24 +191,6 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 
 <p>Subclass code of the device managed by the mini-driver (see RTDM_SUBCLASS_xxx definition in the <a class="el" href="group__rtdm__profiles.html">Device Profiles</a>). </p>
 <p>The main class code is forced to RTDM_CLASS_UDD. </p>
-
-<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a05c8b9b7cb84386162044193bd9a78fc"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int udd_device::driver_version</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p><a class="el" href="group__rtdm__device__register.html#drv_versioning">Driver version.</a></p>
-
-<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
 
 </div>
 </div>
@@ -267,7 +243,7 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <p>IRQ number. </p>
 <p>If valid, the UDD core manages the corresponding interrupt line, installing a base handler. Otherwise, a special value can be passed for declaring <a class="el" href="group__rtdm__udd.html#udd_irq_special">unmanaged IRQs</a>. </p>
 
-<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>, and <a class="el" href="group__rtdm__udd.html#ga7206665dd8c240e578a2925450697a40">udd_unregister_device()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>, and <a class="el" href="group__rtdm__udd.html#ga389544ffa49f17fe3417d97122ed3acb">udd_unregister_device()</a>.</p>
 
 </div>
 </div>

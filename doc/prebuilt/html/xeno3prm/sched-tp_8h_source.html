@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -135,7 +135,7 @@ $(document).ready(function(){initNavTree('sched-tp_8h_source.html','');});
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">struct </span>xnsched_tp_schedule {</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordtype">int</span> pwin_nr;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        xnticks_t tf_duration;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        atomic_t refcount;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <a class="code" href="structatomic__t.html">atomic_t</a> refcount;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keyword">struct </span>xnsched_tp_window pwins[0];</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;};</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
@@ -178,6 +178,7 @@ $(document).ready(function(){initNavTree('sched-tp_8h_source.html','');});
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_SCHED_TP_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:58</div></div>
+<div class="ttc" id="structatomic__t_html"><div class="ttname"><a href="structatomic__t.html">atomic_t</a></div><div class="ttdoc">Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. </div><div class="ttdef"><b>Definition:</b> atomic.h:24</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -103,88 +103,100 @@ Collaboration diagram for rtdm_device:</div>
 <div class="dyncontent">
 <div class="center"><img src="structrtdm__device__coll__graph.png" border="0" usemap="#rtdm__device_coll__map" alt="Collaboration graph"/></div>
 <map name="rtdm__device_coll__map" id="rtdm__device_coll__map">
-<area shape="rect" id="node2" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="5,5,99,32"/></map>
+<area shape="rect" id="node2" href="structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="5,5,99,32"/><area shape="rect" id="node3" href="structrtdm__driver.html" title="RTDM driver. " alt="" coords="98,96,184,123"/><area shape="rect" id="node4" href="structatomic__t.html" title="Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. " alt="" coords="127,5,199,32"/></map>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a548f89224ffc7146fd46c53a0eb48040"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a548f89224ffc7146fd46c53a0eb48040"></a>
-struct rtdm_dev_reserved&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a548f89224ffc7146fd46c53a0eb48040">reserved</a></td></tr>
-<tr class="memdesc:a548f89224ffc7146fd46c53a0eb48040"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data stored by RTDM inside a registered device (internal use only) <br/></td></tr>
-<tr class="separator:a548f89224ffc7146fd46c53a0eb48040"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa2844f98d874f16d802b4e0b693e4e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa2844f98d874f16d802b4e0b693e4e2"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#aaa2844f98d874f16d802b4e0b693e4e2">struct_version</a></td></tr>
-<tr class="memdesc:aaa2844f98d874f16d802b4e0b693e4e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Revision number of this structure, see <a class="el" href="group__rtdm__device__register.html#drv_versioning">Driver Versioning</a> defines. <br/></td></tr>
-<tr class="separator:aaa2844f98d874f16d802b4e0b693e4e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af459bf86f0d037c99bb669f627d78764"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af459bf86f0d037c99bb669f627d78764"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#af459bf86f0d037c99bb669f627d78764">device_flags</a></td></tr>
-<tr class="memdesc:af459bf86f0d037c99bb669f627d78764"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device flags, see <a class="el" href="group__rtdm__device__register.html#dev_flags">Device Flags</a> for details. <br/></td></tr>
-<tr class="separator:af459bf86f0d037c99bb669f627d78764"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48d67f835c341c5d27bc5886920a11da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48d67f835c341c5d27bc5886920a11da"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a48d67f835c341c5d27bc5886920a11da">context_size</a></td></tr>
-<tr class="memdesc:a48d67f835c341c5d27bc5886920a11da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of driver defined appendix to struct <a class="el" href="structrtdm__dev__context.html" title="Device context. ">rtdm_dev_context</a>. <br/></td></tr>
-<tr class="separator:a48d67f835c341c5d27bc5886920a11da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a376a833e95ff75eb9c8033895bc5e102"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a376a833e95ff75eb9c8033895bc5e102"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a376a833e95ff75eb9c8033895bc5e102">device_name</a> [RTDM_MAX_DEVNAME_LEN+1]</td></tr>
-<tr class="memdesc:a376a833e95ff75eb9c8033895bc5e102"><td class="mdescLeft">&#160;</td><td class="mdescRight">Named device identification (orthogonal to Linux device name space) <br/></td></tr>
-<tr class="separator:a376a833e95ff75eb9c8033895bc5e102"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae58c050e09a79b277f718d796eda2072"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae58c050e09a79b277f718d796eda2072"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#ae58c050e09a79b277f718d796eda2072">protocol_family</a></td></tr>
-<tr class="memdesc:ae58c050e09a79b277f718d796eda2072"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol device identification: protocol family (PF_xxx) <br/></td></tr>
-<tr class="separator:ae58c050e09a79b277f718d796eda2072"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02552f2d91052bd801576b3a132ba3f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02552f2d91052bd801576b3a132ba3f9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a02552f2d91052bd801576b3a132ba3f9">socket_type</a></td></tr>
-<tr class="memdesc:a02552f2d91052bd801576b3a132ba3f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol device identification: socket type (SOCK_xxx) <br/></td></tr>
-<tr class="separator:a02552f2d91052bd801576b3a132ba3f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7307b2b415abae0747c6580ab00cfa83"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7307b2b415abae0747c6580ab00cfa83"></a>
-struct <a class="el" href="structrtdm__fd__ops.html">rtdm_fd_ops</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a7307b2b415abae0747c6580ab00cfa83">ops</a></td></tr>
-<tr class="memdesc:a7307b2b415abae0747c6580ab00cfa83"><td class="mdescLeft">&#160;</td><td class="mdescRight">I/O operation handlers. <br/></td></tr>
-<tr class="separator:a7307b2b415abae0747c6580ab00cfa83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94aa3100258b43c812c5240b55777f07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94aa3100258b43c812c5240b55777f07"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a94aa3100258b43c812c5240b55777f07">device_class</a></td></tr>
-<tr class="memdesc:a94aa3100258b43c812c5240b55777f07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device class ID, see <a class="el" href="group__rtdm__profiles.html#RTDM_CLASS_xxx">RTDM_CLASS_xxx</a>. <br/></td></tr>
-<tr class="separator:a94aa3100258b43c812c5240b55777f07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aece6c5135a6256dbb3636f66eb97cb40"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aece6c5135a6256dbb3636f66eb97cb40"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#aece6c5135a6256dbb3636f66eb97cb40">device_sub_class</a></td></tr>
-<tr class="memdesc:aece6c5135a6256dbb3636f66eb97cb40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device sub-class, see RTDM_SUBCLASS_xxx definition in the <a class="el" href="group__rtdm__profiles.html">Device Profiles</a>. <br/></td></tr>
-<tr class="separator:aece6c5135a6256dbb3636f66eb97cb40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a157db58bb0025b832ca409bc40735ae9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a157db58bb0025b832ca409bc40735ae9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a157db58bb0025b832ca409bc40735ae9">profile_version</a></td></tr>
-<tr class="memdesc:a157db58bb0025b832ca409bc40735ae9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Supported device profile version. <br/></td></tr>
-<tr class="separator:a157db58bb0025b832ca409bc40735ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55d676531831124ae7e8051addde3cdc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55d676531831124ae7e8051addde3cdc"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a55d676531831124ae7e8051addde3cdc">driver_name</a></td></tr>
-<tr class="memdesc:a55d676531831124ae7e8051addde3cdc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Informational driver name (reported via /proc) <br/></td></tr>
-<tr class="separator:a55d676531831124ae7e8051addde3cdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aebcb235c789d0698fd821124817e2330"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aebcb235c789d0698fd821124817e2330"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#aebcb235c789d0698fd821124817e2330">driver_version</a></td></tr>
-<tr class="memdesc:aebcb235c789d0698fd821124817e2330"><td class="mdescLeft">&#160;</td><td class="mdescRight">Driver version, see <a class="el" href="group__rtdm__device__register.html#drv_versioning">Driver Versioning</a> defines. <br/></td></tr>
-<tr class="separator:aebcb235c789d0698fd821124817e2330"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed46d0d1567069de23a7400ff987610b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed46d0d1567069de23a7400ff987610b"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#aed46d0d1567069de23a7400ff987610b">peripheral_name</a></td></tr>
-<tr class="memdesc:aed46d0d1567069de23a7400ff987610b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Informational peripheral name the device is attached to (reported via /proc) <br/></td></tr>
-<tr class="separator:aed46d0d1567069de23a7400ff987610b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaacffe6b5bcea62396bf09d6ae2650ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaacffe6b5bcea62396bf09d6ae2650ba"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#aaacffe6b5bcea62396bf09d6ae2650ba">provider_name</a></td></tr>
-<tr class="memdesc:aaacffe6b5bcea62396bf09d6ae2650ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Informational driver provider name (reported via /proc) <br/></td></tr>
-<tr class="separator:aaacffe6b5bcea62396bf09d6ae2650ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0df5612d6bfcf6421509345384467392"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0df5612d6bfcf6421509345384467392"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a0df5612d6bfcf6421509345384467392">proc_name</a></td></tr>
-<tr class="memdesc:a0df5612d6bfcf6421509345384467392"><td class="mdescLeft">&#160;</td><td class="mdescRight">Name of /proc entry for the device, must not be NULL. <br/></td></tr>
-<tr class="separator:a0df5612d6bfcf6421509345384467392"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13d065b957258e702b0c0526c64b729b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13d065b957258e702b0c0526c64b729b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a13d065b957258e702b0c0526c64b729b">device_id</a></td></tr>
-<tr class="memdesc:a13d065b957258e702b0c0526c64b729b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Driver definable device ID. <br/></td></tr>
-<tr class="separator:a13d065b957258e702b0c0526c64b729b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61c4d79a727f060a968d37abc852b6c2"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structrtdm__driver.html">rtdm_driver</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a61c4d79a727f060a968d37abc852b6c2">driver</a></td></tr>
+<tr class="memdesc:a61c4d79a727f060a968d37abc852b6c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device driver.  <a href="#a61c4d79a727f060a968d37abc852b6c2">More...</a><br/></td></tr>
+<tr class="separator:a61c4d79a727f060a968d37abc852b6c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23bedbebe7a0d2e392ca6dce1585edcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23bedbebe7a0d2e392ca6dce1585edcc"></a>
 void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a23bedbebe7a0d2e392ca6dce1585edcc">device_data</a></td></tr>
 <tr class="memdesc:a23bedbebe7a0d2e392ca6dce1585edcc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Driver definable device data. <br/></td></tr>
 <tr class="separator:a23bedbebe7a0d2e392ca6dce1585edcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaffd77ca14fa303088001dc4a597fef1"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#aaffd77ca14fa303088001dc4a597fef1">label</a></td></tr>
+<tr class="memdesc:aaffd77ca14fa303088001dc4a597fef1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device label template for composing the device name.  <a href="#aaffd77ca14fa303088001dc4a597fef1">More...</a><br/></td></tr>
+<tr class="separator:aaffd77ca14fa303088001dc4a597fef1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16570d51d834d3cca1151a0f2690a495"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#a16570d51d834d3cca1151a0f2690a495">minor</a></td></tr>
+<tr class="memdesc:a16570d51d834d3cca1151a0f2690a495"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minor number of the device.  <a href="#a16570d51d834d3cca1151a0f2690a495">More...</a><br/></td></tr>
+<tr class="separator:a16570d51d834d3cca1151a0f2690a495"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a699d48b1b15b0fdb63f34aa90067af1c"><td class="memItemLeft" >struct {</td></tr>
+<tr class="memitem:a699d48b1b15b0fdb63f34aa90067af1c"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
+<tr class="memdesc:a699d48b1b15b0fdb63f34aa90067af1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reserved area.  <a href="#a699d48b1b15b0fdb63f34aa90067af1c">More...</a><br/></td></tr>
+<tr class="separator:a699d48b1b15b0fdb63f34aa90067af1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>RTDM device. </p>
-<p>This structure specifies a RTDM device. As some fields, especially the reserved area, will be modified by RTDM during runtime, the structure must not reside in write-protected memory. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<p>This descriptor describes a RTDM device instance. The structure holds runtime data, therefore it must reside in writable memory. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a699d48b1b15b0fdb63f34aa90067af1c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct { ... } </td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reserved area. </p>
+
+</div>
+</div>
+<a class="anchor" id="a61c4d79a727f060a968d37abc852b6c2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct <a class="el" href="structrtdm__driver.html">rtdm_driver</a>* rtdm_device::driver</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Device driver. </p>
+
+<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2">rtdm_dev_register()</a>, <a class="el" href="group__rtdm__device__register.html#gafbe43e78f3b5eb9c164c8b7fa3cc1aa8">rtdm_dev_unregister()</a>, <a class="el" href="group__rtdm__udd.html#ga306a8671bd96a1ea578c5f76e646ef67">udd_get_device()</a>, and <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aaffd77ca14fa303088001dc4a597fef1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* rtdm_device::label</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Device label template for composing the device name. </p>
+<p>A limited printf-like format string is assumed, with a provision for replacing the first d/i placeholder found in the string by the device minor number. It is up to the driver to actually mention this placeholder or not, depending on the naming convention for its devices. For named devices, the corresponding device node will automatically appear in the /dev/rtdm hierachy with hotplug-enabled device filesystems (DEVTMPFS). </p>
+
+<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2">rtdm_dev_register()</a>, and <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a16570d51d834d3cca1151a0f2690a495"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_device::minor</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Minor number of the device. </p>
+<p>If RTDM_FIXED_MINOR is present in the driver flags, the value stored in this field is used verbatim by <a class="el" href="group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2" title="Register a RTDM device. ">rtdm_dev_register()</a>. Otherwise, the RTDM core automatically assigns minor numbers to all devices managed by the driver referred to by <em>driver</em>, in order of registration, storing the resulting values into this field.</p>
+<p>Device nodes created for named devices in the Linux /dev hierarchy are assigned this minor number.</p>
+<p>The minor number of the current device handling an I/O request can be retreived by a call to rtdm_fd_minor(). </p>
+
+<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2">rtdm_dev_register()</a>.</p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/cobalt/kernel/rtdm/<a class="el" href="driver_8h_source.html">driver.h</a></li>
 </ul>
 </div><!-- contents -->

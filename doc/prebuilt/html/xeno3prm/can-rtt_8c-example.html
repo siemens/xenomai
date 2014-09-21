@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -133,6 +133,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line"><span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;limits.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;getopt.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;memory.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;netinet/in.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;net/if.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sys/ioctl.h&gt;</span></div>
@@ -184,7 +185,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="keyword">struct </span>timespec next_period;</div>
 <div class="line">    <span class="keyword">struct </span>timespec time;</div>
 <div class="line">    <span class="keyword">struct </span><a name="_a0"></a><a class="code" href="structcan__frame.html">can_frame</a> frame;</div>
-<div class="line">    <span class="keywordtype">long</span> <span class="keywordtype">long</span> *rtt_time = (<span class="keywordtype">long</span> <span class="keywordtype">long</span> *)&amp;frame.data;</div>
+<div class="line">    <span class="keywordtype">long</span> <span class="keywordtype">long</span> *rtt_time = (<span class="keywordtype">long</span> <span class="keywordtype">long</span> *)&amp;frame.data, t;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">/* Pre-fill CAN frame */</span></div>
 <div class="line">    frame.<a name="a1"></a><a class="code" href="structcan__frame.html#a0294f06f81a3ae0d155eb5fd14733d63">can_id</a> = <a class="code" href="structcan__frame.html#a0294f06f81a3ae0d155eb5fd14733d63">can_id</a>;</div>
@@ -212,10 +213,11 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">        }</div>
 <div class="line"></div>
 <div class="line">        <a class="code" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a>(CLOCK_MONOTONIC, &amp;time);</div>
-<div class="line">        *rtt_time = (<span class="keywordtype">long</span> long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;</div>
+<div class="line">        t = (<span class="keywordtype">long</span> long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;</div>
+<div class="line">        memcpy(rtt_time, &amp;t, <span class="keyword">sizeof</span>(t));</div>
 <div class="line"></div>
 <div class="line">        <span class="comment">/* Transmit the message containing the local time */</span></div>
-<div class="line">        if (send(txsock, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <a class="code" href="structcan__frame.html">can_frame</a>), 0) &lt; 0) {</div>
+<div class="line">        <span class="keywordflow">if</span> (send(txsock, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <a class="code" href="structcan__frame.html">can_frame</a>), 0) &lt; 0) {</div>
 <div class="line">            <span class="keywordflow">if</span> (errno == EBADF)</div>
 <div class="line">                printf(<span class="stringliteral">&quot;terminating transmitter thread\n&quot;</span>);</div>
 <div class="line">            <span class="keywordflow">else</span></div>
@@ -232,7 +234,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="keyword">struct </span>sched_param param = { .sched_priority = 82 };</div>
 <div class="line">    <span class="keyword">struct </span>timespec time;</div>
 <div class="line">    <span class="keyword">struct </span><a class="code" href="structcan__frame.html">can_frame</a> frame;</div>
-<div class="line">    <span class="keywordtype">long</span> <span class="keywordtype">long</span> *rtt_time = (<span class="keywordtype">long</span> <span class="keywordtype">long</span> *)frame.data;</div>
+<div class="line">    <span class="keywordtype">long</span> <span class="keywordtype">long</span> *rtt_time = (<span class="keywordtype">long</span> <span class="keywordtype">long</span> *)frame.data, t;</div>
 <div class="line">    <span class="keyword">struct</span> rtt_stat rtt_stat = {0, 1000000000000000000LL, -1000000000000000000LL,</div>
 <div class="line">                                0, 0, 0};</div>
 <div class="line"></div>
@@ -262,10 +264,11 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">            }</div>
 <div class="line">            txcount++;</div>
 <div class="line">        } <span class="keywordflow">else</span> {</div>
+<div class="line">            memcpy(&amp;t, rtt_time, <span class="keyword">sizeof</span>(t));</div>
 <div class="line">            <a class="code" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a>(CLOCK_MONOTONIC, &amp;time);</div>
 <div class="line">            <span class="keywordflow">if</span> (rxcount &gt; 0) {</div>
 <div class="line">                rtt_stat.rtt = ((<span class="keywordtype">long</span> long)time.tv_sec * 1000000000LL +</div>
-<div class="line">                                time.tv_nsec - *rtt_time);</div>
+<div class="line">                                time.tv_nsec - t);</div>
 <div class="line">                rtt_stat.rtt_sum += rtt_stat.rtt;</div>
 <div class="line">                <span class="keywordflow">if</span> (rtt_stat.rtt &lt;  rtt_stat.rtt_min)</div>
 <div class="line">                    rtt_stat.rtt_min = rtt_stat.rtt;</div>

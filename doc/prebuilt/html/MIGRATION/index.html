@@ -980,10 +980,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-2.99.7. Functionally speaking, only the former <em>master</em> time base
+2.99.8. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 2.99.7 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 2.99.8 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -1214,20 +1214,359 @@ Redundant prefixes were removed from the following files:
 </div>
 <div class="sect2">
 <h3 id="_driver_api">5.2. Driver API</h3>
+<div class="sect3">
+<h4 id="_new_device_description_model">5.2.1. New device description model</h4>
+<div class="paragraph"><p>Several changes have taken place in the device description passed to
+<code>rtdm_dev_register()</code> (i.e. <code>struct rtdm_device</code>). Aside of fixing
+consistency issues, the bulk of changes is aimed at narrowing the gap
+between the regular Linux device driver model and RTDM.</p></div>
+<div class="paragraph"><p>To this end, RTDM in Xenomai 3 shares the Linux namespace for named
+devices, which are now backed by common character device objects from
+the regular Linux device model. As a consequence of this, file
+descriptors obtained on named RTDM devices are regular file
+descriptors, visible from the <code>/proc/&lt;pid&gt;/fd</code> interface.</p></div>
+<div class="sect4">
+<h5 id="_named_device_description">Named device description</h5>
+<div class="paragraph"><p>The major change required for supporting this closer integration of
+RTDM into the regular Linux driver model involved splitting the device
+driver properties from the device instance definitions, which used to
+be combined in Xenomai 2.x into the <code>rtdm_device</code> descriptor.</p></div>
+<div class="listingblock">
+<div class="title">Xenomai 2.x named device description</div>
+<div class="content">
+<pre><code>static struct rtdm_device foo_device0 = {
+        .struct_version         =       RTDM_DEVICE_STRUCT_VER,
+        .device_flags           =       RTDM_NAMED_DEVICE|RTDM_EXCLUSIVE,
+        .device_id              =       0
+        .context_size           =       sizeof(struct foo_context),
+        .ops = {
+                .open           =       foo_open,
+                .ioctl_rt       =       foo_ioctl_rt,
+                .ioctl_nrt      =       foo_ioctl_nrt,
+                .close          =       foo_close,
+        },
+        .device_class           =       RTDM_CLASS_EXPERIMENTAL,
+        .device_sub_class       =       RTDM_SUBCLASS_FOO,
+        .profile_version        =       42,
+        .device_name            =       "foo0",
+        .driver_name            =       "foo driver",
+        .driver_version         =       RTDM_DRIVER_VER(1, 0, 0),
+        .peripheral_name        =       "Ultra-void IV board driver",
+        .proc_name              =       device.device_name,
+        .provider_name          =       "Whoever",
+};
+
+static struct rtdm_device foo_device1 = {
+        .struct_version         =       RTDM_DEVICE_STRUCT_VER,
+        .device_flags           =       RTDM_NAMED_DEVICE|RTDM_EXCLUSIVE,
+        .device_id              =       1
+        .context_size           =       sizeof(struct foo_context),
+        .ops = {
+                .open           =       foo_open,
+                .ioctl_rt       =       foo_ioctl_rt,
+                .ioctl_nrt      =       foo_ioctl_nrt,
+                .close          =       foo_close,
+        },
+        .device_class           =       RTDM_CLASS_EXPERIMENTAL,
+        .device_sub_class       =       RTDM_SUBCLASS_FOO,
+        .profile_version        =       42,
+        .device_name            =       "foo1",
+        .device_data            =       NULL,
+        .driver_name            =       "foo driver",
+        .driver_version         =       RTDM_DRIVER_VER(1, 0, 0),
+        .peripheral_name        =       "Ultra-void IV board driver",
+        .proc_name              =       device.device_name,
+        .provider_name          =       "Whoever",
+};
+
+foo0.device_data = &amp;some_driver_data0;
+ret = rtdm_dev_register(&amp;foo0);
+...
+foo1.device_data = &amp;some_driver_data1;
+ret = rtdm_dev_register(&amp;foo1);</code></pre>
+</div></div>
+<div class="paragraph"><p>The legacy description above would only create "virtual" device
+entries, private to the RTDM device namespace, with no visible
+counterparts into the Linux device namespace.</p></div>
+<div class="listingblock">
+<div class="title">Xenomai 3.x named device description</div>
+<div class="content">
+<pre><code>static struct rtdm_driver foo_driver = {
+        .profile_info           =       RTDM_PROFILE_INFO(foo,
+                                                          RTDM_CLASS_EXPERIMENTAL,
+                                                          RTDM_SUBCLASS_FOO,
+                                                          42),
+        .device_flags           =       RTDM_NAMED_DEVICE|RTDM_EXCLUSIVE,
+        .device_count           =       2,
+        .context_size           =       sizeof(struct foo_context),
+        .ops = {
+                .open           =       foo_open,
+                .ioctl_rt       =       foo_ioctl_rt,
+                .ioctl_nrt      =       foo_ioctl_nrt,
+                .close          =       foo_close,
+        },
+};
+
+static struct rtdm_device foo_devices[2] = {
+        [ 0 ... 1 ] = {
+                .driver = &amp;foo_driver,
+                .label = "foo%d",
+        },
+};
+
+MODULE_VERSION("1.0.0");
+MODULE_DESCRIPTION("Ultra-void IV board driver");
+MODULE_AUTHOR'"Whoever");
+
+foo_devices[0].device_data = &amp;some_driver_data0;
+ret = rtdm_dev_register(&amp;foo_devices[0]);
+...
+foo_devices[1].device_data = &amp;some_driver_data1;
+ret = rtdm_dev_register(&amp;foo_devices[1]);</code></pre>
+</div></div>
+<div class="paragraph"><p>The current description above will cause the device nodes
+/dev/rtdm/foo0 and /dev/rtdm/foo1 to be created in the Linux device
+namespace. Application may open these device nodes for interacting
+with the RTDM driver, as they would do with any regular <em>chrdev</em>
+driver.</p></div>
+</div>
+<div class="sect4">
+<h5 id="_protocol_device_description">Protocol device description</h5>
+<div class="paragraph"><p>Similarly, the registration data for protocol devices have been
+changed to follow the new generic layout:</p></div>
+<div class="listingblock">
+<div class="title">Xenomai 2.x protocol device description</div>
+<div class="content">
+<pre><code>static struct rtdm_device foo_device = {
+        .struct_version =       RTDM_DEVICE_STRUCT_VER,
+        .device_flags   =       RTDM_PROTOCOL_DEVICE,
+        .context_size   =       sizeof(struct foo_context),
+        .device_name    =       "foo",
+        .protocol_family=       PF_FOO,
+        .socket_type    =       SOCK_DGRAM,
+        .socket_nrt     =       foo_socket,
+        .ops = {
+                .close_nrt      =       foo_close,
+                .recvmsg_rt     =       foo_recvmsg,
+                .sendmsg_rt     =       foo_sendmsg,
+                .ioctl_rt       =       foo_ioctl,
+                .ioctl_nrt      =       foo_ioctl,
+                .read_rt        =       foo_read,
+                .write_rt       =       foo_write,
+                .select_bind    =       foo_select,
+        },
+        .device_class           =       RTDM_CLASS_EXPERIMENTAL,
+        .device_sub_class       =       RTDM_SUBCLASS_FOO,
+        .profile_version        =       1,
+        .driver_name            =       "foo",
+        .driver_version         =       RTDM_DRIVER_VER(1, 0, 0),
+        .peripheral_name        =       "Unexpected protocol driver",
+        .proc_name              =       device.device_name,
+        .provider_name          =       "Whoever",
+        .device_data            =       &amp;some_driver_data,
+};
+
+ret = rtdm_dev_register(&amp;foo_device);
+...</code></pre>
+</div></div>
+<div class="listingblock">
+<div class="title">Xenomai 3.x protocol device description</div>
+<div class="content">
+<pre><code>static struct rtdm_driver foo_driver = {
+        .profile_info           =       RTDM_PROFILE_INFO(foo,
+                                                          RTDM_CLASS_EXPERIMENTAL,
+                                                          RTDM_SUBCLASS_FOO,
+                                                          1),
+        .device_flags           =       RTDM_PROTOCOL_DEVICE,
+        .device_count           =       1,
+        .context_size           =       sizeof(struct foo_context),
+        .protocol_family        =       PF_FOO,
+        .socket_type            =       SOCK_DGRAM,
+        .ops = {
+                .socket         =       foo_socket,
+                .close          =       foo_close,
+                .recvmsg_rt     =       foo_recvmsg,
+                .sendmsg_rt     =       foo_sendmsg,
+                .ioctl_rt       =       foo_ioctl,
+                .ioctl_nrt      =       foo_ioctl,
+                .read_rt        =       foo_read,
+                .write_rt       =       foo_write,
+                .select         =       foo_select,
+        },
+};
+
+static struct rtdm_device foo_device = {
+        .driver = &amp;foo_driver,
+        .label = "foo",
+        .device_data = &amp;some_driver_data,
+};
+
+ret = rtdm_dev_register(&amp;foo_device);
+...
+
+MODULE_VERSION("1.0.0");
+MODULE_DESCRIPTION("Unexpected protocol driver");
+MODULE_AUTHOR'"Whoever");</code></pre>
+</div></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Changes in the <code>rtdm_device</code> descriptor
+<code>.device_count</code> has been added to reflect the (maximum) number of
+  device instances which may be managed by the driver. This
+  information is used to dynamically reserve a range of major/minor
+  numbers for named RTDM devices in the Linux device namespace, by a
+  particular driver.  Device minors are assigned to RTDM device
+  instances in order of registration starting from minor #0, unless
+  RTDM_FIXED_MINOR is present in the device flags. In the latter case,
+  rtdm_device.minor is used verbatim by the RTDM core when registering
+  the device.
+</p>
+</li>
+<li>
+<p>
+<code>.device_id</code> was removed from the device description, as the minor
+  number it was most commonly holding is now available from a call to
+  rtdm_fd_minor(). Drivers should use <code>.device_data</code> for storing
+  private information attached to device instances.
+</p>
+</li>
+<li>
+<p>
+<code>.struct_version</code> was dropped, as it provided no additional feature
+  to the standard module versioning scheme.
+</p>
+</li>
+<li>
+<p>
+<code>.proc_name</code> was dropped, as it is redundant with the device
+  name. Above all, using a /proc information label different from the
+  actual device name is unlikely to be a good idea.
+</p>
+</li>
+<li>
+<p>
+<code>.device_class</code>, <code>.device_sub_class</code> and <code>.profile_version</code> numbers
+  have been grouped in a dedicated profile information descriptor
+  (<code>struct rtdm_profile_info</code>), one <strong>must</strong> initialize using the
+  <code>RTDM_PROFILE_INFO()</code> macro.
+</p>
+</li>
+<li>
+<p>
+<code>.driver_name</code> was dropped, as it adds no value to the plain module
+  name (unless the module name is deliberately obfuscated, that is).
+</p>
+</li>
+<li>
+<p>
+<code>.peripheral_name</code> was dropped, as this information should be
+  conveyed by MODULE_DESCRIPTION().
+</p>
+</li>
+<li>
+<p>
+<code>.provider_name</code>, as this information should be conveyed by
+  MODULE_AUTHOR().
+</p>
+</li>
+<li>
+<p>
+<code>.driver_version</code>, as this information should be conveyed by
+  MODULE_VERSION().
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>The following changes have taken place in the device description
-passed to <code>rtdm_dev_register()</code> (i.e. <code>struct rtdm_device</code>):</p></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_introduction_of_file_descriptors">5.2.2. Introduction of file descriptors</h4>
+<div class="paragraph"><p>Xenomai 3 introduces a file descriptor abstraction for RTDM
+drivers. For this reason, all RTDM driver handlers and services which
+used to receive a <code>user_info</code> opaque argument describing the calling
+context, now receive a <code>rtdm_fd</code> pointer standing for the target file
+descriptor for the operation.</p></div>
+<div class="paragraph"><p>As a consequence of this:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<code>.open_rt</code> was dropped, and <code>.open_nrt</code> renamed as <code>.open</code>. Opening
-  a named device instance always happens from secondary mode.
+The <code>rtdm_context_get/put()</code> call pair has been replaced by
+  <code>rtdm_fd_get/put()</code>.
+</p>
+</li>
+<li>
+<p>
+Likewise, the <code>rtdm_context_lock/unlock()</code> call pair has been
+  replaced by <code>rtdm_fd_lock/unlock()</code>.
+</p>
+</li>
+<li>
+<p>
+<code>rtdm_fd_to_private()</code> is available to fetch the context-private
+  memory allocated by the driver for a particular RTDM file
+  descriptor. Conversely, <code>rtdm_private_to_fd()</code> returns the file
+  descriptor owning a particular context-private memory area.
+</p>
+</li>
+<li>
+<p>
++rtdm_fd_minor() retrieves the minor number assigned to the current
+  named device instance using its file descriptor.
+</p>
+</li>
+<li>
+<p>
+<code>xenomai/rtdm/open_files</code> and <code>xenomai/rtdm/fildes</code> now solely
+  report file descriptors obtained using the driver-to-driver API.
+  RTDM file descriptors obtained from applications appear under the
+  regular /proc/&lt;pid&gt;/fd hierarchy. All RTDM file descriptors obtained
+  by an application are automatically released when the latter exits.
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">Because RTDM file descriptors may be released and destroyed
+asynchronously, rtdm_fd_get() and rtdm_fd_lock() may return -EIDRM if
+a file descriptor fetched from some driver-private registry becomes
+stale prior to calling these services. Typically, this may happen if
+the descriptor is released from the &#8594;close() handler implemented by
+the driver. Therefore, make sure to always carefully check the return
+value of these services.</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">Unlike Xenomai 2.x, RTDM file descriptors returned to Xenomai 3
+applications fall within the regular Linux range. Each open RTDM
+connection is actually mapped over a regular file descriptor, which
+RTDM services from <em>libcobalt</em> recognize and handle.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_updated_device_operation_descriptor">5.2.3. Updated device operation descriptor</h4>
+<div class="paragraph"><p>As visible from the previous illustrations, a few handlers have been
+moved to the device operation descriptor, some dropped, other renamed,
+mainly for the sake of consistency:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<code>.select_bind</code> was renamed as <code>.select</code> in the device operation
+  descriptor.
+</p>
+</li>
+<li>
+<p>
+<code>.open_rt</code> was dropped, and <code>.open_nrt</code> renamed as <code>.open</code>.  Opening
+  a named device instance always happens from secondary mode. In
+  addition, the new handler is now part of the device operation
+  descriptor <code>.ops</code>.
 </p>
 </li>
 </ul></div>
@@ -1243,7 +1582,8 @@ available to regular calling contexts.</p></div>
 <p>
 Likewise, <code>.socket_rt</code> was dropped, and <code>.socket_nrt</code> renamed as
   <code>.socket</code>. Opening a protocol device instance always happens from
-  secondary mode.
+  secondary mode. In addition, the new handler is now part of the
+  device operation descriptor <code>.ops</code>.
 </p>
 </li>
 <li>
@@ -1255,29 +1595,58 @@ As a consequence of the previous changes, <code>.close_rt</code> was dropped,
 </li>
 <li>
 <p>
-The <code>.ops</code> operation descriptor shows a new member, namely <code>.mmap</code>
-  for handling memory mapping requests to the RTDM driver. This
-  handler always operates from secondary mode on behalf of the calling
-  task context, so that it may invoke regular kernel services safely.
+.open, .socket and .close handlers have become optional in Xenomai
+  3.x.
 </p>
-<div class="ulist" id="rtdm-mmap"><ul>
+</li>
 <li>
 <p>
-rtdm_dev_unregister() won&#8217;t return -ENODEV.
+The device operation descriptor <code>.ops</code> shows two new members, namely
+  <code>.mmap</code> for handling memory mapping requests to the RTDM driver, and
+  <code>get_unmapped_area</code>, mainly for supporting such memory mapping
+  operations in MMU-less configurations. These handlers - named after
+  the similar handlers defined in the regular file_operation
+  descriptor - always operate from secondary mode on behalf of the
+  calling task context, so that they may invoke regular kernel
+  services safely.
 </p>
 </li>
 </ul></div>
+<div class="admonitionblock" id="rtdm-mmap">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">See the documentation in the
+<a href="http://xenomai.org/documentation/xenomai-3/html/xeno3prm/">Programming
+Reference Manual</a> covering the device registration and operation
+handlers for a complete description.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_changes_to_rtdm_services">5.2.4. Changes to RTDM services</h4>
+<div class="ulist"><ul>
+<li>
+<p>
+rtdm_dev_unregister() loses the poll_delay argument, and its return
+  value. Instead, this service waits indefinitely for all ongoing
+  connection to be drop prior to unregistering the device. The new
+  prototype is therefore:
+</p>
 </li>
 </ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>void rtdm_dev_unregister(struct rtdm_device *device);</code></pre>
+</div></div>
 <div class="sidebarblock">
 <div class="content">
 <div class="title">Rationale</div>
-<div class="paragraph"><p>The RTDM core (rightfully) assumes that object descriptors passed by
-client drivers to all other services shall be valid, so checking the
-device descriptor only for rtdm_dev_unregister() brings no actual
-safety. Besides, the former implementation for detecting unregistered
-device structures was wrong, assuming valid memory for the device
-structure, which is in essence at odds with the purpose of this check.</p></div>
+<div class="paragraph"><p>Drivers are most often not willing to deal with receiving a device
+busy condition from a module exit routine (which is the place devices
+should be unregistered from).  Drivers which really want to deal with
+such condition should simply use module refcounting in their own code.</p></div>
 </div></div>
 <div class="ulist"><ul>
 <li>
@@ -1413,8 +1782,8 @@ A test-condition-and-wait pattern has to be carried out
 </ul></div>
 </li>
 </ul></div>
-<div class="paragraph"><p>Refer to kernel/drivers/ipc/iddp.c for an illustration of the RTDM
-wait queue usage.</p></div>
+<div class="paragraph"><p>Please refer to kernel/drivers/ipc/iddp.c for an illustration of the
+RTDM wait queue usage.</p></div>
 </div></div>
 <div class="ulist"><ul>
 <li>
@@ -1433,7 +1802,7 @@ involve complex processing for basic operations
 (e.g. enabling/disabling the interrupt line) with some interrupt types
 like MSI. Such processing cannot be made dual-kernel safe at a
 reasonable cost, without encurring measurable latency or significant
-code rewrites.</p></div>
+code updates in the kernel.</p></div>
 <div class="paragraph"><p>Since allocating, releasing, enabling or disabling real-time
 interrupts is most commonly done from driver initialization/cleanup
 context already, the Cobalt core has simply inherited those
@@ -1460,81 +1829,63 @@ to the current address space.</p></div>
 <div class="content">
 <pre><code>int rtdm_munmap(void *ptr, size_t len);</code></pre>
 </div></div>
-</div>
-<div class="sect2">
-<h3 id="_file_descriptors">5.3. File descriptors</h3>
-<div class="paragraph"><p>Xenomai 3 introduces a file descriptor abstraction for RTDM
-drivers. For this reason, all RTDM driver handlers and services which
-used to receive a <code>user_info</code> opaque argument describing the calling
-context, now receive a <code>rtdm_fd</code> pointer standing for the target file
-descriptor for the operation.</p></div>
-<div class="paragraph"><p>As a consequence of this:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-The <code>rtdm_context_get/put()</code> call pair has been replaced by
-  <code>rtdm_fd_get/put()</code>.
-</p>
-</li>
-<li>
-<p>
-Likewise, the <code>rtdm_context_lock/unlock()</code> call pair has been
-  replaced by <code>rtdm_fd_lock/unlock()</code>.
-</p>
-</li>
-<li>
-<p>
-<code>rtdm_fd_to_private()</code> is available to fetch the context-private
-  memory allocated by the driver for a particular RTDM file
-  descriptor. Conversely, <code>rtdm_private_to_fd()</code> returns the file
-  descriptor owning a particular context-private memory area.
-</p>
-</li>
-<li>
-<p>
-<code>xenomai/rtdm/open_files</code> and <code>xenomai/rtdm/fildes</code> now solely
-  report file descriptors obtained using the driver-to-driver API.
-  RTDM file descriptors obtained from applications appear under the
-  regular /proc/&lt;pid&gt;/fd hierarchy as connections to <code>/dev/null</code>. All
-  RTDM file descriptors obtained by an application are automatically
-  released when the latter exits.
+Additional memory mapping calls
 </p>
 </li>
 </ul></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="../asciidoc-icons/caution.png" alt="Caution" />
-</td>
-<td class="content">Because RTDM file descriptors may be released and destroyed
-asynchronously, rtdm_fd_get() and rtdm_fd_lock() may return -EIDRM if
-a file descriptor fetched from some driver-private registry becomes
-stale prior to calling these services. Typically, this may happen if
-the descriptor is released from the &#8594;close() handler implemented by
-the driver. Therefore, make sure to always carefully check the return
-value of these services.</td>
-</tr></table>
+<div class="paragraph"><p>The new following routines are available to RTDM drivers, for mapping
+memory over a user address space. They are intended to be called from
+a &#8594;mmap() handler:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+rtdm_mmap_kmem() for mapping logical kernel memory (i.e. having
+  a direct physical mapping).
+</p>
+</li>
+<li>
+<p>
+rtdm_mmap_vmem() for mapping purely virtual memory (i.e. with no
+  direct physical mapping).
+</p>
+</li>
+<li>
+<p>
+rtdm_mmap_iomem() for mapping I/O memory.
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>static int foo_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
+{
+        ...
+        switch (memory_type) {
+        case MEM_PHYSICAL:
+                ret = rtdm_mmap_iomem(vma, addr);
+                break;
+        case MEM_LOGICAL:
+                ret = rtdm_mmap_kmem(vma, (void *)addr);
+                break;
+        case MEM_VIRTUAL:
+                ret = rtdm_mmap_vmem(vma, (void *)addr);
+                break;
+        default:
+                return -EINVAL;
+        }
+        ...
+}</code></pre>
+</div></div>
 </div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="../asciidoc-icons/note.png" alt="Note" />
-</td>
-<td class="content">Unlike Xenomai 2.x, RTDM file descriptors returned to Xenomai 3
-applications fall within the regular Linux range. Each open RTDM
-connection is actually mapped over a regular file descriptor obtained
-on <code>/dev/null</code>, which RTDM services from <em>libcobalt</em> recognize and
-handle.</td>
-</tr></table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_adaptive_syscalls">5.4. Adaptive syscalls</h3>
+<div class="sect3">
+<h4 id="_adaptive_syscalls">5.2.5. Adaptive syscalls</h4>
 <div class="paragraph"><p><code>ioctl()</code>, <code>read()</code>, <code>write()</code>, <code>recvmsg()</code> and <code>sendmsg()</code> have
-become context-adaptive RTDM calls, which means that Xenomai threads
-running over the Cobalt core will be automatically switched to primary
-mode prior to running the driver handler for the corresponding
-request.</p></div>
+become conforming RTDM calls, which means that Xenomai threads running
+over the Cobalt core will be automatically switched to primary mode
+prior to running the driver handler for the corresponding request.</p></div>
 <div class="sidebarblock">
 <div class="content">
 <div class="title">Rationale</div>
@@ -1567,44 +1918,97 @@ may be valid from the regular Linux domain exclusively.</td>
 </tr></table>
 </div>
 </div>
+</div>
 <div class="sect2">
-<h3 id="_device_minor_specification">5.5. Device minor specification</h3>
-<div class="paragraph"><p>Xenomai 3 introduces a simple fully dynamic naming convention by which
-an application can request to open() a particular device unit managed
-by a RTDM driver, using the form:</p></div>
+<h3 id="_application_interface">5.3. Application interface</h3>
+<div class="paragraph"><p>Unlike with Xenomai 2.x, named RTDM device nodes in Xenomai 3 are
+visible from the Linux device namespace. These nodes are automatically
+created by the <em>hotplug</em> kernel facility. Application must open these
+device nodes for interacting with RTDM drivers, as they would do with
+any regular <em>chrdev</em> driver.</p></div>
+<div class="paragraph"><p>All RTDM device nodes are created under the <code>rtdm/</code> sub-root from the
+standard <code>/dev</code> hierarchy, to eliminate potential name clashes with
+standard drivers.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/important.png" alt="Important" />
+</td>
+<td class="content">Enabling DEVTMPFS in the target kernel is recommended so that the
+standard <code>/dev</code> tree immediately reflects updates to the RTDM device
+namespace. You may want to enable CONFIG_DEVTMPFS and
+CONFIG_DEVTMPFS_MOUNT.</td>
+</tr></table>
+</div>
 <div class="listingblock">
+<div class="title">Opening a named device instance with Xenomai 2.x</div>
 <div class="content">
-<pre><code>open("device-name@&lt;minor&gt;", ...);</code></pre>
+<pre><code>fd = open("foo", O_RDWR);
+   or
+fd = open("/dev/foo", O_RDWR);</code></pre>
 </div></div>
-<div class="paragraph"><p>The open() call first attempts to match the full name verbatim, then
-checks for any minor specification, only looking for the device name
-in a second attempt to retrieve the <code>rtdm_device</code> descriptor.</p></div>
-<div class="paragraph"><p>Upon success, the minor is stored into the <code>rtdm_fd</code> descriptor
-representing the new connection, and made available to the driver code
-by the <code>rtdm_fd_minor()</code> accessor. When specified, a valid minor value
-shall be positive or zero, otherwise the match fails. The default
-minor value is -1, which the driver may safely ignore, or choose to
-interpret as a special device master/control channel.</p></div>
-<div class="paragraph"><p>e.g.:</p></div>
 <div class="listingblock">
+<div class="title">Opening a named device instance with Xenomai 3</div>
 <div class="content">
-<pre><code>    open("/dev/foo@0", ...) =&gt; connect to unit #0 of device type "foo"
-    open("/dev/foo@7", ...) =&gt; connect to unit #7 of device type "foo"
-    open("/dev/foo", ...) =&gt; connect to control channel of device "foo"</code></pre>
+<pre><code>fd = open("/dev/rtdm/foo", O_RDWR);</code></pre>
 </div></div>
-<div class="sidebarblock">
-<div class="content">
-<div class="title">Rationale</div>
-<div class="paragraph"><p>As RTDM named device drivers have no actual entry in any file system,
-Xenomai 2.x lacked the device minor information normally available
-from i-nodes to regular Linux character-mode drivers.  Therefore a
-<code>rtdm_device</code> descriptor in Xenomai 2.x used to represent a device
-unit in practice, although it should represent a device type, within a
-larger class. This model did not allow for straightforward management
-of multiple units of the same device type dynamically in a driver,
-with a single <code>rtdm_device</code> description matching all the units
-available onboard.</p></div>
-</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">Applications can enable the CONFIG_XENO_OPT_RTDM_COMPAT_DEVNODE option
+in the kernel configuration to enable legacy pathnames for named RTDM
+devices. This compatibility option allows applications to open named
+RTDM devices using the legacy naming scheme used by Xenomai 2.x.</td>
+</tr></table>
+</div>
+<div class="sect3">
+<h4 id="_retrieving_device_information">5.3.1. Retrieving device information</h4>
+<div class="paragraph"><p>Device information can be retrieved via <em>sysfs</em>, instead of <em>procfs</em>
+as with Xenomai 2.x. As a result of this change, <code>/proc/xenomai/rtdm</code>
+disappeared entirely. Instead, the RTDM device information can now be
+reached as follows:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+/sys/devices/virtual/rtdm contains entries for all RTDM devices
+present in the system (including named and protocol device types).
+This directory is aliased to /sys/class/rtdm.
+</p>
+</li>
+<li>
+<p>
+each /sys/devices/virtual/rtdm/&lt;device-name&gt; directory gives access
+  to a particular device information, available from virtual files:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+reading <code>profile</code> returns the class and subclass ids.
+</p>
+</li>
+<li>
+<p>
+reading <code>refcount</code> returns the current count of outstanding
+    connections to the device&#8217;s driver.
+</p>
+</li>
+<li>
+<p>
+reading <code>flags</code> returns the device flags as defined by the
+    device&#8217;s driver.
+</p>
+</li>
+<li>
+<p>
+reading <code>type</code> returns the device type (named or protocol).
+</p>
+</li>
+</ul></div>
+</li>
+</ul></div>
+</div>
 </div>
 </div>
 </div>
@@ -2025,9 +2429,38 @@ multiplexing operation involving other event sources, by passing a
 file descriptor returned by the <code>timerfd()</code> service to a <code>select()</code>
 call.</p></div>
 </div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">A limited emulation of the pthread_make_periodic_np() and
+pthread_wait_np() calls is available from the <a href="#trank">Transition Kit</a>.</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_message_queues">7.8. Message queues</h3>
+<h3 id="_clocks">7.8. Clocks</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+The internal identifier of CLOCK_HOST_REALTIME has changed from 42
+  to 8.
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">This information should normally remain opaque to applications, as it
+is subject to change with ABI revisions.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_message_queues">7.9. Message queues</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2044,7 +2477,7 @@ call.</p></div>
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_posix_i_o_services">7.9. POSIX I/O services</h3>
+<h3 id="_posix_i_o_services">7.10. POSIX I/O services</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2208,6 +2641,13 @@ Cobalt. However, it does not return -EWOULDBLOCK anymore.</p></div>
 TM_ONESHOT was dropped, because the operation mode of the hardware
   timer has no meaning for the application. The core Xenomai system
   always operates the available timer chip in oneshot mode anyway.
+  A tickless clock has a period of one nanosecond.
+</p>
+</li>
+<li>
+<p>
+Unlike with Xenomai 2.x, the target task to <code>rt_task_set_periodic()</code>
+  must be local to the current process.
 </p>
 </li>
 </ul></div>
@@ -2216,17 +2656,10 @@ TM_ONESHOT was dropped, because the operation mode of the hardware
 <td class="icon">
 <img src="../asciidoc-icons/tip.png" alt="Tip" />
 </td>
-<td class="content">A tickless clock has a period of one nanosecond.</td>
+<td class="content">A limited emulation of the deprecated rt_task_set_periodic() behavior
+is available from the <a href="#trank">Transition Kit</a>.</td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-Unlike with Xenomai 2.x, the target task to <code>rt_task_set_periodic()</code>
-  must be local to the current process.
-</p>
-</li>
-</ul></div>
 </div>
 <div class="sect2">
 <h3 id="_mutexes">8.5. Mutexes</h3>
@@ -2274,7 +2707,63 @@ count of waiting tasks anymore.
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_task_management">8.7. Task management</h3>
+<h3 id="_events">8.7. Events</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+Event flags (RT_EVENT) are represented by a regular integer, instead
+  of a long integer as with Xenomai 2.x. This change impacts the
+  following calls:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+rt_event_create()
+</p>
+</li>
+<li>
+<p>
+rt_event_signal()
+</p>
+</li>
+<li>
+<p>
+rt_event_clear()
+</p>
+</li>
+<li>
+<p>
+rt_event_wait()
+</p>
+</li>
+<li>
+<p>
+rt_event_wait_until()
+</p>
+</li>
+</ul></div>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Using long integers for representing event bit masks potentially
+creates a portability issue for applications between 32 and 64bit CPU
+architectures. This issue is solved by using 32bit integers on 32/64
+bit machines, which is normally more than enough for encoding the set
+of events received by a single RT_EVENT object.</p></div>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">These changes are covered by the <a href="#trank">Transition Kit</a>.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_task_management">8.8. Task management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2378,6 +2867,17 @@ T_CPU disappears from the <code>rt_task_create()</code> mode flags. The new
   affinity of a task.
 </p>
 </li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">An emulation of rt_task_create() and rt_task_spawn() accepting the
+deprecated flags is available from the <a href="#trank">Transition Kit</a>.</td>
+</tr></table>
+</div>
+<div class="ulist"><ul>
 <li>
 <p>
 <code>rt_task_sleep_until()</code> does not return -ETIMEDOUT anymore. Waiting
@@ -2387,7 +2887,7 @@ T_CPU disappears from the <code>rt_task_create()</code> mode flags. The new
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_message_queues_2">8.8. Message queues</h3>
+<h3 id="_message_queues_2">8.9. Message queues</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2409,9 +2909,18 @@ Q_DMA
 </ul></div>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">Placeholders for those deprecated definitions are available from the
+<a href="#trank">Transition Kit</a>.</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_heaps">8.9. Heaps</h3>
+<h3 id="_heaps">8.10. Heaps</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2466,9 +2975,18 @@ with the removal of H_DMA, returning a physical address (phys_addr)
 </p>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">Placeholders for those deprecated definitions are available from the
+<a href="#trank">Transition Kit</a>.</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_alarms">8.10. Alarms</h3>
+<h3 id="_alarms">8.11. Alarms</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2504,9 +3022,18 @@ field <code>active</code> has been added, to reflect the current state of
 </ul></div>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">An emulation of rt_alarm_wait() is available from the
+<a href="#trank">Transition Kit</a>.</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_message_pipes">8.11. Message pipes</h3>
+<h3 id="_message_pipes">8.12. Message pipes</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2605,7 +3132,7 @@ int wind_task_denormalize_priority(int core_prio);</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_using_the_transition_kit">11. Using the Transition Kit</h2>
+<h2 id="trank">11. Using the Transition Kit</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Xenomai 2 applications in user-space may use a library and a set of
 compatibility headers, aimed at easing the process of transitioning to
@@ -2651,7 +3178,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-08-18 12:35:37 CEST
+Last updated 2014-09-21 19:58:34 CEST
 </div>
 </div>
 </body>

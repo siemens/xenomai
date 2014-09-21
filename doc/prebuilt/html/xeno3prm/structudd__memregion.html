@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -118,10 +118,10 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <p>The UDD core exposes each region via the mmap(2) interface to the application. To this end, a companion mapper device is created automatically when registering the mini-driver.</p>
 <p>The mapper device creates special files in the RTDM namespace to reach the individual regions, which the application can open, for mapping the corresponding region to their address space via the mmap(2) system call.</p>
 <p>For instance, declaring a region of physical memory at index #2 of the memory region array as follows:</p>
-<div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> foocard_pci_probe(<span class="keyword">struct</span> pci_dev *dev, <span class="keyword">const</span> <span class="keyword">struct</span> pci_device_id *<span class="keywordtype">id</span>)</div>
-<div class="line">{</div>
-<div class="line">     <span class="keyword">struct </span><a class="code" href="structudd__device.html">udd_device</a> udd;</div>
+<div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keyword">struct </span><a class="code" href="structudd__device.html">udd_device</a> udd;</div>
 <div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> foocard_pci_probe(<span class="keyword">struct</span> pci_dev *dev, <span class="keyword">const</span> <span class="keyword">struct</span> pci_device_id *<span class="keywordtype">id</span>)</div>
+<div class="line">{</div>
 <div class="line">     udd.<a class="code" href="structudd__device.html#a8f5d7d94ba891771a3d5dfbc308fdcad">device_name</a> = <span class="stringliteral">&quot;foocard&quot;</span>;</div>
 <div class="line">     ...</div>
 <div class="line">     udd.mem_regions[2].name = <span class="stringliteral">&quot;ADC&quot;</span>;</div>

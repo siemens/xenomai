@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -173,10 +173,10 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2sched_8h_sour
 <div class="line"><a name="l00092"></a><span class="lineno"><a class="line" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">   92</a></span>&#160;        <span class="keyword">struct </span>xntimer <a class="code" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">htimer</a>;</div>
 <div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="structxnsched.html#a46c9f9fdd5a35a375d6924133bde38af">   94</a></span>&#160;        <span class="keyword">struct </span>xntimer <a class="code" href="structxnsched.html#a46c9f9fdd5a35a375d6924133bde38af">rrbtimer</a>;</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        <span class="keyword">struct </span>xnthread rootcb;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH</span></div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor"></span>        <span class="keyword">struct </span>xnthread *last;</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#ifdef CONFIG_XENO_HW_FPU</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#ifdef CONFIG_XENO_ARCH_FPU</span></div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keyword">struct </span>xnthread *fpuholder;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">#endif</span></div>
@@ -450,7 +450,7 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2sched_8h_sour
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;        <span class="keywordflow">return</span> !xnsched_unblockable_p();</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;}</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH</span></div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH</span></div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;<span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a> *xnsched_finish_unlocked_switch(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;</div>
@@ -462,12 +462,12 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2sched_8h_sour
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        <span class="keywordflow">return</span> sched-&gt;<a class="code" href="structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48">status</a> &amp; XNRESCHED;</div>
 <div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;}</div>
 <div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;<span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_HW_UNLOCKED_SWITCH */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;<span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span><a class="code" href="structxnsched.html">xnsched</a> *</div>
 <div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;xnsched_finish_unlocked_switch(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched)</div>
 <div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;{</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        XENO_BUGON(NUCLEUS, !hard_irqs_disabled());</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        XENO_BUGON(COBALT, !hard_irqs_disabled());</div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;        <span class="keywordflow">return</span> xnsched_current();</div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;}</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;</div>
@@ -479,7 +479,7 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2sched_8h_sour
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;        <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;}</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_HW_UNLOCKED_SWITCH */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;<span class="preprocessor">#ifdef CONFIG_XENO_OPT_WATCHDOG</span></div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;<span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnsched_reset_watchdog(<span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched)</div>

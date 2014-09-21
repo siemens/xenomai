@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -115,97 +115,103 @@ $(document).ready(function(){initNavTree('include_2alchemy_2event_8h_source.html
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga332e18be49bf253b8a3a4eb3f0d4df2c">   30</a></span>&#160;<span class="preprocessor">#define EV_PRIO  0x1    </span><span class="comment">/* Pend by task priority order. */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define EV_FIFO  0x0    </span><span class="comment">/* Pend by FIFO order. */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga1bbb8e9b7c802aded726ad136fd6444c">   34</a></span>&#160;<span class="preprocessor">#define EV_ANY  0x1     </span><span class="comment">/* Disjunctive wait. */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define EV_ALL  0x0     </span><span class="comment">/* Conjunctive wait. */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">struct </span>RT_EVENT {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        uintptr_t handle;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;};</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_EVENT RT_EVENT;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html">   50</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> {</div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html#adbf286bbacfacdf430e72dc930356e24">   54</a></span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="structRT__EVENT__INFO.html#adbf286bbacfacdf430e72dc930356e24">value</a>;</div>
-<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">   58</a></span>&#160;        <span class="keywordtype">int</span> <a class="code" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">nwaiters</a>;</div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">   62</a></span>&#160;        <span class="keywordtype">char</span> <a class="code" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">name</a>[XNOBJECT_NAME_LEN];</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;};</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> <a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a>;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c">rt_event_create</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">name</a>,</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ivalue,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                    <span class="keywordtype">int</span> mode);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a>(RT_EVENT *event);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gafda4c544f2429005c4b15de3a7ffc902">rt_event_signal</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask);</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *mask_r,</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                        <span class="keywordtype">int</span> mode,</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                        <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga81e2c7a3346b2364a153a24be291b204">   87</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga81e2c7a3346b2364a153a24be291b204">rt_event_wait_until</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *mask_r,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                        <span class="keywordtype">int</span> mode, RTIME timeout)</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;{</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed</a>(event, mask, mask_r, mode,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                                   alchemy_abs_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga6e9f775275661d9258f8b1eb02fe4681">   97</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga6e9f775275661d9258f8b1eb02fe4681">rt_event_wait</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;                  <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *mask_r,</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                  <span class="keywordtype">int</span> mode, RTIME timeout)</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;{</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed</a>(event, mask, mask_r, mode,</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                                   alchemy_rel_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;}</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga448889bcfd01ed892d97a0b00fdaf553">rt_event_clear</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                   <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> mask,</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                   <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *mask_r);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;alchemy/compat.h&gt;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga332e18be49bf253b8a3a4eb3f0d4df2c">   31</a></span>&#160;<span class="preprocessor">#define EV_PRIO  0x1    </span><span class="comment">/* Pend by task priority order. */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define EV_FIFO  0x0    </span><span class="comment">/* Pend by FIFO order. */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga1bbb8e9b7c802aded726ad136fd6444c">   35</a></span>&#160;<span class="preprocessor">#define EV_ANY  0x1     </span><span class="comment">/* Disjunctive wait. */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define EV_ALL  0x0     </span><span class="comment">/* Conjunctive wait. */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="keyword">struct </span>RT_EVENT {</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        uintptr_t handle;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;};</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_EVENT RT_EVENT;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html">   51</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> {</div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html#a6959309af1887ae4539850a06e5ce285">   55</a></span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="structRT__EVENT__INFO.html#a6959309af1887ae4539850a06e5ce285">value</a>;</div>
+<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">   59</a></span>&#160;        <span class="keywordtype">int</span> <a class="code" href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">nwaiters</a>;</div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">   63</a></span>&#160;        <span class="keywordtype">char</span> <a class="code" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">name</a>[XNOBJECT_NAME_LEN];</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;};</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> <a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a>;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;CURRENT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3">rt_event_create</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                                  <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">name</a>,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                                  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> ivalue,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                                  <span class="keywordtype">int</span> mode));</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a>(RT_EVENT *event);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;CURRENT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__alchemy__event.html#gaa80008e6b15eabf76b7b48fa22edd1e9">rt_event_signal</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                                  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mask));</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mask,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *mask_r,</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                        <span class="keywordtype">int</span> mode,</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                        <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#ifndef __XENO_COMPAT__</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga6b2003500370ccfb6c5dd42674ec83a6">   91</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga6b2003500370ccfb6c5dd42674ec83a6">rt_event_wait_until</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mask, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *mask_r,</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                        <span class="keywordtype">int</span> mode, RTIME timeout)</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;{</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed</a>(event, mask, mask_r, mode,</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                                   alchemy_abs_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;}</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno"><a class="line" href="group__alchemy__event.html#ga091f055040598a9b4da1122ffaaafeae">  101</a></span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga091f055040598a9b4da1122ffaaafeae">rt_event_wait</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mask, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *mask_r,</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                  <span class="keywordtype">int</span> mode, RTIME timeout)</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;{</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed</a>(event, mask, mask_r, mode,</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                                   alchemy_rel_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;}</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gabecddf3846622df42bf95f94871f8e62">rt_event_inquire</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                     <a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> *info);</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga535edab31526338258479100f3e6997c">rt_event_bind</a>(RT_EVENT *event,</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* !__XENO_COMPAT__ */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;CURRENT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__alchemy__event.html#ga7f4c2b3ab613680f11a2ffd2a51d80ab">rt_event_clear</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mask,</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *mask_r));</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gae985bb0e671e2a5e07b575fd793fde22">rt_event_unbind</a>(RT_EVENT *event);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_EVENT_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="structRT__EVENT__INFO_html_adbf286bbacfacdf430e72dc930356e24"><div class="ttname"><a href="structRT__EVENT__INFO.html#adbf286bbacfacdf430e72dc930356e24">RT_EVENT_INFO::value</a></div><div class="ttdeci">unsigned long value</div><div class="ttdoc">Current value of the event flag group. </div><div class="ttdef"><b>Definition:</b> event.h:54</div></div>
-<div class="ttc" id="structRT__EVENT__INFO_html_a3ede25b62f9a18ffab95ee9e5b2e8cf9"><div class="ttname"><a href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">RT_EVENT_INFO::name</a></div><div class="ttdeci">char name[XNOBJECT_NAME_LEN]</div><div class="ttdoc">Name of event flag group. </div><div class="ttdef"><b>Definition:</b> event.h:62</div></div>
-<div class="ttc" id="group__alchemy__event_html_ga448889bcfd01ed892d97a0b00fdaf553"><div class="ttname"><a href="group__alchemy__event.html#ga448889bcfd01ed892d97a0b00fdaf553">rt_event_clear</a></div><div class="ttdeci">int rt_event_clear(RT_EVENT *event, unsigned long mask, unsigned long *mask_r)</div><div class="ttdoc">Clear event flags. </div><div class="ttdef"><b>Definition:</b> event.c:467</div></div>
-<div class="ttc" id="group__alchemy__event_html_ga37bf24b429dd62f48bd0ca024115f6f8"><div class="ttname"><a href="group__alchemy__event.html#ga37bf24b429dd62f48bd0ca024115f6f8">rt_event_wait_timed</a></div><div class="ttdeci">int rt_event_wait_timed(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, const struct timespec *abs_timeout)</div><div class="ttdoc">Wait for an arbitrary set of events. </div><div class="ttdef"><b>Definition:</b> event.c:377</div></div>
-<div class="ttc" id="group__alchemy__event_html_gabecddf3846622df42bf95f94871f8e62"><div class="ttname"><a href="group__alchemy__event.html#gabecddf3846622df42bf95f94871f8e62">rt_event_inquire</a></div><div class="ttdeci">int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)</div><div class="ttdoc">Query event flag group status. </div><div class="ttdef"><b>Definition:</b> event.c:506</div></div>
-<div class="ttc" id="structRT__EVENT__INFO_html_aaa1ac5172774b1d6562079ef9a018ce0"><div class="ttname"><a href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">RT_EVENT_INFO::nwaiters</a></div><div class="ttdeci">int nwaiters</div><div class="ttdoc">Number of tasks currently waiting for events. </div><div class="ttdef"><b>Definition:</b> event.h:58</div></div>
-<div class="ttc" id="group__alchemy__event_html_gafda4c544f2429005c4b15de3a7ffc902"><div class="ttname"><a href="group__alchemy__event.html#gafda4c544f2429005c4b15de3a7ffc902">rt_event_signal</a></div><div class="ttdeci">int rt_event_signal(RT_EVENT *event, unsigned long mask)</div><div class="ttdoc">Signal an event. </div><div class="ttdef"><b>Definition:</b> event.c:427</div></div>
-<div class="ttc" id="group__alchemy__event_html_ga8b0fbb2b816c62081afe86bf897c503c"><div class="ttname"><a href="group__alchemy__event.html#ga8b0fbb2b816c62081afe86bf897c503c">rt_event_create</a></div><div class="ttdeci">int rt_event_create(RT_EVENT *event, const char *name, unsigned long ivalue, int mode)</div><div class="ttdoc">Create an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:168</div></div>
-<div class="ttc" id="group__alchemy__event_html_gabccfea1cd018493ef5a28c6fe8e90d7c"><div class="ttname"><a href="group__alchemy__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a></div><div class="ttdeci">int rt_event_delete(RT_EVENT *event)</div><div class="ttdoc">Delete an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:243</div></div>
-<div class="ttc" id="structRT__EVENT__INFO_html"><div class="ttname"><a href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a></div><div class="ttdoc">Event status descriptor. </div><div class="ttdef"><b>Definition:</b> event.h:50</div></div>
-<div class="ttc" id="group__alchemy__event_html_ga535edab31526338258479100f3e6997c"><div class="ttname"><a href="group__alchemy__event.html#ga535edab31526338258479100f3e6997c">rt_event_bind</a></div><div class="ttdeci">int rt_event_bind(RT_EVENT *event, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:575</div></div>
-<div class="ttc" id="group__alchemy__event_html_ga6e9f775275661d9258f8b1eb02fe4681"><div class="ttname"><a href="group__alchemy__event.html#ga6e9f775275661d9258f8b1eb02fe4681">rt_event_wait</a></div><div class="ttdeci">static int rt_event_wait(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)</div><div class="ttdoc">Wait for an arbitrary set of events (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> event.h:97</div></div>
-<div class="ttc" id="group__alchemy__event_html_ga81e2c7a3346b2364a153a24be291b204"><div class="ttname"><a href="group__alchemy__event.html#ga81e2c7a3346b2364a153a24be291b204">rt_event_wait_until</a></div><div class="ttdeci">static int rt_event_wait_until(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)</div><div class="ttdoc">Wait for an arbitrary set of events (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> event.h:87</div></div>
-<div class="ttc" id="group__alchemy__event_html_gae985bb0e671e2a5e07b575fd793fde22"><div class="ttname"><a href="group__alchemy__event.html#gae985bb0e671e2a5e07b575fd793fde22">rt_event_unbind</a></div><div class="ttdeci">int rt_event_unbind(RT_EVENT *event)</div><div class="ttdoc">Unbind from an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:597</div></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gabecddf3846622df42bf95f94871f8e62">rt_event_inquire</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                     <a class="code" href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a> *info);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#ga535edab31526338258479100f3e6997c">rt_event_bind</a>(RT_EVENT *event,</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                  <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__event.html#gae985bb0e671e2a5e07b575fd793fde22">rt_event_unbind</a>(RT_EVENT *event);</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_EVENT_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="structRT__EVENT__INFO_html_a6959309af1887ae4539850a06e5ce285"><div class="ttname"><a href="structRT__EVENT__INFO.html#a6959309af1887ae4539850a06e5ce285">RT_EVENT_INFO::value</a></div><div class="ttdeci">unsigned int value</div><div class="ttdoc">Current value of the event flag group. </div><div class="ttdef"><b>Definition:</b> event.h:55</div></div>
+<div class="ttc" id="group__alchemy__event_html_ga4e22ecfdac06b221ba49d4f383f3ce07"><div class="ttname"><a href="group__alchemy__event.html#ga4e22ecfdac06b221ba49d4f383f3ce07">rt_event_wait_timed</a></div><div class="ttdeci">int rt_event_wait_timed(RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, const struct timespec *abs_timeout)</div><div class="ttdoc">Wait for an arbitrary set of events. </div><div class="ttdef"><b>Definition:</b> event.c:382</div></div>
+<div class="ttc" id="structRT__EVENT__INFO_html_a3ede25b62f9a18ffab95ee9e5b2e8cf9"><div class="ttname"><a href="structRT__EVENT__INFO.html#a3ede25b62f9a18ffab95ee9e5b2e8cf9">RT_EVENT_INFO::name</a></div><div class="ttdeci">char name[XNOBJECT_NAME_LEN]</div><div class="ttdoc">Name of event flag group. </div><div class="ttdef"><b>Definition:</b> event.h:63</div></div>
+<div class="ttc" id="group__alchemy__event_html_gabecddf3846622df42bf95f94871f8e62"><div class="ttname"><a href="group__alchemy__event.html#gabecddf3846622df42bf95f94871f8e62">rt_event_inquire</a></div><div class="ttdeci">int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)</div><div class="ttdoc">Query event flag group status. </div><div class="ttdef"><b>Definition:</b> event.c:521</div></div>
+<div class="ttc" id="structRT__EVENT__INFO_html_aaa1ac5172774b1d6562079ef9a018ce0"><div class="ttname"><a href="structRT__EVENT__INFO.html#aaa1ac5172774b1d6562079ef9a018ce0">RT_EVENT_INFO::nwaiters</a></div><div class="ttdeci">int nwaiters</div><div class="ttdoc">Number of tasks currently waiting for events. </div><div class="ttdef"><b>Definition:</b> event.h:59</div></div>
+<div class="ttc" id="group__alchemy__event_html_ga563bd4034fc1a8ce45b3f82bf09712f3"><div class="ttname"><a href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3">rt_event_create</a></div><div class="ttdeci">int rt_event_create(RT_EVENT *event, const char *name, unsigned int ivalue, int mode)</div><div class="ttdoc">Create an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:172</div></div>
+<div class="ttc" id="group__alchemy__event_html_ga7f4c2b3ab613680f11a2ffd2a51d80ab"><div class="ttname"><a href="group__alchemy__event.html#ga7f4c2b3ab613680f11a2ffd2a51d80ab">rt_event_clear</a></div><div class="ttdeci">int rt_event_clear(RT_EVENT *event, unsigned int mask, unsigned int *mask_r)</div><div class="ttdoc">Clear event flags. </div><div class="ttdef"><b>Definition:</b> event.c:481</div></div>
+<div class="ttc" id="group__alchemy__event_html_gabccfea1cd018493ef5a28c6fe8e90d7c"><div class="ttname"><a href="group__alchemy__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a></div><div class="ttdeci">int rt_event_delete(RT_EVENT *event)</div><div class="ttdoc">Delete an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:248</div></div>
+<div class="ttc" id="structRT__EVENT__INFO_html"><div class="ttname"><a href="structRT__EVENT__INFO.html">RT_EVENT_INFO</a></div><div class="ttdoc">Event status descriptor. </div><div class="ttdef"><b>Definition:</b> event.h:51</div></div>
+<div class="ttc" id="group__alchemy__event_html_ga535edab31526338258479100f3e6997c"><div class="ttname"><a href="group__alchemy__event.html#ga535edab31526338258479100f3e6997c">rt_event_bind</a></div><div class="ttdeci">int rt_event_bind(RT_EVENT *event, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:590</div></div>
+<div class="ttc" id="group__alchemy__event_html_gaa80008e6b15eabf76b7b48fa22edd1e9"><div class="ttname"><a href="group__alchemy__event.html#gaa80008e6b15eabf76b7b48fa22edd1e9">rt_event_signal</a></div><div class="ttdeci">int rt_event_signal(RT_EVENT *event, unsigned int mask)</div><div class="ttdoc">Signal an event. </div><div class="ttdef"><b>Definition:</b> event.c:436</div></div>
+<div class="ttc" id="group__alchemy__event_html_ga091f055040598a9b4da1122ffaaafeae"><div class="ttname"><a href="group__alchemy__event.html#ga091f055040598a9b4da1122ffaaafeae">rt_event_wait</a></div><div class="ttdeci">static int rt_event_wait(RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, RTIME timeout)</div><div class="ttdoc">Wait for an arbitrary set of events (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> event.h:101</div></div>
+<div class="ttc" id="group__alchemy__event_html_gae985bb0e671e2a5e07b575fd793fde22"><div class="ttname"><a href="group__alchemy__event.html#gae985bb0e671e2a5e07b575fd793fde22">rt_event_unbind</a></div><div class="ttdeci">int rt_event_unbind(RT_EVENT *event)</div><div class="ttdoc">Unbind from an event flag group. </div><div class="ttdef"><b>Definition:</b> event.c:612</div></div>
+<div class="ttc" id="group__alchemy__event_html_ga6b2003500370ccfb6c5dd42674ec83a6"><div class="ttname"><a href="group__alchemy__event.html#ga6b2003500370ccfb6c5dd42674ec83a6">rt_event_wait_until</a></div><div class="ttdeci">static int rt_event_wait_until(RT_EVENT *event, unsigned int mask, unsigned int *mask_r, int mode, RTIME timeout)</div><div class="ttdoc">Wait for an arbitrary set of events (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> event.h:91</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

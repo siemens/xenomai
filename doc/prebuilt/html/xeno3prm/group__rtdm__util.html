@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -314,7 +314,7 @@ Functions</h2></td></tr>
 
 <p>Test if running in a real-time task. </p>
 <dl class="section return"><dt>Returns</dt><dd>Non-zero is returned if the caller resides in real-time context, 0 otherwise.</dd></dl>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -493,7 +493,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Map a kernel logical memory range to a virtual user area. </p>
-<p>This routine is commonly used from a -&gt;mmap() handler of a RTDM driver, for mapping a virtual memory area with no direct physical mapping over the user address space referred to by <em>vma</em>.</p>
+<p>This routine is commonly used from a -&gt;mmap() handler of a RTDM driver, for mapping a virtual memory area with a direct physical mapping over the user address space referred to by <em>vma</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">vma</td><td>The VMA descriptor to receive the mapping. </td></tr>
@@ -853,7 +853,7 @@ RTDM supports two models for unmapping the memory area:<ul>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Non-zero is returned if the caller is able to execute in real-time context (independent of its current execution mode), 0 otherwise.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>This function can be used by drivers that provide different implementations for the same service depending on the execution mode of the caller. If a caller requests such a service in non-real-time context but is capable of running in real-time as well, it might be appropriate for the driver to reject the request via -ENOSYS so that RTDM can switch the caller and restart the request in real-time context.</dd></dl>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>

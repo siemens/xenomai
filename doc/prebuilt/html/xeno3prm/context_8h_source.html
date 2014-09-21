@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -118,14 +118,12 @@ $(document).ready(function(){initNavTree('context_8h_source.html','');});
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        <span class="comment">/* Get a pointer on the container structure */</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <span class="keyword">struct </span>rtdm_fd *fd = <a class="code" href="driver_8h.html#ae435e0c93c5972d0fddbd2d055b43660">rtdm_private_to_fd</a>(cxt);</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="comment">/* Get the minor index */</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="driver_8h.html#ab0378feca734478fb704060e216e65db">rtdm_fd_device</a>(fd)-&gt;<a class="code" href="structrtdm__device.html#a13d065b957258e702b0c0526c64b729b">device_id</a>;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordflow">return</span> rtdm_fd_minor(fd);</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;}</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_RTDM_ANALOGY_CONTEXT_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="driver_8h_html"><div class="ttname"><a href="driver_8h.html">driver.h</a></div><div class="ttdoc">Real-Time Driver Model for Xenomai, driver API header. </div></div>
-<div class="ttc" id="driver_8h_html_ab0378feca734478fb704060e216e65db"><div class="ttname"><a href="driver_8h.html#ab0378feca734478fb704060e216e65db">rtdm_fd_device</a></div><div class="ttdeci">static struct rtdm_device * rtdm_fd_device(struct rtdm_fd *fd)</div><div class="ttdoc">Locate a device structure from a file descriptor. </div><div class="ttdef"><b>Definition:</b> driver.h:225</div></div>
-<div class="ttc" id="structrtdm__device_html_a13d065b957258e702b0c0526c64b729b"><div class="ttname"><a href="structrtdm__device.html#a13d065b957258e702b0c0526c64b729b">rtdm_device::device_id</a></div><div class="ttdeci">int device_id</div><div class="ttdoc">Driver definable device ID. </div><div class="ttdef"><b>Definition:</b> driver.h:293</div></div>
-<div class="ttc" id="driver_8h_html_ae435e0c93c5972d0fddbd2d055b43660"><div class="ttname"><a href="driver_8h.html#ae435e0c93c5972d0fddbd2d055b43660">rtdm_private_to_fd</a></div><div class="ttdeci">static struct rtdm_fd * rtdm_private_to_fd(void *dev_private)</div><div class="ttdoc">Locate a device file descriptor structure from its driver private area. </div><div class="ttdef"><b>Definition:</b> driver.h:197</div></div>
+<div class="ttc" id="driver_8h_html_ae435e0c93c5972d0fddbd2d055b43660"><div class="ttname"><a href="driver_8h.html#ae435e0c93c5972d0fddbd2d055b43660">rtdm_private_to_fd</a></div><div class="ttdeci">static struct rtdm_fd * rtdm_private_to_fd(void *dev_private)</div><div class="ttdoc">Locate a device file descriptor structure from its driver private area. </div><div class="ttdef"><b>Definition:</b> driver.h:170</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

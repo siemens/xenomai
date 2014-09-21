@@ -12,5 +12,5 @@ var cobalt_2kernel_2rtdm_2udd_8h =
     [ "udd_post_irq_disable", "cobalt_2kernel_2rtdm_2udd_8h.html#gaf6f4e8a3f067de20bc9f04749172b8cc", null ],
     [ "udd_post_irq_enable", "cobalt_2kernel_2rtdm_2udd_8h.html#ga3918bc5d1ca700864d3b38994d611ed7", null ],
     [ "udd_register_device", "cobalt_2kernel_2rtdm_2udd_8h.html#gaa5bee7471396c7b182a5a2a5fb60d230", null ],
-    [ "udd_unregister_device", "cobalt_2kernel_2rtdm_2udd_8h.html#ga7206665dd8c240e578a2925450697a40", null ]
+    [ "udd_unregister_device", "cobalt_2kernel_2rtdm_2udd_8h.html#ga389544ffa49f17fe3417d97122ed3acb", null ]
 ];

@@ -1,6 +1,7 @@
 var structrtdm__fd__ops =
 [
     [ "close", "structrtdm__fd__ops.html#a2b27945be840f51ad42201e60d91e9d7", null ],
+    [ "get_unmapped_area", "structrtdm__fd__ops.html#afaa1481da3f0bc215bb81640b031ec6c", null ],
     [ "ioctl_nrt", "structrtdm__fd__ops.html#ada51e5fd0712b753d72ede0d18c5b698", null ],
     [ "ioctl_rt", "structrtdm__fd__ops.html#a78844cc56952f738c8a2f4c99e71ea5d", null ],
     [ "mmap", "structrtdm__fd__ops.html#a45257084e12bfb4a86169b4b47f641e3", null ],

@@ -12,7 +12,6 @@ var group__cobalt__core =
     [ "Registry services", "group__cobalt__core__registry.html", "group__cobalt__core__registry" ],
     [ "Thread scheduling control", "group__cobalt__core__sched.html", "group__cobalt__core__sched" ],
     [ "Synchronous I/O multiplexing", "group__cobalt__core__select.html", "group__cobalt__core__select" ],
-    [ "Real-time shadow services", "group__cobalt__core__shadow.html", "group__cobalt__core__shadow" ],
     [ "Thread synchronization services", "group__cobalt__core__synch.html", "group__cobalt__core__synch" ],
     [ "Thread services", "group__cobalt__core__thread.html", "group__cobalt__core__thread" ],
     [ "Timer services", "group__cobalt__core__timer.html", "group__cobalt__core__timer" ],

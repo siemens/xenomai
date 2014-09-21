@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.7</span>
+   &#160;<span id="projectnumber">2.99.8</span>
    </div>
   </td>
  </tr>
@@ -103,6 +103,15 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <tr class="memitem:ga6c0caadae03541db8a46751d290c0d76"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a> (RT_ALARM *alarm)</td></tr>
 <tr class="memdesc:ga6c0caadae03541db8a46751d290c0d76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for the next alarm shot (compatibility service).  <a href="#ga6c0caadae03541db8a46751d290c0d76">More...</a><br/></td></tr>
 <tr class="separator:ga6c0caadae03541db8a46751d290c0d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabe889b984ed685d4bccdaabb2e0be6d4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#gabe889b984ed685d4bccdaabb2e0be6d4">COMPAT__rt_event_create</a> (RT_EVENT *event, const char *name, unsigned long ivalue, int mode)</td></tr>
+<tr class="memdesc:gabe889b984ed685d4bccdaabb2e0be6d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an event flag group.  <a href="#gabe889b984ed685d4bccdaabb2e0be6d4">More...</a><br/></td></tr>
+<tr class="separator:gabe889b984ed685d4bccdaabb2e0be6d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6b65888836cffb1674f6d61522674d15"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga6b65888836cffb1674f6d61522674d15">COMPAT__rt_event_signal</a> (RT_EVENT *event, unsigned long mask)</td></tr>
+<tr class="memdesc:ga6b65888836cffb1674f6d61522674d15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal an event.  <a href="#ga6b65888836cffb1674f6d61522674d15">More...</a><br/></td></tr>
+<tr class="separator:ga6b65888836cffb1674f6d61522674d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6e02ebb20c49674d47cb16e648baff45"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#ga6e02ebb20c49674d47cb16e648baff45">COMPAT__rt_event_clear</a> (RT_EVENT *event, unsigned long mask, unsigned long *mask_r)</td></tr>
+<tr class="memdesc:ga6e02ebb20c49674d47cb16e648baff45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear event flags.  <a href="#ga6e02ebb20c49674d47cb16e648baff45">More...</a><br/></td></tr>
+<tr class="separator:ga6e02ebb20c49674d47cb16e648baff45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gafe8deaa3c89e0a07e59f0e58f9ec1473"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np</a> (pthread_t thread, struct timespec *starttp, struct timespec *periodtp)</td></tr>
 <tr class="memdesc:gafe8deaa3c89e0a07e59f0e58f9ec1473"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a thread periodic (compatibility service).  <a href="#gafe8deaa3c89e0a07e59f0e58f9ec1473">More...</a><br/></td></tr>
 <tr class="separator:gafe8deaa3c89e0a07e59f0e58f9ec1473"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,6 +165,161 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Alarms are process-private objects and thus cannot be shared by multiple processes, even if they belong to the same Xenomai session.</dd></dl>
 <dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000007">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6e02ebb20c49674d47cb16e648baff45"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int COMPAT__rt_event_clear </td>
+          <td>(</td>
+          <td class="paramtype">RT_EVENT *&#160;</td>
+          <td class="paramname"><em>event</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramname"><em>mask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long *&#160;</td>
+          <td class="paramname"><em>mask_r</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Clear event flags. </p>
+<p>This call is the legacy form of the <a class="el" href="group__alchemy__event.html#ga7f4c2b3ab613680f11a2ffd2a51d80ab" title="Clear event flags. ">rt_event_clear()</a> service, using a long event mask. The new form uses a regular integer to hold the event mask instead.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
+    <tr><td class="paramname">mask</td><td>The set of event flags to be cleared.</td></tr>
+    <tr><td class="paramname">mask_r</td><td>If non-NULL, <em>mask_r</em> is the address of a memory location which will receive the previous value of the event flag group before the flags are cleared.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>event</em> is not a valid event flag group descriptor.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a></dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000011">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gabe889b984ed685d4bccdaabb2e0be6d4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int COMPAT__rt_event_create </td>
+          <td>(</td>
+          <td class="paramtype">RT_EVENT *&#160;</td>
+          <td class="paramname"><em>event</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramname"><em>ivalue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>mode</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create an event flag group. </p>
+<p>This call is the legacy form of the <a class="el" href="group__alchemy__event.html#ga563bd4034fc1a8ce45b3f82bf09712f3" title="Create an event flag group. ">rt_event_create()</a> service, using a long event mask. The new form uses a regular integer to hold the event mask instead.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">event</td><td>The address of an event descriptor which can be later used to identify uniquely the created object, upon success of this call.</td></tr>
+    <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the event. When non-NULL and non-empty, a copy of this string is used for indexing the created event into the object registry.</td></tr>
+    <tr><td class="paramname">ivalue</td><td>The initial value of the group's event mask.</td></tr>
+    <tr><td class="paramname">mode</td><td>The event group creation mode. The following flags can be OR'ed into this bitmask:</td></tr>
+  </table>
+  </dd>
+</dl>
+<ul>
+<li>EV_FIFO makes tasks pend in FIFO order on the event flag group.</li>
+<li>EV_PRIO makes tasks pend in priority order on the event flag group.</li>
+</ul>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>mode</em> is invalid.</li>
+<li>-ENOMEM is returned if the system fails to get memory from the main heap in order to create the event flag group.</li>
+<li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered event flag group.</li>
+<li>-EPERM is returned if this service was called from an asynchronous context.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Event flag groups can be shared by multiple processes which belong to the same Xenomai session.</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6b65888836cffb1674f6d61522674d15"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int COMPAT__rt_event_signal </td>
+          <td>(</td>
+          <td class="paramtype">RT_EVENT *&#160;</td>
+          <td class="paramname"><em>event</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramname"><em>mask</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Signal an event. </p>
+<p>This call is the legacy form of the <a class="el" href="group__alchemy__event.html#gaa80008e6b15eabf76b7b48fa22edd1e9" title="Signal an event. ">rt_event_signal()</a> service, using a long event mask. The new form uses a regular integer to hold the event mask instead.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">event</td><td>The event descriptor.</td></tr>
+    <tr><td class="paramname">mask</td><td>The set of events to be posted.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if <em>event</em> is not an event flag group descriptor.</li>
+</ul>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a></dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -348,7 +512,7 @@ an error number if:<ul>
 </ul>
 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Unlike the original Xenomai 2.x call, this emulation does not delay the caller waiting for the first periodic release point. In addition, <em>thread</em> must be equal to pthread_self().</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000012">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create()</a>, and <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime()</a>.</p>
 
@@ -384,7 +548,7 @@ an error number if:<ul>
 <li>EPERM is returned if this service was called from an invalid context.</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>If the current release point has already been reached at the time of the call, the current thread immediately returns from this service with no delay.</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000013">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
 
 </div>
 </div>

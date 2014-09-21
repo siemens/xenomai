@@ -9,11 +9,9 @@ var group__rtdm__udd =
     [ "udd_device", "structudd__device.html", [
       [ "udd_reserved", "structudd__device_1_1udd__reserved.html", null ],
       [ "close", "structudd__device.html#ae620cc437f5cf1884738403acf608ade", null ],
-      [ "device_description", "structudd__device.html#a77ed5470016a191707476602d110fe80", null ],
+      [ "device_flags", "structudd__device.html#acc143e9af9f5a1a6de12a09730370e4c", null ],
       [ "device_name", "structudd__device.html#a8f5d7d94ba891771a3d5dfbc308fdcad", null ],
       [ "device_subclass", "structudd__device.html#ae2be25937198705a92f5e179d6c48192", null ],
-      [ "driver_author", "structudd__device.html#ab00aaf8cf5df4f32790fb12cad3879f0", null ],
-      [ "driver_version", "structudd__device.html#a05c8b9b7cb84386162044193bd9a78fc", null ],
       [ "interrupt", "structudd__device.html#a4399a85d7b40dfb943658f1cf44d54bc", null ],
       [ "ioctl", "structudd__device.html#ab0468cbed245769ae99910e3bd902e52", null ],
       [ "irq", "structudd__device.html#aab89d90525c1e515756a87116c8adf09", null ],
@@ -39,5 +37,5 @@ var group__rtdm__udd =
     [ "udd_post_irq_disable", "group__rtdm__udd.html#gaf6f4e8a3f067de20bc9f04749172b8cc", null ],
     [ "udd_post_irq_enable", "group__rtdm__udd.html#ga3918bc5d1ca700864d3b38994d611ed7", null ],
     [ "udd_register_device", "group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230", null ],
-    [ "udd_unregister_device", "group__rtdm__udd.html#ga7206665dd8c240e578a2925450697a40", null ]
+    [ "udd_unregister_device", "group__rtdm__udd.html#ga389544ffa49f17fe3417d97122ed3acb", null ]
 ];
