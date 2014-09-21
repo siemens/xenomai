@@ -279,6 +279,15 @@ redo:
 			data += vfile->datasz;
 			it->nrdata++;
 		}
+#ifdef CONFIG_SMP
+		{
+			/* Leave some time for other cpus to get the lock */
+			xnticks_t wakeup = xnarch_get_cpu_tsc();
+			wakeup += xnarch_ns_to_tsc(1000);
+			while ((xnsticks_t)(xnarch_get_cpu_tsc() - wakeup) < 0)
+				cpu_relax();
+		}
+#endif
 	}
 
 	if (ret < 0) {
