@@ -172,28 +172,6 @@ static void *lookup_context(int xid)
 	return priv;
 }
 
-static int enter_personality(struct cobalt_process *process,
-			     struct xnthread_personality *personality)
-{
-	if (personality->module && !try_module_get(personality->module))
-		return -EAGAIN;
-
-	__set_bit(personality->xid, &process->permap);
-	atomic_inc(&personality->refcnt);
-
-	return 0;
-}
-
-static void leave_personality(struct cobalt_process *process,
-			      struct xnthread_personality *personality)
-{
-	__clear_bit(personality->xid, &process->permap);
-	atomic_dec(&personality->refcnt);
-	XENO_ASSERT(COBALT, atomic_read(&personality->refcnt) >= 0);
-	if (personality->module)
-		module_put(personality->module);
-}
-
 static void remove_process(struct cobalt_process *process)
 {
 	struct xnthread_personality *personality;
@@ -207,16 +185,20 @@ static void remove_process(struct cobalt_process *process)
 			continue;
 		personality = cobalt_personalities[xid];
 		priv = process->priv[xid];
+		if (priv == NULL)
+			continue;
 		/*
 		 * CAUTION: process potentially refers to stale memory
 		 * upon return from detach_process() for the Cobalt
 		 * personality, so don't dereference it afterwards.
 		 */
-		if (priv) {
-			process->priv[xid] = NULL;
-			personality->ops.detach_process(priv);
-			leave_personality(process, personality);
-		}
+		process->priv[xid] = NULL;
+		__clear_bit(personality->xid, &process->permap);
+		personality->ops.detach_process(priv);
+		atomic_dec(&personality->refcnt);
+		XENO_ASSERT(COBALT, atomic_read(&personality->refcnt) >= 0);
+		if (personality->module)
+			module_put(personality->module);
 	}
 
 	cobalt_set_process(NULL);
@@ -295,7 +277,6 @@ static int bind_personality(struct xnthread_personality *personality)
 {
 	struct cobalt_process *process;
 	void *priv;
-	int ret;
 
 	/*
 	 * We also check capabilities for stacking a Cobalt extension,
@@ -323,12 +304,13 @@ static int bind_personality(struct xnthread_personality *personality)
 	 * safely bump the module refcount after the attach handler
 	 * has returned.
 	 */
-	ret = enter_personality(process, personality);
-	if (ret) {
+	if (personality->module && !try_module_get(personality->module)) {
 		personality->ops.detach_process(priv);
-		return ret;
+		return -EAGAIN;
 	}
 
+	__set_bit(personality->xid, &process->permap);
+	atomic_inc(&personality->refcnt);
 	process->priv[personality->xid] = priv;
 
 	raise_cap(CAP_SYS_NICE);
