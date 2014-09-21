@@ -121,7 +121,7 @@ do_init:
 	return 0;
 fail_register:
 	xnlock_put_irqrestore(&nklock, s);
-	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm, state);
+	cobalt_umm_free(&sys_ppd->umm, state);
 fail_umm:
 	xnfree(cond);
 
