@@ -125,6 +125,7 @@ static void init_bind(void)
 	if (cobalt_umm_private == MAP_FAILED) {
 		report_error("cannot map private umm area: %s",
 			     strerror(errno));
+		report_error_cont("(CONFIG_DEVTMPFS_MOUNT not enabled?)");
 		exit(EXIT_FAILURE);
 	}
 }
