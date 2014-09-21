@@ -208,7 +208,7 @@ static inline void ____xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_
 	atomic_set(&lock->owner, ~0);
 }
 
-#ifndef CONFIG_XENO_HW_OUTOFLINE_XNLOCK
+#ifndef CONFIG_XENO_ARCH_OUTOFLINE_XNLOCK
 #define ___xnlock_get ____xnlock_get
 #define ___xnlock_put ____xnlock_put
 #else /* out of line xnlock */

@@ -56,7 +56,7 @@ static void nop_close(struct rtdm_fd *fd)
 }
 
 static inline struct rtdm_fd_index *
-fetch_fd_index(struct xnsys_ppd *p, int ufd)
+fetch_fd_index(struct cobalt_ppd *p, int ufd)
 {
 	struct xnid *id = xnid_fetch(&p->fds, ufd);
 	if (id == NULL)
@@ -65,7 +65,7 @@ fetch_fd_index(struct xnsys_ppd *p, int ufd)
 	return container_of(id, struct rtdm_fd_index, id);
 }
 
-static struct rtdm_fd *fetch_fd(struct xnsys_ppd *p, int ufd)
+static struct rtdm_fd *fetch_fd(struct cobalt_ppd *p, int ufd)
 {
 	struct rtdm_fd_index *idx = fetch_fd_index(p, ufd);
 	if (idx == NULL)
@@ -119,7 +119,7 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 		  struct rtdm_fd_ops *ops)
 {
 	struct rtdm_fd_index *idx;
-	struct xnsys_ppd *ppd;
+	struct cobalt_ppd *ppd;
 	spl_t s;
 	int ret;
 
@@ -176,7 +176,7 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
  */
 struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic)
 {
-	struct xnsys_ppd *p = cobalt_ppd_get(0);
+	struct cobalt_ppd *p = cobalt_ppd_get(0);
 	struct rtdm_fd *fd;
 	spl_t s;
 
@@ -496,7 +496,7 @@ out:
 EXPORT_SYMBOL_GPL(rtdm_fd_sendmsg);
 
 static void
-__fd_close(struct xnsys_ppd *p, struct rtdm_fd_index *idx, spl_t s)
+__fd_close(struct cobalt_ppd *p, struct rtdm_fd_index *idx, spl_t s)
 {
 	xnid_remove(&p->fds, &idx->id);
 	__put_fd(idx->fd, s);
@@ -507,7 +507,7 @@ __fd_close(struct xnsys_ppd *p, struct rtdm_fd_index *idx, spl_t s)
 int rtdm_fd_close(int ufd, unsigned int magic)
 {
 	struct rtdm_fd_index *idx;
-	struct xnsys_ppd *ppd;
+	struct cobalt_ppd *ppd;
 	struct rtdm_fd *fd;
 	spl_t s;
 
@@ -628,7 +628,7 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 
 static void destroy_fd(void *cookie, struct xnid *id)
 {
-	struct xnsys_ppd *p = cookie;
+	struct cobalt_ppd *p = cookie;
 	struct rtdm_fd_index *idx;
 	spl_t s;
 
@@ -637,7 +637,7 @@ static void destroy_fd(void *cookie, struct xnid *id)
 	__fd_close(p, idx, 0);
 }
 
-void rtdm_fd_cleanup(struct xnsys_ppd *p)
+void rtdm_fd_cleanup(struct cobalt_ppd *p)
 {
 	/*
 	 * This is called on behalf of a (userland) task exit handler,

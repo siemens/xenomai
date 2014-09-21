@@ -63,14 +63,14 @@ static inline int xnarch_shadow_p(struct xnarchtcb *tcb, struct task_struct *tas
 				 ((d)->exception == 1 || (d)->exception == 3))
 #define xnarch_fault_notify(d)	(!xnarch_fault_bp_p(d))
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 
 void xnarch_save_fpu(struct xnthread *thread);
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to);
 int xnarch_handle_fpu_fault(struct xnthread *from, 
 			struct xnthread *to, struct ipipe_trap_data *d);
 
-#else /* !CONFIG_XENO_HW_FPU */
+#else /* !CONFIG_XENO_ARCH_FPU */
 
 static inline void xnarch_save_fpu(struct xnthread *thread) { }
 static inline void
@@ -86,7 +86,7 @@ xnarch_handle_fpu_fault(struct xnthread *from,
 	return 0;
 }
 
-#endif /* !CONFIG_XENO_HW_FPU */
+#endif /* !CONFIG_XENO_ARCH_FPU */
 
 void xnarch_init_root_tcb(struct xnthread *thread);
 

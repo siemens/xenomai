@@ -56,7 +56,7 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, ret;
 	struct cobalt_cond *cond, *old_cond;
 	struct cobalt_cond_state *state;
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 	struct list_head *condq;
 	spl_t s;
 

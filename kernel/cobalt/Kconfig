@@ -166,7 +166,7 @@ config XENO_OPT_RR_QUANTUM
 
 config XENO_OPT_AUTOTUNE
         bool "Auto-tuning"
-        default y if XENO_HW_AUTOTUNE
+        default y if XENO_ARCH_AUTOTUNE
 	select XENO_DRIVERS_AUTOTUNE
         help
 	Enable auto-tuning capabilities. Auto-tuning is used for
@@ -298,7 +298,7 @@ config XENO_OPT_REGISTRY_NRSLOTS
 	the maximum number of resources the registry can handle.
 
 config XENO_OPT_SYS_HEAPSZ
-	int "Size of the system heap (Kb)"
+	int "Size of system heap (Kb)"
 	default 256
 	help
 

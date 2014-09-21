@@ -71,7 +71,7 @@ int __xnsys_disabled;
 module_param_named(disable, __xnsys_disabled, int, 0444);
 EXPORT_SYMBOL_GPL(__xnsys_disabled);
 
-struct xnsys_ppd __xnsys_global_ppd = {
+struct cobalt_ppd __xnsys_global_ppd = {
 	.exe_path = "vmlinux",
 };
 EXPORT_SYMBOL_GPL(__xnsys_global_ppd);

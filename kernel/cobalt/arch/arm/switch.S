@@ -54,7 +54,7 @@
 
 	.text
 
-#if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
+#if defined(CONFIG_VFP) && defined(CONFIG_XENO_ARCH_FPU)
 /* Copied from vfp_save_state in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state, r1 = fpexc
  */

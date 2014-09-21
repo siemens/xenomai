@@ -23,7 +23,7 @@
 
 struct xnarchtcb {
 	struct xntcb core;
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 	struct thread_struct *fpup;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 #else
@@ -50,7 +50,7 @@ struct xnarchtcb {
 
 static inline void xnarch_enter_root(struct xnthread *root) { }
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread)
 {
@@ -66,13 +66,13 @@ static inline void xnarch_init_shadow_tcb(struct xnthread *thread)
 
 void xnarch_leave_root(struct xnthread *root);
 
-#else  /* !CONFIG_XENO_HW_FPU */
+#else  /* !CONFIG_XENO_ARCH_FPU */
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
 static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
 static inline void xnarch_leave_root(struct xnthread *root) { }
 
-#endif  /* !CONFIG_XENO_HW_FPU */
+#endif  /* !CONFIG_XENO_ARCH_FPU */
 
 static inline int 
 xnarch_handle_fpu_fault(struct xnthread *from, 

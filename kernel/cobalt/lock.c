@@ -57,7 +57,7 @@ void __xnlock_spin(int cpu, struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 }
 EXPORT_SYMBOL_GPL(__xnlock_spin);
 
-#ifdef CONFIG_XENO_HW_OUTOFLINE_XNLOCK
+#ifdef CONFIG_XENO_ARCH_OUTOFLINE_XNLOCK
 int ___xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	return ____xnlock_get(lock /* , */ XNLOCK_DBG_PASS_CONTEXT);

@@ -119,7 +119,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 	do_switch_threads(out_tcb, in_tcb, prev, next);
 }
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 
 #define FPSCR_RCHG 0x00000000
 
@@ -296,7 +296,7 @@ void xnarch_leave_root(struct xnthread *root)
 		&rootcb->core.user_fpu_owner->thread : NULL;
 }
 
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 
 int xnarch_escalate(void)
 {

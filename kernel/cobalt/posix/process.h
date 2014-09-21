@@ -47,7 +47,7 @@ struct cobalt_kqueues {
 struct cobalt_process {
 	struct mm_struct *mm;
 	struct hlist_node hlink;
-	struct xnsys_ppd sys_ppd;
+	struct cobalt_ppd sys_ppd;
 	unsigned long permap;
 	struct cobalt_kqueues kqueues;
 	struct rb_root usems;
@@ -100,7 +100,7 @@ cobalt_set_process(struct cobalt_process *process)
 	return old;
 }
 
-static inline struct xnsys_ppd *cobalt_ppd_get(int global)
+static inline struct cobalt_ppd *cobalt_ppd_get(int global)
 {
 	struct cobalt_process *process;
 

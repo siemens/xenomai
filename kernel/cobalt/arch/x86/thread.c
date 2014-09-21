@@ -203,7 +203,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 	stts();
 }
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 
 #ifdef CONFIG_X86_64
 #define XSAVE_PREFIX	"0x48,"
@@ -393,7 +393,7 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 		clear_stopped_child_used_math(p);
 }
 
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 
 void xnarch_init_root_tcb(struct xnthread *thread)
 {

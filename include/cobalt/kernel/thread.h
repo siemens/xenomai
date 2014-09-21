@@ -413,11 +413,11 @@ int xnthread_wait_complete_p(struct xnthread_wait_context *wc)
 	return wc->posted;
 }
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 void xnthread_switch_fpu(struct xnsched *sched);
 #else
 static inline void xnthread_switch_fpu(struct xnsched *sched) { }
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 
 void xnthread_init_shadow_tcb(struct xnthread *thread,
 			      struct task_struct *task);

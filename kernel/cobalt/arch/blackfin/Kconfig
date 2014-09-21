@@ -1,4 +1,4 @@
-config XENO_HW_FPU
+config XENO_ARCH_FPU
 	def_bool n
 
 source "kernel/xenomai/Kconfig"

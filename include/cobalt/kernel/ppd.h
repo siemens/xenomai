@@ -30,7 +30,7 @@ struct cobalt_umm {
 	void (*release)(struct cobalt_umm *umm);
 };
 
-struct xnsys_ppd {
+struct cobalt_ppd {
 	struct cobalt_umm umm;
 	unsigned long mayday_addr;
 	atomic_t refcnt;
@@ -38,6 +38,6 @@ struct xnsys_ppd {
 	struct rb_root fds;
 };
 
-extern struct xnsys_ppd __xnsys_global_ppd;
+extern struct cobalt_ppd __xnsys_global_ppd;
 
 #endif /* _COBALT_KERNEL_PPD_H */

@@ -1,10 +1,10 @@
-config XENO_HW_FPU
+config XENO_ARCH_FPU
 	def_bool y
 
-config XENO_HW_AUTOTUNE
+config XENO_ARCH_AUTOTUNE
 	def_bool y
 
-config XENO_HW_X32
+config XENO_ARCH_X32
         def_bool X86_X32
 	select XENO_OPT_SYS3264
 

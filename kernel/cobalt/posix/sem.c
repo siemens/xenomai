@@ -73,7 +73,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 {
 	struct cobalt_sem *sem, *osem;
 	struct cobalt_kqueues *kq;
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 	struct sem_dat *datp;
 	int ret, sflags;
 	spl_t s;

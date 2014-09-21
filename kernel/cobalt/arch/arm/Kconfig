@@ -1,9 +1,9 @@
 source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"
 
-menu "Platform-specific options"
+menu "Machine/platform-specific options"
 
-config XENO_HW_UNLOCKED_SWITCH
+config XENO_ARCH_UNLOCKED_SWITCH
 	bool "Unlocked context switch"
 	default y
 	help
@@ -20,18 +20,18 @@ endmenu
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	bool
-	default y if XENO_HW_UNLOCKED_SWITCH
-	default n if !XENO_HW_UNLOCKED_SWITCH
+	default y if XENO_ARCH_UNLOCKED_SWITCH
+	default n if !XENO_ARCH_UNLOCKED_SWITCH
 
 config IPIPE_WANT_ACTIVE_MM
        def_bool y
 
-config XENO_HW_WANT_TIP
+config XENO_ARCH_WANT_TIP
        def_bool y
 
-config XENO_HW_FPU
+config XENO_ARCH_FPU
 	def_bool VFP
 
-config XENO_HW_OUTOFLINE_XNLOCK
+config XENO_ARCH_OUTOFLINE_XNLOCK
        bool
        default y

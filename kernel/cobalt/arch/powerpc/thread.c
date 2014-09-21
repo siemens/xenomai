@@ -59,7 +59,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 	__asm_thread_switch(out_tcb->core.tsp, in_tcb->core.tsp);
 }
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 
 asmlinkage void __asm_init_fpu(struct thread_struct *ts);
 
@@ -192,7 +192,7 @@ void xnarch_leave_root(struct xnthread *root)
 		&rootcb->core.user_fpu_owner->thread : NULL;
 }
 
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 
 int xnarch_escalate(void)
 {

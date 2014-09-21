@@ -642,7 +642,7 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 {
 	struct xnthread_user_window *u_window;
 	struct xnthread_start_attr attr;
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 	struct cobalt_umm *umm;
 	int ret;
 
@@ -722,13 +722,13 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	trace_cobalt_thread_fault(thread, d);
 
 	if (xnarch_fault_fpu_p(d)) {
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 		/* FPU exception received in primary mode. */
 		if (xnarch_handle_fpu_fault(sched->fpuholder, thread, d)) {
 			sched->fpuholder = thread;
 			return 1;
 		}
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(d));
 	}
@@ -774,7 +774,7 @@ static int handle_mayday_event(struct pt_regs *regs)
 {
 	struct xnthread *thread = xnthread_current();
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 
 	XENO_BUGON(COBALT, !xnthread_test_state(thread, XNUSER));
 
@@ -1042,7 +1042,7 @@ static inline void unlock_timers(void)
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */
 {
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 	struct xnthread *thread;
 
 	/*
@@ -1229,7 +1229,7 @@ static int handle_sigwake_event(struct task_struct *p)
 static int handle_cleanup_event(struct mm_struct *mm)
 {
 	struct cobalt_process *old, *process;
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 	struct xnthread *thread;
 
 	/*
@@ -1302,7 +1302,7 @@ int ipipe_kevent_hook(int kevent, void *data)
 
 static int attach_process(struct cobalt_process *process)
 {
-	struct xnsys_ppd *p = &process->sys_ppd;
+	struct cobalt_ppd *p = &process->sys_ppd;
 	char *exe_path;
 	int ret;
 
@@ -1379,7 +1379,7 @@ static void *cobalt_process_attach(void)
 
 static void detach_process(struct cobalt_process *process)
 {
-	struct xnsys_ppd *p = &process->sys_ppd;
+	struct cobalt_ppd *p = &process->sys_ppd;
 
 	if (p->exe_path)
 		kfree(p->exe_path);

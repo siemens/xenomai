@@ -34,7 +34,7 @@ asmlinkage void __asm_thread_switch(struct thread_info *out,
 
 asmlinkage void __asm_thread_trampoline(void);
 
-#if defined(CONFIG_XENO_HW_FPU) && defined(CONFIG_VFP)
+#if defined(CONFIG_XENO_ARCH_FPU) && defined(CONFIG_VFP)
 
 static unsigned int vfp_checked;
 static DEFINE_MUTEX(vfp_check_lock);
@@ -308,7 +308,7 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 	/* XNFPU is set upon first FPU fault */
 	xnthread_clear_state(thread, XNFPU);
 }
-#endif /* CONFIG_XENO_HW_FPU && CONFIG_VFP*/
+#endif /* CONFIG_XENO_ARCH_FPU && CONFIG_VFP*/
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {

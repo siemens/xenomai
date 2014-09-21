@@ -148,7 +148,7 @@ int __xnthread_init(struct xnthread *thread,
 	spl_t s;
 
 	flags &= ~XNSUSP;
-#ifndef CONFIG_XENO_HW_FPU
+#ifndef CONFIG_XENO_ARCH_FPU
 	flags &= ~XNFPU;
 #endif
 	if (flags & XNROOT)
@@ -231,12 +231,12 @@ void xnthread_init_shadow_tcb(struct xnthread *thread, struct task_struct *task)
 	tcb->core.tsp = &task->thread;
 	tcb->core.mm = task->mm;
 	tcb->core.active_mm = task->mm;
-#ifdef CONFIG_XENO_HW_WANT_TIP
+#ifdef CONFIG_XENO_ARCH_WANT_TIP
 	tcb->core.tip = task_thread_info(task);
 #endif
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 	tcb->core.user_fpu_owner = task;
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 	xnarch_init_shadow_tcb(thread);
 }
 
@@ -248,7 +248,7 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 	tcb->core.host_task = current;
 	tcb->core.tsp = &tcb->core.ts;
 	tcb->core.mm = current->mm;
-#ifdef CONFIG_XENO_HW_WANT_TIP
+#ifdef CONFIG_XENO_ARCH_WANT_TIP
 	tcb->core.tip = NULL;
 #endif
 	xnarch_init_root_tcb(thread);
@@ -362,7 +362,7 @@ EXPORT_SYMBOL_GPL(xnthread_prepare_wait);
 static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 {
 	int ret = 0;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
 	/*
 	 * When deleting a thread in the course of a context switch or
 	 * in flight to another CPU with nklock unlocked on a distant
@@ -375,7 +375,7 @@ static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 	return ret;
 }
 
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 
 static inline void giveup_fpu(struct xnsched *sched,
 			      struct xnthread *thread)
@@ -408,7 +408,7 @@ void xnthread_switch_fpu(struct xnsched *sched)
 	sched->fpuholder = curr;
 }
 
-#else /* !CONFIG_XENO_HW_FPU */
+#else /* !CONFIG_XENO_ARCH_FPU */
 
 static inline void giveup_fpu(struct xnsched *sched,
 				      struct xnthread *thread)
@@ -419,7 +419,7 @@ static inline void release_fpu(struct xnthread *thread)
 {
 }
 
-#endif /* !CONFIG_XENO_HW_FPU */
+#endif /* !CONFIG_XENO_ARCH_FPU */
 
 static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off */
 {

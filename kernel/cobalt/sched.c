@@ -202,9 +202,9 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_set_priority(&sched->rrbtimer, XNTIMER_LOPRIO);
 
 	xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
-#ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_XENO_ARCH_FPU
 	sched->fpuholder = &sched->rootcb;
-#endif /* CONFIG_XENO_HW_FPU */
+#endif /* CONFIG_XENO_ARCH_FPU */
 
 	xnthread_init_root_tcb(&sched->rootcb);
 	list_add_tail(&sched->rootcb.glink, &nkthreadq);
@@ -292,7 +292,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 #endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
 }
 
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 {
@@ -318,7 +318,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	return sched;
 }
 
-#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
+#endif /* CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
 
 void ___xnsched_lock(struct xnsched *sched)
 {
@@ -473,16 +473,16 @@ void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 {
 	migrate_thread(thread, sched);
 
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
 	/*
 	 * Mark the thread in flight, xnsched_finish_unlocked_switch()
 	 * will put the thread on the remote runqueue.
 	 */
 	xnthread_set_state(thread, XNMIGRATE);
-#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+#else /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
 	/* Move thread to the remote runnable queue. */
 	xnsched_putback(thread);
-#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+#endif /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
 }
 
 /*
@@ -685,11 +685,11 @@ struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 static inline void switch_context(struct xnsched *sched,
 				  struct xnthread *prev, struct xnthread *next)
 {
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
 	sched->last = prev;
 	sched->status |= XNINSW;
 	xnlock_clear_irqon(&nklock);
-#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+#endif /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
 
 	xnarch_switch_to(prev, next);
 }
@@ -764,7 +764,7 @@ static inline void enter_root(struct xnthread *root)
 {
 	struct xnarchtcb *rootcb __maybe_unused = xnthread_archtcb(root);
 
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
 	if (rootcb->core.mm == NULL)
 		set_ti_thread_flag(rootcb->core.tip, TIF_MMSWITCH_INT);
 #endif
@@ -782,7 +782,7 @@ static inline void leave_root(struct xnthread *root)
 	rootcb->core.host_task = p;
 	rootcb->core.tsp = &p->thread;
 	rootcb->core.mm = rootcb->core.active_mm = ipipe_get_active_mm();
-#ifdef CONFIG_XENO_HW_WANT_TIP
+#ifdef CONFIG_XENO_ARCH_WANT_TIP
 	rootcb->core.tip = task_thread_info(p);
 #endif
 	xnarch_leave_root(root);

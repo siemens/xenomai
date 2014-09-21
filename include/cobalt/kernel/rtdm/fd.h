@@ -29,7 +29,7 @@ struct vm_area_struct;
 struct rtdm_fd;
 struct _rtdm_mmap_request;
 struct xnselector;
-struct xnsys_ppd;
+struct cobalt_ppd;
 
 /**
  * @file
@@ -295,7 +295,7 @@ struct rtdm_fd_ops {
 struct rtdm_fd {
 	unsigned int magic;
 	struct rtdm_fd_ops *ops;
-	struct xnsys_ppd *owner;
+	struct cobalt_ppd *owner;
 	unsigned int refs;
 	int minor;
 	struct list_head cleanup;
@@ -307,7 +307,7 @@ int __rtdm_anon_getfd(const char *name, int flags);
 
 void __rtdm_anon_putfd(int ufd);
 
-static inline struct xnsys_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
+static inline struct cobalt_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
 {
 	return fd->owner;
 }
@@ -349,7 +349,7 @@ int rtdm_fd_valid_p(int ufd);
 int rtdm_fd_select(int ufd, struct xnselector *selector,
 		   unsigned int type);
 
-void rtdm_fd_cleanup(struct xnsys_ppd *p);
+void rtdm_fd_cleanup(struct cobalt_ppd *p);
 
 void rtdm_fd_init(void);
 

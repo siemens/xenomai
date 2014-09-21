@@ -650,7 +650,7 @@ EXPORT_SYMBOL_GPL(xnlock_dbg_release);
 
 void xndebug_shadow_init(struct xnthread *thread)
 {
-	struct xnsys_ppd *sys_ppd;
+	struct cobalt_ppd *sys_ppd;
 	size_t len;
 
 	sys_ppd = cobalt_ppd_get(0);
