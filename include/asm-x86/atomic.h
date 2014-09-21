@@ -54,6 +54,9 @@ typedef atomic_long_t xnarch_atomic_t;
 #define xnarch_read_memory_barrier()    rmb()
 #define xnarch_write_memory_barrier()   wmb()
 
+#define xnarch_mb_before_unlock()	barrier()
+#define xnarch_mb_after_unlock()	barrier()
+
 #else /* !__KERNEL__ */
 
 #include <xeno_config.h>
@@ -70,9 +73,9 @@ typedef struct { unsigned long counter; } xnarch_atomic_t;
 #define xnarch_write_memory_barrier() xnarch_memory_barrier()
 
 #define xnarch_atomic_cmpxchg(v, o, n)                  \
-        __sync_val_compare_and_swap(&(v)->counter,      \
-                                    (unsigned long)(o), \
-                                    (unsigned long)(n))
+	__sync_val_compare_and_swap(&(v)->counter,      \
+				    (unsigned long)(o), \
+				    (unsigned long)(n))
 
 static inline void cpu_relax(void)
 {

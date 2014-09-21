@@ -93,6 +93,14 @@ static inline unsigned xnarch_current_cpu(void)
 	return rthal_processor_id();
 }
 
+#ifndef xnarch_mb_before_unlock
+#define xnarch_mb_before_unlock() xnarch_memory_barrier()
+#endif
+
+#ifndef xnarch_mb_after_unlock
+#define xnarch_mb_after_unlock() xnarch_memory_barrier()
+#endif
+
 #if XENO_DEBUG(XNLOCK)
 
 typedef struct {
@@ -375,9 +383,11 @@ static inline void xnlock_put(xnlock_t *lock)
 	 * Make sure all data written inside the lock is visible to
 	 * other CPUs before we release the lock.
 	 */
-	xnarch_memory_barrier();
+	xnarch_mb_before_unlock();
 
 	atomic_set(&lock->owner, ~0);
+
+	xnarch_mb_after_unlock();
 }
 
 static inline spl_t
@@ -456,9 +466,9 @@ static inline int xnarch_remap_io_page_range(struct file *filp,
 					     unsigned long size,
 					     pgprot_t prot)
 {
- 	return wrap_remap_io_page_range(vma, from, to, size,
- 					wrap_phys_mem_prot(filp, (to) >> PAGE_SHIFT,
- 							   size, prot));
+	return wrap_remap_io_page_range(vma, from, to, size,
+					wrap_phys_mem_prot(filp, (to) >> PAGE_SHIFT,
+							   size, prot));
 }
 
 static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
