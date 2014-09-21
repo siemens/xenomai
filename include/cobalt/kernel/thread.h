@@ -356,10 +356,10 @@ void __xnthread_cleanup(struct xnthread *curr);
  * or NULL if running over a regular Linux task. This call is not
  * affected by the current runtime mode of the core thread.
  *
- * @caution The returned value may differ from
- * xnsched_current_thread() called from the same context, since the
- * latter returns the root thread descriptor for the current CPU if
- * the caller is running in secondary mode.
+ * @note The returned value may differ from xnsched_current_thread()
+ * called from the same context, since the latter returns the root
+ * thread descriptor for the current CPU if the caller is running in
+ * secondary mode.
  *
  * @coretags{unrestricted}
  */

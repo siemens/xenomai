@@ -28,20 +28,18 @@
  * @ingroup rtdm_profiles
  * @defgroup rtdm_testing Testing Devices
  *
- * This group of devices is intended to provide in-kernel testing results.
- * Feel free to comment on this profile via the Xenomai mailing list
- * (xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
+ * This group of devices is intended to provide in-kernel testing
+ * results.  Feel free to comment on this profile via the Xenomai
+ * mailing list <xenomai@xenomai.org> or directly to the author
+ * <jan.kiszka@web.de>.
  *
  * @b Profile @b Revision: 2
  * @n
  * @n
  * @par Device Characteristics
- * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE @n
+ * @ref rtdm_driver_flags "Device Flags": @c RTDM_NAMED_DEVICE @n
  * @n
- * @ref rtdm_device.device_name "Device Name": @c "rttest[-<subclass>]<N>",
- * N >= 0, optional subclass name to simplify device discovery @n
- * @n
- * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_TESTING @n
+ * @ref rtdm_driver_profile "Device Class": @c RTDM_CLASS_TESTING @n
  * @n
  *
  * @par Supported Operations

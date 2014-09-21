@@ -9,9 +9,8 @@ Known variations from pSOS
 ==========================
 
 You may observe some variations from pSOS. If you find such a
-variation and you think it would be easy to correct, please send a
-mail to the Xenomai development mailing list at
-http://mail.gna.org/listinfo/xenomai-core/.  Here are the known
+variation and you think it would be easy to correct, please mail to
+the Xenomai mailing list at <xenomai@xenomai.org>.  Here are the known
 variations:
 
 - pSOS task priorities are restricted to [1..97] in the current

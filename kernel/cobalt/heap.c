@@ -180,13 +180,13 @@ static void init_freelist(struct xnheap *heap)
  *
  * @return 0 is returned upon success, or:
  *
- * -EINVAL is returned if @a size is either:
+ * - -EINVAL is returned if @a size is either:
  *
  *   - not aligned on PAGE_SIZE
  *   - smaller than 2 * PAGE_SIZE
  *   - greater than 2 Gb (XNHEAP_MAXHEAPSZ)
  *
- * - ENOMEM is returned upon failure of allocating the meta-data area
+ * - -ENOMEM is returned upon failure of allocating the meta-data area
  * used internally to maintain the heap.
  *
  * @coretags{secondary-only}

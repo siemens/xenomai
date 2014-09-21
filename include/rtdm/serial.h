@@ -28,19 +28,20 @@
  * @ingroup rtdm_profiles
  * @defgroup rtdm_serial Serial Devices
  *
- * This is the common interface a RTDM-compliant serial device has to provide.
- * Feel free to comment on this profile via the Xenomai mailing list
- * (Xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
+ * This is the common interface a RTDM-compliant serial device has to
+ * provide.  Feel free to comment on this profile via the Xenomai
+ * mailing list <xenomai@xenomai.org> or directly to the author
+ * <jan.kiszka@web.de>.
  *
  * @b Profile @b Revision: 3
  * @n
  * @n
  * @par Device Characteristics
- * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE, @c RTDM_EXCLUSIVE @n
+ * @ref rtdm_driver_flags "Device Flags": @c RTDM_NAMED_DEVICE, @c RTDM_EXCLUSIVE @n
  * @n
- * @ref rtdm_device.device_name "Device Name": @c "rtser<N>", N >= 0 @n
+ * @ref rtdm_driver_profile "Device Class": @c RTDM_CLASS_SERIAL @n
  * @n
- * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_SERIAL @n
+ * Device Name: @c "/dev/rtdm/rtser<N>", N >= 0 @n
  * @n
  *
  * @par Supported Operations

@@ -659,11 +659,13 @@ INCLUDE_FILE_PATTERNS  =
 # or name=definition (no spaces). If the definition and the = are 
 # omitted =1 is assumed.
 
-PREDEFINED = DOXYGEN_CPP		\
-	CONFIG_SMP			\
-        "EXPORT_SYMBOL_GPL(symbol)=//"	\
-	"COBALT_IMPL(T,I,A)=T I A"	\
-	"COBALT_DECL(T,P)=T P"
+PREDEFINED = DOXYGEN_CPP			\
+	CONFIG_SMP				\
+        "EXPORT_SYMBOL_GPL(symbol)=//"		\
+	"COBALT_IMPL(T,I,A)=T I A"		\
+	"COBALT_DECL(T,P)=T P"			\
+	"COBALT_SYSCALL(N,M,T,A)=T N A"		\
+	"COBALT_SYSCALL_DECL(N,T,A)=T N A"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 

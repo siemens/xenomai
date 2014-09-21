@@ -275,7 +275,7 @@ static void unregister_driver(struct rtdm_driver *drv)
  *
  * Registers a device in the RTDM namespace.
  *
- * @param[in] device Device descriptor.
+ * @param[in] dev Device descriptor.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -406,7 +406,7 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  * Removes the device from the RTDM namespace. This routine waits until
  * all connections to @a device have been closed prior to unregistering.
  *
- * @param[in] device Device descriptor.
+ * @param[in] dev Device descriptor.
  *
  * @coretags{secondary-only}
  */

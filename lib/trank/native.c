@@ -319,7 +319,7 @@ int COMPAT__rt_event_create(RT_EVENT *event, const char *name,
  * @deprecated This is a compatibility service from the Transition
  * Kit.
  */
-int COMPAT__rt_event_signal(RT_EVENT *event, unsigned int mask);
+int COMPAT__rt_event_signal(RT_EVENT *event, unsigned long mask);
 
 /**
  * @fn int COMPAT__rt_event_clear(RT_EVENT *event,unsigned long mask,unsigned long *mask_r)

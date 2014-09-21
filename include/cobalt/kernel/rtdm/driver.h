@@ -233,9 +233,13 @@ struct rtdm_driver {
 	/**
 	 * Class profile information. The RTDM_PROFILE_INFO() macro @b
 	 * must be used for filling up this field.
+	 * @anchor rtdm_driver_profile
 	 */
 	struct rtdm_profile_info profile_info;
-	/** Device flags, see @ref dev_flags "Device Flags" for details */
+	/**
+	 * Device flags, see @ref dev_flags "Device Flags" for details
+	 * @anchor rtdm_driver_flags
+	 */
 	int device_flags;
 	/** Size of driver defined appendix to struct rtdm_dev_context */
 	size_t context_size;

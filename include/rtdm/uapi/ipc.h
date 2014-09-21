@@ -31,13 +31,13 @@
  * @n
  * @par Device Characteristics
  * @n
- * @ref rtdm_device.device_flags "Device Flags": @c RTDM_PROTOCOL_DEVICE @n
+ * @ref rtdm_driver_flags "Device Flags": @c RTDM_PROTOCOL_DEVICE @n
  * @n
- * @ref rtdm_device.protocol_family "Protocol Family": @c PF_RTIPC @n
+ * @ref rtdm_driver.protocol_family "Protocol Family": @c PF_RTIPC @n
  * @n
- * @ref rtdm_device.socket_type "Socket Type": @c SOCK_DGRAM @n
+ * @ref rtdm_driver.socket_type "Socket Type": @c SOCK_DGRAM @n
  * @n
- * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_RTIPC @n
+ * @ref rtdm_driver_profile "Device Class": @c RTDM_CLASS_RTIPC @n
  * @n
  * @{
  *
