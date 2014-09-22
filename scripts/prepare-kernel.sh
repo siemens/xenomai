@@ -389,10 +389,12 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 	version_major=`expr $version_stamp : '\([[0-9]]*\)' || true`
 	version_minor=`expr $version_stamp : '[[0-9]]*\.\([[0-9]*]*\)' || true`
 	revision_level=`expr $version_stamp : '[[0-9]]*\.[[0-9]*]*\.\([[0-9]*]*\)' || true`
+	version_string=`cat $xenomai_root/config/label`
 	sed -e "s,@LINUX_ARCH@,$linux_arch,g" \
 	    -e "s,@VERSION_MAJOR@,$version_major,g" \
 	    -e "s,@VERSION_MINOR@,$version_minor,g" \
 	    -e "s,@REVISION_LEVEL@,$revision_level,g" \
+	    -e "s,@VERSION_STRING@,$version_string,g" \
 	    $xenomai_root/scripts/Kconfig.frag |
             patch_append init/Kconfig
     fi

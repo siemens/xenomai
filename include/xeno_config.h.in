@@ -94,6 +94,9 @@
 #undef CONFIG_XENO_VERSION_MINOR
 
 /* config */
+#undef CONFIG_XENO_VERSION_STRING
+
+/* config */
 #undef CONFIG_XENO_X86_VSYSCALL
 
 #ifdef __IN_XENO__

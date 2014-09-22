@@ -39,3 +39,7 @@ config XENO_VERSION_MINOR
 config XENO_REVISION_LEVEL
        int
        default @REVISION_LEVEL@
+
+config XENO_VERSION_STRING
+       string
+       default @VERSION_STRING@

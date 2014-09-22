@@ -7,12 +7,14 @@ AC_PREREQ(2.62)
 # implement (which actually expresses the revision level of the
 # Copperplate library).  The kernel ABI is Cobalt-specific and is
 # defined for each architecture in the asm/features.h file.
-AC_INIT([Xenomai],m4_normalize(m4_include([config/version])),xenomai@xenomai.org)
+AC_INIT([Xenomai],m4_normalize(m4_include([config/label])),xenomai@xenomai.org)
 
-CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([[0-9]]*\)'`
-CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
-CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
+version_code=`cat $srcdir/config/version`
+CONFIG_XENO_VERSION_MAJOR=`expr $version_code : '\([[0-9]]*\)'`
+CONFIG_XENO_VERSION_MINOR=`expr $version_code : '[[0-9]]*\.\([[0-9]]*\)'`
+CONFIG_XENO_REVISION_LEVEL=`expr $version_code : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_UAPI_LEVEL=`cat $srcdir/config/apirev`
+CONFIG_XENO_VERSION_STRING="$PACKAGE_VERSION"
 topdir=`cd $srcdir && pwd`
 
 dnl Find out whether we build for Cobalt core, i.e. dual kernel mode,
@@ -546,6 +548,7 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MAJOR,$CONFIG_XENO_VERSION_MAJOR,[config]
 AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_UAPI_LEVEL,$CONFIG_XENO_UAPI_LEVEL,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_STRING,"$CONFIG_XENO_VERSION_STRING",[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_PREFIX,"$prefix",[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_BUILD_ARGS,"$XENO_BUILD_ARGS",[config])
 
