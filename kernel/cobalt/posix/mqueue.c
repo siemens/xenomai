@@ -334,7 +334,7 @@ static int mq_open(int uqd, const char *name, int oflags,
 
 		err = mq_init(mq, attr);
 		if (err) {
-			xnfree(mq);
+			kfree(mq);
 			return err;
 		}
 
