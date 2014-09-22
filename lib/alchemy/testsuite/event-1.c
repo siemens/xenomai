@@ -12,7 +12,7 @@ static RT_EVENT event;
 
 static void background_task(void *arg)
 {
-	unsigned long flags;
+	unsigned int flags;
 	int ret, n;
 
 	traceobj_enter(&trobj);
@@ -36,7 +36,7 @@ static void background_task(void *arg)
 
 static void foreground_task(void *arg)
 {
-	unsigned long flags;
+	unsigned int flags;
 	int ret, n;
 
 	traceobj_enter(&trobj);
