@@ -45,21 +45,22 @@ o STMicroelectronics SPEAr600
 o Texas Instrument OMAP3 and OMAP4
 
 
--- SOC specific instructions
+-- Vendor forks specific instructions
+
+The following instructions indicate how to work with vendor forks of
+the Linux kernel. It does not necessarily mean that you have to use
+these patches, some SOCs are also supported by mainline kernels.
 
 ---- MXC (tested on iMX51, iMX53, iMX6Q)
 
-1- Checkout the "rel_imx_3.0.15_12.03.00" tag in the Freescale IMX git [1],
+1- Checkout the "d97b871cc396738ff62293df6b4ba78ade44b6d2" commit in the Freescale IMX git [1],
    or in the Denx git tree [2];
-2- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-pre.patch;
-3- apply adeos-ipipe-3.0.36-arm-1.18-11.patch
-4- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-post.patch;
-5- you can resume to generic installation instructions.
-
+2- apply mxc/adeos-ipipe-3.0.43-mx6q-1.18-14.patch;
+3- you can resume to generic installation instructions.
 
 ---- Beaglebone
 
-1- Checkout the "am33x-v3.8" branch in the Robert Nelson repository [3], 
+1- Checkout the "am33x-v3.8" branch in the Robert Nelson repository [3],
 the patch has been tested with commit 3fc8a73d782231ab2750ff29793a760e8fa076bb
 2- apply beaglebone/ipipe-core-3.8.13-beaglebone-pre.patch
 3- apply ipipe-core-3.8.13-arm-1.patch
