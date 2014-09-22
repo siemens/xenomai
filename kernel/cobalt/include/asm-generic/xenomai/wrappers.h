@@ -28,9 +28,23 @@
 #error "CONFIG_IPIPE_LEGACY must be switched off"
 #endif
 
+/*
+ * To keep the #ifdefery as readable as possible, please:
+ *
+ * - keep the conditional structure flat, no nesting (e.g. do not nest
+ *   the pre-3.11 conditions into the pre-3.14 ones).
+ * - group all wrappers which share the same condition.
+ */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
+#define DEVICE_ATTR_RW(_name)	__ATTR_RW(_name)
+#define DEVICE_ATTR_RO(_name)	__ATTR_RO(_name)
+#define DEVICE_ATTR_WO(_name)	__ATTR_WO(_name)
+#endif /* < 3.11 */
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
 #define get_current_uuid() current_uid()
-#else
+#else /* >= 3.14 */
 #define get_current_uuid() from_kuid_munged(current_user_ns(), current_uid())
 #endif
 

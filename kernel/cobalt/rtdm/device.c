@@ -148,7 +148,6 @@ static ssize_t profile_show(struct device *kdev,
 		       dev->driver->profile_info.class_id,
 		       dev->driver->profile_info.subclass_id);
 }
-static DEVICE_ATTR_RO(profile);
 
 static ssize_t refcount_show(struct device *kdev,
 			     struct device_attribute *attr, char *buf)
@@ -157,7 +156,6 @@ static ssize_t refcount_show(struct device *kdev,
 
 	return sprintf(buf, "%d\n", atomic_read(&dev->refcount));
 }
-static DEVICE_ATTR_RO(refcount);
 
 #define cat_count(__buf, __str)			\
 	({					\
@@ -175,7 +173,6 @@ static ssize_t flags_show(struct device *kdev,
 	return sprintf(buf, "%#x\n", drv->device_flags);
 
 }
-static DEVICE_ATTR_RO(flags);
 
 static ssize_t type_show(struct device *kdev,
 			 struct device_attribute *attr, char *buf)
@@ -192,6 +189,12 @@ static ssize_t type_show(struct device *kdev,
 	return ret;
 
 }
+
+#ifdef ATTRIBUTE_GROUPS
+
+static DEVICE_ATTR_RO(profile);
+static DEVICE_ATTR_RO(refcount);
+static DEVICE_ATTR_RO(flags);
 static DEVICE_ATTR_RO(type);
 
 static struct attribute *rtdm_attrs[] = {
@@ -202,6 +205,25 @@ static struct attribute *rtdm_attrs[] = {
 	NULL,
 };
 ATTRIBUTE_GROUPS(rtdm);
+
+#else /* !ATTRIBUTE_GROUPS */
+
+/*
+ * Cope with legacy sysfs attributes. Scheduled for removal when 3.10
+ * is at EOL for us.
+ */
+static struct device_attribute rtdm_attrs[] = {
+	DEVICE_ATTR_RO(profile),
+	DEVICE_ATTR_RO(refcount),
+	DEVICE_ATTR_RO(flags),
+	DEVICE_ATTR_RO(type),
+	__ATTR_NULL 
+};
+
+#define dev_groups   dev_attrs
+#define rtdm_groups  rtdm_attrs
+
+#endif /* !ATTRIBUTE_GROUPS */
 
 static int register_driver(struct rtdm_driver *drv)
 {
