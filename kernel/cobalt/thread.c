@@ -222,20 +222,29 @@ err_out:
 	return ret;
 }
 
-void xnthread_init_shadow_tcb(struct xnthread *thread, struct task_struct *task)
+void xnthread_init_shadow_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	struct task_struct *p = current;
+
+	/*
+	 * If the current task is a kthread, the pipeline will take
+	 * the necessary steps to make the FPU usable in such
+	 * context. The kernel already took care of this issue for
+	 * userland tasks (e.g. setting up a clean backup area).
+	 */
+	__ipipe_share_current(0);
 
 	memset(tcb, 0, sizeof(*tcb));
-	tcb->core.host_task = task;
-	tcb->core.tsp = &task->thread;
-	tcb->core.mm = task->mm;
-	tcb->core.active_mm = task->mm;
+	tcb->core.host_task = p;
+	tcb->core.tsp = &p->thread;
+	tcb->core.mm = p->mm;
+	tcb->core.active_mm = p->mm;
 #ifdef CONFIG_XENO_ARCH_WANT_TIP
-	tcb->core.tip = task_thread_info(task);
+	tcb->core.tip = task_thread_info(p);
 #endif
 #ifdef CONFIG_XENO_ARCH_FPU
-	tcb->core.user_fpu_owner = task;
+	tcb->core.user_fpu_owner = p;
 #endif /* CONFIG_XENO_ARCH_FPU */
 	xnarch_init_shadow_tcb(thread);
 }
@@ -243,11 +252,12 @@ void xnthread_init_shadow_tcb(struct xnthread *thread, struct task_struct *task)
 void xnthread_init_root_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	struct task_struct *p = current;
 
 	memset(tcb, 0, sizeof(*tcb));
-	tcb->core.host_task = current;
+	tcb->core.host_task = p;
 	tcb->core.tsp = &tcb->core.ts;
-	tcb->core.mm = current->mm;
+	tcb->core.mm = p->mm;
 #ifdef CONFIG_XENO_ARCH_WANT_TIP
 	tcb->core.tip = NULL;
 #endif
@@ -2353,7 +2363,7 @@ int xnthread_map(struct xnthread *thread, struct completion *done)
 
 	trace_cobalt_shadow_map(thread);
 
-	xnthread_init_shadow_tcb(thread, p);
+	xnthread_init_shadow_tcb(thread);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	init_kthread_info(thread);
 	xnthread_set_state(thread, XNMAPPED);

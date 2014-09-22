@@ -659,7 +659,7 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 	 * positive in debug code from handle_schedule_event() and
 	 * friends.
 	 */
-	xnthread_init_shadow_tcb(thread, current);
+	xnthread_init_shadow_tcb(thread);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	init_uthread_info(thread);
 	xnthread_set_state(thread, XNMAPPED);
