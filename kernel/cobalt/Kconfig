@@ -166,7 +166,7 @@ config XENO_OPT_RR_QUANTUM
 
 config XENO_OPT_AUTOTUNE
         bool "Auto-tuning"
-        default y if XENO_ARCH_AUTOTUNE
+        default y
 	select XENO_DRIVERS_AUTOTUNE
         help
 	Enable auto-tuning capabilities. Auto-tuning is used for
