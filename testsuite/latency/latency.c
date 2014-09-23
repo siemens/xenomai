@@ -20,15 +20,15 @@ pthread_t latency_task, display_task;
 
 sem_t *display_sem;
 
-#define TEN_MILLION	10000000
 #define ONE_BILLION	1000000000
+#define TEN_MILLIONS	10000000
 
 #define HIPRIO 99
 #define LOPRIO 0
 
 unsigned max_relaxed;
 long minjitter, maxjitter, avgjitter;
-long gminjitter = TEN_MILLION, gmaxjitter = -TEN_MILLION, goverrun = 0;
+long gminjitter = TEN_MILLIONS, gmaxjitter = -TEN_MILLIONS, goverrun = 0;
 long long gavgjitter = 0;
 
 long long period_ns = 0;
@@ -55,9 +55,6 @@ const char *test_mode_names[] = {
 
 time_t test_start, test_end;	/* report test duration */
 int test_loops = 0;		/* outer loop count */
-
-#define MEASURE_PERIOD ONE_BILLION
-#define SAMPLE_COUNT (MEASURE_PERIOD / period_ns)
 
 /* Warmup time : in order to avoid spurious cache effects on low-end machines. */
 #define WARMUP_TIME 1
@@ -122,7 +119,7 @@ static void *latency(void *cookie)
 	}
 
 	fault_threshold = CONFIG_XENO_DEFAULT_PERIOD;
-	nsamples = ONE_BILLION / period_ns;
+	nsamples = (long long)ONE_BILLION / period_ns;
 	/* start time: one millisecond from now. */
 	expected.tv_nsec += 1000000;
 	if (expected.tv_nsec > ONE_BILLION) {
@@ -141,7 +138,7 @@ static void *latency(void *cookie)
 	}
 
 	for (;;) {
-		long minj = TEN_MILLION, maxj = -TEN_MILLION, dt;
+		long minj = TEN_MILLIONS, maxj = -TEN_MILLIONS, dt;
 		long overrun = 0;
 		long long sumj;
 		test_loops++;
@@ -611,6 +608,10 @@ int main(int argc, char *const *argv)
 		case 'p':
 
 			period_ns = atoi(optarg) * 1000LL;
+			if (period_ns > ONE_BILLION) {
+				fprintf(stderr, "latency: invalid period (> 1s).\n");
+				exit(2);
+			}
 			break;
 
 		case 'l':
