@@ -9,21 +9,21 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <copperplate/init.h>
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
 #include <alchemy/sem.h>
 #include <rtdm/testing.h>
+#include <boilerplate/trace.h>
 
 RT_TASK latency_task, display_task;
 
 RT_SEM display_sem;
 
-#define TEN_MILLION    10000000
+#define TEN_MILLIONS    10000000
 
 unsigned max_relaxed;
 long minjitter, maxjitter, avgjitter;
-long gminjitter = TEN_MILLION, gmaxjitter = -TEN_MILLION, goverrun = 0;
+long gminjitter = TEN_MILLIONS, gmaxjitter = -TEN_MILLIONS, goverrun = 0;
 long long gavgjitter = 0;
 
 long long period_ns = 0;
@@ -104,7 +104,7 @@ static void latency(void *cookie)
 	}
 
 	for (;;) {
-		long minj = TEN_MILLION, maxj = -TEN_MILLION, dt;
+		long minj = TEN_MILLIONS, maxj = -TEN_MILLIONS, dt;
 		long overrun = 0;
 		long long sumj;
 		test_loops++;
@@ -524,8 +524,6 @@ int main(int argc, char *const *argv)
 	cpu_set_t cpus;
 	sigset_t mask;
 
-	copperplate_init(&argc, &argv);
-
 	while ((c = getopt(argc, argv, "g:hp:l:T:qH:B:sD:t:fc:P:b")) != EOF)
 		switch (c) {
 		case 'g':
@@ -754,7 +752,7 @@ int main(int argc, char *const *argv)
 		}
 	}
 
-	__STD(sigwait(&mask, &sig));
+	sigwait(&mask, &sig);
 	finished = 1;
 
 	cleanup();

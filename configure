@@ -655,6 +655,7 @@ ASCIIDODC
 LATEX_MODE
 LATEX_BATCHMODE
 DOXYGEN_SHOW_INCLUDE_FILES
+XENO_AUTOINIT_LDFLAGS
 CONFIG_STATUS_DEPENDENCIES
 XENO_POSIX_WRAPPERS
 LD_FILE_OPTION
@@ -14220,6 +14221,9 @@ if test x$rtcore_type = xcobalt; then
    CONFIG_STATUS_DEPENDENCIES="$cobalt_wrappers"
 
 fi
+
+XENO_AUTOINIT_LDFLAGS="-Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
+
 
 unset want_fortify
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortify support" >&5

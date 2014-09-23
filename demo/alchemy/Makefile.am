@@ -16,9 +16,9 @@ ldadd = 					\
 	../../lib/alchemy/libalchemy.la		\
 	../../lib/copperplate/libcopperplate.la	\
 	$(core_libs)				\
-	 @XENO_USER_LDADD@			\
-	-lpthread -lrt
+	 @XENO_USER_LDADD@
 
 latency_SOURCES = latency.c
 latency_CPPFLAGS = $(cppflags)
-latency_LDADD = $(ldadd) -lm
+latency_LDADD = $(ldadd) -lpthread -lrt -lm
+latency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)

@@ -109,6 +109,9 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(latency_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -304,6 +307,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 W3M = @W3M@
+XENO_AUTOINIT_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@
 XENO_BUILD_ARGS = @XENO_BUILD_ARGS@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
 XENO_COBALT_CFLAGS = @XENO_COBALT_CFLAGS@
@@ -388,12 +392,12 @@ ldadd = \
 	../../lib/alchemy/libalchemy.la		\
 	../../lib/copperplate/libcopperplate.la	\
 	$(core_libs)				\
-	 @XENO_USER_LDADD@			\
-	-lpthread -lrt
+	 @XENO_USER_LDADD@
 
 latency_SOURCES = latency.c
 latency_CPPFLAGS = $(cppflags)
-latency_LDADD = $(ldadd) -lm
+latency_LDADD = $(ldadd) -lpthread -lrt -lm
+latency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 all: all-recursive
 
 .SUFFIXES:
@@ -480,7 +484,7 @@ clean-demoPROGRAMS:
 
 latency$(EXEEXT): $(latency_OBJECTS) $(latency_DEPENDENCIES) $(EXTRA_latency_DEPENDENCIES) 
 	@rm -f latency$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(latency_OBJECTS) $(latency_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(latency_LINK) $(latency_OBJECTS) $(latency_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

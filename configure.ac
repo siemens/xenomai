@@ -792,6 +792,9 @@ dnl in-tree executables which require POSIX symbol wrapping.
    AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$cobalt_wrappers"])
 fi
 
+XENO_AUTOINIT_LDFLAGS="-Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
+AC_SUBST(XENO_AUTOINIT_LDFLAGS)
+
 unset want_fortify
 AC_MSG_CHECKING(for fortify support)
 AC_ARG_ENABLE([fortify],
