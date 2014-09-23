@@ -816,6 +816,15 @@ uninstall-am: uninstall-demoPROGRAMS
 	uninstall-am uninstall-demoPROGRAMS
 
 
+# This demo mixes the Alchemy and Xenomai-enabled POSIX APIs over
+# Cobalt, so we ask for both set of flags. --posix along with
+# --ldflags will get us the linker switches causing the symbol
+# wrapping for open/read/write/ioctl and friends.  Over Mercury,
+# --posix is ignored since it's implicitly enabled.
+#
+# CFLAGS =  $(shell xeno-config --alchemy --posix --cflags)
+# LDFLAGS = $(shell xeno-config --alchemy --posix --ldflags)
+
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
