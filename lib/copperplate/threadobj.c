@@ -1467,8 +1467,11 @@ int threadobj_wait_period(unsigned long *overruns_r)
 		panic("cannot wait for next period, %s", symerror(-errno));
 	}
 
-	if (overruns_r)
-		*overruns_r = si.si_overrun;
+	if (si.si_overrun) {
+		if (overruns_r)
+			*overruns_r = si.si_overrun;
+		return -ETIMEDOUT;
+	}
 
 	return 0;
 }
