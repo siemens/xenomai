@@ -135,11 +135,10 @@ static void latency(void *cookie)
 						err);
 					exit(EXIT_FAILURE); /* Timer stopped. */
 				}
-
 				overrun += ov;
 				expected_tsc += period_tsc * ov;
-			} else
-				expected_tsc += period_tsc;
+			}
+			expected_tsc += period_tsc;
 
 			if (freeze_max && (dt > gmaxjitter)
 			    && !(finished || warmup)) {
