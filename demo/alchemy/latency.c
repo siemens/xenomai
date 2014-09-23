@@ -683,12 +683,7 @@ int main(int argc, char *const *argv)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	if (test_mode != USER_TASK) {
-		char devname[RTDM_MAX_DEVNAME_LEN];
-
-		snprintf(devname, RTDM_MAX_DEVNAME_LEN, "rttest-timerbench%d",
-			 benchdev_no);
-		benchdev = rt_dev_open(devname, O_RDWR);
-
+		benchdev = open("/dev/rtdm/timerbench", O_RDWR);
 		if (benchdev < 0) {
 			fprintf(stderr,
 				"latency: failed to open benchmark device, code %d\n"
