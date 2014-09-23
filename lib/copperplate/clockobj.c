@@ -260,7 +260,7 @@ void clockobj_get_time(struct clockobj *clkobj,
 	unsigned long long ns, tsc;
 
 	tsc = cobalt_read_tsc();
-	ns = cobalt_ticks_to_ns(tsc);
+	ns = cobalt_ticks_to_ns_rounded(tsc);
 	if (clockobj_get_resolution(clkobj) > 1)
 		ns /= clockobj_get_resolution(clkobj);
 	*pticks = ns;
