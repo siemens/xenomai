@@ -826,7 +826,7 @@ index 88d6181..b23d57c 100644
  
 diff --git a/arch/arm/include/asm/fcse.h b/arch/arm/include/asm/fcse.h
 new file mode 100644
-index 0000000..af67648
+index 0000000..1d42a30
 --- /dev/null
 +++ b/arch/arm/include/asm/fcse.h
 @@ -0,0 +1,201 @@
@@ -849,6 +849,12 @@ index 0000000..af67648
 +#ifndef __ASM_ARM_FCSE_H
 +#define __ASM_ARM_FCSE_H
 +
++#ifdef CONFIG_ARM_FCSE_DEBUG
++#define FCSE_BUG_ON(expr) BUG_ON(expr)
++#else /* !CONFIG_ARM_FCSE_DEBUG */
++#define FCSE_BUG_ON(expr) do { } while(0)
++#endif /* !CONFIG_ARM_FCSE_DEBUG */
++
 +#ifdef CONFIG_ARM_FCSE
 +
 +#include <linux/mm_types.h>	/* For struct mm_struct */
@@ -870,12 +876,6 @@ index 0000000..af67648
 +
 +#define FCSE_NR_PIDS (TASK_SIZE / FCSE_PID_TASK_SIZE)
 +#define FCSE_PID_MAX (FCSE_NR_PIDS - 1)
-+
-+#ifdef CONFIG_ARM_FCSE_DEBUG
-+#define FCSE_BUG_ON(expr) BUG_ON(expr)
-+#else /* !CONFIG_ARM_FCSE_DEBUG */
-+#define FCSE_BUG_ON(expr) do { } while(0)
-+#endif /* !CONFIG_ARM_FCSE_DEBUG */
 +
 +struct vm_unmapped_area_info;
 +
@@ -1076,7 +1076,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..112ab17
+index 0000000..233fbe1
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,274 @@
@@ -1124,13 +1124,13 @@ index 0000000..112ab17
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	4
++#define IPIPE_CORE_RELEASE	5
 +
 +struct ipipe_domain;
 +
-+#define IPIPE_TSC_TYPE_NONE	   		0
-+#define IPIPE_TSC_TYPE_FREERUNNING 		1
-+#define IPIPE_TSC_TYPE_DECREMENTER 		2
++#define IPIPE_TSC_TYPE_NONE			0
++#define IPIPE_TSC_TYPE_FREERUNNING		1
++#define IPIPE_TSC_TYPE_DECREMENTER		2
 +#define IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN	3
 +#define IPIPE_TSC_TYPE_FREERUNNING_TWICE	4
 +#define IPIPE_TSC_TYPE_FREERUNNING_ARCH		5
@@ -3032,10 +3032,10 @@ index 160f337..8d77bff 100644
   * have in theory up to 7 arguments to a function - r0 to r6.
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..812b8ef
+index 0000000..5b77cfb
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,627 @@
+@@ -0,0 +1,658 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -3259,7 +3259,7 @@ index 0000000..812b8ef
 +		unsigned long flags;
 +
 +		printk("I-pipe: disabling SMP code\n");
-+		
++
 +		flags = hard_local_irq_save();
 +		static_key_slow_dec(&__ipipe_smp_key);
 +		hard_local_irq_restore(flags);
@@ -3393,19 +3393,40 @@ index 0000000..812b8ef
 +	return ret;
 +}
 +
++#if __LINUX_ARM_ARCH__ <= 5
++#define fast_irq_disable() hard_local_irq_save()
++#define fast_irq_enable(flags) hard_local_irq_restore(flags)
++#else
++#define fast_irq_disable()			\
++	({					\
++		hard_local_irq_disable();	\
++		0;				\
++	})
++#define fast_irq_enable(flags)			\
++	({					\
++		hard_local_irq_enable();	\
++		(void)(flags);			\
++	})
++#endif
++
 +asmlinkage int __ipipe_syscall_root(unsigned long scno, struct pt_regs *regs)
 +{
++#ifdef CONFIG_OABI_COMPAT
++	const bool oabi = scno + __NR_SYSCALL_BASE != regs->ARM_r7;
++#elif defined(CONFIG_AEABI)
++	const bool oabi = false;
++#else /* OABI */
++	const bool oabi = true;
++#endif
++	struct task_struct *const task = current;
 +	struct ipipe_percpu_domain_data *p;
 +	unsigned long orig_r7;
++	unsigned long flags;
 +	int ret = 0;
 +
++#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +	WARN_ON_ONCE(hard_irqs_disabled());
-+
-+	/*
-+	 * We use r7 to pass the syscall number to the other domains.
-+	 */
-+	orig_r7 = regs->ARM_r7;
-+	regs->ARM_r7 = __NR_SYSCALL_BASE + scno;
++#endif
 +
 +	/*
 +	 * This routine either returns:
@@ -3416,19 +3437,31 @@ index 0000000..812b8ef
 +	 * tail work has to be performed (for handling signals etc).
 +	 */
 +
-+	if (!__ipipe_syscall_watched_p(current, regs->ARM_r7))
++	scno += __NR_SYSCALL_BASE;
++	if (!__ipipe_syscall_watched_p(task, scno))
 +		goto out;
++
++	if (oabi) {
++		/*
++		 * We use r7 to pass the syscall number to the other domains.
++		 */
++		orig_r7 = regs->ARM_r7;
++		regs->ARM_r7 = scno;
++	}
 +
 +	ret = __ipipe_notify_syscall(regs);
 +
-+	hard_local_irq_disable();
++	if (oabi)
++		regs->ARM_r7 = orig_r7;
++
++	flags = fast_irq_disable();
 +
 +	/*
 +	 * This is the end of the syscall path, so we may
 +	 * safely assume a valid Linux task stack here.
 +	 */
-+	if (current->ipipe.flags & PF_MAYDAY) {
-+		current->ipipe.flags &= ~PF_MAYDAY;
++	if (task->ipipe.flags & PF_MAYDAY) {
++		task->ipipe.flags &= ~PF_MAYDAY;
 +		__ipipe_notify_trap(IPIPE_TRAP_MAYDAY, regs);
 +	}
 +
@@ -3440,10 +3473,8 @@ index 0000000..812b8ef
 +			__ipipe_sync_stage();
 +	}
 +
-+	hard_local_irq_enable();
++	fast_irq_enable(flags);
 +out:
-+	regs->ARM_r7 = orig_r7;
-+
 +	return ret;
 +}
 +
@@ -3526,7 +3557,7 @@ index 0000000..812b8ef
 +		int rc __maybe_unused = __do_switch_mm(prev, next, tsk, true);
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+		/* 
++		/*
 +		 * Reading thread_info flags and setting active_mm
 +		 * must be done atomically.
 +		 */
@@ -3542,9 +3573,9 @@ index 0000000..812b8ef
 +			return;
 +		}
 +		hard_local_irq_restore(flags);
-+		
++
 +		if (rc < 0)
-+			/* 
++			/*
 +			 * We were interrupted by head domain, which
 +			 * may have changed the mm context, mm context
 +			 * is now unknown, but will be switched in
@@ -3585,7 +3616,7 @@ index 0000000..812b8ef
 +		__do_switch_mm(prev, next, NULL, false);
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+		/* 
++		/*
 +		 * Reading thread_info flags and setting active_mm
 +		 * must be done atomically.
 +		 */
