@@ -805,7 +805,7 @@ undo:
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  *
- * @sideeffect Over Cobalt, -EINVAL is returned if @a period is
+ * @note Over Cobalt, -EINVAL is returned if @a period is
  * different from TM_INFINITE but shorter than the user scheduling
  * latency value for the target system, as displayed by
  * /proc/xenomai/latency.
@@ -813,6 +813,11 @@ undo:
  * @note The @a idate and @a period values are interpreted as a
  * multiple of the Alchemy clock resolution (see
  * --alchemy-clock-resolution option, defaults to 1 nanosecond).
+ *
+ * @attention Unlike its Xenomai 2.x counterpart,
+ * rt_task_set_periodic() will @b NOT block @a task until @a idate is
+ * reached. The first beat in the periodic timeline should be awaited
+ * for by a call to rt_task_wait_period().
  */
 #ifndef DOXYGEN_CPP
 CURRENT_IMPL(int, rt_task_set_periodic,
