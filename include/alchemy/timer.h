@@ -99,6 +99,25 @@ int alchemy_poll_mode(const struct timespec *abs_timeout)
 extern "C" {
 #endif
 
+/**
+ * @fn RTIME rt_timer_read(void)
+ * @brief Return the current system time.
+ *
+ * Return the current time maintained by the Xenomai core clock.
+ *
+ * @return The current time expressed in clock ticks (see note).
+ *
+ * @apitags{unrestricted}
+ *
+ * @note The @a time value is a multiple of the Alchemy clock
+ * resolution (see --alchemy-clock-resolution option, defaults to 1
+ * nanosecond).
+ */
+static inline RTIME rt_timer_read(void)
+{
+	return clockobj_get_time(&alchemy_clock);
+}
+
 static inline RTIME rt_timer_tsc(void)
 {
 	return clockobj_get_tsc();

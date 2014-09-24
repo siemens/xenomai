@@ -237,21 +237,18 @@ ticks_t clockobj_get_tsc(void)
 {
 	struct timespec now;
 
-	/* Rare case with legacy uClibc+linuxthreads combo. */
+	/*
+	 * Rare case with legacy uClibc+linuxthreads combo over
+	 * Cobalt, we actually return nanoseconds just like in the
+	 * Mercury case.
+	 */
 	__RT(clock_gettime(CLOCK_REALTIME, &now));
 	return xnarch_ullmul(now.tv_sec, 1000000000) + now.tv_nsec;
 }
 
-void clockobj_get_time(struct clockobj *clkobj,
-		       ticks_t *pticks, ticks_t *ptsc)
+ticks_t clockobj_get_time(struct clockobj *clkobj)
 {
-	ticks_t ns;
-
-	ns = clockobj_get_tsc();
-	if (ptsc)
-		*ptsc = ns;
-
-	*pticks = clockobj_ns_to_ticks(clkobj, ns);
+	return clockobj_ns_to_ticks(clkobj, clockobj_get_tsc());
 }
 
 #else /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
@@ -266,17 +263,10 @@ ticks_t clockobj_get_tsc(void)
 	return cobalt_read_tsc();
 }
 
-void clockobj_get_time(struct clockobj *clkobj,
-		       ticks_t *pticks, ticks_t *ptsc)
+ticks_t clockobj_get_time(struct clockobj *clkobj)
 {
-	ticks_t ns, tsc;
-
-	tsc = cobalt_read_tsc();
-	if (ptsc)
-		*ptsc = tsc;
-
-	ns = cobalt_ticks_to_ns_rounded(tsc);
-	*pticks = clockobj_ns_to_ticks(clkobj, ns);
+	ticks_t ns = cobalt_ticks_to_ns_rounded(cobalt_read_tsc());
+	return clockobj_ns_to_ticks(clkobj, ns);
 }
 
 #endif /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
@@ -326,8 +316,7 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
-void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
-		       ticks_t *ptsc)
+ticks_t clockobj_get_time(struct clockobj *clkobj)
 {
 	struct timespec now;
 
@@ -335,17 +324,10 @@ void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 
 	/* Convert the time value to ticks, with no offset. */
 	if (clockobj_get_resolution(clkobj) > 1)
-		*pticks = (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
+		return (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
 			+ (ticks_t)now.tv_nsec / clockobj_get_resolution(clkobj);
-	else
-		*pticks = timespec_scalar(&now);
 
-	/*
-	 * Mercury has a single time source, with TSC == monotonic
-	 * time.
-	 */
-	if (ptsc)
-		*ptsc = *pticks;
+	return timespec_scalar(&now);
 }
 
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
@@ -391,7 +373,7 @@ void clockobj_get_distance(struct clockobj *clkobj,
 {
 	ticks_t now, start, interval, dist;
 
-	clockobj_get_time(clkobj, &now, NULL);
+	now = clockobj_get_time(clkobj);
 	start = timespec_scalar(&itm->it_value);
 
 	if (start >= now)

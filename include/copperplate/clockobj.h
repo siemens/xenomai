@@ -71,8 +71,7 @@ void clockobj_set_date(struct clockobj *clkobj, ticks_t ticks);
 
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
 
-void clockobj_get_time(struct clockobj *clkobj,
-		       ticks_t *pticks, ticks_t *ptsc);
+ticks_t clockobj_get_time(struct clockobj *clkobj);
 
 void clockobj_get_distance(struct clockobj *clkobj,
 			   const struct itimerspec *itm,

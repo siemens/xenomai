@@ -959,7 +959,7 @@ int rt_task_sleep_until(RTIME date)
 	if (date == TM_INFINITE)
 		ts = zero_time;
 	else {
-		clockobj_get_time(&alchemy_clock, &now, NULL);
+		now = clockobj_get_time(&alchemy_clock);
 		if (date <= now)
 			return -ETIMEDOUT;
 		CANCEL_DEFER(svc);

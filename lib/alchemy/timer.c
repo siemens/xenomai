@@ -31,29 +31,6 @@
 struct clockobj alchemy_clock;
 
 /**
- * @fn RTIME rt_timer_read(void)
- * @brief Return the current system time.
- *
- * Return the current time maintained by the Xenomai core clock.
- *
- * @return The current time expressed in clock ticks (see note).
- *
- * @apitags{unrestricted}
- *
- * @note The @a time value is a multiple of the Alchemy clock
- * resolution (see --alchemy-clock-resolution option, defaults to 1
- * nanosecond).
- */
-RTIME rt_timer_read(void)
-{
-	ticks_t ticks;
-
-	clockobj_get_time(&alchemy_clock, &ticks, NULL);
-
-	return ticks;
-}
-
-/**
  * @fn RTIME rt_timer_ns2ticks(SRTIME ns)
  * @brief Convert nanoseconds to Alchemy clock ticks.
  *
@@ -113,7 +90,8 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks)
 int rt_timer_inquire(RT_TIMER_INFO *info)
 {
 	info->period = clockobj_get_resolution(&alchemy_clock);
-	clockobj_get_time(&alchemy_clock, &info->date, &info->tsc);
+	info->date = clockobj_get_time(&alchemy_clock);
+	info->tsc = clockobj_get_tsc();
 
 	return 0;
 }
