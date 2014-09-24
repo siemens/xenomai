@@ -1,3 +1,8 @@
+/*
+ * The alternate latency measurement program based on the Alchemy API.
+ *
+ * Licensed under the LGPL v2.1.
+ */
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -82,7 +87,7 @@ static void latency(void *cookie)
 
 	ret = rt_task_set_periodic(NULL, start_ns, period_ns);
 	if (ret) {
-		fprintf(stderr, "latency: failed to set periodic, code %d\n",
+		fprintf(stderr, "altency: failed to set periodic, code %d\n",
 			ret);
 		return;
 	}
@@ -112,7 +117,7 @@ static void latency(void *cookie)
 			if (ret) {
 				if (ret != -ETIMEDOUT) {
 					fprintf(stderr,
-						"latency: wait period failed, code %d\n",
+						"altency: wait period failed, code %d\n",
 						ret);
 					exit(EXIT_FAILURE); /* Timer stopped. */
 				}
@@ -169,7 +174,7 @@ static void display(void *cookie)
 		ret = rt_sem_create(&display_sem, sem_name, 0, S_FIFO);
 		if (ret) {
 			fprintf(stderr,
-				"latency: cannot create semaphore: %s\n",
+				"altency: cannot create semaphore: %s\n",
 				strerror(-ret));
 			return;
 		}
@@ -192,7 +197,7 @@ static void display(void *cookie)
 		ret = ioctl(devfd, RTTST_RTIOC_TMBENCH_START, &config);
 		if (ret) {
 			fprintf(stderr,
-				"latency: failed to start in-kernel timer benchmark, code %d\n",
+				"altency: failed to start in-kernel timer benchmark, code %d\n",
 				ret);
 			return;
 		}
@@ -215,7 +220,7 @@ static void display(void *cookie)
 			if (ret) {
 				if (ret != -EIDRM)
 					fprintf(stderr,
-						"latency: failed to pend on semaphore, code %d\n",
+						"altency: failed to pend on semaphore, code %d\n",
 						ret);
 
 				return;
@@ -234,7 +239,7 @@ static void display(void *cookie)
 			if (ret) {
 				if (ret != -EIDRM)
 					fprintf(stderr,
-					"latency: failed to call RTTST_RTIOC_INTERM_BENCH_RES, %m\n");
+					"altency: failed to call RTTST_RTIOC_INTERM_BENCH_RES, %m\n");
 
 				return;
 			}
@@ -471,7 +476,7 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 	case SIGDEBUG_UNDEFINED:
 	case SIGDEBUG_NOMLOCK:
 	case SIGDEBUG_WATCHDOG:
-		n = snprintf(buffer, sizeof(buffer), "latency: %s\n",
+		n = snprintf(buffer, sizeof(buffer), "altency: %s\n",
 			     reason_str[reason]);
 		n = write(STDERR_FILENO, buffer, n);
 		exit(EXIT_FAILURE);
@@ -513,7 +518,7 @@ int main(int argc, char *const *argv)
 		case 'p':
 			period_ns = atoi(optarg) * 1000LL;
 			if (period_ns > ONE_BILLION) {
-				fprintf(stderr, "latency: invalid period (> 1s).\n");
+				fprintf(stderr, "altency: invalid period (> 1s).\n");
 				exit(2);
 			}
 			break;
@@ -536,7 +541,7 @@ int main(int argc, char *const *argv)
 		case 'c':
 			cpu = atoi(optarg);
 			if (cpu < 0 || cpu >= CPU_SETSIZE) {
-				fprintf(stderr, "latency: invalid CPU #%d\n", cpu);
+				fprintf(stderr, "altency: invalid CPU #%d\n", cpu);
 				return 1;
 			}
 			break;
@@ -549,7 +554,7 @@ int main(int argc, char *const *argv)
 		default:
 
 			fprintf(stderr,
-"usage: latency [options]\n"
+"usage: altency [options]\n"
 "  [-h]                         # print histograms of min, avg, max latencies\n"
 "  [-g <file>]                  # dump histogram to <file> in gnuplot format\n"
 "  [-s]                         # print statistics of min, avg, max latencies\n"
@@ -570,12 +575,12 @@ int main(int argc, char *const *argv)
 
 	if (!test_duration && quiet) {
 		fprintf(stderr,
-			"latency: -q only works if -T has been given.\n");
+			"altency: -q only works if -T has been given.\n");
 		quiet = 0;
 	}
 
 	if ((test_mode < USER_TASK) || (test_mode > TIMER_HANDLER)) {
-		fprintf(stderr, "latency: invalid test mode.\n");
+		fprintf(stderr, "altency: invalid test mode.\n");
 		exit(2);
 	}
 
@@ -628,17 +633,17 @@ int main(int argc, char *const *argv)
 		devfd = open("/dev/rtdm/timerbench", O_RDWR);
 		if (devfd < 0) {
 			fprintf(stderr,
-				"latency: failed to open timerbench device, %m\n"
+				"altency: failed to open timerbench device, %m\n"
 				"(modprobe xeno_timerbench?)\n");
 			return 0;
 		}
 	}
 
-	snprintf(task_name, sizeof(task_name), "display-%d", getpid());
+	snprintf(task_name, sizeof(task_name), "alt-display-%d", getpid());
 	ret = rt_task_create(&display_task, task_name, 0, 0, 0);
 	if (ret) {
 		fprintf(stderr,
-			"latency: failed to create display task, code %d\n",
+			"altency: failed to create display task, code %d\n",
 			ret);
 		return 0;
 	}
@@ -646,18 +651,18 @@ int main(int argc, char *const *argv)
 	ret = rt_task_start(&display_task, &display, NULL);
 	if (ret) {
 		fprintf(stderr,
-			"latency: failed to start display task, code %d\n",
+			"altency: failed to start display task, code %d\n",
 			ret);
 		return 0;
 	}
 
 	if (test_mode == USER_TASK) {
-		snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
+		snprintf(task_name, sizeof(task_name), "alt-sampling-%d", getpid());
 		ret = rt_task_create(&latency_task, task_name, 0, priority,
 				     T_WARNSW);
 		if (ret) {
 			fprintf(stderr,
-				"latency: failed to create latency task, code %d\n",
+				"altency: failed to create sampling task, code %d\n",
 				ret);
 			return 0;
 		}
@@ -668,16 +673,16 @@ int main(int argc, char *const *argv)
 			ret = rt_task_set_affinity(&latency_task, &cpus);
 			if (ret) {
 				fprintf(stderr,
-					"latency: failed to set CPU affinity, code %d\n",
+					"altency: failed to set CPU affinity, code %d\n",
 					ret);
 				return 0;
 			}
 		}
 
-		ret = rt_task_start(&latency_task, &latency, NULL);
+		ret = rt_task_start(&latency_task, latency, NULL);
 		if (ret) {
 			fprintf(stderr,
-				"latency: failed to start latency task, code %d\n",
+				"altency: failed to start sampling task, code %d\n",
 				ret);
 			return 0;
 		}

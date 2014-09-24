@@ -79,7 +79,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-demo_PROGRAMS = latency$(EXEEXT)
+demo_PROGRAMS = altency$(EXEEXT)
 @XENO_COBALT_TRUE@am__append_1 = ../../lib/cobalt/libcobalt.la
 subdir = demo/alchemy
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -100,18 +100,18 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(demodir)"
 PROGRAMS = $(demo_PROGRAMS)
-am_latency_OBJECTS = latency-latency.$(OBJEXT)
-latency_OBJECTS = $(am_latency_OBJECTS)
+am_altency_OBJECTS = altency-altency.$(OBJEXT)
+altency_OBJECTS = $(am_altency_OBJECTS)
 am__DEPENDENCIES_1 = ../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la $(core_libs)
-latency_DEPENDENCIES = $(am__DEPENDENCIES_1)
+altency_DEPENDENCIES = $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+altency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(latency_LDFLAGS) $(LDFLAGS) -o $@
+	$(altency_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -146,8 +146,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(latency_SOURCES)
-DIST_SOURCES = $(latency_SOURCES)
+SOURCES = $(altency_SOURCES)
+DIST_SOURCES = $(altency_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -394,10 +394,10 @@ ldadd = \
 	$(core_libs)				\
 	 @XENO_USER_LDADD@
 
-latency_SOURCES = latency.c
-latency_CPPFLAGS = $(cppflags)
-latency_LDADD = $(ldadd) -lpthread -lrt -lm
-latency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
+altency_SOURCES = altency.c
+altency_CPPFLAGS = $(cppflags)
+altency_LDADD = $(ldadd) -lpthread -lrt -lm
+altency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 all: all-recursive
 
 .SUFFIXES:
@@ -482,9 +482,9 @@ clean-demoPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
-latency$(EXEEXT): $(latency_OBJECTS) $(latency_DEPENDENCIES) $(EXTRA_latency_DEPENDENCIES) 
-	@rm -f latency$(EXEEXT)
-	$(AM_V_CCLD)$(latency_LINK) $(latency_OBJECTS) $(latency_LDADD) $(LIBS)
+altency$(EXEEXT): $(altency_OBJECTS) $(altency_DEPENDENCIES) $(EXTRA_altency_DEPENDENCIES) 
+	@rm -f altency$(EXEEXT)
+	$(AM_V_CCLD)$(altency_LINK) $(altency_OBJECTS) $(altency_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -492,7 +492,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/latency-latency.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/altency-altency.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -515,19 +515,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-latency-latency.o: latency.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(latency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT latency-latency.o -MD -MP -MF $(DEPDIR)/latency-latency.Tpo -c -o latency-latency.o `test -f 'latency.c' || echo '$(srcdir)/'`latency.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/latency-latency.Tpo $(DEPDIR)/latency-latency.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='latency.c' object='latency-latency.o' libtool=no @AMDEPBACKSLASH@
+altency-altency.o: altency.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(altency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT altency-altency.o -MD -MP -MF $(DEPDIR)/altency-altency.Tpo -c -o altency-altency.o `test -f 'altency.c' || echo '$(srcdir)/'`altency.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/altency-altency.Tpo $(DEPDIR)/altency-altency.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='altency.c' object='altency-altency.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(latency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o latency-latency.o `test -f 'latency.c' || echo '$(srcdir)/'`latency.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(altency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o altency-altency.o `test -f 'altency.c' || echo '$(srcdir)/'`altency.c
 
-latency-latency.obj: latency.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(latency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT latency-latency.obj -MD -MP -MF $(DEPDIR)/latency-latency.Tpo -c -o latency-latency.obj `if test -f 'latency.c'; then $(CYGPATH_W) 'latency.c'; else $(CYGPATH_W) '$(srcdir)/latency.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/latency-latency.Tpo $(DEPDIR)/latency-latency.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='latency.c' object='latency-latency.obj' libtool=no @AMDEPBACKSLASH@
+altency-altency.obj: altency.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(altency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT altency-altency.obj -MD -MP -MF $(DEPDIR)/altency-altency.Tpo -c -o altency-altency.obj `if test -f 'altency.c'; then $(CYGPATH_W) 'altency.c'; else $(CYGPATH_W) '$(srcdir)/altency.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/altency-altency.Tpo $(DEPDIR)/altency-altency.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='altency.c' object='altency-altency.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(latency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o latency-latency.obj `if test -f 'latency.c'; then $(CYGPATH_W) 'latency.c'; else $(CYGPATH_W) '$(srcdir)/latency.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(altency_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o altency-altency.obj `if test -f 'altency.c'; then $(CYGPATH_W) 'altency.c'; else $(CYGPATH_W) '$(srcdir)/altency.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

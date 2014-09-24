@@ -1,6 +1,6 @@
 demodir = @XENO_DEMO_DIR@
 
-demo_PROGRAMS = latency
+demo_PROGRAMS = altency
 
 core_libs =
 if XENO_COBALT
@@ -18,10 +18,10 @@ ldadd = 					\
 	$(core_libs)				\
 	 @XENO_USER_LDADD@
 
-latency_SOURCES = latency.c
-latency_CPPFLAGS = $(cppflags)
-latency_LDADD = $(ldadd) -lpthread -lrt -lm
-latency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
+altency_SOURCES = altency.c
+altency_CPPFLAGS = $(cppflags)
+altency_LDADD = $(ldadd) -lpthread -lrt -lm
+altency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 # This demo mixes the Alchemy and Xenomai-enabled POSIX APIs over
 # Cobalt, so we ask for both set of flags. --posix along with
