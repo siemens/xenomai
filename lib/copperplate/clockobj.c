@@ -231,18 +231,55 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 #include <cobalt/arith.h>
 #include <asm/xenomai/tsc.h>
 
+#ifdef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
+
 ticks_t clockobj_get_tsc(void)
 {
-#ifdef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
-	/* Rare case with legacy uClibc+linuxthreads combo. */
 	struct timespec now;
+
+	/* Rare case with legacy uClibc+linuxthreads combo. */
 	__RT(clock_gettime(CLOCK_REALTIME, &now));
 	return xnarch_ullmul(now.tv_sec, 1000000000) + now.tv_nsec;
-#else
+}
+
+void clockobj_get_time(struct clockobj *clkobj,
+		       ticks_t *pticks, ticks_t *ptsc)
+{
+	ticks_t ns;
+
+	ns = clockobj_get_tsc();
+	if (ptsc)
+		*ptsc = ns;
+
+	*pticks = clockobj_ns_to_ticks(clkobj, ns);
+}
+
+#else /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
+
+/*
+ * NOTE: we can't inline this routine, as we don't want to expose
+ * lib/cobalt/arch/.../include/asm/xenomai/tsc.h.
+ */
+ticks_t clockobj_get_tsc(void)
+{
 	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
 	return cobalt_read_tsc();
-#endif
 }
+
+void clockobj_get_time(struct clockobj *clkobj,
+		       ticks_t *pticks, ticks_t *ptsc)
+{
+	ticks_t ns, tsc;
+
+	tsc = cobalt_read_tsc();
+	if (ptsc)
+		*ptsc = tsc;
+
+	ns = cobalt_ticks_to_ns_rounded(tsc);
+	*pticks = clockobj_ns_to_ticks(clkobj, ns);
+}
+
+#endif /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 
@@ -254,28 +291,13 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
-void clockobj_get_time(struct clockobj *clkobj,
-		       ticks_t *pticks, ticks_t *ptsc)
-{
-	unsigned long long ns, tsc;
-
-	tsc = cobalt_read_tsc();
-	ns = cobalt_ticks_to_ns_rounded(tsc);
-	if (clockobj_get_resolution(clkobj) > 1)
-		ns /= clockobj_get_resolution(clkobj);
-	*pticks = ns;
-
-	if (ptsc)
-		*ptsc = tsc;
-}
-
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 {
 	unsigned long long ns;
 
 	read_lock_nocancel(&clkobj->lock);
 
-	ns = cobalt_ticks_to_ns(cobalt_read_tsc());
+	ns = cobalt_ticks_to_ns(clockobj_get_tsc());
 	/* Add offset to epoch. */
 	ns += (unsigned long long)clkobj->offset.tv_sec * 1000000000ULL;
 	ns += clkobj->offset.tv_nsec;
