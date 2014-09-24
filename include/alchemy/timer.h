@@ -139,7 +139,7 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks);
 
 RTIME rt_timer_read(void);
 
-int rt_timer_inquire(RT_TIMER_INFO *info);
+void rt_timer_inquire(RT_TIMER_INFO *info);
 
 void rt_timer_spin(RTIME ns);
 

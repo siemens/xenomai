@@ -75,7 +75,7 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks)
 }
 
 /**
- * @fn int rt_timer_inquire(RT_TIMER_INFO *info)
+ * @fn void rt_timer_inquire(RT_TIMER_INFO *info)
  * @brief Inquire about the Xenomai core timer.
  *
  * Return status information of the Xenomai core timer.
@@ -83,17 +83,13 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks)
  * @param info The address of a structure the status data will be
  * written to.
  *
- * @return This service always returns 0.
- *
  * @apitags{unrestricted}
  */
-int rt_timer_inquire(RT_TIMER_INFO *info)
+void rt_timer_inquire(RT_TIMER_INFO *info)
 {
 	info->period = clockobj_get_resolution(&alchemy_clock);
 	info->date = clockobj_get_time(&alchemy_clock);
 	info->tsc = clockobj_get_tsc();
-
-	return 0;
 }
 
 /**
