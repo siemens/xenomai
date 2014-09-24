@@ -2628,7 +2628,7 @@ index 6ed91d9..732f111 100644
  	CFI_ENDPROC
  END(general_protection)
 diff --git a/arch/x86/kernel/entry_64.S b/arch/x86/kernel/entry_64.S
-index cb3c591..41d6c97 100644
+index cb3c591..1f79b14 100644
 --- a/arch/x86/kernel/entry_64.S
 +++ b/arch/x86/kernel/entry_64.S
 @@ -50,6 +50,7 @@
@@ -3085,14 +3085,12 @@ index cb3c591..41d6c97 100644
   */
  	.pushsection .kprobes.text, "ax"
  
--paranoidzeroentry_ist debug do_debug DEBUG_STACK
--paranoidzeroentry_ist int3 do_int3 DEBUG_STACK
 +#ifdef CONFIG_IPIPE
 +paranoidzeroentry debug do_debug ex_do_debug
 +paranoidzeroentry int3 do_int3 ex_do_int3
 +#else
-+paranoidzeroentry_ist debug do_debug DEBUG_STACK ex_do_debug
-+paranoidzeroentry_ist int3 do_int3 DEBUG_STACK ex_do_int3
+ paranoidzeroentry_ist debug do_debug DEBUG_STACK
+ paranoidzeroentry_ist int3 do_int3 DEBUG_STACK
 +#endif
  paranoiderrorentry stack_segment do_stack_segment
  #ifdef CONFIG_XEN
@@ -5110,6 +5108,123 @@ index 0000000..3fe423c
 +	/* n bits clocksource with 32 < n < 64, not supported. */
 +	CFI_ENDPROC
 +ENDPROC(__ipipe_get_cs_tsc)
+diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
+index 3b9d18b..51b5772 100644
+--- a/drivers/gpu/drm/i915/i915_gem.c
++++ b/drivers/gpu/drm/i915/i915_gem.c
+@@ -2546,24 +2546,53 @@ static void sandybridge_write_fence_reg(struct drm_device *dev, int reg,
+ static void i965_write_fence_reg(struct drm_device *dev, int reg,
+ 				 struct drm_i915_gem_object *obj)
+ {
+-	drm_i915_private_t *dev_priv = dev->dev_private;
+-	uint64_t val;
+-
+-	if (obj) {
+-		u32 size = obj->gtt_space->size;
+-
+-		val = (uint64_t)((obj->gtt_offset + size - 4096) &
+-				 0xfffff000) << 32;
+-		val |= obj->gtt_offset & 0xfffff000;
+-		val |= ((obj->stride / 128) - 1) << I965_FENCE_PITCH_SHIFT;
+-		if (obj->tiling_mode == I915_TILING_Y)
+-			val |= 1 << I965_FENCE_TILING_Y_SHIFT;
+-		val |= I965_FENCE_REG_VALID;
+-	} else
+-		val = 0;
+-
+-	I915_WRITE64(FENCE_REG_965_0 + reg * 8, val);
+-	POSTING_READ(FENCE_REG_965_0 + reg * 8);
++        drm_i915_private_t *dev_priv = dev->dev_private;
++        int fence_reg;
++        int fence_pitch_shift;
++
++        if (INTEL_INFO(dev)->gen >= 6) {
++                fence_reg = FENCE_REG_SANDYBRIDGE_0;
++                fence_pitch_shift = SANDYBRIDGE_FENCE_PITCH_SHIFT;
++        } else {
++                fence_reg = FENCE_REG_965_0;
++                fence_pitch_shift = I965_FENCE_PITCH_SHIFT;
++        }
++
++        fence_reg += reg * 8;
++
++        /* To w/a incoherency with non-atomic 64-bit register updates,
++         * we split the 64-bit update into two 32-bit writes. In order
++         * for a partial fence not to be evaluated between writes, we
++         * precede the update with write to turn off the fence register,
++         * and only enable the fence as the last step.
++         *
++         * For extra levels of paranoia, we make sure each step lands
++         * before applying the next step.
++         */
++        I915_WRITE(fence_reg, 0);
++        POSTING_READ(fence_reg);
++
++        if (obj) {
++                u32 size = obj->gtt_space->size;
++                uint64_t val;
++
++                val = (uint64_t)((obj->gtt_offset + size - 4096) &
++                                 0xfffff000) << 32;
++                val |= obj->gtt_offset & 0xfffff000;
++                val |= (uint64_t)((obj->stride / 128) - 1) << fence_pitch_shift;
++                if (obj->tiling_mode == I915_TILING_Y)
++                        val |= 1 << I965_FENCE_TILING_Y_SHIFT;
++                val |= I965_FENCE_REG_VALID;
++
++                I915_WRITE(fence_reg + 4, val >> 32);
++                POSTING_READ(fence_reg + 4);
++
++                I915_WRITE(fence_reg + 0, val);
++                POSTING_READ(fence_reg);
++        } else {
++                I915_WRITE(fence_reg + 4, 0);
++                POSTING_READ(fence_reg + 4);
++        }
+ }
+ 
+ static void i915_write_fence_reg(struct drm_device *dev, int reg,
+@@ -2662,35 +2691,17 @@ static inline int fence_number(struct drm_i915_private *dev_priv,
+ 	return fence - dev_priv->fence_regs;
+ }
+ 
+-static void i915_gem_write_fence__ipi(void *data)
+-{
+-	wbinvd();
+-}
+-
+ static void i915_gem_object_update_fence(struct drm_i915_gem_object *obj,
+ 					 struct drm_i915_fence_reg *fence,
+ 					 bool enable)
+ {
+-	struct drm_device *dev = obj->base.dev;
+-	struct drm_i915_private *dev_priv = dev->dev_private;
+-	int fence_reg = fence_number(dev_priv, fence);
+-
+-	/* In order to fully serialize access to the fenced region and
+-	 * the update to the fence register we need to take extreme
+-	 * measures on SNB+. In theory, the write to the fence register
+-	 * flushes all memory transactions before, and coupled with the
+-	 * mb() placed around the register write we serialise all memory
+-	 * operations with respect to the changes in the tiler. Yet, on
+-	 * SNB+ we need to take a step further and emit an explicit wbinvd()
+-	 * on each processor in order to manually flush all memory
+-	 * transactions before updating the fence register.
+-	 */
+-	if (HAS_LLC(obj->base.dev))
+-		on_each_cpu(i915_gem_write_fence__ipi, NULL, 1);
+-	i915_gem_write_fence(dev, fence_reg, enable ? obj : NULL);
++	struct drm_i915_private *dev_priv = obj->base.dev->dev_private;
++	int reg = fence_number(dev_priv, fence);
++
++	i915_gem_write_fence(obj->base.dev, reg, enable ? obj : NULL);
+ 
+ 	if (enable) {
+-		obj->fence_reg = fence_reg;
++		obj->fence_reg = reg;
+ 		fence->obj = obj;
+ 		list_move_tail(&fence->lru_list, &dev_priv->mm.fence_list);
+ 	} else {
 diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
 index 6e373ea..f32da7b 100644
 --- a/drivers/pci/htirq.c
@@ -8160,7 +8275,7 @@ index 7d537ce..da7855c 100644
  
  static inline void spin_unlock_wait(spinlock_t *lock)
 diff --git a/include/linux/spinlock_api_smp.h b/include/linux/spinlock_api_smp.h
-index 51df117..7e7b9a7 100644
+index 51df117a..7e7b9a7 100644
 --- a/include/linux/spinlock_api_smp.h
 +++ b/include/linux/spinlock_api_smp.h
 @@ -99,7 +99,9 @@ static inline int __raw_spin_trylock(raw_spinlock_t *lock)
