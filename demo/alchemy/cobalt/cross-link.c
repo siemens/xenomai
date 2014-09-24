@@ -32,8 +32,8 @@
 #define WTASK_PREFIX  "write_task: "
 #define RTASK_PREFIX  "read_task: "
 
-#define WRITE_FILE    "rtser0"
-#define READ_FILE     "rtser1"
+#define WRITE_FILE    "/dev/rtdm/rtser0"
+#define READ_FILE     "/dev/rtdm/rtser1"
 
 int read_fd  = -1;
 int write_fd = -1;
@@ -77,7 +77,7 @@ static int close_file( int fd, char *name)
 
 	do {
 		i++;
-		err = rt_dev_close(fd);
+		err = close(fd);
 		switch (err) {
 		case -EAGAIN:
 			printf(MAIN_PREFIX "%s -> EAGAIN (%d times)\n",
@@ -155,9 +155,9 @@ static void write_task_proc(void *arg)
 
 		write_time = rt_timer_read();
 
-		written = rt_dev_write(write_fd, &write_time, sz);
+		written = write(write_fd, &write_time, sz);
 		if (written < 0 ) {
-			printf(WTASK_PREFIX "error on rt_dev_write, %s\n",
+			printf(WTASK_PREFIX "error on write, %s\n",
 			       strerror(-err));
 			break;
 		} else if (written != sz) {
@@ -183,7 +183,7 @@ static void read_task_proc(void *arg)
 	RTIME write_time = 0;
 	RTIME irq_time   = 0;
 	ssize_t sz = sizeof(RTIME);
-	int read = 0;
+	int rd = 0;
 	struct rtser_event rx_event;
 
 	printf(" Nr |   write->irq    |    irq->read    |   write->read   |\n");
@@ -197,7 +197,7 @@ static void read_task_proc(void *arg)
 
 	while (1) {
 		/* waiting for event */
-		err = rt_dev_ioctl(read_fd, RTSER_RTIOC_WAIT_EVENT, &rx_event);
+		err = ioctl(read_fd, RTSER_RTIOC_WAIT_EVENT, &rx_event);
 		if (err) {
 			printf(RTASK_PREFIX
 			       "error on RTSER_RTIOC_WAIT_EVENT, %s\n",
@@ -208,21 +208,21 @@ static void read_task_proc(void *arg)
 		}
 
 		irq_time = rx_event.rxpend_timestamp;
-		read = rt_dev_read(read_fd, &write_time, sz);
-		if (read == sz) {
+		rd = read(read_fd, &write_time, sz);
+		if (rd == sz) {
 			read_time = rt_timer_read();
 			printf("%3d |%16llu |%16llu |%16llu\n", nr,
 			       irq_time  - write_time,
 			       read_time - irq_time,
 			       read_time - write_time);
 			nr++;
-		} else if (read < 0 ) {
-			printf(RTASK_PREFIX "error on rt_dev_read, code %s\n",
+		} else if (rd < 0 ) {
+			printf(RTASK_PREFIX "error on read, code %s\n",
 			       strerror(-err));
 			break;
 		} else {
 			printf(RTASK_PREFIX "only %d / %zd byte received \n",
-			       read, sz);
+			       rd, sz);
 			break;
 		}
 	}
@@ -241,11 +241,8 @@ int main(int argc, char* argv[])
 	signal(SIGTERM, catch_signal);
 	signal(SIGINT, catch_signal);
 
-	/* no memory-swapping for this programm */
-	mlockall(MCL_CURRENT | MCL_FUTURE);
-
 	/* open rtser0 */
-	write_fd = rt_dev_open( WRITE_FILE, 0);
+	write_fd = open( WRITE_FILE, 0);
 	if (write_fd < 0) {
 		printf(MAIN_PREFIX "can't open %s (write), %s\n", WRITE_FILE,
 		       strerror(-write_fd));
@@ -255,7 +252,7 @@ int main(int argc, char* argv[])
 	printf(MAIN_PREFIX "write-file opened\n");
 
 	/* writing write-config */
-	err = rt_dev_ioctl(write_fd, RTSER_RTIOC_SET_CONFIG, &write_config);
+	err = ioctl(write_fd, RTSER_RTIOC_SET_CONFIG, &write_config);
 	if (err) {
 		printf(MAIN_PREFIX "error while RTSER_RTIOC_SET_CONFIG, %s\n",
 		       strerror(-err));
@@ -264,7 +261,7 @@ int main(int argc, char* argv[])
 	printf(MAIN_PREFIX "write-config written\n");
 
 	/* open rtser1 */
-	read_fd = rt_dev_open( READ_FILE, 0 );
+	read_fd = open( READ_FILE, 0 );
 	if (read_fd < 0) {
 		printf(MAIN_PREFIX "can't open %s (read), %s\n", READ_FILE,
 		       strerror(-read_fd));
@@ -274,9 +271,9 @@ int main(int argc, char* argv[])
 	printf(MAIN_PREFIX "read-file opened\n");
 
 	/* writing read-config */
-	err = rt_dev_ioctl(read_fd, RTSER_RTIOC_SET_CONFIG, &read_config);
+	err = ioctl(read_fd, RTSER_RTIOC_SET_CONFIG, &read_config);
 	if (err) {
-		printf(MAIN_PREFIX "error while rt_dev_ioctl, %s\n",
+		printf(MAIN_PREFIX "error while ioctl, %s\n",
 		       strerror(-err));
 		goto error;
 	}
@@ -320,7 +317,9 @@ int main(int argc, char* argv[])
 		goto error;
 	}
 
-	pause();
+	for (;;)
+		pause();
+
 	return 0;
 
  error:

@@ -1,5 +1,7 @@
 demodir = @XENO_DEMO_DIR@
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 demo_PROGRAMS = cross-link
 
 cppflags = 			\
@@ -10,6 +12,7 @@ ldadd = 						\
 	../../../lib/alchemy/libalchemy.la		\
 	../../../lib/copperplate/libcopperplate.la	\
 	../../../lib/cobalt/libcobalt.la		\
+	$(XENO_POSIX_WRAPPERS)				\
 	 @XENO_USER_LDADD@				\
 	-lpthread -lrt
 

@@ -101,10 +101,11 @@ am__installdirs = "$(DESTDIR)$(demodir)"
 PROGRAMS = $(demo_PROGRAMS)
 am_cross_link_OBJECTS = cross_link-cross-link.$(OBJEXT)
 cross_link_OBJECTS = $(am_cross_link_OBJECTS)
-am__DEPENDENCIES_1 = ../../../lib/alchemy/libalchemy.la \
+am__DEPENDENCIES_1 =
+am__DEPENDENCIES_2 = ../../../lib/alchemy/libalchemy.la \
 	../../../lib/copperplate/libcopperplate.la \
-	../../../lib/cobalt/libcobalt.la
-cross_link_DEPENDENCIES = $(am__DEPENDENCIES_1)
+	../../../lib/cobalt/libcobalt.la $(am__DEPENDENCIES_1)
+cross_link_DEPENDENCIES = $(am__DEPENDENCIES_2)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -135,7 +136,6 @@ AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
-CCLD = $(CC)
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -337,6 +337,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 demodir = @XENO_DEMO_DIR@
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 cppflags = \
 	$(XENO_USER_CFLAGS)	\
 	-I$(top_srcdir)/include
@@ -345,6 +346,7 @@ ldadd = \
 	../../../lib/alchemy/libalchemy.la		\
 	../../../lib/copperplate/libcopperplate.la	\
 	../../../lib/cobalt/libcobalt.la		\
+	$(XENO_POSIX_WRAPPERS)				\
 	 @XENO_USER_LDADD@				\
 	-lpthread -lrt
 
