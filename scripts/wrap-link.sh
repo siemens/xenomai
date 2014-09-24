@@ -138,7 +138,7 @@ while test $# -gt 0; do
 	    next_is_wrapped_symbol=:
 	    ;;
 
-	-Wl,--wrap,main|-Wl,--wrap=main)
+	-Wl,--wrap,main|-Wl,--wrap=main|-Wl,--dynamic-list=*)
 	    # special case so that Copperplate can interpose on the
 	    # main() routine. For this we need this wrapping to
 	    # take place in the second stage.
@@ -209,5 +209,5 @@ if $stage2; then
     $dryrun rm -f $output.tmp
 else
     $verbose && set -x
-    $dryrun $cc -o "$output" $onestage_args
+    $dryrun $cc $onestage_args
 fi
