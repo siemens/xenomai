@@ -172,6 +172,7 @@ int __rtdm_dev_open(const char *path, int oflag)
 		goto fail_create;
 
 	context->fd.minor = dev->minor;
+	context->fd.oflags = oflag;
 
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 

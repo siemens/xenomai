@@ -298,6 +298,7 @@ struct rtdm_fd {
 	struct cobalt_ppd *owner;
 	unsigned int refs;
 	int minor;
+	int oflags;
 	struct list_head cleanup;
 };
 
@@ -315,6 +316,11 @@ static inline struct cobalt_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
 static inline int rtdm_fd_minor(struct rtdm_fd *fd)
 {
 	return fd->minor;
+}
+
+static inline int rtdm_fd_flags(struct rtdm_fd *fd)
+{
+	return fd->oflags;
 }
 
 int rtdm_fd_enter(struct rtdm_fd *rtdm_fd, int ufd,
