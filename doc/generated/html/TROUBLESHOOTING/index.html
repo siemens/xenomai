@@ -269,7 +269,19 @@ solve the problem.</td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_on_other_supported_platforms">2.9.3. On other supported platforms</h4>
+<h4 id="_on_arm">2.9.3. On ARM</h4>
+<div class="paragraph"><p>If you see the following message:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>Xenomai: hal/arm: hardware FPU support enabled but not available</tt></pre>
+</div></div>
+<div class="paragraph"><p>It means that you enabled CONFIG_VFP and CONFIG_XENO_HW_FPU in the
+kernel configuration, but the processor on which you are running the
+kernel has no support for VFP. In that case, you have to recompile the
+kernel with CONFIG_XENO_HW_FPU disabled.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_on_other_supported_platforms">2.9.4. On other supported platforms</h4>
 <div class="paragraph"><p>As on x86, on other platforms where Xenomai shares the timer with
 Linux, the timer is only used if it was not shut down by Linux. So you
 should check the log for messages about disabled timers. You can also
@@ -296,7 +308,7 @@ the complete kernel boot log.
 </ul></div>
 </div>
 <div class="sect3">
-<h4 id="_on_a_new_i_pipe_port">2.9.4. On a new I-pipe port</h4>
+<h4 id="_on_a_new_i_pipe_port">2.9.5. On a new I-pipe port</h4>
 <div class="paragraph"><p>You will most likely also see the following message:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -827,7 +839,7 @@ like calling:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-10-04 22:38:05 CEST
+Last updated 2014-09-15 20:44:38 CEST
 </div>
 </div>
 </body>

@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -318,7 +318,7 @@ Functions</h2></td></tr>
 
 <p>Install a signal handler. </p>
 <p>This service installs a signal handler for the current task. Signals are discrete events tasks can receive each time they resume execution. When signals are pending upon resumption, <em>handler</em> is fired to process them. Signals can be sent using <a class="el" href="group__task.html#ga70e65c2efb499c48c6d15010a1c630a3" title="Send signals to a task.">rt_task_notify()</a>. A task can block the signal delivery by passing the T_NOSIG bit to <a class="el" href="group__task.html#ga915e7edfb0aaddb643794d7abc7093bf" title="Change task mode bits.">rt_task_set_mode()</a>.</p>
-<p>Calling this service implicitely unblocks the signal delivery for the caller.</p>
+<p>Calling this service implicitly unblocks the signal delivery for the caller.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">handler</td><td>The address of the user-supplied routine to fire when signals are pending for the task. This handler is passed the set of pending signals as its first and only argument.</td></tr>
@@ -1964,7 +1964,7 @@ When called from a user-space task, this service may need to allocate some tempo
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:10 for Xenomai API by
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:25 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>

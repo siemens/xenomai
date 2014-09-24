@@ -1,6 +1,6 @@
 <map id="include/native/ppd.h" name="include/native/ppd.h">
 <area shape="rect" id="node3" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="803,83,904,112"/>
-<area shape="rect" id="node60" href="$nucleus_2ppd_8h_source.html" title="nucleus/ppd.h" alt="" coords="1123,83,1224,112"/>
+<area shape="rect" id="node60" href="$nucleus_2ppd_8h.html" title="nucleus/ppd.h" alt="" coords="1123,83,1224,112"/>
 <area shape="rect" id="node69" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="1027,160,1136,189"/>
 <area shape="rect" id="node5" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="523,160,640,189"/>
 <area shape="rect" id="node7" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="448,237,565,267"/>

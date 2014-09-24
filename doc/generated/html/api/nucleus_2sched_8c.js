@@ -5,7 +5,7 @@ var nucleus_2sched_8c =
     [ "EXPORT_SYMBOL_GPL", "nucleus_2sched_8c.html#a6d296f507df3c81f67ce6af200d2f557", null ],
     [ "xnsched_destroy", "nucleus_2sched_8c.html#ga93c66caff95dbdd10200e0b5fab59bdd", null ],
     [ "xnsched_init", "nucleus_2sched_8c.html#ga2105493e07be158299ccd55863a962cf", null ],
-    [ "xnsched_migrate", "nucleus_2sched_8c.html#ga151329cce2141ebab553ded297ef8505", null ],
+    [ "xnsched_migrate", "nucleus_2sched_8c.html#gab24eda0cb6214173ef042377876bd5ec", null ],
     [ "xnsched_migrate_passive", "nucleus_2sched_8c.html#ga272df1c8a9b7d49fb7d93349d6fdc2fc", null ],
     [ "xnsched_pick_next", "nucleus_2sched_8c.html#ga8766bd9fe19df8c984a1f77e9d9bf478", null ],
     [ "xnsched_putback", "nucleus_2sched_8c.html#ga3822a1c15b4c8d50428cf8ed27e2c365", null ],

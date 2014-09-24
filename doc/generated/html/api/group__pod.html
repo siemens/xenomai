@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -158,8 +158,8 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga96e6b70fb05da3603bebacde76b16f22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Install a nucleus hook.  <a href="#ga96e6b70fb05da3603bebacde76b16f22"></a><br/></td></tr>
 <tr class="memitem:gace800481d23255eebe45f969e9434adf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gace800481d23255eebe45f969e9434adf">xnpod_remove_hook</a> (int type, void(*routine)(xnthread_t *))</td></tr>
 <tr class="memdesc:gace800481d23255eebe45f969e9434adf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a nucleus hook.  <a href="#gace800481d23255eebe45f969e9434adf"></a><br/></td></tr>
-<tr class="memitem:ga657259b9accb3be41574f9970baef393"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga657259b9accb3be41574f9970baef393">xnpod_welcome_thread</a> (xnthread_t *thread, int imask)</td></tr>
-<tr class="memdesc:ga657259b9accb3be41574f9970baef393"><td class="mdescLeft">&#160;</td><td class="mdescRight">Thread prologue.  <a href="#ga657259b9accb3be41574f9970baef393"></a><br/></td></tr>
+<tr class="memitem:gaa09947e0f921edfac98b8fb54b7c6e0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gaa09947e0f921edfac98b8fb54b7c6e0b">xnpod_welcome_thread</a> (xnthread_t *curr, int imask)</td></tr>
+<tr class="memdesc:gaa09947e0f921edfac98b8fb54b7c6e0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Thread prologue.  <a href="#gaa09947e0f921edfac98b8fb54b7c6e0b"></a><br/></td></tr>
 <tr class="memitem:gaf95cac21ec23e44282461905dd3fc153"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">xnpod_trap_fault</a> (xnarch_fltinfo_t *fltinfo)</td></tr>
 <tr class="memdesc:gaf95cac21ec23e44282461905dd3fc153"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default fault handler.  <a href="#gaf95cac21ec23e44282461905dd3fc153"></a><br/></td></tr>
 </table>
@@ -357,7 +357,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__nucleus__state__flags.html#gadd8332af5954bcc409e8a1181005cd86">XNASDI</a>.</p>
 
-<p>Referenced by <a class="el" href="group__pod.html#ga657259b9accb3be41574f9970baef393">xnpod_welcome_thread()</a>, and <a class="el" href="group__shadow.html#ga5f631762c7381866d70177afb2ba123b">xnshadow_harden()</a>.</p>
+<p>Referenced by <a class="el" href="group__pod.html#gaa09947e0f921edfac98b8fb54b7c6e0b">xnpod_welcome_thread()</a>, and <a class="el" href="group__shadow.html#ga5f631762c7381866d70177afb2ba123b">xnshadow_harden()</a>.</p>
 
 </div>
 </div>
@@ -1133,7 +1133,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, <a class="el" href="group__nucleus__state__flags.html#ga0843357a4c7a592e9d5f9cb1ce84ea8e">XNSTARTED</a>, and <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__thread.html#gae6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>, <a class="el" href="group__task.html#gac9638918b8310a430088f5c9a04d2bb7">rt_task_start()</a>, <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>, and <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">xnshadow_map()</a>.</p>
+<p>Referenced by <a class="el" href="group__posix__thread.html#gae6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>, <a class="el" href="group__task.html#gac9638918b8310a430088f5c9a04d2bb7">rt_task_start()</a>, <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>, and <a class="el" href="group__shadow.html#gac506f8fcc45099cb1ed37fbc6ca1349e">xnshadow_map()</a>.</p>
 
 </div>
 </div>
@@ -1254,7 +1254,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="structxnsched.html#a4e9ca82832cb0709308e7d78e7f9d694">xnsched::lflags</a>, <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__nucleus__state__flags.html#ga9394cc02e730535e3dd8b0aabb08ea86">XNHELD</a>, <a class="el" href="group__nucleus__info__flags.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, <a class="el" href="group__nucleus__info__flags.html#gad28db508d297929d6a0ec30964639d65">XNROBBED</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, <a class="el" href="group__synch.html#ga997e546948920193bb36ab8d120fbab7">xnsynch_forget_sleeper()</a>, <a class="el" href="group__nucleus__info__flags.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>, <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab">xntimer_start()</a>, and <a class="el" href="group__nucleus__info__flags.html#ga53e49fa49b312e5266b31d66f7465d44">XNWAKEN</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>, <a class="el" href="group__posix__signal.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill()</a>, <a class="el" href="group__task.html#gad5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep()</a>, <a class="el" href="group__task.html#ga0dc2deebe7500c9d21ff05d51d5efaa8">rt_task_sleep_until()</a>, <a class="el" href="group__task.html#ga926a4b10e3631f76c5f38910e6eea24c">rt_task_suspend()</a>, <a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread()</a>, <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread()</a>, <a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa">xnpod_set_thread_periodic()</a>, <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>, <a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">xnpod_trap_fault()</a>, <a class="el" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa">xnpod_wait_thread_period()</a>, <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">xnshadow_map()</a>, <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>, <a class="el" href="group__synch.html#ga6d4ad886901c751a4f3c51b90fc8f91f">xnsynch_acquire()</a>, and <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>.</p>
+<p>Referenced by <a class="el" href="group__posix__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>, <a class="el" href="group__posix__signal.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill()</a>, <a class="el" href="group__task.html#gad5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep()</a>, <a class="el" href="group__task.html#ga0dc2deebe7500c9d21ff05d51d5efaa8">rt_task_sleep_until()</a>, <a class="el" href="group__task.html#ga926a4b10e3631f76c5f38910e6eea24c">rt_task_suspend()</a>, <a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread()</a>, <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread()</a>, <a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa">xnpod_set_thread_periodic()</a>, <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>, <a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">xnpod_trap_fault()</a>, <a class="el" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa">xnpod_wait_thread_period()</a>, <a class="el" href="group__shadow.html#gac506f8fcc45099cb1ed37fbc6ca1349e">xnshadow_map()</a>, <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>, <a class="el" href="group__synch.html#ga6d4ad886901c751a4f3c51b90fc8f91f">xnsynch_acquire()</a>, and <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>.</p>
 
 </div>
 </div>
@@ -1373,7 +1373,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga657259b9accb3be41574f9970baef393"></a>
+<a class="anchor" id="gaa09947e0f921edfac98b8fb54b7c6e0b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1410,7 +1410,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:10 for Xenomai API by
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:24 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>

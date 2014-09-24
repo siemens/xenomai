@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -108,8 +108,8 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga5f631762c7381866d70177afb2ba123b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Migrate a Linux task to the Xenomai domain.  <a href="#ga5f631762c7381866d70177afb2ba123b"></a><br/></td></tr>
 <tr class="memitem:ga8de86a334ac2c5aeeebccf88fcee03ab"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax</a> (int notify, int reason)</td></tr>
 <tr class="memdesc:ga8de86a334ac2c5aeeebccf88fcee03ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Switch a shadow thread back to the Linux domain.  <a href="#ga8de86a334ac2c5aeeebccf88fcee03ab"></a><br/></td></tr>
-<tr class="memitem:ga7204facd253dcde78c214e107e2ceafa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">xnshadow_map</a> (xnthread_t *thread, xncompletion_t __user *u_completion, unsigned long __user *u_mode_offset)</td></tr>
-<tr class="memdesc:ga7204facd253dcde78c214e107e2ceafa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a shadow thread context.  <a href="#ga7204facd253dcde78c214e107e2ceafa"></a><br/></td></tr>
+<tr class="memitem:gac506f8fcc45099cb1ed37fbc6ca1349e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#gac506f8fcc45099cb1ed37fbc6ca1349e">xnshadow_map</a> (xnthread_t *curr, xncompletion_t __user *u_completion, unsigned long __user *u_mode_offset)</td></tr>
+<tr class="memdesc:gac506f8fcc45099cb1ed37fbc6ca1349e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a shadow thread context.  <a href="#gac506f8fcc45099cb1ed37fbc6ca1349e"></a><br/></td></tr>
 <tr class="memitem:ga14c8b586498491f886d7b5335f92c3b1"><td class="memItemLeft" align="right" valign="top">xnshadow_ppd_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga14c8b586498491f886d7b5335f92c3b1">xnshadow_ppd_get</a> (unsigned muxid)</td></tr>
 <tr class="memdesc:ga14c8b586498491f886d7b5335f92c3b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the per-process data attached to the calling process.  <a href="#ga14c8b586498491f886d7b5335f92c3b1"></a><br/></td></tr>
 </table>
@@ -139,13 +139,13 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: always. </p>
 
-<p>References <a class="el" href="group__nucleus__info__flags.html#gacd09e12fd36001dcc930a01f5b16cbd5">XNATOMIC</a>, <a class="el" href="group__nucleus__state__flags.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">XNDEBUG</a>, <a class="el" href="group__pod.html#gafd49fb1aa94c5f44f8c23d66a77b5581">xnpod_dispatch_signals()</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, and <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>.</p>
+<p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="group__nucleus__info__flags.html#gacd09e12fd36001dcc930a01f5b16cbd5">XNATOMIC</a>, <a class="el" href="group__nucleus__state__flags.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">XNDEBUG</a>, <a class="el" href="group__pod.html#gafd49fb1aa94c5f44f8c23d66a77b5581">xnpod_dispatch_signals()</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, and <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">xnshadow_map()</a>.</p>
+<p>Referenced by <a class="el" href="group__shadow.html#gac506f8fcc45099cb1ed37fbc6ca1349e">xnshadow_map()</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ga7204facd253dcde78c214e107e2ceafa"></a>
+<a class="anchor" id="gac506f8fcc45099cb1ed37fbc6ca1349e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -153,7 +153,7 @@ Functions</h2></td></tr>
           <td class="memname">int xnshadow_map </td>
           <td>(</td>
           <td class="paramtype">xnthread_t *&#160;</td>
-          <td class="paramname"><em>thread</em>, </td>
+          <td class="paramname"><em>curr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -180,7 +180,7 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">thread</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036" title="Initialize a new thread.">xnpod_init_thread()</a>.</td></tr>
-    <tr><td class="paramname">u_completion</td><td>is the address of an optional completion descriptor aimed at synchronizing our parent thread with us. If non-NULL, the information <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa" title="Create a shadow thread context.">xnshadow_map()</a> will store into the completion block will be later used to wake up the parent thread when the current shadow has been initialized. In the latter case, the new shadow thread is left in a dormant state (XNDORMANT) after its creation, leading to the suspension of "current" in the Linux domain, only processing signals. Otherwise, the shadow thread is immediately started and "current" immediately resumes in the Xenomai domain from this service.</td></tr>
+    <tr><td class="paramname">u_completion</td><td>is the address of an optional completion descriptor aimed at synchronizing our parent thread with us. If non-NULL, the information <a class="el" href="group__shadow.html#gac506f8fcc45099cb1ed37fbc6ca1349e" title="Create a shadow thread context.">xnshadow_map()</a> will store into the completion block will be later used to wake up the parent thread when the current shadow has been initialized. In the latter case, the new shadow thread is left in a dormant state (XNDORMANT) after its creation, leading to the suspension of "current" in the Linux domain, only processing signals. Otherwise, the shadow thread is immediately started and "current" immediately resumes in the Xenomai domain from this service.</td></tr>
     <tr><td class="paramname"></td><td>u_mode_offset is the address of a user space address where we will store the offset of the "u_mode" thread variable in the process shared heap. This thread variable reflects the current thread mode (primary or secondary). The nucleus will try to update the variable before switching to secondary or after switching from primary mode.</td></tr>
   </table>
   </dd>
@@ -279,7 +279,7 @@ NULL otherwise. </dd></dl>
 <p>Rescheduling: always.</p>
 <dl class="section note"><dt>Note</dt><dd>"current" is valid here since the shadow runs with the properties of the Linux task. </dd></dl>
 
-<p>References <a class="el" href="group__nucleus__info__flags.html#ga5367249995d2f1130a4f40b6b114f52d">XNAFFSET</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__nucleus__info__flags.html#ga1ebc292a849f2b9cd19fc89caaa65a3e">XNPRIOSET</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, and <a class="el" href="group__nucleus__state__flags.html#gade2e62645781aa1badafd97659cf3473">XNTRAPSW</a>.</p>
+<p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="group__nucleus__info__flags.html#ga5367249995d2f1130a4f40b6b114f52d">XNAFFSET</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__nucleus__info__flags.html#ga1ebc292a849f2b9cd19fc89caaa65a3e">XNPRIOSET</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, and <a class="el" href="group__nucleus__state__flags.html#gade2e62645781aa1badafd97659cf3473">XNTRAPSW</a>.</p>
 
 <p>Referenced by <a class="el" href="group__posix__thread.html#ga9dd3db5524fccb05a8868b7c33ccaa79">pthread_set_mode_np()</a>, <a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">xnpod_trap_fault()</a>, and <a class="el" href="group__shadow.html#ga5f631762c7381866d70177afb2ba123b">xnshadow_harden()</a>.</p>
 
@@ -290,7 +290,7 @@ NULL otherwise. </dd></dl>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:10 for Xenomai API by
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:24 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>

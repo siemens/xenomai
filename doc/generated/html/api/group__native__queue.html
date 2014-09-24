@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -320,7 +320,7 @@ Functions</h2></td></tr>
 <li>Q_PRIO makes tasks pend in priority order on the queue.</li>
 </ul>
 <ul>
-<li>Q_SHARED causes the queue to be sharable between kernel and user-space tasks. Otherwise, the new queue is only available for kernel-based usage. This flag is implicitely set when the caller is running in user-space. This feature requires the real-time support in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).</li>
+<li>Q_SHARED causes the queue to be sharable between kernel and user-space tasks. Otherwise, the new queue is only available for kernel-based usage. This flag is implicitly set when the caller is running in user-space. This feature requires the real-time support in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).</li>
 </ul>
 <ul>
 <li>Q_DMA causes the buffer pool associated to the queue to be allocated in physically contiguous memory, suitable for DMA operations with I/O devices. A 128Kb limit exists for <em>poolsize</em> when this flag is passed.</li>
@@ -1069,7 +1069,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:10 for Xenomai API by
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:24 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>

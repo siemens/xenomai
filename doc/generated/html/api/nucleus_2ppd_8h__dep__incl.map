@@ -1,0 +1,30 @@
+<map id="include/nucleus/ppd.h" name="include/nucleus/ppd.h">
+<area shape="rect" id="node3" href="$sys__ppd_8h_source.html" title="include/nucleus/sys\l_ppd.h" alt="" coords="375,83,511,130"/>
+<area shape="rect" id="node5" href="$shadow_8c.html" title="Real&#45;time shadow services." alt="" coords="5,179,160,208"/>
+<area shape="rect" id="node13" href="$posix_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="1765,411,1939,440"/>
+<area shape="rect" id="node16" href="$native_2ppd_8h.html" title="This file is part of the Xenomai project." alt="" coords="1100,92,1239,121"/>
+<area shape="rect" id="node47" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="1893,179,2045,208"/>
+<area shape="rect" id="node49" href="$rtdm_2internal_8h_source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="2024,92,2192,121"/>
+<area shape="rect" id="node56" href="$posix_2internal_8h_source.html" title="ksrc/skins/posix/internal.h" alt="" coords="1648,92,1821,121"/>
+<area shape="rect" id="node7" href="$ksrc_2skins_2native_2mutex_8c.html" title="This file is part of the Xenomai project." alt="" coords="419,179,589,208"/>
+<area shape="rect" id="node9" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="805,256,981,285"/>
+<area shape="rect" id="node11" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="184,179,344,208"/>
+<area shape="rect" id="node18" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="840,179,989,208"/>
+<area shape="rect" id="node25" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="1181,179,1325,208"/>
+<area shape="rect" id="node31" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="1013,179,1157,208"/>
+<area shape="rect" id="node35" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="1349,179,1491,208"/>
+<area shape="rect" id="node41" href="$native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="664,179,816,208"/>
+<area shape="rect" id="node20" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="613,256,781,285"/>
+<area shape="rect" id="node22" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="1005,256,1184,285"/>
+<area shape="rect" id="node27" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="1208,256,1371,285"/>
+<area shape="rect" id="node38" href="$ksrc_2skins_2native_2pipe_8c.html" title="This file is part of the Xenomai project." alt="" coords="1395,256,1555,285"/>
+<area shape="rect" id="node44" href="$ksrc_2skins_2native_2queue_8c.html" title="This file is part of the Xenomai project." alt="" coords="419,256,589,285"/>
+<area shape="rect" id="node52" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="2069,179,2235,208"/>
+<area shape="rect" id="node54" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="2259,179,2427,208"/>
+<area shape="rect" id="node58" href="$ksrc_2skins_2posix_2thread_8h_source.html" title="ksrc/skins/posix/thread.h" alt="" coords="1651,179,1819,208"/>
+<area shape="rect" id="node65" href="$ksrc_2skins_2posix_2mutex_8h_source.html" title="ksrc/skins/posix/mutex.h" alt="" coords="2007,256,2175,285"/>
+<area shape="rect" id="node60" href="$sig_8h_source.html" title="ksrc/skins/posix/sig.h" alt="" coords="1760,256,1909,285"/>
+<area shape="rect" id="node71" href="$ksrc_2skins_2posix_2sem_8h_source.html" title="ksrc/skins/posix/sem.h" alt="" coords="1591,333,1748,363"/>
+<area shape="rect" id="node62" href="$ksrc_2skins_2posix_2timer_8h_source.html" title="ksrc/skins/posix/timer.h" alt="" coords="1772,333,1932,363"/>
+<area shape="rect" id="node67" href="$ksrc_2skins_2posix_2cond_8h_source.html" title="ksrc/skins/posix/cond.h" alt="" coords="2007,333,2167,363"/>
+</map>

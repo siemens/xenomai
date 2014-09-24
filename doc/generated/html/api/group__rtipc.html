@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -614,8 +614,8 @@ Socket level options</h2></td></tr>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="gga16af7b253440dadd46a80a4b9fddba4da28a488c3e7fc47dee4d5757f215f62e9"></a>IPCPROTO_XDDP</em>&nbsp;</td><td>
 <p>Cross-domain datagram protocol (RT &lt;-&gt; non-RT). </p>
-<p>Real-time Xenomai threads and regular Linux threads may want to exchange data in a way that does not require the former to leave the real-time domain (i.e. secondary mode). The RTDM-based XDDP protocol is available for this purpose.</p>
-<p>On the Linux domain side, pseudo-device files named /dev/rtp<em>&lt;minor&gt;</em> give regular POSIX threads access to non real-time communication endpoints, via the standard character-based I/O interface. On the Xenomai domain side, sockets may be bound to XDDP ports, which act as proxies to send and receive data to/from the associated pseudo-device files. Ports and pseudo-device minor numbers are paired, meaning that e.g. port 7 will proxy the traffic to/from /dev/rtp7.</p>
+<p>Real-time Xenomai threads and regular Linux threads may want to exchange data in a way that does not require the former to leave the real-time domain (i.e. primary mode). The RTDM-based XDDP protocol is available for this purpose.</p>
+<p>On the Linux domain side, pseudo-device files named /dev/rtp<em>&lt;minor&gt;</em> give regular POSIX threads access to non real-time communication endpoints, via the standard character-based I/O interface. On the Xenomai domain side, sockets may be bound to XDDP ports, which act as proxies to send and receive data to/from the associated pseudo-device files. Ports and pseudo-device minor numbers are paired, meaning that e.g. socket port 7 will proxy the traffic to/from /dev/rtp7.</p>
 <p>All data sent through a bound/connected XDDP socket via <code>sendto(2)</code> or <code>write(2)</code> will be passed to the peer endpoint in the Linux domain, and made available for reading via the standard <code>read(2)</code> system call. Conversely, all data sent using <code>write(2)</code> through the non real-time endpoint will be conveyed to the real-time socket endpoint, and made available to the <code>recvfrom(2)</code> or <code>read(2)</code> system calls. </p>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="gga16af7b253440dadd46a80a4b9fddba4da7f1e80711306177a6f5d48031efe0080"></a>IPCPROTO_IDDP</em>&nbsp;</td><td>
@@ -1112,7 +1112,7 @@ Socket level options</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:10 for Xenomai API by
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:25 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>

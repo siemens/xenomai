@@ -12,7 +12,7 @@ var dir_b681fac26223caaf15e149e8e802bec7 =
     [ "module.h", "module_8h_source.html", null ],
     [ "pipe.h", "nucleus_2pipe_8h_source.html", null ],
     [ "pod.h", "pod_8h.html", "pod_8h" ],
-    [ "ppd.h", "nucleus_2ppd_8h_source.html", null ],
+    [ "ppd.h", "nucleus_2ppd_8h.html", "nucleus_2ppd_8h" ],
     [ "queue.h", "nucleus_2queue_8h_source.html", null ],
     [ "registry.h", "include_2nucleus_2registry_8h.html", "include_2nucleus_2registry_8h" ],
     [ "sched-idle.h", "sched-idle_8h.html", "sched-idle_8h" ],

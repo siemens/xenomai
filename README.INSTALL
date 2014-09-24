@@ -1,4 +1,4 @@
-Installing Xenomai 2.6.3
+Installing Xenomai 2.6.4
 
 -------------------------------------------------------------------------------
 
@@ -512,7 +512,7 @@ location
 
 $ mkdir $build_root/xenomai && cd $build_root/xenomai
 $ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
-  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi-
+  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi
 $ make DESTDIR=$staging_dir install
 
 [Important] Important
@@ -543,7 +543,7 @@ imx51/imx53   -march=armv7-a -mfpu=vfp3 ^[a]
 
 imx6q         -march=armv7-a -mfpu=vfp3 ^[a]
 
-ixp4xx        -march=armv5 -msoft-float          --enable-arm-tsc=ixp4xx
+ixp4xx        -march=armv5 -msoft-float
 
 omap3         -march=armv7-a -mfpu=vfp3 ^[a]
 

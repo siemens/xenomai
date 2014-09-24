@@ -79,7 +79,7 @@ var shadow_8c =
     [ "xnshadow_exit", "shadow_8c.html#gace7eea32a53d19aa18cdbcea8ae193ff", null ],
     [ "xnshadow_grab_events", "shadow_8c.html#ga222ccd6336cfa8f2bab7ca1d01c25b44", null ],
     [ "xnshadow_harden", "shadow_8c.html#ga5f631762c7381866d70177afb2ba123b", null ],
-    [ "xnshadow_map", "shadow_8c.html#ga7204facd253dcde78c214e107e2ceafa", null ],
+    [ "xnshadow_map", "shadow_8c.html#gac506f8fcc45099cb1ed37fbc6ca1349e", null ],
     [ "xnshadow_mount", "shadow_8c.html#gaeb771b8a03405276df5ee3e13463cfb7", null ],
     [ "xnshadow_ppd_get", "shadow_8c.html#ga14c8b586498491f886d7b5335f92c3b1", null ],
     [ "xnshadow_register_interface", "shadow_8c.html#ga100397c23b2bbc7b31da5b5de97afb82", null ],

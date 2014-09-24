@@ -1,7 +1,7 @@
 <map id="ksrc/skins/rtdm/device.c" name="ksrc/skins/rtdm/device.c">
 <area shape="rect" id="node7" href="$rtdm_2internal_8h_source.html" title="rtdm/internal.h" alt="" coords="1751,83,1855,112"/>
 <area shape="rect" id="node9" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="721,315,823,344"/>
-<area shape="rect" id="node66" href="$nucleus_2ppd_8h_source.html" title="nucleus/ppd.h" alt="" coords="1840,160,1941,189"/>
+<area shape="rect" id="node66" href="$nucleus_2ppd_8h.html" title="nucleus/ppd.h" alt="" coords="1840,160,1941,189"/>
 <area shape="rect" id="node75" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="1387,160,1515,189"/>
 <area shape="rect" id="node11" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="969,392,1087,421"/>
 <area shape="rect" id="node13" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="529,469,647,499"/>

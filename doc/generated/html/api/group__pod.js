@@ -27,5 +27,5 @@ var group__pod =
     [ "xnpod_trap_fault", "group__pod.html#gaf95cac21ec23e44282461905dd3fc153", null ],
     [ "xnpod_unblock_thread", "group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd", null ],
     [ "xnpod_wait_thread_period", "group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa", null ],
-    [ "xnpod_welcome_thread", "group__pod.html#ga657259b9accb3be41574f9970baef393", null ]
+    [ "xnpod_welcome_thread", "group__pod.html#gaa09947e0f921edfac98b8fb54b7c6e0b", null ]
 ];

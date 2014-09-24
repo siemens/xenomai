@@ -71,7 +71,7 @@ var pod_8c =
     [ "xnpod_trap_fault", "pod_8c.html#gaf95cac21ec23e44282461905dd3fc153", null ],
     [ "xnpod_unblock_thread", "pod_8c.html#gae5f0d19e7a499b9b262f68a43ab545dd", null ],
     [ "xnpod_wait_thread_period", "pod_8c.html#gaf836996e4a3378928f2a9f93a4915cfa", null ],
-    [ "xnpod_welcome_thread", "pod_8c.html#ga657259b9accb3be41574f9970baef393", null ],
+    [ "xnpod_welcome_thread", "pod_8c.html#gaa09947e0f921edfac98b8fb54b7c6e0b", null ],
     [ "nkaffinity", "pod_8c.html#gaaf8dd6cb785659c596ea4a888115ef25", null ],
     [ "nklatency", "pod_8c.html#gae7fd11fd638fac8ae49942f2ca7640d4", null ],
     [ "nkpod_struct", "pod_8c.html#gaf3a320d6aab6365279b23275bc282c19", null ],

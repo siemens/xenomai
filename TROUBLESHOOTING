@@ -20,8 +20,9 @@ Table of Contents
 
         2.9.1. On x86
         2.9.2. On AMD x86_64
-        2.9.3. On other supported platforms
-        2.9.4. On a new I-pipe port
+        2.9.3. On ARM
+        2.9.4. On other supported platforms
+        2.9.5. On a new I-pipe port
 
     2.10. Xenomai: system init failed, code -22
 
@@ -252,7 +253,18 @@ located in the Advanced BIOS Features→ menu (AMD C1E Support).
             Disabling AMD K8 Cool&Quiet option in a BIOS does not solve the
             problem.
 
-2.9.3. On other supported platforms
+2.9.3. On ARM
+
+If you see the following message:
+
+Xenomai: hal/arm: hardware FPU support enabled but not available
+
+It means that you enabled CONFIG_VFP and CONFIG_XENO_HW_FPU in the kernel
+configuration, but the processor on which you are running the kernel has no
+support for VFP. In that case, you have to recompile the kernel with
+CONFIG_XENO_HW_FPU disabled.
+
+2.9.4. On other supported platforms
 
 As on x86, on other platforms where Xenomai shares the timer with Linux, the
 timer is only used if it was not shut down by Linux. So you should check the
@@ -266,7 +278,7 @@ post a message to the xenomai mailing list: "xenomai@xenomai.org", sending:
     issue
   * the complete kernel boot log.
 
-2.9.4. On a new I-pipe port
+2.9.5. On a new I-pipe port
 
 You will most likely also see the following message:
 

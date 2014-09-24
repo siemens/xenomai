@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -152,7 +152,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Acquire a mutex. </p>
-<p>Attempt to lock a mutex. The calling task is blocked until the mutex is available, in which case it is locked again before this service returns. Mutexes have an ownership property, which means that their current owner is tracked. Xenomai mutexes are implicitely recursive and implement the priority inheritance protocol.</p>
+<p>Attempt to lock a mutex. The calling task is blocked until the mutex is available, in which case it is locked again before this service returns. Mutexes have an ownership property, which means that their current owner is tracked. Xenomai mutexes are implicitly recursive and implement the priority inheritance protocol.</p>
 <p>Since a nested locking count is maintained for the current owner, rt_mutex_acquire{_until}() and <a class="el" href="group__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070" title="Unlock mutex.">rt_mutex_release()</a> must be used in pairs.</p>
 <p>Tasks pend on mutexes by priority order.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -217,7 +217,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Acquire a mutex (with absolute timeout date). </p>
-<p>Attempt to lock a mutex. The calling task is blocked until the mutex is available, in which case it is locked again before this service returns. Mutexes have an ownership property, which means that their current owner is tracked. Xenomai mutexes are implicitely recursive and implement the priority inheritance protocol.</p>
+<p>Attempt to lock a mutex. The calling task is blocked until the mutex is available, in which case it is locked again before this service returns. Mutexes have an ownership property, which means that their current owner is tracked. Xenomai mutexes are implicitly recursive and implement the priority inheritance protocol.</p>
 <p>Since a nested locking count is maintained for the current owner, rt_mutex_acquire{_until}() and <a class="el" href="group__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070" title="Unlock mutex.">rt_mutex_release()</a> must be used in pairs.</p>
 <p>Tasks pend on mutexes by priority order.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -564,7 +564,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:10 for Xenomai API by
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:24 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>

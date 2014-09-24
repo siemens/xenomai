@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.7" />
-<title>Installing Xenomai 2.6.3</title>
+<title>Installing Xenomai 2.6.4</title>
 <link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
 <script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
 <script type="text/javascript">
@@ -15,7 +15,7 @@ asciidoc.install(3);
 </head>
 <body class="article" style="max-width:55em">
 <div id="header">
-<h1>Installing Xenomai 2.6.3</h1>
+<h1>Installing Xenomai 2.6.4</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -630,7 +630,7 @@ $ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
 <div class="content">
 <pre><tt>$ mkdir $build_root/xenomai &amp;&amp; cd $build_root/xenomai
 $ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
-  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi-
+  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi
 $ make DESTDIR=$staging_dir install</tt></pre>
 </div></div>
 <div class="admonitionblock">
@@ -704,7 +704,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">ixp4xx</p></td>
 <td align="left" valign="top"><p class="table"><tt>-march=armv5 -msoft-float</tt></p></td>
-<td align="left" valign="top"><p class="table"><tt><tt>--enable-arm-tsc=ixp4xx</tt></tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">omap3</p></td>
@@ -931,7 +931,7 @@ test under load to evaluate the latency test of your system, the
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-10-13 17:44:53 CEST
+Last updated 2014-09-15 20:44:38 CEST
 </div>
 </div>
 </body>

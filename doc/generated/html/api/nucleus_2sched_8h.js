@@ -31,7 +31,7 @@ var nucleus_2sched_8h =
     [ "xnsched_init", "nucleus_2sched_8h.html#ga2105493e07be158299ccd55863a962cf", null ],
     [ "xnsched_init_proc", "nucleus_2sched_8h.html#ga64352f736789e04964f33d53766ba4b3", null ],
     [ "xnsched_init_tcb", "nucleus_2sched_8h.html#ga34d31892eb1324bfb949128f71114091", null ],
-    [ "xnsched_migrate", "nucleus_2sched_8h.html#ga151329cce2141ebab553ded297ef8505", null ],
+    [ "xnsched_migrate", "nucleus_2sched_8h.html#gab24eda0cb6214173ef042377876bd5ec", null ],
     [ "xnsched_migrate_passive", "nucleus_2sched_8h.html#ga272df1c8a9b7d49fb7d93349d6fdc2fc", null ],
     [ "xnsched_peek_rpi", "nucleus_2sched_8h.html#gadd6921cf9ad2ec945ecb03340b679404", null ],
     [ "xnsched_pick_next", "nucleus_2sched_8h.html#ga8766bd9fe19df8c984a1f77e9d9bf478", null ],

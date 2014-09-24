@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.3</span>
+   &#160;<span id="projectnumber">2.6.4</span>
    </div>
   </td>
  </tr>
@@ -91,40 +91,41 @@ $(document).ready(function(){initNavTree('nucleus_2ppd_8h_source.html','');});
 <div class="title">ppd.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#ifndef _XENO_NUCLEUS_PPD_H</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_PPD_H</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;nucleus/queue.h&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;nucleus/shadow.h&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">struct </span>mm_struct;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>xnshadow_ppd_key {</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> muxid;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <span class="keyword">struct </span>mm_struct *mm;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;} xnshadow_ppd_key_t;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>xnshadow_ppd_t {</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    xnshadow_ppd_key_t key;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    xnholder_t link;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#define link2ppd(ln)    container_of(ln, xnshadow_ppd_t, link)</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor"></span>} xnshadow_ppd_t;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#define xnshadow_ppd_muxid(ppd) ((ppd)-&gt;key.muxid)</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#define xnshadow_ppd_mm(ppd)    ((ppd)-&gt;key.mm)</span></div>
+<a href="nucleus_2ppd_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#ifndef _XENO_NUCLEUS_PPD_H</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENO_NUCLEUS_PPD_H</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="comment">/* Call with nklock locked irqs off. */</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;xnshadow_ppd_t *<a class="code" href="group__shadow.html#ga14c8b586498491f886d7b5335f92c3b1" title="Return the per-process data attached to the calling process.">xnshadow_ppd_get</a>(<span class="keywordtype">unsigned</span> muxid);</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;nucleus/queue.h&gt;</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#include &lt;nucleus/shadow.h&gt;</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENO_NUCLEUS_PPD_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">struct </span>mm_struct;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>xnshadow_ppd_key {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> muxid;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keyword">struct </span>mm_struct *mm;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;} xnshadow_ppd_key_t;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>xnshadow_ppd_t {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    xnshadow_ppd_key_t key;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    xnholder_t link;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#define link2ppd(ln)    container_of(ln, xnshadow_ppd_t, link)</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor"></span>} xnshadow_ppd_t;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define xnshadow_ppd_muxid(ppd) ((ppd)-&gt;key.muxid)</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#define xnshadow_ppd_mm(ppd)    ((ppd)-&gt;key.mm)</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">/* Call with nklock locked irqs off. */</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;xnshadow_ppd_t *<a class="code" href="group__shadow.html#ga14c8b586498491f886d7b5335f92c3b1" title="Return the per-process data attached to the calling process.">xnshadow_ppd_get</a>(<span class="keywordtype">unsigned</span> muxid);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENO_NUCLEUS_PPD_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_b681fac26223caaf15e149e8e802bec7.html">nucleus</a></li><li class="navelem"><b>ppd.h</b></li>
-    <li class="footer">Generated on Sun Oct 13 2013 19:13:08 for Xenomai API by
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_b681fac26223caaf15e149e8e802bec7.html">nucleus</a></li><li class="navelem"><a class="el" href="nucleus_2ppd_8h.html">ppd.h</a></li>
+    <li class="footer">Generated on Wed Sep 24 2014 22:53:23 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>
