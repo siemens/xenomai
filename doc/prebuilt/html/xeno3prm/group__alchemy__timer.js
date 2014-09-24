@@ -6,7 +6,7 @@ var group__alchemy__timer =
       [ "tsc", "structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2", null ]
     ] ],
     [ "RT_TIMER_INFO", "group__alchemy__timer.html#ga36af8698cba5da05f9dca2d644c1a6df", null ],
-    [ "rt_timer_inquire", "group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf", null ],
+    [ "rt_timer_inquire", "group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465", null ],
     [ "rt_timer_ns2ticks", "group__alchemy__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f", null ],
     [ "rt_timer_read", "group__alchemy__timer.html#ga9665d6947e29d1a19dafb5401b0f6285", null ],
     [ "rt_timer_spin", "group__alchemy__timer.html#ga7d3f782ce7b642a2759c62649777d2c7", null ],

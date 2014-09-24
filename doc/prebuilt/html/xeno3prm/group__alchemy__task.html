@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.8</span>
+   &#160;<span id="projectnumber">3.0-rc1</span>
    </div>
   </td>
  </tr>
@@ -395,7 +395,7 @@ Functions</h2></td></tr>
 </ul>
 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Tasks can be referred to from multiple processes which all belong to the same Xenomai session. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a17">cross-link.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a12">cross-link.c</a>.</dd>
 </dl>
 <p>References <a class="el" href="group__alchemy__task.html#ga2ac6cf9677bae1012ecbcb6037d14fcb">T_LOCK</a>, and <a class="el" href="group__alchemy__task.html#ga725324cb26d8b5835c0818acb738bfe6">T_WARNSW</a>.</p>
 
@@ -433,7 +433,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a5">cross-link.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a4">cross-link.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1172,10 +1172,13 @@ Forcing the task mode using the T_CONFORMING bit from user code is almost always
 <li>-ETIMEDOUT is returned if <em>idate</em> is different from TM_INFINITE and represents a date in the past.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
-<dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd></dl>
-<dl class="section user"><dt>Side effects</dt><dd>Over Cobalt, -EINVAL is returned if <em>period</em> is different from TM_INFINITE but shorter than the user scheduling latency value for the target system, as displayed by /proc/xenomai/latency.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>The <em>idate</em> and <em>period</em> values are interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a6">cross-link.c</a>.</dd>
+<dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd>
+<dd>
+Over Cobalt, -EINVAL is returned if <em>period</em> is different from TM_INFINITE but shorter than the user scheduling latency value for the target system, as displayed by /proc/xenomai/latency.</dd>
+<dd>
+The <em>idate</em> and <em>period</em> values are interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond).</dd></dl>
+<dl class="section attention"><dt>Attention</dt><dd>Unlike its Xenomai 2.x counterpart, <a class="el" href="group__alchemy__task.html#gababee94264156693cd4f5b9b70d3c5a1" title="Make a real-time task periodic. ">rt_task_set_periodic()</a> will <b>NOT</b> block <em>task</em> until <em>idate</em> is reached. The first beat in the periodic timeline should be awaited for by a call to <a class="el" href="group__alchemy__task.html#ga1645d3a072ef3cefeed3bcbb27dcf108" title="Wait for the next periodic release point. ">rt_task_wait_period()</a>. </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a5">cross-link.c</a>.</dd>
 </dl>
 <p>References <a class="el" href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime()</a>.</p>
 
@@ -1323,7 +1326,7 @@ Assigning the same priority to a running or ready task moves it to the end of it
 <dl class="section return"><dt>Returns</dt><dd>See <a class="el" href="group__alchemy__task.html#ga0dc2deebe7500c9d21ff05d51d5efaa8" title="Delay the current real-time task (with absolute wakeup date). ">rt_task_sleep_until()</a>.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>delay</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a4">cross-link.c</a>, and <a class="el" href="rtcansend_8c-example.html#a3">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a3">cross-link.c</a>, and <a class="el" href="rtcansend_8c-example.html#a3">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1530,7 +1533,7 @@ The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock res
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Starting an already started task leads to a nop, returning a success status. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a18">cross-link.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a13">cross-link.c</a>.</dd>
 </dl>
 <p>Referenced by <a class="el" href="group__alchemy__task.html#gaa4f9fa3cb09d7f774ebff7585994dffb">rt_task_spawn()</a>.</p>
 
@@ -1661,7 +1664,7 @@ Blocked and suspended task states are cumulative. Therefore, suspending a task c
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>If the current release point has already been reached at the time of the call, the current task immediately returns from this service with no delay. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a8">cross-link.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a7">cross-link.c</a>.</dd>
 </dl>
 </div>
 </div>

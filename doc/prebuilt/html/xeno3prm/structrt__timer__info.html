@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.8</span>
+   &#160;<span id="projectnumber">3.0-rc1</span>
    </div>
   </td>
  </tr>
@@ -114,7 +114,7 @@ RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="str
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Timer status descriptor. </p>
-<p><a class="anchor" id="RT_TIMER_INFO"></a> This structure reports various static and runtime information about the timer, returned by a call to <a class="el" href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf" title="Inquire about the Xenomai core timer. ">rt_timer_inquire()</a>. </p>
+<p><a class="anchor" id="RT_TIMER_INFO"></a> This structure reports various static and runtime information about the timer, returned by a call to <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465" title="Inquire about the Xenomai core timer. ">rt_timer_inquire()</a>. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="ae0b40e3f54176cb6eaff19a0a42ecd3e"></a>
 <div class="memitem">
@@ -129,7 +129,7 @@ RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="str
 <p>Current monotonic date, based on the time stamp counter value. </p>
 <p>The date is expressed in clock ticks, therefore depends on the Alchemy clock resolution applicable to the current process. </p>
 
-<p>Referenced by <a class="el" href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465">rt_timer_inquire()</a>.</p>
 
 </div>
 </div>
@@ -146,7 +146,7 @@ RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="str
 <p>Current time stamp counter value. </p>
 <p>The source of this information is hardware-dependent, and does not depend on the per-process clock settings. Consecutive readings from a single CPU are guaranteed to be monotonically incrementing, however readings may not be synchronized on multi-core hardware if the time stamp counter is local to each CPU. Therefore, whether consecutive readings from different CPUs are consistent and monotonically incrementing depends on the underlying TSC source. </p>
 
-<p>Referenced by <a class="el" href="group__alchemy__timer.html#ga66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire()</a>.</p>
+<p>Referenced by <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465">rt_timer_inquire()</a>.</p>
 
 </div>
 </div>

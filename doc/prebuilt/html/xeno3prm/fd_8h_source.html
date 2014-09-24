@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">2.99.8</span>
+   &#160;<span id="projectnumber">3.0-rc1</span>
    </div>
   </td>
  </tr>
@@ -192,62 +192,68 @@ $(document).ready(function(){initNavTree('fd_8h_source.html','');});
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keyword">struct </span>cobalt_ppd *owner;</div>
 <div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> refs;</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordtype">int</span> minor;</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keyword">struct </span>list_head cleanup;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;};</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;<span class="preprocessor">#define RTDM_FD_MAGIC 0x52544446</span></div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="keywordtype">int</span> __rtdm_anon_getfd(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;<span class="keywordtype">void</span> __rtdm_anon_putfd(<span class="keywordtype">int</span> ufd);</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>cobalt_ppd *rtdm_fd_owner(<span class="keyword">struct</span> rtdm_fd *fd)</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;{</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;        <span class="keywordflow">return</span> fd-&gt;owner;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;}</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_fd_minor(<span class="keyword">struct</span> rtdm_fd *fd)</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;{</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        <span class="keywordflow">return</span> fd-&gt;minor;</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;}</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="keywordtype">int</span> rtdm_fd_enter(<span class="keyword">struct</span> rtdm_fd *rtdm_fd, <span class="keywordtype">int</span> ufd,</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;                  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic, <span class="keyword">struct</span> <a class="code" href="structrtdm__fd__ops.html">rtdm_fd_ops</a> *ops);</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="keyword">struct </span>rtdm_fd *<a class="code" href="fd_8h.html#a24bb11700c627fca3ea4f8433a5cbc00">rtdm_fd_get</a>(<span class="keywordtype">int</span> ufd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic);</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;<span class="keywordtype">int</span> <a class="code" href="fd_8h.html#a4cb9270d8f0153a2903f55004b9a0e2a">rtdm_fd_lock</a>(<span class="keyword">struct</span> rtdm_fd *fd);</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fd_8h.html#a998aa7dd77e8a9784ae713b486c4d494">rtdm_fd_put</a>(<span class="keyword">struct</span> rtdm_fd *fd);</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordtype">int</span> oflags;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        <span class="keyword">struct </span>list_head cleanup;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;};</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;<span class="preprocessor">#define RTDM_FD_MAGIC 0x52544446</span></div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;<span class="keywordtype">int</span> __rtdm_anon_getfd(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;<span class="keywordtype">void</span> __rtdm_anon_putfd(<span class="keywordtype">int</span> ufd);</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>cobalt_ppd *rtdm_fd_owner(<span class="keyword">struct</span> rtdm_fd *fd)</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;{</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordflow">return</span> fd-&gt;owner;</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;}</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_fd_minor(<span class="keyword">struct</span> rtdm_fd *fd)</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;{</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        <span class="keywordflow">return</span> fd-&gt;minor;</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;}</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rtdm_fd_flags(<span class="keyword">struct</span> rtdm_fd *fd)</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;{</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;        <span class="keywordflow">return</span> fd-&gt;oflags;</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;}</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;<span class="keywordtype">int</span> rtdm_fd_enter(<span class="keyword">struct</span> rtdm_fd *rtdm_fd, <span class="keywordtype">int</span> ufd,</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic, <span class="keyword">struct</span> <a class="code" href="structrtdm__fd__ops.html">rtdm_fd_ops</a> *ops);</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fd_8h.html#a4bba9f5f7c0ebf230c088d2135c83164">rtdm_fd_unlock</a>(<span class="keyword">struct</span> rtdm_fd *fd);</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="keyword">struct </span>rtdm_fd *<a class="code" href="fd_8h.html#a24bb11700c627fca3ea4f8433a5cbc00">rtdm_fd_get</a>(<span class="keywordtype">int</span> ufd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic);</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="keywordtype">int</span> rtdm_fd_ioctl(<span class="keywordtype">int</span> ufd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> request, ...);</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="keywordtype">int</span> <a class="code" href="fd_8h.html#a4cb9270d8f0153a2903f55004b9a0e2a">rtdm_fd_lock</a>(<span class="keyword">struct</span> rtdm_fd *fd);</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;ssize_t rtdm_fd_read(<span class="keywordtype">int</span> ufd, <span class="keywordtype">void</span> __user *buf, <span class="keywordtype">size_t</span> size);</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fd_8h.html#a998aa7dd77e8a9784ae713b486c4d494">rtdm_fd_put</a>(<span class="keyword">struct</span> rtdm_fd *fd);</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;ssize_t rtdm_fd_write(<span class="keywordtype">int</span> ufd, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *buf, <span class="keywordtype">size_t</span> size);</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fd_8h.html#a4bba9f5f7c0ebf230c088d2135c83164">rtdm_fd_unlock</a>(<span class="keyword">struct</span> rtdm_fd *fd);</div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="keywordtype">int</span> rtdm_fd_close(<span class="keywordtype">int</span> ufd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic);</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="keywordtype">int</span> rtdm_fd_ioctl(<span class="keywordtype">int</span> ufd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> request, ...);</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;ssize_t rtdm_fd_recvmsg(<span class="keywordtype">int</span> ufd, <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;ssize_t rtdm_fd_read(<span class="keywordtype">int</span> ufd, <span class="keywordtype">void</span> __user *buf, <span class="keywordtype">size_t</span> size);</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;ssize_t rtdm_fd_sendmsg(<span class="keywordtype">int</span> ufd, <span class="keyword">const</span> <span class="keyword">struct</span> msghdr *msg,</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;                        <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;<span class="keywordtype">int</span> rtdm_fd_mmap(<span class="keywordtype">int</span> ufd, <span class="keyword">struct</span> _rtdm_mmap_request *rma,</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;                 <span class="keywordtype">void</span> * __user *u_addrp);</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;ssize_t rtdm_fd_write(<span class="keywordtype">int</span> ufd, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *buf, <span class="keywordtype">size_t</span> size);</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;<span class="keywordtype">int</span> rtdm_fd_close(<span class="keywordtype">int</span> ufd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic);</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;ssize_t rtdm_fd_recvmsg(<span class="keywordtype">int</span> ufd, <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);</div>
 <div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="keywordtype">int</span> rtdm_fd_valid_p(<span class="keywordtype">int</span> ufd);</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;<span class="keywordtype">int</span> <a class="code" href="fd_8h.html#a3feba2db3d6f8619ce4720f24d84bfe8">rtdm_fd_select</a>(<span class="keywordtype">int</span> ufd, <span class="keyword">struct</span> xnselector *selector,</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> type);</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="keywordtype">void</span> rtdm_fd_cleanup(<span class="keyword">struct</span> cobalt_ppd *p);</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="keywordtype">void</span> rtdm_fd_init(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _COBALT_KERNEL_FD_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;ssize_t rtdm_fd_sendmsg(<span class="keywordtype">int</span> ufd, <span class="keyword">const</span> <span class="keyword">struct</span> msghdr *msg,</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;                        <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="keywordtype">int</span> rtdm_fd_mmap(<span class="keywordtype">int</span> ufd, <span class="keyword">struct</span> _rtdm_mmap_request *rma,</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;                 <span class="keywordtype">void</span> * __user *u_addrp);</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="keywordtype">int</span> rtdm_fd_valid_p(<span class="keywordtype">int</span> ufd);</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="keywordtype">int</span> <a class="code" href="fd_8h.html#a3feba2db3d6f8619ce4720f24d84bfe8">rtdm_fd_select</a>(<span class="keywordtype">int</span> ufd, <span class="keyword">struct</span> xnselector *selector,</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> type);</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="keywordtype">void</span> rtdm_fd_cleanup(<span class="keyword">struct</span> cobalt_ppd *p);</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="keywordtype">void</span> rtdm_fd_init(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _COBALT_KERNEL_FD_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="group__rtdm__device__register_html_ga53afc70c849817555a0b7bedeaed4f12"><div class="ttname"><a href="group__rtdm__device__register.html#ga53afc70c849817555a0b7bedeaed4f12">rtdm_sendmsg_handler</a></div><div class="ttdeci">ssize_t rtdm_sendmsg_handler(struct rtdm_fd *fd, const struct msghdr *msg, int flags)</div><div class="ttdoc">Transmit message handler. </div></div>
 <div class="ttc" id="structrtdm__fd__ops_html_a219c3d753fb01060a59b3d8eeed24c6b"><div class="ttname"><a href="structrtdm__fd__ops.html#a219c3d753fb01060a59b3d8eeed24c6b">rtdm_fd_ops::read_rt</a></div><div class="ttdeci">ssize_t(* read_rt)(struct rtdm_fd *fd, void __user *buf, size_t size)</div><div class="ttdoc">See rtdm_read_handler(). </div><div class="ttdef"><b>Definition:</b> fd.h:256</div></div>
 <div class="ttc" id="structrtdm__fd__ops_html_a9243098a8167f302c9159f754251757b"><div class="ttname"><a href="structrtdm__fd__ops.html#a9243098a8167f302c9159f754251757b">rtdm_fd_ops::recvmsg_rt</a></div><div class="ttdeci">ssize_t(* recvmsg_rt)(struct rtdm_fd *fd, struct msghdr *msg, int flags)</div><div class="ttdoc">See rtdm_recvmsg_handler(). </div><div class="ttdef"><b>Definition:</b> fd.h:268</div></div>
