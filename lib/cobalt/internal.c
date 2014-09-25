@@ -52,6 +52,14 @@ void cobalt_thread_harden(void)
 		XENOMAI_SYSCALL1(sc_cobalt_migrate, COBALT_PRIMARY);
 }
 
+void cobalt_thread_relax(void)
+{
+	unsigned long status = cobalt_get_current_mode();
+
+	if ((status & XNRELAX) == 0)
+		XENOMAI_SYSCALL1(sc_cobalt_migrate, COBALT_SECONDARY);
+}
+
 int cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 {
 	return XENOMAI_SYSCALL2(sc_cobalt_thread_getstat, pid, stat);

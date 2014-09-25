@@ -71,6 +71,8 @@ void __cobalt_commit_memory(void *p, size_t len);
 
 void cobalt_thread_harden(void);
 
+void cobalt_thread_relax(void);
+
 int cobalt_thread_join(pthread_t thread);
 
 pid_t cobalt_thread_pid(pthread_t thread);
