@@ -54,39 +54,20 @@ static inline int xnarch_shadow_p(struct xnarchtcb *tcb, struct task_struct *tas
 #define xnarch_fault_trap(d)	((d)->exception)
 #define xnarch_fault_code(d)	((d)->regs->orig_ax)
 #define xnarch_fault_pc(d)	((d)->regs->ip)
-/* fault is caused by use FPU while FPU disabled. */
 #define xnarch_fault_fpu_p(d)	((d)->exception == 7)
-/* The following predicates are only usable over a regular Linux stack
-   context. */
 #define xnarch_fault_pf_p(d)	((d)->exception == 14)
 #define xnarch_fault_bp_p(d)	((current->ptrace & PT_PTRACED) &&	\
 				 ((d)->exception == 1 || (d)->exception == 3))
 #define xnarch_fault_notify(d)	(!xnarch_fault_bp_p(d))
 
-#ifdef CONFIG_XENO_ARCH_FPU
-
 void xnarch_save_fpu(struct xnthread *thread);
+
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to);
+
 int xnarch_handle_fpu_fault(struct xnthread *from, 
 			struct xnthread *to, struct ipipe_trap_data *d);
 
-#else /* !CONFIG_XENO_ARCH_FPU */
-
-static inline void xnarch_save_fpu(struct xnthread *thread) { }
-static inline void
-xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread) 
-{ 
-	return 0;
-}
-
-static inline int
-xnarch_handle_fpu_fault(struct xnthread *from, 
-			struct xnthread *to, struct ipipe_trap_data *d)
-{
-	return 0;
-}
-
-#endif /* !CONFIG_XENO_ARCH_FPU */
+void xnarch_leave_root(struct xnthread *root);
 
 void xnarch_init_root_tcb(struct xnthread *thread);
 
@@ -95,8 +76,6 @@ void xnarch_init_shadow_tcb(struct xnthread *thread);
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
 
 static inline void xnarch_enter_root(struct xnthread *root) { }
-
-void xnarch_leave_root(struct xnthread *root);
 
 int xnarch_escalate(void);
 
