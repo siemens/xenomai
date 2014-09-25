@@ -13832,7 +13832,9 @@ done
 
 LIBS="$save_LIBS"
 
-ac_fn_c_check_func "$LINENO" "pthread_condattr_setclock" "ac_cv_func_pthread_condattr_setclock"
+
+if test $rtcore_type = mercury; then
+   ac_fn_c_check_func "$LINENO" "pthread_condattr_setclock" "ac_cv_func_pthread_condattr_setclock"
 if test "x$ac_cv_func_pthread_condattr_setclock" = xyes; then :
 
 else
@@ -13841,6 +13843,7 @@ $as_echo "#define CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED 1" >>confdefs.h
 
 fi
 
+fi
 
 if test x$use_pshared = xy;  then
   ac_fn_c_check_func "$LINENO" "shm_open" "ac_cv_func_shm_open"

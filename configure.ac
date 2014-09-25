@@ -528,10 +528,20 @@ AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
 LIBS="$save_LIBS"
 
 dnl If we can't set the clock for condvar timeouts, then
-dnl we have to restrict the Copperplate clock to CLOCK_REALTIME.
+dnl we have to restrict the Copperplate clock to CLOCK_REALTIME over
+dnl Mercury unconditionally. Cobalt is different: although we may not
+dnl have pthread_condattr_setclock() available from the threading library,
+dnl Copperplate is still able to attach Cobalt condvars to specific clocks
+dnl internally, therefore we don't have to use a restricted clock in
+dnl Copperplate.
+dnl
 dnl In effect this means that updating the host system date may affect
-dnl wait times of blocking services. This is a provision for running
-dnl over legacy threading libraries such as linuxthreads.
+dnl wait times of all blocking services implemented by Copperplate over
+dnl Mercury, but will only affect explicit calls to pthread_cond_timedwait()
+dnl over Cobalt.
+dnl
+dnl This is a provision for running over legacy threading libraries
+dnl such as linuxthreads.
 dnl
 dnl CAUTION: the CLOCK_COPPERPLATE value is part of the ABI between
 dnl the Xenomai core libraries and the applications. Therefore it shall
@@ -539,8 +549,11 @@ dnl remain stable even if applications depend on a different libc
 dnl than Xenomai libraries were built against originally. Hence the
 dnl built-in CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED flag, which
 dnl won't vary for a given Xenomai installation.
-AC_CHECK_FUNC(pthread_condattr_setclock,,
-    [AC_DEFINE(CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED, 1,[config])])
+
+if test $rtcore_type = mercury; then
+   AC_CHECK_FUNC(pthread_condattr_setclock,,
+	 [AC_DEFINE(CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED, 1,[config])])
+fi
 
 dnl Check that Copperplate can implement a shared heap if
 dnl --enable-pshared was given.

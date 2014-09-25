@@ -102,6 +102,13 @@ static struct registry_operations registry_ops;
  *
  * @note Condition variables can be shared by multiple processes which
  * belong to the same Xenomai session.
+ *
+ * @attention If the underlying threading library does not support
+ * pthread_condattr_setclock(), timings with Alchemy condition
+ * variables will be based on CLOCK_REALTIME, and may therefore be
+ * affected by updates to the system date (e.g. NTP). This typically
+ * concerns legacy setups based on the linuxthreads library.
+ * In the normal case, timings are based on CLOCK_MONOTONIC.
  */
 int rt_cond_create(RT_COND *cond, const char *name)
 {
@@ -128,6 +135,13 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	generate_name(ccb->name, name, &cond_namegen);
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
+	/*
+	 * pthread_condattr_setclock() may return ENOSYS over Cobalt
+	 * if not actually implemented by the threading library, but
+	 * only by the compat placeholder. In such a case, timings
+	 * will be based on CLOCK_REALTIME, which is an accepted
+	 * restriction.
+	 */
 	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	__RT(pthread_cond_init(&ccb->cond, &cattr));
 	pthread_condattr_destroy(&cattr);

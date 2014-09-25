@@ -232,26 +232,8 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 #include <asm/xenomai/tsc.h>
 
 #ifdef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
-
-ticks_t clockobj_get_tsc(void)
-{
-	struct timespec now;
-
-	/*
-	 * Rare case with legacy uClibc+linuxthreads combo over
-	 * Cobalt, we actually return nanoseconds just like in the
-	 * Mercury case.
-	 */
-	__RT(clock_gettime(CLOCK_REALTIME, &now));
-	return xnarch_ullmul(now.tv_sec, 1000000000) + now.tv_nsec;
-}
-
-ticks_t clockobj_get_time(struct clockobj *clkobj)
-{
-	return clockobj_ns_to_ticks(clkobj, clockobj_get_tsc());
-}
-
-#else /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
+#error "restricted CLOCK_COPPERPLATE not available"
+#endif
 
 /*
  * NOTE: we can't inline this routine, as we don't want to expose
@@ -268,8 +250,6 @@ ticks_t clockobj_get_time(struct clockobj *clkobj)
 	ticks_t ns = cobalt_ticks_to_ns_rounded(cobalt_read_tsc());
 	return clockobj_ns_to_ticks(clkobj, ns);
 }
-
-#endif /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 
@@ -303,8 +283,18 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 ticks_t clockobj_get_tsc(void)
 {
 	struct timespec now;
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
+}
+
+ticks_t clockobj_get_time(struct clockobj *clkobj)
+{
+	ticks_t ns = clockobj_get_tsc();
+
+	if (clockobj_get_resolution(clkobj) > 1)
+		return ns / clockobj_get_resolution(clkobj);
+
+	return ns;
 }
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
@@ -316,27 +306,13 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
-ticks_t clockobj_get_time(struct clockobj *clkobj)
-{
-	struct timespec now;
-
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-
-	/* Convert the time value to ticks, with no offset. */
-	if (clockobj_get_resolution(clkobj) > 1)
-		return (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
-			+ (ticks_t)now.tv_nsec / clockobj_get_resolution(clkobj);
-
-	return timespec_scalar(&now);
-}
-
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 {
 	struct timespec now, date;
 
 	read_lock_nocancel(&clkobj->lock);
 
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 
 	/* Add offset from epoch to current system time. */
 	timespec_add(&date, &clkobj->offset, &now);

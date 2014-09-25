@@ -30,7 +30,7 @@
 /*
  * We normally define the Copperplate clock as a monotonic,
  * non-adjustable one, unless the threading library has restrictions
- * to support this.
+ * to support this over Mercury.
  *
  * In the normal case, this means that ongoing delays and timeouts
  * won't be affected when the host system date is changed. In the
@@ -119,20 +119,6 @@ int clockobj_destroy(struct clockobj *clkobj);
  * equivalent to Copperplate TSC units, and Copperplate ticks are
  * periods of the reference clockobj which Cobalt does not know about.
  */
-#ifdef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
-
-static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
-{
-	return ns;
-}
-
-static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
-{
-	return tsc;
-}
-
-#else /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
-
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
 	return cobalt_ns_to_ticks(ns);
@@ -142,8 +128,6 @@ static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
 {
 	return cobalt_ticks_to_ns(tsc);
 }
-
-#endif /* !CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
 
 static inline
 void clockobj_ns_to_timespec(ticks_t ns, struct timespec *ts)
