@@ -314,6 +314,7 @@ XENO_FUSE_CFLAGS = @XENO_FUSE_CFLAGS@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
+XENO_SYMBOL_PREFIX = @XENO_SYMBOL_PREFIX@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
 XENO_TARGET_CORE = @XENO_TARGET_CORE@
 XENO_TEST_DIR = @XENO_TEST_DIR@
@@ -369,6 +370,7 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
+sys_symbol_underscore = @sys_symbol_underscore@
 sysconfdir = @sysconfdir@
 target = @target@
 target_alias = @target_alias@
@@ -402,7 +404,8 @@ plugin_list = $(foreach plugin,$(SUBDIRS),$(plugin)/lib$(plugin).a)
 # wrap-link.sh is confused by -whole-archive, so work around
 # this by forcing undefined references to symbols we expect the
 # plugins to export.
-undef_list = $(foreach plugin,$(SUBDIRS),-u smokey_plugin_$(subst -,_,$(plugin)))
+sym_prefix = @XENO_SYMBOL_PREFIX@
+undef_list = $(foreach plugin,$(SUBDIRS),-u $(sym_prefix)smokey_plugin_$(subst -,_,$(plugin)))
 smokey_CPPFLAGS = \
 	$(XENO_USER_CFLAGS)		\
 	-I$(top_srcdir)/include

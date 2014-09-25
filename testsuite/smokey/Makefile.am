@@ -30,7 +30,8 @@ plugin_list = $(foreach plugin,$(SUBDIRS),$(plugin)/lib$(plugin).a)
 # wrap-link.sh is confused by -whole-archive, so work around
 # this by forcing undefined references to symbols we expect the
 # plugins to export.
-undef_list = $(foreach plugin,$(SUBDIRS),-u smokey_plugin_$(subst -,_,$(plugin)))
+sym_prefix=@XENO_SYMBOL_PREFIX@
+undef_list = $(foreach plugin,$(SUBDIRS),-u $(sym_prefix)smokey_plugin_$(subst -,_,$(plugin)))
 
 smokey_CPPFLAGS = 			\
 	$(XENO_USER_CFLAGS)		\
