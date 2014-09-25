@@ -447,6 +447,10 @@ static void pi_wait(void)
 	pthread_mutex_t mutex;
 	pthread_t waiter_tid;
 
+#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+	fprintf(stderr, "NOTE: pi_wait PTHREAD_PRIO_INHERIT: not supported\n");
+	return;
+#endif
 	fprintf(stderr, "pi_wait\n");
 
 	dispatch("pi mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
