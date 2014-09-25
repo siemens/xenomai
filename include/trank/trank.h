@@ -23,7 +23,7 @@
 #define trank_warning(__fmt, __args...)	\
 	warning("%s: " __fmt, __func__, ##__args)
 
-#define __CURRENT(call)		__hidden_ ## call
+#define __CURRENT(call)		__current_ ## call
 
 #define COMPAT_DECL(T, P)	__typeof__(T) P
 #define CURRENT_DECL(T, P)	__typeof__(T) __CURRENT(P)
@@ -36,11 +36,11 @@
 
 #define COMPAT_DECL(T, P)
 #define CURRENT_DECL(T, P)	__typeof__(T) P;	\
-				__typeof__(T) __hidden_ ## P
+				__typeof__(T) __current_ ## P
 
 #define CURRENT_IMPL(T, I, A)		\
-__typeof__(T) I A __attribute__((alias("__hidden_" __stringify(I)), weak)); \
-__typeof__(T) __hidden_ ## I A
+__typeof__(T) I A __attribute__((alias("__current_" __stringify(I)), weak)); \
+__typeof__(T) __current_ ## I A
 
 #endif /* !__XENO_COMPAT__ */
 
