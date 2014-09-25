@@ -277,7 +277,7 @@ linux_syscall:
 	return KEVENT_PROPAGATE;
 
 bad_syscall:
-	printk(XENO_WARN "bad syscall <%ld>\n", __xn_syscall(regs));
+	printk(XENO_WARN "bad syscall <%#lx>\n", __xn_syscall(regs));
 	
 	__xn_error_return(regs, -ENOSYS);
 
