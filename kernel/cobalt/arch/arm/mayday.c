@@ -35,7 +35,7 @@ void xnarch_setup_mayday_page(void *page)
 	 * ef000000 	svc	0x00000000
 	 * e3a00000 	mov	r0, #0
 	 * e5800000 	str	r0, [r0]	; <bug>
-	 * 0a00022b     .word   0x0a00022b	; __xn_sys_mayday << 24
+	 * 1000005e     .word   0x1000005e	; sc_cobalt_mayday | __COBALT_SYSCALL_BIT
 	 * 000f0042     .word   0x000f0042
 	 *
 	 * elif ARM_OABI
@@ -44,7 +44,7 @@ void xnarch_setup_mayday_page(void *page)
 	 * ef9f0042 	swi	0x009f0042
 	 * e3a00000 	mov	r0, #0
 	 * e5800000 	str	r0, [r0]	; <bug>
-	 * 0a00022b     .word   0x0a00022b	; __xn_sys_mayday << 24
+	 * 1000005e     .word   0x1000005e	; sc_cobalt_mayday | __COBALT_SYSCALL_BIT
 	 *
 	 * endif
 	 *
@@ -69,7 +69,7 @@ void xnarch_setup_mayday_page(void *page)
 		.swi_0 = 0xef000000,
 		.mov_r0 = 0xe3a00000,
 		.str_r0 = 0xe5800000,
-		.cst_r0 = 0x0a00022b,
+		.cst_r0 =  __xn_syscode(sc_cobalt_mayday),
 		.cst_r7 = 0x000f0042,
 	};
 #else /* OABI */
@@ -84,7 +84,7 @@ void xnarch_setup_mayday_page(void *page)
 		.swi_syscall = 0xef9f0042,
 		.mov_r0 = 0xe3a00000,
 		.str_r0 = 0xe5800000,
-		.cst_r0 = 0x0a00022b,
+		.cst_r0 =  __xn_syscode(sc_cobalt_mayday),
 	};
 #endif /* OABI */
 
