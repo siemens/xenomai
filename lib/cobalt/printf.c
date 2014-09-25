@@ -511,12 +511,9 @@ const char *rt_print_buffer_name(void)
 /* *** Deferred Output Management *** */
 void rt_print_flush_buffers(void)
 {
-	assert_nrt();
-
+	cobalt_thread_relax();
 	pthread_mutex_lock(&buffer_lock);
-
 	print_buffers();
-
 	pthread_mutex_unlock(&buffer_lock);
 }
 
@@ -797,6 +794,7 @@ void cobalt_print_init(void)
 	pthread_atfork(NULL, NULL, forked_child_init);
 
 	rt_print_auto_init(1);
+	atexit(rt_print_flush_buffers);
 }
 
 void cobalt_print_exit(void)
