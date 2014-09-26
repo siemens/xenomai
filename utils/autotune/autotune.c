@@ -283,7 +283,7 @@ int main(int argc, char *const argv[])
 		if (!nohog)
 			create_hog(&hog);
 		if (!quiet)
-			printf("Auto-tuning started, period=%dns (may take a while)\n",
+			printf("Auto-tuning started, period=%d ns (may take a while)\n",
 				period);
 	} else
 		nohog = 1;

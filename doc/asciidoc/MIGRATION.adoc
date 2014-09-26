@@ -1390,6 +1390,9 @@ receipts, as explained <<userirqtip,here>>.
 
 === Timing services ===
 
+- +rt_timer_inquire()+ has a void return type, instead of always
+  returning zero as previously.
+
 - +rt_timer_set_mode()+ is obsolete. The clock resolution has become a
 per-process setting, which should be set using the
 +--alchemy-clock-resolution+ switch on the command line.
