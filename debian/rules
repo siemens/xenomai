@@ -79,7 +79,7 @@ install: build
 binary-indep: build install
 	dh_testdir -i
 	dh_testroot -i
-	dh_installdocs -i -A README.INSTALL README.APPLICATIONS MIGRATION TROUBLESHOOTING.COBALT TROUBLESHOOTING.MERCURY
+	dh_installdocs -i -A README
 	dh_link -i
 	dh_installchangelogs -i
 	dh_strip -i
@@ -98,7 +98,7 @@ binary-arch: build install
 	dh_testroot -s
 	dh_installinit -s --name=xenomai
 	dh_installman -s
-	dh_installdocs -s -A README.INSTALL README.APPLICATIONS MIGRATION TROUBLESHOOTING.COBALT TROUBLESHOOTING.MERCURY
+	dh_installdocs -s -A README
 	dh_link -s
 	dh_installchangelogs -s
 	dh_strip -s

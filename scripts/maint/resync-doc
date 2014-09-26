@@ -61,7 +61,6 @@ echo `cat tmp-dist/added_dirs tmp-dist/added_files`
 
 echo -n 'Copying prebuilt documentation to the source tree...'
 cp -aR tmp-dist/doc/prebuilt "$abs_srcdir"
-cp asciidoc/README.INSTALL.txt "$abs_srcdir"/../README.INSTALL
 echo done
 
 cd "$abs_srcdir"

@@ -1,0 +1,32 @@
+
+Where to start from?
+====================
+
+http://xenomai.org/start-here/ is the best place to start learning
+about Xenomai 3.
+
+Built-in documentation
+======================
+
+The Xenomai 3.x documentation package for this release is directly
+available from the source tree, in HTML and PDF formats:
+
+doc/prebuilt/{html, pdf}/README.INSTALL
+doc/prebuilt/{html, pdf}/README.APPLICATIONS
+doc/prebuilt/{html, pdf}/MIGRATION
+doc/prebuilt/{html, pdf}/TROUBLESHOOTING.COBALT
+doc/prebuilt/{html, pdf}/TROUBLESHOOTING.MERCURY
+doc/prebuilt/{html, pdf}/xeno3prm
+
+Online documentation
+====================
+
+The online version of the documentation is available from our website
+for the current release:
+
+http://xenomai.org/installing-xenomai-3-x/
+http://xenomai.org/migrating-from-xenomai-2-x-to-3-x/
+http://xenomai.org/documentation/xenomai-3/html/xeno3prm/index.html
+http://xenomai.org/running-applications-with-xenomai-3-x/
+http://xenomai.org/troubleshooting-a-dual-kernel-configuration/
+http://xenomai.org/troubleshooting-a-single-kernel-configuration/
