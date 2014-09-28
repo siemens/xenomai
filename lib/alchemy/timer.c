@@ -76,12 +76,12 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks)
 
 /**
  * @fn void rt_timer_inquire(RT_TIMER_INFO *info)
- * @brief Inquire about the Xenomai core timer.
+ * @brief Inquire about the Alchemy clock.
  *
- * Return status information of the Xenomai core timer.
+ * Return status information about the Alchemy clock.
  *
- * @param info The address of a structure the status data will be
- * written to.
+ * @param info The address of a @ref RT_TIMER_INFO "structure" to fill
+ * with the clock information.
  *
  * @apitags{unrestricted}
  */
@@ -89,7 +89,6 @@ void rt_timer_inquire(RT_TIMER_INFO *info)
 {
 	info->period = clockobj_get_resolution(&alchemy_clock);
 	info->date = clockobj_get_time(&alchemy_clock);
-	info->tsc = clockobj_get_tsc();
 }
 
 /**

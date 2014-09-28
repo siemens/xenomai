@@ -38,8 +38,8 @@ typedef sticks_t SRTIME;
  * @brief Timer status descriptor
  * @anchor RT_TIMER_INFO
  *
- * This structure reports various static and runtime information about
- * the timer, returned by a call to rt_timer_inquire().
+ * This structure reports information about the Alchemy clock,
+ * returned by a call to rt_timer_inquire().
  */
 typedef struct rt_timer_info {
 	/**
@@ -47,22 +47,10 @@ typedef struct rt_timer_info {
 	 */
 	RTIME period;
 	/**
-	 * Current time stamp counter value. The source of this
-	 * information is hardware-dependent, and does not depend on
-	 * the per-process clock settings. Consecutive readings from a
-	 * single CPU are guaranteed to be monotonically incrementing,
-	 * however readings may not be synchronized on multi-core
-	 * hardware if the time stamp counter is local to each CPU.
-	 * Therefore, whether consecutive readings from different CPUs
-	 * are consistent and monotonically incrementing depends on
-	 * the underlying TSC source.
-	 */
-	RTIME tsc;
-	/**
-	 * Current monotonic date, based on the time stamp counter
-	 * value. The date is expressed in clock ticks, therefore
-	 * depends on the Alchemy clock resolution applicable to the
-	 * current process.
+	 * Current monotonic date expressed in clock ticks. The
+	 * duration of a tick depends on the Alchemy clock resolution
+	 * for the process (see --alchemy-clock-resolution option,
+	 * defaults to 1 nanosecond).
 	 */
 	RTIME date;
 } RT_TIMER_INFO;
@@ -116,21 +104,6 @@ extern "C" {
 static inline RTIME rt_timer_read(void)
 {
 	return clockobj_get_time(&alchemy_clock);
-}
-
-static inline RTIME rt_timer_tsc(void)
-{
-	return clockobj_get_tsc();
-}
-
-static inline SRTIME rt_timer_ns2tsc(SRTIME ns)
-{
-	return clockobj_ns_to_tsc(ns);
-}
-
-static inline SRTIME rt_timer_tsc2ns(SRTIME tsc)
-{
-	return clockobj_tsc_to_ns(tsc);
 }
 
 SRTIME rt_timer_ns2ticks(SRTIME ns);
