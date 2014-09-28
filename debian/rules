@@ -14,8 +14,8 @@ DEB_HOST_GNU_TYPE=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 CONFIG_OPTS = --prefix=/usr \
-            --includedir=/usr/include/xenomai \
-            --mandir=/usr/share/man \
+	    --includedir=/usr/include/xenomai \
+	    --mandir=/usr/share/man \
 	    --with-testdir=/usr/lib/xenomai/testsuite \
 	    --enable-debug
 
@@ -72,7 +72,7 @@ install: build
 	cp debian/libxenomai1.lintian $(CURDIR)/debian/libxenomai1/usr/share/lintian/overrides/libxenomai1
 	cp debian/libxenomai-dev.lintian $(CURDIR)/debian/libxenomai-dev/usr/share/lintian/overrides/libxenomai-dev
 	mkdir -p $(CURDIR)/debian/xenomai-kernel-source/usr/src/xenomai-kernel-source $(CURDIR)/debian/xenomai-kernel-source/usr/share/doc/xenomai-kernel-source
-	cp -a ksrc include scripts $(CURDIR)/debian/xenomai-kernel-source/usr/src/xenomai-kernel-source
+	cp -a config ksrc include scripts $(CURDIR)/debian/xenomai-kernel-source/usr/src/xenomai-kernel-source
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -111,9 +111,9 @@ binary-arch: build install
 #	 Echo config options to control.
 	echo " ." >> $(CURDIR)/debian/libxenomai1/DEBIAN/control
 	echo " Compiled with the following options." >> \
-	        $(CURDIR)/debian/libxenomai1/DEBIAN/control
+		$(CURDIR)/debian/libxenomai1/DEBIAN/control
 	echo "$(CONFIG_OPTS)" | awk '{ for ( i=1 ; i<=NF ; i++ ) print "   "$$i }' >> \
-	        $(CURDIR)/debian/libxenomai1/DEBIAN/control
+		$(CURDIR)/debian/libxenomai1/DEBIAN/control
 #	 End of hackery.
 	dh_md5sums -s
 	dh_builddeb -s
