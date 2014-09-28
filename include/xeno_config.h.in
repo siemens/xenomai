@@ -94,6 +94,9 @@
 #undef CONFIG_XENO_VERSION_MINOR
 
 /* config */
+#undef CONFIG_XENO_VERSION_NAME
+
+/* config */
 #undef CONFIG_XENO_VERSION_STRING
 
 /* config */

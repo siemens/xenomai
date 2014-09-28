@@ -2359,12 +2359,13 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-version_code=`cat $srcdir/config/version`
+version_code=`cat $srcdir/config/version-code`
 CONFIG_XENO_VERSION_MAJOR=`expr $version_code : '\([0-9]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $version_code : '[0-9]*\.\([0-9]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $version_code : '[0-9]*\.[0-9]*\.\([0-9]*\)'`
 CONFIG_XENO_UAPI_LEVEL=`cat $srcdir/config/apirev`
 CONFIG_XENO_VERSION_STRING="$PACKAGE_VERSION"
+CONFIG_XENO_VERSION_NAME=`cat $srcdir/config/version-name`
 topdir=`cd $srcdir && pwd`
 
 rtcore_type=cobalt
@@ -13879,6 +13880,11 @@ _ACEOF
 
 cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_VERSION_STRING "$CONFIG_XENO_VERSION_STRING"
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_VERSION_NAME "$CONFIG_XENO_VERSION_NAME"
 _ACEOF
 
 

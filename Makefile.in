@@ -80,7 +80,7 @@ host_triplet = @host@
 target_triplet = @target@
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/configure $(am__configure_deps) \
+	$(top_srcdir)/configure $(am__configure_deps) README \
 	$(top_srcdir)/config/config.guess \
 	$(top_srcdir)/config/config.sub \
 	$(top_srcdir)/config/install-sh $(top_srcdir)/config/ltmain.sh \
@@ -91,8 +91,8 @@ am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/ltoptions.m4 \
 	$(top_srcdir)/config/ltsugar.m4 \
 	$(top_srcdir)/config/ltversion.m4 \
-	$(top_srcdir)/config/lt~obsolete.m4 $(top_srcdir)/config/label \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/config/lt~obsolete.m4 \
+	$(top_srcdir)/config/version-label $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -883,7 +883,7 @@ dev devices:
 @XENO_COBALT_TRUE@	   done ; \
 @XENO_COBALT_TRUE@	else if test -d $(DESTDIR)/etc/udev/rules.d ; then \
 @XENO_COBALT_TRUE@	      for f in $(srcdir)/kernel/cobalt/udev/*.rules ; do \
-@XENO_COBALT_TRUE@		 sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
+@XENO_COBALT_TRUE@		 $$sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
 @XENO_COBALT_TRUE@	      done ; \
 @XENO_COBALT_TRUE@	   fi ; \
 @XENO_COBALT_TRUE@	fi ; \

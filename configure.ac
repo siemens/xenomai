@@ -1,20 +1,21 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.62)
 
-# The config/version file defines the general version information as:
-# <major>.<minor>.<subrev>, giving the full Xenomai version stamp.
+# The config/version-code file defines the general versioning data
+# as: <major>.<minor>.<subrev>, giving the full Xenomai version stamp.
 # config/apirev defines the revision level of the user API we
 # implement (which actually expresses the revision level of the
 # Copperplate library).  The kernel ABI is Cobalt-specific and is
 # defined for each architecture in the asm/features.h file.
-AC_INIT([Xenomai],m4_normalize(m4_include([config/label])),xenomai@xenomai.org)
+AC_INIT([Xenomai],m4_normalize(m4_include([config/version-label])),xenomai@xenomai.org)
 
-version_code=`cat $srcdir/config/version`
+version_code=`cat $srcdir/config/version-code`
 CONFIG_XENO_VERSION_MAJOR=`expr $version_code : '\([[0-9]]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $version_code : '[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $version_code : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_UAPI_LEVEL=`cat $srcdir/config/apirev`
 CONFIG_XENO_VERSION_STRING="$PACKAGE_VERSION"
+CONFIG_XENO_VERSION_NAME=`cat $srcdir/config/version-name`
 topdir=`cd $srcdir && pwd`
 
 dnl Find out whether we build for Cobalt core, i.e. dual kernel mode,
@@ -571,6 +572,7 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[config]
 AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_UAPI_LEVEL,$CONFIG_XENO_UAPI_LEVEL,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_STRING,"$CONFIG_XENO_VERSION_STRING",[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_NAME,"$CONFIG_XENO_VERSION_NAME",[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_PREFIX,"$prefix",[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_BUILD_ARGS,"$XENO_BUILD_ARGS",[config])
 
