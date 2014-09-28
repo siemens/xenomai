@@ -270,7 +270,8 @@ Functions</h2></td></tr>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
-<dl class="section note"><dt>Note</dt><dd>Condition variables can be shared by multiple processes which belong to the same Xenomai session. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Condition variables can be shared by multiple processes which belong to the same Xenomai session.</dd></dl>
+<dl class="section attention"><dt>Attention</dt><dd>If the underlying threading library does not support <a class="el" href="group__cobalt__api__cond.html#ga68d1e544c6bbf3cedeee5455b14c642d" title="Set the clock selection attribute of a condition variable attributes object. ">pthread_condattr_setclock()</a>, timings with Alchemy condition variables will be based on CLOCK_REALTIME, and may therefore be affected by updates to the system date (e.g. NTP). This typically concerns legacy setups based on the linuxthreads library. In the normal case, timings are based on CLOCK_MONOTONIC. </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy()</a>, <a class="el" href="group__cobalt__api__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init()</a>, <a class="el" href="group__cobalt__api__cond.html#ga066f082e4a085641043714e3bc4d70d7">pthread_condattr_destroy()</a>, <a class="el" href="group__cobalt__api__cond.html#ga34083fe1cd54d5d67599b4cca593ffa4">pthread_condattr_init()</a>, <a class="el" href="group__cobalt__api__cond.html#ga68d1e544c6bbf3cedeee5455b14c642d">pthread_condattr_setclock()</a>, and <a class="el" href="group__cobalt__api__cond.html#ga1a026d48926e804fed515bb01b0cbb45">pthread_condattr_setpshared()</a>.</p>
 

@@ -105,16 +105,13 @@ Data Fields</h2></td></tr>
 RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">period</a></td></tr>
 <tr class="memdesc:a02f413497af5105ef5df396c378dbbf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clock resolution in nanoseconds. <br/></td></tr>
 <tr class="separator:a02f413497af5105ef5df396c378dbbf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a7d07f1d0ece5618812826d1f28c9d2"><td class="memItemLeft" align="right" valign="top">RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">tsc</a></td></tr>
-<tr class="memdesc:a1a7d07f1d0ece5618812826d1f28c9d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current time stamp counter value.  <a href="#a1a7d07f1d0ece5618812826d1f28c9d2">More...</a><br/></td></tr>
-<tr class="separator:a1a7d07f1d0ece5618812826d1f28c9d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0b40e3f54176cb6eaff19a0a42ecd3e"><td class="memItemLeft" align="right" valign="top">RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">date</a></td></tr>
-<tr class="memdesc:ae0b40e3f54176cb6eaff19a0a42ecd3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current monotonic date, based on the time stamp counter value.  <a href="#ae0b40e3f54176cb6eaff19a0a42ecd3e">More...</a><br/></td></tr>
+<tr class="memdesc:ae0b40e3f54176cb6eaff19a0a42ecd3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current monotonic date expressed in clock ticks.  <a href="#ae0b40e3f54176cb6eaff19a0a42ecd3e">More...</a><br/></td></tr>
 <tr class="separator:ae0b40e3f54176cb6eaff19a0a42ecd3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Timer status descriptor. </p>
-<p><a class="anchor" id="RT_TIMER_INFO"></a> This structure reports various static and runtime information about the timer, returned by a call to <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465" title="Inquire about the Xenomai core timer. ">rt_timer_inquire()</a>. </p>
+<p><a class="anchor" id="RT_TIMER_INFO"></a> This structure reports information about the Alchemy clock, returned by a call to <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465" title="Inquire about the Alchemy clock. ">rt_timer_inquire()</a>. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="ae0b40e3f54176cb6eaff19a0a42ecd3e"></a>
 <div class="memitem">
@@ -126,25 +123,8 @@ RTIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="str
       </table>
 </div><div class="memdoc">
 
-<p>Current monotonic date, based on the time stamp counter value. </p>
-<p>The date is expressed in clock ticks, therefore depends on the Alchemy clock resolution applicable to the current process. </p>
-
-<p>Referenced by <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465">rt_timer_inquire()</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a1a7d07f1d0ece5618812826d1f28c9d2"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">RTIME rt_timer_info::tsc</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Current time stamp counter value. </p>
-<p>The source of this information is hardware-dependent, and does not depend on the per-process clock settings. Consecutive readings from a single CPU are guaranteed to be monotonically incrementing, however readings may not be synchronized on multi-core hardware if the time stamp counter is local to each CPU. Therefore, whether consecutive readings from different CPUs are consistent and monotonically incrementing depends on the underlying TSC source. </p>
+<p>Current monotonic date expressed in clock ticks. </p>
+<p>The duration of a tick depends on the Alchemy clock resolution for the process (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </p>
 
 <p>Referenced by <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465">rt_timer_inquire()</a>.</p>
 

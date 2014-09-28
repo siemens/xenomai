@@ -2559,6 +2559,49 @@ The RT_IOREGION API is gone. I/O memory resources should
 <div class="ulist"><ul>
 <li>
 <p>
+<code>rt_timer_tsc()</code>, <code>rt_timer_ns2tsc()</code> and <code>rt_timer_tsc2ns()</code> have
+  been removed from the API.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Due to the accumulation of rounding errors, using raw timestamp values
+from the underlying clock source hardware for measuring long
+timespans may yield (increasingly) wrong results.</p></div>
+<div class="paragraph"><p>Either we guarantee stable computations with counts of nanoseconds
+from within the application, or with raw timestamps instead,
+regardless of the clock source frequency, but we can&#8217;t provide such
+guarantee for both. From an API standpoint, the nanosecond unit is
+definitely the best option as the meaning won&#8217;t vary between clock
+sources.</p></div>
+<div class="paragraph"><p>Avoiding the overhead of the tsc&#8594;ns conversion as a justification to
+use raw TSC counts does not fly anymore, as all architectures
+implement fast arithmetics for this operation over Cobalt, and
+Mercury&#8217;s (virtual) timestamp counter is actually mapped over
+CLOCK_MONOTONIC.</p></div>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content">Alchemy users should measure timespans (or get timestamps) as counts
+of nanoseconds as returned by rt_timer_read() instead.</td>
+</tr></table>
+</div>
+<div class="ulist"><ul>
+<li>
+<p>
+<code>rt_timer_inquire()</code> has a void return type, instead of always
+  returning zero as previously. As a consequence of the previously
+  documented change regarding TSC values, the current TSC count is no
+  more returned into the RT_TIMER_INFO structure.
+</p>
+</li>
+<li>
+<p>
 <code>rt_timer_set_mode()</code> is obsolete. The clock resolution has become a
 per-process setting, which should be set using the
 <code>--alchemy-clock-resolution</code> switch on the command line.
@@ -3178,7 +3221,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-09-24 15:25:02 CEST
+Last updated 2014-09-28 19:07:22 CEST
 </div>
 </div>
 </body>

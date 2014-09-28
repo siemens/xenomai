@@ -1390,8 +1390,37 @@ receipts, as explained <<userirqtip,here>>.
 
 === Timing services ===
 
+- +rt_timer_tsc()+, +rt_timer_ns2tsc()+ and +rt_timer_tsc2ns()+ have
+  been removed from the API.
+
+.Rationale
+**********************************************************************
+Due to the accumulation of rounding errors, using raw timestamp values
+from the underlying clock source hardware for measuring long
+timespans may yield (increasingly) wrong results.
+    
+Either we guarantee stable computations with counts of nanoseconds
+from within the application, or with raw timestamps instead,
+regardless of the clock source frequency, but we can't provide such
+guarantee for both. From an API standpoint, the nanosecond unit is
+definitely the best option as the meaning won't vary between clock
+sources.
+    
+Avoiding the overhead of the tsc->ns conversion as a justification to
+use raw TSC counts does not fly anymore, as all architectures
+implement fast arithmetics for this operation over Cobalt, and
+Mercury's (virtual) timestamp counter is actually mapped over
+CLOCK_MONOTONIC.
+**********************************************************************
+
+[TIP]
+Alchemy users should measure timespans (or get timestamps) as counts
+of nanoseconds as returned by rt_timer_read() instead.
+
 - +rt_timer_inquire()+ has a void return type, instead of always
-  returning zero as previously.
+  returning zero as previously. As a consequence of the previously
+  documented change regarding TSC values, the current TSC count is no
+  more returned into the RT_TIMER_INFO structure.
 
 - +rt_timer_set_mode()+ is obsolete. The clock resolution has become a
 per-process setting, which should be set using the

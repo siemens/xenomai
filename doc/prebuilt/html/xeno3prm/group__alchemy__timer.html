@@ -127,7 +127,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:gaa41e1976c4df9929c1a1238cc1195f48"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Alchemy clock ticks to nanoseconds.  <a href="#gaa41e1976c4df9929c1a1238cc1195f48">More...</a><br/></td></tr>
 <tr class="separator:gaa41e1976c4df9929c1a1238cc1195f48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4909da5d803e8c98fef89cfc0e921465"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465">rt_timer_inquire</a> (<a class="el" href="group__alchemy__timer.html#ga36af8698cba5da05f9dca2d644c1a6df">RT_TIMER_INFO</a> *info)</td></tr>
-<tr class="memdesc:ga4909da5d803e8c98fef89cfc0e921465"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inquire about the Xenomai core timer.  <a href="#ga4909da5d803e8c98fef89cfc0e921465">More...</a><br/></td></tr>
+<tr class="memdesc:ga4909da5d803e8c98fef89cfc0e921465"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inquire about the Alchemy clock.  <a href="#ga4909da5d803e8c98fef89cfc0e921465">More...</a><br/></td></tr>
 <tr class="separator:ga4909da5d803e8c98fef89cfc0e921465"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga7d3f782ce7b642a2759c62649777d2c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__timer.html#ga7d3f782ce7b642a2759c62649777d2c7">rt_timer_spin</a> (RTIME ns)</td></tr>
 <tr class="memdesc:ga7d3f782ce7b642a2759c62649777d2c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="#ga7d3f782ce7b642a2759c62649777d2c7">More...</a><br/></td></tr>
@@ -147,7 +147,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Timer status descriptor. </p>
-<p><a class="anchor" id="RT_TIMER_INFO"></a> This structure reports various static and runtime information about the timer, returned by a call to <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465" title="Inquire about the Xenomai core timer. ">rt_timer_inquire()</a>. </p>
+<p><a class="anchor" id="RT_TIMER_INFO"></a> This structure reports information about the Alchemy clock, returned by a call to <a class="el" href="group__alchemy__timer.html#ga4909da5d803e8c98fef89cfc0e921465" title="Inquire about the Alchemy clock. ">rt_timer_inquire()</a>. </p>
 
 </div>
 </div>
@@ -166,17 +166,17 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Inquire about the Xenomai core timer. </p>
-<p>Return status information of the Xenomai core timer.</p>
+<p>Inquire about the Alchemy clock. </p>
+<p>Return status information about the Alchemy clock.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">info</td><td>The address of a structure the status data will be written to.</td></tr>
+    <tr><td class="paramname">info</td><td>The address of a <a class="el" href="group__alchemy__timer.html#RT_TIMER_INFO">structure</a> to fill with the clock information.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
-<p>References <a class="el" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">rt_timer_info::date</a>, <a class="el" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">rt_timer_info::period</a>, and <a class="el" href="structrt__timer__info.html#a1a7d07f1d0ece5618812826d1f28c9d2">rt_timer_info::tsc</a>.</p>
+<p>References <a class="el" href="structrt__timer__info.html#ae0b40e3f54176cb6eaff19a0a42ecd3e">rt_timer_info::date</a>, and <a class="el" href="structrt__timer__info.html#a02f413497af5105ef5df396c378dbbf2">rt_timer_info::period</a>.</p>
 
 </div>
 </div>
