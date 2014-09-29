@@ -1465,14 +1465,14 @@ MODULE_AUTHOR'"Whoever");</code></pre>
 </li>
 <li>
 <p>
-<code>.provider_name</code>, as this information should be conveyed by
-  MODULE_AUTHOR().
+<code>.provider_name</code> was dropped, as this information should be conveyed
+  by MODULE_AUTHOR().
 </p>
 </li>
 <li>
 <p>
-<code>.driver_version</code>, as this information should be conveyed by
-  MODULE_VERSION().
+<code>.driver_version</code> was dropped, as this information should be
+  conveyed by MODULE_VERSION().
 </p>
 </li>
 </ul></div>
@@ -1980,7 +1980,7 @@ This directory is aliased to /sys/class/rtdm.
 <li>
 <p>
 each /sys/devices/virtual/rtdm/&lt;device-name&gt; directory gives access
-  to a particular device information, available from virtual files:
+  to device information, available from virtual files:
 </p>
 <div class="ulist"><ul>
 <li>
@@ -1991,18 +1991,18 @@ reading <code>profile</code> returns the class and subclass ids.
 <li>
 <p>
 reading <code>refcount</code> returns the current count of outstanding
-    connections to the device&#8217;s driver.
+    connections to the device driver.
 </p>
 </li>
 <li>
 <p>
-reading <code>flags</code> returns the device flags as defined by the
-    device&#8217;s driver.
+reading <code>flags</code> returns the device flags as defined by the device
+    driver.
 </p>
 </li>
 <li>
 <p>
-reading <code>type</code> returns the device type (named or protocol).
+reading <code>type</code> returns the device type (<em>named</em> or <em>protocol</em>).
 </p>
 </li>
 </ul></div>
@@ -3221,7 +3221,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-09-28 19:07:22 CEST
+Last updated 2014-10-04 18:47:11 CEST
 </div>
 </div>
 </body>
