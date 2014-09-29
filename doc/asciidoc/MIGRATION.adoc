@@ -598,11 +598,11 @@ MODULE_AUTHOR'"Whoever");
 * +.peripheral_name+ was dropped, as this information should be
   conveyed by MODULE_DESCRIPTION().
 
-* +.provider_name+, as this information should be conveyed by
-  MODULE_AUTHOR().
+* +.provider_name+ was dropped, as this information should be conveyed
+  by MODULE_AUTHOR().
 
-* +.driver_version+, as this information should be conveyed by
-  MODULE_VERSION().
+* +.driver_version+ was dropped, as this information should be
+  conveyed by MODULE_VERSION().
 
 ==== Introduction of file descriptors ====
 
@@ -958,17 +958,17 @@ present in the system (including named and protocol device types).
 This directory is aliased to /sys/class/rtdm.
 
 - each /sys/devices/virtual/rtdm/<device-name> directory gives access
-  to a particular device information, available from virtual files:
+  to device information, available from virtual files:
 
   * reading +profile+ returns the class and subclass ids.
 
   * reading +refcount+ returns the current count of outstanding
-    connections to the device's driver.
+    connections to the device driver.
 
-  * reading +flags+ returns the device flags as defined by the
-    device's driver.
+  * reading +flags+ returns the device flags as defined by the device
+    driver.
 
-  * reading +type+ returns the device type (named or protocol).
+  * reading +type+ returns the device type (_named_ or _protocol_).
 
 == Analogy interface changes ==
 
