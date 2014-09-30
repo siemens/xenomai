@@ -165,7 +165,7 @@ config XENO_OPT_RR_QUANTUM
 	provide a round-robin interval.
 
 config XENO_OPT_AUTOTUNE
-        bool "Auto-tuning"
+        tristate "Auto-tuning"
         default y
 	select XENO_DRIVERS_AUTOTUNE
         help
@@ -173,25 +173,18 @@ config XENO_OPT_AUTOTUNE
 	adjusting the core timing services to the intrinsic latency of
 	the platform.
 
-	The calibration method is conservative, in order to never
-	cause early shots.
-
-if XENO_OPT_AUTOTUNE
-config XENO_OPT_TIMING_SCHEDLAT
-	int
-	default 0
-endif
-
 config XENO_OPT_TIMING_SCHEDLAT
 	int "Scheduling latency (ns)"
 	default 0
-	depends on !XENO_OPT_AUTOTUNE
 	help
 	Scheduling latency is the time between the termination of an
 	interrupt handler and the execution of the first instruction
 	of the real-time thread this handler resumes. A default value
 	of 0 (recommended) will cause a pre-calibrated value to be
 	used.
+
+	If the auto-tuner is enabled, this value will be used as the
+	factory default when running "autotune --reset".
 
 config XENO_OPT_SCALABLE_SCHED
 	bool "O(1) scheduler"

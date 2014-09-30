@@ -19,33 +19,51 @@
  */
 #include <linux/init.h>
 #include <linux/slab.h>
+#include <linux/kernel.h>
+#include <linux/sort.h>
 #include <cobalt/kernel/arith.h>
 #include <rtdm/driver.h>
 #include <rtdm/autotune.h>
 
-/*
- * Auto-tuning services for the Cobalt core clock.  This driver is
- * always built statically into the kernel when enabled.
- */
-#define AUTOTUNE_STEPS  60
-#define ONE_SECOND	1000000000UL
-#define H2G2_FACTOR(g)	((g) * 4 / 5)	/* 42 would be too pessimistic */
+MODULE_DESCRIPTION("Xenomai/cobalt autotuner");
+MODULE_AUTHOR("Philippe Gerum <rpm@xenomai.org>");
+MODULE_LICENSE("GPL");
+
+/* Auto-tuning services for the Cobalt core clock. */
+
+#define SAMPLING_TIME	500000000UL
+#define LOG_TIMESPAN	20000U	/* ns */
+#define BUCKET_TIMESPAN	500U	/* ns */
+#define NR_BUCKETS	(LOG_TIMESPAN / BUCKET_TIMESPAN)
+#define WARMUP_STEPS	3
+#define AUTOTUNE_STEPS  NR_BUCKETS
+
+struct tuning_score {
+	int mean;
+	int pmean;
+	int stddev;
+	int minlat;
+	unsigned int step;
+	unsigned int gravity;
+};
 
 struct tuner_state {
 	xnticks_t ideal;
 	xnticks_t step;
-	xnsticks_t min_lat;
-	xnsticks_t max_lat;
-	xnsticks_t sum_lat;
-	unsigned long cur_samples;
-	unsigned long max_samples;
+	int min_lat;
+	int max_lat;
+	int pow_sum_avg;
+	int mean;
+	unsigned int cur_samples;
+	unsigned int max_samples;
+	unsigned int log[NR_BUCKETS];
 };
 
 struct gravity_tuner {
 	const char *name;
-	unsigned long (*get_gravity)(struct gravity_tuner *tuner);
-	void (*set_gravity)(struct gravity_tuner *tuner, unsigned long gravity);
-	void (*adjust_gravity)(struct gravity_tuner *tuner, long adjust);
+	unsigned int (*get_gravity)(struct gravity_tuner *tuner);
+	void (*set_gravity)(struct gravity_tuner *tuner, unsigned int gravity);
+	unsigned int (*adjust_gravity)(struct gravity_tuner *tuner, int adjust);
 	int (*init_tuner)(struct gravity_tuner *tuner);
 	int (*start_tuner)(struct gravity_tuner *tuner, xnticks_t start_time,
 			   xnticks_t interval);
@@ -53,6 +71,9 @@ struct gravity_tuner {
 	struct tuner_state state;
 	rtdm_event_t done;
 	int status;
+	int quiet;
+	struct tuning_score scores[AUTOTUNE_STEPS];
+	int nscores;
 };
 
 struct irq_gravity_tuner {
@@ -100,20 +121,26 @@ static inline void done_sampling(struct gravity_tuner *tuner,
 static int add_sample(struct gravity_tuner *tuner, xnticks_t timestamp)
 {
 	struct tuner_state *state;
-	xnsticks_t delta;
+	int b, n, delta;
 
 	state = &tuner->state;
 
-	delta = (xnsticks_t)(timestamp - state->ideal);
+	delta = (int)(timestamp - state->ideal);
 	if (delta < state->min_lat)
 		state->min_lat = delta;
 	if (delta > state->max_lat)
 		state->max_lat = delta;
 
-	state->sum_lat += delta;
 	state->ideal += state->step;
+	n = ++state->cur_samples;
 
-	if (++state->cur_samples >= state->max_samples) {
+	b = (delta < 0 ? 0 : delta) / BUCKET_TIMESPAN;
+	state->log[b < NR_BUCKETS ? b : NR_BUCKETS - 1]++;
+	/* Build running mean and power sum average for stddev. */
+	state->mean += (delta - state->mean) / n;
+	state->pow_sum_avg += (delta * delta - state->pow_sum_avg) / n;
+
+	if (n >= state->max_samples) {
 		done_sampling(tuner, 0);
 		return 1;	/* Finished. */
 	}
@@ -157,19 +184,19 @@ static void destroy_irq_tuner(struct gravity_tuner *tuner)
 	destroy_tuner(tuner);
 }
 
-static unsigned long get_irq_gravity(struct gravity_tuner *tuner)
+static unsigned int get_irq_gravity(struct gravity_tuner *tuner)
 {
 	return nkclock.gravity.irq;
 }
 
-static void set_irq_gravity(struct gravity_tuner *tuner, unsigned long gravity)
+static void set_irq_gravity(struct gravity_tuner *tuner, unsigned int gravity)
 {
 	nkclock.gravity.irq = gravity;
 }
 
-static void adjust_irq_gravity(struct gravity_tuner *tuner, long adjust)
+static unsigned int adjust_irq_gravity(struct gravity_tuner *tuner, int adjust)
 {
-	nkclock.gravity.irq += adjust;
+	return nkclock.gravity.irq += adjust;
 }
 
 static int start_irq_tuner(struct gravity_tuner *tuner,
@@ -216,8 +243,8 @@ void task_handler(void *arg)
 
 		for (;;) {
 			ret = rtdm_task_wait_period();
-			if (ret)
-				break;
+			if (ret && ret != -ETIMEDOUT)
+				goto out;
 
 			now = xnclock_read_raw(&nkclock);
 			if (add_sample(&k_tuner->tuner, now)) {
@@ -226,7 +253,7 @@ void task_handler(void *arg)
 			}
 		}
 	}
-
+out:
 	done_sampling(&k_tuner->tuner, ret);
 	rtdm_task_destroy(&k_tuner->task);
 }
@@ -253,19 +280,19 @@ static void destroy_kthread_tuner(struct gravity_tuner *tuner)
 	rtdm_event_destroy(&k_tuner->barrier);
 }
 
-static unsigned long get_kthread_gravity(struct gravity_tuner *tuner)
+static unsigned int get_kthread_gravity(struct gravity_tuner *tuner)
 {
 	return nkclock.gravity.kernel;
 }
 
-static void set_kthread_gravity(struct gravity_tuner *tuner, unsigned long gravity)
+static void set_kthread_gravity(struct gravity_tuner *tuner, unsigned int gravity)
 {
 	nkclock.gravity.kernel = gravity;
 }
 
-static void adjust_kthread_gravity(struct gravity_tuner *tuner, long adjust)
+static unsigned int adjust_kthread_gravity(struct gravity_tuner *tuner, int adjust)
 {
-	nkclock.gravity.kernel += adjust;
+	return nkclock.gravity.kernel += adjust;
 }
 
 static int start_kthread_tuner(struct gravity_tuner *tuner,
@@ -328,19 +355,19 @@ static void destroy_uthread_tuner(struct gravity_tuner *tuner)
 	rtdm_event_destroy(&u_tuner->pulse);
 }
 
-static unsigned long get_uthread_gravity(struct gravity_tuner *tuner)
+static unsigned int get_uthread_gravity(struct gravity_tuner *tuner)
 {
 	return nkclock.gravity.user;
 }
 
-static void set_uthread_gravity(struct gravity_tuner *tuner, unsigned long gravity)
+static void set_uthread_gravity(struct gravity_tuner *tuner, unsigned int gravity)
 {
 	nkclock.gravity.user = gravity;
 }
 
-static void adjust_uthread_gravity(struct gravity_tuner *tuner, long adjust)
+static unsigned int adjust_uthread_gravity(struct gravity_tuner *tuner, int adjust)
 {
-	nkclock.gravity.user += adjust;
+	return nkclock.gravity.user += adjust;
 }
 
 static int start_uthread_tuner(struct gravity_tuner *tuner,
@@ -385,35 +412,138 @@ struct uthread_gravity_tuner uthread_tuner = {
 	},
 };
 
-static int tune_gravity(struct gravity_tuner *tuner, int period, int quiet)
+static inline void build_score(struct gravity_tuner *tuner, int step)
 {
-	unsigned long old_gravity, gravity;
-	struct tuner_state *state;
-	int ret, step, wedge;
-	xnsticks_t minlat;
-	long adjust;
+	struct tuner_state *state = &tuner->state;
+	unsigned int sum, variance, n, b;
 
-	state = &tuner->state;
-	state->step = xnclock_ns_to_ticks(&nkclock, period);
-	state->max_samples = ONE_SECOND / (period ?: 1);
-	minlat = xnclock_ns_to_ticks(&nkclock, ONE_SECOND);
-	old_gravity = tuner->get_gravity(tuner);
-	tuner->set_gravity(tuner, 0);
-	gravity = 0;
-	wedge = 0;
+	for (b = sum = n = 0; b < NR_BUCKETS; b++) {
+		sum += (b * BUCKET_TIMESPAN + BUCKET_TIMESPAN / 2) * state->log[b];
+		n += state->log[b];
+	}
+
+	tuner->scores[step].mean = state->mean;
+	tuner->scores[step].pmean = sum / n;
+	variance = (state->pow_sum_avg * n - n *
+		    state->mean * state->mean) / (n - 1);
+	tuner->scores[step].stddev = int_sqrt(variance);
+	tuner->scores[step].minlat = state->min_lat;
+	tuner->scores[step].gravity = tuner->get_gravity(tuner);
+	tuner->scores[step].step = step;
+	tuner->nscores++;
+}
+
+#if XENO_DEBUG(COBALT)
+#define progress(__tuner, __fmt, __args...)				\
+	do {								\
+		if (!(__tuner)->quiet)					\
+			printk(XENO_INFO "autotune(%s) " __fmt "\n",	\
+			       (__tuner)->name, ##__args);		\
+	} while (0)
+#else
+#define progress(__tuner, __fmt, __args...)
+#endif
+
+static int cmp_score_mean(const void *c, const void *r)
+{
+	const struct tuning_score *sc = c, *sr = r;
+	return sc->pmean - sr->pmean;
+}
+
+static int cmp_score_minlat(const void *c, const void *r)
+{
+	const struct tuning_score *sc = c, *sr = r;
+	return sc->minlat - sr->minlat;
+}
+
+static int cmp_score_gravity(const void *c, const void *r)
+{
+	const struct tuning_score *sc = c, *sr = r;
+	return (int)(sc->gravity - sr->gravity);
+}
+
+static int cmp_score_stddev(const void *c, const void *r)
+{
+	const struct tuning_score *sc = c, *sr = r;
+	return sc->stddev - sr->stddev;
+}
+
+static int filter_mean(struct gravity_tuner *tuner)
+{
+	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
+	     cmp_score_mean, NULL);
+
+	/* Top half of the best approximate pondered mean. */
+	return (tuner->nscores + 1) / 2;
+}
+
+static int filter_minlat(struct gravity_tuner *tuner)
+{
+	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
+	     cmp_score_minlat, NULL);
+
+	/* Top half of the best minimum latency observed. */
+	return (tuner->nscores + 1) / 2;
+}
+
+static int filter_gravity(struct gravity_tuner *tuner)
+{
+	int n;
+
+	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
+	     cmp_score_gravity, NULL);
 
 	/*
-	 * The tuning process is basic: we run a latency test for one
-	 * second, increasing the clock gravity value by 2/3rd until
-	 * we reach the wedge value or cause early shots, whichever
-	 * comes first.
+	 * Top half of the smallest gravity applied, limited to values
+	 * not greater than twice the standard deviation of the set.
 	 */
-	for (step = 1; step <= AUTOTUNE_STEPS; step++) {
+	for (n = 1; n < (tuner->nscores + 1) / 2; n++) {
+		if (tuner->scores[n].gravity >= tuner->scores[n].stddev * 2)
+			break;
+	}
+
+	return n;
+}
+
+static int filter_stddev(struct gravity_tuner *tuner)
+{
+	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
+	     cmp_score_stddev, NULL);
+
+	/* Best standard deviation. */
+
+	return 1;
+}
+
+static inline void filter_score(struct gravity_tuner *tuner,
+				int (*filter)(struct gravity_tuner *tuner))
+{
+	tuner->nscores = filter(tuner);
+}
+
+static int tune_gravity(struct gravity_tuner *tuner, int period)
+{
+	struct tuner_state *state = &tuner->state;
+	unsigned int orig_gravity, gravity_limit;
+	int ret, step, adjust;
+
+	state->step = xnclock_ns_to_ticks(&nkclock, period);
+	state->max_samples = SAMPLING_TIME / (period ?: 1);
+	orig_gravity = tuner->get_gravity(tuner);
+	tuner->set_gravity(tuner, 0);
+	tuner->nscores = 0;
+	adjust = xnclock_ns_to_ticks(&nkclock, BUCKET_TIMESPAN);
+	gravity_limit = AUTOTUNE_STEPS * adjust;
+	progress(tuner, "warming up...");
+
+	for (step = 0; step < WARMUP_STEPS + AUTOTUNE_STEPS; step++) {
 		state->ideal = xnclock_read_raw(&nkclock) + state->step * 3;
-		state->min_lat = xnclock_ns_to_ticks(&nkclock, ONE_SECOND);
+		state->min_lat = xnclock_ns_to_ticks(&nkclock, SAMPLING_TIME);
 		state->max_lat = 0;
-		state->sum_lat = 0;
+		state->mean = 0;
+		state->pow_sum_avg = 0;
 		state->cur_samples = 0;
+		memset(state->log, 0, sizeof(state->log));
 
 		ret = tuner->start_tuner(tuner,
 					 xnclock_ticks_to_ns(&nkclock, state->ideal),
@@ -430,84 +560,57 @@ static int tune_gravity(struct gravity_tuner *tuner, int period, int quiet)
 		if (ret)
 			goto fail;
 
-		if (state->min_lat <= 0) {
-			if (!quiet)
-				printk(XENO_WARN
-			       "auto-tuning[%s]: early shot by %Ld ns"
-			       ": disabling gravity\n",
-			       tuner->name,
-			       xnclock_ticks_to_ns(&nkclock, state->min_lat));
-			gravity = 0;
-			minlat = 0;
-			goto done;
-		}
-
-		/*
-		 * If we detect worse latencies with smaller gravity
-		 * values across consecutive tests, we assume the
-		 * former is our wedge value.  Retry and confirm it 5
-		 * times before stopping.
-		 */
-		if (state->min_lat > minlat) {
-#ifdef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-			if (!quiet)
-				printk(XENO_INFO "autotune[%s]: "
-				       "at wedge (min_ns %Ld => %Ld), "
-				       "gravity reset to %Ld ns\n",
-				       tuner->name,
-				       xnclock_ticks_to_ns(&nkclock, minlat),
-				       xnclock_ticks_to_ns(&nkclock, state->min_lat),
-				       xnclock_ticks_to_ns(&nkclock, gravity));
-#endif
-			if (++wedge >= 5)
-				goto done;
-			tuner->set_gravity(tuner, gravity);
+		if (step < WARMUP_STEPS) {
+			if (step == WARMUP_STEPS - 1 && state->min_lat >= 0)
+				gravity_limit = state->min_lat;
 			continue;
 		}
 
-		/*
-		 * We seem to have a margin for compensating even
-		 * more, increase the gravity value by a 3rd for next
-		 * round.
-		 */
-		minlat = state->min_lat;
-		adjust = (long)xnarch_llimd(minlat, 2, 3);
-		if (adjust == 0)
-			goto done;
+		if (state->min_lat < 0) {
+			if (tuner->get_gravity(tuner) == 0) {
+				printk(XENO_WARN
+				       "autotune(%s) failed with early shot (%Ld ns)\n",
+				       tuner->name,
+				       xnclock_ticks_to_ns(&nkclock, state->min_lat));
+				ret = -EAGAIN;
+				goto fail;
+			}
+			break;
+		}
 
-		gravity = tuner->get_gravity(tuner);
-		tuner->adjust_gravity(tuner, adjust);
-#ifdef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-		if (!quiet)
-			printk(XENO_INFO "autotune[%s]: min=%Ld | max=%Ld |"
-			       "avg=%Ld | gravity(%lut + adj=%ldt)\n",
-			       tuner->name,
-			       xnclock_ticks_to_ns(&nkclock, minlat),
-			       xnclock_ticks_to_ns(&nkclock, state->max_lat),
-			       xnclock_ticks_to_ns(&nkclock,
-				   xnarch_llimd(state->sum_lat, 1,
-						(state->cur_samples ?: 1))),
-		       gravity, adjust);
-#endif
+		if (((step - WARMUP_STEPS) % 5) == 0)
+			progress(tuner, "calibrating... (slice %d)",
+				 (step - WARMUP_STEPS) / 5 + 1);
+
+		build_score(tuner, step - WARMUP_STEPS);
+
+		/*
+		 * Anticipating more than the minimum latency detected
+		 * at warmup would make no sense: cap the gravity we
+		 * may try.
+		 */
+		if (tuner->adjust_gravity(tuner, adjust) > gravity_limit)
+			break;
 	}
 
-	printk(XENO_ERR "could not auto-tune (%s) after %ds\n",
-	       tuner->name, AUTOTUNE_STEPS);
-
-	return -EINVAL;
-done:
-	tuner->set_gravity(tuner, H2G2_FACTOR(gravity));
-
-	if (!quiet)
+	filter_score(tuner, filter_mean);
+	filter_score(tuner, filter_minlat);
+	filter_score(tuner, filter_gravity);
+	filter_score(tuner, filter_stddev);
+	tuner->set_gravity(tuner, tuner->scores[0].gravity);
+	if (!tuner->quiet)
 		printk(XENO_INFO
-		       "auto-tuning[%s]: gravity_ns=%Ld, min_ns=%Ld\n",
+		       "autotune(%s) pmean=%Ld stddev=%Lu minlat=%Lu gravity=%Lu step=%d\n",
 		       tuner->name,
-		       xnclock_ticks_to_ns(&nkclock, tuner->get_gravity(tuner)),
-		       step > 1 ? xnclock_ticks_to_ns(&nkclock, minlat) : 0);
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].pmean),
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].stddev),
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].minlat),
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].gravity),
+		       tuner->scores[0].step);
 
 	return 0;
 fail:
-	tuner->set_gravity(tuner, old_gravity);
+	tuner->set_gravity(tuner, orig_gravity);
 
 	return ret;
 }
@@ -563,8 +666,7 @@ static int autotune_ioctl_nrt(struct rtdm_fd *fd, unsigned int request, void *ar
 	context->setup = setup;
 
 	if (!setup.quiet)
-		printk(XENO_INFO "auto-tuning core clock gravity, %s\n",
-		       tuner->name);
+		printk(XENO_INFO "autotune(%s) started\n", tuner->name);
 
 	return ret;
 }
@@ -574,7 +676,7 @@ static int autotune_ioctl_rt(struct rtdm_fd *fd, unsigned int request, void *arg
 	struct autotune_context *context;
 	struct gravity_tuner *tuner;
 	nanosecs_abs_t timestamp;
-	unsigned long gravity;
+	unsigned int gravity;
 	int ret;
 
 	context = rtdm_fd_to_private(fd);
@@ -584,9 +686,8 @@ static int autotune_ioctl_rt(struct rtdm_fd *fd, unsigned int request, void *arg
 
 	switch (request) {
 	case AUTOTUNE_RTIOC_RUN:
-		ret = tune_gravity(tuner,
-				   context->setup.period,
-				   context->setup.quiet);
+		tuner->quiet = context->setup.quiet;
+		ret = tune_gravity(tuner, context->setup.period);
 		if (ret)
 			break;
 		gravity = xnclock_ticks_to_ns(&nkclock,
@@ -660,4 +761,13 @@ static int __init autotune_init(void)
 	return rtdm_dev_register(&device);
 }
 
-device_initcall(autotune_init);
+static void __exit autotune_exit(void)
+{
+	if (!realtime_core_enabled())
+		return;
+
+	rtdm_dev_unregister(&device);
+}
+
+module_init(autotune_init);
+module_exit(autotune_exit);
