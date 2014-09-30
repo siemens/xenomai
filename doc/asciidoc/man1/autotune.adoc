@@ -97,10 +97,10 @@ activity can slip in, treading over a larger address space).
 Reset the gravity values to their factory defaults. These defaults
 are statically defined by the Xenomai platform code.
 
-*--nohog*::
-Disable load generation while auto-tuning. *autotune* runs a simple
-load generator internally in parallel to estimating the latency, in
-order to eliminate irregular delays which tend to appear on fully idle
+*--noload*::
+Disable load generation while auto-tuning. *autotune* runs a load
+generator internally in parallel to estimating the latency, in order
+to eliminate irregular delays which tend to appear on fully idle
 systems.  Therefore, keeping the load generation enabled most often
 leads to a more accurate estimation.
 
