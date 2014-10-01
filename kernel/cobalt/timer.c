@@ -105,6 +105,7 @@ int xntimer_start(struct xntimer *timer,
 	struct xnclock *clock = xntimer_clock(timer);
 	xntimerq_t *q = xntimer_percpu_queue(timer);
 	xnticks_t date, now, delay, period;
+	unsigned long gravity;
 	struct xnsched *sched;
 	int ret = 0;
 
@@ -144,7 +145,18 @@ int xntimer_start(struct xntimer *timer,
 		break;
 	}
 
-	xntimerh_date(&timer->aplink) = date;
+	/*
+	 * To cope with the basic system latency, we apply a clock
+	 * gravity value, which is the amount of time expressed in
+	 * clock ticks by which we should anticipate the shot for any
+	 * outstanding timer. The gravity value varies with the type
+	 * of context the timer wakes up, i.e. irq handler, kernel or
+	 * user thread.
+	 */
+	gravity = xntimer_gravity(timer);
+	xntimerh_date(&timer->aplink) = date - gravity;
+	if (now >= xntimerh_date(&timer->aplink))
+		xntimerh_date(&timer->aplink) += gravity / 2;
 
 	timer->interval_ns = XN_INFINITE;
 	timer->interval = XN_INFINITE;
@@ -229,8 +241,7 @@ xnticks_t xntimer_get_date(struct xntimer *timer)
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
-	return xnclock_ticks_to_ns(xntimer_clock(timer),
-				   xntimerh_date(&timer->aplink));
+	return xnclock_ticks_to_ns(xntimer_clock(timer), xntimer_expiry(timer));
 }
 EXPORT_SYMBOL_GPL(xntimer_get_date);
 
@@ -254,20 +265,19 @@ EXPORT_SYMBOL_GPL(xntimer_get_date);
  */
 xnticks_t xntimer_get_timeout(struct xntimer *timer)
 {
-	xnticks_t ticks, delta;
 	struct xnclock *clock;
+	xnticks_t expiry, now;
 
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
 	clock = xntimer_clock(timer);
-	ticks = xnclock_read_raw(clock);
-	if (xntimerh_date(&timer->aplink) < ticks)
-		return 1;	/* Will elapse shortly. */
+	now = xnclock_read_raw(clock);
+	expiry = xntimer_expiry(timer);
+	if (expiry < now)
+		return 1;  /* Will elapse shortly. */
 
-	delta = xntimerh_date(&timer->aplink) - ticks;
-
-	return xnclock_ticks_to_ns(clock, delta);
+	return xnclock_ticks_to_ns(clock, expiry - now);
 }
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 

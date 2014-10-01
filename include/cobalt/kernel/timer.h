@@ -268,12 +268,25 @@ static inline xntimerq_t *xntimer_this_queue(struct xntimer *timer)
 	return &tmd->q;
 }
 
+static inline unsigned long xntimer_gravity(struct xntimer *timer)
+{
+	struct xnclock *clock = xntimer_clock(timer);
+
+	if (timer->status & XNTIMER_KGRAVITY)
+		return clock->gravity.kernel;
+
+	if (timer->status & XNTIMER_UGRAVITY)
+		return clock->gravity.user;
+
+	return clock->gravity.irq;
+}
+
 static inline void xntimer_update_date(struct xntimer *timer)
 {
-	xntimerh_date(&timer->aplink) = timer->start_date +
-		xnclock_ns_to_ticks(xntimer_clock(timer),
-				timer->periodic_ticks * timer->interval_ns);
-
+	xntimerh_date(&timer->aplink) = timer->start_date
+		+ xnclock_ns_to_ticks(xntimer_clock(timer),
+			timer->periodic_ticks * timer->interval_ns)
+		- xntimer_gravity(timer);
 }
 
 static inline xnticks_t xntimer_pexpect(struct xntimer *timer)
@@ -392,6 +405,12 @@ static inline xnticks_t xntimer_interval(struct xntimer *timer)
 	return timer->interval_ns;
 }
 
+static inline xnticks_t xntimer_expiry(struct xntimer *timer)
+{
+	/* Real expiry date in ticks without anticipation (no gravity) */
+	return xntimerh_date(&timer->aplink) + xntimer_gravity(timer);
+}
+
 int xntimer_start(struct xntimer *timer,
 		xnticks_t value,
 		xnticks_t interval,
@@ -416,11 +435,6 @@ static inline void xntimer_stop(struct xntimer *timer)
 static inline xnticks_t xntimer_get_timeout_stopped(struct xntimer *timer)
 {
 	return xntimer_get_timeout(timer);
-}
-
-static inline xnticks_t xntimer_get_expiry(struct xntimer *timer)
-{
-	return xntimerh_date(&timer->aplink);
 }
 
 static inline void xntimer_enqueue(struct xntimer *timer,

@@ -121,17 +121,6 @@ EXPORT_SYMBOL_GPL(xnclock_core_ticks_to_ns_rounded);
 EXPORT_SYMBOL_GPL(xnclock_core_ns_to_ticks);
 EXPORT_SYMBOL_GPL(xnclock_divrem_billion);
 
-static inline unsigned long get_timer_gravity(struct xntimer *timer)
-{
-	if (timer->status & XNTIMER_KGRAVITY)
-		return nkclock.gravity.kernel;
-
-	if (timer->status & XNTIMER_UGRAVITY)
-		return nkclock.gravity.user;
-
-	return nkclock.gravity.irq;
-}
-
 void xnclock_core_local_shot(struct xnsched *sched)
 {
 	struct xntimerdata *tmd;
@@ -186,16 +175,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 		}
 	}
 
-	/*
-	 * The gravity value gives the amount of time expressed in
-	 * clock ticks, by which we should anticipate the next shot
-	 * for the given timer, to account for the typical system
-	 * latency when delivering the event to an irq handler, or a
-	 * kernel/user thread.
-	 */
-	delay = xntimerh_date(&timer->aplink) -
-		(xnclock_core_read_raw() + get_timer_gravity(timer));
-
+	delay = xntimerh_date(&timer->aplink) - xnclock_core_read_raw();
 	if (delay < 0)
 		delay = 0;
 	else if (delay > ULONG_MAX)
@@ -229,10 +209,9 @@ static void adjust_timer(struct xntimer *timer, xntimerq_t *q,
 	timer->start_date -= delta;
 	period = xntimer_interval(timer);
 	diff = xnclock_ticks_to_ns(clock,
-				xnclock_read_raw(clock) -
-				xntimerh_date(&timer->aplink));
+		xnclock_read_raw(clock) - xntimer_expiry(timer));
 
-	if ((xnsticks_t) (diff - period) >= 0) {
+	if ((xnsticks_t)(diff - period) >= 0) {
 		/*
 		 * Timer should tick several times before now, instead
 		 * of calling timer->handler several times, we change
@@ -695,9 +674,9 @@ void xnclock_tick(struct xnclock *clock)
 {
 	xntimerq_t *timerq = &xnclock_this_timerdata(clock)->q;
 	struct xnsched *sched = xnsched_current();
-	xnticks_t now, interval_ticks;
 	struct xntimer *timer;
 	xnsticks_t delta;
+	xnticks_t now;
 	xntimerh_t *h;
 
 	/*
@@ -767,9 +746,8 @@ void xnclock_tick(struct xnclock *clock)
 		    (XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_RUNNING))
 			continue;
 	advance:
-		interval_ticks = 1;
 		do {
-			timer->periodic_ticks += interval_ticks;
+			timer->periodic_ticks++;
 			xntimer_update_date(timer);
 		} while (xntimerh_date(&timer->aplink) < now);
 	requeue:
