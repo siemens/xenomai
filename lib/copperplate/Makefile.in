@@ -458,7 +458,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
-libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -lpthread -version-info 0:0:0
+libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -lpthread -lrt -version-info 0:0:0
 libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c init.c \
 	internal.c internal.h main.c syncobj.c semobj.c threadobj.c \
 	timerobj.c traceobj.c wrappers.c $(am__append_4) \
