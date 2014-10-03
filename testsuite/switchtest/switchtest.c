@@ -262,6 +262,14 @@ static void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 	cpu->last_switches_count = switches_count;
 }
 
+static int sink(const char *fmt, ...)
+{
+	return 0;
+}
+
+#define check_fp_result(__expected)	\
+	fp_regs_check(fp_features, __expected, quiet < 2 ? printf : sink)
+
 static void *sleeper_switcher(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
@@ -353,7 +361,7 @@ static void *sleeper_switcher(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPS) {
-			fp_val = fp_regs_check(fp_features, expected, printf);
+			fp_val = check_fp_result(expected);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -479,7 +487,7 @@ static void *rtup(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPP) {
-			fp_val = fp_regs_check(fp_features, expected, printf);
+			fp_val = check_fp_result(expected);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -565,7 +573,7 @@ static void *rtus(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPS) {
-			fp_val = fp_regs_check(fp_features, expected, printf);
+			fp_val = check_fp_result(expected);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -651,7 +659,7 @@ static void *rtuo(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS)) {
-			fp_val = fp_regs_check(fp_features, expected, printf);
+			fp_val = check_fp_result(expected);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -990,6 +998,7 @@ static void usage(FILE *fd, const char *progname)
 		"lines.\n"
 		"--quiet or -q, prevent this program from printing every "
 		"second the count of\ncontext switches;\n"
+		"--really-quiet or -Q, prevent this program from printing any output;\n"
 		"--timeout <duration> or -T <duration>, limit the test duration "
 		"to <duration>\nseconds;\n"
 		"--nofpu or -n, disables any use of FPU instructions.\n"
@@ -1049,25 +1058,31 @@ static void *check_fpu_thread(void *cookie)
 	int check;
 
 	/* Check if fp routines are dummy or if hw fpu is not supported. */
-	fprintf(stderr, "== Testing FPU check routines...\n");
+	if (quiet < 2)
+		fprintf(stderr, "== Testing FPU check routines...\n");
 	if(sigsetjmp(jump, 1)) {
-		fprintf(stderr, "== Hardware FPU not available on your board"
+		if (quiet < 2)
+			fprintf(stderr,
+			"== Hardware FPU not available on your board"
 			" or not enabled in Linux kernel\n== configuration:"
 			" skipping FPU switches tests.\n");
 		return NULL;
 	}
 	signal(SIGILL, illegal_instruction);
 	fp_regs_set(fp_features, 1);
-	check = fp_regs_check(fp_features, 2, printf);
+	check = check_fp_result(2);
 	signal(SIGILL, SIG_DFL);
 	if (check != 1) {
-		fprintf(stderr,
-			"== FPU check routines: unimplemented, "
-			"skipping FPU switches tests.\n");
+		if (quiet < 2)
+			fprintf(stderr,
+				"== FPU check routines: unimplemented, "
+				"skipping FPU switches tests.\n");
 		return NULL;
 	}
 
-	fprintf(stderr, "== FPU check routines: OK.\n");
+	if (quiet < 2)
+		fprintf(stderr, "== FPU check routines: OK.\n");
+
 	return (void *) 1;
 }
 
@@ -1141,12 +1156,13 @@ int main(int argc, const char *argv[])
 			{ "lines",   1, NULL, 'l' },
 			{ "nofpu",   0, NULL, 'n' },
 			{ "quiet",   0, NULL, 'q' },
+			{ "really-quiet", 0, NULL, 'Q' },
 			{ "stress",  1, NULL, 's' },
 			{ "timeout", 1, NULL, 'T' },
 			{ NULL,      0, NULL, 0   }
 		};
 		int i = 0;
-		int c = getopt_long(argc, (char *const *) argv, "fhl:nqs:T:",
+		int c = getopt_long(argc, (char *const *) argv, "fhl:nqQs:T:",
 				    long_options, &i);
 
 		if (c == -1)
@@ -1171,6 +1187,10 @@ int main(int argc, const char *argv[])
 
 		case 'q':
 			quiet = 1;
+			break;
+
+		case 'Q':
+			quiet = 2;
 			break;
 
 		case 's':
@@ -1353,7 +1373,9 @@ int main(int argc, const char *argv[])
 	pthread_attr_setschedparam(&rt_attr, &sp);
 	pthread_attr_setstacksize(&rt_attr, PTHREAD_STACK_MIN);
 
-	printf("== Threads:");
+	if (quiet < 2)
+		printf("== Threads:");
+
 	/* Create and register all tasks. */
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
@@ -1382,12 +1404,14 @@ int main(int argc, const char *argv[])
 				status = EXIT_FAILURE;
 				goto cleanup;
 			}
-			printf(" %s",
-			       task_name(buffer, sizeof(buffer),
-					 param->cpu, param->swt.index));
+			if (quiet < 2)
+				printf(" %s",
+				       task_name(buffer, sizeof(buffer),
+						 param->cpu, param->swt.index));
 		}
 	}
-	printf("\n");
+	if (quiet < 2)
+		printf("\n");
 
 	clock_gettime(CLOCK_REALTIME, &start);
 
@@ -1431,7 +1455,8 @@ int main(int argc, const char *argv[])
 
 			clock_gettime(CLOCK_REALTIME, &now);
 
-			quiet = 0;
+			if (quiet == 1)
+				quiet = 0;
 			display_switches_count(&cpus[i], &now);
 
 			/* Kill the kernel-space tasks. */

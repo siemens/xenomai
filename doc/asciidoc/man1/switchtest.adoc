@@ -90,6 +90,9 @@ print headers every <lines> lines
 *--quiet or -q*::
 prevent this program from printing every second the count of ncontext switches
 
+*--really-quiet or -Q*::
+prevent this program from printing any output
+
 *--timeout <duration>, -T <duration>*::
 limit the test duration to <duration> seconds
 
