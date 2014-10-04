@@ -1493,7 +1493,7 @@ struct mmap_helper_data {
 static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 {
 	unsigned long addr, len, pfn, to;
-	int ret;
+	int ret = 0;
 	
 	to = (unsigned long)va;
 	addr = vma->vm_start;
