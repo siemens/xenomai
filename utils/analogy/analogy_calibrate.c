@@ -31,11 +31,9 @@
 #include "analogy_calibrate.h"
 #include "calibration_ni_m.h"
 
-struct apply_calibration_params params = {.name = NULL,} ;
 struct timespec calibration_start_time;
 static const char *revision = "0.0.1";
 a4l_desc_t descriptor;
-FILE *cal = NULL;
 
 static const struct option options[] = {
 	{
@@ -57,12 +55,6 @@ static const struct option options[] = {
 		.flag = NULL,
 	},
 	{
-#define apply_opt	3
-		.name = "apply",
-		.has_arg = 1,
-		.flag = NULL,
-	},
-	{
 		.name = NULL,
 	}
 };
@@ -71,51 +63,22 @@ static void
 print_usage(void)
 {
 	fprintf(stderr, "Usage: analogy_calibrate \n"
-	       "  --help 	     				: this menu \n"
-	       "  --device /dev/analogyX			: analogy device to calibrate \n"
-	       "  --output filename   				: calibration results \n"
-	       "  --apply filename:subd,channel,range,aref 	: apply the calibration file \n"
-	       "          ex: /home/foo/calib.rc:0,1,255,255 - use 255 for dont care \n"
+	       "  --help                  : this menu \n"
+	       "  --device /dev/analogyX  : analogy device to calibrate \n"
+	       "  --output filename       : calibration results \n"
 	      );
-}
-
-static int
-apply_calibration_set_globals(char *info)
-{
-	char *p;
-
-	params.name = strtok(info, ":");
-	p = strtok(NULL, ",");
-	if (!p)
-		error(EXIT, 0, "missing --apply parameter subd \n");
-	params.subd = strtol(p, NULL, 0);
-
-	p = strtok(NULL, ",");
-	if (!p)
-		error(EXIT, 0, "missing --apply parameter channel \n");
-	params.channel = strtol(p, NULL, 0);
-
-	p = strtok(NULL, ",");
-	if (!p)
-		error(EXIT, 0, "missing --apply parameter range \n");
-	params.range = strtol(p, NULL, 0);
-
-	p = strtok(NULL, "");
-	if (!p)
-		error(EXIT, 0, "missing --apply parameter aref \n");
-	params.aref = strtol(p, NULL, 0);
-
-	return 0;
 }
 
 static void __attribute__ ((constructor)) __analogy_calibrate_init(void)
 {
 	clock_gettime(CLOCK_MONOTONIC, &calibration_start_time);
 }
+
 int main(int argc, char *argv[])
 {
-	char *device = NULL, *file = NULL, *apply_info = NULL;
+	char *device = NULL, *file = NULL;
 	int v, i, fd, err = 0;
+	FILE *p = NULL;
 
 	__debug("version: git commit %s, revision %s \n", GIT_STAMP, revision);
 
@@ -133,13 +96,8 @@ int main(int argc, char *argv[])
 			break;
 		case output_opt:
 			file = optarg;
-			cal = fopen(file, "w+");
-			if (!cal)
-				error(EXIT, errno, "calibration file");
+			p = fopen(file, "w+");
 			__debug("calibration output: %s \n", file);
-			break;
-		case apply_opt:
-			apply_info = optarg;
 			break;
 		default:
 			print_usage();
@@ -147,8 +105,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (apply_info)
-		apply_calibration_set_globals(apply_info);
+	if (!p)
+		error(EXIT, errno, "calibration file not present");
 
 	fd = a4l_open(&descriptor, device);
 	if (fd < 0)
@@ -159,20 +117,9 @@ int main(int argc, char *argv[])
 		error(EXIT, 0, "board %s: driver %s not supported",
 		      descriptor.board_name, descriptor.driver_name);
 
-	/*
-	 * TODO: modify the meaning of board/driver in the proc
-	 */
-	push_to_cal_file("[%s] \n",PLATFORM_STR);
-	push_to_cal_file(DRIVER_STR" = %s;\n", descriptor.board_name);
-	push_to_cal_file(BOARD_STR" = %s;\n", descriptor.driver_name);
-
-	err = ni_m_software_calibrate();
+	err = ni_m_software_calibrate(p);
 	if (err)
 		error(CONT, 0, "software calibration failed (%d)", err);
-
-	err = ni_m_apply_calibration();
-	if (err)
-		error(CONT, 0, "applying calibration failed (%d)", err);
 
 	a4l_close(&descriptor);
 

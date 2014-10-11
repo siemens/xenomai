@@ -31,23 +31,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "iniparser/iniparser.h"
+
 #include "git-stamp.h"
 #include "error.h"
 
 extern struct timespec calibration_start_time;
 extern a4l_desc_t descriptor;
 extern FILE *cal;
-
-struct apply_calibration_params {
-	int channel;
-	char *name;
-	int range;
-	int subd;
-	int aref;
-};
-
-extern struct apply_calibration_params params;
 
 #define ARRAY_LEN(a)  (sizeof(a) / sizeof((a)[0]))
 
@@ -124,18 +114,6 @@ static inline void __debug(char *fmt, ...)
 	va_end(ap);
 }
 
-static inline void __push_to_file(FILE *file, char *fmt, ...)
-{
-	va_list ap;
-
-	if (!file)
-		return;
-
-	va_start(ap, fmt);
-	vfprintf(file, fmt, ap);
-	fflush(file);
-	va_end(ap);
-}
 
 static inline int __array_search(char *elem, const char *array[], int len)
 {
@@ -148,11 +126,6 @@ static inline int __array_search(char *elem, const char *array[], int len)
 	return -1;
 }
 
-#define push_to_cal_file(fmt, ...) 						\
-        do {									\
-                if (cal)							\
-                        __push_to_file(cal, fmt, ##__VA_ARGS__);		\
-	} while(0)
 
 static inline double rng_max(a4l_rnginfo_t *range)
 {
@@ -174,108 +147,6 @@ static inline double rng_min(a4l_rnginfo_t *range)
 	return a;
 }
 
-struct subd_data {
-	int index;
-	int channel;
-	int range;
-	int expansion;
-	int nb_coeff;
-	double *coeff;
-};
-
-struct calibration_data {
-	char *driver_name;
-	char *board_name;
-	int nb_ai;
-	struct subd_data *ai;
-	int nb_ao;
-	struct subd_data *ao;
-};
-
-#define ELEMENT_FIELD_FMT	"%s_%d:%s"
-#define ELEMENT_FMT		"%s:%s"
-#define COEFF_FMT		ELEMENT_FIELD_FMT"_%d"
-
-#define PLATFORM_STR		"platform"
-#define CALIBRATION_SUBD_STR	"calibration"
-#define MEMORY_SUBD_STR		"memory"
-#define AI_SUBD_STR		"analog_input"
-#define AO_SUBD_STR		"analog_output"
-
-#define INDEX_STR	"index"
-#define ELEMENTS_STR	"elements"
-#define CHANNEL_STR	"channel"
-#define RANGE_STR	"range"
-#define EXPANSION_STR	"expansion_origin"
-#define NBCOEFF_STR	"nbcoeff"
-#define COEFF_STR	"coeff"
-#define BOARD_STR	"board_name"
-#define DRIVER_STR	"driver_name"
-
-static inline int
-read_calfile_str(char ** val, struct _dictionary_ *f, const char *subd, char *type)
-{
-	char *not_found = NULL;
-	char *str;
-	int err;
-
-	err = asprintf(&str, ELEMENT_FMT, subd, type);
-	if (err < 0)
-		error(EXIT, 0, "asprintf \n");
-	*val = (char *) iniparser_getstring(f, str, not_found);
-	__debug("%s = %s \n", str, *val);
-	free(str);
-	if (*val == not_found)
-		error(EXIT, 0, "calibration file: str element not found \n");
-
-	return 0;
-}
-
-
-static inline int
-read_calfile_integer(int *val, struct _dictionary_ *f,
-		    const char *subd, int subd_idx, char *type)
-{
-	int not_found = 0xFFFF;
-	char *str;
-	int err;
-
-	if (subd_idx < 0)
-		err = asprintf(&str, ELEMENT_FMT, subd, type);
-	else
-		err = asprintf(&str, ELEMENT_FIELD_FMT, subd, subd_idx, type);
-	if (err < 0)
-		error(EXIT, 0, "asprintf \n");
-	*val = iniparser_getint(f, str, not_found);
-	__debug("%s = %d \n", str, *val);
-	free(str);
-	if (*val == not_found)
-		error(EXIT, 0, "calibration file: int element not found \n");
-
-	return 0;
-}
-
-static inline int
-read_calfile_double(double *d, struct _dictionary_ *f,
-		    const char *subd, int subd_idx, char *type, int type_idx)
-{
-	const double not_found = -255.0;
-	char *str;
-	int err;
-
-	if (strncmp(type, COEFF_STR, strlen(COEFF_STR) != 0))
-		error(EXIT, 0, "only contains doubles as coefficients \n");
-	err = asprintf(&str, COEFF_FMT, subd, subd_idx, type, type_idx);
-	if (err < 0)
-		error(EXIT, 0, "asprintf \n");
-	*d = iniparser_getdouble(f, str, not_found);
-	__debug("%s = %g \n", str, *d);
-	free(str);
-	if (*d == not_found)
-		error(EXIT, 0, "calbration file: double element not found \n");
-
-	return 0;
-}
 
 
 

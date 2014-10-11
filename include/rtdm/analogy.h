@@ -21,8 +21,11 @@
 #ifndef _RTDM_ANALOGY_H
 #define _RTDM_ANALOGY_H
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <rtdm/uapi/analogy.h>
+
+#include "boilerplate/list.h"
 
 /*!
   @addtogroup analogy_lib_descriptor
@@ -226,6 +229,14 @@ int a4l_ftoraw(a4l_chinfo_t *chan,
 
 int a4l_dtoraw(a4l_chinfo_t *chan,
 	       a4l_rnginfo_t *rng, void *dst, double *src, int cnt);
+
+void a4l_write_calibration_file(FILE *dst, struct list *l,
+	                        struct a4l_calibration_subdev *subd,
+	                        a4l_desc_t *desc);
+
+int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data);
+
+
 
 #endif /* !DOXYGEN_CPP */
 

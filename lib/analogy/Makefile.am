@@ -7,11 +7,16 @@ libanalogy_la_SOURCES =	\
 	descriptor.c	\
 	info.c		\
 	internal.h	\
+	calibration.c	\
 	range.c		\
 	root_leaf.h	\
 	sync.c		\
 	sys.c
 
-libanalogy_la_CPPFLAGS =	\
-	@XENO_USER_CFLAGS@	\
-	-I$(top_srcdir)/include
+libanalogy_la_CPPFLAGS =		\
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include 	\
+	-I$(top_srcdir)/lib/boilerplate	
+
+libanalogy_la_LIBADD = \
+	../boilerplate/libboilerplate.la

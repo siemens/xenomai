@@ -13,8 +13,7 @@ CPPFLAGS = 						\
 	@XENO_USER_CFLAGS@ 				\
 	-ggdb						\
 	-I$(top_srcdir)/include                         \
-	-I$(top_srcdir)/lib/boilerplate	
-
+        -I$(top_srcdir)/lib/analogy
 
 LDFLAGS =
 
@@ -29,7 +28,7 @@ analogy_config_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/cobalt/libcobalt.la	\
 	@XENO_USER_LDADD@		\
-	-lpthread -lrt
+	-lrt -lpthread
 
 analogy_calibrate_SOURCES = analogy_calibrate.c calibration_ni_m.c
 analogy_calibrate.c: git-stamp.h calibration_ni_m.h

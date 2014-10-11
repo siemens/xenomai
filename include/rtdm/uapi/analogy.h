@@ -706,4 +706,32 @@ typedef struct a4l_instruction_list a4l_insnlst_t;
 
 /*! @} analogy_lib_sync1 */
 
+struct a4l_calibration_subdev {
+	a4l_sbinfo_t *info;
+	int slen;
+	int idx;
+	char *name;
+};
+
+struct a4l_calibration_subdev_data {
+	int index;
+	int channel;
+	int range;
+	int expansion;
+	int nb_coeff;
+	double *coeff;
+
+};
+
+struct a4l_calibration_data {
+	char *driver_name;
+	char *board_name;
+	int nb_ai;
+	struct a4l_calibration_subdev_data *ai;
+	int nb_ao;
+	struct a4l_calibration_subdev_data *ao;
+};
+
+
+
 #endif /* _RTDM_UAPI_ANALOGY_H */

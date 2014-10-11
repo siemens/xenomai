@@ -25,159 +25,29 @@
 #include <gsl/gsl_multifit.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
+#include <rtdm/uapi/analogy.h>
 #include <rtdm/analogy.h>
 #include <wordexp.h>
 #include <math.h>
 
 #include "calibration_ni_m.h"
-
-extern char *apply_name;
-
+#include "calibration.h"
 struct list ai_calibration_list;
 struct list ao_calibration_list;
 
 static struct references references;
-static struct subdevice mem_subd;
-static struct subdevice cal_subd;
-static struct subdevice ao_subd;
-static struct subdevice ai_subd;
+static struct a4l_calibration_subdev mem_subd;
+static struct a4l_calibration_subdev cal_subd;
+static struct a4l_calibration_subdev ao_subd;
+static struct a4l_calibration_subdev ai_subd;
 static struct subdev_ops ops;
 static struct eeprom eeprom;
 static struct gnumath math;
 
-static int
-parse_calibration_file(char *name, struct calibration_data *data)
-{
-	const char *subdevice[2] = { AI_SUBD_STR, AO_SUBD_STR };
-	int i, j, k, index, nb_elements;
-	struct subd_data *p = NULL;
-	struct _dictionary_ *d;
-	const char *filename;
-	wordexp_t exp;
-	int ret = 0;
-
-	ret = wordexp(name, &exp, WRDE_NOCMD|WRDE_UNDEF);
-	if (ret) {
-		ret = ret == WRDE_NOSPACE ? -ENOMEM : -EINVAL;
-		error(EXIT, 0, "cant apply calibration (%d) \n", ret);
-	}
-
-	if (exp.we_wordc != 1)
-		error(EXIT, 0, "weird expansion of %s as rc file \n", params.name);
-
-	filename = exp.we_wordv[0];
-	if (access(filename, R_OK))
-		error(EXIT, 0, "cant access %s for reading \n", params.name);
-
-	__debug("using calibration file: %s \n", params.name);
-
-	d = iniparser_load(filename);
-	if (d == NULL)
-		error(EXIT, 0, "iniparser loading error for %s (%d)\n", params.name, errno);
-
-	read_calfile_str(&data->driver_name, d, PLATFORM_STR, DRIVER_STR);
-	read_calfile_str(&data->board_name, d, PLATFORM_STR, BOARD_STR);
-	for (k = 0; k < ARRAY_LEN(subdevice); k++) {
-		read_calfile_integer(&nb_elements, d, subdevice[k], -1,
-				     ELEMENTS_STR);
-		read_calfile_integer(&index, d, subdevice[k], -1,
-				     INDEX_STR);
-
-		if (strncmp(subdevice[k], AI_SUBD_STR, strlen(AI_SUBD_STR)) == 0) {
-			data->ai = malloc(nb_elements * sizeof(struct subd_data));
-			data->nb_ai = nb_elements;
-			p  = data->ai;
-		}
-		if (strncmp(subdevice[k], AO_SUBD_STR, strlen(AO_SUBD_STR)) == 0) {
-			data->ao = malloc(nb_elements * sizeof(struct subd_data));
-			data->nb_ao = nb_elements;
-			p = data->ao;
-		}
-		for (i = 0; i < nb_elements; i++) {
-			read_calfile_integer(&p->expansion, d, subdevice[k], i,
-					     EXPANSION_STR);
-			read_calfile_integer(&p->nb_coeff, d, subdevice[k], i,
-					     NBCOEFF_STR);
-			read_calfile_integer(&p->channel, d, subdevice[k], i,
-					     CHANNEL_STR);
-			read_calfile_integer(&p->range, d, subdevice[k], i,
-					     RANGE_STR);
-			p->coeff = malloc(p->nb_coeff * sizeof(double));
-			for (j = 0; j < p->nb_coeff; j++) {
-				read_calfile_double(&p->coeff[j], d, subdevice[k],
-						    i, COEFF_STR, j);
-			}
-			p->index = index;
-			p++;
-		}
-	}
-	wordfree(&exp);
-
-	return 0;
-}
-
-
-int
-ni_m_apply_calibration(void)
-{
-	struct calibration_data cal_data;
-
-	if (params.name == NULL)
-		return 0;
-
-	parse_calibration_file(params.name, &cal_data);
-	/*
-	 * TODO: apply the calibration file.
-	 */
-
-	return 0;
-}
-
-/*
- * generate the calibration file
- */
-static void
-write_calibration(struct list *calibration_list, struct subdevice *subd)
-{
-	struct subdevice_calibration_node *e, *t;
-	int i, j = 0;
-
-	if (list_empty(calibration_list))
-		return;
-
-	push_to_cal_file("\n[%s] \n", subd->name);
-	push_to_cal_file(INDEX_STR" = %d;\n", subd->idx);
-	list_for_each_entry_safe(e, t, calibration_list, node) {
-		j++;
-	}
-	push_to_cal_file(ELEMENTS_STR" = %d;\n", j);
-
-	j = 0;
-	list_for_each_entry_safe(e, t, calibration_list, node) {
-		push_to_cal_file("[%s_%d] \n", subd->name, j);
-		push_to_cal_file(CHANNEL_STR" = %d;\n", e->channel);
-		push_to_cal_file(RANGE_STR" = %d;\n", e->range);
-		push_to_cal_file(EXPANSION_STR" = %g;\n",
-				 e->polynomial->expansion_origin);
-		push_to_cal_file(NBCOEFF_STR"= %d;\n",
-				 e->polynomial->nb_coefficients);
-
-		for (i = 0; i < e->polynomial->nb_coefficients; i++)
-			push_to_cal_file(COEFF_STR"_%d = %g;\n",
-					 i,
-					 e->polynomial->coefficients[i]);
-		j++;
-	}
-
-	return;
-}
-
-
 /*
  *  eeprom
  */
-static int
-eeprom_read_byte(unsigned address, unsigned *val)
+static int eeprom_read_byte(unsigned address, unsigned *val)
 {
 	ops.data.read(val, &mem_subd, address, 0, 0);
 	if (*val > 0xff)
@@ -186,8 +56,7 @@ eeprom_read_byte(unsigned address, unsigned *val)
 	return 0;
 }
 
-static int
-eeprom_read_uint16(unsigned address, unsigned *val)
+static int eeprom_read_uint16(unsigned address, unsigned *val)
 {
 	unsigned a = 0, b = 0;
 	int err;
@@ -206,16 +75,14 @@ eeprom_read_uint16(unsigned address, unsigned *val)
 	return 0;
 }
 
-static int
-eeprom_get_calibration_base_address(unsigned *address)
+static int eeprom_get_calibration_base_address(unsigned *address)
 {
 	eeprom_read_uint16(24, address);
 
 	return 0;
 }
 
-static int
-eeprom_read_float(unsigned address, float *val)
+static int eeprom_read_float(unsigned address, float *val)
 {
 	union float_converter {
 		unsigned u;
@@ -241,8 +108,7 @@ eeprom_read_float(unsigned address, float *val)
 	return 0;
 }
 
-static int
-eeprom_read_reference_voltage(float *val)
+static int eeprom_read_reference_voltage(float *val)
 {
 	unsigned address;
 
@@ -255,8 +121,7 @@ eeprom_read_reference_voltage(float *val)
 /*
  * subdevice operations
  */
-static int
-data_read_hint(struct subdevice *s, int channel, int range, int aref)
+static int data_read_hint(struct a4l_calibration_subdev *s, int channel, int range, int aref)
 {
 	sampl_t dummy_data;
 	a4l_insn_t insn;
@@ -276,8 +141,8 @@ data_read_hint(struct subdevice *s, int channel, int range, int aref)
 	return 0;
 }
 
-static int
-data_read(unsigned *data, struct subdevice *s, int channel, int range, int aref)
+static int data_read(unsigned *data, struct a4l_calibration_subdev *s, int channel,
+	             int range, int aref)
 {
 	a4l_insn_t insn;
 	int err;
@@ -296,8 +161,8 @@ data_read(unsigned *data, struct subdevice *s, int channel, int range, int aref)
 	return 0;
 }
 
-static int
-data_write(long int *data, struct subdevice *s, int channel, int range, int aref)
+static int data_write(long int *data, struct a4l_calibration_subdev *s, int channel,
+	              int range, int aref)
 {
 	a4l_insn_t insn;
 	int err;
@@ -316,9 +181,8 @@ data_write(long int *data, struct subdevice *s, int channel, int range, int aref
 	return 0;
 }
 
-static int
-data_read_async(void *dst, struct subdevice *s, unsigned int nb_samples,
-		int speriod, int irange)
+static int data_read_async(void *dst, struct a4l_calibration_subdev *s,
+	                   unsigned int nb_samples, int speriod, int irange)
 {
 	int i, len, err;
 	a4l_cmd_t cmd;
@@ -373,9 +237,8 @@ data_read_async(void *dst, struct subdevice *s, unsigned int nb_samples,
  * math: uses the gnu statistic library and the math library
  *
  */
-static int
-statistics_standard_deviation_of_mean(double *dst, double src[], int len,
-				      double mean)
+static int statistics_standard_deviation_of_mean(double *dst, double src[],
+	                                         int len, double mean)
 {
 	double a;
 
@@ -386,8 +249,8 @@ statistics_standard_deviation_of_mean(double *dst, double src[], int len,
 	return 0;
 }
 
-static int
-statistics_standard_deviation(double *dst, double src[], int len, double mean)
+static int statistics_standard_deviation(double *dst, double src[], int len,
+	                                 double mean)
 {
 	double a;
 
@@ -398,16 +261,14 @@ statistics_standard_deviation(double *dst, double src[], int len, double mean)
 	return 0;
 }
 
-static int
-statistics_mean(double *dst, double src[], int len)
+static int statistics_mean(double *dst, double src[], int len)
 {
 	*dst = gsl_stats_mean(src, 1, len);
 
 	return 0;
 }
 
-static int
-polynomial_fit(struct polynomial *dst, struct codes_info *src)
+static int polynomial_fit(struct polynomial *dst, struct codes_info *src)
 {
 	gsl_multifit_linear_workspace *work;
 	const int nb_coeff = dst->order + 1;
@@ -457,8 +318,7 @@ polynomial_fit(struct polynomial *dst, struct codes_info *src)
 	return 0;
 }
 
-static int
-polynomial_linearize(double *dst, struct polynomial *p, double val)
+static int polynomial_linearize(double *dst, struct polynomial *p, double val)
 {
 	double a = 0.0, b = 1.0;
 	int i;
@@ -467,7 +327,6 @@ polynomial_linearize(double *dst, struct polynomial *p, double val)
 		a = a + p->coefficients[i] * b;
 		b = b * (val - p->expansion_origin);
 	}
-
 	*dst = a;
 
 	return 0;
@@ -478,8 +337,7 @@ polynomial_linearize(double *dst, struct polynomial *p, double val)
  * reference
  *
  */
-static int
-reference_get_min_sampling_period(int *val)
+static int reference_get_min_sampling_period(int *val)
 {
 	unsigned int chan_descs[] = { 0};
 	a4l_cmd_t cmd;
@@ -510,8 +368,7 @@ reference_get_min_sampling_period(int *val)
 	return 0;
 }
 
-static int
-reference_set_bits(unsigned int bits)
+static int reference_set_bits(unsigned int bits)
 {
 	unsigned int data[2] = { A4L_INSN_CONFIG_ALT_SOURCE, bits};
 	a4l_insn_t insn;
@@ -530,9 +387,8 @@ reference_set_bits(unsigned int bits)
 	return 0;
 }
 
-static int
-reference_set_pwm(struct subdevice *s, unsigned int h, unsigned int d,
-		  unsigned int *rh, unsigned int *rd)
+static int reference_set_pwm(struct a4l_calibration_subdev *s, unsigned int h,
+	                     unsigned int d, unsigned int *rh, unsigned int *rd)
 {
 	unsigned int data[5] = {
 		[0] = A4L_INSN_CONFIG_PWM_OUTPUT,
@@ -560,9 +416,8 @@ reference_set_pwm(struct subdevice *s, unsigned int h, unsigned int d,
 	return 0;
 }
 
-static int
-reference_read_doubles(double dst[], unsigned int nb_samples,
-		       int speriod, int irange)
+static int reference_read_doubles(double dst[], unsigned int nb_samples,
+		                  int speriod, int irange)
 {
 	int i, err = 0;
 	sampl_t *p;
@@ -585,8 +440,8 @@ reference_read_doubles(double dst[], unsigned int nb_samples,
 	return 0;
 }
 
-static int
-reference_read_samples(void *dst, unsigned int nb_samples, int speriod, int irange)
+static int reference_read_samples(void *dst, unsigned int nb_samples,
+	                          int speriod, int irange)
 {
 	int err;
 
@@ -618,8 +473,7 @@ const char *ni_m_boards[] = {
 
 const int nr_ni_m_boards = ARRAY_LEN(ni_m_boards);
 
-static inline
-int pwm_period_ticks(void)
+static inline int pwm_period_ticks(void)
 {
 	int min_speriod, speriod_ticks, ticks;
 	int err;
@@ -636,8 +490,7 @@ int pwm_period_ticks(void)
 	return ++ticks;
 }
 
-static inline
-int pwm_rounded_nsamples(void)
+static inline int pwm_rounded_nsamples(void)
 {
 	int pwm_period, total_speriod, min_speriod;
 	int err;
@@ -654,8 +507,7 @@ int pwm_rounded_nsamples(void)
 	return total_speriod / min_speriod;
 }
 
-static int
-check_buf_size(int slen)
+static int check_buf_size(int slen)
 {
 	unsigned long blen, req_blen;
 	int err;
@@ -671,8 +523,7 @@ check_buf_size(int slen)
 	return 0;
 }
 
-static int
-set_pwm_up_ticks(int t)
+static int set_pwm_up_ticks(int t)
 {
 	unsigned int up_p, down_p, real_up_p, real_down_p;
 	int  err;
@@ -687,8 +538,7 @@ set_pwm_up_ticks(int t)
 	return 0;
 }
 
-static int
-characterize_pwm(struct pwm_info *dst, int pref, unsigned range)
+static int characterize_pwm(struct pwm_info *dst, int pref, unsigned range)
 {
 	int i, up_ticks, err, speriod, len;
 	double mean, stddev, stddev_of_mean;
@@ -739,8 +589,7 @@ characterize_pwm(struct pwm_info *dst, int pref, unsigned range)
 	return 0;
 }
 
-static void
-print_polynomial(struct polynomial *p)
+static void print_polynomial(struct polynomial *p)
 {
 	int i;
 
@@ -753,8 +602,8 @@ print_polynomial(struct polynomial *p)
 			i, p->coefficients[i]);
 }
 
-static int
-calibrate_non_linearity(struct polynomial *poly, struct pwm_info *src)
+static int calibrate_non_linearity(struct polynomial *poly,
+	                           struct pwm_info *src)
 {
 	unsigned int max_data = (1 << ai_subd.slen * 8)  - 2;
 	unsigned up_ticks, down_ticks, i;
@@ -785,13 +634,14 @@ calibrate_non_linearity(struct polynomial *poly, struct pwm_info *src)
 	return 0;
 }
 
-static int
-calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
-			     unsigned pos_ref, float volt_ref, unsigned range)
+static int calibrate_ai_gain_and_offset(struct polynomial *dst,
+	                                struct polynomial *src,
+			                unsigned pos_ref, float volt_ref,
+	                                unsigned range)
 {
 	double *p;
-	double measured_ground_code, linearized_ground_code;
-	double measured_reference_code, linearized_reference_code;
+	double measured_gnd_cde, linearized_gnd_cde;
+	double measured_ref_cde, linearized_ref_cde;
 	double gain, offset;
 	int i, len, err, speriod;
 	double a, b;
@@ -809,9 +659,9 @@ calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
 	err = references.read_doubles(p, len/sizeof(*p), speriod, range);
 	if (err)
 		error(EXIT, 0, "read_doubles");
-	math.stats.mean(&measured_ground_code, p, len/sizeof(*p));
-	math.polynomial.linearize(&linearized_ground_code, src,
-				  measured_ground_code);
+	math.stats.mean(&measured_gnd_cde, p, len/sizeof(*p));
+	math.polynomial.linearize(&linearized_gnd_cde, src,
+				  measured_gnd_cde);
 
 	/* reference */
 	references.set_bits(pos_ref | REF_NEG_CAL_GROUND);
@@ -821,11 +671,10 @@ calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
 	err = references.read_doubles(p, len/sizeof(*p), speriod, range);
 	if (err)
 		error(EXIT, 0, "read_doubles");
-	math.stats.mean(&measured_reference_code, p, len/sizeof(*p));
-	math.polynomial.linearize(&linearized_reference_code, src,
-				  measured_reference_code);
+	math.stats.mean(&measured_ref_cde, p, len/sizeof(*p));
+	math.polynomial.linearize(&linearized_ref_cde, src, measured_ref_cde);
 
-	gain = volt_ref / (linearized_reference_code - linearized_ground_code);
+	gain = volt_ref / (linearized_ref_cde - linearized_gnd_cde);
 
 	/*
 	 * update output
@@ -841,19 +690,19 @@ calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
 	for (i = 0; i < dst->nb_coefficients; i++)
 		dst->coefficients[i] = src->coefficients[i] * gain;
 
-	math.polynomial.linearize(&offset, dst, measured_ground_code);
+	math.polynomial.linearize(&offset, dst, measured_gnd_cde);
 	dst->coefficients[0] = dst->coefficients[0] - offset;
 
 	__debug("volt_ref                = %g \n", volt_ref);
-	__debug("measured_ground_code    = %g, linearized_ground_code     = %g \n",
-		measured_ground_code, linearized_ground_code);
-	__debug("measured_reference_code = %g, linearized_reference_code  = %g \n",
-		measured_reference_code, linearized_reference_code);
+	__debug("measured_gnd_cde    = %g, linearized_gnd_cde     = %g \n",
+		measured_gnd_cde, linearized_gnd_cde);
+	__debug("measured_ref_cde = %g, linearized_ref_cde  = %g \n",
+		measured_ref_cde, linearized_ref_cde);
 
-	math.polynomial.linearize(&a, dst, measured_ground_code);
-	__debug("full_correction(measured_ground_code)    = %g \n", a);
-	math.polynomial.linearize(&b, dst, measured_reference_code);
-	__debug("full_correction(measured_reference_code) = %g \n", b);
+	math.polynomial.linearize(&a, dst, measured_gnd_cde);
+	__debug("full_correction(measured_gnd_cde)    = %g \n", a);
+	math.polynomial.linearize(&b, dst, measured_ref_cde);
+	__debug("full_correction(measured_ref_cde) = %g \n", b);
 
 	print_polynomial(dst);
 
@@ -862,8 +711,7 @@ calibrate_ai_gain_and_offset(struct polynomial *dst, struct polynomial *src,
 	return 0;
 }
 
-static int
-calibrate_base_range(struct polynomial *dst, struct polynomial *src)
+static int calibrate_base_range(struct polynomial *dst, struct polynomial *src)
 {
 	float volt_ref;
 	int err;
@@ -878,8 +726,10 @@ calibrate_base_range(struct polynomial *dst, struct polynomial *src)
 }
 
 
-static struct subdevice_calibration_node *
-get_calibration_node(struct list *l, unsigned channel, unsigned range) {
+static struct subdevice_calibration_node *get_calibration_node(struct list *l,
+	                                                       unsigned channel,
+	                                                       unsigned range)
+{
 	struct subdevice_calibration_node *e, *t;
 
 	if (list_empty(l))
@@ -898,9 +748,8 @@ get_calibration_node(struct list *l, unsigned channel, unsigned range) {
 	return NULL;
 }
 
-static int
-calibrate_pwm(struct polynomial *dst, struct pwm_info *pwm_info,
-	      struct subdevice_calibration_node *range_calibration)
+static int calibrate_pwm(struct polynomial *dst, struct pwm_info *pwm_info,
+	                 struct subdevice_calibration_node *range_calibration)
 {
 	double pwm_cal, adrange_cal, lsb_error;
 	double aprox_volts_per_bit, a, b;
@@ -946,9 +795,8 @@ calibrate_pwm(struct polynomial *dst, struct pwm_info *pwm_info,
 	return 0;
 }
 
-static int
-append_calibration_node(struct list *l, struct polynomial *polynomial,
-			unsigned channel, unsigned range)
+static int append_calibration_node(struct list *l, struct polynomial *polynomial,
+			           unsigned channel, unsigned range)
 {
 	struct subdevice_calibration_node *q;
 
@@ -964,12 +812,13 @@ append_calibration_node(struct list *l, struct polynomial *polynomial,
 	return 0;
 }
 
-static int
-calibrate_ai_range(struct polynomial *dst, struct polynomial *pwm_calibration,
-		   struct polynomial *non_linearity_correction, unsigned pos_ref,
-		   unsigned range)
+static int calibrate_ai_range(struct polynomial *dst,
+	                      struct polynomial *pwm_calibration,
+		              struct polynomial *non_linearity_correction,
+	                      unsigned pos_ref,
+		              unsigned range)
 {
-	struct polynomial inverse_pwm_calibration;
+	struct polynomial inv_pwm_cal;
 	double reference_voltage;
 	a4l_rnginfo_t *rng;
 	unsigned up_ticks;
@@ -979,16 +828,16 @@ calibrate_ai_range(struct polynomial *dst, struct polynomial *pwm_calibration,
 	if (pwm_calibration->order != 1)
 		error(EXIT, -1, "pwm_calibration order \n");
 
-	inverse_pwm_calibration.expansion_origin = pwm_calibration->coefficients[0];
+	inv_pwm_cal.expansion_origin = pwm_calibration->coefficients[0];
 	p = malloc((pwm_calibration->order + 1) * sizeof(double));
 	if (!p)
 		error(EXIT,0,"malloc\n");
 
-	inverse_pwm_calibration.order = pwm_calibration->order;
-	inverse_pwm_calibration.nb_coefficients = pwm_calibration->order + 1;
-	inverse_pwm_calibration.coefficients = p;
-	inverse_pwm_calibration.coefficients[0] = pwm_calibration->expansion_origin;
-	inverse_pwm_calibration.coefficients[1] = 1.0 / pwm_calibration->coefficients[1];
+	inv_pwm_cal.order = pwm_calibration->order;
+	inv_pwm_cal.nb_coefficients = pwm_calibration->order + 1;
+	inv_pwm_cal.coefficients = p;
+	inv_pwm_cal.coefficients[0] = pwm_calibration->expansion_origin;
+	inv_pwm_cal.coefficients[1] = 1.0 / pwm_calibration->coefficients[1];
 
 	err = a4l_get_rnginfo(&descriptor, ai_subd.idx, 0, range, &rng);
 	if (err < 0)
@@ -996,7 +845,7 @@ calibrate_ai_range(struct polynomial *dst, struct polynomial *pwm_calibration,
 
 	__debug("adjusted rng_max: %g \n", rng_max(rng) * 0.9);
 
-	math.polynomial.linearize(&val, &inverse_pwm_calibration,
+	math.polynomial.linearize(&val, &inv_pwm_cal,
 				  rng_max(rng) * 0.9);
 	up_ticks = lrint(val);
 	free(p);
@@ -1013,13 +862,12 @@ calibrate_ai_range(struct polynomial *dst, struct polynomial *pwm_calibration,
 	return 0;
 }
 
-static int
-calibrate_ranges_above_threshold(struct polynomial *pwm_calibration,
-				 struct polynomial *non_linearity_correction,
-				 unsigned pos_ref,
-				 struct list *calibration_list,
-				 struct calibrated_ranges *calibrated,
-				 double max_range_threshold )
+static int calibrate_ranges_above_threshold(struct polynomial *pwm_calibration,
+				            struct polynomial *non_lin_correct,
+				            unsigned pos_ref,
+				            struct list *calibration_list,
+				            struct calibrated_ranges *calibrated,
+				            double max_range_threshold )
 {
 	struct polynomial *dst;
 	a4l_rnginfo_t *rnginfo;
@@ -1041,7 +889,7 @@ calibrate_ranges_above_threshold(struct polynomial *pwm_calibration,
 			error(EXIT, 0, "malloc");
 
 		__debug("calibrating range %d \n", i);
-		calibrate_ai_range(dst, pwm_calibration, non_linearity_correction,
+		calibrate_ai_range(dst, pwm_calibration, non_lin_correct,
 				   pos_ref, i);
 		append_calibration_node(calibration_list, dst, ALL_CHANNELS, i);
 		calibrated->ranges[i] = 1;
@@ -1051,8 +899,8 @@ calibrate_ranges_above_threshold(struct polynomial *pwm_calibration,
 	return 0;
 }
 
-static int
-get_min_range_containing(struct calibrated_ranges *calibrated, double value)
+static int get_min_range_containing(struct calibrated_ranges *calibrated,
+	                            double value)
 {
 	a4l_rnginfo_t *rnginfo, *smallest = NULL;
 	unsigned smallest_range = 0;
@@ -1067,7 +915,8 @@ get_min_range_containing(struct calibrated_ranges *calibrated, double value)
 			error(EXIT,0,"a4l_get_rnginfo (%d)\n", err);
 
 		if (rng_max(rnginfo) > value &&
-		    (smallest_range == 0 || rng_max(rnginfo) < rng_max(smallest))) {
+		    (smallest_range == 0 ||
+		     rng_max(rnginfo) < rng_max(smallest))) {
 			smallest_range = i;
 			smallest = rnginfo;
 		}
@@ -1078,29 +927,27 @@ get_min_range_containing(struct calibrated_ranges *calibrated, double value)
 	return smallest_range;
 }
 
-static int
-ni_m_calibrate_ai(void)
+static int ni_m_calibrate_ai(void)
 {
-	const unsigned PWM_CAL_POINTS = (NI_M_TARGET_PWM_PERIOD_TICKS / NI_M_MIN_PWM_PULSE_TICKS);
+	const unsigned PWM_CAL_POINTS = (NI_M_TARGET_PWM_PERIOD_TICKS /
+					 NI_M_MIN_PWM_PULSE_TICKS);
 	const double MEDIUM_RANGE = 0.499;
 	const double LARGE_RANGE = 1.99;
 	const double SMALL_RANGE = 0.0;
-
-	struct polynomial non_linearity_correction, full_correction;
+	struct polynomial non_lin_correct, full_correct;
 	struct subdevice_calibration_node *node;
 	struct calibrated_ranges calibrated;
 	struct polynomial pwm_calibration;
 	struct pwm_info pwm_info;
 	a4l_chinfo_t *chan_info;
 	int i, err;
-
 	struct calibration_loop {
 		const char *message;
 		unsigned ref_pos;
 		double threshold;
 		double item;
 		int range;
-	} calibration_info [] = {
+	} cal_info [] = {
 		[0] = {
 			.message = "low gain range ",
 			.ref_pos = REF_POS_CAL_PWM_10V,
@@ -1122,8 +969,6 @@ ni_m_calibrate_ai(void)
 			.item =  MEDIUM_RANGE,
 			.range = -1,
 		},
-
-
 	};
 
 	list_init(&ai_calibration_list);
@@ -1163,15 +1008,15 @@ ni_m_calibrate_ai(void)
 	if (err)
 		error(EXIT, 0, "characterize_pwm");
 
-	err = calibrate_non_linearity(&non_linearity_correction, &pwm_info);
+	err = calibrate_non_linearity(&non_lin_correct, &pwm_info);
 	if (err)
 		error(EXIT, 0, "calibrate_non_linearity");
 
-	err = calibrate_base_range(&full_correction, &non_linearity_correction);
+	err = calibrate_base_range(&full_correct, &non_lin_correct);
 	if (err)
 		error(EXIT, 0, "calibrate_ai_base_range");
 
-	append_calibration_node(&ai_calibration_list, &full_correction,
+	append_calibration_node(&ai_calibration_list, &full_correct,
 				ALL_CHANNELS, NI_M_BASE_RANGE);
 	calibrated.ranges[NI_M_BASE_RANGE] = 1;
 
@@ -1179,26 +1024,26 @@ ni_m_calibrate_ai(void)
 	/*
 	 * calibrate low, medium and high gain ranges
 	 */
-	for (i = 0; i < ARRAY_LEN(calibration_info); i++) {
-		__debug("Calibrating AI: %s \n", calibration_info[i]);
+	for (i = 0; i < ARRAY_LEN(cal_info); i++) {
+		__debug("Calibrating AI: %s \n", cal_info[i]);
 
-		if (calibration_info[i].range >= 0)
+		if (cal_info[i].range >= 0)
 			goto calibrate;
 
-		calibration_info[i].range = get_min_range_containing(&calibrated,
-								     calibration_info[i].item);
-		if (!calibrated.ranges[calibration_info[i].range])
+		cal_info[i].range = get_min_range_containing(&calibrated,
+							     cal_info[i].item);
+		if (!calibrated.ranges[cal_info[i].range])
 			error(EXIT, 0, "not calibrated yet \n" );
 
 		err = characterize_pwm(&pwm_info,
-				       calibration_info[i].ref_pos,
-				       calibration_info[i].range);
+				       cal_info[i].ref_pos,
+				       cal_info[i].range);
 		if (err)
 			error(EXIT, 0, "characterize_pwm \n");
 
 calibrate:
 		node = get_calibration_node(&ai_calibration_list, 0,
-					    calibration_info[i].range);
+					    cal_info[i].range);
 		if (!node)
 			error(EXIT, 0, "couldnt find node \n");
 
@@ -1207,11 +1052,11 @@ calibrate:
 			error(EXIT, 0, "calibrate_pwm \n");
 
 		err = calibrate_ranges_above_threshold(&pwm_calibration,
-						       &non_linearity_correction,
-						       calibration_info[i].ref_pos,
+						       &non_lin_correct,
+						       cal_info[i].ref_pos,
 						       &ai_calibration_list,
 						       &calibrated,
-						       calibration_info[i].threshold);
+						       cal_info[i].threshold);
 		if (err)
 			error(EXIT, 0, "calibrate_ranges_above_threshold \n");
 	}
@@ -1219,8 +1064,7 @@ calibrate:
 	return 0;
 }
 
-static unsigned
-find_ai_range_for_ao(unsigned ao_range)
+static unsigned find_ai_range_for_ao(unsigned ao_range)
 {
 	a4l_rnginfo_t *ao_rng_info, *ai_rng_info, *rng_info = NULL;
 	a4l_chinfo_t *ai_chan_info;
@@ -1263,8 +1107,7 @@ find_ai_range_for_ao(unsigned ao_range)
 	return range;
 }
 
-static long int
-get_high_code(unsigned ai_rng, unsigned ao_rng)
+static long int get_high_code(unsigned ai_rng, unsigned ao_rng)
 {
 	unsigned int ao_max_data = (1 << ao_subd.slen * 8)  - 2;
 	a4l_rnginfo_t *ai, *ao;
@@ -1276,15 +1119,17 @@ get_high_code(unsigned ai_rng, unsigned ao_rng)
 	if (rng_max(ai) > rng_max(ao))
 		return lrint(ao_max_data * 0.9);
 
-	fractional_code = (0.9 * rng_max(ai) - rng_min(ao)) / (rng_max(ao) - rng_min(ao));
+	fractional_code = (0.9 * rng_max(ai) - rng_min(ao)) /
+		          (rng_max(ao) - rng_min(ao));
+
 	if (fractional_code < 0.0 || fractional_code > 1.0)
 		error(EXIT, 0, "error looking for high code");
 
 	return lrint(ao_max_data * fractional_code);
 }
 
-static int
-calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao_rng)
+static int calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel,
+	                                  unsigned ao_rng)
 {
 	unsigned int ao_max_data = (1 << ao_subd.slen * 8)  - 2;
 	double measured_low_code, measured_high_code, tmp;
@@ -1310,7 +1155,8 @@ calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao
 	if ((ao_channel & 0xf) != ao_channel)
 		error(EXIT,0, "wrong ao channel (%d)", ao_channel);
 
-	references.set_bits(REF_POS_CAL_AO |  REF_NEG_CAL_GROUND | ao_channel << 15);
+	references.set_bits(REF_POS_CAL_AO |
+		            REF_NEG_CAL_GROUND | ao_channel << 15);
 
 	/* low nominals */
 	data.codes[0].nominal = low_code;
@@ -1341,8 +1187,8 @@ calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao
 				  node->polynomial,
 				  measured_high_code);
 
-	poly.expansion_origin = 0.0;
 	poly.order = data.nb_codes - 1;
+	poly.expansion_origin = 0.0;
 	__debug("AO calibration for channel %d, range %d \n", ao_channel, ao_rng);
 
 	for (i = 0; i < data.nb_codes ; i++)
@@ -1369,8 +1215,7 @@ calibrate_ao_channel_and_range(unsigned ai_rng, unsigned ao_channel, unsigned ao
 	return 0;
 }
 
-static int
-ni_m_calibrate_ao(void)
+static int ni_m_calibrate_ao(void)
 {
 	a4l_rnginfo_t *range_info;
 	a4l_chinfo_t *chan_info;
@@ -1391,8 +1236,8 @@ ni_m_calibrate_ao(void)
 	for (channel = 0; channel < ao_subd.info->nb_chan; channel++) {
 		for (range = 0 ; range < chan_info->nb_rng; range++) {
 
-			err = a4l_get_rnginfo(&descriptor, ao_subd.idx, 0, range,
-					      &range_info);
+			err = a4l_get_rnginfo(&descriptor, ao_subd.idx, 0,
+				              range, &range_info);
 			if (err)
 				error(EXIT, 0, "a4l_get_rng_info (%d)", err);
 
@@ -1400,9 +1245,8 @@ ni_m_calibrate_ao(void)
 				continue;
 
 			ai_range = find_ai_range_for_ao(range);
-
-			err = calibrate_ao_channel_and_range(ai_range, channel,
-							     range);
+			err = calibrate_ao_channel_and_range(ai_range,
+				                             channel, range);
 			if (err)
 				error(EXIT, 0, "calibrate_ao");
 		}
@@ -1414,7 +1258,7 @@ ni_m_calibrate_ao(void)
 /*
  * main entry
  */
-int ni_m_software_calibrate(void)
+int ni_m_software_calibrate(FILE *p)
 {
 	a4l_sbinfo_t *sbinfo;
 	int i, err;
@@ -1458,7 +1302,7 @@ int ni_m_software_calibrate(void)
 	if (err)
 		error(EXIT, 0, "ai calibration error (%d)", err);
 
-	write_calibration(&ai_calibration_list, &ai_subd);
+	a4l_write_calibration_file(p, &ai_calibration_list, &ai_subd, &descriptor);
 
 	/* only calibrate the analog output subdevice if present */
 	if (ao_subd.idx < 0) {
@@ -1470,7 +1314,7 @@ int ni_m_software_calibrate(void)
 	if (err)
 		error(EXIT, 0, "ao calibration error (%d)", err);
 
-	write_calibration(&ao_calibration_list, &ao_subd);
+	a4l_write_calibration_file(p, &ao_calibration_list, &ao_subd, NULL);
 
 	return 0;
 }

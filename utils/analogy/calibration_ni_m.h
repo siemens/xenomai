@@ -23,7 +23,8 @@
 
 #ifndef __NI_M_SOFTWARE_CALIBRATE_H__
 #define __NI_M_SOFTWARE_CALIBRATE_H__
-
+#include <rtdm/uapi/analogy.h>
+#include "calibration.h"
 #include "analogy_calibrate.h"
 #include "boilerplate/list.h"
 
@@ -32,8 +33,7 @@ extern const int nr_ni_m_boards;
 
 #define ni_m_board_supported(id) __array_search(id, ni_m_boards, nr_ni_m_boards)
 
-int ni_m_software_calibrate(void);
-int ni_m_apply_calibration(void);
+int ni_m_software_calibrate(FILE *p);
 
 #define init_interface(a, b)  a = ((typeof(a)) INIT_##b);
 
@@ -55,13 +55,6 @@ int ni_m_apply_calibration(void);
 	.info = NULL,				\
 	.name = NULL,				\
 }
-
-struct subdevice {
-	a4l_sbinfo_t *info;
-	int slen;
-	int idx;
-	char *name;
-};
 
 /*
  * eeprom
@@ -116,10 +109,10 @@ struct eeprom {
         .data = INIT_SUBDEV_DATA_OPS	\
 }
 
-typedef int (*data_read_async_function)(void *, struct subdevice *, unsigned , int , int);
-typedef int (*data_read_hint_function)(struct subdevice *s, int, int, int);
-typedef int (*data_read_function)(unsigned *, struct subdevice *, int, int, int);
-typedef int (*data_write_function)(long int *, struct subdevice *s, int, int, int);
+typedef int (*data_read_async_function)(void *, struct a4l_calibration_subdev *, unsigned , int , int);
+typedef int (*data_read_hint_function)(struct a4l_calibration_subdev *s, int, int, int);
+typedef int (*data_read_function)(unsigned *, struct a4l_calibration_subdev *, int, int, int);
+typedef int (*data_write_function)(long int *, struct a4l_calibration_subdev *s, int, int, int);
 
 struct subdev_ops {
 	struct data_ops {
@@ -153,12 +146,6 @@ struct subdev_ops {
 	.polynomial = INIT_GNU_MATH_POLYNOMIAL,	\
 }
 
-struct polynomial {
-	double expansion_origin;
-	double *coefficients;
-	int nb_coefficients;
-	int order;
-};
 
 struct codes {
 	double measured;
@@ -220,7 +207,7 @@ struct gnumath {
 	.read_doubles = reference_read_doubles,			\
 }
 
-typedef int (*reference_set_pwm_function)(struct subdevice *s, unsigned, unsigned, unsigned *, unsigned *);
+typedef int (*reference_set_pwm_function)(struct a4l_calibration_subdev *s, unsigned, unsigned, unsigned *, unsigned *);
 typedef int (*reference_read_reference_doubles_function)(double [], unsigned, int, int);
 typedef int (*reference_read_reference_samples_function)(void *, unsigned, int, int);
 typedef int (*reference_get_min_sampling_period_function)(int *);
@@ -260,13 +247,6 @@ struct pwm_info {
 #define NI_M_NR_SAMPLES			( 15000 )
 #define NI_M_BASE_RANGE			( 0 )
 
-
-struct subdevice_calibration_node {
-	struct holder node;
-	struct polynomial *polynomial;
-	unsigned channel;
-	unsigned range;
-};
 
 struct calibrated_ranges {
 	unsigned *ranges;
