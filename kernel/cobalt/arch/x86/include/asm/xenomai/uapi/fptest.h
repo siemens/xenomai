@@ -39,7 +39,7 @@ static inline void fp_regs_set(int features, unsigned int val)
 			"vmovupd %0,%%ymm5;"
 			"vmovupd %0,%%ymm6;"
 			"vmovupd %0,%%ymm7;"
-			: : "m" (vec[0]));
+			: : "m"(vec[0]), "m"(vec[1]), "m"(vec[2]), "m"(vec[3]));
 	} else if (features & __COBALT_HAVE_SSE2) {
 		__asm__ __volatile__(
 			"movupd %0,%%xmm0;"
@@ -50,7 +50,7 @@ static inline void fp_regs_set(int features, unsigned int val)
 			"movupd %0,%%xmm5;"
 			"movupd %0,%%xmm6;"
 			"movupd %0,%%xmm7;"
-			: : "m" (vec[0]));
+			: : "m"(vec[0]), "m"(vec[1]), "m"(vec[2]), "m"(vec[3]));
 	}
 }
 
