@@ -708,9 +708,9 @@ typedef struct a4l_instruction_list a4l_insnlst_t;
 
 struct a4l_calibration_subdev {
 	a4l_sbinfo_t *info;
+	char *name;
 	int slen;
 	int idx;
-	char *name;
 };
 
 struct a4l_calibration_subdev_data {

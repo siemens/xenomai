@@ -46,7 +46,7 @@ analogy_calibrate_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/cobalt/libcobalt.la	\
 	@XENO_USER_LDADD@		\
-	-lpthread -lrt -lgsl -lgslcblas -lm
+	-lpthread -lrt 
 
 cmd_read_SOURCES = cmd_read.c
 cmd_read_LDADD = \

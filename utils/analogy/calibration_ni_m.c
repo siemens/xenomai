@@ -234,88 +234,51 @@ static int data_read_async(void *dst, struct a4l_calibration_subdev *s,
 
 /*
  *
- * math: uses the gnu statistic library and the math library
+ * math: uses the a4l statistic helpers and the math library
  *
  */
-static int statistics_standard_deviation_of_mean(double *dst, double src[],
-	                                         int len, double mean)
+static void
+statistics_standard_deviation_of_mean(double *dst, double src[], int len,
+	                              double mean)
 {
-	double a;
-
-	a = gsl_stats_variance_m(src, 1, len, mean);
-	a = sqrt(a/len);
-	*dst = a;
-
-	return 0;
+	a4l_math_stddev_of_mean(dst, mean, src, len);
 }
 
-static int statistics_standard_deviation(double *dst, double src[], int len,
-	                                 double mean)
+static void
+statistics_standard_deviation(double *dst, double src[], int len, double mean)
 {
-	double a;
-
-	a = gsl_stats_variance_m(src, 1, len, mean);
-	a = sqrt(a);
-	*dst = a;
-
-	return 0;
+	a4l_math_stddev(dst, mean, src, len);
 }
 
-static int statistics_mean(double *dst, double src[], int len)
+static void statistics_mean(double *dst, double src[], int len)
 {
-	*dst = gsl_stats_mean(src, 1, len);
-
-	return 0;
+	a4l_math_mean(dst, src, len);
 }
 
 static int polynomial_fit(struct polynomial *dst, struct codes_info *src)
 {
-	gsl_multifit_linear_workspace *work;
-	const int nb_coeff = dst->order + 1;
-	gsl_matrix *covariance, *m;
-	gsl_vector_view b, result;
-	double a, *tmp, chisq;
-	int i, j, len;
+	double *measured;
+	double *nominal;
+	int i, ret;
 
-	work = gsl_multifit_linear_alloc(src->nb_codes, nb_coeff);
-	covariance = gsl_matrix_alloc(nb_coeff, nb_coeff);
-	m = gsl_matrix_alloc(src->nb_codes, nb_coeff);
+	dst->nb_coefficients = dst->order + 1;
+	dst->coefficients = malloc(sizeof(double) * dst->nb_coefficients);
+	measured = malloc(sizeof(double) * src->nb_codes);
+	nominal = malloc(sizeof(double) * src->nb_codes);
+
+	if (!dst->coefficients || !measured || !nominal)
+		return -ENOMEM;
 
 	for (i = 0; i < src->nb_codes; i++) {
-		gsl_matrix_set(m, i, 0, 1.0);
-		for (j = 1; j < nb_coeff; j++) {
-			a = gsl_matrix_get(m, i, j - 1);
-			a = a * (src->codes[i].nominal - dst->expansion_origin);
-			gsl_matrix_set(m, i, j, a);
-		}
+		measured[i] = src->codes[i].measured;
+		nominal[i] = src->codes[i].nominal;
 	}
 
-	len = src->nb_codes * sizeof(double);
-	tmp = malloc(len);
-	if (!tmp)
-		error(EXIT, 0, "malloc (%d)", len);
+	ret = a4l_math_polyfit(dst->nb_coefficients, dst->coefficients,
+		               dst->expansion_origin,
+		               src->nb_codes, nominal, measured);
 
-	for (i = 0; i < src->nb_codes; i++)
-		tmp[i] = src->codes[i].measured;
-
-	b = gsl_vector_view_array(tmp, src->nb_codes);
-
-	dst->nb_coefficients = nb_coeff;
-	len = dst->nb_coefficients * sizeof(double);
-	dst->coefficients = malloc(len);
-	if (!dst->coefficients)
-		error(EXIT, 0, "malloc (%d)", len);
-
-	result = gsl_vector_view_array(dst->coefficients, nb_coeff);
-	gsl_multifit_linear(m, &b.vector, &result.vector, covariance, &chisq,
-			    work);
-	gsl_matrix_free(m);
-	gsl_matrix_free(covariance);
-	gsl_multifit_linear_free(work);
-
-	free(tmp);
-
-	return 0;
+	return ret;
 }
 
 static int polynomial_linearize(double *dst, struct polynomial *p, double val)
@@ -568,19 +531,10 @@ static int characterize_pwm(struct pwm_info *dst, int pref, unsigned range)
 		if (err)
 			error(EXIT, 0, "read_doubles");
 
-		err = math.stats.mean(&mean, p, len/sizeof(*p));
-		if (err)
-			error(EXIT, 0, "estimate_mean");
-
-		err = math.stats.stddev(&stddev, p, len/sizeof(*p), mean);
-		if (err)
-			error(EXIT, 0, "estimate_stddev");
-
-		err = math.stats.stddev_of_mean(&stddev_of_mean, p,
-						len/sizeof(*p), mean);
-		if (err)
-			error(EXIT, 0, "estimate_stddev_of_mean");
-
+		math.stats.mean(&mean, p, len/sizeof(*p));
+		math.stats.stddev(&stddev, p, len/sizeof(*p), mean);
+		math.stats.stddev_of_mean(&stddev_of_mean, p,
+			                  len/sizeof(*p), mean);
 		dst->node[i].up_tick = up_ticks;
 		dst->node[i].mean = mean;
 	}

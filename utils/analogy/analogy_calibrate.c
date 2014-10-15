@@ -32,7 +32,7 @@
 #include "calibration_ni_m.h"
 
 struct timespec calibration_start_time;
-static const char *revision = "0.0.1";
+static const char *revision = "1.0.0";
 a4l_desc_t descriptor;
 
 static const struct option options[] = {
@@ -105,8 +105,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (!p)
-		error(EXIT, errno, "calibration file not present");
+	if (!p || !device)
+		error(EXIT, errno, "missing input parameters");
 
 	fd = a4l_open(&descriptor, device);
 	if (fd < 0)

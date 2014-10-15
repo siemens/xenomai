@@ -7,6 +7,7 @@ libanalogy_la_SOURCES =	\
 	descriptor.c	\
 	info.c		\
 	internal.h	\
+	math.c		\
 	calibration.c	\
 	range.c		\
 	root_leaf.h	\
@@ -19,4 +20,6 @@ libanalogy_la_CPPFLAGS =		\
 	-I$(top_srcdir)/lib/boilerplate	
 
 libanalogy_la_LIBADD = \
-	../boilerplate/libboilerplate.la
+	../boilerplate/libboilerplate.la	\
+	-lm
+

@@ -157,9 +157,9 @@ struct codes_info {
 	int nb_codes;
 };
 
-typedef int (*statistics_standard_deviation_of_mean_function)(double *, double [], int, double );
-typedef int (*statistics_standard_deviation_function)(double *, double [], int, double);
-typedef int (*statistics_mean_function)(double *, double [], int);
+typedef void (*statistics_standard_deviation_of_mean_function)(double *, double [], int, double );
+typedef void (*statistics_standard_deviation_function)(double *, double [], int, double);
+typedef void (*statistics_mean_function)(double *, double [], int);
 
 struct statistics_ops {
 	statistics_standard_deviation_of_mean_function stddev_of_mean;

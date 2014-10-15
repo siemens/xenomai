@@ -236,6 +236,18 @@ void a4l_write_calibration_file(FILE *dst, struct list *l,
 
 int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data);
 
+int a4l_math_polyfit(unsigned order, double *r,double orig,
+	             const unsigned dim, double *x, double *y);
+
+void a4l_math_mean(double *pmean, double *val, unsigned nr);
+
+void a4l_math_stddev(double *pstddev,
+	             double mean, double *val, unsigned nr);
+
+void a4l_math_stddev_of_mean(double *pstddevm,
+	                     double mean, double *val, unsigned nr);
+
+
 
 
 #endif /* !DOXYGEN_CPP */
