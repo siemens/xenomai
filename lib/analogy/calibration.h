@@ -61,5 +61,8 @@ struct subdevice_calibration_node {
 	unsigned range;
 };
 
+void write_calibration_file(FILE *dst, struct list *l,
+                            struct a4l_calibration_subdev *subd,
+	                    a4l_desc_t *desc);
 
 #endif

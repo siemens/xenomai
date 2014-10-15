@@ -103,6 +103,64 @@ static inline void write_calibration(FILE *file, char *fmt, ...)
 	va_end(ap);
 }
 
+void
+write_calibration_file(FILE *dst, struct list *l,
+	               struct a4l_calibration_subdev *subd, a4l_desc_t *desc)
+{
+	struct subdevice_calibration_node *e, *t;
+	int i, j = 0;
+
+	if (list_empty(l))
+		return;
+
+	/* TODO: modify the meaning of board/driver in the proc */
+	if (desc) {
+		write_calibration(dst, "[%s] \n",PLATFORM_STR);
+		write_calibration(dst, DRIVER_STR" = %s;\n", desc->board_name);
+		write_calibration(dst, BOARD_STR" = %s;\n", desc->driver_name);
+	}
+
+	write_calibration(dst, "\n[%s] \n", subd->name);
+	write_calibration(dst, INDEX_STR" = %d;\n", subd->idx);
+	list_for_each_entry_safe(e, t, l, node) {
+		j++;
+	}
+	write_calibration(dst, ELEMENTS_STR" = %d;\n", j);
+
+	j = 0;
+	list_for_each_entry_safe(e, t, l, node) {
+		write_calibration(dst, "[%s_%d] \n", subd->name, j);
+		write_calibration(dst, CHANNEL_STR" = %d;\n", e->channel);
+		write_calibration(dst, RANGE_STR" = %d;\n", e->range);
+		write_calibration(dst, EXPANSION_STR" = %g;\n",
+				  e->polynomial->expansion_origin);
+		write_calibration(dst, NBCOEFF_STR"= %d;\n",
+				  e->polynomial->nb_coefficients);
+
+		for (i = 0; i < e->polynomial->nb_coefficients; i++)
+			write_calibration(dst, COEFF_STR"_%d = %g;\n",
+					  i,
+					  e->polynomial->coefficients[i]);
+		j++;
+	}
+
+	return;
+}
+
+/*!
+ * @ingroup analogy_lib_level2
+ * @defgroup analogy_lib_calibration Software calibration API
+ * @{
+ */
+
+/**
+ * @brief Read the analogy generated calibration file
+ *
+ * @param[in] name Name of the calibration file
+ * @param[out] data Pointer to the calibration file contents
+ *
+ */
+
 int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 {
 	const char *subdevice[2] = { AI_SUBD_STR, AO_SUBD_STR };
@@ -186,48 +244,5 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 	return 0;
 }
 
-void a4l_write_calibration_file(FILE *dst, struct list *l,
-	                        struct a4l_calibration_subdev *subd,
-	                        a4l_desc_t *desc)
-{
-	struct subdevice_calibration_node *e, *t;
-	int i, j = 0;
-
-	if (list_empty(l))
-		return;
-
-	/* TODO: modify the meaning of board/driver in the proc */
-	if (desc) {
-		write_calibration(dst, "[%s] \n",PLATFORM_STR);
-		write_calibration(dst, DRIVER_STR" = %s;\n", desc->board_name);
-		write_calibration(dst, BOARD_STR" = %s;\n", desc->driver_name);
-	}
-
-	write_calibration(dst, "\n[%s] \n", subd->name);
-	write_calibration(dst, INDEX_STR" = %d;\n", subd->idx);
-	list_for_each_entry_safe(e, t, l, node) {
-		j++;
-	}
-	write_calibration(dst, ELEMENTS_STR" = %d;\n", j);
-
-	j = 0;
-	list_for_each_entry_safe(e, t, l, node) {
-		write_calibration(dst, "[%s_%d] \n", subd->name, j);
-		write_calibration(dst, CHANNEL_STR" = %d;\n", e->channel);
-		write_calibration(dst, RANGE_STR" = %d;\n", e->range);
-		write_calibration(dst, EXPANSION_STR" = %g;\n",
-				  e->polynomial->expansion_origin);
-		write_calibration(dst, NBCOEFF_STR"= %d;\n",
-				  e->polynomial->nb_coefficients);
-
-		for (i = 0; i < e->polynomial->nb_coefficients; i++)
-			write_calibration(dst, COEFF_STR"_%d = %g;\n",
-					  i,
-					  e->polynomial->coefficients[i]);
-		j++;
-	}
-
-	return;
-}
-
+/** @} Calibration API */
 

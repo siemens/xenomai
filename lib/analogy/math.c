@@ -325,7 +325,27 @@ static int mat_qr(struct mat *r, struct vec *y)
 	return rc;
 }
 
-/*
+
+/*!
+ * @ingroup analogy_lib_level2
+ * @defgroup analogy_lib_math Math API
+ * @{
+ */
+
+
+/**
+ * @brief Calculate the polynomial fit
+ *
+ * @param[in] order Order of the resulting polynomial
+ * @param[out] r Polynomial
+ * @param[in] orig
+ * @param[in] dim Number of elements in the polynomials
+ * @param[in] x Polynomial
+ * @param[in] y Polynomial
+ *
+ *
+ * Operation:
+ *
  * We are looking for Res such that A.Res = Y, with A the Vandermonde
  * matrix made from the X vector.
  *
@@ -340,6 +360,7 @@ static int mat_qr(struct mat *r, struct vec *y)
  *
  * We can then obtain Res by back substitution using
  * mat_upper_triangular_backsub() with R upper triangular.
+ *
  */
 int a4l_math_polyfit(unsigned order, double *r, double orig, const unsigned dim,
 	        double *x, double *y)
@@ -375,6 +396,14 @@ int a4l_math_polyfit(unsigned order, double *r, double orig, const unsigned dim,
         return rc;
 }
 
+/**
+ * @brief Calculate the aritmetic mean of an array of values
+ *
+ * @param[out] pmean Pointer to the resulting value
+ * @param[in] val Array of input values
+ * @param[in] nr Number of array elements
+ *
+ */
 void a4l_math_mean(double *pmean, double *val, unsigned nr)
 {
 	double sum;
@@ -386,6 +415,15 @@ void a4l_math_mean(double *pmean, double *val, unsigned nr)
 	*pmean = sum / nr;
 }
 
+/**
+ * @brief Calculate the standard deviation of an array of values
+ *
+ * @param[out] pstddevm Pointer to the resulting value
+ * @param[in] mean Mean value
+ * @param[in] val Array of input values
+ * @param[in] nr Number of array elements
+ *
+ */
 void a4l_math_stddev(double *pstddev, double mean, double *val, unsigned nr)
 {
 	double sum, sum_sq;
@@ -400,6 +438,15 @@ void a4l_math_stddev(double *pstddev, double mean, double *val, unsigned nr)
 	*pstddev = sqrt((sum_sq - (sum * sum) / nr) / (nr - 1));
 }
 
+/**
+ * @brief Calculate the standard deviation of the mean
+ *
+ * @param[out] pstddevm Pointer to the resulting value
+ * @param[in] mean Mean value
+ * @param[in] val Array of input values
+ * @param[in] nr Number of array elements
+ *
+ */
 void a4l_math_stddev_of_mean(double *pstddevm, double mean, double *val, unsigned nr)
 {
 	double sum, sum_sq;
@@ -415,4 +462,4 @@ void a4l_math_stddev_of_mean(double *pstddevm, double mean, double *val, unsigne
 }
 
 
-
+/** @} Math API */

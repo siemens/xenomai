@@ -121,7 +121,8 @@ static int eeprom_read_reference_voltage(float *val)
 /*
  * subdevice operations
  */
-static int data_read_hint(struct a4l_calibration_subdev *s, int channel, int range, int aref)
+static int data_read_hint(struct a4l_calibration_subdev *s, int channel,
+	                  int range, int aref)
 {
 	sampl_t dummy_data;
 	a4l_insn_t insn;
@@ -141,8 +142,8 @@ static int data_read_hint(struct a4l_calibration_subdev *s, int channel, int ran
 	return 0;
 }
 
-static int data_read(unsigned *data, struct a4l_calibration_subdev *s, int channel,
-	             int range, int aref)
+static int data_read(unsigned *data, struct a4l_calibration_subdev *s,
+	             int channel, int range, int aref)
 {
 	a4l_insn_t insn;
 	int err;
@@ -161,8 +162,8 @@ static int data_read(unsigned *data, struct a4l_calibration_subdev *s, int chann
 	return 0;
 }
 
-static int data_write(long int *data, struct a4l_calibration_subdev *s, int channel,
-	              int range, int aref)
+static int data_write(long int *data, struct a4l_calibration_subdev *s,
+	              int channel, int range, int aref)
 {
 	a4l_insn_t insn;
 	int err;
@@ -1256,7 +1257,7 @@ int ni_m_software_calibrate(FILE *p)
 	if (err)
 		error(EXIT, 0, "ai calibration error (%d)", err);
 
-	a4l_write_calibration_file(p, &ai_calibration_list, &ai_subd, &descriptor);
+	write_calibration_file(p, &ai_calibration_list, &ai_subd, &descriptor);
 
 	/* only calibrate the analog output subdevice if present */
 	if (ao_subd.idx < 0) {
@@ -1268,7 +1269,7 @@ int ni_m_software_calibrate(FILE *p)
 	if (err)
 		error(EXIT, 0, "ao calibration error (%d)", err);
 
-	a4l_write_calibration_file(p, &ao_calibration_list, &ao_subd, NULL);
+	write_calibration_file(p, &ao_calibration_list, &ao_subd, NULL);
 
 	return 0;
 }
