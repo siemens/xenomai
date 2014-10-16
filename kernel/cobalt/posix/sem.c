@@ -243,25 +243,61 @@ static int sem_trywait(xnhandle_t handle)
 	return err;
 }
 
-static inline int
-sem_wait_inner(xnhandle_t handle, int timed,
-	       const struct timespec __user *u_ts)
+static int sem_wait(xnhandle_t handle)
 {
-	struct timespec ts = { .tv_sec = 0, .tv_nsec = 0 };
-	int pull_ts = 1, ret, info;
 	struct cobalt_sem *sem;
-	xntmode_t tmode;
+	int ret, info;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-redo:
-	sem = xnregistry_lookup(handle, NULL);
 
+	sem = xnregistry_lookup(handle, NULL);
 	ret = sem_trywait_inner(sem);
 	if (ret != -EAGAIN)
 		goto out;
 
-	if (timed) {
+	ret = 0;
+	info = xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
+	if (info & XNRMID)
+		ret = -EINVAL;
+ 	else if (info & XNBREAK)
+		ret = -EINTR;
+out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+static inline int sem_fetch_timeout(struct timespec *ts,
+				    const void __user *u_ts)
+{
+	return u_ts == NULL ? -EFAULT :
+		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+}
+
+int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
+			   const void __user *u_ts,
+			   int (*fetch_timeout)(struct timespec *ts,
+						const void __user *u_ts))
+{
+	struct timespec ts = { .tv_sec = 0, .tv_nsec = 0 };
+	int pull_ts = 1, ret, info;
+	struct cobalt_sem *sem;
+	xnhandle_t handle;
+	xntmode_t tmode;
+	spl_t s;
+
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_timedwait(handle);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	for (;;) {
+		sem = xnregistry_lookup(handle, NULL);
+		ret = sem_trywait_inner(sem);
+		if (ret != -EAGAIN)
+			break;
+
 		/*
 		 * POSIX states that the validity of the timeout spec
 		 * _need_ not be checked if the semaphore can be
@@ -271,55 +307,34 @@ redo:
 		 */
 		if (pull_ts) {
 			atomic_inc(&sem->datp->value);
-			if (u_ts == NULL)
-				goto efault;
 			xnlock_put_irqrestore(&nklock, s);
-			ret =__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts));
+			ret = sem_fetch_timeout(&ts, u_ts);
 			xnlock_get_irqsave(&nklock, s);
 			if (ret)
-				goto efault;
-			if (ts.tv_nsec >= ONE_BILLION)
-				goto einval;
+				break;
+			if (ts.tv_nsec >= ONE_BILLION) {
+				ret = -EINVAL;
+				break;
+			}
 			pull_ts = 0;
-			goto redo;
+			continue;
 		}
 
+		ret = 0;
 		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
 		info = xnsynch_sleep_on(&sem->synchbase, ts2ns(&ts) + 1, tmode);
-	} else
-		info = xnsynch_sleep_on(&sem->synchbase,
-					XN_INFINITE, XN_RELATIVE);
-	if (info & XNRMID)
-		goto einval;
- 	if (info & (XNBREAK|XNTIMEO)) {
-		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
-		goto fail;
+		if (info & XNRMID)
+			ret = -EINVAL;
+		else if (info & (XNBREAK|XNTIMEO)) {
+			ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
+			atomic_inc(&sem->datp->value);
+		}
+		break;
 	}
-	ret = 0;
-out:
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
-fail:
-	atomic_inc(&sem->datp->value);
-	goto out;
-efault:
-	ret = -EFAULT;
-	goto out;
-einval:
-	ret = -EINVAL;
-	goto out;
-}
-
-static int sem_wait(xnhandle_t handle)
-{
-	return sem_wait_inner(handle, 0, NULL);
-}
-
-static int sem_timedwait(xnhandle_t handle,
-			 const struct timespec __user *abs_timeout)
-{
-	return sem_wait_inner(handle, 1, abs_timeout);
 }
 
 int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcast)
@@ -442,12 +457,7 @@ COBALT_SYSCALL(sem_timedwait, primary,
 	       int, (struct cobalt_sem_shadow __user *u_sem,
 		     struct timespec __user *u_ts))
 {
-	xnhandle_t handle;
-
-	handle = cobalt_get_handle_from_user(&u_sem->handle);
-	trace_cobalt_psem_timedwait(handle);
-
-	return sem_timedwait(handle, u_ts);
+	return __cobalt_sem_timedwait(u_sem, u_ts, sem_fetch_timeout);
 }
 
 COBALT_SYSCALL(sem_trywait, primary,

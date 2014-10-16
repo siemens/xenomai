@@ -59,6 +59,11 @@ typedef struct
 #define SEM_FAILED	NULL
 #define SEM_NAMED	0x80000000
 
+int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
+			   const void __user *u_ts,
+			   int (*fetch_timeout)(struct timespec *ts,
+						const void __user *u_ts));
+
 int __cobalt_sem_destroy(xnhandle_t handle);
 
 void __cobalt_sem_unlink(xnhandle_t handle);
