@@ -49,8 +49,5 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 		break;
 	}
 
-	if (__xn_copy_to_user((void *)a2, &info, sizeof(info)))
-		return -EFAULT;
-
-	return 0;
+	return __xn_safe_copy_to_user((void *)a2, &info, sizeof(info));
 }
