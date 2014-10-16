@@ -364,6 +364,9 @@ COBALT_IMPL(int, mq_timedsend, (mqd_t q,
 {
 	int err, oldtype;
 
+	if (timeout == NULL)
+		return -EFAULT;
+
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SYSCALL5(sc_cobalt_mq_timedsend,
@@ -482,6 +485,9 @@ COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
 {
 	ssize_t rlen = (ssize_t) len;
 	int err, oldtype;
+
+	if (timeout == NULL)
+		return -EFAULT;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 

@@ -30,6 +30,28 @@ struct mq_attr {
 	long mq_curmsgs;
 };
 
+int __cobalt_mq_open(const char __user *u_name, int oflags,
+		     mode_t mode, struct mq_attr *attr);
+
+int __cobalt_mq_getattr(mqd_t uqd, struct mq_attr *attr);
+
+int __cobalt_mq_setattr(mqd_t uqd, const struct mq_attr *attr,
+			struct mq_attr *oattr);
+
+int __cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
+			  unsigned int prio, const void __user *u_ts,
+			  int (*fetch_timeout)(struct timespec *ts,
+					       const void __user *u_ts));
+
+int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
+			     ssize_t __user *u_len,
+			     unsigned int __user *u_prio,
+			     const void __user *u_ts,
+			     int (*fetch_timeout)(struct timespec *ts,
+						  const void __user *u_ts));
+
+int __cobalt_mq_notify(mqd_t fd, const struct sigevent *evp);
+
 COBALT_SYSCALL_DECL(mq_open,
 		    int, (const char __user *u_name, int oflags,
 			  mode_t mode, struct mq_attr __user *u_attr));

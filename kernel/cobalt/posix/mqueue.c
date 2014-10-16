@@ -464,16 +464,22 @@ mq_tryrcv(struct cobalt_mqd *mqd, size_t len)
 
 static struct cobalt_msg *
 mq_timedsend_inner(struct cobalt_mqd *mqd,
-		   size_t len, const struct timespec *abs_timeoutp)
+		   size_t len, const void __user *u_ts,
+		   int (*fetch_timeout)(struct timespec *ts,
+					const void __user *u_ts))
 {
 	struct cobalt_mqwait_context mwc;
 	struct cobalt_msg *msg;
 	struct cobalt_mq *mq;
+	struct timespec ts;
 	xntmode_t tmode;
 	xnticks_t to;
 	spl_t s;
 	int ret;
 
+	to = XN_INFINITE;
+	tmode = XN_RELATIVE;
+redo:
 	xnlock_get_irqsave(&nklock, s);
 	msg = mq_trysend(mqd, len);
 	if (msg != ERR_PTR(-EAGAIN))
@@ -482,15 +488,17 @@ mq_timedsend_inner(struct cobalt_mqd *mqd,
 	if (mqd->flags & O_NONBLOCK)
 		goto out;
 
-	to = XN_INFINITE;
-	tmode = XN_RELATIVE;
-	if (abs_timeoutp) {
-		if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION) {
-			msg = ERR_PTR(-EINVAL);
-			goto out;
-		}
-		to = ts2ns(abs_timeoutp) + 1;
+	if (fetch_timeout) {
+		xnlock_put_irqrestore(&nklock, s);
+		ret = fetch_timeout(&ts, u_ts);
+		if (ret)
+			return ERR_PTR(ret);
+		if ((unsigned long)ts.tv_nsec >= ONE_BILLION)
+			return ERR_PTR(-EINVAL);
+		to = ts2ns(&ts) + 1;
 		tmode = XN_REALTIME;
+		fetch_timeout = NULL;
+		goto redo;
 	}
 
 	mq = mqd->mq;
@@ -584,16 +592,23 @@ mq_finish_send(struct cobalt_mqd *mqd, struct cobalt_msg *msg)
 
 static struct cobalt_msg *
 mq_timedrcv_inner(struct cobalt_mqd *mqd,
-		  size_t len, const struct timespec *abs_timeoutp)
+		  size_t len,
+		  const void __user *u_ts,
+		  int (*fetch_timeout)(struct timespec *ts,
+				       const void __user *u_ts))
 {
 	struct cobalt_mqwait_context mwc;
 	struct cobalt_msg *msg;
 	struct cobalt_mq *mq;
+	struct timespec ts;
 	xntmode_t tmode;
 	xnticks_t to;
 	spl_t s;
 	int ret;
 
+	to = XN_INFINITE;
+	tmode = XN_RELATIVE;
+redo:
 	xnlock_get_irqsave(&nklock, s);
 	msg = mq_tryrcv(mqd, len);
 	if (msg != ERR_PTR(-EAGAIN))
@@ -602,15 +617,17 @@ mq_timedrcv_inner(struct cobalt_mqd *mqd,
 	if (mqd->flags & O_NONBLOCK)
 		goto out;
 
-	to = XN_INFINITE;
-	tmode = XN_RELATIVE;
-	if (abs_timeoutp) {
-		if (abs_timeoutp->tv_nsec >= ONE_BILLION) {
-			msg = ERR_PTR(-EINVAL);
-			goto out;
-		}
-		to = ts2ns(abs_timeoutp) + 1;
+	if (fetch_timeout) {
+		xnlock_put_irqrestore(&nklock, s);
+		ret = fetch_timeout(&ts, u_ts);
+		if (ret)
+			return ERR_PTR(ret);
+		if (ts.tv_nsec >= ONE_BILLION)
+			return ERR_PTR(-EINVAL);
+		to = ts2ns(&ts) + 1;
 		tmode = XN_REALTIME;
+		fetch_timeout = NULL;
+		goto redo;
 	}
 
 	mq = mqd->mq;
@@ -752,39 +769,37 @@ static inline void cobalt_mqd_put(struct cobalt_mqd *mqd)
 	rtdm_fd_put(&mqd->fd);
 }
 
+int __cobalt_mq_notify(mqd_t fd, const struct sigevent *evp)
+{
+	struct cobalt_mqd *mqd;
+	int ret;
+
+	mqd = cobalt_mqd_get(fd);
+	if (IS_ERR(mqd))
+		ret = PTR_ERR(mqd);
+	else {
+		trace_cobalt_mq_notify(fd, evp);
+		ret = mq_notify(mqd, fd, evp);
+		cobalt_mqd_put(mqd);
+	}
+
+	return ret;
+}
+
 COBALT_SYSCALL(mq_notify, primary,
 	       int, (mqd_t fd, const struct sigevent *__user evp))
 {
-	struct cobalt_mqd *mqd;
 	struct sigevent sev;
-	int err;
 
-	mqd = cobalt_mqd_get(fd);
-	if (IS_ERR(mqd)) {
-		err = PTR_ERR(mqd);
-		goto out;
-	}
+	if (evp && __xn_safe_copy_from_user(&sev, evp, sizeof(sev)))
+		return -EFAULT;
 
-	if (evp && __xn_safe_copy_from_user(&sev, evp, sizeof(sev))) {
-		err = -EFAULT;
-		goto out;
-	}
-
-	trace_cobalt_mq_notify(fd, evp ? &sev : NULL);
-
-	err = mq_notify(mqd, fd, evp ? &sev : NULL);
-
-  out:
-	cobalt_mqd_put(mqd);
-
-	return err;
+	return __cobalt_mq_notify(fd, evp ? &sev : NULL);
 }
 
-COBALT_SYSCALL(mq_open, lostage,
-	       int, (const char __user *u_name, int oflags,
-		     mode_t mode, struct mq_attr __user *u_attr))
+int __cobalt_mq_open(const char __user *u_name, int oflags,
+		     mode_t mode, struct mq_attr *attr)
 {
-	struct mq_attr locattr, *attr;
 	char name[COBALT_MAXNAME];
 	unsigned int len;
 	mqd_t uqd;
@@ -800,14 +815,6 @@ COBALT_SYSCALL(mq_open, lostage,
 	if (len == 0)
 		return -EINVAL;
 
-	if ((oflags & O_CREAT) && u_attr) {
-		if (__xn_safe_copy_from_user(&locattr, u_attr, sizeof(locattr)))
-			return -EFAULT;
-
-		attr = &locattr;
-	} else
-		attr = NULL;
-
 	trace_cobalt_mq_open(name, oflags, mode);
 
 	uqd = __rtdm_anon_getfd("[cobalt-mq]", oflags);
@@ -821,6 +828,21 @@ COBALT_SYSCALL(mq_open, lostage,
 	}
 
 	return uqd;
+}
+
+COBALT_SYSCALL(mq_open, lostage,
+	       int, (const char __user *u_name, int oflags,
+		     mode_t mode, struct mq_attr __user *u_attr))
+{
+	struct mq_attr _attr, *attr = &_attr;
+
+	if ((oflags & O_CREAT) && u_attr) {
+		if (__xn_safe_copy_from_user(&_attr, u_attr, sizeof(_attr)))
+			return -EFAULT;
+	} else
+		attr = NULL;
+
+	return __cobalt_mq_open(u_name, oflags, mode, attr);
 }
 
 COBALT_SYSCALL(mq_close, lostage, int, (mqd_t uqd))
@@ -847,26 +869,53 @@ COBALT_SYSCALL(mq_unlink, lostage,
 	return mq_unlink(name);
 }
 
-COBALT_SYSCALL(mq_getattr, current,
-	       int, (mqd_t uqd, struct mq_attr __user *u_attr))
+int __cobalt_mq_getattr(mqd_t uqd, struct mq_attr *attr)
 {
 	struct cobalt_mqd *mqd;
-	struct mq_attr attr;
-	int err;
+	int ret;
 
 	mqd = cobalt_mqd_get(uqd);
 	if (IS_ERR(mqd))
 		return PTR_ERR(mqd);
 
-	err = mq_getattr(mqd, &attr);
-
+	ret = mq_getattr(mqd, attr);
 	cobalt_mqd_put(mqd);
-	if (err)
-		return err;
+	if (ret)
+		return ret;
 
-	trace_cobalt_mq_getattr(uqd, &attr);
+	trace_cobalt_mq_getattr(uqd, attr);
+
+	return 0;
+}
+
+COBALT_SYSCALL(mq_getattr, current,
+	       int, (mqd_t uqd, struct mq_attr __user *u_attr))
+{
+	struct mq_attr attr;
+	int ret;
+
+	ret = __cobalt_mq_getattr(uqd, &attr);
+	if (ret)
+		return ret;
 
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
+}
+
+int __cobalt_mq_setattr(mqd_t uqd, const struct mq_attr *attr,
+			struct mq_attr *oattr)
+{
+	struct cobalt_mqd *mqd;
+	int ret;
+
+	mqd = cobalt_mqd_get(uqd);
+	if (IS_ERR(mqd))
+		return PTR_ERR(mqd);
+
+	trace_cobalt_mq_setattr(uqd, attr);
+	ret = mq_setattr(mqd, attr, oattr);
+	cobalt_mqd_put(mqd);
+
+	return ret;
 }
 
 COBALT_SYSCALL(mq_setattr, current,
@@ -874,144 +923,123 @@ COBALT_SYSCALL(mq_setattr, current,
 		     struct mq_attr __user *u_oattr))
 {
 	struct mq_attr attr, oattr;
-	struct cobalt_mqd *mqd;
-	int err;
+	int ret;
 
-	mqd = cobalt_mqd_get(uqd);
-	if (IS_ERR(mqd))
-		return PTR_ERR(mqd);
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
 
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr))) {
-		err = -EFAULT;
-		goto out;
-	}
+	ret = __cobalt_mq_setattr(uqd, &attr, &oattr);
+	if (ret)
+		return ret;
 
-	trace_cobalt_mq_setattr(uqd, &attr);
+	if (u_oattr == NULL)
+		return 0;
 
-	err = mq_setattr(mqd, &attr, &oattr);
-  out:
-	cobalt_mqd_put(mqd);
-	if (err)
-		return err;
-
-	if (u_oattr)
-		return __xn_safe_copy_to_user(u_oattr, &oattr, sizeof(oattr));
-
-	return 0;
+	return __xn_safe_copy_to_user(u_oattr, &oattr, sizeof(oattr));
 }
 
-COBALT_SYSCALL(mq_timedsend, primary,
-	       int, (mqd_t uqd, const void __user *u_buf, size_t len,
-		     unsigned int prio, const struct timespec __user *u_ts))
+static inline int mq_fetch_timeout(struct timespec *ts,
+				   const void __user *u_ts)
 {
-	struct timespec timeout, *timeoutp;
+	return u_ts == NULL ? -EFAULT :
+		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+}
+
+int __cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
+			  unsigned int prio, const void __user *u_ts,
+			  int (*fetch_timeout)(struct timespec *ts,
+					       const void __user *u_ts))
+{
 	struct cobalt_msg *msg;
 	struct cobalt_mqd *mqd;
-	int err;
+	int ret;
 
 	mqd = cobalt_mqd_get(uqd);
 	if (IS_ERR(mqd))
 		return PTR_ERR(mqd);
 
 	if (prio >= COBALT_MSGPRIOMAX) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto out;
 	}
 
 	if (len > 0 && !access_rok(u_buf, len)) {
-		err = -EFAULT;
+		ret = -EFAULT;
 		goto out;
 	}
 
-	if (u_ts) {
-		if (__xn_safe_copy_from_user(&timeout, u_ts, sizeof(timeout))) {
-			err = -EFAULT;
-			goto out;
-		}
-		timeoutp = &timeout;
-		trace_cobalt_mq_timedsend(uqd, u_buf, len, prio, &timeout);
-	} else {
-		timeoutp = NULL;
-		trace_cobalt_mq_send(uqd, u_buf, len, prio);
-	}
-
-	msg = mq_timedsend_inner(mqd, len, timeoutp);
+	trace_cobalt_mq_send(uqd, u_buf, len, prio);
+	msg = mq_timedsend_inner(mqd, len, u_ts, fetch_timeout);
 	if (IS_ERR(msg)) {
-		err = PTR_ERR(msg);
+		ret = PTR_ERR(msg);
 		goto out;
 	}
 
-	if(__xn_copy_from_user(msg->data, u_buf, len)) {
+	ret = __xn_safe_copy_from_user(msg->data, u_buf, len);
+	if (ret) {
 		mq_finish_rcv(mqd, msg);
-		err = -EFAULT;
 		goto out;
 	}
 	msg->len = len;
 	msg->prio = prio;
-
-	err = mq_finish_send(mqd, msg);
-  out:
+	ret = mq_finish_send(mqd, msg);
+out:
 	cobalt_mqd_put(mqd);
 
-	return err;
+	return ret;
 }
 
-COBALT_SYSCALL(mq_timedreceive, primary,
-	       int, (mqd_t uqd, void __user *u_buf,
-		     ssize_t __user *u_len,
-		     unsigned int __user *u_prio,
-		     const struct timespec __user *u_ts))
+COBALT_SYSCALL(mq_timedsend, primary,
+	       int, (mqd_t uqd, const void __user *u_buf, size_t len,
+		     unsigned int prio, const struct timespec __user *u_ts))
 {
-	struct timespec timeout, *timeoutp;
+	return __cobalt_mq_timedsend(uqd, u_buf, len, prio,
+				     u_ts, u_ts ? mq_fetch_timeout : NULL);
+}
+
+int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
+			     ssize_t __user *u_len,
+			     unsigned int __user *u_prio,
+			     const void __user *u_ts,
+			     int (*fetch_timeout)(struct timespec *ts,
+						  const void __user *u_ts))
+{
 	struct cobalt_mqd *mqd;
 	struct cobalt_msg *msg;
 	unsigned int prio;
 	ssize_t len;
-	int err;
+	int ret;
 
 	mqd = cobalt_mqd_get(uqd);
 	if (IS_ERR(mqd))
 		return PTR_ERR(mqd);
 
 	if (__xn_get_user(len, u_len)) {
-		err = -EFAULT;
+		ret = -EFAULT;
 		goto fail;
 	}
 
 	if (len > 0 && !access_wok(u_buf, len)) {
-		err = -EFAULT;
+		ret = -EFAULT;
 		goto fail;
 	}
 
-	if (u_ts) {
-		if (__xn_safe_copy_from_user(&timeout, u_ts, sizeof(timeout))) {
-			err = -EFAULT;
-			goto fail;
-		}
-
-		timeoutp = &timeout;
-		trace_cobalt_mq_timedreceive(uqd, u_buf, len, &timeout);
-	} else {
-		timeoutp = NULL;
-		trace_cobalt_mq_receive(uqd, u_buf, len);
-	}
-
-	msg = mq_timedrcv_inner(mqd, len, timeoutp);
+	msg = mq_timedrcv_inner(mqd, len, u_ts, fetch_timeout);
 	if (IS_ERR(msg)) {
-		err = PTR_ERR(msg);
+		ret = PTR_ERR(msg);
 		goto fail;
 	}
 
-	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
+	ret = __xn_safe_copy_to_user(u_buf, msg->data, msg->len);
+	if (ret) {
 		mq_finish_rcv(mqd, msg);
-		err = -EFAULT;
 		goto fail;
 	}
 
 	len = msg->len;
 	prio = msg->prio;
-	err = mq_finish_rcv(mqd, msg);
-	if (err)
+	ret = mq_finish_rcv(mqd, msg);
+	if (ret)
 		goto fail;
 
 	cobalt_mqd_put(mqd);
@@ -1023,11 +1051,20 @@ COBALT_SYSCALL(mq_timedreceive, primary,
 		return -EFAULT;
 
 	return 0;
-
 fail:
 	cobalt_mqd_put(mqd);
 
-	return err;
+	return ret;
+}
+
+COBALT_SYSCALL(mq_timedreceive, primary,
+	       int, (mqd_t uqd, void __user *u_buf,
+		     ssize_t __user *u_len,
+		     unsigned int __user *u_prio,
+		     const struct timespec __user *u_ts))
+{
+	return __cobalt_mq_timedreceive(uqd, u_buf, u_len, u_prio,
+					u_ts, u_ts ? mq_fetch_timeout : NULL);
 }
 
 int cobalt_mq_pkg_init(void)
