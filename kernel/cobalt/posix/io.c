@@ -76,30 +76,34 @@ COBALT_SYSCALL(recvmsg, probing,
 	       ssize_t, (int fd, struct msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
-	int ret;
+	ssize_t ret;
 
-	if (__xn_copy_from_user(&m, umsg, sizeof(m)))
-		return -EFAULT;
+	if (flags & MSG_CMSG_COMPAT)
+		return -EINVAL;
+
+	ret = __xn_safe_copy_from_user(&m, umsg, sizeof(m));
+	if (ret)
+		return ret;
 
 	ret = rtdm_fd_recvmsg(fd, &m, flags);
 	if (ret < 0)
 		return ret;
 
-	if (__xn_copy_to_user(umsg, &m, sizeof(*umsg)))
-		return -EFAULT;
-
-	return ret;
+	return __xn_safe_copy_to_user(umsg, &m, sizeof(*umsg)) ?: ret;
 }
 
 COBALT_SYSCALL(sendmsg, probing,
 	       ssize_t, (int fd, struct msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
+	int ret;
 
-	if (__xn_copy_from_user(&m, umsg, sizeof(m)))
-		return -EFAULT;
+	if (flags & MSG_CMSG_COMPAT)
+		return -EINVAL;
 
-	return rtdm_fd_sendmsg(fd, &m, flags);
+	ret = __xn_safe_copy_from_user(&m, umsg, sizeof(m));
+
+	return ret ?: rtdm_fd_sendmsg(fd, &m, flags);
 }
 
 COBALT_SYSCALL(mmap, lostage,
@@ -110,20 +114,18 @@ COBALT_SYSCALL(mmap, lostage,
 	void *u_addr = NULL;
 	int ret;
 
-	if (__xn_copy_from_user(&rma, u_rma, sizeof(rma)))
-		return -EFAULT;
+	ret = __xn_safe_copy_from_user(&rma, u_rma, sizeof(rma));
+	if (ret)
+		return ret;
 
 	ret = rtdm_fd_mmap(fd, &rma, &u_addr);
 	if (ret)
 		return ret;
 
-	if (__xn_copy_to_user(u_addrp, &u_addr, sizeof(u_addr)))
-		return -EFAULT;
-
-	return 0;
+	return __xn_safe_copy_to_user(u_addrp, &u_addr, sizeof(u_addr));
 }
 
-static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
+int __cobalt_first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 {
 	int i, fd;
 
@@ -148,8 +150,8 @@ static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 	return -EBADF;
 }
 
-static int select_bind_all(struct xnselector *selector,
-			   fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
+int __cobalt_select_bind_all(struct xnselector *selector,
+			     fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 {
 	unsigned fd, type;
 	int err;
@@ -228,7 +230,7 @@ COBALT_SYSCALL(select, nonrestartable,
 		   to avoid the xnselector allocation in this case, so, we do a
 		   simple test: test if the first file descriptor we find in the
 		   fd_set is an RTDM descriptor or a message queue descriptor. */
-		if (!first_fd_valid_p(in_fds, nfds))
+		if (!__cobalt_first_fd_valid_p(in_fds, nfds))
 			return -EBADF;
 
 		selector = xnmalloc(sizeof(*curr->selector));
@@ -239,7 +241,7 @@ COBALT_SYSCALL(select, nonrestartable,
 
 		/* Bind directly the file descriptors, we do not need to go
 		   through xnselect returning -ECHRNG */
-		if ((err = select_bind_all(selector, in_fds, nfds)))
+		if ((err = __cobalt_select_bind_all(selector, in_fds, nfds)))
 			return err;
 	}
 
@@ -247,7 +249,7 @@ COBALT_SYSCALL(select, nonrestartable,
 		err = xnselect(selector, out_fds, in_fds, nfds, timeout, mode);
 
 		if (err == -ECHRNG) {
-			int err = select_bind_all(selector, out_fds, nfds);
+			int err = __cobalt_select_bind_all(selector, out_fds, nfds);
 			if (err)
 				return err;
 		}

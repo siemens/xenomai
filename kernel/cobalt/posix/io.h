@@ -21,6 +21,12 @@
 
 #include <rtdm/rtdm.h>
 #include <xenomai/posix/syscall.h>
+#include <cobalt/kernel/select.h>
+
+int __cobalt_first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds);
+
+int __cobalt_select_bind_all(struct xnselector *selector,
+			     fd_set *fds[XNSELECT_MAX_TYPES], int nfds);
 
 COBALT_SYSCALL_DECL(open, int,
 		    (const char __user *u_path, int oflag));
