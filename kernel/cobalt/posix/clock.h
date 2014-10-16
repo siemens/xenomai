@@ -84,6 +84,19 @@ static inline int clock_flag(int flag, clockid_t clock_id)
 	return -EINVAL;
 }
 
+int __cobalt_clock_getres(clockid_t clock_id,
+			  struct timespec *ts);
+
+int __cobalt_clock_gettime(clockid_t clock_id,
+			   struct timespec *ts);
+
+int __cobalt_clock_settime(clockid_t clock_id,
+			   const struct timespec *ts);
+
+int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
+			     const struct timespec *rqt,
+			     struct timespec *rmt);
+
 COBALT_SYSCALL_DECL(clock_getres,
 		    int, (clockid_t clock_id,
 			  struct timespec __user *u_ts));

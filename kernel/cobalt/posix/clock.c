@@ -106,10 +106,8 @@ static int do_clock_host_realtime(struct timespec *tp)
 	__val;							\
 })
 
-COBALT_SYSCALL(clock_getres, current,
-	       int, (clockid_t clock_id, struct timespec __user *u_ts))
+int __cobalt_clock_getres(clockid_t clock_id, struct timespec *ts)
 {
-	struct timespec ts;
 	xnticks_t ns;
 	int ret;
 
@@ -117,14 +115,29 @@ COBALT_SYSCALL(clock_getres, current,
 	case CLOCK_REALTIME:
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		ns2ts(&ts, 1);
+		ns2ts(ts, 1);
 		break;
 	default:
 		ret = do_ext_clock(clock_id, get_resolution, ns);
 		if (ret)
 			return ret;
-		ns2ts(&ts, ns);
+		ns2ts(ts, ns);
 	}
+
+	trace_cobalt_clock_getres(clock_id, ts);
+
+	return 0;
+}
+
+COBALT_SYSCALL(clock_getres, current,
+	       int, (clockid_t clock_id, struct timespec __user *u_ts))
+{
+	struct timespec ts;
+	int ret;
+
+	ret = __cobalt_clock_getres(clock_id, &ts);
+	if (ret)
+		return ret;
 
 	if (u_ts && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
 		return -EFAULT;
@@ -134,31 +147,44 @@ COBALT_SYSCALL(clock_getres, current,
 	return 0;
 }
 
-COBALT_SYSCALL(clock_gettime, current,
-	       int, (clockid_t clock_id, struct timespec __user *u_ts))
+int __cobalt_clock_gettime(clockid_t clock_id, struct timespec *ts)
 {
-	struct timespec ts;
 	xnticks_t ns;
 	int ret;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ns2ts(&ts, xnclock_read_realtime(&nkclock));
+		ns2ts(ts, xnclock_read_realtime(&nkclock));
 		break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		ns2ts(&ts, xnclock_read_monotonic(&nkclock));
+		ns2ts(ts, xnclock_read_monotonic(&nkclock));
 		break;
 	case CLOCK_HOST_REALTIME:
-		if (do_clock_host_realtime(&ts) != 0)
+		if (do_clock_host_realtime(ts) != 0)
 			return -EINVAL;
 		break;
 	default:
 		ret = do_ext_clock(clock_id, read_monotonic, ns);
 		if (ret)
 			return ret;
-		ns2ts(&ts, ns);
+		ns2ts(ts, ns);
 	}
+
+	trace_cobalt_clock_gettime(clock_id, ts);
+
+	return 0;
+}
+
+COBALT_SYSCALL(clock_gettime, current,
+	       int, (clockid_t clock_id, struct timespec __user *u_ts))
+{
+	struct timespec ts;
+	int ret;
+
+	ret = __cobalt_clock_gettime(clock_id, &ts);
+	if (ret)
+		return ret;
 
 	if (__xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
 		return -EFAULT;
@@ -168,67 +194,65 @@ COBALT_SYSCALL(clock_gettime, current,
 	return 0;
 }
 
-COBALT_SYSCALL(clock_settime, current,
-	       int, (clockid_t clock_id,
-		     const struct timespec __user *u_ts))
+int __cobalt_clock_settime(clockid_t clock_id, const struct timespec *ts)
 {
-	struct timespec ts;
 	int _ret, ret = 0;
 	xnticks_t now;
 	spl_t s;
 
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-		return -EFAULT;
-
-	if ((unsigned long)ts.tv_nsec >= ONE_BILLION)
+	if ((unsigned long)ts->tv_nsec >= ONE_BILLION)
 		return -EINVAL;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
 		xnlock_get_irqsave(&nklock, s);
 		now = xnclock_read_realtime(&nkclock);
-		xnclock_adjust(&nkclock, (xnsticks_t) (ts2ns(&ts) - now));
+		xnclock_adjust(&nkclock, (xnsticks_t) (ts2ns(ts) - now));
 		xnlock_put_irqrestore(&nklock, s);
 		break;
 	default:
-		_ret = do_ext_clock(clock_id, set_time, ret, &ts);
+		_ret = do_ext_clock(clock_id, set_time, ret, ts);
 		if (_ret || ret)
 			return _ret ?: ret;
 	}
 
-	trace_cobalt_clock_settime(clock_id, &ts);
+	trace_cobalt_clock_settime(clock_id, ts);
 
 	return 0;
 }
 
-COBALT_SYSCALL(clock_nanosleep, nonrestartable,
-	       int, (clockid_t clock_id, int flags,
-		     const struct timespec __user *u_rqt,
-		     struct timespec __user *u_rmt))
+COBALT_SYSCALL(clock_settime, current,
+	       int, (clockid_t clock_id,
+		     const struct timespec __user *u_ts))
 {
-	struct timespec rqt, rmt, *rmtp = NULL;
-	struct xnthread *cur;
-	xnsticks_t rem;
-	int err = 0;
-	spl_t s;
+	struct timespec ts;
 
-	if (u_rmt)
-		rmtp = &rmt;
-
-	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
+	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
 		return -EFAULT;
 
-	trace_cobalt_clock_nanosleep(clock_id, flags, &rqt);
+	return __cobalt_clock_settime(clock_id, &ts);
+}
+
+int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
+			     const struct timespec *rqt,
+			     struct timespec *rmt)
+{
+	struct xnthread *cur;
+	xnsticks_t rem;
+	int ret = 0;
+	spl_t s;
+
+	trace_cobalt_clock_nanosleep(clock_id, flags, rqt);
 
 	if (clock_id != CLOCK_MONOTONIC &&
 	    clock_id != CLOCK_MONOTONIC_RAW &&
 	    clock_id != CLOCK_REALTIME)
 		return -EOPNOTSUPP;
 
-	if (rqt.tv_sec < 0)
+	if (rqt->tv_sec < 0)
 		return -EINVAL;
 
-	if ((unsigned long)rqt.tv_nsec >= ONE_BILLION)
+	if ((unsigned long)rqt->tv_nsec >= ONE_BILLION)
 		return -EINVAL;
 
 	if (flags & ~TIMER_ABSTIME)
@@ -238,16 +262,14 @@ COBALT_SYSCALL(clock_nanosleep, nonrestartable,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnthread_suspend(cur, XNDELAY, ts2ns(&rqt) + 1,
+	xnthread_suspend(cur, XNDELAY, ts2ns(rqt) + 1,
 			 clock_flag(flags, clock_id), NULL);
 
 	if (xnthread_test_info(cur, XNBREAK)) {
-		if (flags == 0 && rmtp) {
+		if (flags == 0 && rmt) {
 			rem = xntimer_get_timeout_stopped(&cur->rtimer);
 			xnlock_put_irqrestore(&nklock, s);
-			ns2ts(rmtp, rem > 1 ? rem : 0);
-			if (__xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
-				return -EFAULT;
+			ns2ts(rmt, rem > 1 ? rem : 0);
 		} else
 			xnlock_put_irqrestore(&nklock, s);
 
@@ -256,7 +278,30 @@ COBALT_SYSCALL(clock_nanosleep, nonrestartable,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
+}
+
+COBALT_SYSCALL(clock_nanosleep, nonrestartable,
+	       int, (clockid_t clock_id, int flags,
+		     const struct timespec __user *u_rqt,
+		     struct timespec __user *u_rmt))
+{
+	struct timespec rqt, rmt, *rmtp = NULL;
+	int ret;
+
+	if (u_rmt)
+		rmtp = &rmt;
+
+	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
+		return -EFAULT;
+
+	ret = __cobalt_clock_nanosleep(clock_id, flags, &rqt, rmtp);
+	if (ret == -EINTR && flags == 0 && rmtp) {
+		if (__xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
+			return -EFAULT;
+	}
+
+	return ret;
 }
 
 int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
