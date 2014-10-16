@@ -259,8 +259,8 @@ out:
 	return ret;
 }
 
-void cobalt_xntimer_gettime(struct xntimer *__restrict__ timer,
-			struct itimerspec *__restrict__ value)
+void __cobalt_timer_getval(struct xntimer *__restrict__ timer,
+			   struct itimerspec *__restrict__ value)
 {
 	if (!xntimer_running_p(timer)) {
 		value->it_value.tv_sec = 0;
@@ -290,11 +290,11 @@ timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 
 	if (!cobalt_call_extension(timer_gettime, &timer->extref,
 				   ret, value) || ret == 0)
-		cobalt_xntimer_gettime(&timer->timerbase, value);
+		__cobalt_timer_getval(&timer->timerbase, value);
 }
 
-int cobalt_xntimer_settime(struct xntimer *__restrict__ timer, int clock_flag,
-			const struct itimerspec *__restrict__ value)
+int __cobalt_timer_setval(struct xntimer *__restrict__ timer, int clock_flag,
+			  const struct itimerspec *__restrict__ value)
 {
 	xnticks_t start, period;
 
@@ -349,8 +349,8 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 	 */
 	xntimer_set_sched(&timer->timerbase, thread->threadbase.sched);
 
-	return cobalt_xntimer_settime(&timer->timerbase,
-				clock_flag(flags, timer->clockid), value);
+	return __cobalt_timer_setval(&timer->timerbase,
+				     clock_flag(flags, timer->clockid), value);
 }
 
 static inline void
@@ -371,10 +371,9 @@ timer_deliver_late(struct cobalt_process *cc, timer_t timerid)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-static inline int
-timer_settime(timer_t timerid, int flags,
-	      const struct itimerspec *__restrict__ value,
-	      struct itimerspec *__restrict__ ovalue)
+int __cobalt_timer_settime(timer_t timerid, int flags,
+			   const struct itimerspec *__restrict__ value,
+			   struct itimerspec *__restrict__ ovalue)
 {
 	struct cobalt_timer *timer;
 	struct cobalt_process *cc;
@@ -413,7 +412,7 @@ out:
 	return ret;
 }
 
-static inline int timer_gettime(timer_t timerid, struct itimerspec *value)
+int __cobalt_timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct cobalt_timer *timer;
 	struct cobalt_process *cc;
@@ -445,22 +444,14 @@ int cobalt_timer_delete(timer_t timerid)
 	return timer_delete(timerid);
 }
 
-COBALT_SYSCALL(timer_create, current,
-	       int, (clockid_t clock,
-		     const struct sigevent __user *u_sev,
-		     timer_t __user *u_tm))
+int __cobalt_timer_create(clockid_t clock,
+			  const struct sigevent *sev,
+			  timer_t __user *u_tm)
 {
-	struct sigevent sev, *evp = NULL;
 	timer_t timerid = 0;
 	int ret;
 
-	if (u_sev) {
-		evp = &sev;
-		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
-			return -EFAULT;
-	}
-
-	ret = timer_create(clock, evp, &timerid);
+	ret = timer_create(clock, sev, &timerid);
 	if (ret)
 		return ret;
 
@@ -472,25 +463,42 @@ COBALT_SYSCALL(timer_create, current,
 	return 0;
 }
 
+COBALT_SYSCALL(timer_create, current,
+	       int, (clockid_t clock,
+		     const struct sigevent __user *u_sev,
+		     timer_t __user *u_tm))
+{
+	struct sigevent sev, *evp = NULL;
+
+	if (u_sev) {
+		evp = &sev;
+		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
+			return -EFAULT;
+	}
+
+	return __cobalt_timer_create(clock, evp, u_tm);
+}
+
 COBALT_SYSCALL(timer_settime, primary,
 	       int, (timer_t tm, int flags,
 		     const struct itimerspec __user *u_newval,
 		     struct itimerspec __user *u_oldval))
 {
-	struct itimerspec newv, oldv, *oldvp;
+	struct itimerspec newv, oldv, *oldvp = &oldv;
 	int ret;
 
-	oldvp = u_oldval == 0 ? NULL : &oldv;
+	if (u_oldval == NULL)
+		oldvp = NULL;
 
 	if (__xn_safe_copy_from_user(&newv, u_newval, sizeof(newv)))
 		return -EFAULT;
 
-	ret = timer_settime(tm, flags, &newv, oldvp);
+	ret = __cobalt_timer_settime(tm, flags, &newv, oldvp);
 	if (ret)
 		return ret;
 
 	if (oldvp && __xn_safe_copy_to_user(u_oldval, oldvp, sizeof(oldv))) {
-		timer_settime(tm, flags, oldvp, NULL);
+		__cobalt_timer_settime(tm, flags, oldvp, NULL);
 		return -EFAULT;
 	}
 
@@ -503,7 +511,7 @@ COBALT_SYSCALL(timer_gettime, current,
 	struct itimerspec val;
 	int ret;
 
-	ret = timer_gettime(tm, &val);
+	ret = __cobalt_timer_gettime(tm, &val);
 	if (ret)
 		return ret;
 
