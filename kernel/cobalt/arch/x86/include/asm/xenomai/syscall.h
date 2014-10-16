@@ -42,8 +42,12 @@
 #define __xn_reg_sp(regs)     ((regs)->sp)
 
 #define __xn_syscall_p(regs)  (__xn_reg_sys(regs) & __COBALT_SYSCALL_BIT)
-#define __xn_syscall(regs)    (__xn_reg_sys(regs) & \
-			       ~(__COBALT_SYSCALL_BIT|__COBALT_SYSCALL_MASK))
+#ifdef CONFIG_XENO_ARCH_SYS3264
+#define __xn_syscall(regs)    __COBALT_CALL32_SYSNR(__xn_reg_sys(regs)	\
+				    & ~__COBALT_SYSCALL_BIT)
+#else
+#define __xn_syscall(regs)    (__xn_reg_sys(regs) & ~__COBALT_SYSCALL_BIT)
+#endif
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {

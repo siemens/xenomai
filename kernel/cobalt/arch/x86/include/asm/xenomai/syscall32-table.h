@@ -24,22 +24,42 @@
  * table. Only preprocessor stuff and syscall entries here.
  */
 
-#ifdef CONFIG_X86_X32
-
-/*
- * When x32 support is enabled, we need thunks for dealing with
- * 32<->64 argument conversion. An additional entry for each
- * __COBALT_CALL_X32 syscall is generated into the table, at a
- * position equal to the original syscall number + __COBALT_X32_BASE
- * as defined in asm/xenomai/syscall32.h.
- */
-
-#define __sysx32__(__name)		\
-	((cobalt_syshand)(cobalt32x_ ## __name))
-
-#define __COBALT_CALL_X32(__name)	\
-	[sc_cobalt_ ## __name + __COBALT_X32_BASE] = __sysx32__(__name),
-
-#endif
+__COBALT_CALL32emu_THUNK(thread_create)
+__COBALT_CALL32emu_THUNK(thread_setschedparam_ex)
+__COBALT_CALL32emu_THUNK(thread_getschedparam_ex)
+__COBALT_CALL32emu_THUNK(sem_open)
+__COBALT_CALL32emu_THUNK(sem_timedwait)
+__COBALT_CALL32emu_THUNK(clock_getres)
+__COBALT_CALL32emu_THUNK(clock_gettime)
+__COBALT_CALL32emu_THUNK(clock_settime)
+__COBALT_CALL32emu_THUNK(clock_nanosleep)
+__COBALT_CALL32emu_THUNK(mutex_timedlock)
+__COBALT_CALL32emu_THUNK(cond_wait_prologue)
+__COBALT_CALL32emu_THUNK(mq_open)
+__COBALT_CALL32emu_THUNK(mq_getattr)
+__COBALT_CALL32emu_THUNK(mq_setattr)
+__COBALT_CALL32emu_THUNK(mq_timedsend)
+__COBALT_CALL32emu_THUNK(mq_timedreceive)
+__COBALT_CALL32emu_THUNK(mq_notify)
+__COBALT_CALL32emu_THUNK(sched_weightprio)
+__COBALT_CALL32emu_THUNK(sched_setconfig_np)
+__COBALT_CALL32emu_THUNK(sched_getconfig_np)
+__COBALT_CALL32emu_THUNK(timer_create)
+__COBALT_CALL32emu_THUNK(timer_settime)
+__COBALT_CALL32emu_THUNK(timer_gettime)
+__COBALT_CALL32emu_THUNK(timerfd_settime)
+__COBALT_CALL32emu_THUNK(timerfd_gettime)
+__COBALT_CALL32emu_THUNK(sigwait)
+__COBALT_CALL32emu_THUNK(sigtimedwait)
+__COBALT_CALL32emu_THUNK(sigwaitinfo)
+__COBALT_CALL32emu_THUNK(sigpending)
+__COBALT_CALL32emu_THUNK(sigqueue)
+__COBALT_CALL32emu_THUNK(monitor_wait)
+__COBALT_CALL32emu_THUNK(event_wait)
+__COBALT_CALL32emu_THUNK(select)
+__COBALT_CALL32emu_THUNK(recvmsg)
+__COBALT_CALL32emu_THUNK(sendmsg)
+__COBALT_CALL32emu_THUNK(mmap)
+__COBALT_CALL32emu_THUNK(backtrace)
 
 #endif /* !_COBALT_X86_ASM_SYSCALL32_TABLE_H */
