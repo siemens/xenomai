@@ -20,6 +20,9 @@ config XENO_ARCH_WANT_TIP
 config XENO_ARCH_FPU
 	def_bool PPC_FPU
 
+config XENO_ARCH_SYS3264
+        def_bool n
+
 menu "Machine/platform-specific options"
 
 config XENO_ARCH_UNLOCKED_SWITCH
