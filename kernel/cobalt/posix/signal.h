@@ -56,6 +56,23 @@ void cobalt_copy_siginfo(int code,
 	}
 }
 
+int __cobalt_sigwait(sigset_t *set);
+
+int __cobalt_sigtimedwait(sigset_t *set,
+			  const struct timespec *timeout,
+			  void __user *u_si,
+			  int (*put_siginfo)(void __user *u_si,
+					     const struct siginfo *si,
+					     int overrun));
+
+int __cobalt_sigwaitinfo(sigset_t *set,
+			 void __user *u_si,
+			 int (*put_siginfo)(void __user *u_si,
+					    const struct siginfo *si,
+					    int overrun));
+
+int __cobalt_sigqueue(pid_t pid, int sig, const union sigval *value);
+
 int cobalt_signal_send(struct cobalt_thread *thread,
 		       struct cobalt_sigpending *sigp,
 		       int group);

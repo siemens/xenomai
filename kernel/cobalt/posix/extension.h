@@ -51,7 +51,7 @@ struct cobalt_extension {
 		int (*signal_queue)(struct cobalt_extref *refthread,
 				    struct cobalt_sigpending *sigp);
 		int (*signal_copyinfo)(struct cobalt_extref *refthread,
-				       struct siginfo __user *u_si,
+				       void __user *u_si,
 				       const struct siginfo *si,
 				       int overrun);
 		int (*sched_yield)(struct cobalt_extref *curref);
