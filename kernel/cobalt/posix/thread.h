@@ -156,12 +156,22 @@ COBALT_SYSCALL_DECL(thread_getstat,
 		    int, (pid_t pid,
 			  struct cobalt_threadstat __user *u_stat));
 
+int __cobalt_thread_setschedparam_ex(unsigned long pth,
+				     int policy,
+				     const struct sched_param_ex *param_ex,
+				     __u32 __user *u_winoff,
+				     int __user *u_promoted);
+
 COBALT_SYSCALL_DECL(thread_setschedparam_ex,
 		    int, (unsigned long pth,
 			  int policy,
 			  const struct sched_param_ex __user *u_param,
 			  __u32 __user *u_winoff,
 			  int __user *u_promoted));
+
+int __cobalt_thread_getschedparam_ex(unsigned long pth,
+				     int __user *u_policy,
+				     struct sched_param_ex *param_ex);
 
 COBALT_SYSCALL_DECL(thread_getschedparam_ex,
 		    int, (unsigned long pth,

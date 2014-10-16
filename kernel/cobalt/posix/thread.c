@@ -439,6 +439,41 @@ static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 	return 0;
 }
 
+int __cobalt_thread_setschedparam_ex(unsigned long pth,
+				     int policy,
+				     const struct sched_param_ex *param_ex,
+				     __u32 __user *u_winoff,
+				     int __user *u_promoted)
+{
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
+	int ret, promoted = 0;
+
+	hkey.u_pth = pth;
+	hkey.mm = current->mm;
+	trace_cobalt_pthread_setschedparam(pth, policy, param_ex);
+
+	thread = thread_lookup(&hkey);
+	if (thread == NULL && u_winoff) {
+		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
+		if (IS_ERR(thread))
+			return PTR_ERR(thread);
+
+		promoted = 1;
+	}
+
+	if (thread)
+		ret = pthread_setschedparam_ex(thread, policy, param_ex);
+	else
+		ret = -EPERM;
+
+	if (ret == 0 &&
+	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
+		ret = -EFAULT;
+
+	return ret;
+}
+
 /*
  * NOTE: there is no cobalt_thread_setschedparam syscall defined by
  * the Cobalt ABI. Useland changes scheduling parameters only via the
@@ -452,36 +487,38 @@ COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 		     int __user *u_promoted))
 {
 	struct sched_param_ex param_ex;
-	struct cobalt_local_hkey hkey;
-	struct cobalt_thread *thread;
-	int ret, promoted = 0;
 
 	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
 
+	return __cobalt_thread_setschedparam_ex(pth, policy, &param_ex,
+						u_winoff, u_promoted);
+}
+
+int __cobalt_thread_getschedparam_ex(unsigned long pth,
+				     int __user *u_policy,
+				     struct sched_param_ex *param_ex)
+{
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
+	int policy, ret;
+
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
-	trace_cobalt_pthread_setschedparam(pth, policy, &param_ex);
-
 	thread = thread_lookup(&hkey);
-	if (thread == NULL && u_winoff) {
-		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
-		if (IS_ERR(thread))
-			return PTR_ERR(thread);
+	if (thread == NULL)
+		return -ESRCH;
 
-		promoted = 1;
-	}
+	ret = pthread_getschedparam_ex(thread, &policy, param_ex);
+	if (ret)
+		return ret;
 
-	if (thread)
-		ret = pthread_setschedparam_ex(thread, policy, &param_ex);
-	else
-		ret = -EPERM;
+	trace_cobalt_pthread_getschedparam(pth, policy, param_ex);
 
-	if (ret == 0 &&
-	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		ret = -EFAULT;
+	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
+		return -EFAULT;
 
-	return ret;
+	return policy;
 }
 
 /*
@@ -495,24 +532,11 @@ COBALT_SYSCALL(thread_getschedparam_ex, current,
 		     struct sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
-	struct cobalt_local_hkey hkey;
-	struct cobalt_thread *thread;
-	int policy, ret;
+	int policy;
 
-	hkey.u_pth = pth;
-	hkey.mm = current->mm;
-	thread = thread_lookup(&hkey);
-	if (thread == NULL)
-		return -ESRCH;
-
-	ret = pthread_getschedparam_ex(thread, &policy, &param_ex);
-	if (ret)
-		return ret;
-
-	trace_cobalt_pthread_getschedparam(pth, policy, &param_ex);
-
-	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
-		return -EFAULT;
+	policy = __cobalt_thread_getschedparam_ex(pth, u_policy, &param_ex);
+	if (policy < 0)
+		return policy;
 
 	return __xn_safe_copy_to_user(u_param, &param_ex, sizeof(param_ex));
 }

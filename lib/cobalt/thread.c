@@ -972,6 +972,8 @@ COBALT_IMPL(int, pthread_yield, (void))
  * - config.tp.nr_windows should define the number of elements present
  * in the config.tp.windows[] array.
  *
+ * @a info is ignored for this request.
+ *
  * @par Settings applicable to SCHED_QUOTA
  *
  * This call manages thread groups running on @a cpu.
@@ -980,10 +982,9 @@ COBALT_IMPL(int, pthread_yield, (void))
  * out. Valid operations are:
  *
  *    - sched_quota_add for creating a new thread group on @a cpu.
- *      The new group identifier will be written back to
- *      config.quota.add.tgid_r upon success. A new group is given no
- *      initial runtime budget when created. sched_quota_set should be
- *      issued to enable it.
+ *      The new group identifier will be written back to info.tgid
+ *      upon success. A new group is given no initial runtime budget
+ *      when created. sched_quota_set should be issued to enable it.
  *
  *    - sched_quota_remove for deleting a thread group on @a cpu. The
  *      group identifier should be passed in config.quota.remove.tgid.
@@ -994,13 +995,10 @@ COBALT_IMPL(int, pthread_yield, (void))
  *      percentage of the quota interval (config.quota.set.quota), and
  *      the peak percentage allowed (config.quota.set.quota_peak).
  *
- *    - sched_quota_get for retrieving the scheduling parameters of a
- *      thread group defined on @a cpu. The group identifier should be
- *      passed in config.quota.get.tgid. The allotted percentage of
- *      the quota interval (config.quota.get.quota_r), and the peak
- *      percentage (config.quota.get.quota_peak_r) will be written to
- *      the given output variables. The result of this operation is
- *      identical to calling sched_getconfig_np().
+ * All three operations fill in the @a config.info structure with the
+ * information reflecting the state of the scheduler on @a cpu with
+ * respect to @a policy, after the requested changes have been
+ * applied.
  *
  * @param len overall length of the configuration data (in bytes).
  *
@@ -1035,14 +1033,30 @@ int sched_setconfig_np(int cpu, int policy,
  * @param cpu processor to retrieve the configuration of.
  *
  * @param policy scheduling policy to which the configuration data
- * applies. Currently, SCHED_TP and SCHED_QUOTA are valid.
+ * applies. Currently, only SCHED_TP and SCHED_QUOTA are valid input.
  *
- * @param config a pointer to a memory area where the configuration
- * data will be copied back. This area must be at least @a *len_r
- * bytes long.
+ * @param[in, out] info a pointer to a memory area for receiving the
+ * configuration data. This area must be at least @a *len_r bytes
+ * long.
  *
- * @param len_r overall length of the configuration data returned (in
- * bytes).
+ * @par SCHED_TP specifics
+ *
+ * On successful return, config->quota.tp contains the TP schedule
+ * active on @a cpu.
+ *
+ * @par SCHED_QUOTA specifics
+ *
+ * On entry, config->quota.get.tgid must contain the thread group
+ * identifier to inquire about.
+ *
+ * On successful exit, config->quota.info contains the information
+ * related to the thread group referenced to by
+ * config->quota.get.tgid.
+ *
+ * @param[in, out] len_r a pointer to a variable for collecting the
+ * overall length of the configuration data returned (in bytes). This
+ * variable must contain the amount of space available in @a config
+ * when the request is issued.
  *
  * @return the number of bytes copied to @a config on success;
  * @return a negative error number if:
@@ -1052,7 +1066,8 @@ int sched_setconfig_np(int cpu, int policy,
  * configuration data.
  *
  * - ESRCH, with @a policy equal to SCHED_QUOTA, if the group
- *   identifier required to perform the operation is not valid.
+ *   identifier required to perform the operation is not valid
+ *   (i.e. config->quota.get.tgid is invalid).
  *
  * - ENOMEM, lack of memory to perform the operation.
  *
