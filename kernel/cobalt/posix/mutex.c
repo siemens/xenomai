@@ -94,40 +94,15 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	xnfree(mutex);
 }
 
-static inline int cobalt_mutex_acquire(struct xnthread *cur,
-				       struct cobalt_mutex *mutex,
-				       int timed,
-				       const struct timespec __user *u_ts)
-{
-	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
-		return -EINVAL;
-
-#if XENO_DEBUG(USER)
-	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
-		return -EPERM;
-#endif
-
-	if (xnsynch_owner_check(&mutex->synchbase, cur) == 0)
-		return -EBUSY;
-
-	return cobalt_mutex_acquire_unchecked(cur, mutex, timed, u_ts);
-}
-
 /* must be called with nklock locked, interrupts off. */
-int cobalt_mutex_acquire_unchecked(struct xnthread *cur,
-				   struct cobalt_mutex *mutex,
-				   int timed,
-				   const struct timespec __user *u_ts)
+int __cobalt_mutex_acquire_unchecked(struct xnthread *cur,
+				     struct cobalt_mutex *mutex,
+				     const struct timespec *ts)
 {
-	struct timespec ts;
-
-	if (timed) {	/* Always called with IRQs on in this case. */
-		if (u_ts == NULL ||
-		    __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-			return -EFAULT;
-		if (ts.tv_nsec >= ONE_BILLION)
+	if (ts) {
+		if (ts->tv_nsec >= ONE_BILLION)
 			return -EINVAL;
-		xnsynch_acquire(&mutex->synchbase, ts2ns(&ts) + 1, XN_REALTIME);
+		xnsynch_acquire(&mutex->synchbase, ts2ns(ts) + 1, XN_REALTIME);
 	} else
 		xnsynch_acquire(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
 
@@ -174,21 +149,57 @@ int cobalt_mutex_release(struct xnthread *cur,
 	return need_resched;
 }
 
-static inline
-int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
-				 int timed, const struct timespec __user *u_ts)
+int __cobalt_mutex_timedlock_break(struct cobalt_mutex_shadow __user *u_mx,
+				   const void __user *u_ts,
+				   int (*fetch_timeout)(struct timespec *ts,
+							const void __user *u_ts))
 {
 	struct xnthread *curr = xnthread_current();
+	struct timespec ts, *tsp = NULL;
+	struct cobalt_mutex *mutex;
+	xnhandle_t handle;
+	spl_t s;
 	int ret;
 
 	/* We need a valid thread handle for the fast lock. */
 	if (curr->handle == XN_NO_HANDLE)
 		return -EPERM;
 
-	ret = cobalt_mutex_acquire(curr, mutex, timed, u_ts);
-	if (ret != -EBUSY)
-		return ret;
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
+redo:
+	xnlock_get_irqsave(&nklock, s);
 
+	mutex = xnregistry_lookup(handle, NULL);
+
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex)) {
+		ret = -EINVAL;
+		goto out;
+	}
+#if XENO_DEBUG(USER)
+	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared)) {
+		ret = -EPERM;
+		goto out;
+	}
+#endif
+	if (xnsynch_owner_check(&mutex->synchbase, curr)) {
+		if (fetch_timeout) {
+			xnlock_put_irqrestore(&nklock, s);
+			ret = fetch_timeout(&ts, u_ts);
+			if (ret)
+				return ret;
+
+			fetch_timeout = NULL;
+			tsp = &ts;
+			goto redo; /* Revalidate handle. */
+		}
+		ret = __cobalt_mutex_acquire_unchecked(curr, mutex, tsp);
+		xnlock_put_irqrestore(&nklock, s);
+		return ret;
+	}
+
+	/* We already own the mutex, something looks wrong. */
+
+	ret = -EBUSY;
 	switch(mutex->attr.type) {
 	case PTHREAD_MUTEX_NORMAL:
 		/* Attempting to relock a normal mutex, deadlock. */
@@ -197,19 +208,21 @@ int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 		       "thread %s deadlocks on non-recursive mutex\n",
 		       curr->name);
 #endif
-		cobalt_mutex_acquire_unchecked(curr, mutex, timed, u_ts);
+		/* Make the caller hang. */
+		__cobalt_mutex_acquire_unchecked(curr, mutex, NULL);
 		break;
 
-		/* Recursive mutexes are handled in user-space, so
-		   these cases can not happen */
 	case PTHREAD_MUTEX_ERRORCHECK:
-		ret = -EINVAL;
-		break;
-
 	case PTHREAD_MUTEX_RECURSIVE:
+		/*
+		 * Recursive mutexes are handled in user-space, so
+		 * these cases should never happen.
+		 */
 		ret = -EINVAL;
 		break;
 	}
+out:
+	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
@@ -359,36 +372,21 @@ COBALT_SYSCALL(mutex_trylock, primary,
 COBALT_SYSCALL(mutex_lock, primary,
 	       int, (struct cobalt_mutex_shadow __user *u_mx))
 {
-	xnhandle_t handle;
-	spl_t s;
-	int err;
+	return __cobalt_mutex_timedlock_break(u_mx, NULL, NULL);
+}
 
-	handle = cobalt_get_handle_from_user(&u_mx->handle);
-
-	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
-					   0, NULL);
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+static inline int mutex_fetch_timeout(struct timespec *ts,
+				      const void __user *u_ts)
+{
+	return u_ts == NULL ? -EFAULT :
+		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
 }
 
 COBALT_SYSCALL(mutex_timedlock, primary,
 	       int, (struct cobalt_mutex_shadow __user *u_mx,
 		     const struct timespec __user *u_ts))
 {
-	xnhandle_t handle;
-	spl_t s;
-	int err;
-
-	handle = cobalt_get_handle_from_user(&u_mx->handle);
-
-	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
-					   1, u_ts);
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return __cobalt_mutex_timedlock_break(u_mx, u_ts, mutex_fetch_timeout);
 }
 
 COBALT_SYSCALL(mutex_unlock, nonrestartable,
