@@ -224,10 +224,9 @@ drain:
 		datp->flags &= ~COBALT_MONITOR_PENDED;
 }
 
-COBALT_SYSCALL(monitor_wait, nonrestartable,
-	       int, (struct cobalt_monitor_shadow __user *u_mon,
-		     int event, const struct timespec __user *u_ts,
-		     int __user *u_ret))
+int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
+			  int event, const struct timespec *ts,
+			  int __user *u_ret)
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
 	struct cobalt_monitor_data *datp;
@@ -235,18 +234,14 @@ COBALT_SYSCALL(monitor_wait, nonrestartable,
 	int ret = 0, opret = 0, info;
 	struct cobalt_monitor *mon;
 	struct xnsynch *synch;
-	struct timespec ts;
 	xnhandle_t handle;
 	xntmode_t tmode;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
-	if (u_ts) {
-		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-			return -EFAULT;
-		timeout = ts2ns(&ts) + 1;
-	}
+	if (ts)
+		timeout = ts2ns(ts) + 1;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -277,7 +272,7 @@ COBALT_SYSCALL(monitor_wait, nonrestartable,
 	}
 	datp->flags |= COBALT_MONITOR_PENDED;
 
-	tmode = u_ts ? mon->tmode : XN_RELATIVE;
+	tmode = ts ? mon->tmode : XN_RELATIVE;
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
 		if ((event & COBALT_MONITOR_WAITDRAIN) == 0 &&
@@ -302,6 +297,24 @@ out:
 	__xn_put_user(opret, u_ret);
 
 	return ret;
+}
+
+COBALT_SYSCALL(monitor_wait, nonrestartable,
+	       int, (struct cobalt_monitor_shadow __user *u_mon,
+		     int event, const struct timespec __user *u_ts,
+		     int __user *u_ret))
+{
+	struct timespec ts, *tsp = NULL;
+	int ret;
+
+	if (u_ts) {
+		tsp = &ts;
+		ret = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts));
+		if (ret)
+			return ret;
+	}
+
+	return __cobalt_monitor_wait(u_mon, event, tsp, u_ret);
 }
 
 COBALT_SYSCALL(monitor_sync, nonrestartable,

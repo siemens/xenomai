@@ -38,6 +38,10 @@ struct cobalt_monitor {
 	xnhandle_t handle;
 };
 
+int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
+			  int event, const struct timespec *ts,
+			  int __user *u_ret);
+
 COBALT_SYSCALL_DECL(monitor_init,
 		    int, (struct cobalt_monitor_shadow __user *u_monsh,
 			  clockid_t clk_id,
