@@ -111,7 +111,6 @@ out:
  */
 #define RELAX_SPOTNR	128
 #define RELAX_HSLOTS	(1 << 8)
-#define RELAX_CALLDEPTH	SIGSHADOW_BACKTRACE_DEPTH
 
 struct relax_record {
 	/* Number of hits for this location */
@@ -124,7 +123,7 @@ struct relax_record {
 		struct backtrace {
 			unsigned long pc;
 			const char *mapname;
-		} backtrace[RELAX_CALLDEPTH];
+		} backtrace[SIGSHADOW_BACKTRACE_DEPTH];
 		/* Program hash value of the caller. */
 		u32 proghash;
 		/* Pid of the caller. */
@@ -201,10 +200,9 @@ void xndebug_notify_relax(struct xnthread *thread, int reason)
 			  sigshadow_int(SIGSHADOW_ACTION_BACKTRACE, reason));
 }
 
-void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
+void xndebug_trace_relax(int nr, unsigned long *backtrace,
 			 int reason)
 {
-	unsigned long backtrace[RELAX_CALLDEPTH];
 	struct relax_record *p, **h;
 	struct vm_area_struct *vma;
 	struct xnthread *thread;
@@ -220,25 +218,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 	thread = xnthread_current();
 	if (thread == NULL)
 		return;		/* Can't be, right? What a mess. */
-	/*
-	 * In case backtrace() in userland is broken or fails. We may
-	 * want to know about this in kernel space however, for future
-	 * use.
-	 */
-	if (nr <= 0)
-		return;
-	/*
-	 * We may omit the older frames if we can't store the full
-	 * backtrace.
-	 */
-	if (nr > RELAX_CALLDEPTH)
-		nr = RELAX_CALLDEPTH;
-	/*
-	 * Fetch the backtrace array, filled with PC values as seen
-	 * from the relaxing thread in user-space. This can't fail
-	 */
-	if (__xn_safe_copy_from_user(backtrace, u_backtrace, nr * sizeof(pc)))
-		return;
+
 	/*
 	 * We compute PC values relative to the base of the shared
 	 * executable mappings we find in the backtrace, which makes

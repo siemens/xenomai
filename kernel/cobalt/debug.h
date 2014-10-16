@@ -54,7 +54,7 @@ static inline void xndebug_shadow_init(struct xnthread *thread)
 #ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
 void xndebug_notify_relax(struct xnthread *thread,
 			  int reason);
-void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
+void xndebug_trace_relax(int nr, unsigned long *backtrace,
 			 int reason);
 #else
 static inline
@@ -62,7 +62,7 @@ void xndebug_notify_relax(struct xnthread *thread, int reason)
 {
 }
 static inline
-void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
+void xndebug_trace_relax(int nr, unsigned long *backtrace,
 			 int reason)
 {
 	/* Simply ignore. */

@@ -65,4 +65,9 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 	return __xn_strncpy_from_user(dst, src, count);
 }
 
+/* 32bit syscall emulation */
+#define __COBALT_COMPAT_BIT	0x1
+/* 32bit syscall emulation - extended form */
+#define __COBALT_COMPATX_BIT	0x2
+
 #endif /* !_COBALT_ASM_GENERIC_SYSCALL_H */

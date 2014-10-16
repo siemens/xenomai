@@ -24,6 +24,7 @@
 #include <linux/socket.h>
 #include <linux/file.h>
 #include <cobalt/kernel/tree.h>
+#include <asm-generic/xenomai/syscall.h>
 
 struct vm_area_struct;
 struct rtdm_fd;
@@ -299,29 +300,47 @@ struct rtdm_fd {
 	unsigned int refs;
 	int minor;
 	int oflags;
+#ifdef CONFIG_COMPAT
+	int compat;
+#endif
 	struct list_head cleanup;
 };
 
 #define RTDM_FD_MAGIC 0x52544446
 
+#define RTDM_FD_COMPAT	__COBALT_COMPAT_BIT
+#define RTDM_FD_COMPATX	__COBALT_COMPATX_BIT
+
 int __rtdm_anon_getfd(const char *name, int flags);
 
 void __rtdm_anon_putfd(int ufd);
 
-static inline struct cobalt_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
+static inline struct cobalt_ppd *rtdm_fd_owner(const struct rtdm_fd *fd)
 {
 	return fd->owner;
 }
 
-static inline int rtdm_fd_minor(struct rtdm_fd *fd)
+static inline int rtdm_fd_minor(const struct rtdm_fd *fd)
 {
 	return fd->minor;
 }
 
-static inline int rtdm_fd_flags(struct rtdm_fd *fd)
+static inline int rtdm_fd_flags(const struct rtdm_fd *fd)
 {
 	return fd->oflags;
 }
+
+#ifdef CONFIG_COMPAT
+static inline int rtdm_fd_compat(const struct rtdm_fd *fd)
+{
+	return fd->compat;
+}
+#else
+static inline int rtdm_fd_compat(const struct rtdm_fd *fd)
+{
+	return 0;
+}
+#endif
 
 int rtdm_fd_enter(struct rtdm_fd *rtdm_fd, int ufd,
 		  unsigned int magic, struct rtdm_fd_ops *ops);

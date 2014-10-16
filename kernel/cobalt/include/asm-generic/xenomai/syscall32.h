@@ -19,8 +19,12 @@
 #ifndef _COBALT_ASM_GENERIC_SYSCALL32_H
 #define _COBALT_ASM_GENERIC_SYSCALL32_H
 
+#define __COBALT_CALL32_INITHAND(__handler)
+
+#define __COBALT_CALL32_INITMODE(__mode)
+
 #define __COBALT_CALL32_ENTRY(__name, __handler)
 
-#define COBALT_SYSCALL32x_DECL(__name, __type, __args)
+#define __COBALT_CALL_COMPAT(__reg)	0
 
 #endif /* !_COBALT_ASM_GENERIC_SYSCALL32_H */

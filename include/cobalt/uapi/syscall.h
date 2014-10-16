@@ -120,6 +120,6 @@
 #define sc_cobalt_extend			97
 #define sc_cobalt_sysconf			98
 
-#define __NR_COBALT_SYSCALLS			100
+#define __NR_COBALT_SYSCALLS			128 /* Power of 2 */
 
 #endif /* !_COBALT_UAPI_SYSCALL_H */

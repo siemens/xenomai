@@ -132,7 +132,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	}
 
 	handler = cobalt_syscalls[nr];
-	sysflags = cobalt_sysmodes[nr];
+	sysflags = cobalt_sysmodes[nr & (__NR_COBALT_SYSCALLS - 1)];
 
 	/*
 	 * Executing Cobalt services requires CAP_SYS_NICE, except for
@@ -313,7 +313,7 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	/* Processing a Xenomai syscall. */
 
 	handler = cobalt_syscalls[nr];
-	sysflags = cobalt_sysmodes[nr];
+	sysflags = cobalt_sysmodes[nr & (__NR_COBALT_SYSCALLS - 1)];
 
 	if ((sysflags & __xn_exec_conforming) != 0)
 		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
@@ -512,7 +512,32 @@ static COBALT_SYSCALL(backtrace, current,
 		      int, (int nr, unsigned long __user *u_backtrace,
 			    int reason))
 {
-	xndebug_trace_relax(nr, u_backtrace, reason);
+	unsigned long backtrace[SIGSHADOW_BACKTRACE_DEPTH];
+	int ret;
+
+	/*
+	 * In case backtrace() in userland is broken or fails. We may
+	 * want to know about this in kernel space however, for future
+	 * use.
+	 */
+	if (nr <= 0)
+		return 0;
+	/*
+	 * We may omit the older frames if we can't store the full
+	 * backtrace.
+	 */
+	if (nr > SIGSHADOW_BACKTRACE_DEPTH)
+		nr = SIGSHADOW_BACKTRACE_DEPTH;
+	/*
+	 * Fetch the backtrace array, filled with PC values as seen
+	 * from the relaxing thread in user-space. This can't fail
+	 */
+	ret = __xn_safe_copy_from_user(backtrace, u_backtrace, nr * sizeof(long));
+	if (ret)
+		return ret;
+
+	xndebug_trace_relax(nr, backtrace, reason);
+
 	return 0;
 }
 
@@ -722,17 +747,17 @@ static int cobalt_ni(void)
  * returning -ENOSYS, as the table may be sparse.
  *
  * - then __COBALT_CALL_ENTRY() produces a native call entry
- * (e.g. pure 64bit call handler for a 64bit architecture), and
- * optionally a set of 32bit syscall entries offset by an
+ * (e.g. pure 64bit call handler for a 64bit architecture), optionally
+ * followed by a set of 32bit syscall entries offset by an
  * arch-specific base index, which default to the native calls. These
- * nitty-gritty details are defined by <asm/xenomai/syscall32.h>. 32bit
- * architectures - or 64bit ones for which we don't support any 32bit
- * ABI model - will simply define __COBALT_CALL32_ENTRY() as an empty
- * macro.
+ * nitty-gritty details are defined by
+ * <asm/xenomai/syscall32.h>. 32bit architectures - or 64bit ones for
+ * which we don't support any 32bit ABI model - will simply define
+ * __COBALT_CALL32_ENTRY() as an empty macro.
  *
- * - finally, pure 32bit call entries are generated per-architecture,
- * by including <asm/xenomai/syscall32-table.h>, overriding the
- * default handlers installed during the previous step.
+ * - finally, 32bit thunk entries are generated per-architecture, by
+ * including <asm/xenomai/syscall32-table.h>, overriding the default
+ * handlers installed during the previous step.
  *
  * For instance, with CONFIG_X86_X32 support enabled in an x86_64
  * kernel, sc_cobalt_mq_timedreceive would appear twice in the table,
@@ -744,7 +769,7 @@ static int cobalt_ni(void)
  *
  * cobalt32x_mq_timedreceive() would do the required thunking for
  * dealing with the 32<->64bit conversion of arguments. On the other
- * hand, sc_cobalt_sched_yield - which do not require any thunking -
+ * hand, sc_cobalt_sched_yield - which do not require any thunk -
  * would also appear twice, but both entries would point at the native
  * syscall implementation:
  *
@@ -762,21 +787,38 @@ static int cobalt_ni(void)
  * routines it may need for handing 32bit calls over their respective
  * 64bit implementation.
  *
- * By convention, there is NO 32bit-specific syscall, which means that
+ * By convention, there is NO pure 32bit syscall, which means that
  * each 32bit syscall defined by a compat ABI interface MUST match a
  * native (64bit) syscall. This is important as we share the call
  * modes (i.e. __xn_exec_ bits) between all ABI models.
  *
  * --rpm
  */
-#define __syshand__(__name)		((cobalt_syshand)(cobalt_ ## __name))
-#define __COBALT_CALL_ENTRY(__name)	[sc_cobalt_ ## __name] = __syshand__(__name)	\
-					__COBALT_CALL32_ENTRY(__name, __syshand__(__name))
-#define __COBALT_MODE(__name, __mode)	[sc_cobalt_ ## __name] = __xn_exec_##__mode
-#define __COBALT_NI			__syshand__(ni)
+#define __syshand__(__name)	((cobalt_syshand)(cobalt_ ## __name))
+
+#define __COBALT_NI	__syshand__(ni)
+
+#define __COBALT_CALL_NI				\
+	[0 ... __NR_COBALT_SYSCALLS-1] = __COBALT_NI	\
+	__COBALT_CALL32_INITHAND(__COBALT_NI)
+
+#define __COBALT_CALL_NFLAGS				\
+	[0 ... __NR_COBALT_SYSCALLS-1] = 0		\
+	__COBALT_CALL32_INITMODE(0)
+
+#define __COBALT_CALL_ENTRY(__name)				\
+	[sc_cobalt_ ## __name] = __syshand__(__name)		\
+	__COBALT_CALL32_ENTRY(__name, __syshand__(__name))
+
+#define __COBALT_MODE(__name, __mode)	\
+	[sc_cobalt_ ## __name] = __xn_exec_##__mode
+
+#ifdef CONFIG_XENO_ARCH_SYS3264
+#include "syscall32.h"
+#endif	
 
 static const cobalt_syshand cobalt_syscalls[] = {
-	[0 ... __NR_COBALT_SYSCALLS-1] = __COBALT_NI,
+	__COBALT_CALL_NI,
 	__COBALT_CALL_ENTRY(thread_create),
 	__COBALT_CALL_ENTRY(thread_getpid),
 	__COBALT_CALL_ENTRY(thread_setschedparam_ex),
@@ -873,14 +915,14 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(backtrace),
 	__COBALT_CALL_ENTRY(serialdbg),
 	__COBALT_CALL_ENTRY(sysconf),
-	__COBALT_CALL_ENTRY(sysctl),
-#ifdef CONFIG_XENO_OPT_SYS3264
+	__COBALT_CALL_ENTRY(sysctl)
+#ifdef CONFIG_XENO_ARCH_SYS3264
 #include <asm/xenomai/syscall32-table.h>
 #endif	
 };
 
 static const int cobalt_sysmodes[] = {
-	[0 ... __NR_COBALT_SYSCALLS-1] = 0,
+	__COBALT_CALL_NFLAGS,
 	__COBALT_MODE(thread_create, init),
 	__COBALT_MODE(thread_getpid, current),
 	__COBALT_MODE(thread_setschedparam_ex, conforming),

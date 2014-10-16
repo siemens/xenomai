@@ -31,6 +31,7 @@
 #include <rtdm/fd.h>
 #include "internal.h"
 #include "posix/process.h"
+#include "posix/syscall.h"
 
 DEFINE_PRIVATE_XNLOCK(fdtree_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
@@ -115,6 +116,29 @@ static struct rtdm_fd *fetch_fd(struct cobalt_ppd *p, int ufd)
 		}							\
 	while (0)
 
+#ifdef CONFIG_COMPAT
+
+static inline void set_compat_bit(struct rtdm_fd *fd)
+{
+	struct pt_regs *regs;
+
+	if (cobalt_ppd_get(0) == &__xnsys_global_ppd)
+		fd->compat = 0;
+	else {
+		regs = task_pt_regs(current);
+		XENO_BUGON(COBALT, !__xn_syscall_p(regs));
+		fd->compat = __COBALT_CALL_COMPAT(__xn_reg_sys(regs));
+	}
+}
+
+#else	/* !CONFIG_COMPAT */
+
+static inline void set_compat_bit(struct rtdm_fd *fd)
+{
+}
+
+#endif	/* !CONFIG_COMPAT */
+
 int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 		  struct rtdm_fd_ops *ops)
 {
@@ -146,6 +170,7 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 	fd->ops = ops;
 	fd->owner = ppd;
 	fd->refs = 1;
+	set_compat_bit(fd);
 
 	idx->fd = fd;
 
@@ -332,8 +357,8 @@ EXPORT_SYMBOL_GPL(rtdm_fd_unlock);
 
 int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 {
-	void __user *arg;
 	struct rtdm_fd *fd;
+	void __user *arg;
 	va_list args;
 	int err, ret;
 
@@ -346,6 +371,8 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 		err = PTR_ERR(fd);
 		goto out;
 	}
+
+	set_compat_bit(fd);
 
 	trace_cobalt_fd_ioctl(current, fd, ufd, request);
 
@@ -384,6 +411,8 @@ rtdm_fd_read(int ufd, void __user *buf, size_t size)
 		goto out;
 	}
 
+	set_compat_bit(fd);
+
 	trace_cobalt_fd_read(current, fd, ufd, size);
 
 	if (ipipe_root_p)
@@ -414,6 +443,8 @@ ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 		err = PTR_ERR(fd);
 		goto out;
 	}
+
+	set_compat_bit(fd);
 
 	trace_cobalt_fd_write(current, fd, ufd, size);
 
@@ -446,6 +477,8 @@ ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags)
 		goto out;
 	}
 
+	set_compat_bit(fd);
+
 	trace_cobalt_fd_recvmsg(current, fd, ufd, flags);
 
 	if (ipipe_root_p)
@@ -454,7 +487,7 @@ ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags)
 		err = fd->ops->recvmsg_rt(fd, msg, flags);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
-		    splnone();
+		splnone();
 
 	rtdm_fd_put(fd);
 out:
@@ -475,6 +508,8 @@ ssize_t rtdm_fd_sendmsg(int ufd, const struct msghdr *msg, int flags)
 		err = PTR_ERR(fd);
 		goto out;
 	}
+
+	set_compat_bit(fd);
 
 	trace_cobalt_fd_sendmsg(current, fd, ufd, flags);
 
@@ -527,6 +562,8 @@ ebadf:
 		return -EBADF;
 	}
 
+	set_compat_bit(fd);
+
 	trace_cobalt_fd_close(current, fd, ufd, fd->refs);
 
 	/*
@@ -556,6 +593,8 @@ int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 		ret = PTR_ERR(fd);
 		goto out;
 	}
+
+	set_compat_bit(fd);
 
 	trace_cobalt_fd_mmap(current, fd, ufd, rma);
 
@@ -615,6 +654,8 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd))
 		return PTR_ERR(fd);
+
+	set_compat_bit(fd);
 
 	rc = fd->ops->select(fd, selector, type, ufd);
 

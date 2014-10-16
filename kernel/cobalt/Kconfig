@@ -257,9 +257,6 @@ config XENO_OPT_VFILE
        depends on PROC_FS
        default y
 
-config XENO_OPT_SYS3264
-       bool
-
 endmenu
 
 menu "Sizes and static limits"
