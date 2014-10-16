@@ -113,7 +113,7 @@ DECLARE_EVENT_CLASS(syscall_exit,
 
 DECLARE_EVENT_CLASS(cobalt_posix_schedparam,
 	TP_PROTO(unsigned long pth, int policy,
-		 struct sched_param_ex *param_ex),
+		 const struct sched_param_ex *param_ex),
 	TP_ARGS(pth, policy, param_ex),
 
 	TP_STRUCT__entry(
@@ -171,19 +171,19 @@ DEFINE_EVENT(syscall_exit, cobalt_root_sysexit,
 
 DEFINE_EVENT(cobalt_posix_schedparam, cobalt_pthread_create,
 	TP_PROTO(unsigned long pth, int policy,
-		 struct sched_param_ex *param_ex),
+		 const struct sched_param_ex *param_ex),
 	TP_ARGS(pth, policy, param_ex)
 );
 
 DEFINE_EVENT(cobalt_posix_schedparam, cobalt_pthread_setschedparam,
 	TP_PROTO(unsigned long pth, int policy,
-		 struct sched_param_ex *param_ex),
+		 const struct sched_param_ex *param_ex),
 	TP_ARGS(pth, policy, param_ex)
 );
 
 DEFINE_EVENT(cobalt_posix_schedparam, cobalt_pthread_getschedparam,
 	TP_PROTO(unsigned long pth, int policy,
-		 struct sched_param_ex *param_ex),
+		 const struct sched_param_ex *param_ex),
 	TP_ARGS(pth, policy, param_ex)
 );
 
@@ -807,29 +807,6 @@ TRACE_EVENT(cobalt_mq_unlink,
 	),
 
 	TP_printk("name=%s", __get_str(name))
-);
-
-TRACE_EVENT(cobalt_mq_timedsend,
-	TP_PROTO(mqd_t mqd, const void __user *u_buf, size_t len,
-		 unsigned int prio, const struct timespec *timeout),
-	TP_ARGS(mqd, u_buf, len, prio, timeout),
-	TP_STRUCT__entry(
-		__field(mqd_t, mqd)
-		__field(const void __user *, u_buf)
-		__field(size_t, len)
-		__field(unsigned int, prio)
-		__timespec_fields(timeout)
-	),
-	TP_fast_assign(
-		__entry->mqd = mqd;
-		__entry->u_buf = u_buf;
-		__entry->len = len;
-		__entry->prio = prio;
-		__assign_timespec(timeout, timeout);
-	),
-	TP_printk("mqd=%d buf=%p len=%Zu prio=%u timeout=(%ld.%09ld)",
-		  __entry->mqd, __entry->u_buf, __entry->len,
-		  __entry->prio, __timespec_args(timeout))
 );
 
 TRACE_EVENT(cobalt_mq_send,

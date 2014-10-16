@@ -29,14 +29,14 @@
 #define sched_ss_max_repl	sched_u.ss.__sched_max_repl
 #endif	/* !SCHED_SPORADIC */
 
-#define sched_rr_quantum	sched_u.rr.__sched_rr_quantum
-
 struct __sched_ss_param {
 	int __sched_low_priority;
 	struct timespec __sched_repl_period;
 	struct timespec __sched_init_budget;
 	int __sched_max_repl;
 };
+
+#define sched_rr_quantum	sched_u.rr.__sched_rr_quantum
 
 struct __sched_rr_param {
 	struct timespec __sched_rr_quantum;
@@ -84,24 +84,28 @@ enum {
 
 struct __sched_config_quota {
 	int op;
-	int *sum_r;
-	struct {
-		int pshared;
-		int *tgid_r;
-	} add;
-	struct {
-		int tgid;
-	} remove;
-	struct {
+	union {
+		struct {
+			int pshared;
+		} add;
+		struct {
+			int tgid;
+		} remove;
+		struct {
+			int tgid;
+			int quota;
+			int quota_peak;
+		} set;
+		struct {
+			int tgid;
+		} get;
+	};
+	struct __sched_quota_info {
 		int tgid;
 		int quota;
 		int quota_peak;
-	} set;
-	struct {
-		int tgid;
-		int *quota_r;
-		int *quota_peak_r;
-	} get;
+		int quota_sum;
+	} info;
 };
 
 #define sched_quota_confsz()  sizeof(struct __sched_config_quota)

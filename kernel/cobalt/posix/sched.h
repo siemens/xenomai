@@ -33,6 +33,29 @@ struct cobalt_sched_group {
 	struct list_head next;
 };
 
+int __cobalt_sched_weightprio(int policy,
+			      const struct sched_param_ex *param_ex);
+
+int __cobalt_sched_setconfig_np(int cpu, int policy,
+				void __user *u_config,
+				size_t len,
+				union sched_config *(*fetch_config)
+				(int policy, const void __user *u_config,
+				 size_t *len),
+				int (*ack_config)(int policy,
+						  const union sched_config *config,
+						  void __user *u_config));
+
+ssize_t __cobalt_sched_getconfig_np(int cpu, int policy,
+				    void __user *u_config,
+				    size_t len,
+				    union sched_config *(*fetch_config)
+				    (int policy, const void __user *u_config,
+				     size_t *len),
+				    ssize_t (*put_config)(int policy,
+							  void __user *u_config,
+							  const union sched_config *config,
+							  size_t len));
 struct xnsched_class *
 cobalt_sched_policy_param(union xnsched_policy_param *param,
 			  int u_policy, const struct sched_param_ex *param_ex,
@@ -51,7 +74,7 @@ COBALT_SYSCALL_DECL(sched_maxprio, int, (int policy));
 COBALT_SYSCALL_DECL(sched_setconfig_np,
 		    int, (int cpu,
 			  int policy,
-			  const union sched_config __user *u_config,
+			  union sched_config __user *u_config,
 			  size_t len));
 
 COBALT_SYSCALL_DECL(sched_getconfig_np,
