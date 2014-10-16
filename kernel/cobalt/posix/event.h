@@ -36,6 +36,11 @@ struct cobalt_event {
 	xnhandle_t handle;
 };
 
+int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
+			unsigned int bits,
+			unsigned int __user *u_bits_r,
+			int mode, const struct timespec *ts);
+
 COBALT_SYSCALL_DECL(event_init,
 		    int, (struct cobalt_event_shadow __user *u_evtsh,
 			  unsigned int value,
@@ -46,7 +51,7 @@ COBALT_SYSCALL_DECL(event_wait,
 			  unsigned int bits,
 			  unsigned int __user *u_bits_r,
 			  int mode,
-			  struct timespec __user *u_ts));
+			  const struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(event_sync,
 		    int, (struct cobalt_event_shadow __user *u_evtsh));

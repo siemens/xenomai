@@ -105,11 +105,10 @@ COBALT_SYSCALL(event_init, current,
 	return __xn_safe_copy_to_user(u_event, &shadow, sizeof(*u_event));
 }
 
-COBALT_SYSCALL(event_wait, primary,
-	       int, (struct cobalt_event_shadow __user *u_event,
-		     unsigned int bits,
-		     unsigned int __user *u_bits_r,
-		     int mode, struct timespec __user *u_ts))
+int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
+			unsigned int bits,
+			unsigned int __user *u_bits_r,
+			int mode, const struct timespec *ts)
 {
 	unsigned int rbits = 0, testval;
 	xnticks_t timeout = XN_INFINITE;
@@ -117,23 +116,20 @@ COBALT_SYSCALL(event_wait, primary,
 	xntmode_t tmode = XN_RELATIVE;
 	struct event_wait_context ewc;
 	struct cobalt_event *event;
-	struct timespec ts;
 	xnhandle_t handle;
 	int ret = 0, info;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_event->handle);
 
-	if (u_ts) {
-		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-			return -EFAULT;
-		timeout = ts2ns(&ts);
+	if (ts) {
+		timeout = ts2ns(ts);
 		if (timeout) {
 			timeout++;
 			tmode = XN_ABSOLUTE;
 		} else
 			timeout = XN_NONBLOCK;
-		trace_cobalt_event_timedwait(u_event, bits, mode, &ts);
+		trace_cobalt_event_timedwait(u_event, bits, mode, ts);
 	} else
 		trace_cobalt_event_wait(u_event, bits, mode);
 
@@ -192,6 +188,25 @@ out:
 		return -EFAULT;
 
 	return ret;
+}
+
+COBALT_SYSCALL(event_wait, primary,
+	       int, (struct cobalt_event_shadow __user *u_event,
+		     unsigned int bits,
+		     unsigned int __user *u_bits_r,
+		     int mode, const struct timespec __user *u_ts))
+{
+	struct timespec ts, *tsp = NULL;
+	int ret;
+
+	if (u_ts) {
+		tsp = &ts;
+		ret = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts));
+		if (ret)
+			return ret;
+	}
+
+	return __cobalt_event_wait(u_event, bits, u_bits_r, mode, tsp);
 }
 
 COBALT_SYSCALL(event_sync, current,
