@@ -42,6 +42,12 @@ struct cobalt_cond {
 	xnhandle_t handle;
 };
 
+int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
+				struct cobalt_mutex_shadow __user *u_mx,
+				int *u_err,
+				void __user *u_ts,
+				int (*fetch_timeout)(struct timespec *ts,
+						     const void __user *u_ts));
 COBALT_SYSCALL_DECL(cond_init,
 		    int, (struct cobalt_cond_shadow __user *u_cnd,
 			  const struct cobalt_condattr __user *u_attr));

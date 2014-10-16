@@ -169,7 +169,6 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 						 struct cobalt_cond *cond,
 						 struct cobalt_mutex *mutex,
-						 int timed,
 						 xnticks_t abs_to)
 {
 	spl_t s;
@@ -212,7 +211,7 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 	}
 
 	/* Wait for another thread to signal the condition. */
-	if (timed)
+	if (abs_to != XN_INFINITE)
 		xnsynch_sleep_on(&cond->synchbase, abs_to,
 				 clock_flag(TIMER_ABSTIME, cond->attr.clock));
 	else
@@ -252,7 +251,7 @@ static inline int cobalt_cond_timedwait_epilogue(struct xnthread *cur,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = cobalt_mutex_acquire_unchecked(cur, mutex, 0, NULL);
+	err = __cobalt_mutex_acquire_unchecked(cur, mutex, NULL);
 	if (err == -EINTR)
 		goto unlock_and_return;
 
@@ -316,13 +315,19 @@ struct us_cond_data {
 	int err;
 };
 
-/* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
-COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
-	       int, (struct cobalt_cond_shadow __user *u_cnd,
-		     struct cobalt_mutex_shadow __user *u_mx,
-		     int *u_err,
-		     unsigned int timed,
-		     struct timespec __user *u_ts))
+static inline int cond_fetch_timeout(struct timespec *ts,
+				     const void __user *u_ts)
+{
+	return u_ts == NULL ? -EFAULT :
+		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+}
+
+int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
+				struct cobalt_mutex_shadow __user *u_mx,
+				int *u_err,
+				void __user *u_ts,
+				int (*fetch_timeout)(struct timespec *ts,
+						     const void __user *u_ts))
 {
 	struct xnthread *cur = xnthread_current();
 	struct cobalt_cond *cond;
@@ -344,19 +349,16 @@ COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
 		cond->state->mutex_datp = datp;
 	}
 
-	if (timed) {
-		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?-EFAULT:0;
+	if (fetch_timeout) {
+		err = fetch_timeout(&ts, u_ts);
 		if (err == 0) {
 			trace_cobalt_cond_timedwait(u_cnd, u_mx, &ts);
-			err = cobalt_cond_timedwait_prologue(cur,
-							     cond, mx, timed,
+			err = cobalt_cond_timedwait_prologue(cur, cond, mx,
 							     ts2ns(&ts) + 1);
 		}
 	} else {
 		trace_cobalt_cond_wait(u_cnd, u_mx);
-		err = cobalt_cond_timedwait_prologue(cur, cond,
-						     mx, timed,
-						     XN_INFINITE);
+		err = cobalt_cond_timedwait_prologue(cur, cond, mx, XN_INFINITE);
 	}
 
 	switch(err) {
@@ -384,6 +386,18 @@ COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
 		__xn_put_user(d.err, u_err);
 
 	return err == 0 ? perr : err;
+}
+
+/* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
+COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
+	       int, (struct cobalt_cond_shadow __user *u_cnd,
+		     struct cobalt_mutex_shadow __user *u_mx,
+		     int *u_err,
+		     unsigned int timed,
+		     struct timespec __user *u_ts))
+{
+	return __cobalt_cond_wait_prologue(u_cnd, u_mx, u_err, u_ts,
+					   timed ? cond_fetch_timeout : NULL);
 }
 
 COBALT_SYSCALL(cond_wait_epilogue, primary,
