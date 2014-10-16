@@ -43,9 +43,9 @@ struct cobalt_tfd {
 
 static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 {
-	unsigned long long __user *u_ticks;
-	unsigned long long ticks = 0;
 	struct cobalt_tfd *tfd;
+	__u64 __user *u_ticks;
+	__u64 ticks = 0;
 	bool aligned;
 	spl_t s;
 	int err;
@@ -54,6 +54,9 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 		return -EINVAL;
 
 	u_ticks = buf;
+	if (!access_wok(u_ticks, sizeof(*u_ticks)))
+		return -EFAULT;
+
 	aligned = (((unsigned long)buf) & (sizeof(ticks) - 1)) == 0;
 
 	tfd = container_of(fd, struct cobalt_tfd, fd);
@@ -230,15 +233,12 @@ static inline void tfd_put(struct cobalt_tfd *tfd)
 	rtdm_fd_put(&tfd->fd);
 }
 
-COBALT_SYSCALL(timerfd_settime, primary,
-	       int, (int fd, int flags,
-		     const struct itimerspec __user *new_value,
-		     struct itimerspec __user *old_value))
+int __cobalt_timerfd_settime(int fd, int flags,
+			     const struct itimerspec *value,
+			     struct itimerspec *ovalue)
 {
-	struct itimerspec ovalue, value;
 	struct cobalt_tfd *tfd;
-	int cflag;
-	int err;
+	int cflag, ret;
 	spl_t s;
 
 	if (flags & ~COBALT_TFD_SETTIME_FLAGS)
@@ -248,57 +248,63 @@ COBALT_SYSCALL(timerfd_settime, primary,
 	if (IS_ERR(tfd))
 		return PTR_ERR(tfd);
 
-	if (!new_value ||
-		__xn_copy_from_user(&value, new_value, sizeof(value))) {
-		err = -EFAULT;
-		goto out;
-	}
-
 	cflag = (flags & TFD_TIMER_ABSTIME) ? TIMER_ABSTIME : 0;
 
 	xnlock_get_irqsave(&nklock, s);
 
+	tfd->target = NULL;
 	if (flags & TFD_WAKEUP) {
 		tfd->target = xnthread_current();
 		if (tfd->target == NULL) {
-			err = -EPERM;
-			goto out_unlock;
+			ret = -EPERM;
+			goto out;
 		}
-	} else
-		tfd->target = NULL;
+	}
 
-	if (old_value)
-		cobalt_xntimer_gettime(&tfd->timer, &ovalue);
+	if (ovalue)
+		__cobalt_timer_getval(&tfd->timer, ovalue);
 
 	xntimer_set_sched(&tfd->timer, xnsched_current());
 
-	err = cobalt_xntimer_settime(&tfd->timer,
-				clock_flag(cflag, tfd->clockid), &value);
-  out_unlock:
+	ret = __cobalt_timer_setval(&tfd->timer,
+				    clock_flag(cflag, tfd->clockid), value);
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (err == 0 && old_value &&
-		__xn_copy_to_user(old_value, &ovalue, sizeof(ovalue))) {
-		xnlock_get_irqsave(&nklock, s);
-		xntimer_stop(&tfd->timer);
-		tfd->target = NULL;
-		xnlock_put_irqrestore(&nklock, s);
-
-		err = -EFAULT;
-	}
-
-  out:
 	tfd_put(tfd);
 
-	return err;
+	return ret;
 }
 
-COBALT_SYSCALL(timerfd_gettime, current,
-	       int, (int fd, struct itimerspec __user *curr_value))
+COBALT_SYSCALL(timerfd_settime, primary,
+	       int, (int fd, int flags,
+		     const struct itimerspec __user *new_value,
+		     struct itimerspec __user *old_value))
 {
-	struct itimerspec value;
+	struct itimerspec ovalue, value;
+	int ret;
+
+	ret = __xn_safe_copy_from_user(&value, new_value, sizeof(value));
+	if (ret)
+		return ret;
+
+	ret = __cobalt_timerfd_settime(fd, flags, &value, &ovalue);
+	if (ret)
+		return ret;
+
+	if (old_value) {
+		ret = __xn_safe_copy_to_user(old_value, &ovalue, sizeof(ovalue));
+		value.it_value.tv_sec = 0;
+		value.it_value.tv_nsec = 0;
+		__cobalt_timerfd_settime(fd, flags, &value, NULL);
+	}
+
+	return ret;
+}
+
+int __cobalt_timerfd_gettime(int fd, struct itimerspec *value)
+{
 	struct cobalt_tfd *tfd;
-	int err = 0;
 	spl_t s;
 
 	tfd = tfd_get(fd);
@@ -306,13 +312,21 @@ COBALT_SYSCALL(timerfd_gettime, current,
 		return PTR_ERR(tfd);
 
 	xnlock_get_irqsave(&nklock, s);
-	cobalt_xntimer_gettime(&tfd->timer, &value);
+	__cobalt_timer_getval(&tfd->timer, value);
 	xnlock_put_irqrestore(&nklock, s);
-
-	if (!curr_value || __xn_copy_to_user(curr_value, &value, sizeof(value)))
-		err = -EFAULT;
 
 	tfd_put(tfd);
 
-	return err;
+	return 0;
+}
+
+COBALT_SYSCALL(timerfd_gettime, current,
+	       int, (int fd, struct itimerspec __user *curr_value))
+{
+	struct itimerspec value;
+	int ret;
+
+	ret = __cobalt_timerfd_gettime(fd, &value);
+
+	return ret ?: __xn_safe_copy_to_user(curr_value, &value, sizeof(value));
 }

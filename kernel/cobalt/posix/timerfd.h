@@ -4,6 +4,13 @@
 #include <linux/time.h>
 #include <xenomai/posix/syscall.h>
 
+int __cobalt_timerfd_settime(int fd, int flags,
+			     const struct itimerspec *new_value,
+			     struct itimerspec *old_value);
+
+int __cobalt_timerfd_gettime(int fd,
+			     struct itimerspec *value);
+
 COBALT_SYSCALL_DECL(timerfd_create,
 		    int, (int clockid, int flags));
 
