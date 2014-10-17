@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <semaphore.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -22,6 +23,8 @@ smokey_test_plugin(xddp,
 );
 
 static pthread_t rt1, rt2, nrt;
+
+static sem_t semsync;
 
 #define XDDP_PORT_LABEL  "xddp-smokey"
 
@@ -59,6 +62,7 @@ static void *realtime_thread1(void *arg)
 
 	FD_ZERO(&set);
 	FD_SET(s, &set);
+	sem_post(&semsync); /* unleash client RT thread */
 
 	for (;;) {
 		control++;
@@ -87,6 +91,19 @@ static void *realtime_thread1(void *arg)
 	}
 
 	return NULL;
+}
+
+static void sem_sync(sem_t *sem)
+{
+	int ret;
+
+	for (;;) {
+		ret = sem_wait(sem);
+		if (ret == 0)
+			return;
+		if (errno != EINTR)
+			fail("sem_wait");
+	}
 }
 
 static void *realtime_thread2(void *arg)
@@ -118,6 +135,9 @@ static void *realtime_thread2(void *arg)
 			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
+
+	sem_sync(&semsync);
+	sem_post(&semsync); /* unleash regular thread */
 
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sipc_family = AF_RTIPC;
@@ -199,6 +219,8 @@ static int run_xddp(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct sched_param param = { .sched_priority = 42 };
 	pthread_attr_t rtattr, regattr;
+
+	sem_init(&semsync, 0, 0);
 
 	pthread_attr_init(&rtattr);
 	pthread_attr_setdetachstate(&rtattr, PTHREAD_CREATE_JOINABLE);
