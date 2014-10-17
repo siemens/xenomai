@@ -63,7 +63,7 @@ dump_info ()
     version=${XENO_VERSION}
     if test -x $XENO_PREFIX/sbin/version; then
 	_version=`$XENO_PREFIX/sbin/version 2>/dev/null`
-	test x$_version = x || version=$_version
+	test x"$_version" = x || version="$_version"
     fi
     echo "Xenomai version: ${version}"
     uname -a 2>/dev/null || echo "Cannot determine system information (uname?)"
