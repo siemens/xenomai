@@ -92,8 +92,8 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
+	struct cobalt_mutex_state *state;
 	struct cobalt_mutexattr kmattr;
-	struct mutex_dat *datp;
 	int err, tmp;
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
@@ -129,14 +129,8 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	if (err)
 		return err;
 
-	if (!_mutex->attr.pshared) {
-		datp = (struct mutex_dat *)
-			(cobalt_umm_private + _mutex->dat_offset);
-		_mutex->dat = datp;
-	} else
-		datp = mutex_get_datp(_mutex);
-
-	cobalt_commit_memory(datp);
+	state = mutex_get_state(_mutex);
+	cobalt_commit_memory(state);
 
 	return err;
 }
@@ -212,9 +206,8 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	unsigned long status;
+	int status, ret;
 	xnhandle_t cur;
-	int err;
 
 	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -230,18 +223,18 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 	 */
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
-		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
-		if (err == 0) {
+		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
+		if (ret == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
 	} else {
-		err = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
-		if (!err)
-			err = -EBUSY;
+		ret = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
+		if (ret == 0)
+			ret = -EBUSY;
 	}
 
-	if (err == -EBUSY)
+	if (ret == -EBUSY)
 		switch(_mutex->attr.type) {
 		case PTHREAD_MUTEX_NORMAL:
 			break;
@@ -256,14 +249,14 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 			return 0;
 		}
 
-	do {
-		err = XENOMAI_SYSCALL1(sc_cobalt_mutex_lock, _mutex);
-	} while (err == -EINTR);
+	do
+		ret = XENOMAI_SYSCALL1(sc_cobalt_mutex_lock, _mutex);
+	while (ret == -EINTR);
 
-	if (!err)
+	if (ret == 0)
 		_mutex->lockcnt = 1;
 
-	return -err;
+	return -ret;
 }
 
 /**
@@ -301,9 +294,8 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	unsigned long status;
+	int status, ret;
 	xnhandle_t cur;
-	int err;
 
 	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -315,18 +307,18 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 	/* See __cobalt_pthread_mutex_lock() */
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
-		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
-		if (err == 0) {
+		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
+		if (ret == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
 	} else {
-		err = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
-		if (!err)
-			err = -EBUSY;
+		ret = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
+		if (ret == 0)
+			ret = -EBUSY;
 	}
 
-	if (err == -EBUSY)
+	if (ret == -EBUSY)
 		switch(_mutex->attr.type) {
 		case PTHREAD_MUTEX_NORMAL:
 			break;
@@ -343,12 +335,12 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 		}
 
 	do {
-		err = XENOMAI_SYSCALL2(sc_cobalt_mutex_timedlock, _mutex, to);
-	} while (err == -EINTR);
+		ret = XENOMAI_SYSCALL2(sc_cobalt_mutex_timedlock, _mutex, to);
+	} while (ret == -EINTR);
 
-	if (!err)
+	if (ret == 0)
 		_mutex->lockcnt = 1;
-	return -err;
+	return -ret;
 }
 
 /**
@@ -379,9 +371,8 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	unsigned long status;
+	int status, err;
 	xnhandle_t cur;
-	int err;
 
 	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -456,8 +447,8 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	struct mutex_dat *datp = NULL;
-	xnhandle_t cur = XN_NO_HANDLE;
+	struct cobalt_mutex_state *state;
+	xnhandle_t cur;
 	int err;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
@@ -467,8 +458,8 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	datp = mutex_get_datp(_mutex);
-	if (xnsynch_fast_owner_check(&datp->owner, cur) != 0)
+	state = mutex_get_state(_mutex);
+	if (xnsynch_fast_owner_check(&state->owner, cur) != 0)
 		return EPERM;
 
 	if (_mutex->lockcnt > 1) {
@@ -476,13 +467,13 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 		return 0;
 	}
 
-	if ((datp->flags & COBALT_MUTEX_COND_SIGNAL))
+	if ((state->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
 
 	if (cobalt_get_current_mode() & XNWEAK)
 		goto do_syscall;
 
-	if (xnsynch_fast_release(&datp->owner, cur))
+	if (xnsynch_fast_release(&state->owner, cur))
 		return 0;
 do_syscall:
 

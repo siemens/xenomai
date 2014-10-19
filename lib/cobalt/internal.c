@@ -45,7 +45,7 @@ int cobalt_sysconf(int option, void *buf, size_t bufsz)
 
 void cobalt_thread_harden(void)
 {
-	unsigned long status = cobalt_get_current_mode();
+	int status = cobalt_get_current_mode();
 
 	/* non-RT shadows are NOT allowed to force primary mode. */
 	if ((status & (XNRELAX|XNWEAK)) == XNRELAX)
@@ -54,7 +54,7 @@ void cobalt_thread_harden(void)
 
 void cobalt_thread_relax(void)
 {
-	unsigned long status = cobalt_get_current_mode();
+	int status = cobalt_get_current_mode();
 
 	if ((status & XNRELAX) == 0)
 		XENOMAI_SYSCALL1(sc_cobalt_migrate, COBALT_SECONDARY);
@@ -161,16 +161,16 @@ size_t cobalt_get_stacksize(size_t size)
 }
 
 static inline
-struct cobalt_monitor_data *get_monitor_data(cobalt_monitor_t *mon)
+struct cobalt_monitor_state *get_monitor_state(cobalt_monitor_t *mon)
 {
 	return mon->flags & COBALT_MONITOR_SHARED ?
-		cobalt_umm_shared + mon->u.data_offset :
-		mon->u.data;
+		cobalt_umm_shared + mon->state_offset :
+		cobalt_umm_private + mon->state_offset;
 }
 
 int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 {
-	struct cobalt_monitor_data *datp;
+	struct cobalt_monitor_state *state;
 	int ret;
 
 	ret = XENOMAI_SYSCALL3(sc_cobalt_monitor_init,
@@ -178,13 +178,8 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 	if (ret)
 		return ret;
 
-	if ((flags & COBALT_MONITOR_SHARED) == 0) {
-		datp = cobalt_umm_private + mon->u.data_offset;
-		mon->u.data = datp;
-	} else
-		datp = get_monitor_data(mon);
-
-	cobalt_commit_memory(datp);
+	state = get_monitor_state(mon);
+	cobalt_commit_memory(state);
 
 	return 0;
 }
@@ -196,9 +191,8 @@ int cobalt_monitor_destroy(cobalt_monitor_t *mon)
 
 int cobalt_monitor_enter(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp;
-	unsigned long status;
-	int ret, oldtype;
+	struct cobalt_monitor_state *state;
+	int status, ret, oldtype;
 	xnhandle_t cur;
 
 	/*
@@ -212,11 +206,11 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 	if (status & (XNRELAX|XNWEAK))
 		goto syscall;
 
-	datp = get_monitor_data(mon);
+	state = get_monitor_state(mon);
 	cur = cobalt_get_current();
-	ret = xnsynch_fast_acquire(&datp->owner, cur);
+	ret = xnsynch_fast_acquire(&state->owner, cur);
 	if (ret == 0) {
-		datp->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
+		state->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
 		return 0;
 	}
 syscall:
@@ -237,16 +231,15 @@ syscall:
 
 int cobalt_monitor_exit(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp;
-	unsigned long status;
+	struct cobalt_monitor_state *state;
+	int status, ret;
 	xnhandle_t cur;
-	int ret;
 
 	__sync_synchronize();
 
-	datp = get_monitor_data(mon);
-	if ((datp->flags & COBALT_MONITOR_PENDED) &&
-	    (datp->flags & COBALT_MONITOR_SIGNALED))
+	state = get_monitor_state(mon);
+	if ((state->flags & COBALT_MONITOR_PENDED) &&
+	    (state->flags & COBALT_MONITOR_SIGNALED))
 		goto syscall;
 
 	status = cobalt_get_current_mode();
@@ -254,7 +247,7 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 		goto syscall;
 
 	cur = cobalt_get_current();
-	if (xnsynch_fast_release(&datp->owner, cur))
+	if (xnsynch_fast_release(&state->owner, cur))
 		return 0;
 syscall:
 	do
@@ -290,21 +283,21 @@ int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
 void cobalt_monitor_grant(cobalt_monitor_t *mon,
 			  struct xnthread_user_window *u_window)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 
-	datp->flags |= COBALT_MONITOR_GRANTED;
+	state->flags |= COBALT_MONITOR_GRANTED;
 	u_window->grant_value = 1;
 }
 
 int cobalt_monitor_grant_sync(cobalt_monitor_t *mon,
 			  struct xnthread_user_window *u_window)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_grant(mon, u_window);
 
-	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+	if ((state->flags & COBALT_MONITOR_PENDED) == 0)
 		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -321,19 +314,19 @@ int cobalt_monitor_grant_sync(cobalt_monitor_t *mon,
 
 void cobalt_monitor_grant_all(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 
-	datp->flags |= COBALT_MONITOR_GRANTED|COBALT_MONITOR_BROADCAST;
+	state->flags |= COBALT_MONITOR_GRANTED|COBALT_MONITOR_BROADCAST;
 }
 
 int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_grant_all(mon);
 
-	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+	if ((state->flags & COBALT_MONITOR_PENDED) == 0)
 		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -350,19 +343,19 @@ int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon)
 
 void cobalt_monitor_drain(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 
-	datp->flags |= COBALT_MONITOR_DRAINED;
+	state->flags |= COBALT_MONITOR_DRAINED;
 }
 
 int cobalt_monitor_drain_sync(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_drain(mon);
 
-	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+	if ((state->flags & COBALT_MONITOR_PENDED) == 0)
 		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -379,19 +372,19 @@ int cobalt_monitor_drain_sync(cobalt_monitor_t *mon)
 
 void cobalt_monitor_drain_all(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 
-	datp->flags |= COBALT_MONITOR_DRAINED|COBALT_MONITOR_BROADCAST;
+	state->flags |= COBALT_MONITOR_DRAINED|COBALT_MONITOR_BROADCAST;
 }
 
 int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 {
-	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+	struct cobalt_monitor_state *state = get_monitor_state(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_drain_all(mon);
 
-	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+	if ((state->flags & COBALT_MONITOR_PENDED) == 0)
 		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -438,30 +431,25 @@ forward:
 }
 
 static inline
-struct cobalt_event_data *get_event_data(cobalt_event_t *event)
+struct cobalt_event_state *get_event_state(cobalt_event_t *event)
 {
 	return event->flags & COBALT_EVENT_SHARED ?
-		cobalt_umm_shared + event->u.data_offset :
-		event->u.data;
+		cobalt_umm_shared + event->state_offset :
+		cobalt_umm_shared + event->state_offset;
 }
 
 int cobalt_event_init(cobalt_event_t *event, unsigned int value,
 		      int flags)
 {
-	struct cobalt_event_data *datp;
+	struct cobalt_event_state *state;
 	int ret;
 
 	ret = XENOMAI_SYSCALL3(sc_cobalt_event_init, event, value, flags);
 	if (ret)
 		return ret;
 
-	if ((flags & COBALT_EVENT_SHARED) == 0) {
-		datp = cobalt_umm_private + event->u.data_offset;
-		event->u.data = datp;
-	} else
-		datp = get_event_data(event);
-
-	cobalt_commit_memory(datp);
+	state = get_event_state(event);
+	cobalt_commit_memory(state);
 
 	return 0;
 }
@@ -473,14 +461,14 @@ int cobalt_event_destroy(cobalt_event_t *event)
 
 int cobalt_event_post(cobalt_event_t *event, unsigned int bits)
 {
-	struct cobalt_event_data *datp = get_event_data(event);
+	struct cobalt_event_state *state = get_event_state(event);
 
 	if (bits == 0)
 		return 0;
 
-	__sync_or_and_fetch(&datp->value, bits); /* full barrier. */
+	__sync_or_and_fetch(&state->value, bits); /* full barrier. */
 
-	if ((datp->flags & COBALT_EVENT_PENDED) == 0)
+	if ((state->flags & COBALT_EVENT_PENDED) == 0)
 		return 0;
 
 	return XENOMAI_SYSCALL1(sc_cobalt_event_sync, event);
@@ -505,9 +493,9 @@ int cobalt_event_wait(cobalt_event_t *event,
 unsigned long cobalt_event_clear(cobalt_event_t *event,
 				 unsigned int bits)
 {
-	struct cobalt_event_data *datp = get_event_data(event);
+	struct cobalt_event_state *state = get_event_state(event);
 
-	return __sync_fetch_and_and(&datp->value, ~bits);
+	return __sync_fetch_and_and(&state->value, ~bits);
 }
 
 int cobalt_event_inquire(cobalt_event_t *event,

@@ -302,6 +302,7 @@ ssize_t get_tp_config(int cpu, void __user *u_config, size_t len,
 		      (int policy, const void __user *u_config,
 		       size_t *len),
 		      ssize_t (*put_config)(int policy, void __user *u_config,
+					    size_t u_len,
 					    const union sched_config *config,
 					    size_t len))
 {
@@ -326,18 +327,12 @@ ssize_t get_tp_config(int cpu, void __user *u_config, size_t len,
 	xnlock_put_irqrestore(&nklock, s);
 
 	elen = sched_tp_confsz(gps->pwin_nr);
-	if (elen > len) {
-		ret = -ENOSPC;
-		goto out;
-	}
-
 	config = xnmalloc(elen);
 	if (config == NULL) {
 		ret = -ENOMEM;
 		goto out;
 	}
 
-	ret = elen;
 	config->tp.nr_windows = gps->pwin_nr;
 	for (n = 0, pp = p = config->tp.windows, pw = w = gps->pwins;
 	     n < gps->pwin_nr; pp = p, p++, pw = w, w++, n++) {
@@ -346,7 +341,7 @@ ssize_t get_tp_config(int cpu, void __user *u_config, size_t len,
 		p->ptid = w->w_part;
 	}
 	ns2ts(&pp->duration, gps->tf_duration - pw->w_offset);
-	ret = put_config(SCHED_TP, u_config, config, elen);
+	ret = put_config(SCHED_TP, u_config, len, config, elen);
 	xnfree(config);
 out:
 	xnsched_tp_put_schedule(gps);
@@ -368,6 +363,7 @@ get_tp_config(int cpu, union sched_config __user *u_config, size_t len,
 	      (int policy, const void __user *u_config,
 	       size_t *len),
 	      ssize_t (*put_config)(int policy, void __user *u_config,
+				    size_t u_len,
 				    const union sched_config *config,
 				    size_t len))
 {
@@ -467,6 +463,7 @@ ssize_t get_quota_config(int cpu, void __user *u_config, size_t len,
 			 (int policy, const void __user *u_config,
 			  size_t *len),
 			 ssize_t (*put_config)(int policy, void __user *u_config,
+					       size_t u_len,
 					       const union sched_config *config,
 					       size_t len))
 {
@@ -476,9 +473,6 @@ ssize_t get_quota_config(int cpu, void __user *u_config, size_t len,
 	struct xnsched *sched;
 	ssize_t ret;
 	spl_t s;
-
-	if (len < sizeof(config->quota))
-		return -EINVAL;
 
 	config = fetch_config(SCHED_QUOTA, u_config, &len);
 	if (IS_ERR(config))
@@ -500,7 +494,7 @@ ssize_t get_quota_config(int cpu, void __user *u_config, size_t len,
 	config->quota.info.quota_sum = xnsched_quota_sum_all(sched);
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = put_config(SCHED_QUOTA, u_config, config, sizeof(*config));
+	ret = put_config(SCHED_QUOTA, u_config, len, config, sizeof(*config));
 	xnfree(config);
 
 	return ret;
@@ -526,6 +520,7 @@ ssize_t get_quota_config(int cpu, void __user *u_config,
 			 (int policy, const void __user *u_config,
 			  size_t *len),
 			 ssize_t (*put_config)(int policy, void __user *u_config,
+					       size_t u_len,
 					       const union sched_config *config,
 					       size_t len))
 {
@@ -542,6 +537,9 @@ sched_fetch_config(int policy, const void __user *u_config, size_t *len)
 
 	if (u_config == NULL)
 		return ERR_PTR(-EFAULT);
+
+	if (policy == SCHED_QUOTA && *len < sizeof(buf->quota))
+		return ERR_PTR(-EINVAL);
 
 	buf = xnmalloc(*len);
 	if (buf == NULL)
@@ -569,7 +567,8 @@ static int sched_ack_config(int policy, const union sched_config *config,
 				       sizeof(u_p->quota.info));
 }
 
-static ssize_t sched_put_config(int policy, void __user *u_config,
+static ssize_t sched_put_config(int policy,
+				void __user *u_config, size_t u_len,
 				const union sched_config *config, size_t len)
 {
 	union sched_config *u_p = u_config;
@@ -577,10 +576,13 @@ static ssize_t sched_put_config(int policy, void __user *u_config,
 	if (u_config == NULL)
 		return -EFAULT;
 
-	if (policy == SCHED_QUOTA)
+	if (policy == SCHED_QUOTA) {
+		if (u_len < sizeof(config->quota))
+			return -EINVAL;
 		return __xn_safe_copy_to_user(&u_p->quota.info, &config->quota.info,
 					      sizeof(u_p->quota.info)) ?:
 			sizeof(u_p->quota.info);
+	}
 
 	return __xn_safe_copy_to_user(u_config, config, len) ?: len;
 }
@@ -646,6 +648,7 @@ ssize_t __cobalt_sched_getconfig_np(int cpu, int policy,
 				     size_t *len),
 				    ssize_t (*put_config)(int policy,
 							  void __user *u_config,
+							  size_t u_len,
 							  const union sched_config *config,
 							  size_t len))
 {

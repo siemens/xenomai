@@ -59,7 +59,7 @@ int __cobalt_sem_destroy(xnhandle_t handle)
 	xnlock_put_irqrestore(&nklock, s);
 
 	cobalt_umm_free(&cobalt_ppd_get(!!(sem->flags & SEM_PSHARED))->umm,
-			sem->datp);
+			sem->state);
 	xnregistry_remove(sem->handle);
 
 	xnfree(sem);
@@ -71,10 +71,10 @@ struct cobalt_sem *
 __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 		  int flags, unsigned int value)
 {
+	struct cobalt_sem_state *state;
 	struct cobalt_sem *sem, *osem;
 	struct cobalt_kqueues *kq;
 	struct cobalt_ppd *sys_ppd;
-	struct sem_dat *datp;
 	int ret, sflags;
 	spl_t s;
 
@@ -92,8 +92,8 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	ksformat(sem->name, sizeof(sem->name), "%s", name);
 
 	sys_ppd = cobalt_ppd_get(!!(flags & SEM_PSHARED));
-	datp = cobalt_umm_alloc(&sys_ppd->umm, sizeof(*datp));
-	if (datp == NULL) {
+	state = cobalt_umm_alloc(&sys_ppd->umm, sizeof(*state));
+	if (state == NULL) {
 		ret = -EAGAIN;
 		goto err_free_sem;
 	}
@@ -142,18 +142,18 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 	xnsynch_init(&sem->synchbase, sflags, NULL);
 
-	sem->datp = datp;
-	atomic_set(&datp->value, value);
-	datp->flags = flags;
+	sem->state = state;
+	atomic_set(&state->value, value);
+	state->flags = flags;
 	sem->flags = flags;
 	sem->owningq = kq;
 	sem->refs = name[0] ? 2 : 1;
 
 	sm->magic = name[0] ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
 	sm->handle = sem->handle;
-	sm->datp_offset = cobalt_umm_offset(&sys_ppd->umm, datp);
+	sm->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
 	if (flags & SEM_PSHARED)
-		sm->datp_offset = -sm->datp_offset;
+		sm->state_offset = -sm->state_offset;
 	xnlock_put_irqrestore(&nklock, s);
 
 	trace_cobalt_psem_init(sem->name, sem->handle, flags, value);
@@ -162,7 +162,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 
 err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
-	cobalt_umm_free(&sys_ppd->umm, datp);
+	cobalt_umm_free(&sys_ppd->umm, state);
 err_free_sem:
 	xnfree(sem);
 out:
@@ -225,7 +225,7 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 		return -EPERM;
 #endif
 
-	if (atomic_sub_return(1, &sem->datp->value) < 0)
+	if (atomic_sub_return(1, &sem->state->value) < 0)
 		return -EAGAIN;
 
 	return 0;
@@ -306,7 +306,7 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 		 * applications ported to Linux happy.
 		 */
 		if (pull_ts) {
-			atomic_inc(&sem->datp->value);
+			atomic_inc(&sem->state->value);
 			xnlock_put_irqrestore(&nklock, s);
 			ret = sem_fetch_timeout(&ts, u_ts);
 			xnlock_get_irqsave(&nklock, s);
@@ -327,7 +327,7 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 			ret = -EINVAL;
 		else if (info & (XNBREAK|XNTIMEO)) {
 			ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
-			atomic_inc(&sem->datp->value);
+			atomic_inc(&sem->state->value);
 		}
 		break;
 	}
@@ -347,18 +347,18 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
 		return -EPERM;
 #endif
 
-	if (atomic_read(&sem->datp->value) == SEM_VALUE_MAX)
+	if (atomic_read(&sem->state->value) == SEM_VALUE_MAX)
 		return -EINVAL;
 
 	if (!bcast) {
-		if (atomic_inc_return(&sem->datp->value) <= 0) {
+		if (atomic_inc_return(&sem->state->value) <= 0) {
 			if (xnsynch_wakeup_one_sleeper(&sem->synchbase))
 				xnsched_run();
 		} else if (sem->flags & SEM_PULSE)
-			atomic_set(&sem->datp->value, 0);
+			atomic_set(&sem->state->value, 0);
 	} else {
-		if (atomic_read(&sem->datp->value) < 0) {
-			atomic_set(&sem->datp->value, 0);
+		if (atomic_read(&sem->state->value) < 0) {
+			atomic_set(&sem->state->value, 0);
 			if (xnsynch_flush(&sem->synchbase, 0) ==
 				XNSYNCH_RESCHED)
 				xnsched_run();
@@ -401,7 +401,7 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 		return -EPERM;
 	}
 
-	*value = atomic_read(&sem->datp->value);
+	*value = atomic_read(&sem->state->value);
 	if ((sem->flags & SEM_REPORT) == 0 && *value < 0)
 		*value = 0;
 
@@ -559,7 +559,7 @@ COBALT_SYSCALL(sem_inquire, current,
 		 * holding any lock, then revalidate the handle.
 		 */
 		if (t == NULL) {
-			val = atomic_read(&sem->datp->value);
+			val = atomic_read(&sem->state->value);
 			if (val >= 0 || u_waitlist == NULL)
 				break;
 			xnlock_put_irqrestore(&nklock, s);
@@ -575,7 +575,7 @@ COBALT_SYSCALL(sem_inquire, current,
 			xnlock_get_irqsave(&nklock, s);
 		} else if (pstamp == nstamp)
 			break;
-		else if (val != atomic_read(&sem->datp->value)) {
+		else if (val != atomic_read(&sem->state->value)) {
 			xnlock_put_irqrestore(&nklock, s);
 			if (t != fbuf)
 				xnfree(t);

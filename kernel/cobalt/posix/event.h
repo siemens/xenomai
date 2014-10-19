@@ -29,7 +29,7 @@ struct cobalt_event {
 	unsigned int magic;
 	unsigned int value;
 	struct xnsynch synch;
-	struct cobalt_event_data *data;
+	struct cobalt_event_state *state;
 	struct cobalt_kqueues *owningq;
 	struct list_head link;
 	int flags;

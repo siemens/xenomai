@@ -94,16 +94,14 @@ static void show_hostrt_diagnostics(void)
 		return;
 	}
 
-	printf("Sequence counter : %u\n",
+	printf("sequence counter : %u\n",
 	       cobalt_vdso->hostrt_data.lock.sequence);
 	printf("wall_time_sec    : %lld\n",
-	       (unsigned long long)cobalt_vdso->hostrt_data.wall_time_sec);
-	printf("wall_time_nsec   : %u\n", cobalt_vdso->hostrt_data.wall_time_nsec);
-	printf("wall_to_monotonic\n");
-	printf("          tv_sec : %jd\n",
-	       (intmax_t)cobalt_vdso->hostrt_data.wall_to_monotonic.tv_sec);
-	printf("         tv_nsec : %ld\n",
-	       cobalt_vdso->hostrt_data.wall_to_monotonic.tv_nsec);
+	       (unsigned long long)cobalt_vdso->hostrt_data.wall_sec);
+	printf("wall_time_nsec   : %u\n", cobalt_vdso->hostrt_data.wall_nsec);
+	printf("wall_to_monotonic_sec    : %lld\n",
+	       (unsigned long long)cobalt_vdso->hostrt_data.wtom_sec);
+	printf("wall_to_monotonic_nsec   : %u\n", cobalt_vdso->hostrt_data.wtom_nsec);
 	printf("cycle_last       : %Lu\n", cobalt_vdso->hostrt_data.cycle_last);
 	printf("mask             : 0x%Lx\n", cobalt_vdso->hostrt_data.mask);
 	printf("mult             : %u\n", cobalt_vdso->hostrt_data.mult);

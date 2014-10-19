@@ -31,7 +31,7 @@ struct cobalt_sem {
 	struct xnsynch synchbase;
 	/** semq */
 	struct list_head link;
-	struct sem_dat *datp;
+	struct cobalt_sem_state *state;
 	int flags;
 	struct cobalt_kqueues *owningq;
 	xnhandle_t handle;
@@ -58,6 +58,11 @@ typedef struct
 #define SEM_VALUE_MAX	(INT_MAX)
 #define SEM_FAILED	NULL
 #define SEM_NAMED	0x80000000
+
+struct cobalt_sem_shadow __user *
+__cobalt_sem_open(struct cobalt_sem_shadow __user *usm,
+		  const char __user *u_name,
+		  int oflags, mode_t mode, unsigned int value);
 
 int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 			   const void __user *u_ts,
@@ -99,9 +104,9 @@ COBALT_SYSCALL_DECL(sem_destroy,
 		    int, (struct cobalt_sem_shadow __user *u_sem));
 
 COBALT_SYSCALL_DECL(sem_open,
-		    int, (struct cobalt_sem_shadow __user *__user *u_addr,
+		    int, (struct cobalt_sem_shadow __user *__user *u_addrp,
 			  const char __user *u_name,
-			  int oflags, mode_t mode, unsigned value));
+			  int oflags, mode_t mode, unsigned int value));
 
 COBALT_SYSCALL_DECL(sem_close,
 		    int, (struct cobalt_sem_shadow __user *usm));

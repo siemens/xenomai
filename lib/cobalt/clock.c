@@ -134,8 +134,8 @@ static int __do_clock_host_realtime(struct timespec *ts)
 		mask = hostrt_data->mask;
 		mult = hostrt_data->mult;
 		shift = hostrt_data->shift;
-		ts->tv_sec = hostrt_data->wall_time_sec;
-		nsec = hostrt_data->wall_time_nsec;
+		ts->tv_sec = hostrt_data->wall_sec;
+		nsec = hostrt_data->wall_nsec;
 	}
 
 	cycle_delta = (now - base) & mask;

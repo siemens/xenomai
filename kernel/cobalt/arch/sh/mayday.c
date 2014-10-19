@@ -19,13 +19,16 @@
 
 #include <linux/types.h>
 #include <linux/ipipe.h>
+#include <linux/vmalloc.h>
 #include <linux/mm.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
 
-void xnarch_setup_mayday_page(void *page)
+static void *mayday;
+
+static inline void setup_mayday(void *page)
 {
 	u16 insn[11];
 
@@ -58,6 +61,27 @@ void xnarch_setup_mayday_page(void *page)
 	memcpy(page, insn, sizeof(insn));
 
 	flush_dcache_page(vmalloc_to_page(page));
+}
+
+int xnarch_init_mayday(void)
+{
+	mayday = vmalloc(PAGE_SIZE);
+	if (mayday == NULL)
+		return -ENOMEM;
+
+	setup_mayday(mayday);
+
+	return 0;
+}
+
+void xnarch_cleanup_mayday(void)
+{
+	vfree(mayday);
+}
+
+void *xnarch_get_mayday_page(void)
+{
+	return mayday;
 }
 
 void xnarch_handle_mayday(struct xnarchtcb *tcb,

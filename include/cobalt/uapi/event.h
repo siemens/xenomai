@@ -20,7 +20,7 @@
 
 #include <cobalt/uapi/kernel/types.h>
 
-struct cobalt_event_data {
+struct cobalt_event_state {
 	__u32 value;
 	__u32 flags;
 #define COBALT_EVENT_PENDED  0x1
@@ -39,12 +39,9 @@ struct cobalt_event;
 #define COBALT_EVENT_ANY  0x1
 
 struct cobalt_event_shadow {
-	xnhandle_t handle;
-	union {
-		struct cobalt_event_data *data;
-		__u32 data_offset;
-	} u;
+	__u32 state_offset;
 	__u32 flags;
+	xnhandle_t handle;
 };
 
 struct cobalt_event_info {

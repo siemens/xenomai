@@ -43,7 +43,7 @@ static inline xnhandle_t cobalt_get_current_fast(void)
 	return cobalt_get_current();
 }
 
-static inline unsigned long cobalt_get_current_mode(void)
+static inline int cobalt_get_current_mode(void)
 {
 	return cobalt_current_window ? cobalt_current_window->state : XNRELAX;
 }
@@ -73,7 +73,7 @@ static inline xnhandle_t cobalt_get_current_fast(void)
 	return (xnhandle_t)(uintptr_t)val ?: XN_NO_HANDLE;
 }
 
-static inline unsigned long cobalt_get_current_mode(void)
+static inline int cobalt_get_current_mode(void)
 {
 	struct xnthread_user_window *window;
 

@@ -19,13 +19,17 @@
 
 #include <linux/types.h>
 #include <linux/ipipe.h>
+#include <linux/vmalloc.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/uapi/syscall.h>
 #include <asm/ptrace.h>
 
-#ifdef CONFIG_X86_32
+static void *mayday;
+#ifdef CONFIG_COMPAT
+static void *mayday_compat;
+#endif
 
-void xnarch_setup_mayday_page(void *page)
+static inline void setup_mayday32(void *page)
 {
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
@@ -58,9 +62,7 @@ void xnarch_setup_mayday_page(void *page)
 	/* no cache flush required. */
 }
 
-#else /* CONFIG_X86_64 */
-
-void xnarch_setup_mayday_page(void *page)
+static inline void setup_mayday64(void *page)
 {
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
@@ -93,7 +95,44 @@ void xnarch_setup_mayday_page(void *page)
 	/* no cache flush required. */
 }
 
-#endif /* CONFIG_X86_64 */
+int xnarch_init_mayday(void)
+{
+	mayday = vmalloc(PAGE_SIZE);
+	if (mayday == NULL)
+		return -ENOMEM;
+
+#ifdef CONFIG_X86_32
+	setup_mayday32(mayday);
+#else
+	setup_mayday64(mayday);
+#ifdef CONFIG_COMPAT
+	mayday_compat = vmalloc(PAGE_SIZE);
+	if (mayday_compat == NULL) {
+		vfree(mayday);
+		return -ENOMEM;
+	}
+	setup_mayday32(mayday_compat);
+#endif
+#endif
+	return 0;
+}
+
+void xnarch_cleanup_mayday(void)
+{
+	vfree(mayday);
+#ifdef CONFIG_COMPAT
+	vfree(mayday_compat);
+#endif
+}
+
+void *xnarch_get_mayday_page(void)
+{
+#if defined(CONFIG_X86_32) || !defined(CONFIG_COMPAT)
+	return mayday;
+#else
+	return test_thread_flag(TIF_IA32) ? mayday_compat : mayday;
+#endif
+}
 
 void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
 			  unsigned long tramp)

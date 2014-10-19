@@ -185,40 +185,46 @@ void __cobalt_sem_unlink(xnhandle_t handle)
 		xnregistry_unlink(xnregistry_key(handle));
 }
 
-COBALT_SYSCALL(sem_open, current,
-	       int, (struct cobalt_sem_shadow __user *__user *u_addr,
-		     const char __user *u_name,
-		     int oflags, mode_t mode, unsigned value))
+struct cobalt_sem_shadow __user *
+__cobalt_sem_open(struct cobalt_sem_shadow __user *usm,
+		  const char __user *u_name,
+		  int oflags, mode_t mode, unsigned int value)
 {
-	struct cobalt_sem_shadow __user *usm;
-	char name[COBALT_MAXNAME + 1];
+	struct filename *filename;
 	struct cobalt_process *cc;
-	long len;
 
 	cc = cobalt_current_process();
 	if (cc == NULL)
-		return -EPERM;
+		return ERR_PTR(-EPERM);
 
-	__xn_get_user(usm, u_addr);
+	filename = getname(u_name);
+	if (IS_ERR(filename))
+		return ERR_CAST(filename);
 
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return len;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-	if (len == 0)
-		return -EINVAL;
-
-	usm = sem_open(cc, usm, name, oflags, mode, value);
-	if (IS_ERR(usm)) {
-		trace_cobalt_psem_open_failed(name, oflags, mode,
+	usm = sem_open(cc, usm, filename->name, oflags, mode, value);
+	if (IS_ERR(usm))
+		trace_cobalt_psem_open_failed(filename->name, oflags, mode,
 					      value, PTR_ERR(usm));
+	putname(filename);
+
+	return usm;
+}
+
+COBALT_SYSCALL(sem_open, current,
+	       int, (struct cobalt_sem_shadow __user *__user *u_addrp,
+		     const char __user *u_name,
+		     int oflags, mode_t mode, unsigned int value))
+{
+	struct cobalt_sem_shadow __user *usm;
+
+	if (__xn_get_user(usm, u_addrp))
+		return -EFAULT;
+
+	usm = __cobalt_sem_open(usm, u_name, oflags, mode, value);
+	if (IS_ERR(usm))
 		return PTR_ERR(usm);
-	}
 
-	__xn_put_user(usm, u_addr);
-
-	return 0;
+	return __xn_put_user(usm, u_addrp) ? -EFAULT : 0;
 }
 
 COBALT_SYSCALL(sem_close, current,

@@ -50,4 +50,8 @@
 #define __maybe_unused	__attribute__((__unused__))
 #endif
 
+#ifndef __aligned
+#define __aligned(__n)	__attribute__((aligned (__n)))
+#endif
+
 #endif /* _BOILERPLATE_COMPILER_H */

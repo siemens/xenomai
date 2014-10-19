@@ -27,18 +27,18 @@ extern void *cobalt_umm_shared;
 
 void cobalt_sigshadow_install_once(void);
 
-static inline struct mutex_dat *mutex_get_datp(struct cobalt_mutex_shadow *shadow)
+static inline
+struct cobalt_mutex_state *mutex_get_state(struct cobalt_mutex_shadow *shadow)
 {
 	if (shadow->attr.pshared)
-		return (struct mutex_dat *)
-			(cobalt_umm_shared + shadow->dat_offset);
+		return cobalt_umm_shared + shadow->state_offset;
 
-	return shadow->dat;
+	return cobalt_umm_private + shadow->state_offset;
 }
 
 static inline atomic_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow)
 {
-	return &mutex_get_datp(shadow)->owner;
+	return &mutex_get_state(shadow)->owner;
 }
 
 void cobalt_thread_init(void);

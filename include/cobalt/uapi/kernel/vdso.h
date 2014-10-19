@@ -21,15 +21,16 @@
 #include <cobalt/uapi/kernel/urw.h>
 
 struct xnvdso_hostrt_data {
-	__u16 live;
-	urw_t lock;
-	__u64 wall_time_sec;
-	__u32 wall_time_nsec;
-	struct timespec wall_to_monotonic;
+	__u64 wall_sec;
+	__u64 wtom_sec;
 	__u64 cycle_last;
 	__u64 mask;
+	__u32 wall_nsec;
+	__u32 wtom_nsec;
 	__u32 mult;
 	__u32 shift;
+	__u32 live;
+	urw_t lock;
 };
 
 /*

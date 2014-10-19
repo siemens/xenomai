@@ -59,24 +59,23 @@ static inline struct cobalt_cond_state *
 get_cond_state(struct cobalt_cond_shadow *shadow)
 {
 	if (xnsynch_is_shared(shadow->handle))
-		return (struct cobalt_cond_state *)(cobalt_umm_shared
-				 + shadow->state_offset);
-	return shadow->state;
+		return cobalt_umm_shared + shadow->state_offset;
+
+	return cobalt_umm_private + shadow->state_offset;
 }
 
-static inline struct mutex_dat *
+static inline struct cobalt_mutex_state *
 get_mutex_state(struct cobalt_cond_shadow *shadow)
 {
 	struct cobalt_cond_state *cond_state = get_cond_state(shadow);
 
-	if (cond_state->mutex_datp == (struct mutex_dat *)~0UL)
+	if (cond_state->mutex_state_offset == ~0U)
 		return NULL;
 
 	if (xnsynch_is_shared(shadow->handle))
-		return (struct mutex_dat *)(cobalt_umm_shared
-					    + cond_state->mutex_datp_offset);
+		return cobalt_umm_shared + cond_state->mutex_state_offset;
 
-	return cond_state->mutex_datp;
+	return cobalt_umm_private + cond_state->mutex_state_offset;
 }
 
 void cobalt_default_condattr_init(void)
@@ -134,18 +133,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 	if (err)
 		return err;
 
-	if (kcattr.pshared)
-		cond_state = get_cond_state(_cnd);
-	else {
-		/*
-		 * This is condvar is local to the current process,
-		 * build a direct pointer for fast access.
-		 */
-		cond_state = (struct cobalt_cond_state *)
-			(cobalt_umm_private + _cnd->state_offset);
-		_cnd->state = cond_state;
-	}
-
+	cond_state = get_cond_state(_cnd);
 	cobalt_commit_memory(cond_state);
 
 	return 0;
@@ -405,8 +393,8 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_mutex_state *mutex_state;
 	struct cobalt_cond_state *cond_state;
-	struct mutex_dat *mutex_state;
 	__u32 pending_signals;
 	xnhandle_t cur;
 	__u32 flags;
@@ -457,8 +445,8 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_mutex_state *mutex_state;
 	struct cobalt_cond_state *cond_state;
-	struct mutex_dat *mutex_state;
 	xnhandle_t cur;
 	__u32 flags;
 

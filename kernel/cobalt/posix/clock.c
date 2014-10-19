@@ -60,8 +60,8 @@ static int do_clock_host_realtime(struct timespec *tp)
 		mask = hostrt_data->mask;
 		mult = hostrt_data->mult;
 		shift = hostrt_data->shift;
-		tp->tv_sec = hostrt_data->wall_time_sec;
-		nsec = hostrt_data->wall_time_nsec;
+		tp->tv_sec = hostrt_data->wall_sec;
+		nsec = hostrt_data->wall_nsec;
 	}
 
 	/*

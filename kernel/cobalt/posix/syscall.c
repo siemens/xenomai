@@ -77,10 +77,6 @@ typedef int (*cobalt_syshand)(unsigned long arg1, unsigned long arg2,
 			      unsigned long arg3, unsigned long arg4,
 			      unsigned long arg5);
 
-static const cobalt_syshand cobalt_syscalls[];
-
-static const int cobalt_sysmodes[];
-
 static void prepare_for_signal(struct task_struct *p,
 			       struct xnthread *thread,
 			       struct pt_regs *regs,
@@ -102,306 +98,6 @@ static void prepare_for_signal(struct task_struct *p,
 	xnthread_test_cancel();
 
 	xnthread_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
-}
-
-static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
-{
-	struct cobalt_process *process;
-	int switched, ret, sigs;
-	struct xnthread *thread;
-	cobalt_syshand handler;
-	struct task_struct *p;
-	unsigned int nr;
-	int sysflags;
-
-	if (!__xn_syscall_p(regs))
-		goto linux_syscall;
-
-	thread = xnthread_current();
-	nr = __xn_syscall(regs);
-
-	trace_cobalt_head_sysentry(thread, nr);
-
-	if (nr >= __NR_COBALT_SYSCALLS)
-		goto bad_syscall;
-
-	process = cobalt_current_process();
-	if (process == NULL) {
-		process = cobalt_search_process(current->mm);
-		cobalt_set_process(process);
-	}
-
-	handler = cobalt_syscalls[nr];
-	sysflags = cobalt_sysmodes[nr & (__NR_COBALT_SYSCALLS - 1)];
-
-	/*
-	 * Executing Cobalt services requires CAP_SYS_NICE, except for
-	 * sc_cobalt_bind which does its own checks.
-	 */
-	if (unlikely((process == NULL && nr != sc_cobalt_bind) ||
-		     (thread == NULL && (sysflags & __xn_exec_shadow) != 0) ||
-		     (!cap_raised(current_cap(), CAP_SYS_NICE) &&
-		      nr != sc_cobalt_bind))) {
-		if (XENO_DEBUG(COBALT))
-			printk(XENO_WARN
-			       "syscall <%d> denied to %s[%d]\n",
-			       nr, current->comm, current->pid);
-		__xn_error_return(regs, -EPERM);
-		goto ret_handled;
-	}
-
-	if (sysflags & __xn_exec_conforming)
-		/*
-		 * If the conforming exec bit is set, turn the exec
-		 * bitmask for the syscall into the most appropriate
-		 * setup for the caller, i.e. Xenomai domain for
-		 * shadow threads, Linux otherwise.
-		 */
-		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
-
-	/*
-	 * Here we have to dispatch the syscall execution properly,
-	 * depending on:
-	 *
-	 * o Whether the syscall must be run into the Linux or Xenomai
-	 * domain, or indifferently in the current Xenomai domain.
-	 *
-	 * o Whether the caller currently runs in the Linux or Xenomai
-	 * domain.
-	 */
-	switched = 0;
-restart:
-	/*
-	 * Process adaptive syscalls by restarting them in the
-	 * opposite domain.
-	 */
-	if (sysflags & __xn_exec_lostage) {
-		/*
-		 * The syscall must run from the Linux domain.
-		 */
-		if (ipd == &xnsched_realtime_domain) {
-			/*
-			 * Request originates from the Xenomai domain:
-			 * relax the caller then invoke the syscall
-			 * handler right after.
-			 */
-			xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
-			switched = 1;
-		} else
-			/*
-			 * Request originates from the Linux domain:
-			 * propagate the event to our Linux-based
-			 * handler, so that the syscall is executed
-			 * from there.
-			 */
-			return KEVENT_PROPAGATE;
-	} else if (sysflags & (__xn_exec_histage | __xn_exec_current)) {
-		/*
-		 * Syscall must run either from the Xenomai domain, or
-		 * from the calling domain.
-		 *
-		 * If the request originates from the Linux domain,
-		 * hand it over to our secondary-mode dispatcher.
-		 * Otherwise, invoke the syscall handler immediately.
-		 */
-		if (ipd != &xnsched_realtime_domain)
-			return KEVENT_PROPAGATE;
-	}
-
-	ret = handler(__xn_reg_arglist(regs));
-	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
-		if (switched) {
-			switched = 0;
-			ret = xnthread_harden();
-			if (ret)
-				goto done;
-		}
-
-		sysflags ^=
-		    (__xn_exec_lostage | __xn_exec_histage |
-		     __xn_exec_adaptive);
-		goto restart;
-	}
-done:
-	__xn_status_return(regs, ret);
-	sigs = 0;
-	if (!xnsched_root_p()) {
-		p = current;
-		if (signal_pending(p) ||
-		    xnthread_test_info(thread, XNKICKED)) {
-			sigs = 1;
-			prepare_for_signal(p, thread, regs, sysflags);
-		} else if (xnthread_test_state(thread, XNWEAK) &&
-			   thread->res_count == 0) {
-			if (switched)
-				switched = 0;
-			else
-				xnthread_relax(0, 0);
-		}
-	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
-		xnthread_harden(); /* -EPERM will be trapped later if needed. */
-
-ret_handled:
-	/* Update the stats and userland-visible state. */
-	if (thread) {
-		xnstat_counter_inc(&thread->stat.xsc);
-		xnthread_sync_window(thread);
-	}
-
-	trace_cobalt_head_sysexit(thread, __xn_reg_rval(regs));
-
-	return KEVENT_STOP;
-
-linux_syscall:
-	if (xnsched_root_p())
-		/*
-		 * The call originates from the Linux domain, either
-		 * from a relaxed shadow or from a regular Linux task;
-		 * just propagate the event so that we will fall back
-		 * to handle_root_syscall().
-		 */
-		return KEVENT_PROPAGATE;
-
-	/*
-	 * From now on, we know that we have a valid shadow thread
-	 * pointer.
-	 *
-	 * The current syscall will eventually fall back to the Linux
-	 * syscall handler if our Linux domain handler does not
-	 * intercept it. Before we let it go, ensure that the current
-	 * thread has properly entered the Linux domain.
-	 */
-	xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
-
-	return KEVENT_PROPAGATE;
-
-bad_syscall:
-	printk(XENO_WARN "bad syscall <%#lx>\n", __xn_syscall(regs));
-	
-	__xn_error_return(regs, -ENOSYS);
-
-	return KEVENT_STOP;
-}
-
-static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
-{
-	int sysflags, switched, ret, sigs;
-	struct xnthread *thread;
-	cobalt_syshand handler;
-	struct task_struct *p;
-	unsigned int nr;
-
-	/*
-	 * Catch cancellation requests pending for user shadows
-	 * running mostly in secondary mode, i.e. XNWEAK. In that
-	 * case, we won't run prepare_for_signal() that frequently, so
-	 * check for cancellation here.
-	 */
-	xnthread_test_cancel();
-
-	if (!__xn_syscall_p(regs))
-		/* Fall back to Linux syscall handling. */
-		return KEVENT_PROPAGATE;
-
-	thread = xnthread_current();
-	/* nr has already been checked in the head domain handler. */
-	nr = __xn_syscall(regs);
-
-	trace_cobalt_root_sysentry(thread, nr);
-
-	/* Processing a Xenomai syscall. */
-
-	handler = cobalt_syscalls[nr];
-	sysflags = cobalt_sysmodes[nr & (__NR_COBALT_SYSCALLS - 1)];
-
-	if ((sysflags & __xn_exec_conforming) != 0)
-		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
-restart:
-	/*
-	 * Process adaptive syscalls by restarting them in the
-	 * opposite domain.
-	 */
-	if (sysflags & __xn_exec_histage) {
-		/*
-		 * This request originates from the Linux domain and
-		 * must be run into the Xenomai domain: harden the
-		 * caller and execute the syscall.
-		 */
-		ret = xnthread_harden();
-		if (ret) {
-			__xn_error_return(regs, ret);
-			goto ret_handled;
-		}
-		switched = 1;
-	} else
-		/*
-		 * We want to run the syscall in the Linux domain.
-		 */
-		switched = 0;
-
-	ret = handler(__xn_reg_arglist(regs));
-	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
-		if (switched) {
-			switched = 0;
-			xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
-		}
-
-		sysflags ^=
-		    (__xn_exec_lostage | __xn_exec_histage |
-		     __xn_exec_adaptive);
-		goto restart;
-	}
-
-	__xn_status_return(regs, ret);
-
-	sigs = 0;
-	if (!xnsched_root_p()) {
-		/*
-		 * We may have gained a shadow TCB from the syscall we
-		 * just invoked, so make sure to fetch it.
-		 */
-		thread = xnthread_current();
-		p = current;
-		if (signal_pending(p)) {
-			sigs = 1;
-			prepare_for_signal(p, thread, regs, sysflags);
-		} else if (xnthread_test_state(thread, XNWEAK) &&
-			   thread->res_count == 0)
-			sysflags |= __xn_exec_switchback;
-	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0
-	    && (switched || xnsched_primary_p()))
-		xnthread_relax(0, 0);
-
-ret_handled:
-	/* Update the stats and userland-visible state. */
-	if (thread) {
-		xnstat_counter_inc(&thread->stat.xsc);
-		xnthread_sync_window(thread);
-	}
-
-	trace_cobalt_root_sysexit(thread, __xn_reg_rval(regs));
-
-	return KEVENT_STOP;
-}
-
-int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
-{
-	if (unlikely(ipipe_root_p))
-		return handle_root_syscall(ipd, regs);
-
-	return handle_head_syscall(ipd, regs);
-}
-
-int ipipe_fastcall_hook(struct pt_regs *regs)
-{
-	int ret;
-
-	ret = handle_head_syscall(&xnsched_realtime_domain, regs);
-	XENO_BUGON(COBALT, ret == KEVENT_PROPAGATE);
-
-	return ret;
 }
 
 static COBALT_SYSCALL(migrate, current, int, (int domain))
@@ -1021,3 +717,305 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(sysconf, current),
 	__COBALT_MODE(sysctl, probing),
 };
+
+static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
+{
+	struct cobalt_process *process;
+	int switched, ret, sigs;
+	struct xnthread *thread;
+	cobalt_syshand handler;
+	struct task_struct *p;
+	unsigned int nr, code;
+	int sysflags;
+
+	if (!__xn_syscall_p(regs))
+		goto linux_syscall;
+
+	thread = xnthread_current();
+	code = __xn_syscall(regs);
+	if (code >= ARRAY_SIZE(cobalt_syscalls))
+		goto bad_syscall;
+
+	nr = code & (__NR_COBALT_SYSCALLS - 1);
+
+	trace_cobalt_head_sysentry(thread, code);
+
+	process = cobalt_current_process();
+	if (process == NULL) {
+		process = cobalt_search_process(current->mm);
+		cobalt_set_process(process);
+	}
+
+	handler = cobalt_syscalls[code];
+	sysflags = cobalt_sysmodes[nr];
+
+	/*
+	 * Executing Cobalt services requires CAP_SYS_NICE, except for
+	 * sc_cobalt_bind which does its own checks.
+	 */
+	if (unlikely((process == NULL && nr != sc_cobalt_bind) ||
+		     (thread == NULL && (sysflags & __xn_exec_shadow) != 0) ||
+		     (!cap_raised(current_cap(), CAP_SYS_NICE) &&
+		      nr != sc_cobalt_bind))) {
+		if (XENO_DEBUG(COBALT))
+			printk(XENO_WARN
+			       "syscall <%d> denied to %s[%d]\n",
+			       nr, current->comm, current->pid);
+		__xn_error_return(regs, -EPERM);
+		goto ret_handled;
+	}
+
+	if (sysflags & __xn_exec_conforming)
+		/*
+		 * If the conforming exec bit is set, turn the exec
+		 * bitmask for the syscall into the most appropriate
+		 * setup for the caller, i.e. Xenomai domain for
+		 * shadow threads, Linux otherwise.
+		 */
+		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
+
+	/*
+	 * Here we have to dispatch the syscall execution properly,
+	 * depending on:
+	 *
+	 * o Whether the syscall must be run into the Linux or Xenomai
+	 * domain, or indifferently in the current Xenomai domain.
+	 *
+	 * o Whether the caller currently runs in the Linux or Xenomai
+	 * domain.
+	 */
+	switched = 0;
+restart:
+	/*
+	 * Process adaptive syscalls by restarting them in the
+	 * opposite domain.
+	 */
+	if (sysflags & __xn_exec_lostage) {
+		/*
+		 * The syscall must run from the Linux domain.
+		 */
+		if (ipd == &xnsched_realtime_domain) {
+			/*
+			 * Request originates from the Xenomai domain:
+			 * relax the caller then invoke the syscall
+			 * handler right after.
+			 */
+			xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+			switched = 1;
+		} else
+			/*
+			 * Request originates from the Linux domain:
+			 * propagate the event to our Linux-based
+			 * handler, so that the syscall is executed
+			 * from there.
+			 */
+			return KEVENT_PROPAGATE;
+	} else if (sysflags & (__xn_exec_histage | __xn_exec_current)) {
+		/*
+		 * Syscall must run either from the Xenomai domain, or
+		 * from the calling domain.
+		 *
+		 * If the request originates from the Linux domain,
+		 * hand it over to our secondary-mode dispatcher.
+		 * Otherwise, invoke the syscall handler immediately.
+		 */
+		if (ipd != &xnsched_realtime_domain)
+			return KEVENT_PROPAGATE;
+	}
+
+	ret = handler(__xn_reg_arglist(regs));
+	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
+		if (switched) {
+			switched = 0;
+			ret = xnthread_harden();
+			if (ret)
+				goto done;
+		}
+
+		sysflags ^=
+		    (__xn_exec_lostage | __xn_exec_histage |
+		     __xn_exec_adaptive);
+		goto restart;
+	}
+done:
+	__xn_status_return(regs, ret);
+	sigs = 0;
+	if (!xnsched_root_p()) {
+		p = current;
+		if (signal_pending(p) ||
+		    xnthread_test_info(thread, XNKICKED)) {
+			sigs = 1;
+			prepare_for_signal(p, thread, regs, sysflags);
+		} else if (xnthread_test_state(thread, XNWEAK) &&
+			   thread->res_count == 0) {
+			if (switched)
+				switched = 0;
+			else
+				xnthread_relax(0, 0);
+		}
+	}
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
+		xnthread_harden(); /* -EPERM will be trapped later if needed. */
+
+ret_handled:
+	/* Update the stats and userland-visible state. */
+	if (thread) {
+		xnstat_counter_inc(&thread->stat.xsc);
+		xnthread_sync_window(thread);
+	}
+
+	trace_cobalt_head_sysexit(thread, __xn_reg_rval(regs));
+
+	return KEVENT_STOP;
+
+linux_syscall:
+	if (xnsched_root_p())
+		/*
+		 * The call originates from the Linux domain, either
+		 * from a relaxed shadow or from a regular Linux task;
+		 * just propagate the event so that we will fall back
+		 * to handle_root_syscall().
+		 */
+		return KEVENT_PROPAGATE;
+
+	/*
+	 * From now on, we know that we have a valid shadow thread
+	 * pointer.
+	 *
+	 * The current syscall will eventually fall back to the Linux
+	 * syscall handler if our Linux domain handler does not
+	 * intercept it. Before we let it go, ensure that the current
+	 * thread has properly entered the Linux domain.
+	 */
+	xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+
+	return KEVENT_PROPAGATE;
+
+bad_syscall:
+	printk(XENO_WARN "bad syscall <%#lx>\n", __xn_syscall(regs));
+	
+	__xn_error_return(regs, -ENOSYS);
+
+	return KEVENT_STOP;
+}
+
+static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
+{
+	int sysflags, switched, ret, sigs;
+	struct xnthread *thread;
+	cobalt_syshand handler;
+	struct task_struct *p;
+	unsigned int nr, code;
+
+	/*
+	 * Catch cancellation requests pending for user shadows
+	 * running mostly in secondary mode, i.e. XNWEAK. In that
+	 * case, we won't run prepare_for_signal() that frequently, so
+	 * check for cancellation here.
+	 */
+	xnthread_test_cancel();
+
+	if (!__xn_syscall_p(regs))
+		/* Fall back to Linux syscall handling. */
+		return KEVENT_PROPAGATE;
+
+	thread = xnthread_current();
+	/* code has already been checked in the head domain handler. */
+	code = __xn_syscall(regs);
+	nr = code & (__NR_COBALT_SYSCALLS - 1);
+
+	trace_cobalt_root_sysentry(thread, code);
+
+	/* Processing a Xenomai syscall. */
+
+	handler = cobalt_syscalls[code];
+	sysflags = cobalt_sysmodes[nr];
+
+	if ((sysflags & __xn_exec_conforming) != 0)
+		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
+restart:
+	/*
+	 * Process adaptive syscalls by restarting them in the
+	 * opposite domain.
+	 */
+	if (sysflags & __xn_exec_histage) {
+		/*
+		 * This request originates from the Linux domain and
+		 * must be run into the Xenomai domain: harden the
+		 * caller and execute the syscall.
+		 */
+		ret = xnthread_harden();
+		if (ret) {
+			__xn_error_return(regs, ret);
+			goto ret_handled;
+		}
+		switched = 1;
+	} else
+		/*
+		 * We want to run the syscall in the Linux domain.
+		 */
+		switched = 0;
+
+	ret = handler(__xn_reg_arglist(regs));
+	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
+		if (switched) {
+			switched = 0;
+			xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+		}
+
+		sysflags ^=
+		    (__xn_exec_lostage | __xn_exec_histage |
+		     __xn_exec_adaptive);
+		goto restart;
+	}
+
+	__xn_status_return(regs, ret);
+
+	sigs = 0;
+	if (!xnsched_root_p()) {
+		/*
+		 * We may have gained a shadow TCB from the syscall we
+		 * just invoked, so make sure to fetch it.
+		 */
+		thread = xnthread_current();
+		p = current;
+		if (signal_pending(p)) {
+			sigs = 1;
+			prepare_for_signal(p, thread, regs, sysflags);
+		} else if (xnthread_test_state(thread, XNWEAK) &&
+			   thread->res_count == 0)
+			sysflags |= __xn_exec_switchback;
+	}
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0
+	    && (switched || xnsched_primary_p()))
+		xnthread_relax(0, 0);
+
+ret_handled:
+	/* Update the stats and userland-visible state. */
+	if (thread) {
+		xnstat_counter_inc(&thread->stat.xsc);
+		xnthread_sync_window(thread);
+	}
+
+	trace_cobalt_root_sysexit(thread, __xn_reg_rval(regs));
+
+	return KEVENT_STOP;
+}
+
+int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
+{
+	if (unlikely(ipipe_root_p))
+		return handle_root_syscall(ipd, regs);
+
+	return handle_head_syscall(ipd, regs);
+}
+
+int ipipe_fastcall_hook(struct pt_regs *regs)
+{
+	int ret;
+
+	ret = handle_head_syscall(&xnsched_realtime_domain, regs);
+	XENO_BUGON(COBALT, ret == KEVENT_PROPAGATE);
+
+	return ret;
+}

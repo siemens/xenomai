@@ -25,7 +25,7 @@
 
 struct cobalt_sem;
 
-struct sem_dat {
+struct cobalt_sem_state {
 	atomic_t value;
 	__u32 flags;
 };
@@ -34,7 +34,7 @@ union cobalt_sem_union {
 	sem_t native_sem;
 	struct cobalt_sem_shadow {
 		__u32 magic;
-		__s32 datp_offset;
+		__s32 state_offset;
 		xnhandle_t handle;
 	} shadow_sem;
 };

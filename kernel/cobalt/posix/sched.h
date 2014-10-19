@@ -53,7 +53,7 @@ ssize_t __cobalt_sched_getconfig_np(int cpu, int policy,
 				    (int policy, const void __user *u_config,
 				     size_t *len),
 				    ssize_t (*put_config)(int policy,
-							  void __user *u_config,
+							  void __user *u_config, size_t u_len,
 							  const union sched_config *config,
 							  size_t len));
 struct xnsched_class *

@@ -20,7 +20,7 @@
 
 #include <cobalt/uapi/kernel/types.h>
 
-struct cobalt_monitor_data {
+struct cobalt_monitor_state {
 	atomic_t owner;
 	__u32 flags;
 #define COBALT_MONITOR_GRANTED    0x01
@@ -33,12 +33,9 @@ struct cobalt_monitor_data {
 struct cobalt_monitor;
 
 struct cobalt_monitor_shadow {
-	xnhandle_t handle;
-	union {
-		struct cobalt_monitor_data *data;
-		__u32 data_offset;
-	} u;
+	__u32 state_offset;
 	__u32 flags;
+	xnhandle_t handle;
 #define COBALT_MONITOR_SHARED     0x1
 #define COBALT_MONITOR_WAITGRANT  0x0
 #define COBALT_MONITOR_WAITDRAIN  0x1

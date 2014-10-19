@@ -53,12 +53,12 @@ COBALT_SYSCALL(monitor_init, current,
 		     clockid_t clk_id, int flags))
 {
 	struct cobalt_monitor_shadow shadow;
-	struct cobalt_monitor_data *datp;
+	struct cobalt_monitor_state *state;
 	struct cobalt_monitor *mon;
 	struct cobalt_kqueues *kq;
 	int pshared, tmode, ret;
 	struct cobalt_umm *umm;
-	unsigned long datoff;
+	unsigned long stateoff;
 	spl_t s;
 
 	tmode = clock_flag(TIMER_ABSTIME, clk_id);
@@ -71,21 +71,21 @@ COBALT_SYSCALL(monitor_init, current,
 
 	pshared = (flags & COBALT_MONITOR_SHARED) != 0;
 	umm = &cobalt_ppd_get(pshared)->umm;
-	datp = cobalt_umm_alloc(umm, sizeof(*datp));
-	if (datp == NULL) {
+	state = cobalt_umm_alloc(umm, sizeof(*state));
+	if (state == NULL) {
 		xnfree(mon);
 		return -EAGAIN;
 	}
 
 	ret = xnregistry_enter_anon(mon, &mon->handle);
 	if (ret) {
-		cobalt_umm_free(umm, datp);
+		cobalt_umm_free(umm, state);
 		xnfree(mon);
 		return ret;
 	}
 
-	mon->data = datp;
-	xnsynch_init(&mon->gate, XNSYNCH_PIP, &datp->owner);
+	mon->state = state;
+	xnsynch_init(&mon->gate, XNSYNCH_PIP, &state->owner);
 	xnsynch_init(&mon->drain, XNSYNCH_PRIO, NULL);
 	mon->flags = flags;
 	mon->tmode = tmode;
@@ -99,12 +99,12 @@ COBALT_SYSCALL(monitor_init, current,
 
 	mon->magic = COBALT_MONITOR_MAGIC;
 
-	datp->flags = 0;
-	datoff = cobalt_umm_offset(umm, datp);
-	XENO_BUGON(COBALT, datoff != (__u32)datoff);
+	state->flags = 0;
+	stateoff = cobalt_umm_offset(umm, state);
+	XENO_BUGON(COBALT, stateoff != (__u32)stateoff);
 	shadow.flags = flags;
 	shadow.handle = mon->handle;
-	shadow.u.data_offset = (__u32)datoff;
+	shadow.state_offset = (__u32)stateoff;
 
 	return __xn_safe_copy_to_user(u_mon, &shadow, sizeof(*u_mon));
 }
@@ -142,7 +142,7 @@ static int monitor_enter(xnhandle_t handle, struct xnthread *curr)
 		break;
 	}
 
-	mon->data->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
+	mon->state->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
 
 	return 0;
 }
@@ -167,7 +167,7 @@ COBALT_SYSCALL(monitor_enter, primary,
 /* nklock held, irqs off */
 static void monitor_wakeup(struct cobalt_monitor *mon)
 {
-	struct cobalt_monitor_data *datp = mon->data;
+	struct cobalt_monitor_state *state = mon->state;
 	struct cobalt_thread *thread, *tmp;
 	struct xnthread *p;
 	int bcast;
@@ -177,8 +177,8 @@ static void monitor_wakeup(struct cobalt_monitor *mon)
 	 * that somebody is actually waiting for it, so we have to
 	 * check both conditions below.
 	 */
-	bcast = (datp->flags & COBALT_MONITOR_BROADCAST) != 0;
-	if ((datp->flags & COBALT_MONITOR_GRANTED) == 0 ||
+	bcast = (state->flags & COBALT_MONITOR_BROADCAST) != 0;
+	if ((state->flags & COBALT_MONITOR_GRANTED) == 0 ||
 	    list_empty(&mon->waiters))
 		goto drain;
 
@@ -212,7 +212,7 @@ drain:
 	 * pending, either one or all, depending on the broadcast
 	 * flag.
 	 */
-	if ((datp->flags & COBALT_MONITOR_DRAINED) != 0 &&
+	if ((state->flags & COBALT_MONITOR_DRAINED) != 0 &&
 	    xnsynch_pended_p(&mon->drain)) {
 		if (bcast)
 			xnsynch_flush(&mon->drain, 0);
@@ -221,7 +221,7 @@ drain:
 	}
 
 	if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
-		datp->flags &= ~COBALT_MONITOR_PENDED;
+		state->flags &= ~COBALT_MONITOR_PENDED;
 }
 
 int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
@@ -229,7 +229,7 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 			  int __user *u_ret)
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
-	struct cobalt_monitor_data *datp;
+	struct cobalt_monitor_state *state;
 	xnticks_t timeout = XN_INFINITE;
 	int ret = 0, opret = 0, info;
 	struct cobalt_monitor *mon;
@@ -256,8 +256,8 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	 * it wants to sleep on: wake up satisfied waiters before
 	 * going to sleep.
 	 */
-	datp = mon->data;
-	if (datp->flags & COBALT_MONITOR_SIGNALED)
+	state = mon->state;
+	if (state->flags & COBALT_MONITOR_SIGNALED)
 		monitor_wakeup(mon);
 
 	/* Release the gate prior to waiting, all atomically. */
@@ -270,7 +270,7 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 		curr->threadbase.u_window->grant_value = 0;
 		list_add_tail(&curr->monitor_link, &mon->waiters);
 	}
-	datp->flags |= COBALT_MONITOR_PENDED;
+	state->flags |= COBALT_MONITOR_PENDED;
 
 	tmode = ts ? mon->tmode : XN_RELATIVE;
 	info = xnsynch_sleep_on(synch, timeout, tmode);
@@ -280,7 +280,7 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 			list_del_init(&curr->monitor_link);
 
 		if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
-			datp->flags &= ~COBALT_MONITOR_PENDED;
+			state->flags &= ~COBALT_MONITOR_PENDED;
 
 		if (info & XNBREAK) {
 			opret = -EINTR;
@@ -334,7 +334,7 @@ COBALT_SYSCALL(monitor_sync, nonrestartable,
 	mon = xnregistry_lookup(handle, NULL);
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
-	else if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
+	else if (mon->state->flags & COBALT_MONITOR_SIGNALED) {
 		monitor_wakeup(mon);
 		xnsynch_release(&mon->gate, curr);
 		xnsched_run();
@@ -364,7 +364,7 @@ COBALT_SYSCALL(monitor_exit, primary,
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
 	else {
-		if (mon->data->flags & COBALT_MONITOR_SIGNALED)
+		if (mon->state->flags & COBALT_MONITOR_SIGNALED)
 			monitor_wakeup(mon);
 
 		xnsynch_release(&mon->gate, curr);
@@ -392,14 +392,14 @@ static void monitor_destroy(struct cobalt_monitor *mon,
 
 	pshared = (mon->flags & COBALT_MONITOR_SHARED) != 0;
 	umm = &cobalt_ppd_get(pshared)->umm;
-	cobalt_umm_free(umm, mon->data);
+	cobalt_umm_free(umm, mon->state);
 	xnfree(mon);
 }
 
 COBALT_SYSCALL(monitor_destroy, primary,
 	       int, (struct cobalt_monitor_shadow __user *u_mon))
 {
-	struct cobalt_monitor_data *datp;
+	struct cobalt_monitor_state *state;
 	struct cobalt_monitor *mon;
 	struct xnthread *curr;
 	xnhandle_t handle;
@@ -417,8 +417,8 @@ COBALT_SYSCALL(monitor_destroy, primary,
 		goto fail;
 	}
 
-	datp = mon->data;
-	if ((datp->flags & COBALT_MONITOR_PENDED) != 0 ||
+	state = mon->state;
+	if ((state->flags & COBALT_MONITOR_PENDED) != 0 ||
 	    xnsynch_pended_p(&mon->drain) || !list_empty(&mon->waiters)) {
 		ret = -EBUSY;
 		goto fail;

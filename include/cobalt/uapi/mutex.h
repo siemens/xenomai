@@ -22,7 +22,7 @@
 
 #define COBALT_MUTEX_MAGIC  0x86860303
 
-struct mutex_dat {
+struct cobalt_mutex_state {
 	atomic_t owner;
 	__u32 flags;
 #define COBALT_MUTEX_COND_SIGNAL 0x00000001
@@ -34,11 +34,8 @@ union cobalt_mutex_union {
 	struct cobalt_mutex_shadow {
 		__u32 magic;
 		__u32 lockcnt;
+		__u32 state_offset;
 		xnhandle_t handle;
-		union {
-			__u32 dat_offset;
-			struct mutex_dat *dat;
-		};
 		struct cobalt_mutexattr attr;
 	} shadow_mutex;
 };

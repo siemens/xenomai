@@ -54,7 +54,7 @@ COBALT_SYSCALL_DECL(sendmsg, ssize_t,
 
 COBALT_SYSCALL_DECL(mmap, int,
 		    (int fd, struct _rtdm_mmap_request __user *u_rma,
-		     void __user **u_addrp));
+		     void __user * __user *u_addrp));
 
 COBALT_SYSCALL_DECL(select,
 		    int, (int nfds,

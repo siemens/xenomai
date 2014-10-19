@@ -23,7 +23,11 @@ struct xnarchtcb;
 struct task_struct;
 struct pt_regs;
 
-void xnarch_setup_mayday_page(void *page);
+int xnarch_init_mayday(void);
+
+void xnarch_cleanup_mayday(void);
+
+void *xnarch_get_mayday_page(void);
 
 void xnarch_handle_mayday(struct xnarchtcb *tcb,
 			  struct pt_regs *regs,

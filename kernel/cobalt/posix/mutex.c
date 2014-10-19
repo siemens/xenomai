@@ -24,7 +24,7 @@
 
 static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 				   struct cobalt_mutex *mutex,
-				   struct mutex_dat *datp,
+				   struct cobalt_mutex_state *state,
 				   const struct cobalt_mutexattr *attr)
 {
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
@@ -44,15 +44,15 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	shadow->lockcnt = 0;
 
 	shadow->attr = *attr;
-	shadow->dat_offset = cobalt_umm_offset(&sys_ppd->umm, datp);
+	shadow->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
 
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
 
 	mutex->magic = COBALT_MUTEX_MAGIC;
-	xnsynch_init(&mutex->synchbase, synch_flags, &datp->owner);
-	datp->flags = (attr->type == PTHREAD_MUTEX_ERRORCHECK
-		       ? COBALT_MUTEX_ERRORCHECK : 0);
+	xnsynch_init(&mutex->synchbase, synch_flags, &state->owner);
+	state->flags = (attr->type == PTHREAD_MUTEX_ERRORCHECK
+			? COBALT_MUTEX_ERRORCHECK : 0);
 	mutex->attr = *attr;
 	mutex->owningq = kq;
 	INIT_LIST_HEAD(&mutex->conds);
@@ -121,8 +121,8 @@ int __cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 int cobalt_mutex_release(struct xnthread *cur,
 			 struct cobalt_mutex *mutex)
 {
+	struct cobalt_mutex_state *state;
 	struct cobalt_cond *cond;
-	struct mutex_dat *datp;
 	unsigned long flags;
 	int need_resched;
 
@@ -133,11 +133,11 @@ int cobalt_mutex_release(struct xnthread *cur,
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
 		return -EPERM;
 #endif
-	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
-	flags = datp->flags;
+	state = container_of(mutex->synchbase.fastlock, struct cobalt_mutex_state, owner);
+	flags = state->flags;
 	need_resched = 0;
 	if ((flags & COBALT_MUTEX_COND_SIGNAL)) {
-		datp->flags = flags & ~COBALT_MUTEX_COND_SIGNAL;
+		state->flags = flags & ~COBALT_MUTEX_COND_SIGNAL;
 		if (!list_empty(&mutex->conds)) {
 			list_for_each_entry(cond, &mutex->conds, mutex_link)
 				need_resched |=
@@ -253,10 +253,10 @@ COBALT_SYSCALL(mutex_init, current,
 	       int, (struct cobalt_mutex_shadow __user *u_mx,
 		     const struct cobalt_mutexattr __user *u_attr))
 {
+	struct cobalt_mutex_state *state;
 	struct cobalt_mutexattr attr;
-	struct cobalt_mutex *mutex;
 	struct cobalt_mutex_shadow mx;
-	struct mutex_dat *datp;
+	struct cobalt_mutex *mutex;
 	int err;
 
 	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
@@ -269,17 +269,17 @@ COBALT_SYSCALL(mutex_init, current,
 	if (mutex == NULL)
 		return -ENOMEM;
 
-	datp = cobalt_umm_alloc(&cobalt_ppd_get(attr.pshared)->umm,
-				sizeof(*datp));
-	if (datp == NULL) {
+	state = cobalt_umm_alloc(&cobalt_ppd_get(attr.pshared)->umm,
+				 sizeof(*state));
+	if (state == NULL) {
 		xnfree(mutex);
 		return -EAGAIN;
 	}
 
-	err = cobalt_mutex_init_inner(&mx, mutex, datp, &attr);
+	err = cobalt_mutex_init_inner(&mx, mutex, state, &attr);
 	if (err) {
 		xnfree(mutex);
-		cobalt_umm_free(&cobalt_ppd_get(attr.pshared)->umm, datp);
+		cobalt_umm_free(&cobalt_ppd_get(attr.pshared)->umm, state);
 		return err;
 	}
 

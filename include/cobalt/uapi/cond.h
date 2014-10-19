@@ -24,21 +24,15 @@
 
 struct cobalt_cond_state {
 	__u32 pending_signals;
-	union {
-		__u32 mutex_datp_offset;
-		struct mutex_dat *mutex_datp;
-	};
+	__u32 mutex_state_offset;
 };
 
 union cobalt_cond_union {
 	pthread_cond_t native_cond;
 	struct cobalt_cond_shadow {
 		__u32 magic;
+		__u32 state_offset;
 		xnhandle_t handle;
-		union {
-			__u32 state_offset;
-			struct cobalt_cond_state *state;
-		};
 	} shadow_cond;
 };
 

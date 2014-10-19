@@ -83,8 +83,6 @@ DEFINE_PRIVATE_XNLOCK(process_hash_lock);
 
 struct xnthread_personality *cobalt_personalities[NR_PERSONALITIES];
 
-static void *mayday_page;
-
 static struct xnsynch yield_sync;
 
 static unsigned __attribute__((pure)) process_hash_crunch(struct mm_struct *mm)
@@ -763,7 +761,7 @@ static int handle_mayday_event(struct pt_regs *regs)
 	/* We enter the mayday handler with hw IRQs off. */
 	sys_ppd = cobalt_ppd_get(0);
 
-	xnarch_handle_mayday(tcb, regs, sys_ppd->mayday_addr);
+	xnarch_handle_mayday(tcb, regs, sys_ppd->mayday_tramp);
 
 	return KEVENT_PROPAGATE;
 }
@@ -789,38 +787,6 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	 * to recover from the fault.
 	 */
 	return KEVENT_PROPAGATE;
-}
-
-static inline int init_mayday_page(void)
-{
-	mayday_page = vmalloc(PAGE_SIZE);
-	if (mayday_page == NULL) {
-		printk(XENO_ERR "can't alloc MAYDAY page\n");
-		return -ENOMEM;
-	}
-
-	xnarch_setup_mayday_page(mayday_page);
-
-	return 0;
-}
-
-static inline void free_mayday_page(void)
-{
-	if (mayday_page)
-		vfree(mayday_page);
-}
-
-static inline unsigned long map_mayday_page(void)
-{
-	void __user *u_addr = NULL;
-	int ret;
-
-	ret = rtdm_mmap_to_user(NULL, mayday_page, PAGE_SIZE,
-				PROT_READ|PROT_EXEC, &u_addr, NULL, NULL);
-	if (ret)
-		return 0UL;
-
-	return (unsigned long)u_addr;
 }
 
 #ifdef CONFIG_SMP
@@ -978,9 +944,10 @@ static int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
 		nkvdso->hostrt_data.mask = hostrt->mask;
 		nkvdso->hostrt_data.mult = hostrt->mult;
 		nkvdso->hostrt_data.shift = hostrt->shift;
-		nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
-		nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
-		nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
+		nkvdso->hostrt_data.wall_sec = hostrt->wall_time_sec;
+		nkvdso->hostrt_data.wall_nsec = hostrt->wall_time_nsec;
+		nkvdso->hostrt_data.wtom_sec = hostrt->wall_to_monotonic.tv_sec;
+		nkvdso->hostrt_data.wtom_nsec = hostrt->wall_to_monotonic.tv_nsec;
 	}
 
 	spin_unlock_irqrestore(&__hostrtlock, flags);
@@ -1282,6 +1249,21 @@ int ipipe_kevent_hook(int kevent, void *data)
 	return ret;
 }
 
+static inline unsigned long map_mayday_page(void)
+{
+	void __user *u_addr = NULL;
+	void *mayday_page;
+	int ret;
+
+	mayday_page = xnarch_get_mayday_page();
+	ret = rtdm_mmap_to_user(NULL, mayday_page, PAGE_SIZE,
+				PROT_READ|PROT_EXEC, &u_addr, NULL, NULL);
+	if (ret)
+		return 0UL;
+
+	return (unsigned long)u_addr;
+}
+
 static int attach_process(struct cobalt_process *process)
 {
 	struct cobalt_ppd *p = &process->sys_ppd;
@@ -1295,8 +1277,8 @@ static int attach_process(struct cobalt_process *process)
 
 	cobalt_umm_set_name(&p->umm, "private heap[%d]", current->pid);
 
-	p->mayday_addr = map_mayday_page();
-	if (p->mayday_addr == 0) {
+	p->mayday_tramp = map_mayday_page();
+	if (p->mayday_tramp == 0) {
 		printk(XENO_WARN
 		       "%s[%d] cannot map MAYDAY page\n",
 		       current->comm, current->pid);
@@ -1413,10 +1395,10 @@ int cobalt_process_init(void)
 		goto fail_debug;
 
 	/*
-	 * Setup the mayday page early, before userland can mess with
+	 * Setup the mayday stuff early, before userland can mess with
 	 * real-time ops.
 	 */
-	ret = init_mayday_page();
+	ret = xnarch_init_mayday();
 	if (ret)
 		goto fail_mayday;
 
@@ -1442,7 +1424,7 @@ fail_register:
 	cobalt_memdev_cleanup();
 fail_memdev:
 	xnsynch_destroy(&yield_sync);
-	free_mayday_page();
+	xnarch_cleanup_mayday();
 fail_mayday:
 	xndebug_cleanup();
 fail_debug:
@@ -1459,7 +1441,7 @@ void cobalt_process_cleanup(void)
 	ipipe_set_hooks(&xnsched_realtime_domain, 0);
 	ipipe_set_hooks(ipipe_root_domain, 0);
 
-	free_mayday_page();
+	xnarch_cleanup_mayday();
 	xndebug_cleanup();
 
 	if (process_hash) {

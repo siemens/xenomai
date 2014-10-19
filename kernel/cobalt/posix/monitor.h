@@ -29,7 +29,7 @@ struct cobalt_monitor {
 	unsigned int magic;
 	struct xnsynch gate;
 	struct xnsynch drain;
-	struct cobalt_monitor_data *data;
+	struct cobalt_monitor_state *state;
 	struct cobalt_kqueues *owningq;
 	struct list_head link;
 	struct list_head waiters;

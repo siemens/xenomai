@@ -18,13 +18,16 @@
  */
 #include <linux/types.h>
 #include <linux/ipipe.h>
+#include <linux/vmalloc.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/uapi/syscall.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
 #include <asm/bug.h>
 
-void xnarch_setup_mayday_page(void *page)
+static void *mayday;
+
+static inline void setup_mayday(void *page)
 {
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
@@ -68,6 +71,27 @@ void xnarch_setup_mayday_page(void *page)
 
 	flush_dcache_range((unsigned long)page,
 			   (unsigned long)page + sizeof(code));
+}
+
+int xnarch_init_mayday(void)
+{
+	mayday = vmalloc(PAGE_SIZE);
+	if (mayday == NULL)
+		return -ENOMEM;
+
+	setup_mayday(mayday);
+
+	return 0;
+}
+
+void xnarch_cleanup_mayday(void)
+{
+	vfree(mayday);
+}
+
+void *xnarch_get_mayday_page(void)
+{
+	return mayday;
 }
 
 void xnarch_handle_mayday(struct xnarchtcb *tcb,

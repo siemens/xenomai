@@ -72,7 +72,7 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 	}
 	cond->state = state;
 	state->pending_signals = 0;
-	state->mutex_datp = (struct mutex_dat *)~0UL;
+	state->mutex_state_offset = ~0U;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -332,11 +332,11 @@ int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 	struct xnthread *cur = xnthread_current();
 	struct cobalt_cond *cond;
 	struct cobalt_mutex *mx;
-	struct mutex_dat *datp;
 	struct us_cond_data d;
 	struct timespec ts;
 	xnhandle_t handle;
 	int err, perr = 0;
+	__u32 offset;
 
 	handle = cobalt_get_handle_from_user(&u_cnd->handle);
 	cond = xnregistry_lookup(handle, NULL);
@@ -345,8 +345,8 @@ int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 	mx = xnregistry_lookup(handle, NULL);
 
 	if (cond->mutex == NULL) {
-		__xn_get_user(datp, &u_mx->dat);
-		cond->state->mutex_datp = datp;
+		__xn_get_user(offset, &u_mx->state_offset);
+		cond->state->mutex_state_offset = offset;
 	}
 
 	if (fetch_timeout) {
@@ -380,7 +380,7 @@ int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 	}
 
 	if (cond->mutex == NULL)
-		cond->state->mutex_datp = (struct mutex_dat *)~0UL;
+		cond->state->mutex_state_offset = ~0U;
 
 	if (err == -EINTR)
 		__xn_put_user(d.err, u_err);
@@ -418,7 +418,7 @@ COBALT_SYSCALL(cond_wait_epilogue, primary,
 	err = cobalt_cond_timedwait_epilogue(cur, cond, mx);
 
 	if (cond->mutex == NULL)
-		cond->state->mutex_datp = (struct mutex_dat *)~0UL;
+		cond->state->mutex_state_offset = ~0U;
 
 	return err;
 }

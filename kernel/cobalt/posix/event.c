@@ -51,12 +51,12 @@ COBALT_SYSCALL(event_init, current,
 		     unsigned int value, int flags))
 {
 	struct cobalt_event_shadow shadow;
-	struct cobalt_event_data *datp;
+	struct cobalt_event_state *state;
 	int pshared, synflags, ret;
 	struct cobalt_event *event;
 	struct cobalt_kqueues *kq;
 	struct cobalt_umm *umm;
-	unsigned long datoff;
+	unsigned long stateoff;
 	spl_t s;
 
 	trace_cobalt_event_init(u_event, value, flags);
@@ -67,20 +67,20 @@ COBALT_SYSCALL(event_init, current,
 
 	pshared = (flags & COBALT_EVENT_SHARED) != 0;
 	umm = &cobalt_ppd_get(pshared)->umm;
-	datp = cobalt_umm_alloc(umm, sizeof(*datp));
-	if (datp == NULL) {
+	state = cobalt_umm_alloc(umm, sizeof(*state));
+	if (state == NULL) {
 		xnfree(event);
 		return -EAGAIN;
 	}
 
 	ret = xnregistry_enter_anon(event, &event->handle);
 	if (ret) {
-		cobalt_umm_free(umm, datp);
+		cobalt_umm_free(umm, state);
 		xnfree(event);
 		return ret;
 	}
 
-	event->data = datp;
+	event->state = state;
 	event->flags = flags;
 	synflags = (flags & COBALT_EVENT_PRIO) ? XNSYNCH_PRIO : XNSYNCH_FIFO;
 	xnsynch_init(&event->synch, synflags, NULL);
@@ -93,14 +93,14 @@ COBALT_SYSCALL(event_init, current,
 
 	event->magic = COBALT_EVENT_MAGIC;
 
-	datp->value = value;
-	datp->flags = 0;
-	datp->nwaiters = 0;
-	datoff = cobalt_umm_offset(umm, datp);
-	XENO_BUGON(COBALT, datoff != (__u32)datoff);
+	state->value = value;
+	state->flags = 0;
+	state->nwaiters = 0;
+	stateoff = cobalt_umm_offset(umm, state);
+	XENO_BUGON(COBALT, stateoff != (__u32)stateoff);
 	shadow.flags = flags;
 	shadow.handle = event->handle;
-	shadow.u.data_offset = (__u32)datoff;
+	shadow.state_offset = (__u32)stateoff;
 
 	return __xn_safe_copy_to_user(u_event, &shadow, sizeof(*u_event));
 }
@@ -112,7 +112,7 @@ int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 {
 	unsigned int rbits = 0, testval;
 	xnticks_t timeout = XN_INFINITE;
-	struct cobalt_event_data *datp;
+	struct cobalt_event_state *state;
 	xntmode_t tmode = XN_RELATIVE;
 	struct event_wait_context ewc;
 	struct cobalt_event *event;
@@ -141,20 +141,20 @@ int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 		goto out;
 	}
 
-	datp = event->data;
+	state = event->state;
 
 	if (bits == 0) {
 		/*
 		 * Special case: we don't wait for any event, we only
 		 * return the current flag group value.
 		 */
-		rbits = datp->value;
+		rbits = state->value;
 		goto out;
 	}
 
-	datp->flags |= COBALT_EVENT_PENDED;
-	rbits = datp->value & bits;
-	testval = mode & COBALT_EVENT_ANY ? rbits : datp->value;
+	state->flags |= COBALT_EVENT_PENDED;
+	rbits = state->value & bits;
+	testval = mode & COBALT_EVENT_ANY ? rbits : state->value;
 	if (rbits && rbits == testval)
 		goto done;
 
@@ -166,20 +166,20 @@ int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 	ewc.value = bits;
 	ewc.mode = mode;
 	xnthread_prepare_wait(&ewc.wc);
-	datp->nwaiters++;
+	state->nwaiters++;
 	info = xnsynch_sleep_on(&event->synch, timeout, tmode);
 	if (info & XNRMID) {
 		ret = -EIDRM;
 		goto out;
 	}
 	if (info & (XNBREAK|XNTIMEO)) {
-		datp->nwaiters--;
+		state->nwaiters--;
 		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
 	} else
 		rbits = ewc.value;
 done:
 	if (!xnsynch_pended_p(&event->synch))
-		datp->flags &= ~COBALT_EVENT_PENDED;
+		state->flags &= ~COBALT_EVENT_PENDED;
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -214,7 +214,7 @@ COBALT_SYSCALL(event_sync, current,
 {
 	unsigned int bits, waitval, testval;
 	struct xnthread_wait_context *wc;
-	struct cobalt_event_data *datp;
+	struct cobalt_event_state *state;
 	struct event_wait_context *ewc;
 	struct cobalt_event *event;
 	struct xnthread *p, *tmp;
@@ -237,8 +237,8 @@ COBALT_SYSCALL(event_sync, current,
 	 * wake up any thread which could be satisfied by its current
 	 * value.
 	 */
-	datp = event->data;
-	bits = datp->value;
+	state = event->state;
+	bits = state->value;
 
 	xnsynch_for_each_sleeper_safe(p, tmp, &event->synch) {
 		wc = xnthread_get_wait_context(p);
@@ -246,7 +246,7 @@ COBALT_SYSCALL(event_sync, current,
 		waitval = ewc->value & bits;
 		testval = ewc->mode & COBALT_EVENT_ANY ? waitval : ewc->value;
 		if (waitval && waitval == testval) {
-			datp->nwaiters--;
+			state->nwaiters--;
 			ewc->value = waitval;
 			xnsynch_wakeup_this_sleeper(&event->synch, p);
 		}
@@ -274,7 +274,7 @@ static void event_destroy(struct cobalt_event *event,
 	xnlock_put_irqrestore(&nklock, s);
 
 	umm = &cobalt_ppd_get(pshared)->umm;
-	cobalt_umm_free(umm, event->data);
+	cobalt_umm_free(umm, event->state);
 	xnfree(event);
 	xnlock_get_irqsave(&nklock, s);
 }

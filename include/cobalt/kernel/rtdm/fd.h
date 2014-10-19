@@ -331,12 +331,12 @@ static inline int rtdm_fd_flags(const struct rtdm_fd *fd)
 }
 
 #ifdef CONFIG_COMPAT
-static inline int rtdm_fd_compat(const struct rtdm_fd *fd)
+static inline int rtdm_fd_is_compat(const struct rtdm_fd *fd)
 {
 	return fd->compat;
 }
 #else
-static inline int rtdm_fd_compat(const struct rtdm_fd *fd)
+static inline int rtdm_fd_is_compat(const struct rtdm_fd *fd)
 {
 	return 0;
 }

@@ -42,16 +42,15 @@
  *@{
  */
 
-static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
+static inline
+struct cobalt_sem_state *sem_get_state(struct cobalt_sem_shadow *shadow)
 {
-	unsigned int pshared = shadow->datp_offset < 0;
+	unsigned int pshared = shadow->state_offset < 0;
 
 	if (pshared)
-		return (struct sem_dat *)
-			(cobalt_umm_shared - shadow->datp_offset);
+		return cobalt_umm_shared - shadow->state_offset;
 
-	return (struct sem_dat *)
-		(cobalt_umm_private + shadow->datp_offset);
+	return cobalt_umm_private + shadow->state_offset;
 }
 
 /**
@@ -94,7 +93,7 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned int value))
 		return -1;
 	}
 
-	cobalt_commit_memory(sem_get_datp(_sem));
+	cobalt_commit_memory(sem_get_state(_sem));
 
 	return 0;
 }
@@ -179,8 +178,8 @@ COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 COBALT_IMPL(int, sem_post, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_state *state;
 	int value, ret, old, new;
-	struct sem_dat *datp;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
 	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -188,16 +187,16 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 		return -1;
 	}
 
-	datp = sem_get_datp(_sem);
+	state = sem_get_state(_sem);
 	smp_mb();
-	value = atomic_read(&datp->value);
+	value = atomic_read(&state->value);
 	if (value >= 0) {
-		if (datp->flags & SEM_PULSE)
+		if (state->flags & SEM_PULSE)
 			return 0;
 		do {
 			old = value;
 			new = value + 1;
-			value = atomic_cmpxchg(&datp->value, old, new);
+			value = atomic_cmpxchg(&state->value, old, new);
 			if (value < 0)
 				goto do_syscall;
 		} while (value != old);
@@ -239,7 +238,7 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	struct sem_dat *datp;
+	struct cobalt_sem_state *state;
 	int value, old, new;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
@@ -248,14 +247,14 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 		return -1;
 	}
 
-	datp = sem_get_datp(_sem);
+	state = sem_get_state(_sem);
 	smp_mb();
-	value = atomic_read(&datp->value);
+	value = atomic_read(&state->value);
 	if (value > 0) {
 		do {
 			old = value;
 			new = value - 1;
-			value = atomic_cmpxchg(&datp->value, old, new);
+			value = atomic_cmpxchg(&state->value, old, new);
 			if (value <= 0)
 				goto eagain;
 		} while (value != old);
@@ -404,7 +403,7 @@ COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *abs_timeout)
 COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	struct sem_dat *datp;
+	struct cobalt_sem_state *state;
 	int value;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
@@ -413,10 +412,10 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 		return -1;
 	}
 
-	datp = sem_get_datp(_sem);
+	state = sem_get_state(_sem);
 	smp_mb();
-	value = atomic_read(&datp->value);
-	if (value < 0 && (datp->flags & SEM_REPORT) == 0)
+	value = atomic_read(&state->value);
+	if (value < 0 && (state->flags & SEM_REPORT) == 0)
 		value = 0;
 
 	*sval = value;
@@ -604,7 +603,7 @@ int sem_init_np(sem_t *sem, int flags, unsigned int value)
 int sem_broadcast_np(sem_t *sem)
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	struct sem_dat *datp;
+	struct cobalt_sem_state *state;
 	int value, ret;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
@@ -613,9 +612,9 @@ int sem_broadcast_np(sem_t *sem)
 		return -1;
 	}
 
-	datp = sem_get_datp(_sem);
+	state = sem_get_state(_sem);
 	smp_mb();
-	value = atomic_read(&datp->value);
+	value = atomic_read(&state->value);
 	if (value >= 0)
 		return 0;
 

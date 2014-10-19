@@ -372,10 +372,10 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 	iattr.flags = XNUSER|XNFPU;
 	iattr.personality = &cobalt_personality;
 	iattr.affinity = CPU_MASK_ALL;
-	if (xnthread_init(&thread->threadbase,
-			  &iattr, sched_class, &param) != 0) {
+	ret = xnthread_init(&thread->threadbase, &iattr, sched_class, &param);
+	if (ret) {
 		xnfree(thread);
-		return -EAGAIN;
+		return ret;
 	}
 
 	thread->sched_u_policy = policy;
@@ -541,22 +541,16 @@ COBALT_SYSCALL(thread_getschedparam_ex, current,
 	return __xn_safe_copy_to_user(u_param, &param_ex, sizeof(param_ex));
 }
 
-COBALT_SYSCALL(thread_create, init,
-	       int, (unsigned long pth, int policy,
-		     struct sched_param_ex __user *u_param,
-		     int xid,
-		     __u32 __user *u_winoff))
+int __cobalt_thread_create(unsigned long pth, int policy,
+			   struct sched_param_ex *param_ex,
+			   int xid, __u32 __user *u_winoff)
 {
 	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
-	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
 	int ret;
 
-	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
-		return -EFAULT;
-
-	trace_cobalt_pthread_create(pth, policy, &param_ex);
+	trace_cobalt_pthread_create(pth, policy, param_ex);
 
 	/*
 	 * We have been passed the pthread_t identifier the user-space
@@ -566,7 +560,7 @@ COBALT_SYSCALL(thread_create, init,
 	hkey.u_pth = pth;
 	hkey.mm = p->mm;
 
-	ret = pthread_create(&thread, policy, &param_ex, p);
+	ret = pthread_create(&thread, policy, param_ex, p);
 	if (ret)
 		return ret;
 
@@ -591,6 +585,22 @@ fail:
 	xnthread_cancel(&thread->threadbase);
 
 	return ret;
+}
+
+COBALT_SYSCALL(thread_create, init,
+	       int, (unsigned long pth, int policy,
+		     struct sched_param_ex __user *u_param,
+		     int xid,
+		     __u32 __user *u_winoff))
+{
+	struct sched_param_ex param_ex;
+	int ret;
+
+	ret = __xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex));
+	if (ret)
+		return ret;
+
+	return __cobalt_thread_create(pth, policy, &param_ex, xid, u_winoff);
 }
 
 struct cobalt_thread *

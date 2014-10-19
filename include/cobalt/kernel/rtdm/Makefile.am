@@ -3,6 +3,7 @@ noinst_HEADERS =	\
 	autotune.h	\
 	can.h		\
 	cobalt.h	\
+	compat.h	\
 	driver.h	\
 	fd.h		\
 	ipc.h		\
