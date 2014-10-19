@@ -42,21 +42,6 @@ DEFINE_XNLOCK(nklock);
 #if defined(CONFIG_SMP) || XENO_DEBUG(LOCKING)
 EXPORT_SYMBOL_GPL(nklock);
 
-void __xnlock_spin(int cpu, struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
-{
-	unsigned int spin_limit;
-
-	xnlock_dbg_prepare_spin(&spin_limit);
-
-	while (atomic_cmpxchg(&lock->owner, ~0, cpu) != ~0)
-		do {
-			cpu_relax();
-			xnlock_dbg_spinning(lock, cpu, &spin_limit /*, */
-					    XNLOCK_DBG_PASS_CONTEXT);
-		} while(atomic_read(&lock->owner) != ~0);
-}
-EXPORT_SYMBOL_GPL(__xnlock_spin);
-
 #ifdef CONFIG_XENO_ARCH_OUTOFLINE_XNLOCK
 int ___xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {

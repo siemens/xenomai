@@ -66,7 +66,8 @@ typedef unsigned long spl_t;
 #if XENO_DEBUG(LOCKING)
 
 struct xnlock {
-	atomic_t owner;
+	unsigned owner;
+	arch_spinlock_t alock;
 	const char *file;
 	const char *function;
 	unsigned int line;
@@ -84,7 +85,8 @@ struct xnlockinfo {
 };
 
 #define XNARCH_LOCK_UNLOCKED (struct xnlock) {	\
-	{ ~0 },					\
+	~0,					\
+	__ARCH_SPIN_LOCK_UNLOCKED,		\
 	NULL,					\
 	NULL,					\
 	0,					\
@@ -117,10 +119,15 @@ DECLARE_PER_CPU(struct xnlockinfo, xnlock_stats);
 #else /* !XENO_DEBUG(LOCKING) */
 
 struct xnlock {
-	atomic_t owner;
+	unsigned owner;
+	arch_spinlock_t alock;
 };
 
-#define XNARCH_LOCK_UNLOCKED		(struct xnlock) { { ~0 } }
+#define XNARCH_LOCK_UNLOCKED			\
+	(struct xnlock) {			\
+		~0,				\
+		__ARCH_SPIN_LOCK_UNLOCKED,	\
+	}
 
 #define XNLOCK_DBG_CONTEXT
 #define XNLOCK_DBG_CONTEXT_ARGS
@@ -175,20 +182,18 @@ static inline void xnlock_init (struct xnlock *lock)
 #define DEFINE_XNLOCK(lock)		struct xnlock lock = XNARCH_LOCK_UNLOCKED
 #define DEFINE_PRIVATE_XNLOCK(lock)	static DEFINE_XNLOCK(lock)
 
-void __xnlock_spin(int cpu, struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS);
-
 static inline int ____xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	int cpu = ipipe_processor_id();
 	unsigned long long start;
 
-	if (atomic_read(&lock->owner) == cpu)
+	if (lock->owner == cpu)
 		return 2;
 
 	xnlock_dbg_prepare_acquire(&start);
 
-	if (unlikely(atomic_cmpxchg(&lock->owner, ~0, cpu) != ~0))
-		__xnlock_spin(cpu, lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
+	arch_spin_lock(&lock->alock);
+	lock->owner = cpu;
 
 	xnlock_dbg_acquired(lock, cpu, &start /*, */ XNLOCK_DBG_PASS_CONTEXT);
 
@@ -200,12 +205,8 @@ static inline void ____xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_
 	if (xnlock_dbg_release(lock /*, */ XNLOCK_DBG_PASS_CONTEXT))
 		return;
 
-	/*
-	 * Make sure all data written inside the lock is visible to
-	 * other CPUs before we release the lock.
-	 */
-	mb();
-	atomic_set(&lock->owner, ~0);
+	lock->owner = ~0U;
+	arch_spin_unlock(&lock->alock);
 }
 
 #ifndef CONFIG_XENO_ARCH_OUTOFLINE_XNLOCK
@@ -250,7 +251,7 @@ static inline void __xnlock_put_irqrestore(struct xnlock *lock, spl_t flags
 static inline int xnlock_is_owner(struct xnlock *lock)
 {
 	if (__locking_active__)
-		return atomic_read(&lock->owner) == ipipe_processor_id();
+		return lock->owner == ipipe_processor_id();
 
 	return 1;
 }
@@ -266,7 +267,7 @@ static inline int __xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARG
 static inline void __xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	if (__locking_active__)
-		___xnlock_put(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);	
+		___xnlock_put(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
 }
 
 #undef __locking_active__
