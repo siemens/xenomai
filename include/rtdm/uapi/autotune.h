@@ -20,6 +20,8 @@
 #ifndef _RTDM_UAPI_AUTOTUNE_H
 #define _RTDM_UAPI_AUTOTUNE_H
 
+#include <linux/types.h>
+
 #define RTDM_CLASS_AUTOTUNE		RTDM_CLASS_MISC
 #define RTDM_SUBCLASS_AUTOTUNE		0
 

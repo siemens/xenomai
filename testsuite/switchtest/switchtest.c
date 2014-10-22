@@ -208,8 +208,8 @@ static void display_cleanup(void *cookie)
 
 static void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 {
-	unsigned long switches_count;
 	static unsigned nlines = 0;
+	__u32 switches_count;
 
 	if (ioctl(cpu->fd,
 		  RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT,&switches_count)) {
@@ -249,10 +249,10 @@ static void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 	}
 
 #ifdef CONFIG_SMP
-	printf("RTD|%12u|%12lu|%12lu\n", cpu->index,
+	printf("RTD|%12u|%12lu|%12u\n", cpu->index,
 	       switches_count - cpu->last_switches_count, switches_count);
 #else /* !CONFIG_SMP */
-	printf("RTD|%12lu|%12lu\n",
+	printf("RTD|%12lu|%12u\n",
 	       switches_count - cpu->last_switches_count, switches_count);
 #endif /* !CONFIG_SMP */
 

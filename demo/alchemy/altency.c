@@ -25,9 +25,9 @@ RT_SEM display_sem;
 #define TEN_MILLIONS    10000000
 
 unsigned max_relaxed;
-long minjitter, maxjitter, avgjitter;
-long gminjitter = TEN_MILLIONS, gmaxjitter = -TEN_MILLIONS, goverrun = 0;
-long long gavgjitter = 0;
+int32_t minjitter, maxjitter, avgjitter;
+int32_t gminjitter = TEN_MILLIONS, gmaxjitter = -TEN_MILLIONS, goverrun = 0;
+int64_t gavgjitter = 0;
 
 long long period_ns = 0;
 int test_duration = 0;		/* sec of testing, via -T <sec>, 0 is inf */
@@ -57,7 +57,7 @@ int test_loops = 0;		/* outer loop count */
 #define WARMUP_TIME 1
 #define HISTOGRAM_CELLS 300
 int histogram_size = HISTOGRAM_CELLS;
-long *histogram_avg = NULL, *histogram_max = NULL, *histogram_min = NULL;
+int32_t *histogram_avg = NULL, *histogram_max = NULL, *histogram_min = NULL;
 
 char *do_gnuplot = NULL;
 int do_histogram = 0, do_stats = 0, finished = 0;
@@ -65,10 +65,10 @@ int bucketsize = 1000;		/* default = 1000ns, -B <size> to override */
 
 #define need_histo() (do_histogram || do_stats || do_gnuplot)
 
-static inline void add_histogram(long *histogram, long addval)
+static inline void add_histogram(int32_t *histogram, int32_t addval)
 {
 	/* bucketsize steps */
-	long inabs = (addval >= 0 ? addval : -addval) / bucketsize;
+	int inabs = (addval >= 0 ? addval : -addval) / bucketsize;
 	histogram[inabs < histogram_size ? inabs : histogram_size - 1]++;
 }
 
@@ -77,7 +77,7 @@ static void latency(void *cookie)
 	RTIME expected_ns, start_ns, fault_threshold;
 	unsigned int old_relaxed = 0, new_relaxed;
 	int ret, count, nsamples, warmup = 1;
-	long minj, maxj, dt, overrun, sumj;
+	int32_t minj, maxj, dt, overrun, sumj;
 	unsigned long ov;
 
 	fault_threshold = CONFIG_XENO_DEFAULT_PERIOD;
@@ -100,7 +100,7 @@ static void latency(void *cookie)
 
 		for (count = sumj = 0; count < nsamples; count++) {
 			ret = rt_task_wait_period(&ov);
-			dt = (long)(rt_timer_read() - expected_ns);
+			dt = (int32_t)(rt_timer_read() - expected_ns);
 			new_relaxed = sampling_relaxed;
 			if (dt > maxj) {
 				if (new_relaxed != old_relaxed
@@ -213,7 +213,7 @@ static void display(void *cookie)
 			test_duration);
 
 	for (;;) {
-		long minj, gminj, maxj, gmaxj, avgj;
+		int32_t minj, gminj, maxj, gmaxj, avgj;
 
 		if (test_mode == USER_TASK) {
 			ret = rt_sem_p(&display_sem, TM_INFINITE);
@@ -268,7 +268,7 @@ static void display(void *cookie)
 				       "----lat max", "-overrun", "---msw",
 				       "---lat best", "--lat worst");
 			}
-			printf("RTD|%11.3f|%11.3f|%11.3f|%8ld|%6u|%11.3f|%11.3f\n",
+			printf("RTD|%11.3f|%11.3f|%11.3f|%8d|%6u|%11.3f|%11.3f\n",
 			       (double)minj / 1000,
 			       (double)avgj / 1000,
 			       (double)maxj / 1000,
@@ -279,7 +279,7 @@ static void display(void *cookie)
 	}
 }
 
-static double dump_histogram(long *histogram, char *kind)
+static double dump_histogram(int32_t *histogram, char *kind)
 {
 	int n, total_hits = 0;
 	double avg = 0;		/* used to sum hits 1st */
@@ -288,13 +288,13 @@ static double dump_histogram(long *histogram, char *kind)
 		printf("---|--param|----range-|--samples\n");
 
 	for (n = 0; n < histogram_size; n++) {
-		long hits = histogram[n];
+		int32_t hits = histogram[n];
 
 		if (hits) {
 			total_hits += hits;
 			avg += n * hits;
 			if (do_histogram)
-				printf("HSD|    %s| %3d -%3d | %8ld\n",
+				printf("HSD|    %s| %3d -%3d | %8d\n",
 				       kind, n, n + 1, hits);
 		}
 	}
@@ -304,7 +304,7 @@ static double dump_histogram(long *histogram, char *kind)
 	return avg;
 }
 
-static void dump_histo_gnuplot(long *histogram)
+static void dump_histo_gnuplot(int32_t *histogram)
 {
 	unsigned start, stop;
 	FILE *f;
@@ -324,20 +324,20 @@ static void dump_histo_gnuplot(long *histogram)
 
 	fprintf(f, "%g 1\n", start * bucketsize / 1000.0);
 	for (n = start; n <= stop; n++)
-		fprintf(f, "%g %ld\n",
+		fprintf(f, "%g %d\n",
 			(n + 0.5) * bucketsize / 1000.0, histogram[n] + 1);
 	fprintf(f, "%g 1\n", (stop + 1) * bucketsize / 1000.0);
 
 	fclose(f);
 }
 
-static void dump_stats(long *histogram, char *kind, double avg)
+static void dump_stats(int32_t *histogram, char *kind, double avg)
 {
 	int n, total_hits = 0;
 	double variance = 0;
 
 	for (n = 0; n < histogram_size; n++) {
-		long hits = histogram[n];
+		int32_t hits = histogram[n];
 
 		if (hits) {
 			total_hits += hits;
@@ -378,7 +378,7 @@ static void dump_hist_stats(void)
 static void cleanup(void)
 {
 	time_t actual_duration;
-	long gmaxj, gminj, gavgj;
+	int32_t gmaxj, gminj, gavgj;
 
 	if (test_mode == USER_TASK) {
 		rt_sem_delete(&display_sem);
@@ -414,7 +414,7 @@ static void cleanup(void)
 
 	printf
 	    ("---|-----------|-----------|-----------|--------|------|-------------------------\n"
-	     "RTS|%11.3f|%11.3f|%11.3f|%8ld|%6u|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
+	     "RTS|%11.3f|%11.3f|%11.3f|%8d|%6u|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
 	     (double)gminj / 1000, (double)gavgj / 1000, (double)gmaxj / 1000,
 	     goverrun, max_relaxed, actual_duration / 3600, (actual_duration / 60) % 60,
 	     actual_duration % 60, test_duration / 3600,
@@ -586,9 +586,9 @@ int main(int argc, char *const *argv)
 
 	time(&test_start);
 
-	histogram_avg = calloc(histogram_size, sizeof(long));
-	histogram_max = calloc(histogram_size, sizeof(long));
-	histogram_min = calloc(histogram_size, sizeof(long));
+	histogram_avg = calloc(histogram_size, sizeof(int32_t));
+	histogram_max = calloc(histogram_size, sizeof(int32_t));
+	histogram_min = calloc(histogram_size, sizeof(int32_t));
 
 	if (!(histogram_avg && histogram_max && histogram_min))
 		cleanup();

@@ -577,7 +577,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *fd,
 	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
 	struct rttst_swtest_task task;
 	struct rttst_swtest_dir fromto;
-	unsigned long count;
+	__u32 count;
 	int err;
 
 	switch (request) {

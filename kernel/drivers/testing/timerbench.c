@@ -31,13 +31,13 @@ MODULE_LICENSE("GPL");
 
 struct rt_tmbench_context {
 	int mode;
-	unsigned long period;
+	unsigned int period;
 	int freeze_max;
 	int warmup_loops;
 	int samples_per_sec;
-	long *histogram_min;
-	long *histogram_max;
-	long *histogram_avg;
+	int32_t *histogram_min;
+	int32_t *histogram_max;
+	int32_t *histogram_avg;
 	int histogram_size;
 	int bucketsize;
 
@@ -56,10 +56,10 @@ struct rt_tmbench_context {
 };
 
 static inline void add_histogram(struct rt_tmbench_context *ctx,
-				 long *histogram, long addval)
+				 __s32 *histogram, __s32 addval)
 {
 	/* bucketsize steps */
-	long inabs = (addval >= 0 ? addval : -addval) / ctx->bucketsize;
+	int inabs = (addval >= 0 ? addval : -addval) / ctx->bucketsize;
 	histogram[inabs < ctx->histogram_size ?
 		  inabs : ctx->histogram_size - 1]++;
 }
@@ -69,7 +69,7 @@ static inline long long slldiv(long long s, unsigned d)
 	return s >= 0 ? xnarch_ulldiv(s, d, NULL) : -xnarch_ulldiv(-s, d, NULL);
 }
 
-static void eval_inner_loop(struct rt_tmbench_context *ctx, long dt)
+static void eval_inner_loop(struct rt_tmbench_context *ctx, __s32 dt)
 {
 	if (dt > ctx->curr.max)
 		ctx->curr.max = dt;
@@ -156,8 +156,8 @@ static void timer_task_proc(void *arg)
 				return;
 
 			eval_inner_loop(ctx,
-					(long)(rtdm_clock_read_monotonic() -
-					       ctx->date));
+					(__s32)(rtdm_clock_read_monotonic() -
+						ctx->date));
 		}
 		eval_outer_loop(ctx);
 	}
@@ -170,8 +170,8 @@ static void timer_proc(rtdm_timer_t *timer)
 	int err;
 
 	do {
-		eval_inner_loop(ctx, (long)(rtdm_clock_read_monotonic() -
-					    ctx->date));
+		eval_inner_loop(ctx, (__s32)(rtdm_clock_read_monotonic() -
+					     ctx->date));
 
 		ctx->start_time = rtdm_clock_read_monotonic();
 		err = rtdm_timer_start_in_handler(&ctx->timer, ctx->date, 0,
@@ -252,7 +252,7 @@ static int rt_tmbench_start(struct rtdm_fd *fd,
 
 	if (ctx->histogram_size > 0) {
 		ctx->histogram_min =
-		    kmalloc(3 * ctx->histogram_size * sizeof(long),
+		    kmalloc(3 * ctx->histogram_size * sizeof(int32_t),
 			    GFP_KERNEL);
 		ctx->histogram_max =
 		    ctx->histogram_min + config->histogram_size;
@@ -265,7 +265,7 @@ static int rt_tmbench_start(struct rtdm_fd *fd,
 		}
 
 		memset(ctx->histogram_min, 0,
-		       3 * ctx->histogram_size * sizeof(long));
+		       3 * ctx->histogram_size * sizeof(int32_t));
 		ctx->bucketsize = config->histogram_bucketsize;
 	}
 
@@ -357,7 +357,7 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 	}
 
 	if (ctx->histogram_size > 0) {
-		int size = ctx->histogram_size * sizeof(long);
+		int size = ctx->histogram_size * sizeof(int32_t);
 
 		if (rtdm_fd_is_user(fd)) {
 			struct rttst_overall_bench_res res_buf;
