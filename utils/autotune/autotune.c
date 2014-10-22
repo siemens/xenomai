@@ -87,8 +87,8 @@ static const struct option base_options[] = {
 
 static void *sampler_thread(void *arg)
 {
-	nanosecs_abs_t timestamp = 0;
 	int fd = (long)arg, ret, n = 0;
+	__u64 timestamp = 0;
 	struct timespec now;
 
 	for (;;) {
@@ -101,7 +101,7 @@ static void *sampler_thread(void *arg)
 		} else {
 			n++;
 			clock_gettime(CLOCK_MONOTONIC, &now);
-			timestamp = (nanosecs_abs_t)now.tv_sec * 1000000000 + now.tv_nsec;
+			timestamp = (__u64)now.tv_sec * 1000000000 + now.tv_nsec;
 		}
 	}
 
@@ -206,8 +206,8 @@ static void usage(void)
 static void run_tuner(int fd, int op, int period, const char *type)
 {
 	struct autotune_setup setup;
-	unsigned long gravity;
 	pthread_t sampler;
+	__u32 gravity;
 	int ret;
 
 	setup.period = period;
@@ -232,7 +232,7 @@ static void run_tuner(int fd, int op, int period, const char *type)
 		pthread_cancel(sampler);
 
 	if (!quiet)
-		printf("%lu ns\n", gravity);
+		printf("%u ns\n", gravity);
 }
 
 int main(int argc, char *const argv[])

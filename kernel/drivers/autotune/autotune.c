@@ -675,8 +675,8 @@ static int autotune_ioctl_rt(struct rtdm_fd *fd, unsigned int request, void *arg
 {
 	struct autotune_context *context;
 	struct gravity_tuner *tuner;
-	nanosecs_abs_t timestamp;
-	unsigned int gravity;
+	__u64 timestamp;
+	__u32 gravity;
 	int ret;
 
 	context = rtdm_fd_to_private(fd);
