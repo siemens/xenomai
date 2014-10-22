@@ -349,23 +349,21 @@ static ssize_t xddp_recvmsg(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	if (rtipc_get_arg(fd, iov, msg->msg_iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
-		return -EFAULT;
+	ret = rtipc_get_iovec(fd, iov, msg);
+	if (ret)
+		return ret;
 
 	ret = __xddp_recvmsg(fd, iov, msg->msg_iovlen, flags, &saddr);
 	if (ret <= 0)
 		return ret;
 
 	/* Copy the updated I/O vector back */
-	if (rtipc_put_arg(fd, msg->msg_iov, iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
+	if (rtipc_put_iovec(fd, iov, msg))
 		return -EFAULT;
 
 	/* Copy the source address if required. */
 	if (msg->msg_name) {
-		if (rtipc_put_arg(fd, msg->msg_name,
-				  &saddr, sizeof(saddr)))
+		if (rtipc_put_arg(fd, msg->msg_name, &saddr, sizeof(saddr)))
 			return -EFAULT;
 		msg->msg_namelen = sizeof(struct sockaddr_ipc);
 	}
@@ -619,8 +617,7 @@ static ssize_t xddp_sendmsg(struct rtdm_fd *fd,
 			return -EINVAL;
 
 		/* Fetch the destination address to send to. */
-		if (rtipc_get_arg(fd, &daddr,
-				  msg->msg_name, sizeof(daddr)))
+		if (rtipc_get_arg(fd, &daddr, msg->msg_name, sizeof(daddr)))
 			return -EFAULT;
 
 		if (daddr.sipc_port < 0 ||
@@ -638,20 +635,16 @@ static ssize_t xddp_sendmsg(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	if (rtipc_get_arg(fd, iov, msg->msg_iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
-		return -EFAULT;
+	ret = rtipc_get_iovec(fd, iov, msg);
+	if (ret)
+		return ret;
 
 	ret = __xddp_sendmsg(fd, iov, msg->msg_iovlen, flags, &daddr);
 	if (ret <= 0)
 		return ret;
 
 	/* Copy updated I/O vector back */
-	if (rtipc_put_arg(fd, msg->msg_iov, iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
-		return -EFAULT;
-
-	return ret;
+	return rtipc_put_iovec(fd, iov, msg) ?: ret;
 }
 
 static ssize_t xddp_write(struct rtdm_fd *fd,
@@ -860,21 +853,20 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 	struct rtipc_port_label plabel;
 	struct timeval tv;
 	rtdm_lockctx_t s;
-	int ret = 0;
 	size_t len;
+	int ret;
 
-	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
-		return -EFAULT;
+	ret = rtipc_get_sockoptin(fd, &sopt, arg);
+	if (ret)
+		return ret;
 
 	if (sopt.level == SOL_SOCKET) {
 		switch (sopt.optname) {
 
 		case SO_RCVTIMEO:
-			if (sopt.optlen != sizeof(tv))
-				return -EINVAL;
-			if (rtipc_get_arg(fd, &tv,
-					  sopt.optval, sizeof(tv)))
-				return -EFAULT;
+			ret = rtipc_get_timeval(fd, &tv, sopt.optval, sopt.optlen);
+			if (ret)
+				return ret;
 			sk->timeout = rtipc_timeval_to_ns(&tv);
 			break;
 
@@ -891,11 +883,9 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 	switch (sopt.optname) {
 
 	case XDDP_BUFSZ:
-		if (sopt.optlen != sizeof(len))
-			return -EINVAL;
-		if (rtipc_get_arg(fd, &len,
-				  sopt.optval, sizeof(len)))
-			return -EFAULT;
+		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
+		if (ret)
+			return ret;
 		if (len > 0) {
 			len += sizeof(struct xddp_message);
 			if (sk->bufpool &&
@@ -913,11 +903,9 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		break;
 
 	case XDDP_POOLSZ:
-		if (sopt.optlen != sizeof(len))
-			return -EINVAL;
-		if (rtipc_get_arg(fd, &len,
-				  sopt.optval, sizeof(len)))
-			return -EFAULT;
+		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
+		if (ret)
+			return ret;
 		if (len == 0)
 			return -EINVAL;
 		cobalt_atomic_enter(s);
@@ -935,8 +923,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 			return -EPERM;
 		if (sopt.optlen != sizeof(monitor))
 			return -EINVAL;
-		if (rtipc_get_arg(NULL, &monitor,
-				  sopt.optval, sizeof(monitor)))
+		if (rtipc_get_arg(NULL, &monitor, sopt.optval, sizeof(monitor)))
 			return -EFAULT;
 		sk->monitor = monitor;
 		break;
@@ -944,8 +931,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 	case XDDP_LABEL:
 		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(fd, &plabel,
-				  sopt.optval, sizeof(plabel)))
+		if (rtipc_get_arg(fd, &plabel, sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		cobalt_atomic_enter(s);
 		if (test_bit(_XDDP_BOUND, &sk->status) ||
@@ -974,10 +960,11 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 	struct timeval tv;
 	rtdm_lockctx_t s;
 	socklen_t len;
-	int ret = 0;
+	int ret;
 
-	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
-		return -EFAULT;
+	ret = rtipc_get_sockoptout(fd, &sopt, arg);
+	if (ret)
+		return ret;
 
 	if (rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len)))
 		return -EFAULT;
@@ -986,12 +973,10 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 		switch (sopt.optname) {
 
 		case SO_RCVTIMEO:
-			if (len != sizeof(tv))
-				return -EINVAL;
 			rtipc_ns_to_timeval(&tv, sk->timeout);
-			if (rtipc_put_arg(fd, sopt.optval,
-					  &tv, sizeof(tv)))
-				return -EFAULT;
+			ret = rtipc_put_timeval(fd, sopt.optval, &tv, len);
+			if (ret)
+				return ret;
 			break;
 
 		default:
@@ -1012,8 +997,7 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 		cobalt_atomic_enter(s);
 		strcpy(plabel.label, sk->label);
 		cobalt_atomic_leave(s);
-		if (rtipc_put_arg(fd, sopt.optval,
-				  &plabel, sizeof(plabel)))
+		if (rtipc_put_arg(fd, sopt.optval, &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 
@@ -1034,14 +1018,14 @@ static int __xddp_ioctl(struct rtdm_fd *fd,
 
 	switch (request) {
 
-	case _RTIOC_CONNECT:
-		ret = rtipc_get_sockaddr(fd, arg, &saddrp);
+	COMPAT_CASE(_RTIOC_CONNECT):
+		ret = rtipc_get_sockaddr(fd, &saddrp, arg);
 		if (ret == 0)
 			ret = __xddp_connect_socket(sk, saddrp);
 		break;
 
-	case _RTIOC_BIND:
-		ret = rtipc_get_sockaddr(fd, arg, &saddrp);
+	COMPAT_CASE(_RTIOC_BIND):
+		ret = rtipc_get_sockaddr(fd, &saddrp, arg);
 		if (ret)
 			return ret;
 		if (saddrp == NULL)
@@ -1049,24 +1033,24 @@ static int __xddp_ioctl(struct rtdm_fd *fd,
 		ret = __xddp_bind_socket(priv, saddrp);
 		break;
 
-	case _RTIOC_GETSOCKNAME:
+	COMPAT_CASE(_RTIOC_GETSOCKNAME):
 		ret = rtipc_put_sockaddr(fd, arg, &sk->name);
 		break;
 
-	case _RTIOC_GETPEERNAME:
+	COMPAT_CASE(_RTIOC_GETPEERNAME):
 		ret = rtipc_put_sockaddr(fd, arg, &sk->peer);
 		break;
 
-	case _RTIOC_SETSOCKOPT:
+	COMPAT_CASE(_RTIOC_SETSOCKOPT):
 		ret = __xddp_setsockopt(sk, fd, arg);
 		break;
 
-	case _RTIOC_GETSOCKOPT:
+	COMPAT_CASE(_RTIOC_GETSOCKOPT):
 		ret = __xddp_getsockopt(sk, fd, arg);
 		break;
 
 	case _RTIOC_LISTEN:
-	case _RTIOC_ACCEPT:
+	COMPAT_CASE(_RTIOC_ACCEPT):
 		ret = -EOPNOTSUPP;
 		break;
 
@@ -1084,10 +1068,17 @@ static int __xddp_ioctl(struct rtdm_fd *fd,
 static int xddp_ioctl(struct rtdm_fd *fd,
 		      unsigned int request, void *arg)
 {
-	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
-		return -ENOSYS;	/* Try downgrading to NRT */
+	int ret;
 
-	return __xddp_ioctl(fd, request, arg);
+	switch (request) {
+	COMPAT_CASE(_RTIOC_BIND):
+		if (rtdm_in_rt_context())
+			return -ENOSYS;	/* Try downgrading to NRT */
+	default:
+		ret = __xddp_ioctl(fd, request, arg);
+	}
+
+	return ret;
 }
 
 static unsigned int xddp_pollstate(struct rtdm_fd *fd)

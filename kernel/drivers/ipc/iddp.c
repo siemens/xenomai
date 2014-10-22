@@ -344,23 +344,21 @@ static ssize_t iddp_recvmsg(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	if (rtipc_get_arg(fd, iov, msg->msg_iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
-		return -EFAULT;
+	ret = rtipc_get_iovec(fd, iov, msg);
+	if (ret)
+		return ret;
 
 	ret = __iddp_recvmsg(fd, iov, msg->msg_iovlen, flags, &saddr);
 	if (ret <= 0)
 		return ret;
 
 	/* Copy the updated I/O vector back */
-	if (rtipc_put_arg(fd, msg->msg_iov, iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
+	if (rtipc_put_iovec(fd, iov, msg))
 		return -EFAULT;
 
 	/* Copy the source address if required. */
 	if (msg->msg_name) {
-		if (rtipc_put_arg(fd, msg->msg_name,
-				  &saddr, sizeof(saddr)))
+		if (rtipc_put_arg(fd, msg->msg_name, &saddr, sizeof(saddr)))
 			return -EFAULT;
 		msg->msg_namelen = sizeof(struct sockaddr_ipc);
 	}
@@ -484,8 +482,7 @@ static ssize_t iddp_sendmsg(struct rtdm_fd *fd,
 			return -EINVAL;
 
 		/* Fetch the destination address to send to. */
-		if (rtipc_get_arg(fd, &daddr,
-				  msg->msg_name, sizeof(daddr)))
+		if (rtipc_get_arg(fd, &daddr, msg->msg_name, sizeof(daddr)))
 			return -EFAULT;
 
 		if (daddr.sipc_port < 0 ||
@@ -503,20 +500,16 @@ static ssize_t iddp_sendmsg(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	if (rtipc_get_arg(fd, iov, msg->msg_iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
-		return -EFAULT;
+	ret = rtipc_get_iovec(fd, iov, msg);
+	if (ret)
+		return ret;
 
 	ret = __iddp_sendmsg(fd, iov, msg->msg_iovlen, flags, &daddr);
 	if (ret <= 0)
 		return ret;
 
 	/* Copy updated I/O vector back */
-	if (rtipc_put_arg(fd, msg->msg_iov, iov,
-			  sizeof(iov[0]) * msg->msg_iovlen))
-		return -EFAULT;
-
-	return ret;
+	return rtipc_put_iovec(fd, iov, msg) ?: ret;
 }
 
 static ssize_t iddp_write(struct rtdm_fd *fd,
@@ -706,30 +699,27 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 	struct rtipc_port_label plabel;
 	struct timeval tv;
 	rtdm_lockctx_t s;
-	int ret = 0;
 	size_t len;
+	int ret;
 
-	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
-		return -EFAULT;
+	ret = rtipc_get_sockoptin(fd, &sopt, arg);
+	if (ret)
+		return ret;
 
 	if (sopt.level == SOL_SOCKET) {
 		switch (sopt.optname) {
 
 		case SO_RCVTIMEO:
-			if (sopt.optlen != sizeof(tv))
-				return -EINVAL;
-			if (rtipc_get_arg(fd, &tv,
-					  sopt.optval, sizeof(tv)))
-				return -EFAULT;
+			ret = rtipc_get_timeval(fd, &tv, sopt.optval, sopt.optlen);
+			if (ret)
+				return ret;
 			sk->rx_timeout = rtipc_timeval_to_ns(&tv);
 			break;
 
 		case SO_SNDTIMEO:
-			if (sopt.optlen != sizeof(tv))
-				return -EINVAL;
-			if (rtipc_get_arg(fd, &tv,
-					  sopt.optval, sizeof(tv)))
-				return -EFAULT;
+			ret = rtipc_get_timeval(fd, &tv, sopt.optval, sopt.optlen);
+			if (ret)
+				return ret;
 			sk->tx_timeout = rtipc_timeval_to_ns(&tv);
 			break;
 
@@ -746,11 +736,9 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 	switch (sopt.optname) {
 
 	case IDDP_POOLSZ:
-		if (sopt.optlen != sizeof(len))
-			return -EINVAL;
-		if (rtipc_get_arg(fd, &len,
-				  sopt.optval, sizeof(len)))
-			return -EFAULT;
+		ret = rtipc_get_length(fd, &len, sopt.optval, sopt.optlen);
+		if (ret)
+			return ret;
 		if (len == 0)
 			return -EINVAL;
 		cobalt_atomic_enter(s);
@@ -769,8 +757,7 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 	case IDDP_LABEL:
 		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(fd, &plabel,
-				  sopt.optval, sizeof(plabel)))
+		if (rtipc_get_arg(fd, &plabel, sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		cobalt_atomic_enter(s);
 		/*
@@ -802,33 +789,31 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 	struct timeval tv;
 	rtdm_lockctx_t s;
 	socklen_t len;
-	int ret = 0;
+	int ret;
 
-	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
-		return -EFAULT;
+	ret = rtipc_get_sockoptout(fd, &sopt, arg);
+	if (ret)
+		return ret;
 
-	if (rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len)))
-		return -EFAULT;
+	ret = rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len));
+	if (ret)
+		return ret;
 
 	if (sopt.level == SOL_SOCKET) {
 		switch (sopt.optname) {
 
 		case SO_RCVTIMEO:
-			if (len != sizeof(tv))
-				return -EINVAL;
 			rtipc_ns_to_timeval(&tv, sk->rx_timeout);
-			if (rtipc_put_arg(fd, sopt.optval,
-					  &tv, sizeof(tv)))
-				return -EFAULT;
+			ret = rtipc_put_timeval(fd, sopt.optval, &tv, len);
+			if (ret)
+				return ret;
 			break;
 
 		case SO_SNDTIMEO:
-			if (len != sizeof(tv))
-				return -EINVAL;
 			rtipc_ns_to_timeval(&tv, sk->tx_timeout);
-			if (rtipc_put_arg(fd, sopt.optval,
-					  &tv, sizeof(tv)))
-				return -EFAULT;
+			ret = rtipc_put_timeval(fd, sopt.optval, &tv, len);
+			if (ret)
+				return ret;
 			break;
 
 		default:
@@ -849,8 +834,7 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 		cobalt_atomic_enter(s);
 		strcpy(plabel.label, sk->label);
 		cobalt_atomic_leave(s);
-		if (rtipc_put_arg(fd, sopt.optval,
-				  &plabel, sizeof(plabel)))
+		if (rtipc_put_arg(fd, sopt.optval, &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 
@@ -871,15 +855,15 @@ static int __iddp_ioctl(struct rtdm_fd *fd,
 
 	switch (request) {
 
-	case _RTIOC_CONNECT:
-		ret = rtipc_get_sockaddr(fd, arg, &saddrp);
+	COMPAT_CASE(_RTIOC_CONNECT):
+		ret = rtipc_get_sockaddr(fd, &saddrp, arg);
 		if (ret)
 		  return ret;
 		ret = __iddp_connect_socket(sk, saddrp);
 		break;
 
-	case _RTIOC_BIND:
-		ret = rtipc_get_sockaddr(fd, arg, &saddrp);
+	COMPAT_CASE(_RTIOC_BIND):
+		ret = rtipc_get_sockaddr(fd, &saddrp, arg);
 		if (ret)
 			return ret;
 		if (saddrp == NULL)
@@ -887,24 +871,24 @@ static int __iddp_ioctl(struct rtdm_fd *fd,
 		ret = __iddp_bind_socket(fd, saddrp);
 		break;
 
-	case _RTIOC_GETSOCKNAME:
+	COMPAT_CASE(_RTIOC_GETSOCKNAME):
 		ret = rtipc_put_sockaddr(fd, arg, &sk->name);
 		break;
 
-	case _RTIOC_GETPEERNAME:
+	COMPAT_CASE(_RTIOC_GETPEERNAME):
 		ret = rtipc_put_sockaddr(fd, arg, &sk->peer);
 		break;
 
-	case _RTIOC_SETSOCKOPT:
+	COMPAT_CASE(_RTIOC_SETSOCKOPT):
 		ret = __iddp_setsockopt(sk, fd, arg);
 		break;
 
-	case _RTIOC_GETSOCKOPT:
+	COMPAT_CASE(_RTIOC_GETSOCKOPT):
 		ret = __iddp_getsockopt(sk, fd, arg);
 		break;
 
 	case _RTIOC_LISTEN:
-	case _RTIOC_ACCEPT:
+	COMPAT_CASE(_RTIOC_ACCEPT):
 		ret = -EOPNOTSUPP;
 		break;
 
@@ -922,10 +906,17 @@ static int __iddp_ioctl(struct rtdm_fd *fd,
 static int iddp_ioctl(struct rtdm_fd *fd,
 		      unsigned int request, void *arg)
 {
-	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
-		return -ENOSYS;	/* Try downgrading to NRT */
+	int ret;
 
-	return __iddp_ioctl(fd, request, arg);
+	switch (request) {
+	COMPAT_CASE(_RTIOC_BIND):
+		if (rtdm_in_rt_context())
+			return -ENOSYS;	/* Try downgrading to NRT */
+	default:
+		ret = __iddp_ioctl(fd, request, arg);
+	}
+
+	return ret;
 }
 
 static int iddp_init(void)

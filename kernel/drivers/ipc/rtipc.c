@@ -42,51 +42,139 @@ static struct rtipc_protocol *protocols[IPCPROTO_MAX] = {
 
 DEFINE_XNPTREE(rtipc_ptree, "rtipc");
 
-int rtipc_get_arg(struct rtdm_fd *fd,
-		  void *dst, const void *src, size_t len)
+int rtipc_get_arg(struct rtdm_fd *fd, void *dst, const void *src, size_t len)
 {
-	if (rtdm_fd_is_user(fd)) {
-		if (rtdm_safe_copy_from_user(fd, dst, src, len))
-			return -EFAULT;
-	} else
+	if (!rtdm_fd_is_user(fd)) {
 		memcpy(dst, src, len);
-
-	return 0;
-}
-
-int rtipc_put_arg(struct rtdm_fd *fd,
-		  void *dst, const void *src, size_t len)
-{
-	if (rtdm_fd_is_user(fd)) {
-		if (rtdm_safe_copy_to_user(fd, dst, src, len))
-			return -EFAULT;
-	} else
-		memcpy(dst, src, len);
-
-	return 0;
-}
-
-int rtipc_get_sockaddr(struct rtdm_fd *fd,
-		       const void *arg, struct sockaddr_ipc **saddrp)
-{
-	struct _rtdm_setsockaddr_args setaddr;
-
-	if (rtipc_get_arg(fd,
-			  &setaddr, arg, sizeof(setaddr)))
-		return -EFAULT;
-
-	if (setaddr.addrlen > 0) {
-		if (setaddr.addrlen != sizeof(**saddrp))
-			return -EINVAL;
-
-		if (rtipc_get_arg(fd, *saddrp,
-				  setaddr.addr, sizeof(**saddrp)))
-			return -EFAULT;
-	} else {
-		if (setaddr.addr)
-			return -EINVAL;
-		*saddrp = NULL;
+		return 0;
 	}
+
+	return rtdm_copy_from_user(fd, dst, src, len);
+}
+
+int rtipc_put_arg(struct rtdm_fd *fd, void *dst, const void *src, size_t len)
+{
+	if (!rtdm_fd_is_user(fd)) {
+		memcpy(dst, src, len);
+		return 0;
+	}
+
+	return rtdm_copy_to_user(fd, dst, src, len);
+}
+
+int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
+		    const struct msghdr *msg)
+{
+	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
+	if (!rtdm_fd_is_user(fd)) {
+		memcpy(iov, msg->msg_iov, len);
+		return 0;
+	}
+
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_iovec ciov, __user *p;
+		int ret, n;
+		for (n = 0, p = (struct compat_iovec *)msg->msg_iov;
+		     n < msg->msg_iovlen; n++, p++) {
+			ret = rtdm_copy_from_user(fd, &ciov, p, sizeof(ciov));
+			if (ret)
+				return ret;
+			iov[n].iov_base = compat_ptr(ciov.iov_base);
+			iov[n].iov_len = ciov.iov_len;
+		}
+		return 0;
+	}
+#endif
+
+	return rtdm_copy_from_user(fd, iov, msg->msg_iov, len);
+}
+
+int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
+		    const struct msghdr *msg)
+{
+	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
+
+	if (!rtdm_fd_is_user(fd)) {
+		memcpy(msg->msg_iov, iov, len);
+		return 0;
+	}
+
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_iovec ciov, __user *p;
+		int ret, n;
+		for (n = 0, p = (struct compat_iovec *)msg->msg_iov;
+		     n < msg->msg_iovlen; n++, p++) {
+			ciov.iov_base = ptr_to_compat(iov[n].iov_base);
+			ciov.iov_len = iov[n].iov_len;
+			ret = rtdm_copy_to_user(fd, p, &ciov, sizeof(*p));
+			if (ret)
+				return ret;
+		}
+		return 0;
+	}
+#endif
+
+	return rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
+}
+
+int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
+		       const void *arg)
+{
+	const struct _rtdm_setsockaddr_args *p;
+	struct _rtdm_setsockaddr_args sreq;
+	int ret;
+
+	if (!rtdm_fd_is_user(fd)) {
+		p = arg;
+		if (p->addrlen > 0) {
+			if (p->addrlen != sizeof(**saddrp))
+				return -EINVAL;
+			memcpy(*saddrp, p->addr, sizeof(**saddrp));
+		} else {
+			if (p->addr)
+				return -EINVAL;
+			*saddrp = NULL;
+		}
+		return 0;
+	}
+
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_rtdm_setsockaddr_args csreq;
+		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
+		if (ret)
+			return ret;
+		if (csreq.addrlen > 0) {
+			if (csreq.addrlen != sizeof(**saddrp))
+				return -EINVAL;
+			return rtdm_safe_copy_from_user(fd, *saddrp,
+							compat_ptr(csreq.addr),
+							sizeof(**saddrp));
+		}
+		if (csreq.addr)
+			return -EINVAL;
+
+		*saddrp = NULL;
+
+		return 0;
+	}
+#endif
+
+	ret = rtdm_safe_copy_from_user(fd, &sreq, arg, sizeof(sreq));
+	if (ret)
+		return ret;
+	if (sreq.addrlen > 0) {
+		if (sreq.addrlen != sizeof(**saddrp))
+			return -EINVAL;
+		return rtdm_safe_copy_from_user(fd, *saddrp,
+						sreq.addr, sizeof(**saddrp));
+	}
+	if (sreq.addr)
+		return -EINVAL;
+
+	*saddrp = NULL;
 
 	return 0;
 }
@@ -94,30 +182,223 @@ int rtipc_get_sockaddr(struct rtdm_fd *fd,
 int rtipc_put_sockaddr(struct rtdm_fd *fd, void *arg,
 		       const struct sockaddr_ipc *saddr)
 {
-	struct _rtdm_getsockaddr_args getaddr;
+	const struct _rtdm_getsockaddr_args *p;
+	struct _rtdm_getsockaddr_args sreq;
 	socklen_t len;
+	int ret;
 
-	if (rtipc_get_arg(fd,
-			  &getaddr, arg, sizeof(getaddr)))
-		return -EFAULT;
+	if (!rtdm_fd_is_user(fd)) {
+		p = arg;
+		if (*p->addrlen < sizeof(*saddr))
+			return -EINVAL;
+		memcpy(p->addr, saddr, sizeof(*saddr));
+		*p->addrlen = sizeof(*saddr);
+		return 0;
+	}
 
-	if (rtipc_get_arg(fd,
-			  &len, getaddr.addrlen, sizeof(len)))
-		return -EFAULT;
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_rtdm_getsockaddr_args csreq;
+		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
+		if (ret)
+			return ret;
+
+		ret = rtdm_safe_copy_from_user(fd, &len,
+					       compat_ptr(csreq.addrlen),
+					       sizeof(len));
+		if (ret)
+			return ret;
+
+		if (len < sizeof(*saddr))
+			return -EINVAL;
+
+		ret = rtdm_safe_copy_to_user(fd, compat_ptr(csreq.addr),
+					     saddr, sizeof(*saddr));
+		if (ret)
+			return ret;
+
+		len = sizeof(*saddr);
+		return rtdm_safe_copy_to_user(fd, compat_ptr(csreq.addrlen),
+					      &len, sizeof(len));
+	}
+#endif
+
+	ret = rtdm_safe_copy_from_user(fd, &sreq, arg, sizeof(sreq));
+	if (ret)
+		return ret;
+
+	ret = rtdm_safe_copy_from_user(fd, &len, sreq.addrlen, sizeof(len));
+	if (ret)
+		return ret;
 
 	if (len < sizeof(*saddr))
 		return -EINVAL;
 
-	if (rtipc_put_arg(fd,
-			  getaddr.addr, saddr, sizeof(*saddr)))
-		return -EFAULT;
+	ret = rtdm_safe_copy_to_user(fd, sreq.addr, saddr, sizeof(*saddr));
+	if (ret)
+		return ret;
 
 	len = sizeof(*saddr);
-	if (rtipc_put_arg(fd,
-			  getaddr.addrlen, &len, sizeof(len)))
-		return -EFAULT;
 
-	return 0;
+	return rtdm_safe_copy_to_user(fd, sreq.addrlen, &len, sizeof(len));
+}
+
+int rtipc_get_sockoptout(struct rtdm_fd *fd, struct _rtdm_getsockopt_args *sopt,
+			 const void *arg)
+{
+	if (!rtdm_fd_is_user(fd)) {
+		*sopt = *(struct _rtdm_getsockopt_args *)arg;
+		return 0;
+	}
+
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_rtdm_getsockopt_args csopt;
+		int ret;
+		ret = rtdm_safe_copy_from_user(fd, &csopt, arg, sizeof(csopt));
+		if (ret)
+			return ret;
+		sopt->level = csopt.level;
+		sopt->optname = csopt.optname;
+		sopt->optval = compat_ptr(csopt.optval);
+		sopt->optlen = compat_ptr(csopt.optlen);
+		return 0;
+	}
+#endif
+
+	return rtdm_safe_copy_from_user(fd, sopt, arg, sizeof(*sopt));
+}
+
+int rtipc_put_sockoptout(struct rtdm_fd *fd, void *arg,
+			 const struct _rtdm_getsockopt_args *sopt)
+{
+	if (!rtdm_fd_is_user(fd)) {
+		*(struct _rtdm_getsockopt_args *)arg = *sopt;
+		return 0;
+	}
+
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_rtdm_getsockopt_args csopt;
+		int ret;
+		csopt.level = sopt->level;
+		csopt.optname = sopt->optname;
+		csopt.optval = ptr_to_compat(sopt->optval);
+		csopt.optlen = ptr_to_compat(sopt->optlen);
+		ret = rtdm_safe_copy_to_user(fd, arg, &csopt, sizeof(csopt));
+		if (ret)
+			return ret;
+		return 0;
+	}
+#endif
+
+	return rtdm_safe_copy_to_user(fd, arg, sopt, sizeof(*sopt));
+}
+
+int rtipc_get_sockoptin(struct rtdm_fd *fd, struct _rtdm_setsockopt_args *sopt,
+			const void *arg)
+{
+	if (!rtdm_fd_is_user(fd)) {
+		*sopt = *(struct _rtdm_setsockopt_args *)arg;
+		return 0;
+	}
+
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_rtdm_setsockopt_args csopt;
+		int ret;
+		ret = rtdm_safe_copy_from_user(fd, &csopt, arg, sizeof(csopt));
+		if (ret)
+			return ret;
+		sopt->level = csopt.level;
+		sopt->optname = csopt.optname;
+		sopt->optval = compat_ptr(csopt.optval);
+		sopt->optlen = csopt.optlen;
+		return 0;
+	}
+#endif
+
+	return rtdm_safe_copy_from_user(fd, sopt, arg, sizeof(*sopt));
+}
+
+int rtipc_get_timeval(struct rtdm_fd *fd, struct timeval *tv,
+		      const void *arg, size_t arglen)
+{
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		const struct compat_timeval *ctv;
+		if (arglen != sizeof(*ctv))
+			return -EINVAL;
+		ctv = arg;
+		return (ctv == NULL ||
+			!access_rok(ctv, sizeof(*ctv)) ||
+			__xn_get_user(tv->tv_sec, &ctv->tv_sec) ||
+			__xn_get_user(tv->tv_usec, &ctv->tv_usec)) ? -EFAULT : 0;
+	}
+#endif
+
+	if (arglen != sizeof(*tv))
+		return -EINVAL;
+
+	if (!rtdm_fd_is_user(fd)) {
+		*tv = *(struct timeval *)arg;
+		return 0;
+	}
+
+	return rtdm_safe_copy_from_user(fd, tv, arg, sizeof(*tv));
+}
+
+int rtipc_put_timeval(struct rtdm_fd *fd, void *arg,
+		      const struct timeval *tv, size_t arglen)
+{
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		struct compat_timeval *ctv;
+		if (arglen != sizeof(*ctv))
+			return -EINVAL;
+		ctv = arg;
+		return (ctv == NULL ||
+			!access_wok(ctv, sizeof(*ctv)) ||
+			__xn_put_user(tv->tv_sec, &ctv->tv_sec) ||
+			__xn_put_user(tv->tv_usec, &ctv->tv_usec)) ? -EFAULT : 0;
+	}
+#endif
+
+	if (arglen != sizeof(*tv))
+		return -EINVAL;
+
+	if (!rtdm_fd_is_user(fd)) {
+		*(struct timeval *)arg = *tv;
+		return 0;
+	}
+
+	return rtdm_safe_copy_to_user(fd, arg, tv, sizeof(*tv));
+}
+
+int rtipc_get_length(struct rtdm_fd *fd, size_t *lenp,
+		     const void *arg, size_t arglen)
+{
+#ifdef CONFIG_COMPAT
+	if (rtdm_fd_is_compat(fd)) {
+		const compat_size_t *csz;
+		if (arglen != sizeof(*csz))
+			return -EINVAL;
+		csz = arg;
+		return csz == NULL ||
+			!access_rok(csz, sizeof(*csz)) ||
+			__xn_get_user(*lenp, csz) ? -EFAULT : 0;
+	}
+#endif
+
+	if (arglen != sizeof(size_t))
+		return -EINVAL;
+
+	if (!rtdm_fd_is_user(fd)) {
+		*lenp = *(size_t *)arg;
+		return 0;
+	}
+
+	return rtdm_safe_copy_from_user(fd, lenp, arg, sizeof(*lenp));
 }
 
 ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen)
