@@ -39,6 +39,7 @@ static int idx_subd = -1;
 static int idx_chan;
 static int idx_rng = -1;
 static unsigned int scan_size = SCAN_CNT;
+static char *calibration_file = NULL;
 
 struct option insn_read_opts[] = {
 	{"verbose", no_argument, NULL, 'v'},
@@ -47,6 +48,7 @@ struct option insn_read_opts[] = {
 	{"scan-count", required_argument, NULL, 'S'},
 	{"channel", required_argument, NULL, 'c'},
 	{"range", required_argument, NULL, 'R'},
+	{"cal", required_argument, NULL, 'y'},
 	{"raw", no_argument, NULL, 'w'},
 	{"help", no_argument, NULL, 'h'},
 	{0},
@@ -63,6 +65,7 @@ static void do_print_usage(void)
 	fprintf(stdout, "\t\t -c, --channel: channel to use\n");
 	fprintf(stdout, "\t\t -R, --range: range to use\n");
 	fprintf(stdout, "\t\t -w, --raw: dump data in raw format\n");
+	fprintf(stdout, "\t\t -y, --cal: /path/to/calibration.bin \n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
 }
 
@@ -118,9 +121,8 @@ static int dump_text(a4l_desc_t *dsc, unsigned char *buf, int size)
 		if (err < 0)
 			goto out;
 
-		for (i = 0; i < tmp_cnt; i++) {
+		for (i = 0; i < tmp_cnt; i++)
 			fprintf(stdout, fmt, values[i]);
-		}
 
 		tmp_size += tmp_cnt * width;
 	}
@@ -162,6 +164,7 @@ static int dump_converted(a4l_desc_t *dsc, unsigned char *buf, int size)
 		goto out;
 	}
 
+	fprintf(stdout, "Non Calibrated values: \n");
 	while (size - tmp_size > 0) {
 		double values[64];
 		int i, tmp_cnt = ((size - tmp_size) / width > 64) ?
@@ -174,6 +177,78 @@ static int dump_converted(a4l_desc_t *dsc, unsigned char *buf, int size)
 		for (i = 0; i < tmp_cnt; i++) {
 			fprintf(stdout, "%F\n", values[i]);
 		}
+
+		tmp_size += tmp_cnt * width;
+	}
+
+out:
+	return err;
+}
+
+static int dump_calibrated(a4l_desc_t *dsc, unsigned char *buf, int size)
+{
+	struct a4l_calibration_data cal_info;
+	struct a4l_polynomial converter;
+	int err = 0, width, tmp_size = 0;
+	a4l_chinfo_t *chan;
+	a4l_rnginfo_t *rng;
+
+
+	/* Retrieve the channel info */
+	err = a4l_get_chinfo(dsc, idx_subd, idx_chan, &chan);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: info for channel %d "
+			"on subdevice %d not available (err=%d)\n",
+			idx_chan, idx_subd, err);
+		goto out;
+	}
+
+	/* Retrieve the range info */
+	err = a4l_get_rnginfo(dsc, idx_subd, idx_chan, idx_rng, &rng);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: failed to recover range descriptor\n");
+		goto out;
+	}
+
+	width = a4l_sizeof_chan(chan);
+	if (width < 0) {
+		fprintf(stderr,
+			"insn_read: incoherent info for channel %d\n",
+			idx_chan);
+		err = width;
+		goto out;
+	}
+
+	err = a4l_read_calibration_file(calibration_file, &cal_info);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: failed to read /tmp/calibration.txt \n");
+		goto out;
+	}
+
+	err = a4l_get_softcal_converter(&converter, idx_subd, idx_chan, idx_rng,
+		                        &cal_info);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: failed to get the softcal converter  \n");
+		goto out;
+	}
+
+	fprintf(stdout, "Calibrated values: \n");
+	while (size - tmp_size > 0) {
+		double values[64];
+		int i, tmp_cnt = ((size - tmp_size) / width > 64) ?
+			64 : ((size - tmp_size) / width);
+
+		err = a4l_rawtodcal(chan, values, buf + tmp_size, tmp_cnt,
+			            &converter);
+		if (err < 0)
+			goto out;
+
+		for (i = 0; i < tmp_cnt; i++)
+			fprintf(stdout, "%F\n", values[i]);
 
 		tmp_size += tmp_cnt * width;
 	}
@@ -196,7 +271,7 @@ int main(int argc, char *argv[])
 	/* Compute arguments */
 	while ((err = getopt_long(argc,
 				  argv,
-				  "vrd:s:S:c:R:wh", insn_read_opts,
+				  "vrd:s:S:c:R:y:wh", insn_read_opts,
 				  NULL)) >= 0) {
 		switch (err) {
 		case 'v':
@@ -220,6 +295,10 @@ int main(int argc, char *argv[])
 			break;
 		case 'w':
 			dump_function = dump_raw;
+			break;
+		case 'y':
+			dump_function = dump_calibrated;
+			calibration_file = optarg;
 			break;
 		case 'h':
 		default:
