@@ -232,6 +232,15 @@ int a4l_dtoraw(a4l_chinfo_t *chan,
 
 int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data);
 
+int a4l_get_softcal_converter(struct a4l_polynomial *converter,
+	                      int subd, int chan, int range,
+	                      struct a4l_calibration_data *data );
+
+int a4l_rawtodcal(a4l_chinfo_t *chan, double *dst, void *src,
+		  int cnt, struct a4l_polynomial *converter);
+int a4l_dcaltoraw(a4l_chinfo_t * chan, void *dst, double *src, int cnt,
+		  struct a4l_polynomial *converter);
+
 int a4l_math_polyfit(unsigned order, double *r,double orig,
 	             const unsigned dim, double *x, double *y);
 

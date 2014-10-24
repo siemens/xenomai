@@ -732,6 +732,12 @@ struct a4l_calibration_data {
 	struct a4l_calibration_subdev_data *ao;
 };
 
+struct a4l_polynomial {
+	int expansion;
+	int order;
+	int nb_coeff;
+	double *coeff;
+};
 
 
 #endif /* _RTDM_UAPI_ANALOGY_H */

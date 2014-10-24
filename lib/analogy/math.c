@@ -336,7 +336,7 @@ static int mat_qr(struct mat *r, struct vec *y)
 /**
  * @brief Calculate the polynomial fit
  *
- * @param[in] order Order of the resulting polynomial
+ * @param[in] r_dim Number of elements of the resulting polynomial
  * @param[out] r Polynomial
  * @param[in] orig
  * @param[in] dim Number of elements in the polynomials
@@ -362,7 +362,7 @@ static int mat_qr(struct mat *r, struct vec *y)
  * mat_upper_triangular_backsub() with R upper triangular.
  *
  */
-int a4l_math_polyfit(unsigned order, double *r, double orig, const unsigned dim,
+int a4l_math_polyfit(unsigned r_dim, double *r, double orig, const unsigned dim,
 	        double *x, double *y)
 {
 	struct vec v_x, v_y, v_r, qty;
@@ -371,14 +371,14 @@ int a4l_math_polyfit(unsigned order, double *r, double orig, const unsigned dim,
 
 	vec_init(&v_x, dim, x);
 	vec_init(&v_y, dim, y);
-	vec_init(&v_r, order, r);
+	vec_init(&v_r, r_dim, r);
 
 	rc = vec_alloc(&qty, dim);
 	if (rc < 0)
 		return rc;
 	vec_copy(&qty, &v_y);
 
-	rc = mat_alloc(&vdm, dim, order);
+	rc = mat_alloc(&vdm, dim, r_dim);
 	if (rc < 0)
 		goto err_free_qty;
 

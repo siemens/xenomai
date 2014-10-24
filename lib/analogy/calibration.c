@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <math.h>
 #include <rtdm/analogy.h>
 #include <stdio.h>
 #include <errno.h>
@@ -28,7 +29,38 @@
 #include "boilerplate/list.h"
 #include "calibration.h"
 
+
 #define ARRAY_LEN(a)  (sizeof(a) / sizeof((a)[0]))
+
+static lsampl_t data32_get(void *src)
+{
+	return (lsampl_t) * ((lsampl_t *) (src));
+}
+
+static lsampl_t data16_get(void *src)
+{
+	return (lsampl_t) * ((sampl_t *) (src));
+}
+
+static lsampl_t data8_get(void *src)
+{
+	return (lsampl_t) * ((unsigned char *)(src));
+}
+
+static void data32_set(void *dst, lsampl_t val)
+{
+	*((lsampl_t *) (dst)) = val;
+}
+
+static void data16_set(void *dst, lsampl_t val)
+{
+	*((sampl_t *) (dst)) = (sampl_t) (0xffff & val);
+}
+
+static void data8_set(void *dst, lsampl_t val)
+{
+	*((unsigned char *)(dst)) = (unsigned char)(0xff & val);
+}
 
 static inline int read_dbl(double *d, struct _dictionary_ *f,const char *subd,
 			   int subd_idx, char *type, int type_idx)
@@ -73,7 +105,7 @@ static inline int read_int(int *val, struct _dictionary_ *f, const char *subd,
 }
 
 static inline int read_str(char **val, struct _dictionary_ *f, const char *subd,
-	                   const char *type)
+			   const char *type)
 {
 	char *str;
 	int ret;
@@ -105,7 +137,7 @@ static inline void write_calibration(FILE *file, char *fmt, ...)
 
 void
 write_calibration_file(FILE *dst, struct list *l,
-	               struct a4l_calibration_subdev *subd, a4l_desc_t *desc)
+		       struct a4l_calibration_subdev *subd, a4l_desc_t *desc)
 {
 	struct subdevice_calibration_node *e, *t;
 	int i, j = 0;
@@ -205,7 +237,7 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 		if (strncmp(subdevice[k], AI_SUBD_STR,
 			    strlen(AI_SUBD_STR)) == 0) {
 			data->ai = malloc(nb_elements *
-				   sizeof(struct a4l_calibration_subdev_data));
+					  sizeof(struct a4l_calibration_subdev_data));
 			data->nb_ai = nb_elements;
 			p  = data->ai;
 		}
@@ -213,7 +245,7 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 		if (strncmp(subdevice[k], AO_SUBD_STR,
 			    strlen(AO_SUBD_STR)) == 0) {
 			data->ao = malloc(nb_elements *
-				   sizeof(struct a4l_calibration_subdev_data));
+					  sizeof(struct a4l_calibration_subdev_data));
 			data->nb_ao = nb_elements;
 			p = data->ao;
 		}
@@ -232,7 +264,7 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 
 			for (j = 0; j < p->nb_coeff; j++) {
 				read_dbl(&p->coeff[j], d, subdevice[k], i,
-					COEFF_STR, j);
+					 COEFF_STR, j);
 			}
 
 			p->index = index;
@@ -242,6 +274,201 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 	wordfree(&exp);
 
 	return 0;
+}
+
+/**
+ * @brief Get the polynomial that will be use for the software calibration
+ *
+ * @param[out] converter Polynomial to be used on the software calibration
+ * @param[in] subd Subdevice index
+ * @param[in] chan Channel
+ * @param[in] range Range
+ * @param[in] data Calibration data read from the calibration file
+ *
+ * @return -1 on error
+ *
+ */
+
+int a4l_get_softcal_converter(struct a4l_polynomial *converter,
+			      int subd, int chan, int range,
+			      struct a4l_calibration_data *data )
+{
+	int i;
+
+	for (i = 0; i < data->nb_ai; i++) {
+		if (data->ai[i].index != subd)
+			break;
+		if ((data->ai[i].channel == chan || data->ai[i].channel == -1)
+		    &&
+		    (data->ai[i].range == range || data->ai[i].range == -1)) {
+			converter->expansion = data->ai[i].expansion;
+			converter->nb_coeff = data->ai[i].nb_coeff;
+			converter->coeff = data->ai[i].coeff;
+			converter->order = data->ai[i].nb_coeff - 1;
+			return 0;
+		}
+	}
+
+	for (i = 0; i < data->nb_ao; i++) {
+		if (data->ao[i].index != subd)
+			break;
+		if ((data->ao[i].channel == chan || data->ao[i].channel == -1)
+		    &&
+		    (data->ao[i].range == range || data->ao[i].range == -1)) {
+			converter->expansion = data->ao[i].expansion;
+			converter->nb_coeff = data->ao[i].nb_coeff;
+			converter->coeff = data->ao[i].coeff;
+			converter->order = data->ao[i].nb_coeff - 1;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * @brief Convert raw data (from the driver) to calibrated double units
+ * @param[in] chan Channel descriptor
+ * @param[out] dst Ouput buffer
+ * @param[in] src Input buffer
+ * @param[in] cnt Count of conversion to perform
+ * @param[in] converter Conversion polynomial
+ *
+ *
+ * @return the count of conversion performed, otherwise a negative
+ * error code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_rawtodcal()
+ *
+ *
+ *
+ */
+
+int a4l_rawtodcal(a4l_chinfo_t *chan, double *dst, void *src,
+		  int cnt, struct a4l_polynomial *converter)
+{
+	int i = 0, j = 0, k = 0;
+	double term = 1.0;
+	lsampl_t tmp;
+	int size;
+
+	/* Temporary data accessor */
+	lsampl_t(*datax_get) (void *);
+
+	/* Basic checking */
+	if (chan == NULL)
+		return -EINVAL;
+
+	/* Find out the size in memory */
+	size = a4l_sizeof_chan(chan);
+
+	/* Get the suitable accessor */
+	switch (a4l_sizeof_chan(chan)) {
+	case 4:
+		datax_get = data32_get;
+		break;
+	case 2:
+		datax_get = data16_get;
+		break;
+	case 1:
+		datax_get = data8_get;
+		break;
+	default:
+		return -EINVAL;
+	};
+
+	while (j < cnt) {
+		/* Properly retrieve the data */
+		tmp = datax_get(src + i);
+
+		/* Perform the conversion */
+		dst[j] = 0.0;
+		term = 1.0;
+		for (k = 0; k < converter->nb_coeff; k++) {
+			dst[j] += converter->coeff[k] * term;
+			term *= tmp - converter->expansion;
+		}
+
+		/* Update the counters */
+		i += size;
+		j++;
+	}
+
+	return j;
+}
+
+/**
+ * @brief Convert double values to raw calibrated data using polynomials
+ *
+ * @param[in] chan Channel descriptor
+ * @param[out] dst Ouput buffer
+ * @param[in] src Input buffer
+ * @param[in] cnt Count of conversion to perform
+ * @param[in] converter Conversion polynomial
+ *
+ * @return the count of conversion performed, otherwise a negative
+ * error code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_dcaltoraw()
+ *
+ */
+
+int a4l_dcaltoraw( a4l_chinfo_t * chan, void *dst, double *src, int cnt,
+		   struct a4l_polynomial *converter)
+{
+	int size, i = 0, j = 0, k = 0;
+	double value, term;
+
+	/* Temporary data accessor */
+	void (*datax_set) (void *, lsampl_t);
+
+	/* Basic checking */
+	if (chan == NULL)
+		return -EINVAL;
+
+	/* Find out the size in memory */
+	size = a4l_sizeof_chan(chan);
+
+	/* Select the suitable accessor */
+	switch (size) {
+	case 4:
+		datax_set = data32_set;
+		break;
+	case 2:
+		datax_set = data16_set;
+		break;
+	case 1:
+		datax_set = data8_set;
+		break;
+	default:
+		return -EINVAL;
+	};
+
+	while (j < cnt) {
+
+		/* Performs the conversion */
+		value = 0.0;
+		term = 1.0;
+		for (k = 0; k < converter->nb_coeff; k++) {
+			value += converter->coeff[k] * term;
+			term *= src[j] - converter->expansion;
+		}
+		value = nearbyint(value);
+
+		datax_set(dst + i, (lsampl_t) value);
+
+		/* Updates the counters */
+		i += size;
+		j++;
+	}
+
+	return j;
 }
 
 /** @} Calibration API */
