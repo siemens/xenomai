@@ -111,6 +111,24 @@ static int do_ioctl(int fd, unsigned long request, void *arg)
 	return ret;
 }
 
+COBALT_IMPL(int, fcntl, (int fd, int cmd, ...))
+{
+	va_list ap;
+	int arg;
+	int ret;
+
+	va_start(ap, cmd);
+	arg = va_arg(ap, int);
+	va_end(ap);
+
+	ret = XENOMAI_SYSCALL3(sc_cobalt_fcntl, fd, cmd, arg);
+
+	if (ret != -EBADF && ret != -ENOSYS)
+		return set_errno(ret);
+
+	return __STD(fcntl(fd, cmd, arg));
+}
+
 COBALT_IMPL(int, ioctl, (int fd, unsigned long int request, ...))
 {
 	va_list ap;

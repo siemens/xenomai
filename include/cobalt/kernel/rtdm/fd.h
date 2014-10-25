@@ -353,6 +353,8 @@ void rtdm_fd_put(struct rtdm_fd *fd);
 
 void rtdm_fd_unlock(struct rtdm_fd *fd);
 
+int rtdm_fd_fcntl(int ufd, int cmd, ...);
+
 int rtdm_fd_ioctl(int ufd, unsigned int request, ...);
 
 ssize_t rtdm_fd_read(int ufd, void __user *buf, size_t size);

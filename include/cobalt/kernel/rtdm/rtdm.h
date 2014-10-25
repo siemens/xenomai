@@ -50,6 +50,9 @@ int __rtdm_dev_socket(int protocol_family,
 #define rt_dev_close(fd)					\
 	rtdm_fd_close(fd, RTDM_FD_MAGIC)
 
+#define rt_dev_fcntl(fd, cmd, ...)				\
+	rtdm_fd_fcntl(fd,cmd, __VA_ARGS__)
+
 #define rt_dev_ioctl(fd, request, ...)				\
 	rtdm_fd_ioctl(fd, request, __VA_ARGS__)
 

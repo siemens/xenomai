@@ -170,6 +170,19 @@ int __real_close(int fd)
 }
 
 __weak
+int __real_fcntl(int fd, int cmd, ...)
+{
+	va_list ap;
+	int arg;
+
+	va_start(ap, cmd);
+	arg = va_arg(ap, int);
+	va_end(ap);
+
+	return fcntl(fd, cmd, arg);
+}
+
+__weak
 int __real_ioctl(int fd, unsigned long int request, ...)
 {
 	va_list ap;

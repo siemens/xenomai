@@ -105,3 +105,4 @@
 --wrap sleep
 --wrap mmap
 --wrap time
+--wrap fcntl

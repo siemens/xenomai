@@ -511,7 +511,7 @@ static int cobalt_ni(void)
 
 #ifdef CONFIG_XENO_ARCH_SYS3264
 #include "syscall32.h"
-#endif	
+#endif
 
 static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_NI,
@@ -611,10 +611,11 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(backtrace),
 	__COBALT_CALL_ENTRY(serialdbg),
 	__COBALT_CALL_ENTRY(sysconf),
-	__COBALT_CALL_ENTRY(sysctl)
+	__COBALT_CALL_ENTRY(sysctl),
+	__COBALT_CALL_ENTRY(fcntl),
 #ifdef CONFIG_XENO_ARCH_SYS3264
 #include <asm/xenomai/syscall32-table.h>
-#endif	
+#endif
 };
 
 static const int cobalt_sysmodes[] = {
@@ -716,6 +717,7 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(serialdbg, current),
 	__COBALT_MODE(sysconf, current),
 	__COBALT_MODE(sysctl, probing),
+	__COBALT_MODE(fcntl, current),
 };
 
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
@@ -893,7 +895,7 @@ linux_syscall:
 
 bad_syscall:
 	printk(XENO_WARN "bad syscall <%#lx>\n", __xn_syscall(regs));
-	
+
 	__xn_error_return(regs, -ENOSYS);
 
 	return KEVENT_STOP;

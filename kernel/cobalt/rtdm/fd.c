@@ -33,6 +33,8 @@
 #include "posix/process.h"
 #include "posix/syscall.h"
 
+#define RTDM_SETFL_MASK (O_NONBLOCK)
+
 DEFINE_PRIVATE_XNLOCK(fdtree_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
 static struct semaphore rtdm_fd_cleanup_sem;
@@ -355,6 +357,40 @@ void rtdm_fd_unlock(struct rtdm_fd *fd)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_unlock);
 
+int rtdm_fd_fcntl(int ufd, int cmd, ...)
+{
+	struct rtdm_fd *fd;
+	va_list ap;
+	int arg;
+	int ret;
+
+	fd = rtdm_fd_get(ufd, 0);
+	if (IS_ERR(fd))
+		return PTR_ERR(fd);
+
+	va_start(ap, cmd);
+	arg = va_arg(ap, int);
+	va_end(ap);
+
+	switch (cmd) {
+	case F_GETFL:
+		ret = fd->oflags;
+		break;
+	case F_SETFL:
+		fd->oflags = (fd->oflags & ~RTDM_SETFL_MASK) |
+			(arg & RTDM_SETFL_MASK);
+		ret = 0;
+		break;
+	default:
+		ret = -EINVAL;
+	}
+
+	rtdm_fd_put(fd);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(rtdm_fd_fcntl);
+
 int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 {
 	struct rtdm_fd *fd;
@@ -649,7 +685,7 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 		   unsigned int type)
 {
 	struct rtdm_fd *fd;
-	int rc;
+	int ret;
 
 	fd = rtdm_fd_get(ufd, 0);
 	if (IS_ERR(fd))
@@ -657,14 +693,14 @@ int rtdm_fd_select(int ufd, struct xnselector *selector,
 
 	set_compat_bit(fd);
 
-	rc = fd->ops->select(fd, selector, type, ufd);
+	ret = fd->ops->select(fd, selector, type, ufd);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
 		splnone();
 
 	rtdm_fd_put(fd);
 
-	return rc;
+	return ret;
 }
 
 static void destroy_fd(void *cookie, struct xnid *id)
