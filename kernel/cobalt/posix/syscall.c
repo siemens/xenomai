@@ -557,7 +557,6 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(mq_close),
 	__COBALT_CALL_ENTRY(mq_unlink),
 	__COBALT_CALL_ENTRY(mq_getattr),
-	__COBALT_CALL_ENTRY(mq_setattr),
 	__COBALT_CALL_ENTRY(mq_timedsend),
 	__COBALT_CALL_ENTRY(mq_timedreceive),
 	__COBALT_CALL_ENTRY(mq_notify),
@@ -612,7 +611,8 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(serialdbg),
 	__COBALT_CALL_ENTRY(sysconf),
 	__COBALT_CALL_ENTRY(sysctl),
-	__COBALT_CALL_ENTRY(fcntl),
+	__COBALT_CALL_ENTRY(fcntl)
+	/* NO COMMA AT END */
 #ifdef CONFIG_XENO_ARCH_SYS3264
 #include <asm/xenomai/syscall32-table.h>
 #endif
@@ -662,7 +662,6 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(mq_close, lostage),
 	__COBALT_MODE(mq_unlink, lostage),
 	__COBALT_MODE(mq_getattr, current),
-	__COBALT_MODE(mq_setattr, current),
 	__COBALT_MODE(mq_timedsend, primary),
 	__COBALT_MODE(mq_timedreceive, primary),
 	__COBALT_MODE(mq_notify, primary),

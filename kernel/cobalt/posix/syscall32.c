@@ -230,27 +230,6 @@ COBALT_SYSCALL32emu(mq_getattr, current,
 	return sys32_put_mqattr(u_attr, &attr);
 }
 
-COBALT_SYSCALL32emu(mq_setattr, current,
-		    int, (mqd_t uqd, const struct compat_mq_attr __user *u_attr,
-			  struct compat_mq_attr __user *u_oattr))
-{
-	struct mq_attr attr, oattr;
-	int ret;
-
-	ret = sys32_get_mqattr(&attr, u_attr);
-	if (ret)
-		return ret;
-
-	ret = __cobalt_mq_setattr(uqd, &attr, &oattr);
-	if (ret)
-		return ret;
-
-	if (u_oattr == NULL)
-		return 0;
-
-	return sys32_put_mqattr(u_oattr, &oattr);
-}
-
 COBALT_SYSCALL32emu(mq_timedsend, primary,
 		    int, (mqd_t uqd, const void __user *u_buf, size_t len,
 			  unsigned int prio,

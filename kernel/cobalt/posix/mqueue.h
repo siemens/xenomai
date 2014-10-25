@@ -35,9 +35,6 @@ int __cobalt_mq_open(const char __user *u_name, int oflags,
 
 int __cobalt_mq_getattr(mqd_t uqd, struct mq_attr *attr);
 
-int __cobalt_mq_setattr(mqd_t uqd, const struct mq_attr *attr,
-			struct mq_attr *oattr);
-
 int __cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 			  unsigned int prio, const void __user *u_ts,
 			  int (*fetch_timeout)(struct timespec *ts,
@@ -63,10 +60,6 @@ COBALT_SYSCALL_DECL(mq_unlink,
 
 COBALT_SYSCALL_DECL(mq_getattr, 
 		    int, (mqd_t uqd, struct mq_attr __user *u_attr));
-
-COBALT_SYSCALL_DECL(mq_setattr,
-		    int, (mqd_t uqd, const struct mq_attr __user *u_attr,
-			  struct mq_attr __user *u_oattr));
 
 COBALT_SYSCALL_DECL(mq_timedsend,
 		    int, (mqd_t uqd, const void __user *u_buf, size_t len,

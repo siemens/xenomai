@@ -80,10 +80,6 @@ COBALT_SYSCALL32emu_DECL(mq_open,
 COBALT_SYSCALL32emu_DECL(mq_getattr,
 			 int, (mqd_t uqd, struct compat_mq_attr __user *u_attr));
 
-COBALT_SYSCALL32emu_DECL(mq_setattr,
-			 int, (mqd_t uqd, const struct compat_mq_attr __user *u_attr,
-			       struct compat_mq_attr __user *u_oattr));
-
 COBALT_SYSCALL32emu_DECL(mq_timedsend,
 			 int, (mqd_t uqd, const void __user *u_buf, size_t len,
 			       unsigned int prio,

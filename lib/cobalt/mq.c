@@ -258,12 +258,27 @@ COBALT_IMPL(int, mq_setattr, (mqd_t mqd,
 			      const struct mq_attr *__restrict__ attr,
 			      struct mq_attr *__restrict__ oattr))
 {
-	int err;
+	int err = 0, flags;
 
-	err = XENOMAI_SYSCALL3(sc_cobalt_mq_setattr, mqd, attr, oattr);
+	if (oattr) {
+		err = XENOMAI_SYSCALL2(sc_cobalt_mq_getattr, mqd, oattr);
+		if (err < 0)
+			goto out_err;
+		flags = oattr->mq_flags;
+	} else {
+		err = __WRAP(fcntl(mqd, F_GETFL));
+		if (err < 0)
+			goto out_err;
+		flags = err;
+	}
+
+	flags = (flags & ~O_NONBLOCK) | (attr->mq_flags & O_NONBLOCK);
+
+	err = __WRAP(fcntl(mqd, F_SETFL, flags));
 	if (!err)
 		return 0;
 
+  out_err:
 	errno = -err;
 	return -1;
 }

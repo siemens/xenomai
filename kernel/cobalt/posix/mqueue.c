@@ -31,7 +31,7 @@
 
 #define COBALT_MSGMAX		65536
 #define COBALT_MSGSIZEMAX	(16*1024*1024)
-#define COBALT_MSGPRIOMAX 	32768
+#define COBALT_MSGPRIOMAX	32768
 
 struct cobalt_mq {
 	unsigned magic;
@@ -62,7 +62,6 @@ struct cobalt_mq {
 };
 
 struct cobalt_mqd {
-	long flags;
 	struct cobalt_mq *mq;
 	struct rtdm_fd fd;
 };
@@ -228,7 +227,7 @@ mqd_select(struct rtdm_fd *fd, struct xnselector *selector,
 	switch(type) {
 	case XNSELECT_READ:
 		err = -EBADF;
-		if ((mqd->flags & COBALT_PERMS_MASK) == O_WRONLY)
+		if ((rtdm_fd_flags(fd) & COBALT_PERMS_MASK) == O_WRONLY)
 			goto unlock_and_error;
 
 		err = xnselect_bind(&mq->read_select, binding,
@@ -240,7 +239,7 @@ mqd_select(struct rtdm_fd *fd, struct xnselector *selector,
 
 	case XNSELECT_WRITE:
 		err = -EBADF;
-		if ((mqd->flags & COBALT_PERMS_MASK) == O_RDONLY)
+		if ((rtdm_fd_flags(fd) & COBALT_PERMS_MASK) == O_RDONLY)
 			goto unlock_and_error;
 
 		err = xnselect_bind(&mq->write_select, binding,
@@ -275,7 +274,7 @@ static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)
 	if (mqd == NULL)
 		return -ENOSPC;
 
-	mqd->flags = flags;
+	mqd->fd.oflags = flags;
 	mqd->mq = mq;
 
 	return rtdm_fd_enter(&mqd->fd, ufd, COBALT_MQD_MAGIC, &mqd_ops);
@@ -416,7 +415,7 @@ mq_trysend(struct cobalt_mqd *mqd, size_t len)
 	unsigned flags;
 
 	mq = mqd->mq;
-	flags = mqd->flags & COBALT_PERMS_MASK;
+	flags = rtdm_fd_flags(&mqd->fd) & COBALT_PERMS_MASK;
 
 	if (flags != O_WRONLY && flags != O_RDWR)
 		return ERR_PTR(-EBADF);
@@ -442,7 +441,7 @@ mq_tryrcv(struct cobalt_mqd *mqd, size_t len)
 	struct cobalt_mq *mq;
 
 	mq = mqd->mq;
-	flags = mqd->flags & COBALT_PERMS_MASK;
+	flags = rtdm_fd_flags(&mqd->fd) & COBALT_PERMS_MASK;
 
 	if (flags != O_RDONLY && flags != O_RDWR)
 		return ERR_PTR(-EBADF);
@@ -485,7 +484,7 @@ redo:
 	if (msg != ERR_PTR(-EAGAIN))
 		goto out;
 
-	if (mqd->flags & O_NONBLOCK)
+	if (rtdm_fd_flags(&mqd->fd) & O_NONBLOCK)
 		goto out;
 
 	if (fetch_timeout) {
@@ -614,7 +613,7 @@ redo:
 	if (msg != ERR_PTR(-EAGAIN))
 		goto out;
 
-	if (mqd->flags & O_NONBLOCK)
+	if (rtdm_fd_flags(&mqd->fd) & O_NONBLOCK)
 		goto out;
 
 	if (fetch_timeout) {
@@ -668,31 +667,8 @@ static inline int mq_getattr(struct cobalt_mqd *mqd, struct mq_attr *attr)
 	mq = mqd->mq;
 	*attr = mq->attr;
 	xnlock_get_irqsave(&nklock, s);
-	attr->mq_flags = mqd->flags;
+	attr->mq_flags = rtdm_fd_flags(&mqd->fd);
 	attr->mq_curmsgs = mq->nrqueued;
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-}
-
-static inline int mq_setattr(struct cobalt_mqd *mqd,
-			     const struct mq_attr *__restrict__ attr,
-			     struct mq_attr *__restrict__ oattr)
-{
-	struct cobalt_mq *mq;
-	long flags;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	mq = mqd->mq;
-	if (oattr) {
-		*oattr = mq->attr;
-		oattr->mq_flags = mqd->flags;
-		oattr->mq_curmsgs = mq->nrqueued;
-	}
-	flags = (mqd->flags & COBALT_PERMS_MASK)
-	    | (attr->mq_flags & ~COBALT_PERMS_MASK);
-	mqd->flags = flags;
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -899,43 +875,6 @@ COBALT_SYSCALL(mq_getattr, current,
 		return ret;
 
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
-}
-
-int __cobalt_mq_setattr(mqd_t uqd, const struct mq_attr *attr,
-			struct mq_attr *oattr)
-{
-	struct cobalt_mqd *mqd;
-	int ret;
-
-	mqd = cobalt_mqd_get(uqd);
-	if (IS_ERR(mqd))
-		return PTR_ERR(mqd);
-
-	trace_cobalt_mq_setattr(uqd, attr);
-	ret = mq_setattr(mqd, attr, oattr);
-	cobalt_mqd_put(mqd);
-
-	return ret;
-}
-
-COBALT_SYSCALL(mq_setattr, current,
-	       int, (mqd_t uqd, const struct mq_attr __user *u_attr,
-		     struct mq_attr __user *u_oattr))
-{
-	struct mq_attr attr, oattr;
-	int ret;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	ret = __cobalt_mq_setattr(uqd, &attr, &oattr);
-	if (ret)
-		return ret;
-
-	if (u_oattr == NULL)
-		return 0;
-
-	return __xn_safe_copy_to_user(u_oattr, &oattr, sizeof(oattr));
 }
 
 static inline int mq_fetch_timeout(struct timespec *ts,

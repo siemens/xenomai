@@ -63,7 +63,7 @@
 #define sc_cobalt_mq_close			40
 #define sc_cobalt_mq_unlink			41
 #define sc_cobalt_mq_getattr			42
-#define sc_cobalt_mq_setattr			43
+/* 43 unimp */
 #define sc_cobalt_mq_timedsend			44
 #define sc_cobalt_mq_timedreceive		45
 #define sc_cobalt_mq_notify			46
