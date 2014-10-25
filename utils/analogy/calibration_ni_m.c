@@ -20,14 +20,8 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#include <gsl/gsl_statistics_double.h>
-#include <gsl/gsl_multifit.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
 #include <rtdm/uapi/analogy.h>
 #include <rtdm/analogy.h>
-#include <wordexp.h>
 #include <math.h>
 
 #include "calibration_ni_m.h"

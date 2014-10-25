@@ -30,9 +30,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-
-
-#include "git-stamp.h"
 #include "error.h"
 
 extern struct timespec calibration_start_time;

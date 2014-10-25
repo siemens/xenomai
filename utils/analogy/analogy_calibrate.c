@@ -32,7 +32,6 @@
 #include "calibration_ni_m.h"
 
 struct timespec calibration_start_time;
-static const char *revision = "1.0.0";
 a4l_desc_t descriptor;
 
 static const struct option options[] = {
@@ -85,8 +84,6 @@ int main(int argc, char *argv[])
 	char *device = NULL, *file = NULL;
 	int v, i, fd, err = 0;
 	FILE *p = NULL;
-
-	__debug("version: git commit %s, revision %s \n", GIT_STAMP, revision);
 
 	for (;;) {
 		i = -1;

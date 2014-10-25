@@ -19,12 +19,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <math.h>
 #include <rtdm/analogy.h>
 #include <stdio.h>
 #include <errno.h>
-#include <wordexp.h>
 #include "iniparser/iniparser.h"
 #include "boilerplate/list.h"
 #include "calibration.h"
@@ -196,36 +197,16 @@ write_calibration_file(FILE *dst, struct list *l,
 int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 {
 	const char *subdevice[2] = { AI_SUBD_STR, AO_SUBD_STR };
-	struct a4l_calibration_subdev_data *p = NULL;
 	int i, j, k, index = -1, nb_elements = -1;
+	struct a4l_calibration_subdev_data *p = NULL;
 	struct _dictionary_ *d;
-	const char *filename;
-	wordexp_t exp;
-	int ret = 0;
 
-	ret = wordexp(name, &exp, WRDE_NOCMD|WRDE_UNDEF);
-	if (ret) {
-		/* can't apply calibration */
-		ret = ret == WRDE_NOSPACE ? -ENOMEM : -EINVAL;
-		return ret;
-	}
-
-	if (exp.we_wordc != 1) {
-		/* "weird expansion of %s as rc file \n", params.name */
+	if (access(name, R_OK))
 		return -1;
-	}
 
-	filename = exp.we_wordv[0];
-	if (access(filename, R_OK)) {
-		/* "cant access %s for reading \n", params.name */
+	d = iniparser_load(name);
+	if (d == NULL)
 		return -1;
-	}
-
-	d = iniparser_load(filename);
-	if (d == NULL) {
-		/* "loading error for %s (%d)\n", params.name, errno */
-		return -1;
-	}
 
 	read_str(&data->driver_name, d, PLATFORM_STR, DRIVER_STR);
 	read_str(&data->board_name, d, PLATFORM_STR, BOARD_STR);
@@ -271,7 +252,7 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 			p++;
 		}
 	}
-	wordfree(&exp);
+
 
 	return 0;
 }

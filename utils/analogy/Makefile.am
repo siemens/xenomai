@@ -31,17 +31,7 @@ analogy_config_LDADD = \
 	-lrt -lpthread
 
 analogy_calibrate_SOURCES = analogy_calibrate.c calibration_ni_m.c
-analogy_calibrate.c: git-stamp.h calibration_ni_m.h
-git-stamp.h: git-stamp
-	@set -x; if test -r $(top_srcdir)/.git; then					        \
-	  stamp=`git --git-dir=$(top_srcdir)/.git rev-list --abbrev-commit -1 HEAD`;	        \
-	  if test \! -s $@ || grep -wvq $$stamp $@; then				        \
-		date=`git --git-dir=$(top_srcdir)/.git log -1 $$stamp --pretty=format:%ci`;	\
-		echo "#define GIT_STAMP \"#$$stamp ($$date)\"" > $@;			        \
-	  fi;										        \
-	elif test \! -r $@ -o -s $@; then						        \
-	    rm -f $@ && touch $@;							        \
-	fi; true
+analogy_calibrate.c: calibration_ni_m.h
 analogy_calibrate_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/cobalt/libcobalt.la	\
