@@ -65,7 +65,7 @@ int rtmac_vnic_rx(struct rtskb *rtskb, u16 type)
 
 
 
-static void rtmac_vnic_signal_handler(rtdm_nrtsig_t nrtsig, void *arg)
+static void rtmac_vnic_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 {
     struct rtskb            *rtskb;
     struct sk_buff          *skb;
@@ -381,7 +381,9 @@ int __init rtmac_vnic_module_init(void)
 {
     rtskb_queue_init(&rx_queue);
 
-    return rtdm_nrtsig_init(&vnic_signal, rtmac_vnic_signal_handler, NULL);
+    rtdm_nrtsig_init(&vnic_signal, rtmac_vnic_signal_handler, NULL);
+
+    return 0;
 }
 
 

@@ -49,20 +49,20 @@ LIST_HEAD(processed_calls);
 do {                                                                        \
     wait_queue_t __wait;                                                    \
     init_waitqueue_entry(&__wait, current);                                 \
-                                                                            \
+									    \
     add_wait_queue(&wq, &__wait);                                           \
     for (;;) {                                                              \
-        set_current_state(TASK_INTERRUPTIBLE);                              \
-        if (condition)                                                      \
-            break;                                                          \
-        if (!signal_pending(current)) {                                     \
-            ret = schedule_timeout(ret);                                    \
-            if (!ret)                                                       \
-                break;                                                      \
-            continue;                                                       \
-        }                                                                   \
-        ret = -ERESTARTSYS;                                                 \
-        break;                                                              \
+	set_current_state(TASK_INTERRUPTIBLE);                              \
+	if (condition)                                                      \
+	    break;                                                          \
+	if (!signal_pending(current)) {                                     \
+	    ret = schedule_timeout(ret);                                    \
+	    if (!ret)                                                       \
+		break;                                                      \
+	    continue;                                                       \
+	}                                                                   \
+	ret = -ERESTARTSYS;                                                 \
+	break;                                                              \
     }                                                                       \
     current->state = TASK_RUNNING;                                          \
     remove_wait_queue(&wq, &__wait);                                        \
@@ -74,7 +74,7 @@ do {                                                                        \
 ({                                                                          \
     long __ret = timeout;                                                   \
     if (!(condition))                                                       \
-        __wait_event_interruptible_timeout(wq, condition, __ret);           \
+	__wait_event_interruptible_timeout(wq, condition, __ret);           \
     __ret;                                                                  \
 })
 #endif
@@ -82,9 +82,9 @@ do {                                                                        \
 
 
 int rtnet_rtpc_dispatch_call(rtpc_proc proc, unsigned int timeout,
-                             void* priv_data, size_t priv_data_size,
-                             rtpc_copy_back_proc copy_back_handler,
-                             rtpc_cleanup_proc cleanup_handler)
+			     void* priv_data, size_t priv_data_size,
+			     rtpc_copy_back_proc copy_back_handler,
+			     rtpc_cleanup_proc cleanup_handler)
 {
     struct rt_proc_call *call;
     rtdm_lockctx_t      context;
@@ -93,9 +93,9 @@ int rtnet_rtpc_dispatch_call(rtpc_proc proc, unsigned int timeout,
 
     call = kmalloc(sizeof(struct rt_proc_call) + priv_data_size, GFP_KERNEL);
     if (call == NULL) {
-        if (call->cleanup_handler != NULL)
-            call->cleanup_handler(priv_data);
-        return -ENOMEM;
+	if (call->cleanup_handler != NULL)
+	    call->cleanup_handler(priv_data);
+	return -ENOMEM;
     }
 
     memcpy(call->priv_data, priv_data, priv_data_size);
@@ -114,23 +114,23 @@ int rtnet_rtpc_dispatch_call(rtpc_proc proc, unsigned int timeout,
     rtdm_event_signal(&dispatch_event);
 
     if (timeout > 0) {
-        ret = wait_event_interruptible_timeout(call->call_wq,
-            call->processed, (timeout * HZ) / 1000);
-        if (ret == 0)
-            ret = -ETIME;
+	ret = wait_event_interruptible_timeout(call->call_wq,
+	    call->processed, (timeout * HZ) / 1000);
+	if (ret == 0)
+	    ret = -ETIME;
     } else
-        ret = wait_event_interruptible(call->call_wq, call->processed);
+	ret = wait_event_interruptible(call->call_wq, call->processed);
 
     if (ret >= 0) {
-        if (copy_back_handler != NULL)
-            copy_back_handler(call, priv_data);
-        ret = call->result;
+	if (copy_back_handler != NULL)
+	    copy_back_handler(call, priv_data);
+	ret = call->result;
     }
 
     if (atomic_dec_and_test(&call->ref_count)) {
-        if (call->cleanup_handler != NULL)
-            call->cleanup_handler(&call->priv_data);
-        kfree(call);
+	if (call->cleanup_handler != NULL)
+	    call->cleanup_handler(&call->priv_data);
+	kfree(call);
     }
 
     return ret;
@@ -146,8 +146,8 @@ static inline struct rt_proc_call *rtpc_dequeue_pending_call(void)
 
     rtdm_lock_get_irqsave(&pending_calls_lock, context);
     if (!list_empty(&pending_calls)) {
-        call = (struct rt_proc_call *)pending_calls.next;
-        list_del(&call->list_entry);
+	call = (struct rt_proc_call *)pending_calls.next;
+	list_del(&call->list_entry);
     }
     rtdm_lock_put_irqrestore(&pending_calls_lock, context);
 
@@ -178,8 +178,8 @@ static inline struct rt_proc_call *rtpc_dequeue_processed_call(void)
 
     rtdm_lock_get_irqsave(&processed_calls_lock, context);
     if (!list_empty(&processed_calls)) {
-        call = (struct rt_proc_call *)processed_calls.next;
-        list_del(&call->list_entry);
+	call = (struct rt_proc_call *)processed_calls.next;
+	list_del(&call->list_entry);
     }
     rtdm_lock_put_irqrestore(&processed_calls_lock, context);
 
@@ -195,29 +195,29 @@ static void rtpc_dispatch_handler(void *arg)
 
 
     while (rtdm_event_wait(&dispatch_event) == 0)
-        while ((call = rtpc_dequeue_pending_call())) {
-            ret = call->proc(call);
-            if (ret != -CALL_PENDING)
-                rtpc_complete_call(call, ret);
-        }
+	while ((call = rtpc_dequeue_pending_call())) {
+	    ret = call->proc(call);
+	    if (ret != -CALL_PENDING)
+		rtpc_complete_call(call, ret);
+	}
 }
 
 
 
-static void rtpc_signal_handler(rtdm_nrtsig_t nrt_sig, void *arg)
+static void rtpc_signal_handler(rtdm_nrtsig_t *nrt_sig, void *arg)
 {
     struct rt_proc_call *call;
 
 
     while ((call = rtpc_dequeue_processed_call()) != NULL) {
-        call->processed = 1;
-        wake_up(&call->call_wq);
+	call->processed = 1;
+	wake_up(&call->call_wq);
 
-        if (atomic_dec_and_test(&call->ref_count)) {
-            if (call->cleanup_handler != NULL)
-                call->cleanup_handler(&call->priv_data);
-            kfree(call);
-        }
+	if (atomic_dec_and_test(&call->ref_count)) {
+	    if (call->cleanup_handler != NULL)
+		call->cleanup_handler(&call->priv_data);
+	    kfree(call);
+	}
     }
 }
 
@@ -234,15 +234,15 @@ void rtnet_rtpc_complete_call(struct rt_proc_call *call, int result)
 void rtnet_rtpc_complete_call_nrt(struct rt_proc_call *call, int result)
 {
     RTNET_ASSERT(!rtdm_in_rt_context(),
-                 rtnet_rtpc_complete_call(call, result); return;);
+		 rtnet_rtpc_complete_call(call, result); return;);
 
     call->processed = 1;
     wake_up(&call->call_wq);
 
     if (atomic_dec_and_test(&call->ref_count)) {
-        if (call->cleanup_handler != NULL)
-            call->cleanup_handler(&call->priv_data);
-        kfree(call);
+	if (call->cleanup_handler != NULL)
+	    call->cleanup_handler(&call->priv_data);
+	kfree(call);
     }
 }
 
@@ -253,17 +253,15 @@ int __init rtpc_init(void)
     int ret;
 
 
-    ret = rtdm_nrtsig_init(&rtpc_nrt_signal, rtpc_signal_handler, NULL);
-    if (ret < 0)
-        return ret;
+    rtdm_nrtsig_init(&rtpc_nrt_signal, rtpc_signal_handler, NULL);
 
     rtdm_event_init(&dispatch_event, 0);
 
     ret = rtdm_task_init(&dispatch_task, "rtnet-rtpc", rtpc_dispatch_handler,
-                         0, RTDM_TASK_LOWEST_PRIORITY, 0);
+			 0, RTDM_TASK_LOWEST_PRIORITY, 0);
     if (ret < 0) {
-        rtdm_event_destroy(&dispatch_event);
-        rtdm_nrtsig_destroy(&rtpc_nrt_signal);
+	rtdm_event_destroy(&dispatch_event);
+	rtdm_nrtsig_destroy(&rtpc_nrt_signal);
     }
 
     return ret;

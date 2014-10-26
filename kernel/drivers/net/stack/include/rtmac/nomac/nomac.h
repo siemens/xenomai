@@ -27,7 +27,6 @@
 
 #include <rtdm/driver.h>
 
-#include <rtnet_config.h>
 #include <rtmac/rtmac_disc.h>
 
 
@@ -39,6 +38,8 @@
 struct nomac_priv {
     unsigned int                magic;
     struct rtnet_device         *rtdev;
+    char                        device_name[32];
+    struct rtdm_driver          api_driver;
     struct rtdm_device          api_device;
     /* ... */
 

@@ -104,11 +104,11 @@ static void rtnetproxy_tx_loop(void *arg)
     struct rtskb *rtskb;
 
     while (rtdm_event_wait(&rtnetproxy_tx_event) == 0) {
-        while ((rtskb = rtskb_dequeue(&tx_queue)) != NULL) {
-            rtdev = rtskb->rtdev;
-            rtdev_xmit_proxy(rtskb);
-            rtdev_dereference(rtdev);
-        }
+	while ((rtskb = rtskb_dequeue(&tx_queue)) != NULL) {
+	    rtdev = rtskb->rtdev;
+	    rtdev_xmit_proxy(rtskb);
+	    rtdev_dereference(rtdev);
+	}
     }
 }
 
@@ -132,24 +132,24 @@ static int rtnetproxy_xmit(struct sk_buff *skb, struct net_device *dev)
 
     switch (ntohs(eth->h_proto)) {
     case ETH_P_IP:
-         if (len < sizeof(struct ethhdr) + sizeof(struct iphdr))
-             goto drop1;
+	 if (len < sizeof(struct ethhdr) + sizeof(struct iphdr))
+	     goto drop1;
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP
     case ETH_P_ARP:
 #endif
-        break;
+	break;
     default:
 drop1:
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-        dev->stats.tx_dropped++;
+	dev->stats.tx_dropped++;
 #endif
-        dev_kfree_skb(skb);
-        return NETDEV_TX_OK;
+	dev_kfree_skb(skb);
+	return NETDEV_TX_OK;
     }
 
     rtskb = alloc_rtskb(len, &rtskb_pool);
     if (!rtskb)
-        return NETDEV_TX_BUSY;
+	return NETDEV_TX_BUSY;
 
     memcpy(rtskb_put(rtskb, len), skb->data, len);
 
@@ -169,14 +169,14 @@ drop1:
     if (rt_ip_route_output(&rt, daddr, INADDR_ANY) < 0) {
 drop2:
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-        dev->stats.tx_dropped++;
+	dev->stats.tx_dropped++;
 #endif
-        kfree_rtskb(rtskb);
-        return NETDEV_TX_OK;
+	kfree_rtskb(rtskb);
+	return NETDEV_TX_OK;
     }
     if (rt.rtdev->local_ip != saddr) {
-        rtdev_dereference(rt.rtdev);
-        goto drop2;
+	rtdev_dereference(rt.rtdev);
+	goto drop2;
     }
 
     eth = (struct ethhdr *)rtskb->data;
@@ -216,11 +216,11 @@ static void rtnetproxy_recv(struct rtskb *rtskb)
     /* Acquire rtskb (JK) */
     if (rtskb_acquire(rtskb, &rtskb_pool) != 0) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-        dev_rtnetproxy->stats.rx_dropped++;
+	dev_rtnetproxy->stats.rx_dropped++;
 #endif
-        rtdm_printk("rtnetproxy_recv: No free rtskb in pool\n");
-        kfree_rtskb(rtskb);
-        return;
+	rtdm_printk("rtnetproxy_recv: No free rtskb in pool\n");
+	kfree_rtskb(rtskb);
+	return;
     }
 
     rtdev_reference(rtskb->rtdev);
@@ -277,14 +277,14 @@ static inline void rtnetproxy_kernel_recv(struct rtskb *rtskb)
  * It is activated from rtnetproxy_recv whenever rtnet received a frame to
  * be processed by rtnetproxy.
  * ************************************************************************ */
-static void rtnetproxy_signal_handler(rtdm_nrtsig_t nrtsig, void *arg)
+static void rtnetproxy_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 {
     struct rtskb *rtskb;
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
-        rtnetproxy_kernel_recv(rtskb);
-        rtdev_dereference(rtskb->rtdev);
-        kfree_rtskb(rtskb);
+	rtnetproxy_kernel_recv(rtskb);
+	rtdev_dereference(rtskb->rtdev);
+	kfree_rtskb(rtskb);
     }
 }
 
@@ -362,39 +362,32 @@ static int __init rtnetproxy_init_module(void)
 
     /* Initialize the proxy's rtskb pool (JK) */
     if (rtskb_pool_init(&rtskb_pool, proxy_rtskbs) < proxy_rtskbs) {
-        err = -ENOMEM;
-        goto err1;
+	err = -ENOMEM;
+	goto err1;
     }
 
     dev_rtnetproxy = alloc_netdev(0, "rtproxy", rtnetproxy_init);
     if (!dev_rtnetproxy) {
-        err = -ENOMEM;
-        goto err1;
+	err = -ENOMEM;
+	goto err1;
     }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-    SET_MODULE_OWNER(dev_rtnetproxy);
-#endif
-
-    err = rtdm_nrtsig_init(&rtnetproxy_rx_signal, rtnetproxy_signal_handler,
-                           NULL);
-    if (err)
-        goto err2;
+    rtdm_nrtsig_init(&rtnetproxy_rx_signal, rtnetproxy_signal_handler, NULL);
 
     rtskb_queue_init(&tx_queue);
     rtskb_queue_init(&rx_queue);
 
     err = register_netdev(dev_rtnetproxy);
     if (err < 0)
-        goto err3;
+	goto err3;
 
     /* Init the task for transmission */
     rtdm_event_init(&rtnetproxy_tx_event, 0);
     err = rtdm_task_init(&rtnetproxy_tx_task, "rtnetproxy",
-                         rtnetproxy_tx_loop, 0,
-                         RTDM_TASK_LOWEST_PRIORITY, 0);
+			 rtnetproxy_tx_loop, 0,
+			 RTDM_TASK_LOWEST_PRIORITY, 0);
     if (err)
-        goto err4;
+	goto err4;
 
     /* Register with RTnet */
     rt_ip_fallback_handler = rtnetproxy_recv;
@@ -409,7 +402,6 @@ err4:
 err3:
     rtdm_nrtsig_destroy(&rtnetproxy_rx_signal);
 
-err2:
     free_netdev(dev_rtnetproxy);
 
 err1:
@@ -439,13 +431,13 @@ static void __exit rtnetproxy_cleanup_module(void)
     rtdm_nrtsig_destroy(&rtnetproxy_rx_signal);
 
     while ((rtskb = rtskb_dequeue(&tx_queue)) != NULL) {
-        rtdev_dereference(rtskb->rtdev);
-        kfree_rtskb(rtskb);
+	rtdev_dereference(rtskb->rtdev);
+	kfree_rtskb(rtskb);
     }
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
-        rtdev_dereference(rtskb->rtdev);
-        kfree_rtskb(rtskb);
+	rtdev_dereference(rtskb->rtdev);
+	kfree_rtskb(rtskb);
     }
 
     rtskb_pool_release(&rtskb_pool);

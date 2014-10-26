@@ -27,7 +27,6 @@
 
 #include <rtdm/driver.h>
 
-#include <rtnet_config.h>
 #include <rtnet_rtpc.h>
 #include <rtmac/rtmac_disc.h>
 
@@ -108,15 +107,17 @@ struct tdma_reply_cal {
 struct tdma_priv {
     unsigned int                magic;
     struct rtnet_device         *rtdev;
+    char                        device_name[32];
+    struct rtdm_driver          api_driver;
     struct rtdm_device          api_device;
 
 #ifdef ALIGN_RTOS_TASK
     __u8                        __align[(ALIGN_RTOS_TASK -
-                                         ((sizeof(unsigned int) +
-                                           sizeof(struct rtnet_device *) +
-                                           sizeof(struct rtdm_device)
-                                          ) & (ALIGN_RTOS_TASK-1))
-                                         ) & (ALIGN_RTOS_TASK-1)];
+					 ((sizeof(unsigned int) +
+					   sizeof(struct rtnet_device *) +
+					   sizeof(struct rtdm_device)
+					  ) & (ALIGN_RTOS_TASK-1))
+					 ) & (ALIGN_RTOS_TASK-1)];
 #endif
     rtdm_task_t                 worker_task;
     rtdm_event_t                worker_wakeup;
@@ -161,7 +162,7 @@ extern struct rtmac_disc        tdma_disc;
     struct tdma_job *entry; \
     rtdm_printk("%s:%d - ", __FUNCTION__, __LINE__); \
     list_for_each_entry(entry, &tdma->first_job->entry, entry) \
-        rtdm_printk("%d ", entry->id); \
+	rtdm_printk("%d ", entry->id); \
     rtdm_printk("\n"); \
 } while (0)
 

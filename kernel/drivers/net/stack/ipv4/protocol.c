@@ -41,7 +41,7 @@ void rt_inet_add_protocol(struct rtinet_protocol *prot)
 
 
     if ( rt_inet_protocols[hash]==NULL )
-        rt_inet_protocols[hash] = prot;
+	rt_inet_protocols[hash] = prot;
 }
 EXPORT_SYMBOL(rt_inet_add_protocol);
 
@@ -55,7 +55,7 @@ void rt_inet_del_protocol(struct rtinet_protocol *prot)
 
 
     if ( prot==rt_inet_protocols[hash] )
-        rt_inet_protocols[hash] = NULL;
+	rt_inet_protocols[hash] = NULL;
 }
 EXPORT_SYMBOL(rt_inet_del_protocol);
 
@@ -66,31 +66,30 @@ EXPORT_SYMBOL(rt_inet_del_protocol);
  * @sock: socket structure
  * @protocol: protocol id
  */
-int rt_inet_socket(struct rtdm_dev_context *context,
-                   rtdm_user_info_t *user_info, int protocol)
+int rt_inet_socket(struct rtdm_fd *fd, int protocol)
 {
     struct rtinet_protocol  *prot;
 
 
     if (protocol == 0)
-        switch (context->device->socket_type) {
-        case SOCK_DGRAM:
-            protocol = IPPROTO_UDP;
-            break;
-        case SOCK_STREAM:
-            protocol = IPPROTO_TCP;
-            break;
-        }
+	switch (rtdm_fd_to_context(fd)->device->driver->socket_type) {
+	case SOCK_DGRAM:
+	    protocol = IPPROTO_UDP;
+	    break;
+	case SOCK_STREAM:
+	    protocol = IPPROTO_TCP;
+	    break;
+	}
 
     prot = rt_inet_protocols[rt_inet_hashkey(protocol)];
 
     /* create the socket (call the socket creator) */
     if ((prot != NULL) && (prot->protocol == protocol))
-        return prot->init_socket(context, user_info);
+	return prot->init_socket(fd);
     else {
-        rtdm_printk("RTnet: protocol with id %d not found\n", protocol);
+	rtdm_printk("RTnet: protocol with id %d not found\n", protocol);
 
-        return -ENOPROTOOPT;
+	return -ENOPROTOOPT;
     }
 }
 EXPORT_SYMBOL(rt_inet_socket);

@@ -914,7 +914,7 @@ static void __inline__ fec_get_mac(struct rtnet_device *ndev)
 /*
  * Phy section
  */
-static void fec_enet_mdio_done(rtdm_nrtsig_t nrt_sig, void* data)
+static void fec_enet_mdio_done(rtdm_nrtsig_t *nrt_sig, void* data)
 {
 	struct fec_enet_private *fep = data;
 
@@ -1168,10 +1168,7 @@ static int fec_enet_mii_init(struct platform_device *pdev)
 	for (i = 0; i < PHY_MAX_ADDR; i++)
 		fep->mii_bus->irq[i] = PHY_POLL;
 
-	if (rtdm_nrtsig_init(&fep->mdio_done_sig, fec_enet_mdio_done, fep)) {
-		printk("%s: rtdm_nrtsig_init failed\n", __func__);
-		goto err_out_free_mdio_irq;
-	}
+	rtdm_nrtsig_init(&fep->mdio_done_sig, fec_enet_mdio_done, fep);
 
 	if (mdiobus_register(fep->mii_bus))
 		goto err_out_destroy_nrt;
@@ -1186,7 +1183,6 @@ static int fec_enet_mii_init(struct platform_device *pdev)
 
 err_out_destroy_nrt:
 	rtdm_nrtsig_destroy(&fep->mdio_done_sig);
-err_out_free_mdio_irq:
 	kfree(fep->mii_bus->irq);
 err_out_free_mdiobus:
 	mdiobus_free(fep->mii_bus);

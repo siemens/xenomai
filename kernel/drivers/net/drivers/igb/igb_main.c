@@ -272,7 +272,7 @@ char *igb_get_hw_dev_name(struct e1000_hw *hw)
 }
 #endif
 
-void igb_mod_watchdog_timer(rtdm_nrtsig_t nrt_sig, void* data)
+void igb_mod_watchdog_timer(rtdm_nrtsig_t *nrt_sig, void* data)
 {
     struct timer_list *timer = (struct timer_list *)data;
     mod_timer(timer, jiffies + 1);
@@ -1343,11 +1343,8 @@ static int igb_probe(struct pci_dev *pdev,
 	INIT_WORK(&adapter->reset_task, igb_reset_task);
 	INIT_WORK(&adapter->watchdog_task, igb_watchdog_task);
 
-	if (rtdm_nrtsig_init(&adapter->mod_timer_sig, igb_mod_watchdog_timer,
-			     (void*)&adapter->watchdog_timer)) {
-	    rtdm_printk("igb: no free slots to init a signal handler\n");
-	    goto err_register;
-	}
+	rtdm_nrtsig_init(&adapter->mod_timer_sig, igb_mod_watchdog_timer,
+			(void*)&adapter->watchdog_timer);
 
 	/* Initialize link & ring properties that are user-changeable */
 	adapter->tx_ring->count = 256;

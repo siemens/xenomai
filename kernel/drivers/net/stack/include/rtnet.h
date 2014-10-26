@@ -81,7 +81,7 @@ typedef int64_t                 nanosecs_rel_t;
 /* socket transmission priorities */
 #define SOCK_MAX_PRIO           0
 #define SOCK_DEF_PRIO           SOCK_MAX_PRIO + \
-                                    (SOCK_MIN_PRIO-SOCK_MAX_PRIO+1)/2
+				    (SOCK_MIN_PRIO-SOCK_MAX_PRIO+1)/2
 #define SOCK_MIN_PRIO           SOCK_NRT_PRIO - 1
 #define SOCK_NRT_PRIO           31
 
@@ -99,12 +99,12 @@ typedef int64_t                 nanosecs_rel_t;
 #include <rtdm/driver.h>
 
 struct rtnet_callback {
-    void    (*func)(struct rtdm_dev_context *, void *);
+    void    (*func)(struct rtdm_fd *, void *);
     void    *arg;
 };
 
 #define RTNET_RTIOC_CALLBACK    _IOW(RTIOC_TYPE_NETWORK, 0x12, \
-                                     struct rtnet_callback)
+				     struct rtnet_callback)
 
 /* utility functions */
 
@@ -113,6 +113,8 @@ unsigned long rt_inet_aton(const char *ip);
 
 /* provided by rt_packet */
 int rt_eth_aton(unsigned char *addr_buf, const char *mac);
+
+#define RTNET_RTDM_VER 914
 
 #endif  /* __KERNEL__ */
 

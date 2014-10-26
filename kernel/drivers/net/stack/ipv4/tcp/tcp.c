@@ -53,7 +53,7 @@ MODULE_PARM_DESC(multi_error, "on simulated error, drop n packets in a row");
 static unsigned int counter_start = 1234;
 module_param(counter_start, uint, 0664);
 MODULE_PARM_DESC(counter_start, "start value of per-socket packet counter "
-                 "(used for error injection)");
+		 "(used for error injection)");
 
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_TCP_ERROR_INJECTION */
 
@@ -193,22 +193,21 @@ static struct hlist_head port_hash[RT_TCP_SOCKETS * 2];
 module_param(tcp_auto_port_start, uint, 0444);
 module_param(tcp_auto_port_mask, uint, 0444);
 MODULE_PARM_DESC(tcp_auto_port_start, "Start of automatically assigned "
-                 "port range for TCP");
+		 "port range for TCP");
 MODULE_PARM_DESC(tcp_auto_port_mask, "Mask that defines port range for TCP "
-                 "for automatic assignment");
+		 "for automatic assignment");
 
 static inline struct tcp_socket *port_hash_search(u32 saddr, u16 sport)
 {
     u32 bucket = sport & port_hash_mask;
     struct tcp_socket *ts;
-    struct hlist_node *n;
 
-    hlist_for_each_entry(ts, n, &port_hash[bucket], link)
-        if (ts->sport == sport &&
-            (saddr == INADDR_ANY
-             || ts->saddr == saddr
-             || ts->saddr == INADDR_ANY))
-            return ts;
+    hlist_for_each_entry(ts, &port_hash[bucket], link)
+	if (ts->sport == sport &&
+	    (saddr == INADDR_ANY
+	     || ts->saddr == saddr
+	     || ts->saddr == INADDR_ANY))
+	    return ts;
 
     return NULL;
 }
@@ -218,7 +217,7 @@ static int port_hash_insert(struct tcp_socket *ts, u32 saddr, u16 sport)
     u32 bucket;
 
     if (port_hash_search(saddr, sport))
-        return -EADDRINUSE;
+	return -EADDRINUSE;
 
     bucket = sport & port_hash_mask;
     ts->saddr = saddr;
@@ -247,12 +246,11 @@ static struct rtsocket *rt_tcp_v4_lookup(u32 daddr, u16 dport)
     rtdm_lock_get_irqsave(&tcp_socket_base_lock, context);
     ts = port_hash_search(daddr, dport);
 
-    if (ts) {
-        rt_socket_reference(&ts->sock);
+    if (ts && rt_socket_reference(&ts->sock) == 0) {
 
-        rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
+	rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
 
-        return &ts->sock;
+	return &ts->sock;
     }
 
     rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
@@ -283,7 +281,7 @@ static inline u32 rt_tcp_compute_ack_seq(struct tcphdr* th, u32 len)
     u32 ack_seq = ntohl(th->seq) + len;
 
     if (unlikely(th->syn || th->fin))
-        ack_seq++;
+	ack_seq++;
 
     return ack_seq;
 }
@@ -291,16 +289,16 @@ static inline u32 rt_tcp_compute_ack_seq(struct tcphdr* th, u32 len)
 static void rt_tcp_keepalive_start(struct tcp_socket *ts)
 {
     if (ts->tcp_state == TCP_ESTABLISHED) {
-        rtdm_timer_start(&ts->keepalive.timer,
-                         rt_tcp_keepalive_timeout,
-                         0, RTDM_TIMERMODE_RELATIVE);
+	rtdm_timer_start(&ts->keepalive.timer,
+			 rt_tcp_keepalive_timeout,
+			 0, RTDM_TIMERMODE_RELATIVE);
     }
 }
 
 static void rt_tcp_keepalive_stop(struct tcp_socket *ts)
 {
     if (ts->tcp_state == TCP_ESTABLISHED) {
-        rtdm_timer_stop(&ts->keepalive.timer);
+	rtdm_timer_stop(&ts->keepalive.timer);
     }
 }
 
@@ -317,14 +315,14 @@ static void rt_tcp_keepalive_enable(struct tcp_socket *ts)
     keepalive = &ts->keepalive;
 
     if (keepalive->enabled) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
     keepalive->probes = rt_tcp_keepalive_probes;
 
     rtdm_timer_init(&keepalive->timer, rt_tcp_keepalive_timer,
-                    "RT TCP keepalive timer");
+		    "RT TCP keepalive timer");
 
     rt_tcp_keepalive_start(ts);
 
@@ -341,7 +339,7 @@ static void rt_tcp_keepalive_disable(struct tcp_socket *ts)
     keepalive = &ts->keepalive;
 
     if (!keepalive->enabled) {
-        return;
+	return;
     }
 
     rt_tcp_keepalive_stop(ts);
@@ -361,16 +359,16 @@ static void rt_tcp_keepalive_feed(struct tcp_socket *ts)
 
     if (ts->tcp_state == TCP_ESTABLISHED && ts->keepalive.enabled) {
 
-        keepalive->probes = rt_tcp_keepalive_probes;
+	keepalive->probes = rt_tcp_keepalive_probes;
 
-        /* Restart keepalive timer */
-        rtdm_timer_stop(&keepalive->timer);
-        rtdm_timer_start(&keepalive->timer, rt_tcp_keepalive_timeout,
-                         0, RTDM_TIMERMODE_RELATIVE);
+	/* Restart keepalive timer */
+	rtdm_timer_stop(&keepalive->timer);
+	rtdm_timer_start(&keepalive->timer, rt_tcp_keepalive_timeout,
+			 0, RTDM_TIMERMODE_RELATIVE);
 
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
     } else {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
     }
 }
 
@@ -385,11 +383,11 @@ static int rt_tcp_socket_invalidate(struct tcp_socket *ts, u8 to_state)
       see rt_tcp_close(), rt_tcp_rcv(), timeout expiration etc.
     */
     if (ts->is_valid) {
-        ts->is_valid = 0;
+	ts->is_valid = 0;
 
-        if (ts->keepalive.enabled) {
-            rt_tcp_keepalive_stop(ts);
-        }
+	if (ts->keepalive.enabled) {
+	    rt_tcp_keepalive_stop(ts);
+	}
     }
 
     return signal;
@@ -409,7 +407,7 @@ static void rt_tcp_socket_validate(struct tcp_socket *ts)
     ts->is_valid = 1;
 
     if (ts->keepalive.enabled) {
-        rt_tcp_keepalive_start(ts);
+	rt_tcp_keepalive_start(ts);
     }
 
     rtdm_event_init(&ts->send_evt, 0);
@@ -429,44 +427,44 @@ static void rt_tcp_retransmit_handler(void *data)
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
     if (unlikely(rtskb_queue_empty(&ts->retransmit_queue))) {
-        /* handled, but retransmission queue is empty */
-        rtdm_lock_get_irqsave(&ts->socket_lock, context);
-        rtdm_printk("rttcp: bug in RT TCP retransmission routine\n");
-        return;
+	/* handled, but retransmission queue is empty */
+	rtdm_lock_get_irqsave(&ts->socket_lock, context);
+	rtdm_printk("rttcp: bug in RT TCP retransmission routine\n");
+	return;
     }
 
     if (ts->tcp_state == TCP_CLOSE) {
-        /* socket is already closed */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	/* socket is already closed */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
     if (ts->timer_state) {
-        /* more tries */
-        ts->timer_state--;
-        timerwheel_add_timer(&ts->timer, rt_tcp_retransmission_timeout);
+	/* more tries */
+	ts->timer_state--;
+	timerwheel_add_timer(&ts->timer, rt_tcp_retransmission_timeout);
 
-        /* warning, rtskb_clone is under lock */
-        skb = rtskb_clone(ts->retransmit_queue.first, &ts->sock.skb_pool);
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	/* warning, rtskb_clone is under lock */
+	skb = rtskb_clone(ts->retransmit_queue.first, &ts->sock.skb_pool);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-        /* BUG, window changes are not respected */
-        if (unlikely(rtdev_xmit(skb)) != 0) {
-            kfree_rtskb(skb);
-            rtdm_printk("rttcp: packet retransmission from timer failed\n");
-        }
+	/* BUG, window changes are not respected */
+	if (unlikely(rtdev_xmit(skb)) != 0) {
+	    kfree_rtskb(skb);
+	    rtdm_printk("rttcp: packet retransmission from timer failed\n");
+	}
     } else {
-        ts->timer_state = max_retransmits;
+	ts->timer_state = max_retransmits;
 
-        /* report about connection lost */
-        signal = rt_tcp_socket_invalidate(ts, TCP_CLOSE);
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	/* report about connection lost */
+	signal = rt_tcp_socket_invalidate(ts, TCP_CLOSE);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-        if (signal)
-            rt_tcp_socket_invalidate_signal(ts);
+	if (signal)
+	    rt_tcp_socket_invalidate_signal(ts);
 
-        /* retransmission queue will be cleaned up in rt_tcp_socket_destruct */
-        rtdm_printk("rttcp: connection is lost by NACK timeout\n");
+	/* retransmission queue will be cleaned up in rt_tcp_socket_destruct */
+	rtdm_printk("rttcp: connection is lost by NACK timeout\n");
     }
 }
 
@@ -487,8 +485,8 @@ static void rt_tcp_retransmit_ack(struct tcp_socket *ts, u32 ack_seq)
       This could happen on repeated ACKs
     */
     if (rtskb_queue_empty(&ts->retransmit_queue)) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
     /*
@@ -497,35 +495,35 @@ static void rt_tcp_retransmit_ack(struct tcp_socket *ts, u32 ack_seq)
       retransmission queue will be drained completely
     */
     if (!rt_tcp_before(ts->nacked_first, ack_seq)) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
     if (timerwheel_remove_timer(&ts->timer) != 0) {
-        /* already timed out */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	/* already timed out */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
  dequeue_loop:
     if (ts->tcp_state == TCP_CLOSE) {
-        /* warn about queue safety in race with anyone,
-           who closes the socket */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	/* warn about queue safety in race with anyone,
+	   who closes the socket */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
     if ((skb = __rtskb_dequeue(&ts->retransmit_queue)) == NULL) {
-        ts->timer_state = max_retransmits;
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return;
+	ts->timer_state = max_retransmits;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return;
     }
 
     if (rt_tcp_before(ts->nacked_first, ack_seq)) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        kfree_rtskb(skb);
-        rtdm_lock_get_irqsave(&ts->socket_lock, context);
-        goto dequeue_loop;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	kfree_rtskb(skb);
+	rtdm_lock_get_irqsave(&ts->socket_lock, context);
+	goto dequeue_loop;
     }
 
     /* Put NACKed skb back to queue */
@@ -548,20 +546,20 @@ static void rt_tcp_retransmit_ack(struct tcp_socket *ts, u32 ack_seq)
 static void rt_tcp_retransmit_send(struct tcp_socket *ts, struct rtskb *skb)
 {
     if (rtskb_queue_empty(&ts->retransmit_queue)) {
-        /* retransmission queue is empty */
-        ts->nacked_first = ntohl(skb->h.th->seq) + 1;
+	/* retransmission queue is empty */
+	ts->nacked_first = ntohl(skb->h.th->seq) + 1;
 
-        __rtskb_queue_tail(&ts->retransmit_queue, skb);
+	__rtskb_queue_tail(&ts->retransmit_queue, skb);
 
-        timerwheel_add_timer(&ts->timer, rt_tcp_retransmission_timeout);
+	timerwheel_add_timer(&ts->timer, rt_tcp_retransmission_timeout);
     } else {
-        /* retransmission queue is not empty */
-        __rtskb_queue_tail(&ts->retransmit_queue, skb);
+	/* retransmission queue is not empty */
+	__rtskb_queue_tail(&ts->retransmit_queue, skb);
     }
 }
 
 static int rt_ip_build_frame(struct rtskb *skb, struct rtsocket *sk,
-                             struct dest_route *rt, struct iphdr *iph)
+			     struct dest_route *rt, struct iphdr *iph)
 {
     int             ret;
     struct          rtnet_device *rtdev = rt->rtdev;
@@ -587,19 +585,19 @@ static int rt_ip_build_frame(struct rtskb *skb, struct rtsocket *sk,
 
     rtdev_reference(rt->rtdev);
     ret = rtdev->hard_header(skb, rtdev, ETH_P_IP, rt->dev_addr,
-                             rtdev->dev_addr, skb->len);
+			     rtdev->dev_addr, skb->len);
     rtdev_dereference(rt->rtdev);
 
     if (ret != rtdev->hard_header_len) {
-        rtdm_printk("rttcp: rt_ip_build_frame: error on lower level\n");
-        return -EINVAL;
+	rtdm_printk("rttcp: rt_ip_build_frame: error on lower level\n");
+	return -EINVAL;
     }
 
     return 0;
 }
 
 static void rt_tcp_build_header(struct tcp_socket *ts, struct rtskb *skb,
-                                __be32 flags, u8 is_keepalive)
+				__be32 flags, u8 is_keepalive)
 {
     u32 wcheck;
     u8 tcphdrlen = 20;
@@ -613,7 +611,7 @@ static void rt_tcp_build_header(struct tcp_socket *ts, struct rtskb *skb,
     th->seq = htonl(ts->sync.seq);
 
     if (unlikely(is_keepalive))
-        th->seq--;
+	th->seq--;
 
     th->ack_seq = htonl(ts->sync.ack_seq);
     th->window  = htons(ts->sync.window);
@@ -629,8 +627,8 @@ static void rt_tcp_build_header(struct tcp_socket *ts, struct rtskb *skb,
     wcheck = csum_partial(th, tcphdrlen, 0);
 
     if (skb->len - tcphdrlen - iphdrlen) {
-        wcheck = csum_partial(skb->data + tcphdrlen + iphdrlen,
-                              skb->len - tcphdrlen - iphdrlen, wcheck);
+	wcheck = csum_partial(skb->data + tcphdrlen + iphdrlen,
+			      skb->len - tcphdrlen - iphdrlen, wcheck);
     }
 
     th->check = tcp_v4_check(skb->len - iphdrlen, ts->saddr, ts->daddr, wcheck);
@@ -638,7 +636,7 @@ static void rt_tcp_build_header(struct tcp_socket *ts, struct rtskb *skb,
 
 static int
 rt_tcp_segment(struct dest_route *rt, struct tcp_socket *ts, __be32 flags,
-               u32 data_len, u8 *data_ptr, u8 is_keepalive)
+	       u32 data_len, u8 *data_ptr, u8 is_keepalive)
 {
     struct tcphdr       *th;
     struct rtsocket     *sk    = &ts->sock;
@@ -657,8 +655,8 @@ rt_tcp_segment(struct dest_route *rt, struct tcp_socket *ts, __be32 flags,
     u8 *data = NULL;
 
     if ((skb = alloc_rtskb(mtu + hh_len + 15, &sk->skb_pool)) == NULL) {
-        rtdm_printk("rttcp: no more elements in skb_pool for allocation\n");
-        return -ENOBUFS;
+	rtdm_printk("rttcp: no more elements in skb_pool for allocation\n");
+	return -ENOBUFS;
     }
 
     /* rtskb_reserve(skb, hh_len + 20); */
@@ -671,16 +669,16 @@ rt_tcp_segment(struct dest_route *rt, struct tcp_socket *ts, __be32 flags,
     skb->h.th = th;
 
     if (data_len) { /* check for available place */
-        data = (u8*)rtskb_put(skb, data_len); /* length of TCP payload */
-        if (!memcpy(data, (void*)data_ptr, data_len)) {
-            ret = -EFAULT;
-            goto error;
-        }
+	data = (u8*)rtskb_put(skb, data_len); /* length of TCP payload */
+	if (!memcpy(data, (void*)data_ptr, data_len)) {
+	    ret = -EFAULT;
+	    goto error;
+	}
     }
 
     /* used local phy MTU value */
     if (data_len > mtu)
-        data_len = mtu;
+	data_len = mtu;
 
     skb->rtdev    = rtdev;
     skb->priority = prio;
@@ -692,30 +690,30 @@ rt_tcp_segment(struct dest_route *rt, struct tcp_socket *ts, __be32 flags,
     rt_tcp_build_header(ts, skb, flags, is_keepalive);
 
     if ((ret = rt_ip_build_frame(skb, sk, rt, iph)) != 0) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        goto error;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	goto error;
     }
 
     /* add rtskb entry to the socket retransmission queue */
     if (ts->tcp_state != TCP_CLOSE &&
-        ((flags & (TCP_FLAG_SYN|TCP_FLAG_FIN)) || data_len)) {
-        /* rtskb_clone below is called under lock, this is an admission,
-           because for now there is no rtskb copy by reference */
-        cloned_skb = rtskb_clone(skb, &ts->sock.skb_pool);
-        if (!cloned_skb) {
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rtdm_printk("rttcp: cann't clone skb\n");
-            ret = -ENOMEM;
-            goto error;
-        }
+	((flags & (TCP_FLAG_SYN|TCP_FLAG_FIN)) || data_len)) {
+	/* rtskb_clone below is called under lock, this is an admission,
+	   because for now there is no rtskb copy by reference */
+	cloned_skb = rtskb_clone(skb, &ts->sock.skb_pool);
+	if (!cloned_skb) {
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rtdm_printk("rttcp: cann't clone skb\n");
+	    ret = -ENOMEM;
+	    goto error;
+	}
 
-        rt_tcp_retransmit_send(ts, cloned_skb);
+	rt_tcp_retransmit_send(ts, cloned_skb);
     }
 
     /* need to update sync here, because it is safe way in
        comparison with races on fast ACK response */
     if (flags & (TCP_FLAG_FIN|TCP_FLAG_SYN))
-        ts->sync.seq++;
+	ts->sync.seq++;
 
     ts->sync.seq += data_len;
     ts->sync.dst_window -= data_len;
@@ -745,16 +743,16 @@ static int rt_tcp_send(struct tcp_socket *ts, __be32 flags)
      * until the socket died.
      */
     if (likely(ts->rt.rtdev)) {
-        ret = rt_tcp_segment(&ts->rt, ts, flags, 0, NULL, 0);
+	ret = rt_tcp_segment(&ts->rt, ts, flags, 0, NULL, 0);
     } else {
-        ret = rt_ip_route_output(&rt, ts->daddr, ts->saddr);
-        if (ret == 0) {
-            ret = rt_tcp_segment(&rt, ts, flags, 0, NULL, 0);
-            rtdev_dereference(rt.rtdev);
-        }
+	ret = rt_ip_route_output(&rt, ts->daddr, ts->saddr);
+	if (ret == 0) {
+	    ret = rt_tcp_segment(&rt, ts, flags, 0, NULL, 0);
+	    rtdev_dereference(rt.rtdev);
+	}
     }
     if (ret < 0)
-        rtdm_printk("rttcp: can't send a packet: err %d\n", -ret);
+	rtdm_printk("rttcp: can't send a packet: err %d\n", -ret);
     return ret;
 }
 
@@ -763,7 +761,7 @@ static void rt_tcp_keepalive_timer(rtdm_timer_t *timer)
 {
     rtdm_lockctx_t  context;
     struct tcp_keepalive *keepalive = container_of(timer,
-                                                   struct tcp_keepalive, timer);
+						   struct tcp_keepalive, timer);
 
     struct tcp_socket *ts = container_of(keepalive, struct tcp_socket, keepalive);
     int signal = 0;
@@ -771,27 +769,27 @@ static void rt_tcp_keepalive_timer(rtdm_timer_t *timer)
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
     if (keepalive->probes) {
-        /* Send a probe */
-        if (rt_tcp_segment(&ts->rt, ts, 0, 0, NULL, 1) < 0) {
-            /* data receiving and sending is not possible anymore */
-            signal = rt_tcp_socket_invalidate(ts, TCP_TIME_WAIT);
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        }
+	/* Send a probe */
+	if (rt_tcp_segment(&ts->rt, ts, 0, 0, NULL, 1) < 0) {
+	    /* data receiving and sending is not possible anymore */
+	    signal = rt_tcp_socket_invalidate(ts, TCP_TIME_WAIT);
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	}
 
-        keepalive->probes--;
-        rtdm_timer_start_in_handler(&keepalive->timer,
-                                    rt_tcp_keepalive_intvl,
-                                    0, RTDM_TIMERMODE_RELATIVE);
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	keepalive->probes--;
+	rtdm_timer_start_in_handler(&keepalive->timer,
+				    rt_tcp_keepalive_intvl,
+				    0, RTDM_TIMERMODE_RELATIVE);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
     } else {
-        /* data receiving and sending is not possible anymore */
+	/* data receiving and sending is not possible anymore */
 
-        signal = rt_tcp_socket_invalidate(ts, TCP_TIME_WAIT);
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	signal = rt_tcp_socket_invalidate(ts, TCP_TIME_WAIT);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
     }
 
     if (signal)
-        rt_tcp_socket_invalidate_signal(ts);
+	rt_tcp_socket_invalidate_signal(ts);
 }
 #endif
 
@@ -816,33 +814,33 @@ static struct rtsocket *rt_tcp_dest_socket(struct rtskb *skb)
     u32 data_len;
 
     if (tcp_v4_check(skb->len, saddr, daddr,
-                     csum_partial(skb->data, skb->len, 0))) {
-        rtdm_printk("rttcp: invalid TCP packet checksum, dropped\n");
-        return NULL; /* Invalid checksum, drop the packet */
+		     csum_partial(skb->data, skb->len, 0))) {
+	rtdm_printk("rttcp: invalid TCP packet checksum, dropped\n");
+	return NULL; /* Invalid checksum, drop the packet */
     }
 
     /* find the destination socket */
     if ((skb->sk = rt_tcp_v4_lookup(daddr, dport)) == NULL) {
-        /*
-          rtdm_printk("Not found addr:0x%08x, port: 0x%04x\n", daddr, dport);
-        */
-        if (!th->rst) {
-            /* No listening socket found, send RST|ACK */
-            rst_socket.saddr = daddr;
-            rst_socket.daddr = saddr;
-            rst_socket.sport = dport;
-            rst_socket.dport = sport;
+	/*
+	  rtdm_printk("Not found addr:0x%08x, port: 0x%04x\n", daddr, dport);
+	*/
+	if (!th->rst) {
+	    /* No listening socket found, send RST|ACK */
+	    rst_socket.saddr = daddr;
+	    rst_socket.daddr = saddr;
+	    rst_socket.sport = dport;
+	    rst_socket.dport = sport;
 
-            data_len = skb->len - (th->doff << 2);
+	    data_len = skb->len - (th->doff << 2);
 
-            rst_socket.sync.seq = 0;
-            rst_socket.sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
+	    rst_socket.sync.seq = 0;
+	    rst_socket.sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
 
-            if (rt_ip_route_output(&rst_socket.rt, daddr, saddr) == 0) {
-                rt_tcp_send(&rst_socket, TCP_FLAG_ACK|TCP_FLAG_RST);
-                rtdev_dereference(rst_socket.rt.rtdev);
-            }
-        }
+	    if (rt_ip_route_output(&rst_socket.rt, daddr, saddr) == 0) {
+		rt_tcp_send(&rst_socket, TCP_FLAG_ACK|TCP_FLAG_RST);
+		rtdev_dereference(rst_socket.rt.rtdev);
+	    }
+	}
     }
 
     return skb->sk;
@@ -855,21 +853,21 @@ static void rt_tcp_window_update(struct tcp_socket *ts, u16 window)
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
     if (ts->sync.dst_window) {
-        ts->sync.dst_window = window;
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        if (!window) {
-            /* clear send event status */
-            rtdm_event_clear(&ts->send_evt);
-        }
+	ts->sync.dst_window = window;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	if (!window) {
+	    /* clear send event status */
+	    rtdm_event_clear(&ts->send_evt);
+	}
     } else {
-        if (window) {
-            ts->sync.dst_window = window;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            /* set send event status */
-            rtdm_event_signal(&ts->send_evt);
-        } else {
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        }
+	if (window) {
+	    ts->sync.dst_window = window;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    /* set send event status */
+	    rtdm_event_signal(&ts->send_evt);
+	} else {
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	}
     }
 }
 
@@ -892,49 +890,49 @@ static void rt_tcp_rcv(struct rtskb *skb)
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_TCP_ERROR_INJECTION
     if (ts->error_rate > 0) {
-        if ((ts->packet_counter++ % error_rate) < ts->multi_error) {
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            goto drop;
-        }
+	if ((ts->packet_counter++ % error_rate) < ts->multi_error) {
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    goto drop;
+	}
     }
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_TCP_ERROR_INJECTION */
 
     /* Check for daddr/dport correspondence to values stored in
        selected socket from hash */
     if (ts->tcp_state != TCP_LISTEN &&
-        (ts->daddr != skb->nh.iph->saddr || ts->dport != skb->h.th->source)) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        goto drop;
+	(ts->daddr != skb->nh.iph->saddr || ts->dport != skb->h.th->source)) {
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	goto drop;
     }
 
     /* Check if it is a keepalive probe */
     if (ts->sync.ack_seq == (seq + 1) &&
-        ts->tcp_state == TCP_ESTABLISHED) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        rt_tcp_send(ts, TCP_FLAG_ACK);
-        goto feed;
+	ts->tcp_state == TCP_ESTABLISHED) {
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rt_tcp_send(ts, TCP_FLAG_ACK);
+	goto feed;
     }
 
     if (ts->tcp_state == TCP_SYN_SENT) {
-        ts->sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
+	ts->sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
 
-        if (th->syn && th->ack) {
-            rt_tcp_socket_validate(ts);
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rtdm_event_signal(&ts->conn_evt);
-            /* Send ACK */
-            rt_tcp_send(ts, TCP_FLAG_ACK);
-            goto feed;
-        }
+	if (th->syn && th->ack) {
+	    rt_tcp_socket_validate(ts);
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rtdm_event_signal(&ts->conn_evt);
+	    /* Send ACK */
+	    rt_tcp_send(ts, TCP_FLAG_ACK);
+	    goto feed;
+	}
 
-        ts->tcp_state = TCP_CLOSE;
-        ts->sync.seq = ntohl(th->ack_seq);
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	ts->tcp_state = TCP_CLOSE;
+	ts->sync.seq = ntohl(th->ack_seq);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-        /* Send RST|ACK */
-        rtdm_event_signal(&ts->conn_evt);
-        rt_tcp_send(ts, TCP_FLAG_RST|TCP_FLAG_ACK);
-        goto drop;
+	/* Send RST|ACK */
+	rtdm_event_signal(&ts->conn_evt);
+	rt_tcp_send(ts, TCP_FLAG_RST|TCP_FLAG_ACK);
+	goto drop;
     }
 
     /* Check for SEQ correspondence to determine the connection relevance */
@@ -944,183 +942,183 @@ static void rt_tcp_rcv(struct rtskb *skb)
      * th->ack && rt_tcp_after(ts->nacked_first, ntohl(th->ack_seq))
      * th->ack && th->rst && ...
      * th->syn && (ts->tcp_state == TCP_LISTEN ||
-                   ts->tcp_state == TCP_SYN_SENT)
+		   ts->tcp_state == TCP_SYN_SENT)
      * rt_tcp_after(seq, ts->sync.ack_seq) &&
-           rt_tcp_before(seq, ts->sync.ack_seq + ts->sync.window)
+	   rt_tcp_before(seq, ts->sync.ack_seq + ts->sync.window)
      */
 
     if ((rt_tcp_after(seq, ts->sync.ack_seq) &&
-         rt_tcp_before(seq, ts->sync.ack_seq + ts->sync.window)) ||
-        th->rst ||
-        (th->syn && (ts->tcp_state == TCP_LISTEN ||
-                     ts->tcp_state == TCP_SYN_SENT))) {
-        /* everything is ok */
+	 rt_tcp_before(seq, ts->sync.ack_seq + ts->sync.window)) ||
+	th->rst ||
+	(th->syn && (ts->tcp_state == TCP_LISTEN ||
+		     ts->tcp_state == TCP_SYN_SENT))) {
+	/* everything is ok */
     } else if (rt_tcp_after(seq, ts->sync.ack_seq - data_len)) {
-        /* retransmission of data we already acked */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        rt_tcp_send(ts, TCP_FLAG_ACK);
-        goto drop;
+	/* retransmission of data we already acked */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rt_tcp_send(ts, TCP_FLAG_ACK);
+	goto drop;
     } else {
-        /* drop forward ack */
-        if (th->ack &&
-            /* but reset ack from old connection */
-            ts->tcp_state == TCP_ESTABLISHED) {
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rtdm_printk("rttcp: dropped unappropriate ACK packet %u\n",
-                        ts->sync.ack_seq);
-            goto drop;
-        }
+	/* drop forward ack */
+	if (th->ack &&
+	    /* but reset ack from old connection */
+	    ts->tcp_state == TCP_ESTABLISHED) {
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rtdm_printk("rttcp: dropped unappropriate ACK packet %u\n",
+			ts->sync.ack_seq);
+	    goto drop;
+	}
 
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        rtdm_printk("rttcp: sequence number is not in window, "
-                    "dropped (failed: %u <= %u <= %u)\n",
-                    ts->sync.ack_seq, seq, ts->sync.ack_seq + ts->sync.window);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rtdm_printk("rttcp: sequence number is not in window, "
+		    "dropped (failed: %u <= %u <= %u)\n",
+		    ts->sync.ack_seq, seq, ts->sync.ack_seq + ts->sync.window);
 
-        /* That's a forced RST for a lost connection */
-        rst_socket.saddr = skb->nh.iph->daddr;
-        rst_socket.daddr = skb->nh.iph->saddr;
-        rst_socket.sport = th->dest;
-        rst_socket.dport = th->source;
+	/* That's a forced RST for a lost connection */
+	rst_socket.saddr = skb->nh.iph->daddr;
+	rst_socket.daddr = skb->nh.iph->saddr;
+	rst_socket.sport = th->dest;
+	rst_socket.dport = th->source;
 
-        rst_socket.sync.seq = ntohl(th->ack_seq);
-        rst_socket.sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
+	rst_socket.sync.seq = ntohl(th->ack_seq);
+	rst_socket.sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
 
-        if (rt_ip_route_output(&rst_socket.rt, rst_socket.daddr,
-                               rst_socket.saddr) == 0) {
-            rt_tcp_send(&rst_socket, TCP_FLAG_RST|TCP_FLAG_ACK);
-            rtdev_dereference(rst_socket.rt.rtdev);
-        }
-        goto drop;
+	if (rt_ip_route_output(&rst_socket.rt, rst_socket.daddr,
+			       rst_socket.saddr) == 0) {
+	    rt_tcp_send(&rst_socket, TCP_FLAG_RST|TCP_FLAG_ACK);
+	    rtdev_dereference(rst_socket.rt.rtdev);
+	}
+	goto drop;
     }
 
     if (th->rst) {
-        if (ts->tcp_state == TCP_SYN_RECV) {
-            ts->tcp_state = TCP_LISTEN;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            goto drop;
-        } else {
-            /* Drop our half-open connection, peer obviously went away. */
-            signal = rt_tcp_socket_invalidate(ts, TCP_CLOSE);
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	if (ts->tcp_state == TCP_SYN_RECV) {
+	    ts->tcp_state = TCP_LISTEN;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    goto drop;
+	} else {
+	    /* Drop our half-open connection, peer obviously went away. */
+	    signal = rt_tcp_socket_invalidate(ts, TCP_CLOSE);
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-            if (signal)
-                rt_tcp_socket_invalidate_signal(ts);
+	    if (signal)
+		rt_tcp_socket_invalidate_signal(ts);
 
-            goto drop;
-        }
+	    goto drop;
+	}
     }
 
     ts->sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
 
     if (th->fin) {
-        if (ts->tcp_state == TCP_ESTABLISHED) {
-            /* Send ACK */
-            signal = rt_tcp_socket_invalidate(ts, TCP_CLOSE_WAIT);
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	if (ts->tcp_state == TCP_ESTABLISHED) {
+	    /* Send ACK */
+	    signal = rt_tcp_socket_invalidate(ts, TCP_CLOSE_WAIT);
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-            if (signal)
-                rt_tcp_socket_invalidate_signal(ts);
+	    if (signal)
+		rt_tcp_socket_invalidate_signal(ts);
 
-            rt_tcp_send(ts, TCP_FLAG_ACK);
-            goto feed;
-        } else if ((ts->tcp_state == TCP_FIN_WAIT1 && th->ack) ||
-                   ts->tcp_state == TCP_FIN_WAIT2) {
-            /* Send ACK */
-            ts->tcp_state = TCP_TIME_WAIT;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rt_tcp_send(ts, TCP_FLAG_ACK);
-            /* data receiving is not possible anymore */
-            rtdm_sem_destroy(&ts->sock.pending_sem);
-            goto feed;
-        } else if (ts->tcp_state == TCP_FIN_WAIT1) {
-            /* Send ACK */
-            ts->tcp_state = TCP_CLOSING;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rt_tcp_send(ts, TCP_FLAG_ACK);
-            /* data receiving is not possible anymore */
-            rtdm_sem_destroy(&ts->sock.pending_sem);
-            goto feed;
-        } else {
-            /* just drop it */
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            goto drop;
-        }
+	    rt_tcp_send(ts, TCP_FLAG_ACK);
+	    goto feed;
+	} else if ((ts->tcp_state == TCP_FIN_WAIT1 && th->ack) ||
+		   ts->tcp_state == TCP_FIN_WAIT2) {
+	    /* Send ACK */
+	    ts->tcp_state = TCP_TIME_WAIT;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rt_tcp_send(ts, TCP_FLAG_ACK);
+	    /* data receiving is not possible anymore */
+	    rtdm_sem_destroy(&ts->sock.pending_sem);
+	    goto feed;
+	} else if (ts->tcp_state == TCP_FIN_WAIT1) {
+	    /* Send ACK */
+	    ts->tcp_state = TCP_CLOSING;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rt_tcp_send(ts, TCP_FLAG_ACK);
+	    /* data receiving is not possible anymore */
+	    rtdm_sem_destroy(&ts->sock.pending_sem);
+	    goto feed;
+	} else {
+	    /* just drop it */
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    goto drop;
+	}
     }
 
     if (th->syn) {
-        /* Need to differentiate LISTEN socket from ESTABLISHED one */
-        /* Both of them have the same sport/saddr, but different dport/daddr */
-        /* dport is unknown if it is the first connection of n */
+	/* Need to differentiate LISTEN socket from ESTABLISHED one */
+	/* Both of them have the same sport/saddr, but different dport/daddr */
+	/* dport is unknown if it is the first connection of n */
 
-        if (ts->tcp_state == TCP_LISTEN) {
-            /* Need to store ts->seq while sending SYN earlier */
-            /* The socket shall be in TCP_LISTEN state */
+	if (ts->tcp_state == TCP_LISTEN) {
+	    /* Need to store ts->seq while sending SYN earlier */
+	    /* The socket shall be in TCP_LISTEN state */
 
-            /* safe to update ts->saddr here due to a single task for
-               rt_tcp_rcv() and rt_tcp_dest_socket() callers */
-            ts->saddr = skb->nh.iph->daddr;
+	    /* safe to update ts->saddr here due to a single task for
+	       rt_tcp_rcv() and rt_tcp_dest_socket() callers */
+	    ts->saddr = skb->nh.iph->daddr;
 
-            ts->daddr = skb->nh.iph->saddr;
-            ts->dport = th->source;
-            ts->sync.seq = rt_tcp_initial_seq();
-            ts->sync.window = 4096;
-            ts->tcp_state = TCP_SYN_RECV;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    ts->daddr = skb->nh.iph->saddr;
+	    ts->dport = th->source;
+	    ts->sync.seq = rt_tcp_initial_seq();
+	    ts->sync.window = 4096;
+	    ts->tcp_state = TCP_SYN_RECV;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-            /* Send SYN|ACK */
-            rt_tcp_send(ts, TCP_FLAG_SYN|TCP_FLAG_ACK);
-            goto drop;
-        }
+	    /* Send SYN|ACK */
+	    rt_tcp_send(ts, TCP_FLAG_SYN|TCP_FLAG_ACK);
+	    goto drop;
+	}
 
-        /* Send RST|ACK */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        rt_tcp_send(ts, TCP_FLAG_RST|TCP_FLAG_ACK);
-        goto drop;
+	/* Send RST|ACK */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rt_tcp_send(ts, TCP_FLAG_RST|TCP_FLAG_ACK);
+	goto drop;
     }
 
     /* ACK received without SYN, FIN or RST flags */
     if (th->ack) {
-        /* Check ack sequence */
-        if (rt_tcp_before(ts->sync.seq + 1, ntohl(th->ack_seq))) {
-            rtdm_printk("rttcp: unexpected ACK %u %u %u\n",
-                        ts->sync.seq,
-                        ts->nacked_first,
-                        ntohl(th->ack_seq));
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            goto drop;
-        }
+	/* Check ack sequence */
+	if (rt_tcp_before(ts->sync.seq + 1, ntohl(th->ack_seq))) {
+	    rtdm_printk("rttcp: unexpected ACK %u %u %u\n",
+			ts->sync.seq,
+			ts->nacked_first,
+			ntohl(th->ack_seq));
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    goto drop;
+	}
 
-        if (ts->tcp_state == TCP_LAST_ACK) {
-            /* close connection and free socket data */
-            ts->tcp_state = TCP_CLOSE;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            /* socket destruction will be done on close() */
-            goto drop;
-        } else if (ts->tcp_state == TCP_FIN_WAIT1) {
-            ts->tcp_state = TCP_FIN_WAIT2;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            goto feed;
-        } else if (ts->tcp_state == TCP_SYN_RECV) {
-            rt_tcp_socket_validate(ts);
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rtdm_event_signal(&ts->conn_evt);
-            goto feed;
-        } else if (ts->tcp_state == TCP_CLOSING) {
-            ts->tcp_state = TCP_TIME_WAIT;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            /* socket destruction will be done on close() */
-            goto feed;
-        }
+	if (ts->tcp_state == TCP_LAST_ACK) {
+	    /* close connection and free socket data */
+	    ts->tcp_state = TCP_CLOSE;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    /* socket destruction will be done on close() */
+	    goto drop;
+	} else if (ts->tcp_state == TCP_FIN_WAIT1) {
+	    ts->tcp_state = TCP_FIN_WAIT2;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    goto feed;
+	} else if (ts->tcp_state == TCP_SYN_RECV) {
+	    rt_tcp_socket_validate(ts);
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rtdm_event_signal(&ts->conn_evt);
+	    goto feed;
+	} else if (ts->tcp_state == TCP_CLOSING) {
+	    ts->tcp_state = TCP_TIME_WAIT;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    /* socket destruction will be done on close() */
+	    goto feed;
+	}
     }
 
     if (ts->tcp_state != TCP_ESTABLISHED) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        goto drop;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	goto drop;
     }
 
     if (data_len == 0) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        goto feed;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	goto feed;
     }
 
     /* Send ACK */
@@ -1133,7 +1131,7 @@ static void rt_tcp_rcv(struct rtskb *skb)
 
     /* inform retransmission subsystem about arrived ack */
     if (th->ack) {
-        rt_tcp_retransmit_ack(ts, ntohl(th->ack_seq));
+	rt_tcp_retransmit_ack(ts, ntohl(th->ack_seq));
     }
 
     rt_tcp_keepalive_feed(ts);
@@ -1144,7 +1142,7 @@ static void rt_tcp_rcv(struct rtskb *skb)
  feed:
     /* inform retransmission subsystem about arrived ack */
     if (th->ack) {
-        rt_tcp_retransmit_ack(ts, ntohl(th->ack_seq));
+	rt_tcp_retransmit_ack(ts, ntohl(th->ack_seq));
     }
 
     rt_tcp_keepalive_feed(ts);
@@ -1165,18 +1163,18 @@ static void rt_tcp_rcv_err(struct rtskb *skb)
 }
 
 static int rt_tcp_window_send(struct tcp_socket *ts, u32 data_len,
-                              u8 *data_ptr)
+			      u8 *data_ptr)
 {
     u32 dst_window = ts->sync.dst_window;
     int ret;
 
     if (data_len > dst_window)
-        data_len = dst_window;
+	data_len = dst_window;
 
     if ((ret = rt_tcp_segment(&ts->rt, ts, TCP_FLAG_ACK,
-                              data_len, data_ptr, 0)) < 0) {
-        rtdm_printk("rttcp: cann't send a packet: err %d\n", -ret);
-        return ret;
+			      data_len, data_ptr, 0)) < 0) {
+	rtdm_printk("rttcp: cann't send a packet: err %d\n", -ret);
+	return ret;
     }
 
     return ret;
@@ -1229,15 +1227,15 @@ static int rt_tcp_socket_create(struct tcp_socket* ts)
 
     /* enforce maximum number of TCP sockets */
     if (free_ports == 0) {
-        rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
-        return -EAGAIN;
+	rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
+	return -EAGAIN;
     }
     free_ports--;
 
     /* find free auto-port in bitmap */
     for (i = 0; i < RT_PORT_BITMAP_WORDS; i++)
-        if (port_bitmap[i] != (unsigned long)-1)
-            break;
+	if (port_bitmap[i] != (unsigned long)-1)
+	    break;
     index = ffz(port_bitmap[i]);
     set_bit(index, &port_bitmap[i]);
     index += i*32;
@@ -1257,17 +1255,16 @@ static int rt_tcp_socket_create(struct tcp_socket* ts)
  *  rt_tcp_socket - create a new TCP-Socket
  *  @s: socket
  */
-static int rt_tcp_socket(struct rtdm_dev_context *sockctx,
-                         rtdm_user_info_t *user_info)
+static int rt_tcp_socket(struct rtdm_fd *fd)
 {
-    struct tcp_socket *ts = (struct tcp_socket *)&sockctx->dev_private;
+    struct tcp_socket *ts = rtdm_fd_to_private(fd);
     int ret;
 
-    if ((ret = rt_socket_init(sockctx, IPPROTO_TCP)) != 0)
-        return ret;
+    if ((ret = rt_socket_init(fd, IPPROTO_TCP)) != 0)
+	return ret;
 
     if ((ret = rt_tcp_socket_create(ts)) != 0)
-        rt_socket_cleanup(sockctx);
+	rt_socket_cleanup(fd);
 
     return ret;
 }
@@ -1302,12 +1299,12 @@ static void rt_tcp_socket_destruct(struct tcp_socket* ts)
 
     rtdm_lock_get_irqsave(&tcp_socket_base_lock, context);
     if (sock->prot.inet.reg_index >= 0) {
-        index = sock->prot.inet.reg_index;
+	index = sock->prot.inet.reg_index;
 
-        clear_bit(index % BITS_PER_LONG, &port_bitmap[index / BITS_PER_LONG]);
-        port_hash_del(port_registry[index]);
-        free_ports++;
-        sock->prot.inet.reg_index = -1;
+	clear_bit(index % BITS_PER_LONG, &port_bitmap[index / BITS_PER_LONG]);
+	port_hash_del(port_registry[index]);
+	free_ports++;
+	sock->prot.inet.reg_index = -1;
     }
     rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
 
@@ -1321,14 +1318,14 @@ static void rt_tcp_socket_destruct(struct tcp_socket* ts)
 
     /* dereference rtdev */
     if (ts->rt.rtdev != NULL) {
-        rtdev_dereference(ts->rt.rtdev);
-        ts->rt.rtdev = NULL;
+	rtdev_dereference(ts->rt.rtdev);
+	ts->rt.rtdev = NULL;
     }
 
     rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
     if (signal)
-        rt_tcp_socket_invalidate_signal(ts);
+	rt_tcp_socket_invalidate_signal(ts);
 
     rtdm_event_destroy(&ts->conn_evt);
 
@@ -1337,23 +1334,22 @@ static void rt_tcp_socket_destruct(struct tcp_socket* ts)
 
     /* free packets in incoming queue */
     while ((skb = rtskb_dequeue(&sock->incoming)) != NULL)
-        kfree_rtskb(skb);
+	kfree_rtskb(skb);
 
     /* ensure that the timer is no longer running */
     timerwheel_remove_timer_sync(&ts->timer);
 
     /* free packets in retransmission queue */
     while ((skb = __rtskb_dequeue(&ts->retransmit_queue)) != NULL)
-        kfree_rtskb(skb);
+	kfree_rtskb(skb);
 }
 
 /***
  *  rt_tcp_close
  */
-static int rt_tcp_close(struct rtdm_dev_context *sockctx,
-                        rtdm_user_info_t *user_info)
+static int rt_tcp_close(struct rtdm_fd *fd)
 {
-    struct tcp_socket* ts = (struct tcp_socket *)&sockctx->dev_private;
+    struct tcp_socket* ts = rtdm_fd_to_private(fd);
     struct rt_tcp_dispatched_packet_send_cmd send_cmd;
     rtdm_lockctx_t context;
     int signal = 0;
@@ -1363,51 +1359,51 @@ static int rt_tcp_close(struct rtdm_dev_context *sockctx,
     ts->is_closed = 1;
 
     if (ts->tcp_state == TCP_ESTABLISHED ||
-        ts->tcp_state == TCP_SYN_RECV) {
-        /* close() from ESTABLISHED */
-        send_cmd.ts = ts;
-        send_cmd.flags = TCP_FLAG_FIN|TCP_FLAG_ACK;
-        signal = rt_tcp_socket_invalidate(ts, TCP_FIN_WAIT1);
+	ts->tcp_state == TCP_SYN_RECV) {
+	/* close() from ESTABLISHED */
+	send_cmd.ts = ts;
+	send_cmd.flags = TCP_FLAG_FIN|TCP_FLAG_ACK;
+	signal = rt_tcp_socket_invalidate(ts, TCP_FIN_WAIT1);
 
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-        rtpc_dispatch_call(rt_tcp_dispatched_packet_send, 0, &send_cmd,
-                           sizeof(send_cmd), NULL, NULL);
-        /* result is ignored */
+	rtpc_dispatch_call(rt_tcp_dispatched_packet_send, 0, &send_cmd,
+			   sizeof(send_cmd), NULL, NULL);
+	/* result is ignored */
 
-        /* Give the peer some time to reply to our FIN. */
-        msleep(1000);
+	/* Give the peer some time to reply to our FIN. */
+	msleep(1000);
     } else if (ts->tcp_state == TCP_CLOSE_WAIT) {
-        /* Send FIN in CLOSE_WAIT */
-        send_cmd.ts = ts;
-        send_cmd.flags = TCP_FLAG_FIN|TCP_FLAG_ACK;
-        signal = rt_tcp_socket_invalidate(ts, TCP_LAST_ACK);
+	/* Send FIN in CLOSE_WAIT */
+	send_cmd.ts = ts;
+	send_cmd.flags = TCP_FLAG_FIN|TCP_FLAG_ACK;
+	signal = rt_tcp_socket_invalidate(ts, TCP_LAST_ACK);
 
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-        rtpc_dispatch_call(rt_tcp_dispatched_packet_send, 0, &send_cmd,
-                           sizeof(send_cmd), NULL, NULL);
-        /* result is ignored */
+	rtpc_dispatch_call(rt_tcp_dispatched_packet_send, 0, &send_cmd,
+			   sizeof(send_cmd), NULL, NULL);
+	/* result is ignored */
 
-        /* Give the peer some time to reply to our FIN. */
-        msleep(1000);
+	/* Give the peer some time to reply to our FIN. */
+	msleep(1000);
     } else {
-        /*
-          rt_tcp_socket_validate() has not been called at all,
-          hence socket state is TCP_SYN_SENT or TCP_LISTEN,
-          or socket is in one of close states,
-          hence rt_tcp_socket_invalidate() was called,
-          but close() is called at first time
-        */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	/*
+	  rt_tcp_socket_validate() has not been called at all,
+	  hence socket state is TCP_SYN_SENT or TCP_LISTEN,
+	  or socket is in one of close states,
+	  hence rt_tcp_socket_invalidate() was called,
+	  but close() is called at first time
+	*/
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
     }
 
     if (signal)
-        rt_tcp_socket_invalidate_signal(ts);
+	rt_tcp_socket_invalidate_signal(ts);
 
     rt_tcp_socket_destruct(ts);
 
-    return rt_socket_cleanup(sockctx);
+    return rt_socket_cleanup(fd);
 }
 
 /***
@@ -1416,7 +1412,7 @@ static int rt_tcp_close(struct rtdm_dev_context *sockctx,
  *  @addr:  local address
  */
 static int rt_tcp_bind(struct tcp_socket *ts, const struct sockaddr *addr,
-                       socklen_t addrlen)
+		       socklen_t addrlen)
 {
     struct sockaddr_in  *usin = (struct sockaddr_in *)addr;
     rtdm_lockctx_t      context;
@@ -1426,13 +1422,13 @@ static int rt_tcp_bind(struct tcp_socket *ts, const struct sockaddr *addr,
 
 
     if ((addrlen < (int)sizeof(struct sockaddr_in)) ||
-        ((usin->sin_port & tcp_auto_port_mask) == tcp_auto_port_start))
-        return -EINVAL;
+	((usin->sin_port & tcp_auto_port_mask) == tcp_auto_port_start))
+	return -EINVAL;
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
     if (ts->tcp_state != TCP_CLOSE || ts->is_bound || ts->is_binding) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EINVAL;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EINVAL;
     }
 
     ts->is_binding = 1;
@@ -1441,18 +1437,18 @@ static int rt_tcp_bind(struct tcp_socket *ts, const struct sockaddr *addr,
     rtdm_lock_get_irqsave(&tcp_socket_base_lock, context);
 
     if ((index = ts->sock.prot.inet.reg_index) < 0) {
-        /* socket is destroyed */
-        ret = -EBADF;
-        goto unlock_out;
+	/* socket is destroyed */
+	ret = -EBADF;
+	goto unlock_out;
     }
 
     port_hash_del(ts);
     if (port_hash_insert(ts, usin->sin_addr.s_addr,
-                         usin->sin_port ?: index + tcp_auto_port_start)) {
-        port_hash_insert(ts, ts->saddr, ts->sport);
+			 usin->sin_port ?: index + tcp_auto_port_start)) {
+	port_hash_insert(ts, ts->saddr, ts->sport);
 
-        ret = -EADDRINUSE;
-        goto unlock_out;
+	ret = -EADDRINUSE;
+	goto unlock_out;
     }
 
     bound = 1;
@@ -1473,7 +1469,7 @@ static int rt_tcp_bind(struct tcp_socket *ts, const struct sockaddr *addr,
  *  rt_tcp_connect
  */
 static int rt_tcp_connect(struct tcp_socket *ts, const struct sockaddr *serv_addr,
-                          socklen_t addrlen)
+			  socklen_t addrlen)
 {
     struct sockaddr_in  *usin = (struct sockaddr_in *) serv_addr;
     struct dest_route   rt;
@@ -1481,35 +1477,35 @@ static int rt_tcp_connect(struct tcp_socket *ts, const struct sockaddr *serv_add
     int ret;
 
     if (addrlen < (int)sizeof(struct sockaddr_in))
-        return -EINVAL;
+	return -EINVAL;
 
     if (usin->sin_family != AF_INET)
-        return -EAFNOSUPPORT;
+	return -EAFNOSUPPORT;
 
     ret = rt_ip_route_output(&rt, usin->sin_addr.s_addr, ts->saddr);
     if (ret < 0) {
-        /* no route to host */
-        return -ENETUNREACH;
+	/* no route to host */
+	return -ENETUNREACH;
     }
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
     if (ts->is_closed) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        ret = -EBADF;
-        goto err_deref;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	ret = -EBADF;
+	goto err_deref;
     }
 
     if (ts->tcp_state != TCP_CLOSE || ts->is_binding) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        ret = -EINVAL;
-        goto err_deref;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	ret = -EINVAL;
+	goto err_deref;
     }
 
     if (ts->rt.rtdev == NULL)
-        memcpy(&ts->rt, &rt, sizeof(rt));
+	memcpy(&ts->rt, &rt, sizeof(rt));
     else
-        rtdev_dereference(rt.rtdev);
+	rtdev_dereference(rt.rtdev);
 
     ts->saddr = rt.rtdev->local_ip;
 
@@ -1528,25 +1524,25 @@ static int rt_tcp_connect(struct tcp_socket *ts, const struct sockaddr *serv_add
     /* Complete three-way handshake */
     ret = rt_tcp_send(ts, TCP_FLAG_SYN);
     if (ret < 0) {
-        rtdm_printk("rttcp: cann't send SYN\n");
-        return ret;
+	rtdm_printk("rttcp: cann't send SYN\n");
+	return ret;
     }
 
     ret = rtdm_event_timedwait(&ts->conn_evt, rt_tcp_connection_timeout, NULL);
     if (unlikely(ret < 0))
-        switch (ret) {
-            case -EWOULDBLOCK:
-            case -ETIMEDOUT:
-            case -EINTR:
-                return ret;
+	switch (ret) {
+	    case -EWOULDBLOCK:
+	    case -ETIMEDOUT:
+	    case -EINTR:
+		return ret;
 
-            default:
-                return -EBADF;
-        }
+	    default:
+		return -EBADF;
+	}
 
     if (ts->tcp_state == TCP_SYN_SENT) {
-        /* received conn_evt, but connection is not established */
-        return -ECONNREFUSED;
+	/* received conn_evt, but connection is not established */
+	return -ECONNREFUSED;
     }
 
     return ret;
@@ -1570,13 +1566,13 @@ static int rt_tcp_listen(struct tcp_socket *ts, unsigned long backlog)
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
     if (ts->is_closed) {
-        ret = -EBADF;
-        goto unlock_out;
+	ret = -EBADF;
+	goto unlock_out;
     }
 
     if (ts->tcp_state != TCP_CLOSE || ts->is_binding) {
-        ret = -EINVAL;
-        goto unlock_out;
+	ret = -EINVAL;
+	goto unlock_out;
     }
 
     ts->tcp_state = TCP_LISTEN;
@@ -1592,7 +1588,7 @@ static int rt_tcp_listen(struct tcp_socket *ts, unsigned long backlog)
  *  rt_tcp_accept
  */
 static int rt_tcp_accept(struct tcp_socket *ts, struct sockaddr *addr,
-                         socklen_t *addrlen)
+			 socklen_t *addrlen)
 {
     /* Return sockaddr, but bind it with rt_socket_init, so it would be
        possible to read/write from it in future, return valid file descriptor */
@@ -1605,14 +1601,14 @@ static int rt_tcp_accept(struct tcp_socket *ts, struct sockaddr *addr,
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
     if (ts->is_accepting || ts->is_accepted) {
-        /* socket is already accepted or is accepting a connection right now */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EALREADY;
+	/* socket is already accepted or is accepting a connection right now */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EALREADY;
     }
 
     if (ts->tcp_state != TCP_LISTEN || *addrlen < sizeof(struct sockaddr_in)) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EINVAL;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EINVAL;
     }
 
     ts->is_accepting = 1;
@@ -1621,38 +1617,38 @@ static int rt_tcp_accept(struct tcp_socket *ts, struct sockaddr *addr,
     ret = rtdm_event_timedwait(&ts->conn_evt, timeout, NULL);
 
     if (unlikely(ret < 0))
-        switch (ret) {
-            case -ETIMEDOUT:
-            case -EINTR:
-                goto err;
+	switch (ret) {
+	    case -ETIMEDOUT:
+	    case -EINTR:
+		goto err;
 
-            default:
-                ret = -EBADF;
-                goto err;
-        }
+	    default:
+		ret = -EBADF;
+		goto err;
+	}
 
     /* accept() reported about connection establishment */
     ret = rt_ip_route_output(&rt, ts->daddr, ts->saddr);
     if (ret < 0) {
-        /* strange, no route to host, keep status quo */
-        ret = -EPROTO;
-        goto err;
+	/* strange, no route to host, keep status quo */
+	ret = -EPROTO;
+	goto err;
     }
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
     if (ts->tcp_state != TCP_ESTABLISHED) {
-        /* protocol error */
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        rtdev_dereference(rt.rtdev);
-        ret = -EPROTO;
-        goto err;
+	/* protocol error */
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	rtdev_dereference(rt.rtdev);
+	ret = -EPROTO;
+	goto err;
     }
 
     if (ts->rt.rtdev == NULL)
-        memcpy(&ts->rt, &rt, sizeof(rt));
+	memcpy(&ts->rt, &rt, sizeof(rt));
     else
-        rtdev_dereference(rt.rtdev);
+	rtdev_dereference(rt.rtdev);
 
     sin->sin_family      = AF_INET;
     sin->sin_port        = ts->dport;
@@ -1661,7 +1657,7 @@ static int rt_tcp_accept(struct tcp_socket *ts, struct sockaddr *addr,
     ts->is_accepted = 1;
     rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-    ret = rt_socket_context(&ts->sock)->fd;
+    ret = rt_socket_fd(&ts->sock)->fd;
 
  err:
     /* it is not critical to leave this unlocked
@@ -1682,63 +1678,63 @@ static int rt_tcp_shutdown(struct tcp_socket *ts, unsigned long how)
 /***
  *  rt_tcp_setsockopt
  */
-static int rt_tcp_setsockopt(rtdm_user_info_t *user_info, struct tcp_socket *ts,
-                             int level, int optname, const void *optval,
-                             socklen_t optlen)
+static int rt_tcp_setsockopt(struct rtdm_fd *fd, struct tcp_socket *ts,
+			     int level, int optname, const void *optval,
+			     socklen_t optlen)
 {
     /* uint64_t val; */
     struct timeval tv;
     rtdm_lockctx_t  context;
 
     switch (optname) {
-        case SO_KEEPALIVE:
-            if (optlen < sizeof(unsigned int))
-                return -EINVAL;
+	case SO_KEEPALIVE:
+	    if (optlen < sizeof(unsigned int))
+		return -EINVAL;
 
-            /* commented out, because current implementation transmits
-               keepalive probes from interrupt context */
-            /*
-            val = *(unsigned long*)optval;
+	    /* commented out, because current implementation transmits
+	       keepalive probes from interrupt context */
+	    /*
+	    val = *(unsigned long*)optval;
 
-            if (val)
-                rt_tcp_keepalive_enable(ts);
-            else
-                rt_tcp_keepalive_disable(ts);
-            */
-            return 0;
+	    if (val)
+		rt_tcp_keepalive_enable(ts);
+	    else
+		rt_tcp_keepalive_disable(ts);
+	    */
+	    return 0;
 
-        case SO_SNDTIMEO:
-            if (optlen < sizeof(tv))
-                return -EINVAL;
-            if (rtdm_copy_from_user(user_info, &tv, optval, sizeof(tv)))
-                return -EFAULT;
-            if (tv.tv_usec < 0 || tv.tv_usec >= 1000000)
-                return -EDOM;
+	case SO_SNDTIMEO:
+	    if (optlen < sizeof(tv))
+		return -EINVAL;
+	    if (rtdm_copy_from_user(fd, &tv, optval, sizeof(tv)))
+		return -EFAULT;
+	    if (tv.tv_usec < 0 || tv.tv_usec >= 1000000)
+		return -EDOM;
 
-            rtdm_lock_get_irqsave(&ts->socket_lock, context);
+	    rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
-            if (tv.tv_sec < 0) {
-                ts->sk_sndtimeo = RTDM_TIMEOUT_NONE;
-                rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-                return 0;
-            }
+	    if (tv.tv_sec < 0) {
+		ts->sk_sndtimeo = RTDM_TIMEOUT_NONE;
+		rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+		return 0;
+	    }
 
-            ts->sk_sndtimeo = RTDM_TIMEOUT_INFINITE;
-            if (tv.tv_sec == 0 && tv.tv_usec == 0) {
-                rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-                return 0;
-            }
+	    ts->sk_sndtimeo = RTDM_TIMEOUT_INFINITE;
+	    if (tv.tv_sec == 0 && tv.tv_usec == 0) {
+		rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+		return 0;
+	    }
 
-            if (tv.tv_sec < (MAX_SCHEDULE_TIMEOUT/1000000000ull - 1))
-                ts->sk_sndtimeo = (tv.tv_sec * 1000000 + tv.tv_usec) * 1000;
+	    if (tv.tv_sec < (MAX_SCHEDULE_TIMEOUT/1000000000ull - 1))
+		ts->sk_sndtimeo = (tv.tv_sec * 1000000 + tv.tv_usec) * 1000;
 
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
-            return 0;
+	    return 0;
 
-        case SO_REUSEADDR:
-            /* to implement */
-            return -EOPNOTSUPP;
+	case SO_REUSEADDR:
+	    /* to implement */
+	    return -EOPNOTSUPP;
     }
 
     return -ENOPROTOOPT;
@@ -1747,22 +1743,22 @@ static int rt_tcp_setsockopt(rtdm_user_info_t *user_info, struct tcp_socket *ts,
 /***
  *  rt_tcp_getsockopt
  */
-static int rt_tcp_getsockopt(rtdm_user_info_t *user_info, struct tcp_socket *ts,
-                             int level, int optname, void *optval, socklen_t *optlen)
+static int rt_tcp_getsockopt(struct rtdm_fd *fd, struct tcp_socket *ts,
+			     int level, int optname, void *optval, socklen_t *optlen)
 {
     int ret = 0;
 
     if (*optlen < sizeof(unsigned int))
-        return -EINVAL;
+	return -EINVAL;
 
     switch (optname) {
-        case SO_ERROR:
-            ret = 0; /* used in nonblocking connect(), extend later */
-            break;
+	case SO_ERROR:
+	    ret = 0; /* used in nonblocking connect(), extend later */
+	    break;
 
-        default:
-            ret = -ENOPROTOOPT;
-            break;
+	default:
+	    ret = -ENOPROTOOPT;
+	    break;
     }
 
     return ret;
@@ -1771,11 +1767,10 @@ static int rt_tcp_getsockopt(rtdm_user_info_t *user_info, struct tcp_socket *ts,
 /***
  *  rt_tcp_ioctl
  */
-static int rt_tcp_ioctl(struct rtdm_dev_context *sockctx,
-                        rtdm_user_info_t *user_info,
-                        unsigned int request, void __user *arg)
+static int rt_tcp_ioctl(struct rtdm_fd *fd,
+			unsigned int request, void __user *arg)
 {
-    struct tcp_socket* ts = (struct tcp_socket *)&sockctx->dev_private;
+    struct tcp_socket* ts = rtdm_fd_to_private(fd);
     struct _rtdm_setsockaddr_args *setaddr = arg;
     struct _rtdm_getsockaddr_args *getaddr = arg;
     struct _rtdm_getsockopt_args  *getopt  = arg;
@@ -1784,60 +1779,58 @@ static int rt_tcp_ioctl(struct rtdm_dev_context *sockctx,
 
     /* fast path for common socket IOCTLs */
     if (_IOC_TYPE(request) == RTIOC_TYPE_NETWORK)
-        return rt_socket_common_ioctl(sockctx, user_info, request, arg);
+	return rt_socket_common_ioctl(fd, request, arg);
 
     in_rt = rtdm_in_rt_context();
 
     switch (request) {
-        case _RTIOC_BIND:
-            return rt_tcp_bind(ts, setaddr->addr, setaddr->addrlen);
+	case _RTIOC_BIND:
+	    return rt_tcp_bind(ts, setaddr->addr, setaddr->addrlen);
 
-        case _RTIOC_CONNECT:
-            if (!in_rt)
-                return -ENOSYS;
-            return rt_tcp_connect(ts, setaddr->addr, setaddr->addrlen);
+	case _RTIOC_CONNECT:
+	    if (!in_rt)
+		return -ENOSYS;
+	    return rt_tcp_connect(ts, setaddr->addr, setaddr->addrlen);
 
-        case _RTIOC_LISTEN:
-            return rt_tcp_listen(ts, (unsigned long)arg);
+	case _RTIOC_LISTEN:
+	    return rt_tcp_listen(ts, (unsigned long)arg);
 
-        case _RTIOC_ACCEPT:
-            if (!in_rt)
-                return -ENOSYS;
-            return rt_tcp_accept(ts, getaddr->addr, getaddr->addrlen);
+	case _RTIOC_ACCEPT:
+	    if (!in_rt)
+		return -ENOSYS;
+	    return rt_tcp_accept(ts, getaddr->addr, getaddr->addrlen);
 
-        case _RTIOC_SHUTDOWN:
-            return rt_tcp_shutdown(ts, (unsigned long)arg);
+	case _RTIOC_SHUTDOWN:
+	    return rt_tcp_shutdown(ts, (unsigned long)arg);
 
-        case _RTIOC_SETSOCKOPT:
-            if (setopt->level != SOL_SOCKET)
-                break;
+	case _RTIOC_SETSOCKOPT:
+	    if (setopt->level != SOL_SOCKET)
+		break;
 
-            return rt_tcp_setsockopt(user_info, ts, setopt->level,
-                                     setopt->optname, setopt->optval,
-                                     setopt->optlen);
+	    return rt_tcp_setsockopt(fd, ts, setopt->level,
+				     setopt->optname, setopt->optval,
+				     setopt->optlen);
 
-        case _RTIOC_GETSOCKOPT:
-            if (setopt->level != SOL_SOCKET)
-                break;
-            return rt_tcp_getsockopt(user_info, ts, getopt->level,
-                                     getopt->optname, getopt->optval,
-                                     getopt->optlen);
+	case _RTIOC_GETSOCKOPT:
+	    if (setopt->level != SOL_SOCKET)
+		break;
+	    return rt_tcp_getsockopt(fd, ts, getopt->level,
+				     getopt->optname, getopt->optval,
+				     getopt->optlen);
 
-        default:
-            break;
+	default:
+	    break;
     }
-    return rt_ip_ioctl(sockctx, user_info, request, arg);
+    return rt_ip_ioctl(fd, request, arg);
 }
 
 
 /***
  *  rt_tcp_read
  */
-static ssize_t rt_tcp_read(struct rtdm_dev_context *sockctx,
-                           rtdm_user_info_t *user_info, void *buf,
-                           size_t nbyte)
+static ssize_t rt_tcp_read(struct rtdm_fd *fd, void *buf, size_t nbyte)
 {
-    struct tcp_socket *ts = (struct tcp_socket *)&sockctx->dev_private;
+    struct tcp_socket *ts = rtdm_fd_to_private(fd);
     struct rtsocket   *sock = &ts->sock;
 
     struct rtskb      *skb;
@@ -1853,113 +1846,113 @@ static ssize_t rt_tcp_read(struct rtdm_dev_context *sockctx,
 
     rtdm_toseq_t timeout_seq;
 
-    if (!user_info) {
-        return -EFAULT;
+    if (!rtdm_fd_is_user(fd)) {
+	return -EFAULT;
     }
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
 
     if (ts->is_closed) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EBADF;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EBADF;
     }
 
     if (!ts->is_valid) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return 0;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return 0;
     }
 
     if (ts->tcp_state != TCP_ESTABLISHED && ts->tcp_state != TCP_FIN_WAIT2) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EINVAL;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EINVAL;
     }
     rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
     rtdm_toseq_init(&timeout_seq, timeout);
 
     while (copied < nbyte) {
-        ret = rtdm_sem_timeddown(&ts->sock.pending_sem, timeout, &timeout_seq);
+	ret = rtdm_sem_timeddown(&ts->sock.pending_sem, timeout, &timeout_seq);
 
-        if (unlikely(ret < 0))
-            switch (ret) {
-            case -EWOULDBLOCK:
-            case -ETIMEDOUT:
-            case -EINTR:
-                return (copied ? copied : ret);
+	if (unlikely(ret < 0))
+	    switch (ret) {
+	    case -EWOULDBLOCK:
+	    case -ETIMEDOUT:
+	    case -EINTR:
+		return (copied ? copied : ret);
 
-            case -EIDRM: /* event is destroyed */
-            default:
-                if (ts->is_closed) {
-                    return -EBADF;
-                }
+	    case -EIDRM: /* event is destroyed */
+	    default:
+		if (ts->is_closed) {
+		    return -EBADF;
+		}
 
-                return 0;
-            }
+		return 0;
+	    }
 
-        skb = rtskb_dequeue_chain(&sock->incoming);
-        RTNET_ASSERT(skb != NULL, return -EFAULT;);
+	skb = rtskb_dequeue_chain(&sock->incoming);
+	RTNET_ASSERT(skb != NULL, return -EFAULT;);
 
-        th_len = (skb->h.th->doff) << 2;
+	th_len = (skb->h.th->doff) << 2;
 
-        data_len = skb->len - th_len;
+	data_len = skb->len - th_len;
 
-        __rtskb_pull(skb, th_len);
+	__rtskb_pull(skb, th_len);
 
-        first_skb = skb;
+	first_skb = skb;
 
-        /* iterate over all IP fragments */
+	/* iterate over all IP fragments */
     iterate_fragments:
-        block_size = skb->len;
-        copied += block_size;
-        data_len -= block_size;
+	block_size = skb->len;
+	copied += block_size;
+	data_len -= block_size;
 
-        if (copied > nbyte) {
-            block_size -= copied - nbyte;
-            copied = nbyte;
+	if (copied > nbyte) {
+	    block_size -= copied - nbyte;
+	    copied = nbyte;
 
-            if (rtdm_copy_to_user(user_info, user_buf, skb->data, block_size)) {
-                kfree_rtskb(first_skb); /* or store the data? */
-                return -EFAULT;
-            }
-            rtdm_lock_get_irqsave(&ts->socket_lock, context);
-            if (ts->sync.window) {
-                ts->sync.window += block_size;
-                rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            } else {
-                ts->sync.window = block_size;
-                rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-                rt_tcp_send(ts, TCP_FLAG_ACK); /* window update */
-            }
+	    if (rtdm_copy_to_user(fd, user_buf, skb->data, block_size)) {
+		kfree_rtskb(first_skb); /* or store the data? */
+		return -EFAULT;
+	    }
+	    rtdm_lock_get_irqsave(&ts->socket_lock, context);
+	    if (ts->sync.window) {
+		ts->sync.window += block_size;
+		rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    } else {
+		ts->sync.window = block_size;
+		rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+		rt_tcp_send(ts, TCP_FLAG_ACK); /* window update */
+	    }
 
-            __rtskb_pull(skb, block_size);
-            __rtskb_push(first_skb, sizeof(struct tcphdr));
-            first_skb->h.th->doff = 5;
-            rtskb_queue_head(&sock->incoming, first_skb);
-            rtdm_sem_up(&ts->sock.pending_sem);
+	    __rtskb_pull(skb, block_size);
+	    __rtskb_push(first_skb, sizeof(struct tcphdr));
+	    first_skb->h.th->doff = 5;
+	    rtskb_queue_head(&sock->incoming, first_skb);
+	    rtdm_sem_up(&ts->sock.pending_sem);
 
-            return copied;
-        }
+	    return copied;
+	}
 
-        if (rtdm_copy_to_user(user_info, user_buf, skb->data, block_size)) {
-            kfree_rtskb(first_skb); /* or store the data? */
-            return -EFAULT;
-        }
-        rtdm_lock_get_irqsave(&ts->socket_lock, context);
-        if (ts->sync.window) {
-            ts->sync.window += block_size;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        } else {
-            ts->sync.window = block_size;
-            rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-            rt_tcp_send(ts, TCP_FLAG_ACK); /* window update */
-        }
+	if (rtdm_copy_to_user(fd, user_buf, skb->data, block_size)) {
+	    kfree_rtskb(first_skb); /* or store the data? */
+	    return -EFAULT;
+	}
+	rtdm_lock_get_irqsave(&ts->socket_lock, context);
+	if (ts->sync.window) {
+	    ts->sync.window += block_size;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	} else {
+	    ts->sync.window = block_size;
+	    rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	    rt_tcp_send(ts, TCP_FLAG_ACK); /* window update */
+	}
 
-        if ((skb = skb->next) != NULL) {
-            user_buf += data_len;
-            goto iterate_fragments;
-        }
+	if ((skb = skb->next) != NULL) {
+	    user_buf += data_len;
+	    goto iterate_fragments;
+	}
 
-        kfree_rtskb(first_skb);
+	kfree_rtskb(first_skb);
     }
 
     return copied;
@@ -1968,18 +1961,16 @@ static ssize_t rt_tcp_read(struct rtdm_dev_context *sockctx,
 /***
  *  rt_tcp_write
  */
-static ssize_t rt_tcp_write(struct rtdm_dev_context *sockctx,
-                            rtdm_user_info_t *user_info,
-                            const void *buf, size_t nbyte)
+static ssize_t rt_tcp_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
 {
-    struct tcp_socket *ts = (struct tcp_socket *)&sockctx->dev_private;
+    struct tcp_socket *ts = rtdm_fd_to_private(fd);
     uint32_t sent_len = 0;
     rtdm_lockctx_t      context;
     int ret = 0;
     nanosecs_rel_t sk_sndtimeo;
 
-    if (!user_info) {
-        return -EFAULT;
+    if (!rtdm_fd_is_user(fd)) {
+	return -EFAULT;
     }
 
     rtdm_lock_get_irqsave(&ts->socket_lock, context);
@@ -1987,47 +1978,47 @@ static ssize_t rt_tcp_write(struct rtdm_dev_context *sockctx,
     sk_sndtimeo = ts->sk_sndtimeo;
 
     if (!ts->is_valid) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EPIPE;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EPIPE;
     }
 
     if ((ts->daddr | ts->dport) == 0 || ts->tcp_state != TCP_ESTABLISHED) {
-        rtdm_lock_put_irqrestore(&ts->socket_lock, context);
-        return -EINVAL;
+	rtdm_lock_put_irqrestore(&ts->socket_lock, context);
+	return -EINVAL;
     }
 
     rtdm_lock_put_irqrestore(&ts->socket_lock, context);
 
     while (sent_len < nbyte) {
 
-        ret = rtdm_event_timedwait(&ts->send_evt, sk_sndtimeo, NULL);
+	ret = rtdm_event_timedwait(&ts->send_evt, sk_sndtimeo, NULL);
 
-        if (unlikely(ret < 0))
-            switch (ret) {
-                case -EWOULDBLOCK:
-                case -ETIMEDOUT:
-                case -EINTR:
-                    return sent_len ? : ret;
+	if (unlikely(ret < 0))
+	    switch (ret) {
+		case -EWOULDBLOCK:
+		case -ETIMEDOUT:
+		case -EINTR:
+		    return sent_len ? : ret;
 
-                case -EIDRM: /* event is destroyed */
-                default:
-                    if (ts->is_closed)
-                        return -EBADF;
+		case -EIDRM: /* event is destroyed */
+		default:
+		    if (ts->is_closed)
+			return -EBADF;
 
-                    return sent_len ? : ret;
-            }
+		    return sent_len ? : ret;
+	    }
 
-        ret = rt_tcp_window_send(ts, nbyte - sent_len,
-                                 ((u8*)buf) + sent_len);
+	ret = rt_tcp_window_send(ts, nbyte - sent_len,
+				 ((u8*)buf) + sent_len);
 
-        if (ret < 0) { /* check this branch correctness */
-            rtdm_event_signal(&ts->send_evt);
-            break;
-        }
+	if (ret < 0) { /* check this branch correctness */
+	    rtdm_event_signal(&ts->send_evt);
+	    break;
+	}
 
-        sent_len += ret;
-        if (ts->sync.dst_window)
-            rtdm_event_signal(&ts->send_evt);
+	sent_len += ret;
+	if (ts->sync.dst_window)
+	    rtdm_event_signal(&ts->send_evt);
     }
 
     return (ret < 0 ? ret : sent_len);
@@ -2036,75 +2027,70 @@ static ssize_t rt_tcp_write(struct rtdm_dev_context *sockctx,
 /***
  *  rt_tcp_recvmsg
  */
-static ssize_t rt_tcp_recvmsg(struct rtdm_dev_context *sockctx,
-                              rtdm_user_info_t *user_info,
-                              struct msghdr *msg, int msg_flags)
+static ssize_t rt_tcp_recvmsg(struct rtdm_fd *fd, struct msghdr *msg, int msg_flags)
 {
     size_t len;
     void *buf;
 
     if (msg_flags)
-        return -EOPNOTSUPP;
+	return -EOPNOTSUPP;
 
     /* loop over all vectors to be implemented */
     if (msg->msg_iovlen != 1)
-        return -EOPNOTSUPP;
+	return -EOPNOTSUPP;
 
     len = msg->msg_iov[0].iov_len;
     buf = msg->msg_iov[0].iov_base;
 
-    return rt_tcp_read(sockctx, user_info, buf, len);
+    return rt_tcp_read(fd, buf, len);
 }
 
 /***
  *  rt_tcp_sendmsg
  */
-static ssize_t rt_tcp_sendmsg(struct rtdm_dev_context *sockctx,
-                              rtdm_user_info_t *user_info,
-                              const struct msghdr *msg, int msg_flags)
+static ssize_t rt_tcp_sendmsg(struct rtdm_fd *fd,
+			      const struct msghdr *msg, int msg_flags)
 {
     size_t len;
     void *buf;
 
     if (msg_flags)
-        return -EOPNOTSUPP;
+	return -EOPNOTSUPP;
 
     /* loop over all vectors to be implemented */
     if (msg->msg_iovlen != 1)
-        return -EOPNOTSUPP;
+	return -EOPNOTSUPP;
 
     len = msg->msg_iov[0].iov_len;
     buf = msg->msg_iov[0].iov_base;
 
-    return rt_tcp_write(sockctx, user_info, (const void*)buf, len);
+    return rt_tcp_write(fd, (const void*)buf, len);
 }
 
-#ifdef CONFIG_XENO_DRIVERS_NET_SELECT_SUPPORT
 /***
  *  rt_tcp_select
  */
-static int rt_tcp_select(struct rtdm_dev_context *sockctx,
-                         rtdm_selector_t *selector,
-                         enum rtdm_selecttype type,
-                         unsigned fd_index)
+static int rt_tcp_select(struct rtdm_fd *fd,
+			 rtdm_selector_t *selector,
+			 enum rtdm_selecttype type,
+			 unsigned fd_index)
 {
-    struct tcp_socket *ts = (struct tcp_socket *)&sockctx->dev_private;
+    struct tcp_socket *ts = rtdm_fd_to_private(fd);
 
     switch (type) {
-        case XNSELECT_READ:
-            return rtdm_sem_select_bind(&ts->sock.pending_sem, selector,
-                                        XNSELECT_READ, fd_index);
-        case XNSELECT_WRITE:
-            return rtdm_event_select_bind(&ts->send_evt, selector,
-                                          XNSELECT_WRITE, fd_index);
-        default:
-            return -EBADF;
+	case XNSELECT_READ:
+	    return rtdm_sem_select(&ts->sock.pending_sem, selector,
+				XNSELECT_READ, fd_index);
+	case XNSELECT_WRITE:
+	    return rtdm_event_select(&ts->send_evt, selector,
+				    XNSELECT_WRITE, fd_index);
+	default:
+	    return -EBADF;
     }
 
     return -EINVAL;
 
 }
-#endif
 
 /***
  *  TCP-Initialisation
@@ -2117,41 +2103,34 @@ static struct rtinet_protocol tcp_protocol = {
     .init_socket =  &rt_tcp_socket
 };
 
-static struct rtdm_device tcp_device = {
-    .struct_version =   RTDM_DEVICE_STRUCT_VER,
-
+static struct rtdm_driver tcp_driver = {
+    .profile_info =     RTDM_PROFILE_INFO(tcp,
+					RTDM_CLASS_NETWORK,
+					RTDM_SUBCLASS_RTNET,
+					RTNET_RTDM_VER),
     .device_flags =     RTDM_PROTOCOL_DEVICE,
     .context_size =     sizeof(struct tcp_socket),
 
     .protocol_family =  PF_INET,
     .socket_type =      SOCK_STREAM,
 
-    .socket_nrt =       rt_inet_socket,
-
     .ops = {
-        .close_rt   =   NULL,
-        .close_nrt  =   rt_tcp_close,
-        .ioctl_rt   =   rt_tcp_ioctl,
-        .ioctl_nrt  =   rt_tcp_ioctl,
-        .read_rt    =   rt_tcp_read,
-        .write_rt   =   rt_tcp_write,
-        .recvmsg_rt =   rt_tcp_recvmsg,
-        .sendmsg_rt =   rt_tcp_sendmsg,
-#ifdef CONFIG_XENO_DRIVERS_NET_SELECT_SUPPORT
-        .select_bind =  rt_tcp_select,
-#endif
+	.socket     =   rt_inet_socket,
+	.close      =   rt_tcp_close,
+	.ioctl_rt   =   rt_tcp_ioctl,
+	.ioctl_nrt  =   rt_tcp_ioctl,
+	.read_rt    =   rt_tcp_read,
+	.write_rt   =   rt_tcp_write,
+	.recvmsg_rt =   rt_tcp_recvmsg,
+	.sendmsg_rt =   rt_tcp_sendmsg,
+	.select     =   rt_tcp_select,
     },
-
-    .device_class =     RTDM_CLASS_NETWORK,
-    .device_sub_class = RTDM_SUBCLASS_RTNET,
-    .driver_name =      "rttcp",
-    .driver_version =   RTNET_RTDM_VER,
-    .peripheral_name =  "Real-Time IPv4 Stream Socket Interface",
-    .provider_name =    rtnet_rtdm_provider_name,
-
-    .proc_name =        "INET_STREAM"
 };
 
+static struct rtdm_device tcp_device = {
+    .driver = &tcp_driver,
+    .label = "tcp",
+};
 
 #ifdef CONFIG_PROC_FS
 /***
@@ -2160,23 +2139,23 @@ static struct rtdm_device tcp_device = {
 static inline char* rt_tcp_string_of_state(u8 state)
 {
     switch (state) {
-        case TCP_ESTABLISHED: return "ESTABLISHED";
-        case TCP_SYN_SENT:    return "SYN_SENT";
-        case TCP_SYN_RECV:    return "SYN_RECV";
-        case TCP_FIN_WAIT1:   return "FIN_WAIT1";
-        case TCP_FIN_WAIT2:   return "FIN_WAIT2";
-        case TCP_TIME_WAIT:   return "TIME_WAIT";
-        case TCP_CLOSE:       return "CLOSE";
-        case TCP_CLOSE_WAIT:  return "CLOSE_WAIT";
-        case TCP_LAST_ACK:    return "LASK_ACK";
-        case TCP_LISTEN:      return "LISTEN";
-        case TCP_CLOSING:     return "CLOSING";
-        default:              return "UNKNOWN";
+	case TCP_ESTABLISHED: return "ESTABLISHED";
+	case TCP_SYN_SENT:    return "SYN_SENT";
+	case TCP_SYN_RECV:    return "SYN_RECV";
+	case TCP_FIN_WAIT1:   return "FIN_WAIT1";
+	case TCP_FIN_WAIT2:   return "FIN_WAIT2";
+	case TCP_TIME_WAIT:   return "TIME_WAIT";
+	case TCP_CLOSE:       return "CLOSE";
+	case TCP_CLOSE_WAIT:  return "CLOSE_WAIT";
+	case TCP_LAST_ACK:    return "LASK_ACK";
+	case TCP_LISTEN:      return "LISTEN";
+	case TCP_CLOSING:     return "CLOSING";
+	default:              return "UNKNOWN";
     }
 }
 
 static int rt_tcp_proc_read(char *buf, char **start, off_t offset,
-                            int count, int *eof, void *data)
+			    int count, int *eof, void *data)
 {
     rtdm_lockctx_t context;
     struct tcp_socket *ts;
@@ -2191,36 +2170,36 @@ static int rt_tcp_proc_read(char *buf, char **start, off_t offset,
     RTNET_PROC_PRINT_VARS_EX(80);
 
     if (!RTNET_PROC_PRINT_EX("Hash    Local Address           "
-                             "Foreign Address         State\n"))
-        goto done;
+			     "Foreign Address         State\n"))
+	goto done;
 
     for (index = 0; index < RT_TCP_SOCKETS; index++) {
-        rtdm_lock_get_irqsave(&tcp_socket_base_lock, context);
+	rtdm_lock_get_irqsave(&tcp_socket_base_lock, context);
 
-        ts = port_registry[index];
-        state = ts ? ts->tcp_state : TCP_CLOSE;
+	ts = port_registry[index];
+	state = ts ? ts->tcp_state : TCP_CLOSE;
 
-        if (ts && ts->tcp_state != TCP_CLOSE) {
-            saddr = ts->saddr;
-            sport = ts->sport;
-            daddr = ts->daddr;
-            dport = ts->dport;
-        }
+	if (ts && ts->tcp_state != TCP_CLOSE) {
+	    saddr = ts->saddr;
+	    sport = ts->sport;
+	    daddr = ts->daddr;
+	    dport = ts->dport;
+	}
 
-        rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
+	rtdm_lock_put_irqrestore(&tcp_socket_base_lock, context);
 
-        if (state != TCP_CLOSE) {
-            snprintf(sbuffer, sizeof(sbuffer), "%u.%u.%u.%u:%u",
-                     NIPQUAD(saddr), ntohs(sport));
-            snprintf(dbuffer, sizeof(dbuffer), "%u.%u.%u.%u:%u",
-                     NIPQUAD(daddr), ntohs(dport));
+	if (state != TCP_CLOSE) {
+	    snprintf(sbuffer, sizeof(sbuffer), "%u.%u.%u.%u:%u",
+		     NIPQUAD(saddr), ntohs(sport));
+	    snprintf(dbuffer, sizeof(dbuffer), "%u.%u.%u.%u:%u",
+		     NIPQUAD(daddr), ntohs(dport));
 
-            ret = RTNET_PROC_PRINT_EX("%04X    %-23s %-23s %s\n",
-                                      sport & port_hash_mask, sbuffer, dbuffer,
-                                      rt_tcp_string_of_state(state));
-            if (!ret)
-                break;
-        }
+	    ret = RTNET_PROC_PRINT_EX("%04X    %-23s %-23s %s\n",
+				      sport & port_hash_mask, sbuffer, dbuffer,
+				      rt_tcp_string_of_state(state));
+	    if (!ret)
+		break;
+	}
     }
 
  done:
@@ -2235,10 +2214,10 @@ static int __init rt_tcp_proc_register(void)
     struct proc_dir_entry *proc_entry;
 
     proc_entry = create_proc_entry("tcp", S_IFREG | S_IRUGO | S_IWUSR,
-                                   ipv4_proc_root);
+				   ipv4_proc_root);
 
     if (!proc_entry) {
-        return -EPERM;
+	return -EPERM;
     }
 
     proc_entry->read_proc = rt_tcp_proc_read;
@@ -2266,20 +2245,20 @@ int __init rt_tcp_init(void)
     int ret;
 
     if ((tcp_auto_port_start < 0) ||
-        (tcp_auto_port_start >= 0x10000 - RT_TCP_SOCKETS))
-        tcp_auto_port_start = 1024;
+	(tcp_auto_port_start >= 0x10000 - RT_TCP_SOCKETS))
+	tcp_auto_port_start = 1024;
     tcp_auto_port_start = htons(tcp_auto_port_start &
-                                (tcp_auto_port_mask & 0xFFFF));
+				(tcp_auto_port_mask & 0xFFFF));
     tcp_auto_port_mask  = htons(tcp_auto_port_mask | 0xFFFF0000);
 
     for (i = 0; i < ARRAY_SIZE(port_hash); i++)
-        INIT_HLIST_HEAD(&port_hash[i]);
+	INIT_HLIST_HEAD(&port_hash[i]);
 
     /* Perform essential initialization of the RST|ACK socket */
     skbs = rt_bare_socket_init(&rst_socket.sock, IPPROTO_TCP, RT_TCP_RST_PRIO,
-                               RT_TCP_RST_POOL_SIZE);
+			       RT_TCP_RST_POOL_SIZE);
     if (skbs < RT_TCP_RST_POOL_SIZE)
-        printk("rttcp: allocated only %d RST|ACK rtskbs\n", skbs);
+	printk("rttcp: allocated only %d RST|ACK rtskbs\n", skbs);
     rst_socket.sock.prot.inet.tos = 0;
     rtdm_lock_init(&rst_socket.socket_lock);
 
@@ -2288,14 +2267,14 @@ int __init rt_tcp_init(void)
      */
     ret = timerwheel_init(100000000ull, 23);
     if (ret < 0) {
-        rtdm_printk("rttcp: cann't initialize timerwheel task: %d\n", -ret);
-        goto out_1;
+	rtdm_printk("rttcp: cann't initialize timerwheel task: %d\n", -ret);
+	goto out_1;
     }
 
 #ifdef CONFIG_PROC_FS
     if ((ret = rt_tcp_proc_register()) < 0) {
-        rtdm_printk("rttcp: cann't initialize proc entry: %d\n", -ret);
-        goto out_2;
+	rtdm_printk("rttcp: cann't initialize proc entry: %d\n", -ret);
+	goto out_2;
     }
 #endif /* CONFIG_PROC_FS */
 
@@ -2303,8 +2282,8 @@ int __init rt_tcp_init(void)
 
     ret = rtdm_dev_register(&tcp_device);
     if (ret < 0) {
-        rtdm_printk("rttcp: cann't register RT TCP: %d\n", -ret);
-        goto out_3;
+	rtdm_printk("rttcp: cann't register RT TCP: %d\n", -ret);
+	goto out_3;
     }
 
     return ret;
@@ -2340,7 +2319,7 @@ void __exit rt_tcp_release(void)
 
     rt_bare_socket_cleanup(&rst_socket.sock);
 
-    rtdm_dev_unregister(&tcp_device, 1000);
+    rtdm_dev_unregister(&tcp_device);
 }
 
 module_init(rt_tcp_init);

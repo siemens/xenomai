@@ -54,59 +54,54 @@ struct rtsocket {
 
     rtdm_sem_t              pending_sem;
 
-    void                    (*callback_func)(struct rtdm_dev_context *,
-                                             void *arg);
+    void                    (*callback_func)(struct rtdm_fd *, void *arg);
     void                    *callback_arg;
 
+    unsigned long           flags;
+
     union {
-        /* IP specific */
-        struct {
-            u32             saddr;      /* source ip-addr (bind) */
-            u32             daddr;      /* destination ip-addr */
-            u16             sport;      /* source port */
-            u16             dport;      /* destination port */
+	/* IP specific */
+	struct {
+	    u32             saddr;      /* source ip-addr (bind) */
+	    u32             daddr;      /* destination ip-addr */
+	    u16             sport;      /* source port */
+	    u16             dport;      /* destination port */
 
-            int             reg_index;  /* index in port registry */
-            u8              tos;
-            u8              state;
-        } inet;
+	    int             reg_index;  /* index in port registry */
+	    u8              tos;
+	    u8              state;
+	} inet;
 
-        /* packet socket specific */
-        struct {
-            struct rtpacket_type packet_type;
-            int                  ifindex;
-        } packet;
+	/* packet socket specific */
+	struct {
+	    struct rtpacket_type packet_type;
+	    int                  ifindex;
+	} packet;
     } prot;
 };
 
 
-static inline struct rtdm_dev_context *rt_socket_context(struct rtsocket *sock)
+static inline struct rtdm_fd *rt_socket_fd(struct rtsocket *sock)
 {
-    return container_of((void *)sock, struct rtdm_dev_context, dev_private);
+    return rtdm_private_to_fd(sock);
 }
 
 #define rt_socket_reference(sock)   \
-    atomic_inc(&(rt_socket_context(sock)->close_lock_count))
+    rtdm_fd_lock(rt_socket_fd(sock))
 #define rt_socket_dereference(sock) \
-    atomic_dec(&(rt_socket_context(sock)->close_lock_count))
+    rtdm_fd_unlock(rt_socket_fd(sock))
 
-int rt_socket_init(struct rtdm_dev_context *context, unsigned short protocol);
-int rt_socket_cleanup(struct rtdm_dev_context *context);
-int rt_socket_common_ioctl(struct rtdm_dev_context *context,
-                           rtdm_user_info_t *user_info,
-                           int request, void *arg);
-int rt_socket_if_ioctl(struct rtdm_dev_context *context,
-                       rtdm_user_info_t *user_info,
-                       int request, void *arg);
-#ifdef CONFIG_XENO_DRIVERS_NET_SELECT_SUPPORT
-int rt_socket_select_bind(struct rtdm_dev_context *context,
-                          rtdm_selector_t *selector,
-                          enum rtdm_selecttype type,
-                          unsigned fd_index);
-#endif /* CONFIG_XENO_DRIVERS_NET_SELECT_SUPPORT */
+int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol);
+int rt_socket_cleanup(struct rtdm_fd *fd);
+int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg);
+int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg);
+int rt_socket_select_bind(struct rtdm_fd *fd,
+			  rtdm_selector_t *selector,
+			  enum rtdm_selecttype type,
+			  unsigned fd_index);
 
 int rt_bare_socket_init(struct rtsocket *sock, unsigned short protocol,
-                        unsigned int priority, unsigned int pool_size);
+			unsigned int priority, unsigned int pool_size);
 
 static inline void rt_bare_socket_cleanup(struct rtsocket *sock)
 {

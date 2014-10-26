@@ -51,12 +51,12 @@ struct icmp_bxm
     size_t              data_len;
     off_t               offset;
     struct {
-        struct icmphdr  icmph;
-        nanosecs_abs_t  timestamp;
+	struct icmphdr  icmph;
+	nanosecs_abs_t  timestamp;
     } head;
     union {
-        struct rtskb    *skb;
-        void            *buf;
+	struct rtskb    *skb;
+	void            *buf;
     } data;
 };
 
@@ -127,9 +127,9 @@ void rt_icmp_cleanup_echo_requests(void)
     rtdm_lock_put_irqrestore(&echo_calls_lock, context);
 
     while (entry != &echo_calls) {
-        next = entry->next;
-        rtpc_complete_call_nrt((struct rt_proc_call *)entry, -EINTR);
-        entry = next;
+	next = entry->next;
+	rtpc_complete_call_nrt((struct rt_proc_call *)entry, -EINTR);
+	entry = next;
     }
 
     /* purge any pending ICMP fragments */
@@ -148,7 +148,7 @@ static void rt_icmp_discard(struct rtskb *skb)
 
 
 static int rt_icmp_glue_reply_bits(const void *p, unsigned char *to,
-                                   unsigned int offset, unsigned int fraglen)
+				   unsigned int offset, unsigned int fraglen)
 {
     struct icmp_bxm *icmp_param = (struct icmp_bxm *)p;
     struct icmphdr  *icmph;
@@ -157,16 +157,16 @@ static int rt_icmp_glue_reply_bits(const void *p, unsigned char *to,
 
     /* TODO: add support for fragmented ICMP packets */
     if (offset != 0)
-        return -EMSGSIZE;
+	return -EMSGSIZE;
 
     csum = csum_partial_copy_nocheck((void *)&icmp_param->head, to,
-                                     icmp_param->head_len, icmp_param->csum);
+				     icmp_param->head_len, icmp_param->csum);
 
     csum = rtskb_copy_and_csum_bits(icmp_param->data.skb,
-                                    icmp_param->offset,
-                                    to + icmp_param->head_len,
-                                    fraglen - icmp_param->head_len,
-                                    csum);
+				    icmp_param->offset,
+				    to + icmp_param->head_len,
+				    fraglen - icmp_param->head_len,
+				    csum);
 
     icmph = (struct icmphdr *)to;
 
@@ -191,17 +191,17 @@ static void rt_icmp_send_reply(struct icmp_bxm *icmp_param, struct rtskb *skb)
 
     /* route back to the source address via the incoming device */
     if (rt_ip_route_output(&rt, skb->nh.iph->saddr,
-                           skb->rtdev->local_ip) != 0)
-        return;
+			   skb->rtdev->local_ip) != 0)
+	return;
 
     err = rt_ip_build_xmit(&icmp_socket, rt_icmp_glue_reply_bits, icmp_param,
-                           sizeof(struct icmphdr) + icmp_param->data_len,
-                           &rt, MSG_DONTWAIT);
+			   sizeof(struct icmphdr) + icmp_param->data_len,
+			   &rt, MSG_DONTWAIT);
 
     rtdev_dereference(rt.rtdev);
 
     RTNET_ASSERT(err == 0,
-                 rtdm_printk("RTnet: %s() error in xmit\n", __FUNCTION__););
+		 rtdm_printk("RTnet: %s() error in xmit\n", __FUNCTION__););
     (void)err;
 }
 
@@ -220,13 +220,13 @@ static void rt_icmp_echo_reply(struct rtskb *skb)
     rtdm_lock_get_irqsave(&echo_calls_lock, context);
 
     if (!list_empty(&echo_calls)) {
-        call = (struct rt_proc_call *)echo_calls.next;
-        list_del(&call->list_entry);
+	call = (struct rt_proc_call *)echo_calls.next;
+	list_del(&call->list_entry);
 
-        rtdm_lock_put_irqrestore(&echo_calls_lock, context);
+	rtdm_lock_put_irqrestore(&echo_calls_lock, context);
     } else {
-        rtdm_lock_put_irqrestore(&echo_calls_lock, context);
-        return;
+	rtdm_lock_put_irqrestore(&echo_calls_lock, context);
+	return;
     }
 
     cmd = rtpc_get_priv(call, struct ipv4_cmd);
@@ -235,14 +235,14 @@ static void rt_icmp_echo_reply(struct rtskb *skb)
     cmd->args.ping.rtt     = 0;
 
     if ((skb->h.icmph->un.echo.id == cmd->args.ping.id) &&
-        (ntohs(skb->h.icmph->un.echo.sequence) == cmd->args.ping.sequence) &&
-        skb->len == cmd->args.ping.msg_size) {
-        if (skb->len >= sizeof(nanosecs_abs_t))
-            cmd->args.ping.rtt =
-                rtdm_clock_read() - *((nanosecs_abs_t *)skb->data);
-        rtpc_complete_call(call, sizeof(struct icmphdr) + skb->len);
+	(ntohs(skb->h.icmph->un.echo.sequence) == cmd->args.ping.sequence) &&
+	skb->len == cmd->args.ping.msg_size) {
+	if (skb->len >= sizeof(nanosecs_abs_t))
+	    cmd->args.ping.rtt =
+		rtdm_clock_read() - *((nanosecs_abs_t *)skb->data);
+	rtpc_complete_call(call, sizeof(struct icmphdr) + skb->len);
     } else
-        rtpc_complete_call(call, 0);
+	rtpc_complete_call(call, 0);
 }
 
 
@@ -270,7 +270,7 @@ static void rt_icmp_echo_request(struct rtskb *skb)
 
 
 static int rt_icmp_glue_request_bits(const void *p, unsigned char *to,
-                                     unsigned int offset, unsigned int fraglen)
+				     unsigned int offset, unsigned int fraglen)
 {
     struct icmp_bxm *icmp_param = (struct icmp_bxm *)p;
     struct icmphdr  *icmph;
@@ -279,17 +279,17 @@ static int rt_icmp_glue_request_bits(const void *p, unsigned char *to,
 
     /* TODO: add support for fragmented ICMP packets */
     RTNET_ASSERT(offset == 0,
-                 rtdm_printk("RTnet: %s() does not support fragmentation.\n",
-                             __FUNCTION__);
-                 return -1;);
+		 rtdm_printk("RTnet: %s() does not support fragmentation.\n",
+			     __FUNCTION__);
+		 return -1;);
 
     csum = csum_partial_copy_nocheck((void *)&icmp_param->head, to,
-                                     icmp_param->head_len, icmp_param->csum);
+				     icmp_param->head_len, icmp_param->csum);
 
     csum = csum_partial_copy_nocheck(icmp_param->data.buf,
-                                     to + icmp_param->head_len,
-                                     fraglen - icmp_param->head_len,
-                                     csum);
+				     to + icmp_param->head_len,
+				     fraglen - icmp_param->head_len,
+				     csum);
 
     icmph = (struct icmphdr *)to;
 
@@ -314,15 +314,15 @@ static int rt_icmp_send_request(u32 daddr, struct icmp_bxm *icmp_param)
     icmp_param->csum = 0;
 
     if ((err = rt_ip_route_output(&rt, daddr, INADDR_ANY)) < 0)
-        return err;
+	return err;
 
     /* TODO: add support for fragmented ICMP packets */
     size = icmp_param->head_len + icmp_param->data_len;
     if (size + 20 /* ip header */ > rt.rtdev->get_mtu(rt.rtdev, RT_ICMP_PRIO))
-        err = -EMSGSIZE;
+	err = -EMSGSIZE;
     else
-        err = rt_ip_build_xmit(&icmp_socket, rt_icmp_glue_request_bits,
-                               icmp_param, size, &rt, MSG_DONTWAIT);
+	err = rt_ip_build_xmit(&icmp_socket, rt_icmp_glue_request_bits,
+			       icmp_param, size, &rt, MSG_DONTWAIT);
 
     rtdev_dereference(rt.rtdev);
 
@@ -351,19 +351,19 @@ int rt_icmp_send_echo(u32 daddr, u16 id, u16 sequence, size_t msg_size)
     icmp_param.offset = 0;
 
     if (msg_size >= sizeof(nanosecs_abs_t)) {
-        icmp_param.head_len = sizeof(struct icmphdr) + sizeof(nanosecs_abs_t);
-        icmp_param.data_len = msg_size - sizeof(nanosecs_abs_t);
+	icmp_param.head_len = sizeof(struct icmphdr) + sizeof(nanosecs_abs_t);
+	icmp_param.data_len = msg_size - sizeof(nanosecs_abs_t);
 
-        for (pos = 0; pos < icmp_param.data_len; pos++)
-            pattern_buf[pos] = pos & 0xFF;
+	for (pos = 0; pos < icmp_param.data_len; pos++)
+	    pattern_buf[pos] = pos & 0xFF;
 
-        icmp_param.head.timestamp = rtdm_clock_read();
+	icmp_param.head.timestamp = rtdm_clock_read();
     } else {
-        icmp_param.head_len = sizeof(struct icmphdr) + msg_size;
-        icmp_param.data_len = 0;
+	icmp_param.head_len = sizeof(struct icmphdr) + msg_size;
+	icmp_param.data_len = 0;
 
-        for (pos = 0; pos < msg_size; pos++)
-            pattern_buf[pos] = pos & 0xFF;
+	for (pos = 0; pos < msg_size; pos++)
+	    pattern_buf[pos] = pos & 0xFF;
     }
     icmp_param.data.buf = pattern_buf;
 
@@ -375,8 +375,7 @@ int rt_icmp_send_echo(u32 daddr, u16 id, u16 sequence, size_t msg_size)
 /***
  *  rt_icmp_socket
  */
-int rt_icmp_socket(struct rtdm_dev_context *context,
-                   rtdm_user_info_t *user_info)
+int rt_icmp_socket(struct rtdm_fd *fd)
 {
     /* we don't support user-created ICMP sockets */
     return -ENOPROTOOPT;
@@ -458,27 +457,27 @@ void rt_icmp_rcv(struct rtskb *skb)
     /* check header sanity and don't accept fragmented packets */
     if ((length < sizeof(struct icmphdr)) || (skb->next != NULL))
     {
-        rtdm_printk("RTnet: improper length in icmp packet\n");
-        goto cleanup;
+	rtdm_printk("RTnet: improper length in icmp packet\n");
+	goto cleanup;
     }
 
     if (ip_compute_csum((unsigned char *)icmpHdr, length))
     {
-        rtdm_printk("RTnet: invalid checksum in icmp packet %d\n", length);
-        goto cleanup;
+	rtdm_printk("RTnet: invalid checksum in icmp packet %d\n", length);
+	goto cleanup;
     }
 
     if (!rtskb_pull(skb, sizeof(struct icmphdr)))
     {
-        rtdm_printk("RTnet: pull failed %p\n", (skb->sk));
-        goto cleanup;
+	rtdm_printk("RTnet: pull failed %p\n", (skb->sk));
+	goto cleanup;
     }
 
 
     if (icmpHdr->type > NR_ICMP_TYPES)
     {
-        rtdm_printk("RTnet: invalid icmp type\n");
-        goto cleanup;
+	rtdm_printk("RTnet: invalid icmp type\n");
+	goto cleanup;
     }
 
     /* sane packet, process it */
@@ -522,9 +521,9 @@ void __init rt_icmp_init(void)
 
 
     skbs = rt_bare_socket_init(&icmp_socket, IPPROTO_ICMP, RT_ICMP_PRIO,
-                               ICMP_REPLY_POOL_SIZE);
+			       ICMP_REPLY_POOL_SIZE);
     if (skbs < ICMP_REPLY_POOL_SIZE)
-        printk("RTnet: allocated only %d icmp rtskbs\n", skbs);
+	printk("RTnet: allocated only %d icmp rtskbs\n", skbs);
 
     icmp_socket.prot.inet.tos = 0;
 

@@ -42,8 +42,7 @@ struct rtinet_protocol {
     struct rtsocket     *(*dest_socket)(struct rtskb *);
     void                (*rcv_handler)(struct rtskb *);
     void                (*err_handler)(struct rtskb *);
-    int                 (*init_socket)(struct rtdm_dev_context *,
-                                       rtdm_user_info_t *);
+    int                 (*init_socket)(struct rtdm_fd *);
 };
 
 
@@ -52,7 +51,6 @@ extern struct rtinet_protocol *rt_inet_protocols[];
 #define rt_inet_hashkey(id)  (id & (MAX_RT_INET_PROTOCOLS-1))
 extern void rt_inet_add_protocol(struct rtinet_protocol *prot);
 extern void rt_inet_del_protocol(struct rtinet_protocol *prot);
-extern int rt_inet_socket(struct rtdm_dev_context *context,
-                          rtdm_user_info_t *user_info, int protocol);
+extern int rt_inet_socket(struct rtdm_fd *fd, int protocol);
 
 #endif  /* __RTNET_PROTOCOL_H_ */

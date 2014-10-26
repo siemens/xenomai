@@ -36,59 +36,52 @@ static int nomac_dev_openclose(void)
 
 
 
-static int nomac_dev_ioctl(struct rtdm_dev_context *context,
-                           rtdm_user_info_t *user_info,
-                           unsigned int request, void *arg)
+static int nomac_dev_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
 {
     struct nomac_priv   *nomac;
 
 
-    nomac = container_of((struct rtdm_device *)context->device,
-                         struct nomac_priv, api_device);
+    nomac = container_of(rtdm_fd_to_context(fd)->device,
+			 struct nomac_priv, api_device);
 
     switch (request) {
-        case RTMAC_RTIOC_TIMEOFFSET:
+	case RTMAC_RTIOC_TIMEOFFSET:
 
-        case RTMAC_RTIOC_WAITONCYCLE:
+	case RTMAC_RTIOC_WAITONCYCLE:
 
-        default:
-            return -ENOTTY;
+	default:
+	    return -ENOTTY;
     }
 }
 
-
+static struct rtdm_driver nomac_driver = {
+    .profile_info = RTDM_PROFILE_INFO(nomac,
+				    RTDM_CLASS_RTMAC,
+				    RTDM_SUBCLASS_UNMANAGED,
+				    RTNET_RTDM_VER),
+    .device_flags = RTDM_NAMED_DEVICE,
+    .device_count = 1,
+    .context_size = 0,
+    .ops = {
+	.open =         (typeof(nomac_driver.ops.open))nomac_dev_openclose,
+	.ioctl_rt =     nomac_dev_ioctl,
+	.ioctl_nrt =    nomac_dev_ioctl,
+	.close =        (typeof(nomac_driver.ops.close))nomac_dev_openclose,
+    }
+};
 
 int nomac_dev_init(struct rtnet_device *rtdev, struct nomac_priv *nomac)
 {
     char    *pos;
 
-
-    nomac->api_device.struct_version = RTDM_DEVICE_STRUCT_VER;
-
-    nomac->api_device.device_flags = RTDM_NAMED_DEVICE;
-    nomac->api_device.context_size = 0;
-
-    strcpy(nomac->api_device.device_name, "NOMAC");
+    strcpy(nomac->device_name, "NOMAC");
     for (pos = rtdev->name + strlen(rtdev->name) - 1;
-        (pos >= rtdev->name) && ((*pos) >= '0') && (*pos <= '9'); pos--);
-    strncat(nomac->api_device.device_name+5, pos+1, IFNAMSIZ-5);
+	(pos >= rtdev->name) && ((*pos) >= '0') && (*pos <= '9'); pos--);
+    strncat(nomac->device_name+5, pos+1, IFNAMSIZ-5);
 
-    nomac->api_device.open_nrt = (rtdm_open_handler_t)nomac_dev_openclose;
-
-    nomac->api_device.ops.close_nrt =
-            (rtdm_close_handler_t)nomac_dev_openclose;
-
-    nomac->api_device.ops.ioctl_rt  = nomac_dev_ioctl;
-    nomac->api_device.ops.ioctl_nrt = nomac_dev_ioctl;
-
-    nomac->api_device.proc_name = nomac->api_device.device_name;
-
-    nomac->api_device.device_class     = RTDM_CLASS_RTMAC;
-    nomac->api_device.device_sub_class = RTDM_SUBCLASS_UNMANAGED;
-    nomac->api_device.driver_name      = "nomac";
-    nomac->api_device.driver_version   = RTNET_RTDM_VER;
-    nomac->api_device.peripheral_name  = "NoMAC API";
-    nomac->api_device.provider_name    = rtnet_rtdm_provider_name;
+    nomac->api_driver           = nomac_driver;
+    nomac->api_device.driver    = &nomac->api_driver;
+    nomac->api_device.label     = nomac->device_name;
 
     return rtdm_dev_register(&nomac->api_device);
 }

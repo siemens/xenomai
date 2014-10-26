@@ -475,14 +475,14 @@ exit:
 	return;
 }
 
-void e1000e_mod_watchdog_timer(rtdm_nrtsig_t nrt_sig, void *data)
+void e1000e_mod_watchdog_timer(rtdm_nrtsig_t *nrt_sig, void *data)
 {
 	struct timer_list *timer = data;
 
 	mod_timer(timer, jiffies + 1);
 }
 
-void e1000e_trigger_downshift(rtdm_nrtsig_t nrt_sig, void *data)
+void e1000e_trigger_downshift(rtdm_nrtsig_t *nrt_sig, void *data)
 {
 	struct work_struct *downshift_task = data;
 
@@ -4160,12 +4160,10 @@ static int e1000_probe(struct pci_dev *pdev,
 	INIT_WORK(&adapter->downshift_task, e1000e_downshift_workaround);
 	INIT_WORK(&adapter->update_phy_task, e1000e_update_phy_task);
 
-	if (rtdm_nrtsig_init(&adapter->mod_timer_sig, e1000e_mod_watchdog_timer,
-			     (void*)&adapter->watchdog_timer))
-		goto err_nrtsig_timer;
-	if (rtdm_nrtsig_init(&adapter->downshift_sig, e1000e_trigger_downshift,
-			     &adapter->downshift_task))
-		goto err_nrtsig_downshift;
+	rtdm_nrtsig_init(&adapter->mod_timer_sig, e1000e_mod_watchdog_timer,
+			(void*)&adapter->watchdog_timer);
+	rtdm_nrtsig_init(&adapter->downshift_sig, e1000e_trigger_downshift,
+			&adapter->downshift_task);
 
 	/* Initialize link parameters. User can change them with ethtool */
 	adapter->hw.mac.autoneg = 1;
@@ -4248,9 +4246,7 @@ static int e1000_probe(struct pci_dev *pdev,
 
 err_register:
 	rtdm_nrtsig_destroy(&adapter->downshift_sig);
-err_nrtsig_downshift:
 	rtdm_nrtsig_destroy(&adapter->mod_timer_sig);
-err_nrtsig_timer:
 	if (!(adapter->flags & FLAG_HAS_AMT))
 		e1000e_release_hw_control(adapter);
 err_eeprom:

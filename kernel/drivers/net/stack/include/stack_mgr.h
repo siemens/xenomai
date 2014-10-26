@@ -48,7 +48,7 @@ struct rtpacket_type {
 
     int                 (*handler)(struct rtskb *, struct rtpacket_type *);
     int                 (*err_handler)(struct rtskb *, struct rtnet_device *,
-                                       struct rtpacket_type *);
+				       struct rtpacket_type *);
 };
 
 
@@ -58,7 +58,7 @@ int rtdev_remove_pack(struct rtpacket_type *pt);
 void rt_stack_connect(struct rtnet_device *rtdev, struct rtnet_mgr *mgr);
 void rt_stack_disconnect(struct rtnet_device *rtdev);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_DRV_LOOPBACK
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_DRV_LOOPBACK)
 void rt_stack_deliver(struct rtskb *rtskb);
 #endif /* CONFIG_XENO_DRIVERS_NET_DRV_LOOPBACK */
 
