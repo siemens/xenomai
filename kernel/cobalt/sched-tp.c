@@ -253,7 +253,6 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 		goto done;
 
 	list_for_each_entry_safe(thread, tmp, &tp->threads, tp_link) {
-		list_del(&thread->tp_link);
 		param.rt.prio = thread->cprio;
 		xnsched_set_policy(thread, &xnsched_class_rt, &param);
 	}
