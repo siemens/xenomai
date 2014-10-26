@@ -158,8 +158,10 @@ static int xnsched_tp_declare(struct xnthread *thread,
 			      const union xnsched_policy_param *p)
 {
 	struct xnsched *sched = thread->sched;
+	struct xnsched_tp *tp = &sched->tp;
 
-	if (p->tp.prio < XNSCHED_TP_MIN_PRIO ||
+	if (tp->gps == NULL ||
+	    p->tp.prio < XNSCHED_TP_MIN_PRIO ||
 	    p->tp.prio > XNSCHED_TP_MAX_PRIO)
 		return -EINVAL;
 
