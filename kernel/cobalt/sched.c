@@ -1000,7 +1000,7 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 	if (p == NULL)
 		xnvfile_printf(it,
 			       "%-3s  %-6s %-5s  %-8s  %-5s %-8s  %-10s %s\n",
-			       "CPU", "PID", "CLASS", "PERS", "PRI", "TIMEOUT",
+			       "CPU", "PID", "CLASS", "TYPE", "PRI", "TIMEOUT",
 			       "STAT", "NAME");
 	else {
 		ksformat(pbuf, sizeof(pbuf), "%3d", p->cprio);
