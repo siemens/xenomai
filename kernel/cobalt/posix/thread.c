@@ -246,7 +246,7 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	xnticks_t tslice;
-	int ret = 0;
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -269,7 +269,8 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 	if (cobalt_call_extension(thread_setsched, &thread->extref, ret,
 				  sched_class, &param) && ret)
 		goto out;
-	xnthread_set_schedparam(&thread->threadbase, sched_class, &param);
+	ret = xnthread_set_schedparam(&thread->threadbase,
+				      sched_class, &param);
 	xnsched_run();
 out:
 	xnlock_put_irqrestore(&nklock, s);
