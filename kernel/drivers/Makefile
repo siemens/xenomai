@@ -1,2 +1,1 @@
-
-obj-$(CONFIG_XENOMAI) += autotune/ serial/ testing/ can/ analogy/ ipc/ udd/
+obj-$(CONFIG_XENOMAI) += autotune/ serial/ testing/ can/ net/ analogy/ ipc/ udd/

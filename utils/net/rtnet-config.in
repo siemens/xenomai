@@ -1,0 +1,105 @@
+#! /bin/sh
+
+staging=${DESTDIR}
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+libdir="@libdir@"
+datadir="@datadir@"
+pkgdatadir="${datadir}/@PACKAGE@"
+includedir="@includedir@"
+
+RTNET_VERSION="@PACKAGE_VERSION@"
+RTNET_PREFIX="${staging}${prefix}"
+RTNET_CC="@CC@"
+RTNET_TARGET_ARCH="@RTNET_TARGET_ARCH@"
+RTNET_CONFIG="${staging}${pkgdatadir}/config-rtnet-${RTNET_VERSION}"
+RTNET_LINUX_DIR="@RTNET_LINUX_DIR@"
+RTNET_LINUX_VERSION="@RTNET_LINUX_VERSION@"
+RTNET_KERNEL_CFLAGS="-I. -I${staging}${includedir} @RTNET_KMOD_APP_CFLAGS@ @RTNET_FP_CFLAGS@"
+RTNET_LIBRARY_DIR="${staging}${libdir}"
+
+unset prefix exec_prefix libdir datadir pkgdatadir includedir
+
+usage ()
+{
+cat <<EOF
+Usage rtai-config OPTIONS
+Options :
+        --help
+        --version
+        --cc
+        --arch
+        --subarch
+        --prefix
+        --config
+        --module-cflags
+        --module-cxxflags
+        --fusion-cflags
+        --fusion-ldflags
+        --uvm-cflags
+        --uvm-ldflags
+        --linux-dir
+        --linux-version
+        --module-dir
+        --library-dir
+EOF
+    exit $1
+}
+
+if test $# -eq 0; then
+    usage 1 1>&2
+fi
+
+while test $# -gt 0; do
+    case "$1" in
+        --version)
+            echo ${RTNET_VERSION}-fusion
+            ;;
+        --cc)
+            echo $RTNET_CC
+            ;;
+        --arch)
+            echo $RTNET_TARGET_ARCH
+            ;;
+        --subarch)
+            echo $RTNET_TARGET_SUBARCH
+            ;;
+        --prefix)
+            echo $RTNET_PREFIX
+            ;;
+        --config)
+            echo $RTNET_CONFIG
+            ;;
+        --mod*-cflags|--kernel-cflags)
+            echo $RTNET_KERNEL_CFLAGS
+            ;;
+        --fusion-cflags)
+            echo $RTNET_FUSION_CFLAGS
+            ;;
+        --fusion-ldflags)
+            echo $RTNET_FUSION_LDFLAGS
+            ;;
+        --uvm-cflags)
+            echo $RTNET_UVM_CFLAGS
+            ;;
+        --uvm-ldflags)
+            echo $RTNET_UVM_LDFLAGS
+            ;;
+        --mod*-dir)
+            echo $RTNET_MODULE_DIR
+            ;;
+        --lib*-dir|--libdir|--user-libdir)
+            echo $RTNET_LIBRARY_DIR
+            ;;
+        --linux-dir|--linux)
+            echo $RTNET_LINUX_DIR
+            ;;
+        --linux-ver*)
+            echo $RTNET_LINUX_VERSION
+            ;;
+        *)
+         usage 1 1>&2
+         ;;
+    esac
+    shift
+done

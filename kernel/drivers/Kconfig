@@ -1,7 +1,7 @@
 menu "Drivers"
 
 config XENO_OPT_RTDM_COMPAT_DEVNODE
-        bool "Enable legacy pathnames for named RTDM devices"
+	bool "Enable legacy pathnames for named RTDM devices"
 	default y
 	help
 
@@ -25,6 +25,7 @@ source "drivers/xenomai/autotune/Kconfig"
 source "drivers/xenomai/serial/Kconfig"
 source "drivers/xenomai/testing/Kconfig"
 source "drivers/xenomai/can/Kconfig"
+source "drivers/xenomai/net/Kconfig"
 source "drivers/xenomai/analogy/Kconfig"
 source "drivers/xenomai/ipc/Kconfig"
 source "drivers/xenomai/udd/Kconfig"

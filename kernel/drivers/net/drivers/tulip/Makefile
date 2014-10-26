@@ -1,0 +1,13 @@
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai \
+	-Idrivers/xenomai/net/stack/include
+
+obj-$(CONFIG_XENO_DRIVERS_NET_DRV_TULIP) += rt_tulip.o
+
+rt_tulip-y := \
+	tulip_core.o \
+	eeprom.o \
+	interrupt.o \
+	media.o \
+	21142.o \
+	pnic.o \
+	pnic2.o
