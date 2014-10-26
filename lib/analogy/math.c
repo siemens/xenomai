@@ -449,16 +449,8 @@ void a4l_math_stddev(double *pstddev, double mean, double *val, unsigned nr)
  */
 void a4l_math_stddev_of_mean(double *pstddevm, double mean, double *val, unsigned nr)
 {
-	double sum, sum_sq;
-	int i;
-
-	for (sum = 0, sum_sq = 0, i = 0; i < nr; i++) {
-		double x = val[i] - mean;
-		sum_sq += x * x;
-		sum += x;
-	}
-
-	*pstddevm = sqrt(((sum_sq - (sum * sum) / nr) / (nr - 1)) / nr);
+	a4l_math_stddev(pstddevm, mean, val, nr);
+	*pstddevm = *pstddevm / sqrt(nr); 
 }
 
 
