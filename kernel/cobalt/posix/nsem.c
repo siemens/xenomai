@@ -33,6 +33,7 @@ struct named_sem {
 	struct cobalt_sem_shadow __user *usem;
 	unsigned int refs;
 	struct xnid id;
+	struct filename *filename;
 };
 
 static struct named_sem *sem_search(struct cobalt_process *cc, xnhandle_t handle)
@@ -48,11 +49,12 @@ static struct named_sem *sem_search(struct cobalt_process *cc, xnhandle_t handle
 
 static struct cobalt_sem_shadow __user *
 sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
-	 const char *name, int oflags, mode_t mode, unsigned int value)
+	 struct filename *filename, int oflags, mode_t mode, unsigned int value)
 {
+	const char *name = filename->name;
 	struct cobalt_sem_shadow shadow;
-	struct cobalt_sem *sem;
 	struct named_sem *u, *v;
+	struct cobalt_sem *sem;
 	xnhandle_t handle;
 	spl_t s;
 	int rc;
@@ -126,6 +128,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 	u->sem = sem;
 	u->usem = ushadow;
 	u->refs = 1;
+	u->filename = filename;
 
 	xnlock_get_irqsave(&named_sem_lock, s);
 	v = sem_search(cc, handle);
@@ -136,6 +139,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 		--sem->refs;
 		xnlock_put_irqrestore(&nklock, s);
 
+		putname(filename);
 		xnfree(u);
 		u = v;
 	} else {
@@ -171,6 +175,7 @@ static int sem_close(struct cobalt_process *cc, xnhandle_t handle)
 
 	__cobalt_sem_destroy(handle);
 
+	putname(u->filename);
 	xnfree(u);
 	return 1;
 
@@ -201,16 +206,17 @@ __cobalt_sem_open(struct cobalt_sem_shadow __user *usm,
 	if (IS_ERR(filename))
 		return ERR_CAST(filename);
 
-	usm = sem_open(cc, usm, filename->name, oflags, mode, value);
-	if (IS_ERR(usm))
+	usm = sem_open(cc, usm, filename, oflags, mode, value);
+	if (IS_ERR(usm)) {
 		trace_cobalt_psem_open_failed(filename->name, oflags, mode,
 					      value, PTR_ERR(usm));
-	putname(filename);
+		putname(filename);
+	}
 
 	return usm;
 }
 
-COBALT_SYSCALL(sem_open, current,
+COBALT_SYSCALL(sem_open, lostage,
 	       int, (struct cobalt_sem_shadow __user *__user *u_addrp,
 		     const char __user *u_name,
 		     int oflags, mode_t mode, unsigned int value))
@@ -227,7 +233,7 @@ COBALT_SYSCALL(sem_open, current,
 	return __xn_put_user(usm, u_addrp) ? -EFAULT : 0;
 }
 
-COBALT_SYSCALL(sem_close, current,
+COBALT_SYSCALL(sem_close, lostage,
 	       int, (struct cobalt_sem_shadow __user *usm))
 {
 	struct cobalt_process *cc;
@@ -260,21 +266,21 @@ static inline int sem_unlink(const char *name)
 	return 0;
 }
 
-COBALT_SYSCALL(sem_unlink, current,
+COBALT_SYSCALL(sem_unlink, lostage,
 	       int, (const char __user *u_name))
 {
-	char name[COBALT_MAXNAME + 1];
-	long len;
+	struct filename *filename;
+	int ret;
 
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return len;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
+	filename = getname(u_name);
+	if (IS_ERR(filename))
+		return PTR_ERR(filename);
 
-	trace_cobalt_psem_unlink(name);
+	trace_cobalt_psem_unlink(filename->name);
+	ret = sem_unlink(filename->name);
+	putname(filename);
 
-	return sem_unlink(name);
+	return ret;
 }
 
 static void cleanup_named_sems(void *cookie, struct xnid *i)

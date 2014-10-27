@@ -89,8 +89,6 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 		goto out;
 	}
 
-	ksformat(sem->name, sizeof(sem->name), "%s", name);
-
 	sys_ppd = cobalt_ppd_get(!!(flags & SEM_PSHARED));
 	state = cobalt_umm_alloc(&sys_ppd->umm, sizeof(*state));
 	if (state == NULL) {
@@ -133,7 +131,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 		goto err_lock_put;
 	}
 
-	ret = xnregistry_enter(sem->name, sem, &sem->handle, NULL);
+	ret = xnregistry_enter(name ?: "", sem, &sem->handle, NULL);
 	if (ret < 0)
 		goto err_lock_put;
 
@@ -147,16 +145,16 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	state->flags = flags;
 	sem->flags = flags;
 	sem->owningq = kq;
-	sem->refs = name[0] ? 2 : 1;
+	sem->refs = name ? 2 : 1;
 
-	sm->magic = name[0] ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
+	sm->magic = name ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
 	sm->handle = sem->handle;
 	sm->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
 	if (flags & SEM_PSHARED)
 		sm->state_offset = -sm->state_offset;
 	xnlock_put_irqrestore(&nklock, s);
 
-	trace_cobalt_psem_init(sem->name, sem->handle, flags, value);
+	trace_cobalt_psem_init(name ?: "anon", sem->handle, flags, value);
 
 	return sem;
 
@@ -166,7 +164,7 @@ err_lock_put:
 err_free_sem:
 	xnfree(sem);
 out:
-	trace_cobalt_psem_init_failed(name, flags, value, ret);
+	trace_cobalt_psem_init_failed(name ?: "anon", flags, value, ret);
 
 	return ERR_PTR(ret);
 }
@@ -424,7 +422,7 @@ COBALT_SYSCALL(sem_init, current,
 		      SEM_WARNDEL|SEM_RAWCLOCK|SEM_NOBUSYDEL))
 		return -EINVAL;
 
-	sem = __cobalt_sem_init("", &sm, flags, value);
+	sem = __cobalt_sem_init(NULL, &sm, flags, value);
 	if (IS_ERR(sem))
 		return PTR_ERR(sem);
 

@@ -36,7 +36,6 @@ struct cobalt_sem {
 	struct cobalt_kqueues *owningq;
 	xnhandle_t handle;
 	unsigned int refs;
-	char name[COBALT_MAXNAME];
 };
 
 /* Copied from Linuxthreads semaphore.h. */

@@ -422,7 +422,7 @@ static inline int sys32_fetch_timeout(struct timespec *ts,
 		sys32_get_timespec(ts, u_ts);
 }
 
-COBALT_SYSCALL32emu(sem_open, current,
+COBALT_SYSCALL32emu(sem_open, lostage,
 		    int, (compat_uptr_t __user *u_addrp,
 			  const char __user *u_name,
 			  int oflags, mode_t mode, unsigned int value))
