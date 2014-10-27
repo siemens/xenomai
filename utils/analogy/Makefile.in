@@ -81,7 +81,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-sbin_PROGRAMS = analogy_config$(EXEEXT)
+sbin_PROGRAMS = analogy_config$(EXEEXT) analogy_calibrate$(EXEEXT)
 bin_PROGRAMS = cmd_read$(EXEEXT) cmd_write$(EXEEXT) cmd_bits$(EXEEXT) \
 	insn_read$(EXEEXT) insn_write$(EXEEXT) insn_bits$(EXEEXT) \
 	wf_generate$(EXEEXT)
@@ -112,6 +112,11 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
+am_analogy_calibrate_OBJECTS = analogy_calibrate.$(OBJEXT) \
+	calibration_ni_m.$(OBJEXT)
+analogy_calibrate_OBJECTS = $(am_analogy_calibrate_OBJECTS)
+analogy_calibrate_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
+	../../lib/cobalt/libcobalt.la
 am_analogy_config_OBJECTS = analogy_config.$(OBJEXT)
 analogy_config_OBJECTS = $(am_analogy_config_OBJECTS)
 analogy_config_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
@@ -181,14 +186,16 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libwaveform_la_SOURCES) $(analogy_config_SOURCES) \
-	$(cmd_bits_SOURCES) $(cmd_read_SOURCES) $(cmd_write_SOURCES) \
-	$(insn_bits_SOURCES) $(insn_read_SOURCES) \
-	$(insn_write_SOURCES) $(wf_generate_SOURCES)
-DIST_SOURCES = $(libwaveform_la_SOURCES) $(analogy_config_SOURCES) \
-	$(cmd_bits_SOURCES) $(cmd_read_SOURCES) $(cmd_write_SOURCES) \
-	$(insn_bits_SOURCES) $(insn_read_SOURCES) \
-	$(insn_write_SOURCES) $(wf_generate_SOURCES)
+SOURCES = $(libwaveform_la_SOURCES) $(analogy_calibrate_SOURCES) \
+	$(analogy_config_SOURCES) $(cmd_bits_SOURCES) \
+	$(cmd_read_SOURCES) $(cmd_write_SOURCES) $(insn_bits_SOURCES) \
+	$(insn_read_SOURCES) $(insn_write_SOURCES) \
+	$(wf_generate_SOURCES)
+DIST_SOURCES = $(libwaveform_la_SOURCES) $(analogy_calibrate_SOURCES) \
+	$(analogy_config_SOURCES) $(cmd_bits_SOURCES) \
+	$(cmd_read_SOURCES) $(cmd_write_SOURCES) $(insn_bits_SOURCES) \
+	$(insn_read_SOURCES) $(insn_write_SOURCES) \
+	$(wf_generate_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -242,7 +249,8 @@ CPP = @CPP@
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ 				\
 	-ggdb						\
-	-I$(top_srcdir)/include
+	-I$(top_srcdir)/include                         \
+        -I$(top_srcdir)/lib/analogy
 
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
 CPP_FOR_BUILD = @CPP_FOR_BUILD@
@@ -395,7 +403,14 @@ analogy_config_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/cobalt/libcobalt.la	\
 	@XENO_USER_LDADD@		\
-	-lpthread -lrt
+	-lrt -lpthread
+
+analogy_calibrate_SOURCES = analogy_calibrate.c calibration_ni_m.c
+analogy_calibrate_LDADD = \
+	../../lib/analogy/libanalogy.la \
+	../../lib/cobalt/libcobalt.la	\
+	@XENO_USER_LDADD@		\
+	-lpthread -lrt -lm
 
 cmd_read_SOURCES = cmd_read.c
 cmd_read_LDADD = \
@@ -592,6 +607,10 @@ clean-sbinPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+analogy_calibrate$(EXEEXT): $(analogy_calibrate_OBJECTS) $(analogy_calibrate_DEPENDENCIES) $(EXTRA_analogy_calibrate_DEPENDENCIES) 
+	@rm -f analogy_calibrate$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(analogy_calibrate_OBJECTS) $(analogy_calibrate_LDADD) $(LIBS)
+
 analogy_config$(EXEEXT): $(analogy_config_OBJECTS) $(analogy_config_DEPENDENCIES) $(EXTRA_analogy_config_DEPENDENCIES) 
 	@rm -f analogy_config$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(analogy_config_OBJECTS) $(analogy_config_LDADD) $(LIBS)
@@ -630,7 +649,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/analogy_calibrate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/analogy_config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/calibration_ni_m.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd_bits.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd_read.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd_write.Po@am__quote@
@@ -875,6 +896,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS
 	pdf pdf-am ps ps-am tags tags-am uninstall uninstall-am \
 	uninstall-binPROGRAMS uninstall-sbinPROGRAMS
 
+analogy_calibrate.c: calibration_ni_m.h
+
+.PHONY: git-stamp
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

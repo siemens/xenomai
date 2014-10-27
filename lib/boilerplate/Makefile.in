@@ -80,7 +80,11 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 @XENO_DEBUG_TRUE@am__append_1 = debug.c
+
+# We always build the tlsf/malloc support. In the pshared case, it
+# will provide for private memory allocation.
 @XENO_TLSF_TRUE@am__append_2 = libtlsf.la
+@XENO_TLSF_TRUE@am__append_3 = libtlsf.la
 subdir = lib/boilerplate
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp
@@ -99,7 +103,7 @@ CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-@XENO_TLSF_TRUE@libboilerplate_la_DEPENDENCIES = libtlsf.la
+libboilerplate_la_DEPENDENCIES = libiniparser.la $(am__append_2)
 am__libboilerplate_la_SOURCES_DIST = ancillaries.c hash.c obstack.c \
 	time.c debug.c
 @XENO_DEBUG_TRUE@am__objects_1 = libboilerplate_la-debug.lo
@@ -117,6 +121,10 @@ libboilerplate_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(AM_CFLAGS) $(CFLAGS) $(libboilerplate_la_LDFLAGS) $(LDFLAGS) \
 	-o $@
+libiniparser_la_LIBADD =
+am_libiniparser_la_OBJECTS = libiniparser_la-dictionary.lo \
+	libiniparser_la-iniparser.lo
+libiniparser_la_OBJECTS = $(am_libiniparser_la_OBJECTS)
 libtlsf_la_LIBADD =
 am_libtlsf_la_OBJECTS = libtlsf_la-tlsf.lo
 libtlsf_la_OBJECTS = $(am_libtlsf_la_OBJECTS)
@@ -156,9 +164,10 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libboilerplate_la_SOURCES) \
-	$(nodist_libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES)
-DIST_SOURCES = $(am__libboilerplate_la_SOURCES_DIST) \
+	$(nodist_libboilerplate_la_SOURCES) $(libiniparser_la_SOURCES) \
 	$(libtlsf_la_SOURCES)
+DIST_SOURCES = $(am__libboilerplate_la_SOURCES_DIST) \
+	$(libiniparser_la_SOURCES) $(libtlsf_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -352,7 +361,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_LTLIBRARIES = libboilerplate.la $(am__append_2)
+noinst_LTLIBRARIES = libboilerplate.la libiniparser.la $(am__append_3)
 libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -lpthread -version-info 0:0:0
 libboilerplate_la_SOURCES = ancillaries.c hash.c obstack.c time.c \
 	$(am__append_1)
@@ -364,10 +373,18 @@ libboilerplate_la_CPPFLAGS = \
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
+libboilerplate_la_LIBADD = libiniparser.la $(am__append_2)
+libiniparser_la_SOURCES = \
+	iniparser/dictionary.c	\
+	iniparser/dictionary.h	\
+	iniparser/iniparser.h	\
+	iniparser/iniparser.c
 
-# We always build the tlsf/malloc support. In the pshared case, it
-# will provide for private memory allocation.
-@XENO_TLSF_TRUE@libboilerplate_la_LIBADD = libtlsf.la
+libiniparser_la_CPPFLAGS = \
+	-Iiniparser @XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include
+
+EXTRA_DIST = iniparser/README iniparser/LICENSE tlsf/README
 libtlsf_la_SOURCES = \
 	tlsf/tlsf.c	\
 	tlsf/tlsf.h	\
@@ -378,7 +395,6 @@ libtlsf_la_CPPFLAGS = \
 	-I$(top_srcdir)/include				\
 	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
 
-EXTRA_DIST = tlsf/README
 SPARSE = sparse
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -430,6 +446,9 @@ clean-noinstLTLIBRARIES:
 libboilerplate.la: $(libboilerplate_la_OBJECTS) $(libboilerplate_la_DEPENDENCIES) $(EXTRA_libboilerplate_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libboilerplate_la_LINK)  $(libboilerplate_la_OBJECTS) $(libboilerplate_la_LIBADD) $(LIBS)
 
+libiniparser.la: $(libiniparser_la_OBJECTS) $(libiniparser_la_DEPENDENCIES) $(EXTRA_libiniparser_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK)  $(libiniparser_la_OBJECTS) $(libiniparser_la_LIBADD) $(LIBS)
+
 libtlsf.la: $(libtlsf_la_OBJECTS) $(libtlsf_la_DEPENDENCIES) $(EXTRA_libtlsf_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) $(am_libtlsf_la_rpath) $(libtlsf_la_OBJECTS) $(libtlsf_la_LIBADD) $(LIBS)
 
@@ -444,6 +463,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-obstack.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-time.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libiniparser_la-dictionary.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libiniparser_la-iniparser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
 
 .c.o:
@@ -501,6 +522,20 @@ libboilerplate_la-debug.lo: debug.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='debug.c' object='libboilerplate_la-debug.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-debug.lo `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
+
+libiniparser_la-dictionary.lo: iniparser/dictionary.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libiniparser_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libiniparser_la-dictionary.lo -MD -MP -MF $(DEPDIR)/libiniparser_la-dictionary.Tpo -c -o libiniparser_la-dictionary.lo `test -f 'iniparser/dictionary.c' || echo '$(srcdir)/'`iniparser/dictionary.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libiniparser_la-dictionary.Tpo $(DEPDIR)/libiniparser_la-dictionary.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='iniparser/dictionary.c' object='libiniparser_la-dictionary.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libiniparser_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libiniparser_la-dictionary.lo `test -f 'iniparser/dictionary.c' || echo '$(srcdir)/'`iniparser/dictionary.c
+
+libiniparser_la-iniparser.lo: iniparser/iniparser.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libiniparser_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libiniparser_la-iniparser.lo -MD -MP -MF $(DEPDIR)/libiniparser_la-iniparser.Tpo -c -o libiniparser_la-iniparser.lo `test -f 'iniparser/iniparser.c' || echo '$(srcdir)/'`iniparser/iniparser.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libiniparser_la-iniparser.Tpo $(DEPDIR)/libiniparser_la-iniparser.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='iniparser/iniparser.c' object='libiniparser_la-iniparser.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libiniparser_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libiniparser_la-iniparser.lo `test -f 'iniparser/iniparser.c' || echo '$(srcdir)/'`iniparser/iniparser.c
 
 libtlsf_la-tlsf.lo: tlsf/tlsf.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtlsf_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libtlsf_la-tlsf.lo -MD -MP -MF $(DEPDIR)/libtlsf_la-tlsf.Tpo -c -o libtlsf_la-tlsf.lo `test -f 'tlsf/tlsf.c' || echo '$(srcdir)/'`tlsf/tlsf.c
@@ -733,7 +768,7 @@ config-dump.h: Makefile $(CONFIG_HEADER)
 	-e 's/^.*$$/\"& is OFF\",/' $(CONFIG_HEADER) ) > $@
 
 sparse:
-	@for i in $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES); do \
+	@for i in $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES) $(libiniparser_la_SOURCES; do \
 		$(SPARSE) $(CHECKFLAGS) $(srcdir)/$$i; \
 	done
 

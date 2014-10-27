@@ -125,9 +125,10 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libanalogy_la_LIBADD =
+libanalogy_la_DEPENDENCIES = ../boilerplate/libboilerplate.la
 am_libanalogy_la_OBJECTS = libanalogy_la-async.lo \
 	libanalogy_la-descriptor.lo libanalogy_la-info.lo \
+	libanalogy_la-math.lo libanalogy_la-calibration.lo \
 	libanalogy_la-range.lo libanalogy_la-sync.lo \
 	libanalogy_la-sys.lo
 libanalogy_la_OBJECTS = $(am_libanalogy_la_OBJECTS)
@@ -374,14 +375,21 @@ libanalogy_la_SOURCES = \
 	descriptor.c	\
 	info.c		\
 	internal.h	\
+	math.c		\
+	calibration.c	\
 	range.c		\
 	root_leaf.h	\
 	sync.c		\
 	sys.c
 
 libanalogy_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@	\
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include 	\
+	-I$(top_srcdir)/lib/boilerplate	
+
+libanalogy_la_LIBADD = \
+	../boilerplate/libboilerplate.la	\
+	-lm
 
 all: all-am
 
@@ -463,8 +471,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-async.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-calibration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-descriptor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-info.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-math.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-range.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-sync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libanalogy_la-sys.Plo@am__quote@
@@ -510,6 +520,20 @@ libanalogy_la-info.lo: info.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='info.c' object='libanalogy_la-info.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libanalogy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libanalogy_la-info.lo `test -f 'info.c' || echo '$(srcdir)/'`info.c
+
+libanalogy_la-math.lo: math.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libanalogy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libanalogy_la-math.lo -MD -MP -MF $(DEPDIR)/libanalogy_la-math.Tpo -c -o libanalogy_la-math.lo `test -f 'math.c' || echo '$(srcdir)/'`math.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libanalogy_la-math.Tpo $(DEPDIR)/libanalogy_la-math.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='math.c' object='libanalogy_la-math.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libanalogy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libanalogy_la-math.lo `test -f 'math.c' || echo '$(srcdir)/'`math.c
+
+libanalogy_la-calibration.lo: calibration.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libanalogy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libanalogy_la-calibration.lo -MD -MP -MF $(DEPDIR)/libanalogy_la-calibration.Tpo -c -o libanalogy_la-calibration.lo `test -f 'calibration.c' || echo '$(srcdir)/'`calibration.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libanalogy_la-calibration.Tpo $(DEPDIR)/libanalogy_la-calibration.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='calibration.c' object='libanalogy_la-calibration.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libanalogy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libanalogy_la-calibration.lo `test -f 'calibration.c' || echo '$(srcdir)/'`calibration.c
 
 libanalogy_la-range.lo: range.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libanalogy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libanalogy_la-range.lo -MD -MP -MF $(DEPDIR)/libanalogy_la-range.Tpo -c -o libanalogy_la-range.lo `test -f 'range.c' || echo '$(srcdir)/'`range.c
