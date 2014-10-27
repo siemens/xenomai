@@ -37,7 +37,14 @@ static void *thread_body(void *arg)
 	pthread_t me = pthread_self();
 	struct sched_param_ex param;
 	struct timespec ts;
+	cpu_set_t affinity;
 	int ret, part;
+
+	CPU_ZERO(&affinity);
+	CPU_SET(0, &affinity);
+	ret = sched_setaffinity(0, sizeof(affinity), &affinity);
+	if (ret)
+		error(1, errno, "sched_setaffinity");
 
 	part = (int)(long)arg;
 	param.sched_priority = 50 - part;
