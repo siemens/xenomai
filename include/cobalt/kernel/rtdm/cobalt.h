@@ -29,5 +29,6 @@
 #include <xenomai/posix/clock.h>
 #include <xenomai/posix/event.h>
 #include <xenomai/posix/monitor.h>
+#include <xenomai/posix/compat.h>
 
 #endif /* !_COBALT_RTDM_COBALT_H */

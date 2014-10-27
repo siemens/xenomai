@@ -25,7 +25,9 @@
 #include <cobalt/kernel/thread.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/sched.h>
-#include <xenomai/posix/syscall.h> /* CAUTION: rtdm/cobalt.h reads this. */
+/* CAUTION: rtdm/cobalt.h reads this header. */
+#include <xenomai/posix/syscall.h>
+#include <xenomai/posix/extension.h>
 
 #define PTHREAD_PROCESS_PRIVATE 0
 #define PTHREAD_PROCESS_SHARED  1

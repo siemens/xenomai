@@ -22,6 +22,7 @@
 
 #include <linux/compat.h>
 #include <net/compat.h>
+#include <rtdm/rtdm.h>
 
 struct compat_rtdm_getsockopt_args {
 	int level;
@@ -69,5 +70,7 @@ struct compat_rtdm_setsockaddr_args {
 #define __COMPAT_CASE(__op)
 
 #endif	/* !CONFIG_COMPAT */
+
+#define COMPAT_CASE(__op)	case __op __COMPAT_CASE(__op  ## _COMPAT)
 
 #endif /* !_COBALT_RTDM_COMPAT_H */
