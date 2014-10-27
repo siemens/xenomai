@@ -19,6 +19,7 @@
 #ifndef _COBALT_KERNEL_HEAP_H
 #define _COBALT_KERNEL_HEAP_H
 
+#include <linux/string.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/uapi/kernel/types.h>
@@ -141,6 +142,17 @@ void *xnheap_alloc(struct xnheap *heap, u32 size);
 void xnheap_free(struct xnheap *heap, void *block);
 
 int xnheap_check_block(struct xnheap *heap, void *block);
+
+static inline char *xnstrdup(const char *s)
+{
+	char *p;
+
+	p = xnmalloc(strlen(s) + 1);
+	if (p == NULL)
+		return NULL;
+
+	return strcpy(p, s);
+}
 
 /** @} */
 
