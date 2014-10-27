@@ -270,7 +270,14 @@ static int run_sched_quota(struct smokey_test *t, int argc, char *const argv[])
 	pthread_t me = pthread_self();
 	struct sched_param param;
 	int ret, quota = 0;
+	cpu_set_t affinity;
 	double effective;
+
+	CPU_ZERO(&affinity);
+	CPU_SET(0, &affinity);
+	ret = sched_setaffinity(0, sizeof(affinity), &affinity);
+	if (ret)
+		error(1, errno, "sched_setaffinity");
 
 	smokey_parse_args(t, argc, argv);
 	pthread_mutex_init(&lock, NULL);
