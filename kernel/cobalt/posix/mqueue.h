@@ -44,7 +44,7 @@ int __cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 					       const void __user *u_ts));
 
 int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
-			     ssize_t __user *u_len,
+			     ssize_t *lenp,
 			     unsigned int __user *u_prio,
 			     const void __user *u_ts,
 			     int (*fetch_timeout)(struct timespec *ts,

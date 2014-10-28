@@ -264,14 +264,16 @@ COBALT_SYSCALL32emu(mq_timedreceive, primary,
 	ssize_t len;
 	int ret;
 
-	ret = __cobalt_mq_timedreceive(uqd, u_buf, &len, u_prio,
-				       u_ts, u_ts ? sys32_fetch_timeout : NULL);
+	ret = __xn_safe_copy_from_user(&clen, u_len, sizeof(*u_len));
 	if (ret)
 		return ret;
 
+	len = clen;
+	ret = __cobalt_mq_timedreceive(uqd, u_buf, &len, u_prio,
+				       u_ts, u_ts ? sys32_fetch_timeout : NULL);
 	clen = len;
 
-	return __xn_safe_copy_to_user(u_len, &clen, sizeof(*u_len));
+	return ret ?: __xn_safe_copy_to_user(u_len, &clen, sizeof(*u_len));
 }
 
 COBALT_SYSCALL32emu(mq_notify, primary,

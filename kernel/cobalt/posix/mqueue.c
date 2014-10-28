@@ -998,7 +998,7 @@ COBALT_SYSCALL(mq_timedsend, primary,
 }
 
 int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
-			     ssize_t __user *u_len,
+			     ssize_t *lenp,
 			     unsigned int __user *u_prio,
 			     const void __user *u_ts,
 			     int (*fetch_timeout)(struct timespec *ts,
@@ -1007,24 +1007,18 @@ int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 	struct cobalt_mqd *mqd;
 	struct cobalt_msg *msg;
 	unsigned int prio;
-	ssize_t len;
 	int ret;
 
 	mqd = cobalt_mqd_get(uqd);
 	if (IS_ERR(mqd))
 		return PTR_ERR(mqd);
 
-	if (__xn_get_user(len, u_len)) {
+	if (*lenp > 0 && !access_wok(u_buf, *lenp)) {
 		ret = -EFAULT;
 		goto fail;
 	}
 
-	if (len > 0 && !access_wok(u_buf, len)) {
-		ret = -EFAULT;
-		goto fail;
-	}
-
-	msg = mq_timedrcv_inner(mqd, len, u_ts, fetch_timeout);
+	msg = mq_timedrcv_inner(mqd, *lenp, u_ts, fetch_timeout);
 	if (IS_ERR(msg)) {
 		ret = PTR_ERR(msg);
 		goto fail;
@@ -1036,16 +1030,13 @@ int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 		goto fail;
 	}
 
-	len = msg->len;
+	*lenp = msg->len;
 	prio = msg->prio;
 	ret = mq_finish_rcv(mqd, msg);
 	if (ret)
 		goto fail;
 
 	cobalt_mqd_put(mqd);
-
-	if (__xn_put_user(len, u_len))
-		return -EFAULT;
 
 	if (u_prio && __xn_put_user(prio, u_prio))
 		return -EFAULT;
@@ -1063,8 +1054,17 @@ COBALT_SYSCALL(mq_timedreceive, primary,
 		     unsigned int __user *u_prio,
 		     const struct timespec __user *u_ts))
 {
-	return __cobalt_mq_timedreceive(uqd, u_buf, u_len, u_prio,
-					u_ts, u_ts ? mq_fetch_timeout : NULL);
+	ssize_t len;
+	int ret;
+
+	ret = __xn_safe_copy_from_user(&len, u_len, sizeof(len));
+	if (ret)
+		return ret;
+
+	ret = __cobalt_mq_timedreceive(uqd, u_buf, &len, u_prio,
+				       u_ts, u_ts ? mq_fetch_timeout : NULL);
+
+	return ret ?: __xn_safe_copy_to_user(u_len, &len, sizeof(*u_len));
 }
 
 int cobalt_mq_pkg_init(void)
