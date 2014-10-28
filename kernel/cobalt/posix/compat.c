@@ -273,7 +273,7 @@ int sys32_put_sigset(compat_sigset_t *u_cset, const sigset_t *set)
 
 	sigset_to_compat(&cset, set);
 
-	return __xn_safe_copy_from_user(u_cset, &cset, sizeof(cset));
+	return __xn_safe_copy_to_user(u_cset, &cset, sizeof(cset));
 }
 EXPORT_SYMBOL_GPL(sys32_put_sigset);
 
