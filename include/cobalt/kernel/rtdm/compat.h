@@ -20,8 +20,7 @@
 
 #ifdef CONFIG_COMPAT
 
-#include <linux/compat.h>
-#include <net/compat.h>
+#include <cobalt/kernel/compat.h>
 #include <rtdm/rtdm.h>
 
 struct compat_rtdm_getsockopt_args {

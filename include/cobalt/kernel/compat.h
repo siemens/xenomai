@@ -15,26 +15,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#ifndef _COBALT_POSIX_COMPAT_H
-#define _COBALT_POSIX_COMPAT_H
+#ifndef _COBALT_KERNEL_COMPAT_H
+#define _COBALT_KERNEL_COMPAT_H
 
 #ifdef CONFIG_COMPAT
 
-#include <rtdm/compat.h>
-/* CAUTION: rtdm/cobalt.h reads this header. */
-#include <xenomai/posix/thread.h>
-#include <xenomai/posix/mutex.h>
-#include <xenomai/posix/cond.h>
-#include <xenomai/posix/sem.h>
-#include <xenomai/posix/sched.h>
-#include <xenomai/posix/mqueue.h>
-#include <xenomai/posix/clock.h>
-#include <xenomai/posix/timer.h>
-#include <xenomai/posix/timerfd.h>
-#include <xenomai/posix/signal.h>
-#include <xenomai/posix/monitor.h>
-#include <xenomai/posix/event.h>
-#include <xenomai/posix/io.h>
+#include <linux/compat.h>
+#include <net/compat.h>
+#include <cobalt/uapi/sched.h>
+
+struct mq_attr;
 
 struct __compat_sched_ss_param {
 	int __sched_low_priority;
@@ -150,6 +140,14 @@ int sys32_get_msghdr(struct msghdr *msg,
 int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
 		     const struct msghdr *msg);
 
+int sys32_get_iovec(struct iovec *iov,
+		    const struct compat_iovec __user *ciov,
+		    int ciovlen);
+
+int sys32_put_iovec(struct compat_iovec __user *u_ciov,
+		    const struct iovec *iov,
+		    int iovlen);
+
 #endif /* CONFIG_COMPAT */
 
-#endif /* !_COBALT_POSIX_COMPAT_H */
+#endif /* !_COBALT_KERNEL_COMPAT_H */

@@ -21,6 +21,19 @@
 #include <xenomai/rtdm/internal.h>
 #include "internal.h"
 #include "syscall32.h"
+#include "thread.h"
+#include "mutex.h"
+#include "cond.h"
+#include "sem.h"
+#include "sched.h"
+#include "clock.h"
+#include "timer.h"
+#include "timerfd.h"
+#include "signal.h"
+#include "monitor.h"
+#include "event.h"
+#include "mqueue.h"
+#include "io.h"
 #include "../debug.h"
 
 COBALT_SYSCALL32emu(thread_create, init,

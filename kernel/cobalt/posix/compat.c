@@ -17,7 +17,9 @@
  */
 #include <linux/err.h>
 #include <linux/module.h>
-#include "compat.h"
+#include <cobalt/kernel/compat.h>
+#include <asm/xenomai/syscall.h>
+#include <xenomai/posix/mqueue.h>
 
 int sys32_get_timespec(struct timespec *ts,
 		       const struct compat_timespec __user *cts)
@@ -379,3 +381,43 @@ int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(sys32_put_msghdr);
+
+int sys32_get_iovec(struct iovec *iov,
+		    const struct compat_iovec __user *u_ciov,
+		    int ciovlen)
+{
+	const struct compat_iovec __user *p;
+	struct compat_iovec ciov;
+	int ret, n;
+	
+	for (n = 0, p = u_ciov; n < ciovlen; n++, p++) {
+		ret = __xn_safe_copy_from_user(&ciov, p, sizeof(ciov));
+		if (ret)
+			return ret;
+		iov[n].iov_base = compat_ptr(ciov.iov_base);
+		iov[n].iov_len = ciov.iov_len;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(sys32_get_iovec);
+
+int sys32_put_iovec(struct compat_iovec __user *u_ciov,
+		    const struct iovec *iov,
+		    int iovlen)
+{
+	struct compat_iovec __user *p;
+	struct compat_iovec ciov;
+	int ret, n;
+	
+	for (n = 0, p = u_ciov; n < iovlen; n++, p++) {
+		ciov.iov_base = ptr_to_compat(iov[n].iov_base);
+		ciov.iov_len = iov[n].iov_len;
+		ret = __xn_safe_copy_to_user(p, &ciov, sizeof(*p));
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(sys32_put_iovec);

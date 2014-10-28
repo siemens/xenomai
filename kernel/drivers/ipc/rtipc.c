@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/poll.h>
 #include <rtdm/ipc.h>
+#include <rtdm/compat.h>
 #include "internal.h"
 
 MODULE_DESCRIPTION("Real-time IPC interface");
@@ -66,25 +67,17 @@ int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
 		    const struct msghdr *msg)
 {
 	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
+
 	if (!rtdm_fd_is_user(fd)) {
 		memcpy(iov, msg->msg_iov, len);
 		return 0;
 	}
 
 #ifdef CONFIG_COMPAT
-	if (rtdm_fd_is_compat(fd)) {
-		struct compat_iovec ciov, __user *p;
-		int ret, n;
-		for (n = 0, p = (struct compat_iovec *)msg->msg_iov;
-		     n < msg->msg_iovlen; n++, p++) {
-			ret = rtdm_copy_from_user(fd, &ciov, p, sizeof(ciov));
-			if (ret)
-				return ret;
-			iov[n].iov_base = compat_ptr(ciov.iov_base);
-			iov[n].iov_len = ciov.iov_len;
-		}
-		return 0;
-	}
+	if (rtdm_fd_is_compat(fd))
+		return sys32_get_iovec(iov,
+			       (struct compat_iovec __user *)msg->msg_iov,
+			       msg->msg_iovlen);
 #endif
 
 	return rtdm_copy_from_user(fd, iov, msg->msg_iov, len);
@@ -101,19 +94,9 @@ int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
 	}
 
 #ifdef CONFIG_COMPAT
-	if (rtdm_fd_is_compat(fd)) {
-		struct compat_iovec ciov, __user *p;
-		int ret, n;
-		for (n = 0, p = (struct compat_iovec *)msg->msg_iov;
-		     n < msg->msg_iovlen; n++, p++) {
-			ciov.iov_base = ptr_to_compat(iov[n].iov_base);
-			ciov.iov_len = iov[n].iov_len;
-			ret = rtdm_copy_to_user(fd, p, &ciov, sizeof(*p));
-			if (ret)
-				return ret;
-		}
-		return 0;
-	}
+	if (rtdm_fd_is_compat(fd))
+		return sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
+				       iov, msg->msg_iovlen);
 #endif
 
 	return rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
@@ -326,14 +309,9 @@ int rtipc_get_timeval(struct rtdm_fd *fd, struct timeval *tv,
 {
 #ifdef CONFIG_COMPAT
 	if (rtdm_fd_is_compat(fd)) {
-		const struct compat_timeval *ctv;
-		if (arglen != sizeof(*ctv))
+		if (arglen != sizeof(struct compat_timeval))
 			return -EINVAL;
-		ctv = arg;
-		return (ctv == NULL ||
-			!access_rok(ctv, sizeof(*ctv)) ||
-			__xn_get_user(tv->tv_sec, &ctv->tv_sec) ||
-			__xn_get_user(tv->tv_usec, &ctv->tv_usec)) ? -EFAULT : 0;
+		return sys32_get_timeval(tv, arg);
 	}
 #endif
 
@@ -353,14 +331,9 @@ int rtipc_put_timeval(struct rtdm_fd *fd, void *arg,
 {
 #ifdef CONFIG_COMPAT
 	if (rtdm_fd_is_compat(fd)) {
-		struct compat_timeval *ctv;
-		if (arglen != sizeof(*ctv))
+		if (arglen != sizeof(struct compat_timeval))
 			return -EINVAL;
-		ctv = arg;
-		return (ctv == NULL ||
-			!access_wok(ctv, sizeof(*ctv)) ||
-			__xn_put_user(tv->tv_sec, &ctv->tv_sec) ||
-			__xn_put_user(tv->tv_usec, &ctv->tv_usec)) ? -EFAULT : 0;
+		return sys32_put_timeval(arg, tv);
 	}
 #endif
 

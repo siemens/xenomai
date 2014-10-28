@@ -18,7 +18,13 @@
 #ifndef _COBALT_POSIX_SYSCALL32_H
 #define _COBALT_POSIX_SYSCALL32_H
 
-#include "compat.h"
+#include <cobalt/kernel/compat.h>
+
+struct cobalt_mutex_shadow;
+struct cobalt_event_shadow;
+struct cobalt_cond_shadow;
+struct cobalt_sem_shadow;
+struct cobalt_monitor_shadow;
 
 COBALT_SYSCALL32emu_DECL(thread_create,
 			 int, (compat_ulong_t pth,
