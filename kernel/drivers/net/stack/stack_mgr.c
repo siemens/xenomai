@@ -58,6 +58,10 @@ int rtdev_add_pack(struct rtpacket_type *pt)
 
     INIT_LIST_HEAD(&pt->list_entry);
     pt->refcount = 0;
+    if (pt->trylock == NULL)
+	pt->trylock = rtdev_lock_pack;
+    if (pt->unlock == NULL)
+	pt->unlock = rtdev_unlock_pack;
 
     rtdm_lock_get_irqsave(&rt_packets_lock, context);
 
@@ -125,7 +129,7 @@ void rtnetif_rx(struct rtskb *skb)
 
     if (unlikely(rtskb_fifo_insert_inirq(&rx.fifo, skb) < 0)) {
 	rtdm_printk("RTnet: dropping packet in %s()\n", __FUNCTION__);
-	kfree_rtskb(skb);
+	kfryee_rtskb(skb);
 	rtdev_dereference(rtdev);
     }
 }
@@ -158,13 +162,14 @@ __DELIVER_PREFIX void rt_stack_deliver(struct rtskb *rtskb)
 #ifdef CONFIG_XENO_DRIVERS_NET_ETH_P_ALL
     eth_p_all_hit = 0;
     list_for_each_entry(pt_entry, &rt_packets_all, list_entry) {
-	pt_entry->refcount++;
+	if (!pt_entry->trylock(pt_entry))
+	    continue;
 	rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
 	pt_entry->handler(rtskb, pt_entry);
 
 	rtdm_lock_get_irqsave(&rt_packets_lock, context);
-	pt_entry->refcount--;
+	pt_entry->unlock(pt_entry);
 	eth_p_all_hit = 1;
     }
 #endif /* CONFIG_XENO_DRIVERS_NET_ETH_P_ALL */
@@ -173,13 +178,14 @@ __DELIVER_PREFIX void rt_stack_deliver(struct rtskb *rtskb)
 
     list_for_each_entry(pt_entry, &rt_packets[hash], list_entry)
 	if (pt_entry->type == rtskb->protocol) {
-	    pt_entry->refcount++;
+	    if (!pt_entry->trylock(pt_entry))
+		continue;
 	    rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
 	    err = pt_entry->handler(rtskb, pt_entry);
 
 	    rtdm_lock_get_irqsave(&rt_packets_lock, context);
-	    pt_entry->refcount--;
+	    pt_entry->unlock(pt_entry);
 
 	    rtdev_dereference(rtdev);
 

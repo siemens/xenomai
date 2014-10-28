@@ -49,11 +49,24 @@ struct rtpacket_type {
     int                 (*handler)(struct rtskb *, struct rtpacket_type *);
     int                 (*err_handler)(struct rtskb *, struct rtnet_device *,
 				       struct rtpacket_type *);
+    bool                (*trylock)(struct rtpacket_type *)
+    void                (*unlock)(struct rtpacket_type *)
 };
 
 
 int rtdev_add_pack(struct rtpacket_type *pt);
 int rtdev_remove_pack(struct rtpacket_type *pt);
+
+static inline bool rtdev_lock_pack(struct rtpacket_type *pt)
+{
+    ++pt->recount;
+    return true;
+}
+
+static inline void rtdev_unlock_pack(struct rtpacket_type *pt)
+{
+    --pt->refcount;
+}
 
 void rt_stack_connect(struct rtnet_device *rtdev, struct rtnet_mgr *mgr);
 void rt_stack_disconnect(struct rtnet_device *rtdev);

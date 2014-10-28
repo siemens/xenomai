@@ -81,7 +81,26 @@ static int rt_packet_rcv(struct rtskb *skb, struct rtpacket_type *pt)
     return 0;
 }
 
+static bool rt_packet_trylock(struct rtpacket_type *pt)
+{
+    struct rtsocket *sock   = container_of(pt, struct rtsocket,
+					   prot.packet.packet_type);
+    struct rtdm_fd *fd = rtdm_private_to_fd(sock);
 
+    if (rtdm_fd_lock(fd) < 0)
+	return false;
+
+    return rtdev_lock_pack(pt);
+}
+
+static void rt_packet_unlock(struct rtpacket_type *pt)
+{
+    struct rtsocket *sock   = container_of(pt, struct rtsocket,
+					   prot.packet.packet_type);
+    struct rtdm_fd *fd = rtdm_private_to_fd(sock);
+    rtdev_unlock_pack(pt);
+    rtdm_fd_unlock(fd);
+}
 
 /***
  *  rt_packet_bind
@@ -117,6 +136,8 @@ static int rt_packet_bind(struct rtsocket *sock, const struct sockaddr *addr,
     if (new_type != 0) {
 	pt->handler     = rt_packet_rcv;
 	pt->err_handler = NULL;
+	pt->trylock     = rt_packet_trylock;
+	pt->unlock      = rt_packet_unlock;
 
 	ret = rtdev_add_pack(pt);
     } else
@@ -183,8 +204,10 @@ static int rt_packet_socket(struct rtdm_fd *fd, int protocol)
     if ((ret = rt_socket_init(fd, protocol)) != 0)
 	return ret;
 
-    sock->prot.packet.packet_type.type = protocol;
-    sock->prot.packet.ifindex          = 0;
+    sock->prot.packet.packet_type.type  = protocol;
+    sock->prot.packet.ifindex           = 0;
+    sock->prot.packet.trylock           = rt_packet_trylock;
+    sock->prot.packet.unlock            = rt_packet_unlock;
 
     /* if protocol is non-zero, register the packet type */
     if (protocol != 0) {
@@ -216,8 +239,10 @@ static int rt_packet_close(struct rtdm_fd *fd)
 
     rtdm_lock_get_irqsave(&sock->param_lock, context);
 
-    if ((pt->type != 0) && ((ret = rtdev_remove_pack(pt)) == 0))
+    if (pt->type != 0) {
+	rtdev_remove_pack(pt);
 	pt->type = 0;
+    }
 
     rtdm_lock_put_irqrestore(&sock->param_lock, context);
 
@@ -227,10 +252,7 @@ static int rt_packet_close(struct rtdm_fd *fd)
 	kfree_rtskb(del);
     }
 
-    if (ret == 0)
-	ret = rt_socket_cleanup(fd);
-
-    return ret;
+    return rt_socket_cleanup(fd);
 }
 
 

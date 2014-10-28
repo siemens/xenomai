@@ -34,40 +34,40 @@
  *              we create a broadcast message.
  */
 void rt_arp_send(int type, int ptype, u32 dest_ip, struct rtnet_device *rtdev,
-                 u32 src_ip, unsigned char *dest_hw, unsigned char *src_hw,
-                 unsigned char *target_hw)
+		 u32 src_ip, unsigned char *dest_hw, unsigned char *src_hw,
+		 unsigned char *target_hw)
 {
     struct rtskb *skb;
     struct arphdr *arp;
     unsigned char *arp_ptr;
 
     if (rtdev->flags & IFF_NOARP)
-        return;
+	return;
 
     if (!(skb=alloc_rtskb(sizeof(struct arphdr) + 2*(rtdev->addr_len+4) +
-                           rtdev->hard_header_len+15, &global_pool)))
-        return;
+			   rtdev->hard_header_len+15, &global_pool)))
+	return;
 
     rtskb_reserve(skb, (rtdev->hard_header_len+15)&~15);
 
     skb->nh.raw = skb->data;
     arp = (struct arphdr *)rtskb_put(skb, sizeof(struct arphdr) +
-                                     2*(rtdev->addr_len+4));
+				     2*(rtdev->addr_len+4));
 
     skb->rtdev = rtdev;
     skb->protocol = __constant_htons (ETH_P_ARP);
     skb->priority = RT_ARP_SKB_PRIO;
     if (src_hw == NULL)
-        src_hw = rtdev->dev_addr;
+	src_hw = rtdev->dev_addr;
     if (dest_hw == NULL)
-        dest_hw = rtdev->broadcast;
+	dest_hw = rtdev->broadcast;
 
     /*
      *  Fill the device header for the ARP frame
      */
     if (rtdev->hard_header &&
-        (rtdev->hard_header(skb,rtdev,ptype,dest_hw,src_hw,skb->len) < 0))
-        goto out;
+	(rtdev->hard_header(skb,rtdev,ptype,dest_hw,src_hw,skb->len) < 0))
+	goto out;
 
     arp->ar_hrd = htons(rtdev->type);
     arp->ar_pro = __constant_htons(ETH_P_IP);
@@ -84,9 +84,9 @@ void rt_arp_send(int type, int ptype, u32 dest_ip, struct rtnet_device *rtdev,
     arp_ptr+=4;
 
     if (target_hw != NULL)
-        memcpy(arp_ptr, target_hw, rtdev->addr_len);
+	memcpy(arp_ptr, target_hw, rtdev->addr_len);
     else
-        memset(arp_ptr, 0, rtdev->addr_len);
+	memset(arp_ptr, 0, rtdev->addr_len);
     arp_ptr+=rtdev->addr_len;
 
     memcpy(arp_ptr, &dest_ip, 4);
@@ -123,37 +123,37 @@ int rt_arp_rcv(struct rtskb *skb, struct rtpacket_type *pt)
      *  it.
      */
     if ((arp->ar_hln != rtdev->addr_len) ||
-        (rtdev->flags & IFF_NOARP) ||
-        (skb->pkt_type == PACKET_OTHERHOST) ||
-        (skb->pkt_type == PACKET_LOOPBACK) ||
-        (arp->ar_pln != 4))
-        goto out;
+	(rtdev->flags & IFF_NOARP) ||
+	(skb->pkt_type == PACKET_OTHERHOST) ||
+	(skb->pkt_type == PACKET_LOOPBACK) ||
+	(arp->ar_pln != 4))
+	goto out;
 
     switch (dev_type) {
-        default:
-            if ((arp->ar_pro != __constant_htons(ETH_P_IP)) &&
-                (htons(dev_type) != arp->ar_hrd))
-                goto out;
-            break;
-        case ARPHRD_ETHER:
-            /*
-             * ETHERNET devices will accept ARP hardware types of either
-             * 1 (Ethernet) or 6 (IEEE 802.2).
-             */
-            if ((arp->ar_hrd != __constant_htons(ARPHRD_ETHER)) &&
-                (arp->ar_hrd != __constant_htons(ARPHRD_IEEE802))) {
-                goto out;
-            }
-            if (arp->ar_pro != __constant_htons(ETH_P_IP)) {
-                goto out;
-            }
-            break;
+	default:
+	    if ((arp->ar_pro != __constant_htons(ETH_P_IP)) &&
+		(htons(dev_type) != arp->ar_hrd))
+		goto out;
+	    break;
+	case ARPHRD_ETHER:
+	    /*
+	     * ETHERNET devices will accept ARP hardware types of either
+	     * 1 (Ethernet) or 6 (IEEE 802.2).
+	     */
+	    if ((arp->ar_hrd != __constant_htons(ARPHRD_ETHER)) &&
+		(arp->ar_hrd != __constant_htons(ARPHRD_IEEE802))) {
+		goto out;
+	    }
+	    if (arp->ar_pro != __constant_htons(ETH_P_IP)) {
+		goto out;
+	    }
+	    break;
     }
 
     /* Understand only these message types */
     if ((arp->ar_op != __constant_htons(ARPOP_REPLY)) &&
-        (arp->ar_op != __constant_htons(ARPOP_REQUEST)))
-        goto out;
+	(arp->ar_op != __constant_htons(ARPOP_REQUEST)))
+	goto out;
 
     /*
      *  Extract fields
@@ -168,12 +168,12 @@ int rt_arp_rcv(struct rtskb *skb, struct rtpacket_type *pt)
 
     /* process only requests/replies directed to us */
     if (tip == rtdev->local_ip) {
-        rt_ip_route_add_host(sip, sha, rtdev);
+	rt_ip_route_add_host(sip, sha, rtdev);
 
 #ifndef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP
-        if (arp->ar_op == __constant_htons(ARPOP_REQUEST))
-            rt_arp_send(ARPOP_REPLY, ETH_P_ARP, sip, rtdev, tip, sha,
-                        rtdev->dev_addr, sha);
+	if (arp->ar_op == __constant_htons(ARPOP_REQUEST))
+	    rt_arp_send(ARPOP_REPLY, ETH_P_ARP, sip, rtdev, tip, sha,
+			rtdev->dev_addr, sha);
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP */
     }
 
@@ -212,5 +212,9 @@ void __init rt_arp_init(void)
  */
 void rt_arp_release(void)
 {
-    rtdev_remove_pack(&arp_packet_type);
+    while (rtdev_remove_pack(&arp_packet_type) == -EAGAIN) {
+	printk("RTnet ARP: waiting for protocol unregistration\n");
+	set_current_state(TASK_UNINTERRUPTIBLE);
+	schedule_timeout(1*HZ); /* wait a second */
+    }
 }
