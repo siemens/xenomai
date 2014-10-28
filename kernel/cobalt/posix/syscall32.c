@@ -577,11 +577,11 @@ COBALT_SYSCALL32emu(sigwaitinfo, nonrestartable,
 	return __cobalt_sigwaitinfo(&set, u_si, sys32_put_siginfo);
 }
 
-COBALT_SYSCALL32emu(sigpending, primary, int, (compat_sigset_t __user *u_set))
+COBALT_SYSCALL32emu(sigpending, primary, int, (compat_old_sigset_t __user *u_set))
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
-	
-	return sys32_put_sigset(u_set, &curr->sigpending);
+
+	return sys32_put_sigset((compat_sigset_t *)u_set, &curr->sigpending);
 }
 
 COBALT_SYSCALL32emu(sigqueue, conforming,

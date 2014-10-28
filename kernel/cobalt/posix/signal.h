@@ -106,7 +106,7 @@ COBALT_SYSCALL_DECL(sigwaitinfo,
 			  struct siginfo __user *u_si));
 
 COBALT_SYSCALL_DECL(sigpending,
-		    int, (sigset_t __user *u_set));
+		    int, (old_sigset_t __user *u_set));
 
 COBALT_SYSCALL_DECL(kill, int, (pid_t pid, int sig));
 

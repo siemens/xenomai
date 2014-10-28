@@ -451,10 +451,10 @@ COBALT_SYSCALL(sigwaitinfo, nonrestartable,
 	return __cobalt_sigwaitinfo(&set, u_si, signal_put_siginfo);
 }
 
-COBALT_SYSCALL(sigpending, primary, int, (sigset_t __user *u_set))
+COBALT_SYSCALL(sigpending, primary, int, (old_sigset_t __user *u_set))
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
-	
+
 	return __xn_safe_copy_to_user(u_set, &curr->sigpending, sizeof(*u_set));
 }
 

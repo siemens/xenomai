@@ -142,7 +142,7 @@ COBALT_SYSCALL32emu_DECL(sigwaitinfo,
 			       struct compat_siginfo __user *u_si));
 
 COBALT_SYSCALL32emu_DECL(sigpending,
-			 int, (compat_sigset_t __user *u_set));
+			 int, (compat_old_sigset_t __user *u_set));
 
 COBALT_SYSCALL32emu_DECL(sigqueue,
 			 int, (pid_t pid, int sig,
