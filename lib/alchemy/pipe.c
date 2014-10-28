@@ -166,8 +166,8 @@ int rt_pipe_create(RT_PIPE *pipe,
 	}
 
 	if (poolsize > 0) {
-		ret = setsockopt(pcb->sock, SOL_XDDP, XDDP_POOLSZ,
-				 &poolsize, sizeof(poolsize));
+		ret = __RT(setsockopt(pcb->sock, SOL_XDDP, XDDP_POOLSZ,
+				      &poolsize, sizeof(poolsize)));
 		if (ret)
 			goto fail_sockopt;
 	}
@@ -181,7 +181,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sipc_family = AF_RTIPC;
 	saddr.sipc_port = minor;
-	ret = bind(sock, (struct sockaddr *)&saddr, sizeof(saddr));
+	ret = __RT(bind(sock, (struct sockaddr *)&saddr, sizeof(saddr)));
 	if (ret)
 		goto fail_sockopt;
 
