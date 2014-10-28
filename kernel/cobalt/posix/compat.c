@@ -229,7 +229,7 @@ int sys32_get_sigevent(struct sigevent *ev,
 		return ret;
 
 	memset(ev, 0, sizeof(*ev));
-	ev->sigev_value.sival_int = cev.sigev_value.sival_int;
+	ev->sigev_value.sival_ptr = compat_ptr(cev.sigev_value.sival_ptr);
 	ev->sigev_signo = cev.sigev_signo;
 	ev->sigev_notify = cev.sigev_notify;
 	/*
@@ -238,8 +238,8 @@ int sys32_get_sigevent(struct sigevent *ev,
 	 */
 	p = ev->_sigev_un._pad;
 	cp = cev._sigev_un._pad;
-	while ((void *)cp < (void *)cev._sigev_un._pad
-	       + sizeof(cev._sigev_un._pad))
+	while (p < &ev->_sigev_un._pad[ARRAY_SIZE(ev->_sigev_un._pad)] &&
+	       cp < &cev._sigev_un._pad[ARRAY_SIZE(cev._sigev_un._pad)])
 		*p++ = *cp++;
 
 	return 0;
