@@ -115,13 +115,6 @@ COBALT_SYSCALL32emu(sem_timedwait, primary,
 		    int, (struct cobalt_sem_shadow __user *u_sem,
 			  struct compat_timespec __user *u_ts))
 {
-	struct timespec ts;
-	int ret;
-
-	ret = sys32_get_timespec(&ts, u_ts);
-	if (ret)
-		return ret;
-
 	return __cobalt_sem_timedwait(u_sem, u_ts, sys32_fetch_timeout);
 }
 
@@ -136,7 +129,7 @@ COBALT_SYSCALL32emu(clock_getres, current,
 	if (ret)
 		return ret;
 
-	return sys32_put_timespec(u_ts, &ts);
+	return u_ts ? sys32_put_timespec(u_ts, &ts) : 0;
 }
 
 COBALT_SYSCALL32emu(clock_gettime, current,

@@ -306,7 +306,7 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 		if (pull_ts) {
 			atomic_inc(&sem->state->value);
 			xnlock_put_irqrestore(&nklock, s);
-			ret = sem_fetch_timeout(&ts, u_ts);
+			ret = fetch_timeout(&ts, u_ts);
 			xnlock_get_irqsave(&nklock, s);
 			if (ret)
 				break;
