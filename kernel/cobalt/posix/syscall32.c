@@ -421,7 +421,7 @@ static ssize_t sys32_put_config(int policy,
 	return ret ?: u_len;
 }
 
-COBALT_SYSCALL32emu(sched_setconfig_np, current,
+COBALT_SYSCALL32emu(sched_setconfig_np, conforming,
 		    int, (int cpu, int policy,
 			  union compat_sched_config __user *u_config,
 			  size_t len))
@@ -430,7 +430,7 @@ COBALT_SYSCALL32emu(sched_setconfig_np, current,
 					   sys32_fetch_config, sys32_ack_config);
 }
 
-COBALT_SYSCALL32emu(sched_getconfig_np, current,
+COBALT_SYSCALL32emu(sched_getconfig_np, conformin,
 		    ssize_t, (int cpu, int policy,
 			      union compat_sched_config __user *u_config,
 			      size_t len))

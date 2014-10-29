@@ -631,7 +631,7 @@ int __cobalt_sched_setconfig_np(int cpu, int policy,
 	return ret;
 }
 
-COBALT_SYSCALL(sched_setconfig_np, current,
+COBALT_SYSCALL(sched_setconfig_np, conforming,
 	       int, (int cpu, int policy,
 		     union sched_config __user *u_config,
 		     size_t len))
@@ -672,7 +672,7 @@ ssize_t __cobalt_sched_getconfig_np(int cpu, int policy,
 	return ret;
 }
 
-COBALT_SYSCALL(sched_getconfig_np, current,
+COBALT_SYSCALL(sched_getconfig_np, conforming,
 	       ssize_t, (int cpu, int policy,
 			 union sched_config __user *u_config,
 			 size_t len))
