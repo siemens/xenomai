@@ -261,6 +261,14 @@ COBALT_SYSCALL32emu(mq_timedreceive, primary,
 	return ret ?: __xn_safe_copy_to_user(u_len, &clen, sizeof(*u_len));
 }
 
+static inline int mq_fetch_timeout(struct timespec *ts,
+				   const void __user *u_ts)
+{
+	return u_ts == NULL ? -EFAULT :
+		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+
+}
+
 COBALT_SYSCALL32emu(mq_notify, primary,
 		    int, (mqd_t fd, const struct compat_sigevent *__user u_cev))
 {
@@ -799,3 +807,29 @@ COBALT_SYSCALL32emu(backtrace, current,
 
 	return 0;
 }
+
+#ifdef COBALT_SYSCALL32x
+
+COBALT_SYSCALL32x(mq_timedreceive, primary,
+		  int, (mqd_t uqd, void __user *u_buf,
+			compat_ssize_t __user *u_len,
+			unsigned int __user *u_prio,
+			const struct timespec __user *u_ts))
+{
+	compat_ssize_t clen;
+	ssize_t len;
+	int ret;
+
+	ret = __xn_safe_copy_from_user(&clen, u_len, sizeof(*u_len));
+	if (ret)
+		return ret;
+
+	len = clen;
+	ret = __cobalt_mq_timedreceive(uqd, u_buf, &len, u_prio,
+				       u_ts, u_ts ? mq_fetch_timeout : NULL);
+	clen = len;
+
+	return ret ?: __xn_safe_copy_to_user(u_len, &clen, sizeof(*u_len));
+}
+
+#endif /* COBALT_SYSCALL32x */

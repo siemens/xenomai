@@ -55,8 +55,11 @@
 	, [sc_cobalt_ ## __name + __COBALT_X32_BASE] = __handler
 
 /* x32 thunk installation */
-#define __COBALT_CALL32x_THUNK(__name)	\
+#define __COBALT_CALL32x_pure_THUNK(__name)	\
 	__COBALT_CALL32x_ENTRY(__name, __syshand32x__(__name))
+
+#define __COBALT_CALL32x_THUNK(__name)	\
+	__COBALT_CALL32x_ENTRY(__name, __syshand32emu__(__name))
 
 /* x32 thunk implementation. */
 #define COBALT_SYSCALL32x(__name, __mode, __type, __args)	\
@@ -79,6 +82,8 @@
 #define __COBALT_CALL32x_INITMODE(__mode)
 
 #define __COBALT_CALL32x_ENTRY(__name, __handler)
+
+#define __COBALT_CALL32x_pure_THUNK(__name)
 
 #define __COBALT_CALL32x_THUNK(__name)
 
