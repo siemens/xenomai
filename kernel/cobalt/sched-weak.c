@@ -17,6 +17,7 @@
  * 02111-1307, USA.
  */
 #include <cobalt/kernel/sched.h>
+#include <cobalt/uapi/sched.h>
 
 static void xnsched_weak_init(struct xnsched *sched)
 {
@@ -207,6 +208,7 @@ struct xnsched_class xnsched_class_weak = {
 	.sched_cleanup_vfile	=	xnsched_weak_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
+	.policy			=	SCHED_WEAK,
 	.name			=	"weak"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_weak);

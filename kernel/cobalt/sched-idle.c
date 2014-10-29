@@ -56,5 +56,6 @@ struct xnsched_class xnsched_class_idle = {
 	.sched_getparam		=	xnsched_idle_getparam,
 	.sched_trackprio	=	xnsched_idle_trackprio,
 	.weight			=	XNSCHED_CLASS_WEIGHT(0),
+	.policy			=	SCHED_IDLE,
 	.name			=	"idle"
 };

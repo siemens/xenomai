@@ -18,6 +18,7 @@
  */
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
+#include <cobalt/uapi/sched.h>
 
 #define MAX_REPLENISH CONFIG_XENO_OPT_SCHED_SPORADIC_MAXREPL
 
@@ -537,6 +538,7 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_cleanup_vfile	=	xnsched_sporadic_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(3),
+	.policy			=	SCHED_SPORADIC,
 	.name			=	"pss"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_sporadic);

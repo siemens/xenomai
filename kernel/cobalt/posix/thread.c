@@ -264,7 +264,6 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 		ret = -EINVAL;
 		goto out;
 	}
-	thread->sched_u_policy = policy;
 	xnthread_set_slice(&thread->threadbase, tslice);
 	if (cobalt_call_extension(thread_setsched, &thread->extref, ret,
 				  sched_class, &param) && ret)
@@ -284,7 +283,6 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 {
 	struct xnsched_class *base_class;
 	struct xnthread *base_thread;
-	int prio;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -297,9 +295,10 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 
 	base_thread = &thread->threadbase;
 	base_class = base_thread->base_class;
-	*policy_r = thread->sched_u_policy;
-	prio = xnthread_base_priority(base_thread);
-	param_ex->sched_priority = prio;
+	param_ex->sched_priority = xnthread_base_priority(base_thread);
+	*policy_r = base_class->policy;
+	if (param_ex->sched_priority == 0) /* SCHED_FIFO/SCHED_WEAK */
+		*policy_r = SCHED_NORMAL;
 
 	if (base_class == &xnsched_class_rt) {
 		if (xnthread_test_state(base_thread, XNRRB))
@@ -379,7 +378,6 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 		return ret;
 	}
 
-	thread->sched_u_policy = policy;
 	thread->magic = COBALT_THREAD_MAGIC;
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
 

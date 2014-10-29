@@ -102,9 +102,6 @@ struct cobalt_thread {
 	struct xnsynch sigwait;
 	struct list_head signext;
 
-	/** Cached value for current policy (user side). */
-	int sched_u_policy;
-
 	/** Monitor wait object and link holder. */
 	struct xnsynch monitor_synch;
 	struct list_head monitor_link;

@@ -19,6 +19,7 @@
 #include <linux/bitmap.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/arith.h>
+#include <cobalt/uapi/sched.h>
 
 /*
  * With this policy, each per-CPU scheduler slot maintains a list of
@@ -765,6 +766,7 @@ struct xnsched_class xnsched_class_quota = {
 	.sched_cleanup_vfile	=	xnsched_quota_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(3),
+	.policy			=	SCHED_QUOTA,
 	.name			=	"quota"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_quota);

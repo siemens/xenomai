@@ -18,6 +18,7 @@
  */
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
+#include <cobalt/uapi/sched.h>
 
 static void tp_schedule_next(struct xnsched_tp *tp)
 {
@@ -431,6 +432,7 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_cleanup_vfile	=	xnsched_tp_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(2),
+	.policy			=	SCHED_TP,
 	.name			=	"tp"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_tp);

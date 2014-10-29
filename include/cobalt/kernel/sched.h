@@ -158,6 +158,7 @@ struct xnsched_class {
 	int nthreads;
 	struct xnsched_class *next;
 	int weight;
+	int policy;
 	const char *name;
 };
 

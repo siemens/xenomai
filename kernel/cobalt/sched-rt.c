@@ -246,6 +246,7 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(4),
+	.policy			=	SCHED_FIFO,
 	.name			=	"rt"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_rt);
