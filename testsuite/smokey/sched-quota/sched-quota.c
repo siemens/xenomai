@@ -16,6 +16,7 @@
 #include <error.h>
 #include <boilerplate/time.h>
 #include <boilerplate/ancillaries.h>
+#include <boilerplate/atomic.h>
 #include <smokey/smokey.h>
 
 smokey_test_plugin(sched_quota,
@@ -57,6 +58,8 @@ static int started;
 
 static sem_t ready;
 
+static atomic_t throttle;
+
 static unsigned long __attribute__(( noinline ))
 __do_work(unsigned long count)
 {
@@ -93,7 +96,9 @@ static void *thread_body(void *arg)
 
 	for (;;) {
 		do_work(loops, count_r);
-		if (nrthreads > 1)
+		if (atomic_read(&throttle))
+			sleep(1);
+		else if (nrthreads > 1)
 			sched_yield();
 	}
 
@@ -255,12 +260,16 @@ static unsigned long long calibrate(void)
 		pthread_kill(threads[n], SIGDEMT);
 	}
 
+	atomic_set(&throttle, 1);
+	smp_wmb();
+
 	for (n = 0; n < nrthreads; n++) {
 		pthread_cancel(threads[n]);
 		pthread_join(threads[n], NULL);
 	}
 
 	started = 0;
+	atomic_set(&throttle, 0);
 
 	return lps;
 }
