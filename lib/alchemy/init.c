@@ -33,6 +33,7 @@
 #include "buffer.h"
 #include "heap.h"
 #include "alarm.h"
+#include "pipe.h"
 
 /**
  * @defgroup alchemy Alchemy API
@@ -80,6 +81,20 @@ static void alchemy_help(void)
         fprintf(stderr, "--alchemy-clock-resolution=<ns>  tick value (default 1ns, tickless)\n");
 }
 
+#ifdef CONFIG_XENO_COBALT
+
+static inline void init_corespec(void)
+{
+	syncluster_init(&alchemy_pipe_table, "alchemy.pipe");
+	registry_add_dir("/alchemy/pipes");
+}
+
+#else
+
+static inline void init_corespec(void) { }
+
+#endif
+
 static int alchemy_init(void)
 {
 	int ret;
@@ -111,6 +126,8 @@ static int alchemy_init(void)
 	registry_add_dir("/alchemy/buffers");
 	registry_add_dir("/alchemy/heaps");
 	registry_add_dir("/alchemy/alarms");
+
+	init_corespec();
 
 	return 0;
 }

@@ -19,6 +19,7 @@
 #define _XENOMAI_ALCHEMY_PIPE_H
 
 #include <stdint.h>
+#include <cobalt/uapi/kernel/pipe.h>
 #include <alchemy/timer.h>
 
 /**
@@ -30,8 +31,8 @@
 #define P_MINOR_AUTO	XNPIPE_MINOR_AUTO
 
 /** Operation flags. */
-#define P_URGENT  0x1
-#define P_NORMAL  0x0
+#define P_URGENT	XNPIPE_URGENT
+#define P_NORMAL	XNPIPE_NORMAL
 
 struct RT_PIPE {
 	uintptr_t handle;

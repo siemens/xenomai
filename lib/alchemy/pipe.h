@@ -29,9 +29,12 @@ struct alchemy_pipe {
 	unsigned int magic;	/* Must be first. */
 	char name[XNOBJECT_NAME_LEN];
 	int sock;
+	int minor;
 	struct clusterobj cobj;
 };
 
 #define pipe_magic	0x8b8bebeb
+
+extern struct syncluster alchemy_pipe_table;
 
 #endif /* _ALCHEMY_PIPE_H */

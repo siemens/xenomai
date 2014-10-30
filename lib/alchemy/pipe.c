@@ -110,7 +110,8 @@ DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
  * pipe. Passing 0 means that all message allocations for this pipe are
  * performed on the Cobalt core heap.
  *
- * @return Zero is returned upon success. Otherwise:
+ * @return The @a minor number assigned to the connection is returned
+ * upon success. Otherwise:
  *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the pipe.
@@ -136,6 +137,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 	struct alchemy_pipe *pcb;
 	struct service svc;
 	size_t streambufsz;
+	socklen_t addrlen;
 	int ret, sock;
 
 	if (threadobj_irq_p())
@@ -166,15 +168,15 @@ int rt_pipe_create(RT_PIPE *pipe,
 	}
 
 	if (poolsize > 0) {
-		ret = __RT(setsockopt(pcb->sock, SOL_XDDP, XDDP_POOLSZ,
+		ret = __RT(setsockopt(sock, SOL_XDDP, XDDP_POOLSZ,
 				      &poolsize, sizeof(poolsize)));
 		if (ret)
 			goto fail_sockopt;
 	}
 
 	streambufsz = ALCHEMY_PIPE_STREAMSZ;
-	ret = __RT(setsockopt(pcb->sock, SOL_XDDP, XDDP_BUFSZ,
-			      &streambufsz, streambufsz));
+	ret = __RT(setsockopt(sock, SOL_XDDP, XDDP_BUFSZ,
+			      &streambufsz, sizeof(streambufsz)));
 	if (ret)
 		goto fail_sockopt;
 
@@ -185,8 +187,22 @@ int rt_pipe_create(RT_PIPE *pipe,
 	if (ret)
 		goto fail_sockopt;
 
+	if (minor == P_MINOR_AUTO) {
+		/* Fetch the assigned minor device. */
+		addrlen = sizeof(saddr);
+		ret = __RT(getsockname(sock, (struct sockaddr *)&saddr, &addrlen));
+		if (ret)
+			goto fail_sockopt;
+		if (addrlen != sizeof(saddr)) {
+			ret = -EINVAL;
+			goto fail_register;
+		}
+		minor = saddr.sipc_port;
+	}
+
 	generate_name(pcb->name, name, &pipe_namegen);
 	pcb->sock = sock;
+	pcb->minor = minor;
 	pcb->magic = pipe_magic;
 
 	if (syncluster_addobj(&alchemy_pipe_table, pcb->name, &pcb->cobj)) {
@@ -198,7 +214,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 
 	CANCEL_RESTORE(svc);
 
-	return 0;
+	return minor;
 fail_sockopt:
 	ret = -errno;
 	if (ret == -EADDRINUSE)
