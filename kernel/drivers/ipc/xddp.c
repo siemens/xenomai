@@ -207,7 +207,8 @@ static void __xddp_release_handler(void *skarg) /* nklock free */
 		poolsz = xnheap_get_size(&sk->privpool);
 		xnheap_destroy(&sk->privpool);
 		free_pages_exact(poolmem, poolsz);
-	}
+	} else if (sk->buffer)
+		xnfree(sk->buffer);
 
 	kfree(sk);
 }
