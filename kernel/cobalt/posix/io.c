@@ -84,9 +84,6 @@ COBALT_SYSCALL(recvmsg, probing,
 	struct msghdr m;
 	ssize_t ret;
 
-	if (flags & MSG_CMSG_COMPAT)
-		return -EINVAL;
-
 	ret = __xn_safe_copy_from_user(&m, umsg, sizeof(m));
 	if (ret)
 		return ret;
@@ -103,9 +100,6 @@ COBALT_SYSCALL(sendmsg, probing,
 {
 	struct msghdr m;
 	int ret;
-
-	if (flags & MSG_CMSG_COMPAT)
-		return -EINVAL;
 
 	ret = __xn_safe_copy_from_user(&m, umsg, sizeof(m));
 
