@@ -999,7 +999,7 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 
 	if (p == NULL)
 		xnvfile_printf(it,
-			       "%-3s  %-6s %-5s  %-8s  %-5s %-8s  %-10s %s\n",
+			       "%-3s  %-6s %-5s  %-8s  %-5s %-12s  %-10s %s\n",
 			       "CPU", "PID", "CLASS", "TYPE", "PRI", "TIMEOUT",
 			       "STAT", "NAME");
 	else {
@@ -1008,7 +1008,7 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
 
 		xnvfile_printf(it,
-			       "%3u  %-6d %-5s  %-8s  %-5s %-8s  %-10s %s%s%s\n",
+			       "%3u  %-6d %-5s  %-8s  %-5s %-12s  %-10s %s%s%s\n",
 			       p->cpu,
 			       p->pid,
 			       p->sched_class,
