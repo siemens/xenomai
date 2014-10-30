@@ -110,7 +110,7 @@
 #define sc_cobalt_select			87
 #define sc_cobalt_migrate			88
 #define sc_cobalt_archcall			89
-#define sc_cobalt_info				90
+/* 90 unimp */
 #define sc_cobalt_trace				91
 #define sc_cobalt_sysctl			92
 #define sc_cobalt_get_current			93

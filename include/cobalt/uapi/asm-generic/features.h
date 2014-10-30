@@ -23,16 +23,26 @@
 #define XNFEAT_STRING_LEN 64
 
 struct cobalt_featinfo {
-	__u32 feat_abirev;  /* ABI revision level. */
-	__u32 feat_all;	    /* Available feature set. */
-	__u32 feat_man;	    /* Mandatory features (when requested). */
-	__u32 feat_req;	    /* Requested feature set. */
-	__u32 feat_mis;	    /* Missing features. */
+	/** Real-time clock frequency */
+	__u64 clock_freq;
+	/** Offset of nkvdso in the sem heap. */
+	__u32 vdso_offset;
+	/** ABI revision level. */
+	__u32 feat_abirev;
+	/** Available feature set. */
+	__u32 feat_all;
+	/** Mandatory features (when requested). */
+	__u32 feat_man;
+	/** Requested feature set. */
+	__u32 feat_req;
+	/** Missing features. */
+	__u32 feat_mis;
 	char feat_all_s[XNFEAT_STRING_LEN];
 	char feat_man_s[XNFEAT_STRING_LEN];
 	char feat_req_s[XNFEAT_STRING_LEN];
 	char feat_mis_s[XNFEAT_STRING_LEN];
-	struct cobalt_featinfo_archdep feat_arch; /* Arch-dep extension. */
+	/* Architecture-specific features. */
+	struct cobalt_featinfo_archdep feat_arch;
 };
 
 #define __xn_feat_smp         0x80000000

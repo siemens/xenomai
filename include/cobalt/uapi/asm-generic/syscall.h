@@ -26,19 +26,14 @@
 
 struct cobalt_bindreq {
 	/** Features userland requires. */
-	int feat_req;
+	__u32 feat_req;
 	/** ABI revision userland uses. */
-	int abi_rev;
+	__u32 abi_rev;
 	/** Features the Cobalt core provides. */
 	struct cobalt_featinfo feat_ret;
 };
 
 #define COBALT_SECONDARY  0
 #define COBALT_PRIMARY    1
-
-struct cobalt_sysinfo {
-	__u64 clockfreq;	/* Real-time clock frequency */
-	__u32 vdso;		/* Offset of nkvdso in the sem heap */
-};
 
 #endif /* !_COBALT_UAPI_ASM_GENERIC_SYSCALL_H */

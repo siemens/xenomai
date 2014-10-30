@@ -101,20 +101,6 @@ static void unmap_on_fork(void)
 	init_bind_once = PTHREAD_ONCE_INIT;
 }
 
-static void init_vdso(void)
-{
-	struct cobalt_sysinfo sysinfo;
-	int ret;
-
-	ret = XENOMAI_SYSCALL1(sc_cobalt_info, &sysinfo);
-	if (ret < 0) {
-		report_error("sysinfo failed: %s", strerror(-ret));
-		exit(EXIT_FAILURE);
-	}
-
-	cobalt_vdso = (struct xnvdso *)(cobalt_umm_shared + sysinfo.vdso);
-}
-
 /*
  * Will be called once at library loading time, and when re-binding
  * after a fork.
@@ -131,7 +117,7 @@ static void init_bind(void)
 }
 
 /* Will be called only once, at library loading time. */
-static void init_loadup(void)
+static void init_loadup(__u32 vdso_offset)
 {
 	uint32_t size;
 
@@ -144,13 +130,11 @@ static void init_loadup(void)
 		exit(EXIT_FAILURE);
 	}
 
-	init_vdso();
+	cobalt_vdso = (struct xnvdso *)(cobalt_umm_shared + vdso_offset);
 }
 
-void cobalt_init_umm(void)
+void cobalt_init_umm(__u32 vdso_offset)
 {
-	static pthread_once_t init_loadup_once = PTHREAD_ONCE_INIT;
-
 	pthread_once(&init_bind_once, init_bind);
-	pthread_once(&init_loadup_once, init_loadup);
+	init_loadup(vdso_offset);
 }

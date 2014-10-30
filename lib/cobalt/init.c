@@ -62,7 +62,6 @@ static void sigill_handler(int sig)
 static void low_init(void)
 {
 	sighandler_t old_sigill_handler;
-	struct cobalt_sysinfo sysinfo;
 	struct cobalt_bindreq breq;
 	struct cobalt_featinfo *f;
 	int ret;
@@ -101,18 +100,9 @@ static void low_init(void)
 	}
 
 	cobalt_check_features(f);
-
-	ret = XENOMAI_SYSCALL1(sc_cobalt_info, &sysinfo);
-	if (ret) {
-		report_error("sysinfo failed: %s", strerror(-ret));
-		exit(EXIT_FAILURE);
-	}
-
-	cobalt_init_umm();
-
+	cobalt_init_umm(f->vdso_offset);
 	cobalt_init_current_keys();
-
-	cobalt_ticks_init(sysinfo.clockfreq);
+	cobalt_ticks_init(f->clock_freq);
 }
 
 static void __init_cobalt(void);

@@ -130,17 +130,6 @@ static COBALT_SYSCALL(migrate, current, int, (int domain))
 	return 0;
 }
 
-static COBALT_SYSCALL(info, lostage,
-		      int, (struct cobalt_sysinfo __user *u_info))
-{
-	struct cobalt_sysinfo info;
-
-	info.clockfreq = xnarch_machdata.clock_freq;
-	info.vdso = cobalt_umm_offset(&cobalt_ppd_get(1)->umm, nkvdso);
-
-	return __xn_safe_copy_to_user(u_info, &info, sizeof(info));
-}
-
 static COBALT_SYSCALL(trace, current,
 		      int, (int op, unsigned long a1,
 			    unsigned long a2, unsigned long a3))
@@ -340,6 +329,9 @@ static COBALT_SYSCALL(bind, lostage,
 			      sizeof(f->feat_req_s));
 	f->feat_abirev = XENOMAI_ABI_REV;
 	collect_arch_features(f);
+
+	f->clock_freq = xnarch_machdata.clock_freq;
+	f->vdso_offset = cobalt_umm_offset(&cobalt_ppd_get(1)->umm, nkvdso);
 
 	if (__xn_safe_copy_to_user(u_breq, &breq, sizeof(breq)))
 		return -EFAULT;
@@ -603,7 +595,6 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(archcall),
 	__COBALT_CALL_ENTRY(bind),
 	__COBALT_CALL_ENTRY(extend),
-	__COBALT_CALL_ENTRY(info),
 	__COBALT_CALL_ENTRY(trace),
 	__COBALT_CALL_ENTRY(get_current),
 	__COBALT_CALL_ENTRY(mayday),
@@ -708,7 +699,6 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(archcall, current),
 	__COBALT_MODE(bind, lostage),
 	__COBALT_MODE(extend, lostage),
-	__COBALT_MODE(info, lostage),
 	__COBALT_MODE(trace, current),
 	__COBALT_MODE(get_current, current),
 	__COBALT_MODE(mayday, oneway),

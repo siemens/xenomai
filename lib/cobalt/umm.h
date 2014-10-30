@@ -18,7 +18,9 @@
 #ifndef _LIB_COBALT_UMM_H
 #define _LIB_COBALT_UMM_H
 
-void cobalt_init_umm(void);
+#include <linux/types.h>
+
+void cobalt_init_umm(__u32 vdso_offset);
 
 struct xnvdso;
 
