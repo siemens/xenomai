@@ -183,7 +183,7 @@ int __real_fcntl(int fd, int cmd, ...)
 }
 
 __weak
-int __real_ioctl(int fd, unsigned long int request, ...)
+int __real_ioctl(int fd, unsigned int request, ...)
 {
 	va_list ap;
 	void *arg;

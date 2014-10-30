@@ -98,7 +98,7 @@ COBALT_IMPL(int, close, (int fd))
 	return __STD(close(fd));
 }
 
-static int do_ioctl(int fd, unsigned long request, void *arg)
+static int do_ioctl(int fd, unsigned int request, void *arg)
 {
 	int ret, oldtype;
 
@@ -129,7 +129,7 @@ COBALT_IMPL(int, fcntl, (int fd, int cmd, ...))
 	return __STD(fcntl(fd, cmd, arg));
 }
 
-COBALT_IMPL(int, ioctl, (int fd, unsigned long int request, ...))
+COBALT_IMPL(int, ioctl, (int fd, unsigned int request, ...))
 {
 	va_list ap;
 	void *arg;
