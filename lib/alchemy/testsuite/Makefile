@@ -6,32 +6,38 @@ endif
 
 prefix := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --prefix)
 solibs := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --libdir)
+core := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --core)
 
 ifeq ($(prefix),)
 $(error Please add <xenomai-install-path>/bin to your PATH variable or specify DESTDIR)
 endif
 
-TESTS :=	\
-	task-1	\
-	task-2	\
-	task-3	\
-	task-4	\
-	task-5	\
-	task-6	\
-	task-7	\
-	task-8	\
-	task-9	\
-	task-10	\
-	mq-1	\
-	mq-2	\
-	mq-3	\
-	alarm-1	\
-	sem-1	\
-	sem-2	\
-	mutex-1	\
-	event-1	\
-	heap-1	\
-	buffer-1
+cobalt-only := pipe-1
+mercury-only :=
+core-specific = $($(core)-only)
+
+TESTS :=		\
+	task-1		\
+	task-2		\
+	task-3		\
+	task-4		\
+	task-5		\
+	task-6		\
+	task-7		\
+	task-8		\
+	task-9		\
+	task-10		\
+	mq-1		\
+	mq-2		\
+	mq-3		\
+	alarm-1		\
+	sem-1		\
+	sem-2		\
+	mutex-1		\
+	event-1		\
+	heap-1		\
+	buffer-1	\
+	$(core-specific)
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --ldflags)
