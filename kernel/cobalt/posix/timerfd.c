@@ -66,7 +66,7 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 		err = 0;
 		goto out;
 	}
-	if (tfd->flags & TFD_NONBLOCK) {
+	if (rtdm_fd_flags(fd) & O_NONBLOCK) {
 		err = -EAGAIN;
 		goto out;
 	}
@@ -188,7 +188,8 @@ COBALT_SYSCALL(timerfd_create, lostage,
 		goto fail_getfd;
 	}
 
-	tfd->flags = flags;
+	tfd->flags = flags & ~TFD_NONBLOCK;
+	tfd->fd.oflags = (flags & TFD_NONBLOCK) ? O_NONBLOCK : 0;
 	tfd->clockid = clockid;
 	curr = xnthread_current();
 	xntimer_init(&tfd->timer, &nkclock, timerfd_handler,
