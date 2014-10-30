@@ -23,24 +23,10 @@
 #include <linux/poll.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/kernel/pipe.h>
 
 #define XNPIPE_NDEVS      CONFIG_XENO_OPT_PIPE_NRDEV
 #define XNPIPE_DEV_MAJOR  150
-
-#define	XNPIPE_IOCTL_BASE	'p'
-#define XNPIPEIOC_GET_NRDEV	_IOW(XNPIPE_IOCTL_BASE, 0, int)
-#define XNPIPEIOC_IFLUSH	_IO(XNPIPE_IOCTL_BASE,1)
-#define XNPIPEIOC_OFLUSH	_IO(XNPIPE_IOCTL_BASE,2)
-#define XNPIPEIOC_FLUSH		XNPIPEIOC_OFLUSH
-#define XNPIPEIOC_SETSIG	_IO(XNPIPE_IOCTL_BASE,3)
-
-#define XNPIPE_NORMAL  0x0
-#define XNPIPE_URGENT  0x1
-
-#define XNPIPE_IFLUSH  0x1
-#define XNPIPE_OFLUSH  0x2
-
-#define XNPIPE_MINOR_AUTO  -1
 
 #define XNPIPE_KERN_CONN         0x1
 #define XNPIPE_KERN_LCLOSE       0x2

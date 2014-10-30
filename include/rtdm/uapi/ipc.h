@@ -393,6 +393,7 @@ int getpeername__AF_RTIPC(int sockfd, struct sockaddr_ipc *addr, socklen_t *addr
 /** @} */
 
 #include <cobalt/uapi/kernel/types.h>
+#include <cobalt/uapi/kernel/pipe.h>
 #include <rtdm/rtdm.h>
 
 /* Address family */
