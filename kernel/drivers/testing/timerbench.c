@@ -315,11 +315,86 @@ static int rt_tmbench_start(struct rtdm_fd *fd,
 	return err;
 }
 
-static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
-			   struct rttst_overall_bench_res __user *user_res)
+static int kernel_copy_results(struct rt_tmbench_context *ctx,
+			       struct rttst_overall_bench_res *res)
+{
+	int size;
+
+	memcpy(&res->result, &ctx->result.overall, sizeof(res->result));
+
+	if (ctx->histogram_size > 0) {
+		size = ctx->histogram_size * sizeof(int32_t);
+		memcpy(res->histogram_min, ctx->histogram_min, size);
+		memcpy(res->histogram_max, ctx->histogram_max, size);
+		memcpy(res->histogram_avg, ctx->histogram_avg, size);
+		kfree(ctx->histogram_min);
+	}
+
+	return 0;
+}
+
+static int user_copy_results(struct rt_tmbench_context *ctx,
+			     struct rttst_overall_bench_res __user *u_res)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(ctx);
-	int err = 0;
+	struct rttst_overall_bench_res res_buf;
+	int ret, size;
+
+	ret = rtdm_safe_copy_to_user(fd, &u_res->result,
+				     &ctx->result.overall,
+				     sizeof(u_res->result));
+	if (ret || ctx->histogram_size == 0)
+		return ret;
+
+	size = ctx->histogram_size * sizeof(int32_t);
+
+	if (rtdm_safe_copy_from_user(fd, &res_buf, u_res, sizeof(res_buf)) < 0 ||
+	    rtdm_safe_copy_to_user(fd, res_buf.histogram_min,
+				   ctx->histogram_min, size) < 0 ||
+	    rtdm_safe_copy_to_user(fd, res_buf.histogram_max,
+				   ctx->histogram_max, size) < 0 ||
+	    rtdm_safe_copy_to_user(fd, res_buf.histogram_avg,
+				   ctx->histogram_avg, size) < 0)
+		return -EFAULT;
+
+	return 0;
+}
+
+#ifdef CONFIG_COMPAT
+
+static int compat_user_copy_results(struct rt_tmbench_context *ctx,
+				    struct compat_rttst_overall_bench_res __user *u_res)
+{
+	struct compat_rttst_overall_bench_res res_buf;
+	struct rtdm_fd *fd = rtdm_private_to_fd(ctx);
+	int ret, size;
+
+	ret = rtdm_safe_copy_to_user(fd, &u_res->result,
+				     &ctx->result.overall,
+				     sizeof(u_res->result));
+	if (ret || ctx->histogram_size == 0)
+		return ret;
+
+	size = ctx->histogram_size * sizeof(int32_t);
+
+	if (rtdm_safe_copy_from_user(fd, &res_buf, u_res, sizeof(res_buf)) < 0 ||
+	    rtdm_safe_copy_to_user(fd, compat_ptr(res_buf.histogram_min),
+				   ctx->histogram_min, size) < 0 ||
+	    rtdm_safe_copy_to_user(fd, compat_ptr(res_buf.histogram_max),
+				   ctx->histogram_max, size) < 0 ||
+	    rtdm_safe_copy_to_user(fd, compat_ptr(res_buf.histogram_avg),
+				   ctx->histogram_avg, size) < 0)
+		return -EFAULT;
+
+	return 0;
+}
+
+#endif /* CONFIG_COMPAT */
+
+static int rt_tmbench_stop(struct rt_tmbench_context *ctx, void *u_res)
+{
+	struct rtdm_fd *fd = rtdm_private_to_fd(ctx);
+	int ret;
 
 	down(&ctx->nrt_mutex);
 
@@ -342,54 +417,22 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 		   ((ctx->result.overall.test_loops) > 1 ?
 		    ctx->result.overall.test_loops : 2) - 1);
 
-	if (rtdm_fd_is_user(fd))
-		err = rtdm_safe_copy_to_user(fd, &user_res->result,
-					     &ctx->result.overall,
-					     sizeof(struct rttst_bench_res));
-		/* Do not break on error here - we may have to free a
-		   histogram buffer first. */
-	else {
-		struct rttst_overall_bench_res *res =
-			(struct rttst_overall_bench_res *)user_res;
+	if (rtdm_fd_is_user(fd)) {
+#ifdef CONFIG_COMPAT
+		if (rtdm_fd_is_compat(fd))
+			ret = compat_user_copy_results(ctx, u_res);
+		else
+#endif
+			ret = user_copy_results(ctx, u_res);
+	} else
+		ret = kernel_copy_results(ctx, u_res);
 
-		memcpy(&res->result, &ctx->result.overall,
-		       sizeof(struct rttst_bench_res));
-	}
-
-	if (ctx->histogram_size > 0) {
-		int size = ctx->histogram_size * sizeof(int32_t);
-
-		if (rtdm_fd_is_user(fd)) {
-			struct rttst_overall_bench_res res_buf;
-
-			if (rtdm_safe_copy_from_user(fd,
-						     &res_buf, user_res,
-						     sizeof(res_buf)) < 0 ||
-			    rtdm_safe_copy_to_user(fd,
-				    (void __user *)res_buf.histogram_min,
-				    ctx->histogram_min, size) < 0 ||
-			    rtdm_safe_copy_to_user(fd,
-				    (void __user *)res_buf.histogram_max,
-				    ctx->histogram_max, size) < 0 ||
-			    rtdm_safe_copy_to_user(fd,
-				    (void __user *)res_buf.histogram_avg,
-				    ctx->histogram_avg, size) < 0)
-				err = -EFAULT;
-		} else {
-			struct rttst_overall_bench_res *res =
-				(struct rttst_overall_bench_res *)user_res;
-
-			memcpy(res->histogram_min, ctx->histogram_min, size);
-			memcpy(res->histogram_max, ctx->histogram_max, size);
-			memcpy(res->histogram_avg, ctx->histogram_avg, size);
-		}
-
+	if (ctx->histogram_size > 0)
 		kfree(ctx->histogram_min);
-	}
 
 	up(&ctx->nrt_mutex);
 
-	return err;
+	return ret;
 }
 
 static int rt_tmbench_ioctl_nrt(struct rtdm_fd *fd,
@@ -405,11 +448,11 @@ static int rt_tmbench_ioctl_nrt(struct rtdm_fd *fd,
 		err = rt_tmbench_start(fd, ctx, arg);
 		break;
 
-	case RTTST_RTIOC_TMBENCH_STOP:
+	COMPAT_CASE(RTTST_RTIOC_TMBENCH_STOP):
 		err = rt_tmbench_stop(ctx, arg);
 		break;
 	default:
-		err = -ENOTTY;
+		err = -EINVAL;
 	}
 
 	return err;

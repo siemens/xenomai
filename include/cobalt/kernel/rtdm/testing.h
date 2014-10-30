@@ -22,4 +22,20 @@
 #include <rtdm/rtdm.h>
 #include <rtdm/uapi/testing.h>
 
+#ifdef CONFIG_COMPAT
+
+#include <rtdm/compat.h>
+
+struct compat_rttst_overall_bench_res {
+	struct rttst_bench_res result;
+	compat_uptr_t histogram_avg;
+	compat_uptr_t histogram_min;
+	compat_uptr_t histogram_max;
+};
+
+#define RTTST_RTIOC_TMBENCH_STOP_COMPAT \
+	_IOWR(RTIOC_TYPE_TESTING, 0x11, struct compat_rttst_overall_bench_res)
+
+#endif	/* CONFIG_COMPAT */
+
 #endif /* !_COBALT_RTDM_TESTING_H */
