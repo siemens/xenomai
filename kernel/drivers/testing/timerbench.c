@@ -23,6 +23,7 @@
 #include <cobalt/kernel/arith.h>
 #include <rtdm/testing.h>
 #include <rtdm/driver.h>
+#include <rtdm/compat.h>
 
 MODULE_DESCRIPTION("Timer latency test helper");
 MODULE_AUTHOR("Jan Kiszka <jan.kiszka@web.de>");
