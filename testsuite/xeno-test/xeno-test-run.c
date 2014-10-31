@@ -470,6 +470,7 @@ void handle_script_child(struct child *child, fd_set *fds)
 void handle_load_child(struct child *child, fd_set *fds)
 {
 	struct child *next;
+	int ret;
 
 	if (FD_ISSET(child->out, fds))
 		copy(child->out, STDOUT_FILENO);
@@ -512,8 +513,10 @@ void handle_load_child(struct child *child, fd_set *fds)
 				fprintf(stderr, "pipe_in: %s\n", pipe_in_name);
 				script.in = open(pipe_in_name, O_WRONLY);
 			}
-			if (script.in != -1)
-				write(script.in, "0\n", 2);
+			if (script.in != -1) {
+				ret = write(script.in, "0\n", 2);
+				(void)ret;
+			}
 			termload_start = 0;
 		}
 	}

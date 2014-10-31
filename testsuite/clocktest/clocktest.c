@@ -102,8 +102,8 @@ static void show_hostrt_diagnostics(void)
 	printf("wall_to_monotonic_sec    : %lld\n",
 	       (unsigned long long)cobalt_vdso->hostrt_data.wtom_sec);
 	printf("wall_to_monotonic_nsec   : %u\n", cobalt_vdso->hostrt_data.wtom_nsec);
-	printf("cycle_last       : %Lu\n", cobalt_vdso->hostrt_data.cycle_last);
-	printf("mask             : 0x%Lx\n", cobalt_vdso->hostrt_data.mask);
+	printf("cycle_last       : %Lu\n", (long long)cobalt_vdso->hostrt_data.cycle_last);
+	printf("mask             : 0x%Lx\n", (long long)cobalt_vdso->hostrt_data.mask);
 	printf("mult             : %u\n", cobalt_vdso->hostrt_data.mult);
 	printf("shift            : %u\n\n", cobalt_vdso->hostrt_data.shift);
 }
@@ -115,7 +115,7 @@ static void show_realtime_offset(void)
 		return;
 	}
 
-	printf("Wallclock offset : %llu\n", cobalt_vdso->wallclock_offset);
+	printf("Wallclock offset : %llu\n", (long long)cobalt_vdso->wallclock_offset);
 }
 
 static inline uint64_t read_clock(clockid_t clock_id)
