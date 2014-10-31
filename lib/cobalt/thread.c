@@ -1035,9 +1035,8 @@ int sched_setconfig_np(int cpu, int policy,
  * @param policy scheduling policy to which the configuration data
  * applies. Currently, only SCHED_TP and SCHED_QUOTA are valid input.
  *
- * @param[in, out] info a pointer to a memory area for receiving the
- * configuration data. This area must be at least @a *len_r bytes
- * long.
+ * @param config a pointer to a memory area which receives the
+ * configuration settings upon success of this call.
  *
  * @par SCHED_TP specifics
  *

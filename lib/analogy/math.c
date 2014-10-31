@@ -418,7 +418,7 @@ void a4l_math_mean(double *pmean, double *val, unsigned nr)
 /**
  * @brief Calculate the standard deviation of an array of values
  *
- * @param[out] pstddevm Pointer to the resulting value
+ * @param[out] pstddev Pointer to the resulting value
  * @param[in] mean Mean value
  * @param[in] val Array of input values
  * @param[in] nr Number of array elements
