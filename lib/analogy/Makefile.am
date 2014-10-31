@@ -9,6 +9,7 @@ libanalogy_la_SOURCES =	\
 	internal.h	\
 	math.c		\
 	calibration.c	\
+	calibration.h	\
 	range.c		\
 	root_leaf.h	\
 	sync.c		\

@@ -17,7 +17,7 @@ CPPFLAGS = 						\
 
 LDFLAGS =
 
-noinst_HEADERS = wf_facilities.h
+noinst_HEADERS = wf_facilities.h analogy_calibrate.h calibration_ni_m.h
 
 noinst_LTLIBRARIES = libwaveform.la
 
