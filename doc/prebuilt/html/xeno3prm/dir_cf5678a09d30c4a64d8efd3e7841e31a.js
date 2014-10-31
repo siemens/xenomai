@@ -8,6 +8,7 @@ var dir_cf5678a09d30c4a64d8efd3e7841e31a =
     [ "bheap.h", "bheap_8h_source.html", null ],
     [ "bufd.h", "bufd_8h_source.html", null ],
     [ "clock.h", "include_2cobalt_2kernel_2clock_8h_source.html", null ],
+    [ "compat.h", "cobalt_2kernel_2compat_8h_source.html", null ],
     [ "heap.h", "include_2cobalt_2kernel_2heap_8h_source.html", null ],
     [ "init.h", "include_2cobalt_2kernel_2init_8h_source.html", null ],
     [ "intr.h", "intr_8h_source.html", null ],

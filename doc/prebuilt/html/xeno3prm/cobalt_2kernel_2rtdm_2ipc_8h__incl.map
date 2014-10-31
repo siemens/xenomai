@@ -1,6 +1,6 @@
 <map id="include/cobalt/kernel/rtdm/ipc.h" name="include/cobalt/kernel/rtdm/ipc.h">
-<area shape="rect" id="node5" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="398,179,487,205"/>
-<area shape="rect" id="node16" href="$rtdm_2uapi_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="481,96,588,123"/>
+<area shape="rect" id="node5" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="447,179,536,205"/>
+<area shape="rect" id="node16" href="$rtdm_2uapi_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="663,96,771,123"/>
 <area shape="rect" id="node6" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="5,269,64,296"/>
 <area shape="rect" id="node11" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="358,269,425,296"/>
 <area shape="rect" id="node12" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="451,269,533,296"/>
@@ -8,6 +8,7 @@
 <area shape="rect" id="node14" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="680,269,829,296"/>
 <area shape="rect" id="node15" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="853,269,971,296"/>
 <area shape="rect" id="node7" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="429,352,555,379"/>
-<area shape="rect" id="node17" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="981,171,1104,213"/>
+<area shape="rect" id="node17" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="770,171,893,213"/>
+<area shape="rect" id="node20" href="$include_2cobalt_2uapi_2kernel_2pipe_8h_source.html" title="cobalt/uapi/kernel\l/pipe.h" alt="" coords="918,171,1041,213"/>
 <area shape="rect" id="node19" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1115,262,1239,303"/>
 </map>

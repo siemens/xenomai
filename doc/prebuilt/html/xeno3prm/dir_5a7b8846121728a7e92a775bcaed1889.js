@@ -15,6 +15,7 @@ var dir_5a7b8846121728a7e92a775bcaed1889 =
     [ "sem.h", "kernel_2cobalt_2posix_2sem_8h_source.html", null ],
     [ "signal.h", "kernel_2cobalt_2posix_2signal_8h_source.html", null ],
     [ "syscall.h", "kernel_2cobalt_2posix_2syscall_8h_source.html", null ],
+    [ "syscall32.h", "posix_2syscall32_8h_source.html", null ],
     [ "thread.h", "kernel_2cobalt_2posix_2thread_8h_source.html", null ],
     [ "timer.h", "kernel_2cobalt_2posix_2timer_8h_source.html", null ],
     [ "timerfd.h", "kernel_2cobalt_2posix_2timerfd_8h_source.html", null ]

@@ -1,6 +1,6 @@
 <map id="include/rtdm/testing.h" name="include/rtdm/testing.h">
-<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="347,80,436,107"/>
-<area shape="rect" id="node13" href="$rtdm_2uapi_2testing_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header. " alt="" coords="461,80,592,107"/>
+<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="397,80,485,107"/>
+<area shape="rect" id="node13" href="$rtdm_2uapi_2testing_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header. " alt="" coords="768,80,899,107"/>
 <area shape="rect" id="node3" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="5,155,64,181"/>
 <area shape="rect" id="node8" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="358,155,425,181"/>
 <area shape="rect" id="node9" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="451,155,533,181"/>

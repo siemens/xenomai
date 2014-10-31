@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc1</span>
+   &#160;<span id="projectnumber">3.0-rc2</span>
    </div>
   </td>
  </tr>
@@ -114,76 +114,77 @@ $(document).ready(function(){initNavTree('include_2alchemy_2pipe_8h_source.html'
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define _XENOMAI_ALCHEMY_PIPE_H</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#gab3c99a1ac3ecd4d50be1b66be891a1db">   30</a></span>&#160;<span class="preprocessor">#define P_MINOR_AUTO    XNPIPE_MINOR_AUTO</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#ga5ec5fa58851654f7b9770fc25c53335d">   33</a></span>&#160;<span class="preprocessor">#define P_URGENT  0x1</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define P_NORMAL  0x0</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">struct </span>RT_PIPE {</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        uintptr_t handle;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;};</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_PIPE RT_PIPE;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5">rt_pipe_create</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                   <span class="keywordtype">int</span> minor, <span class="keywordtype">size_t</span> poolsize);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#ga1d84976a1b9b668366261ca9b836b677">rt_pipe_delete</a>(RT_PIPE *pipe);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                           <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size,</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                           <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e">   57</a></span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e">rt_pipe_read_until</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                           <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size, RTIME timeout)</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;{</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a>(pipe, buf, size,</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                                  alchemy_abs_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;}</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e">   66</a></span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e">rt_pipe_read</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                     <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size, RTIME timeout)</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;{</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a>(pipe, buf, size,</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                                  alchemy_rel_timeout(timeout, &amp;ts));</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;}</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#ga12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                      <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size, <span class="keywordtype">int</span> mode);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                       <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size);</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#gac732fe4dbc24f9c57a79b58817119048">rt_pipe_bind</a>(RT_PIPE *pipe,</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#ga77722465437c7d65241cc6823b5b6793">rt_pipe_unbind</a>(RT_PIPE *pipe);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_PIPE_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__alchemy__pipe_html_gabfa116f727ec6d1f9fd89df1332d210e"><div class="ttname"><a href="group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e">rt_pipe_read_until</a></div><div class="ttdeci">static ssize_t rt_pipe_read_until(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)</div><div class="ttdoc">Read from a pipe (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> pipe.h:57</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_gac732fe4dbc24f9c57a79b58817119048"><div class="ttname"><a href="group__alchemy__pipe.html#gac732fe4dbc24f9c57a79b58817119048">rt_pipe_bind</a></div><div class="ttdeci">int rt_pipe_bind(RT_PIPE *pipe, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:582</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_ga29521cc898afa0069963964955167aa5"><div class="ttname"><a href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5">rt_pipe_create</a></div><div class="ttdeci">int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)</div><div class="ttdoc">Create a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:131</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_ga12f801963d0db6aa60bc6cf92f65697a"><div class="ttname"><a href="group__alchemy__pipe.html#ga12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write</a></div><div class="ttdeci">ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)</div><div class="ttdoc">Write a message to a pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:479</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_ga1d84976a1b9b668366261ca9b836b677"><div class="ttname"><a href="group__alchemy__pipe.html#ga1d84976a1b9b668366261ca9b836b677">rt_pipe_delete</a></div><div class="ttdeci">int rt_pipe_delete(RT_PIPE *pipe)</div><div class="ttdoc">Delete a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:236</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_gad8edc920499d2c5c5d821ee7b9fa2bcd"><div class="ttname"><a href="group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a></div><div class="ttdeci">ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)</div><div class="ttdoc">Stream bytes through a pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:533</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_ga77722465437c7d65241cc6823b5b6793"><div class="ttname"><a href="group__alchemy__pipe.html#ga77722465437c7d65241cc6823b5b6793">rt_pipe_unbind</a></div><div class="ttdeci">int rt_pipe_unbind(RT_PIPE *pipe)</div><div class="ttdoc">Unbind from a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:604</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_ga62cb64807c2c843f8e8eebb2dc3a7d4e"><div class="ttname"><a href="group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e">rt_pipe_read</a></div><div class="ttdeci">static ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)</div><div class="ttdoc">Read from a pipe (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> pipe.h:66</div></div>
-<div class="ttc" id="group__alchemy__pipe_html_ga7dc073cf31f08531be5ae612864808c8"><div class="ttname"><a href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a></div><div class="ttdeci">ssize_t rt_pipe_read_timed(RT_PIPE *pipe, void *buf, size_t size, const struct timespec *abs_timeout)</div><div class="ttdoc">Read a message from a pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:365</div></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;cobalt/uapi/kernel/pipe.h&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;alchemy/timer.h&gt;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#gab3c99a1ac3ecd4d50be1b66be891a1db">   31</a></span>&#160;<span class="preprocessor">#define P_MINOR_AUTO    XNPIPE_MINOR_AUTO</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#ga5ec5fa58851654f7b9770fc25c53335d">   34</a></span>&#160;<span class="preprocessor">#define P_URGENT        XNPIPE_URGENT</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define P_NORMAL        XNPIPE_NORMAL</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">struct </span>RT_PIPE {</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        uintptr_t handle;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;};</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>RT_PIPE RT_PIPE;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5">rt_pipe_create</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                   <span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                   <span class="keywordtype">int</span> minor, <span class="keywordtype">size_t</span> poolsize);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#ga1d84976a1b9b668366261ca9b836b677">rt_pipe_delete</a>(RT_PIPE *pipe);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                           <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size,</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                           <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e">   58</a></span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e">rt_pipe_read_until</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                           <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size, RTIME timeout)</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;{</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a>(pipe, buf, size,</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                                  alchemy_abs_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;}</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e">   67</a></span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e">rt_pipe_read</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                     <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size, RTIME timeout)</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;{</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">struct </span>timespec ts;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a>(pipe, buf, size,</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                                  alchemy_rel_timeout(timeout, &amp;ts));</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#ga12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                      <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size, <span class="keywordtype">int</span> mode);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;ssize_t <a class="code" href="group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                       <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> size);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#gac732fe4dbc24f9c57a79b58817119048">rt_pipe_bind</a>(RT_PIPE *pipe,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                 <span class="keyword">const</span> <span class="keywordtype">char</span> *name, RTIME timeout);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__alchemy__pipe.html#ga77722465437c7d65241cc6823b5b6793">rt_pipe_unbind</a>(RT_PIPE *pipe);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _XENOMAI_ALCHEMY_PIPE_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__alchemy__pipe_html_gabfa116f727ec6d1f9fd89df1332d210e"><div class="ttname"><a href="group__alchemy__pipe.html#gabfa116f727ec6d1f9fd89df1332d210e">rt_pipe_read_until</a></div><div class="ttdeci">static ssize_t rt_pipe_read_until(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)</div><div class="ttdoc">Read from a pipe (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> pipe.h:58</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_gac732fe4dbc24f9c57a79b58817119048"><div class="ttname"><a href="group__alchemy__pipe.html#gac732fe4dbc24f9c57a79b58817119048">rt_pipe_bind</a></div><div class="ttdeci">int rt_pipe_bind(RT_PIPE *pipe, const char *name, RTIME timeout)</div><div class="ttdoc">Bind to a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:598</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_ga29521cc898afa0069963964955167aa5"><div class="ttname"><a href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5">rt_pipe_create</a></div><div class="ttdeci">int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)</div><div class="ttdoc">Create a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:132</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_ga12f801963d0db6aa60bc6cf92f65697a"><div class="ttname"><a href="group__alchemy__pipe.html#ga12f801963d0db6aa60bc6cf92f65697a">rt_pipe_write</a></div><div class="ttdeci">ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)</div><div class="ttdoc">Write a message to a pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:495</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_ga1d84976a1b9b668366261ca9b836b677"><div class="ttname"><a href="group__alchemy__pipe.html#ga1d84976a1b9b668366261ca9b836b677">rt_pipe_delete</a></div><div class="ttdeci">int rt_pipe_delete(RT_PIPE *pipe)</div><div class="ttdoc">Delete a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:252</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_gad8edc920499d2c5c5d821ee7b9fa2bcd"><div class="ttname"><a href="group__alchemy__pipe.html#gad8edc920499d2c5c5d821ee7b9fa2bcd">rt_pipe_stream</a></div><div class="ttdeci">ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)</div><div class="ttdoc">Stream bytes through a pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:549</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_ga77722465437c7d65241cc6823b5b6793"><div class="ttname"><a href="group__alchemy__pipe.html#ga77722465437c7d65241cc6823b5b6793">rt_pipe_unbind</a></div><div class="ttdeci">int rt_pipe_unbind(RT_PIPE *pipe)</div><div class="ttdoc">Unbind from a message pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:620</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_ga62cb64807c2c843f8e8eebb2dc3a7d4e"><div class="ttname"><a href="group__alchemy__pipe.html#ga62cb64807c2c843f8e8eebb2dc3a7d4e">rt_pipe_read</a></div><div class="ttdeci">static ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)</div><div class="ttdoc">Read from a pipe (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> pipe.h:67</div></div>
+<div class="ttc" id="group__alchemy__pipe_html_ga7dc073cf31f08531be5ae612864808c8"><div class="ttname"><a href="group__alchemy__pipe.html#ga7dc073cf31f08531be5ae612864808c8">rt_pipe_read_timed</a></div><div class="ttdeci">ssize_t rt_pipe_read_timed(RT_PIPE *pipe, void *buf, size_t size, const struct timespec *abs_timeout)</div><div class="ttdoc">Read a message from a pipe. </div><div class="ttdef"><b>Definition:</b> pipe.c:381</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

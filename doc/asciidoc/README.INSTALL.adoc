@@ -88,15 +88,15 @@ located at `/home/me/linux-3.10-ipipe` in order to patch the Xenomai
 support in:
 
 ------------------------------------------------------------------------------
-$ cd xenomai-forge
+$ cd xenomai-3
 $ scripts/prepare-kernel.sh --linux=/home/me/linux-3.10
 ------------------------------------------------------------------------------
 
 Note: The script will infer the location of the Xenomai kernel code
 from its own location within the Xenomai source tree. For instance, if
-`/home/me/xenomai-forge/scripts/prepare-kernel.sh` is executing, then
+`/home/me/xenomai-3/scripts/prepare-kernel.sh` is executing, then
 the Xenomai kernel code available from
-`/home/me/xenomai-forge/kernel/cobalt` will be patched in the target
+`/home/me/xenomai-3/kernel/cobalt` will be patched in the target
 Linux kernel.
 
 

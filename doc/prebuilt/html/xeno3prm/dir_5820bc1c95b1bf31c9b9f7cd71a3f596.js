@@ -1,6 +1,8 @@
 var dir_5820bc1c95b1bf31c9b9f7cd71a3f596 =
 [
     [ "async.c", "async_8c.html", "async_8c" ],
+    [ "calibration.c", "calibration_8c.html", "calibration_8c" ],
+    [ "calibration.h", "lib_2analogy_2calibration_8h.html", null ],
     [ "descriptor.c", "descriptor_8c.html", "descriptor_8c" ],
     [ "info.c", "info_8c.html", null ],
     [ "internal.h", "lib_2analogy_2internal_8h.html", null ],

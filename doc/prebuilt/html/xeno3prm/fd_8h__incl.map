@@ -1,8 +1,10 @@
 <map id="include/cobalt/kernel/rtdm/fd.h" name="include/cobalt/kernel/rtdm/fd.h">
-<area shape="rect" id="node5" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="324,96,457,123"/>
-<area shape="rect" id="node8" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="464,171,611,197"/>
-<area shape="rect" id="node9" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="194,245,333,272"/>
-<area shape="rect" id="node12" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="482,245,651,272"/>
-<area shape="rect" id="node11" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="277,321,400,362"/>
-<area shape="rect" id="node15" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="669,321,792,362"/>
+<area shape="rect" id="node5" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="1165,96,1299,123"/>
+<area shape="rect" id="node16" href="$kernel_2cobalt_2include_2asm-generic_2xenomai_2syscall_8h_source.html" title="asm&#45;generic/xenomai\l/syscall.h" alt="" coords="631,171,777,213"/>
+<area shape="rect" id="node8" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="1355,179,1501,205"/>
+<area shape="rect" id="node9" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="1115,269,1255,296"/>
+<area shape="rect" id="node12" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="1357,269,1525,296"/>
+<area shape="rect" id="node11" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="1123,353,1247,394"/>
+<area shape="rect" id="node15" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1393,353,1516,394"/>
+<area shape="rect" id="node21" href="$include_2cobalt_2uapi_2asm-generic_2syscall_8h_source.html" title="cobalt/uapi/asm&#45;generic\l/syscall.h" alt="" coords="125,262,285,303"/>
 </map>

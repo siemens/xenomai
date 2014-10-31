@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc1</span>
+   &#160;<span id="projectnumber">3.0-rc2</span>
    </div>
   </td>
  </tr>
@@ -138,7 +138,7 @@ $(document).ready(function(){initNavTree('current_8h_source.html','');});
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        <span class="keywordflow">return</span> cobalt_get_current();</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;}</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> cobalt_get_current_mode(<span class="keywordtype">void</span>)</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> cobalt_get_current_mode(<span class="keywordtype">void</span>)</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;{</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keywordflow">return</span> cobalt_current_window ? cobalt_current_window-&gt;state : <a class="code" href="group__cobalt__core__thread__states.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;}</div>
@@ -168,7 +168,7 @@ $(document).ready(function(){initNavTree('current_8h_source.html','');});
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordflow">return</span> (xnhandle_t)(uintptr_t)val ?: XN_NO_HANDLE;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;}</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> cobalt_get_current_mode(<span class="keywordtype">void</span>)</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> cobalt_get_current_mode(<span class="keywordtype">void</span>)</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;{</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        <span class="keyword">struct </span>xnthread_user_window *window;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>

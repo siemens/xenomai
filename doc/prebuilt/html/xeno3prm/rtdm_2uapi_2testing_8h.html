@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc1</span>
+   &#160;<span id="projectnumber">3.0-rc2</span>
    </div>
   </td>
  </tr>
@@ -97,6 +97,11 @@ $(document).ready(function(){initNavTree('rtdm_2uapi_2testing_8h.html','');});
 <p>Real-Time Driver Model for Xenomai, testing device profile header.  
 <a href="#details">More...</a></p>
 <div class="textblock"><div class="dynheader">
+Include dependency graph for testing.h:</div>
+<div class="dyncontent">
+<div class="center"><img src="rtdm_2uapi_2testing_8h__incl.png" border="0" usemap="#include_2rtdm_2uapi_2testing_8h" alt=""/></div>
+</div>
+</div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="rtdm_2uapi_2testing_8h__dep__incl.png" border="0" usemap="#include_2rtdm_2uapi_2testing_8hdep" alt=""/></div>
@@ -137,26 +142,11 @@ Macros</h2></td></tr>
 <tr class="memitem:a3a6aa438f3480c5cfd559bae646fd6c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a6aa438f3480c5cfd559bae646fd6c9"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_TMBENCH_STOP</b>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_TESTING, 0x11, struct rttst_overall_bench_res)</td></tr>
 <tr class="separator:a3a6aa438f3480c5cfd559bae646fd6c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80ee2761ec798ab8b98e588e477bae86"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80ee2761ec798ab8b98e588e477bae86"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_START</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x20, struct rttst_irqbench_config)</td></tr>
-<tr class="separator:a80ee2761ec798ab8b98e588e477bae86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79d687f3b7425403d6f63814372c6751"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79d687f3b7425403d6f63814372c6751"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_STOP</b>&#160;&#160;&#160;_IO(RTIOC_TYPE_TESTING, 0x21)</td></tr>
-<tr class="separator:a79d687f3b7425403d6f63814372c6751"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a699d1af924bcd5ebdb259d73e1212cbf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a699d1af924bcd5ebdb259d73e1212cbf"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_GET_STATS</b>&#160;&#160;&#160;_IOR(RTIOC_TYPE_TESTING, 0x22, struct rttst_irqbench_stats)</td></tr>
-<tr class="separator:a699d1af924bcd5ebdb259d73e1212cbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6ac7d85db5e378dfd407ca74af85cb0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6ac7d85db5e378dfd407ca74af85cb0"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_WAIT_IRQ</b>&#160;&#160;&#160;_IO(RTIOC_TYPE_TESTING, 0x23)</td></tr>
-<tr class="separator:aa6ac7d85db5e378dfd407ca74af85cb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab312848d08eb3c0ffc337ecd6b4e8919"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab312848d08eb3c0ffc337ecd6b4e8919"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_IRQBENCH_REPLY_IRQ</b>&#160;&#160;&#160;_IO(RTIOC_TYPE_TESTING, 0x24)</td></tr>
-<tr class="separator:ab312848d08eb3c0ffc337ecd6b4e8919"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fcf523eca17ee2d8467e6018909f733"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4fcf523eca17ee2d8467e6018909f733"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_TASKS_COUNT</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x30, unsigned long)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_TASKS_COUNT</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x30, __u32)</td></tr>
 <tr class="separator:a4fcf523eca17ee2d8467e6018909f733"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf5a77dd38fef5d00bf508b96b02a117"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf5a77dd38fef5d00bf508b96b02a117"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_CPU</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x31, unsigned long)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_CPU</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x31, __u32)</td></tr>
 <tr class="separator:adf5a77dd38fef5d00bf508b96b02a117"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab06929491f45468bde2c1dfc2a58b913"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab06929491f45468bde2c1dfc2a58b913"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_REGISTER_UTASK</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x32, struct rttst_swtest_task)</td></tr>
@@ -171,16 +161,16 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SWITCH_TO</b>&#160;&#160;&#160;_IOR(RTIOC_TYPE_TESTING, 0x35, struct rttst_swtest_dir)</td></tr>
 <tr class="separator:a3202a6a45d624510077fe3093fa25f84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43f9ce056c9bf113184243fbbec0f491"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43f9ce056c9bf113184243fbbec0f491"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT</b>&#160;&#160;&#160;_IOR(RTIOC_TYPE_TESTING, 0x36, unsigned long)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT</b>&#160;&#160;&#160;_IOR(RTIOC_TYPE_TESTING, 0x36, __u32)</td></tr>
 <tr class="separator:a43f9ce056c9bf113184243fbbec0f491"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3d4281f36fb500b72ff40259ddf6860"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab3d4281f36fb500b72ff40259ddf6860"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_GET_LAST_ERROR</b>&#160;&#160;&#160;_IOR(RTIOC_TYPE_TESTING, 0x37, struct rttst_swtest_error)</td></tr>
 <tr class="separator:ab3d4281f36fb500b72ff40259ddf6860"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ec32f05bb6fec31866afa407bdca0f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ec32f05bb6fec31866afa407bdca0f6"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_PAUSE</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x38, unsigned long)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_SWTEST_SET_PAUSE</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x38, __u32)</td></tr>
 <tr class="separator:a7ec32f05bb6fec31866afa407bdca0f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cfc4de48b18728a59ec49f45054a426"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5cfc4de48b18728a59ec49f45054a426"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_RTDM_DEFER_CLOSE</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x40, unsigned long)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>RTTST_RTIOC_RTDM_DEFER_CLOSE</b>&#160;&#160;&#160;_IOW(RTIOC_TYPE_TESTING, 0x40, __u32)</td></tr>
 <tr class="separator:a5cfc4de48b18728a59ec49f45054a426"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

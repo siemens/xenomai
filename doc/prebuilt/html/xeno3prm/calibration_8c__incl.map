@@ -1,0 +1,18 @@
+<map id="lib/analogy/calibration.c" name="lib/analogy/calibration.c">
+<area shape="rect" id="node4" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="106,155,164,181"/>
+<area shape="rect" id="node7" href="$analogy_8h.html" title="Analogy for Linux, library facilities. " alt="" coords="350,80,458,107"/>
+<area shape="rect" id="node8" href="$stdio_8h_source.html" title="stdio.h" alt="" coords="282,155,343,181"/>
+<area shape="rect" id="node13" href="$boilerplate_2list_8h_source.html" title="boilerplate/list.h" alt="" coords="622,155,735,181"/>
+<area shape="rect" id="node30" href="$lib_2analogy_2calibration_8h.html" title="Analogy for Linux, internal calibration declarations. " alt="" coords="780,80,871,107"/>
+<area shape="rect" id="node5" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="56,237,182,264"/>
+<area shape="rect" id="node12" href="$uapi_2analogy_8h.html" title="Analogy for Linux, UAPI bits. " alt="" coords="367,155,503,181"/>
+<area shape="rect" id="node14" href="$assert_8h_source.html" title="assert.h" alt="" coords="776,237,846,264"/>
+<area shape="rect" id="node23" href="$scope_8h_source.html" title="boilerplate/scope.h" alt="" coords="451,237,582,264"/>
+<area shape="rect" id="node25" href="$compiler_8h_source.html" title="boilerplate/compiler.h" alt="" coords="606,237,751,264"/>
+<area shape="rect" id="node26" href="$shared-list_8h_source.html" title="boilerplate/shared\l&#45;list.h" alt="" coords="870,230,994,271"/>
+<area shape="rect" id="node27" href="$private-list_8h_source.html" title="boilerplate/private\l&#45;list.h" alt="" coords="1018,230,1142,271"/>
+<area shape="rect" id="node15" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="706,320,846,347"/>
+<area shape="rect" id="node19" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="964,320,1132,347"/>
+<area shape="rect" id="node18" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="789,395,912,437"/>
+<area shape="rect" id="node22" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1181,395,1304,437"/>
+</map>

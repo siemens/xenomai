@@ -1,6 +1,6 @@
 <map id="include/rtdm/ipc.h" name="include/rtdm/ipc.h">
-<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="397,163,485,189"/>
-<area shape="rect" id="node13" href="$rtdm_2uapi_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="479,80,587,107"/>
+<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="447,163,536,189"/>
+<area shape="rect" id="node13" href="$rtdm_2uapi_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="715,80,823,107"/>
 <area shape="rect" id="node3" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="5,253,64,280"/>
 <area shape="rect" id="node8" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="358,253,425,280"/>
 <area shape="rect" id="node9" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="451,253,533,280"/>
@@ -8,6 +8,7 @@
 <area shape="rect" id="node11" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="680,253,829,280"/>
 <area shape="rect" id="node12" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="853,253,971,280"/>
 <area shape="rect" id="node4" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="429,336,555,363"/>
-<area shape="rect" id="node14" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="981,155,1104,197"/>
+<area shape="rect" id="node14" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="770,155,893,197"/>
+<area shape="rect" id="node17" href="$include_2cobalt_2uapi_2kernel_2pipe_8h_source.html" title="cobalt/uapi/kernel\l/pipe.h" alt="" coords="918,155,1041,197"/>
 <area shape="rect" id="node16" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1115,246,1239,287"/>
 </map>

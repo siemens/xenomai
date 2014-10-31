@@ -980,10 +980,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-3.0-rc1. Functionally speaking, only the former <em>master</em> time base
+3.0-rc2. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 3.0-rc1 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 3.0-rc2 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -2489,6 +2489,12 @@ A Cobalt replacement for mmap(2) has been introduced. The
 </li>
 <li>
 <p>
+A Cobalt replacement for fcntl(2) has been introduced. The
+  implementation currently deals with the O_NONBLOCK flag exclusively.
+</p>
+</li>
+<li>
+<p>
 Cobalt&#8217;s select(2) service is not automatically restarted anymore
   upon Linux signal receipt, conforming to the POSIX standard (see man
   signal(7)). In such an event, -1 is returned and errno is set to
@@ -3080,6 +3086,15 @@ field <code>active</code> has been added, to reflect the current state of
 <div class="ulist"><ul>
 <li>
 <p>
+<code>rt_pipe_create()</code> now returns the minor number assigned to the
+  connection, matching the /dev/rtp&lt;minor&gt; device usable by the
+  regular threads. As a consequence of this, any return value higher
+  or equal to zero denotes a successful operation, a negative return
+  denotes an error.
+</p>
+</li>
+<li>
+<p>
 Writing to a message pipe is allowed from all contexts, including
   from alarm handlers.
 </p>
@@ -3221,7 +3236,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-04 18:47:11 CEST
+Last updated 2014-10-31 12:36:14 CET
 </div>
 </div>
 </body>

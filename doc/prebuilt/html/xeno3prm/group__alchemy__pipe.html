@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc1</span>
+   &#160;<span id="projectnumber">3.0-rc2</span>
    </div>
   </td>
  </tr>
@@ -107,7 +107,7 @@ Macros</h2></td></tr>
 <tr class="memitem:gab3c99a1ac3ecd4d50be1b66be891a1db"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__pipe.html#gab3c99a1ac3ecd4d50be1b66be891a1db">P_MINOR_AUTO</a>&#160;&#160;&#160;XNPIPE_MINOR_AUTO</td></tr>
 <tr class="memdesc:gab3c99a1ac3ecd4d50be1b66be891a1db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creation flags.  <a href="#gab3c99a1ac3ecd4d50be1b66be891a1db">More...</a><br/></td></tr>
 <tr class="separator:gab3c99a1ac3ecd4d50be1b66be891a1db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5ec5fa58851654f7b9770fc25c53335d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__pipe.html#ga5ec5fa58851654f7b9770fc25c53335d">P_URGENT</a>&#160;&#160;&#160;0x1</td></tr>
+<tr class="memitem:ga5ec5fa58851654f7b9770fc25c53335d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__pipe.html#ga5ec5fa58851654f7b9770fc25c53335d">P_URGENT</a>&#160;&#160;&#160;XNPIPE_URGENT</td></tr>
 <tr class="memdesc:ga5ec5fa58851654f7b9770fc25c53335d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Operation flags.  <a href="#ga5ec5fa58851654f7b9770fc25c53335d">More...</a><br/></td></tr>
 <tr class="separator:ga5ec5fa58851654f7b9770fc25c53335d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -160,6 +160,8 @@ Functions</h2></td></tr>
 
 <p>Creation flags. </p>
 
+<p>Referenced by <a class="el" href="group__alchemy__pipe.html#ga29521cc898afa0069963964955167aa5">rt_pipe_create()</a>.</p>
+
 </div>
 </div>
 <a class="anchor" id="ga5ec5fa58851654f7b9770fc25c53335d"></a>
@@ -167,7 +169,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define P_URGENT&#160;&#160;&#160;0x1</td>
+          <td class="memname">#define P_URGENT&#160;&#160;&#160;XNPIPE_URGENT</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -285,7 +287,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The <em>minor</em> number assigned to the connection is returned upon success. Otherwise:</dd></dl>
 <ul>
 <li>-ENOMEM is returned if the system fails to get memory from the main heap in order to create the pipe.</li>
 <li>-ENODEV is returned if <em>minor</em> is different from P_MINOR_AUTO and is not a valid minor number.</li>
@@ -295,7 +297,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
-<p>References <a class="el" href="group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>, <a class="el" href="structrtipc__port__label.html#a24cdc7d42efdcf42b76e4fbfe8b238e9">rtipc_port_label::label</a>, <a class="el" href="structsockaddr__ipc.html#a34159a73aefb7bde8064259a058599bb">sockaddr_ipc::sipc_family</a>, <a class="el" href="structsockaddr__ipc.html#a03b5a7ead5dab3968fc543aaee649dd2">sockaddr_ipc::sipc_port</a>, <a class="el" href="group__rtdm__ipc.html#ga61a2c99e1588e761aff890c27df6e5bd">XDDP_BUFSZ</a>, <a class="el" href="group__rtdm__ipc.html#gaf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>, and <a class="el" href="group__rtdm__ipc.html#ga40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>.</p>
+<p>References <a class="el" href="group__rtdm__ipc.html#ggaac34dfe6c6b73b43a4656c9dce041034a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>, <a class="el" href="structrtipc__port__label.html#a24cdc7d42efdcf42b76e4fbfe8b238e9">rtipc_port_label::label</a>, <a class="el" href="group__alchemy__pipe.html#gab3c99a1ac3ecd4d50be1b66be891a1db">P_MINOR_AUTO</a>, <a class="el" href="structsockaddr__ipc.html#a34159a73aefb7bde8064259a058599bb">sockaddr_ipc::sipc_family</a>, <a class="el" href="structsockaddr__ipc.html#a03b5a7ead5dab3968fc543aaee649dd2">sockaddr_ipc::sipc_port</a>, <a class="el" href="group__rtdm__ipc.html#ga61a2c99e1588e761aff890c27df6e5bd">XDDP_BUFSZ</a>, <a class="el" href="group__rtdm__ipc.html#gaf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>, and <a class="el" href="group__rtdm__ipc.html#ga40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>.</p>
 
 </div>
 </div>

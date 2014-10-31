@@ -1355,6 +1355,9 @@ is subject to change with ABI revisions.
   from the appropriate RTDM driver the file descriptor is connected
   to.
 
+- A Cobalt replacement for fcntl(2) has been introduced. The
+  implementation currently deals with the O_NONBLOCK flag exclusively.
+
 - Cobalt's select(2) service is not automatically restarted anymore
   upon Linux signal receipt, conforming to the POSIX standard (see man
   signal(7)). In such an event, -1 is returned and errno is set to
@@ -1668,6 +1671,12 @@ An emulation of rt_alarm_wait() is available from the
 <<trank,Transition Kit>>.
 
 === Message pipes ===
+
+- +rt_pipe_create()+ now returns the minor number assigned to the
+  connection, matching the /dev/rtp<minor> device usable by the
+  regular threads. As a consequence of this, any return value higher
+  or equal to zero denotes a successful operation, a negative return
+  denotes an error.
 
 - Writing to a message pipe is allowed from all contexts, including
   from alarm handlers.

@@ -33,7 +33,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc1</span>
+   &#160;<span id="projectnumber">3.0-rc2</span>
    </div>
   </td>
  </tr>
@@ -134,7 +134,7 @@ $(document).ready(function(){initNavTree('x86_2include_2asm_2xenomai_2uapi_2fpte
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                        <span class="stringliteral">&quot;vmovupd %0,%%ymm5;&quot;</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                        <span class="stringliteral">&quot;vmovupd %0,%%ymm6;&quot;</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                        <span class="stringliteral">&quot;vmovupd %0,%%ymm7;&quot;</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                        : : <span class="stringliteral">&quot;m&quot;</span> (vec[0]));</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                        : : <span class="stringliteral">&quot;m&quot;</span>(vec[0]), <span class="stringliteral">&quot;m&quot;</span>(vec[1]), <span class="stringliteral">&quot;m&quot;</span>(vec[2]), <span class="stringliteral">&quot;m&quot;</span>(vec[3]));</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (features &amp; __COBALT_HAVE_SSE2) {</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                __asm__ __volatile__(</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                        <span class="stringliteral">&quot;movupd %0,%%xmm0;&quot;</span></div>
@@ -145,7 +145,7 @@ $(document).ready(function(){initNavTree('x86_2include_2asm_2xenomai_2uapi_2fpte
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                        <span class="stringliteral">&quot;movupd %0,%%xmm5;&quot;</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                        <span class="stringliteral">&quot;movupd %0,%%xmm6;&quot;</span></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                        <span class="stringliteral">&quot;movupd %0,%%xmm7;&quot;</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                        : : <span class="stringliteral">&quot;m&quot;</span> (vec[0]));</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                        : : <span class="stringliteral">&quot;m&quot;</span>(vec[0]), <span class="stringliteral">&quot;m&quot;</span>(vec[1]), <span class="stringliteral">&quot;m&quot;</span>(vec[2]), <span class="stringliteral">&quot;m&quot;</span>(vec[3]));</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        }</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;}</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>

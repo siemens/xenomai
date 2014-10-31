@@ -4,6 +4,7 @@ var dir_6fb3c96f30c05412f9e8266f1a1cbdee =
     [ "autotune.h", "cobalt_2kernel_2rtdm_2autotune_8h_source.html", null ],
     [ "can.h", "cobalt_2kernel_2rtdm_2can_8h.html", null ],
     [ "cobalt.h", "kernel_2rtdm_2cobalt_8h.html", null ],
+    [ "compat.h", "cobalt_2kernel_2rtdm_2compat_8h_source.html", null ],
     [ "driver.h", "driver_8h.html", "driver_8h" ],
     [ "fd.h", "fd_8h.html", "fd_8h" ],
     [ "ipc.h", "cobalt_2kernel_2rtdm_2ipc_8h.html", null ],
