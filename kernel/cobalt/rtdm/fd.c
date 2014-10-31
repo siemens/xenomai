@@ -118,7 +118,7 @@ static struct rtdm_fd *fetch_fd(struct cobalt_ppd *p, int ufd)
 		}							\
 	while (0)
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 
 static inline void set_compat_bit(struct rtdm_fd *fd)
 {
@@ -133,13 +133,13 @@ static inline void set_compat_bit(struct rtdm_fd *fd)
 	}
 }
 
-#else	/* !CONFIG_COMPAT */
+#else	/* !CONFIG_XENO_ARCH_SYS3264 */
 
 static inline void set_compat_bit(struct rtdm_fd *fd)
 {
 }
 
-#endif	/* !CONFIG_COMPAT */
+#endif	/* !CONFIG_XENO_ARCH_SYS3264 */
 
 int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 		  struct rtdm_fd_ops *ops)

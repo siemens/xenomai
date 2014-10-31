@@ -73,7 +73,7 @@ int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd))
 		return sys32_get_iovec(iov,
 			       (struct compat_iovec __user *)msg->msg_iov,
@@ -93,7 +93,7 @@ int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd))
 		return sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
 				       iov, msg->msg_iovlen);
@@ -123,7 +123,7 @@ int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		struct compat_rtdm_setsockaddr_args csreq;
 		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
@@ -179,7 +179,7 @@ int rtipc_put_sockaddr(struct rtdm_fd *fd, void *arg,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		struct compat_rtdm_getsockaddr_args csreq;
 		ret = rtdm_safe_copy_from_user(fd, &csreq, arg, sizeof(csreq));
@@ -234,7 +234,7 @@ int rtipc_get_sockoptout(struct rtdm_fd *fd, struct _rtdm_getsockopt_args *sopt,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		struct compat_rtdm_getsockopt_args csopt;
 		int ret;
@@ -260,7 +260,7 @@ int rtipc_put_sockoptout(struct rtdm_fd *fd, void *arg,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		struct compat_rtdm_getsockopt_args csopt;
 		int ret;
@@ -286,7 +286,7 @@ int rtipc_get_sockoptin(struct rtdm_fd *fd, struct _rtdm_setsockopt_args *sopt,
 		return 0;
 	}
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		struct compat_rtdm_setsockopt_args csopt;
 		int ret;
@@ -307,7 +307,7 @@ int rtipc_get_sockoptin(struct rtdm_fd *fd, struct _rtdm_setsockopt_args *sopt,
 int rtipc_get_timeval(struct rtdm_fd *fd, struct timeval *tv,
 		      const void *arg, size_t arglen)
 {
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		if (arglen != sizeof(struct compat_timeval))
 			return -EINVAL;
@@ -329,7 +329,7 @@ int rtipc_get_timeval(struct rtdm_fd *fd, struct timeval *tv,
 int rtipc_put_timeval(struct rtdm_fd *fd, void *arg,
 		      const struct timeval *tv, size_t arglen)
 {
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		if (arglen != sizeof(struct compat_timeval))
 			return -EINVAL;
@@ -351,7 +351,7 @@ int rtipc_put_timeval(struct rtdm_fd *fd, void *arg,
 int rtipc_get_length(struct rtdm_fd *fd, size_t *lenp,
 		     const void *arg, size_t arglen)
 {
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	if (rtdm_fd_is_compat(fd)) {
 		const compat_size_t *csz;
 		if (arglen != sizeof(*csz))

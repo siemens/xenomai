@@ -300,7 +300,7 @@ struct rtdm_fd {
 	unsigned int refs;
 	int minor;
 	int oflags;
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	int compat;
 #endif
 	struct list_head cleanup;
@@ -330,7 +330,7 @@ static inline int rtdm_fd_flags(const struct rtdm_fd *fd)
 	return fd->oflags;
 }
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 static inline int rtdm_fd_is_compat(const struct rtdm_fd *fd)
 {
 	return fd->compat;

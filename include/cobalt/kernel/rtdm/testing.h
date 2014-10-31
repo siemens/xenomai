@@ -22,7 +22,7 @@
 #include <rtdm/rtdm.h>
 #include <rtdm/uapi/testing.h>
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 
 #include <rtdm/compat.h>
 
@@ -36,6 +36,6 @@ struct compat_rttst_overall_bench_res {
 #define RTTST_RTIOC_TMBENCH_STOP_COMPAT \
 	_IOWR(RTIOC_TYPE_TESTING, 0x11, struct compat_rttst_overall_bench_res)
 
-#endif	/* CONFIG_COMPAT */
+#endif	/* CONFIG_XENO_ARCH_SYS3264 */
 
 #endif /* !_COBALT_RTDM_TESTING_H */

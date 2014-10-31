@@ -361,7 +361,7 @@ static int user_copy_results(struct rt_tmbench_context *ctx,
 	return 0;
 }
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 
 static int compat_user_copy_results(struct rt_tmbench_context *ctx,
 				    struct compat_rttst_overall_bench_res __user *u_res)
@@ -390,7 +390,7 @@ static int compat_user_copy_results(struct rt_tmbench_context *ctx,
 	return 0;
 }
 
-#endif /* CONFIG_COMPAT */
+#endif /* CONFIG_XENO_ARCH_SYS3264 */
 
 static int rt_tmbench_stop(struct rt_tmbench_context *ctx, void *u_res)
 {
@@ -419,7 +419,7 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx, void *u_res)
 		    ctx->result.overall.test_loops : 2) - 1);
 
 	if (rtdm_fd_is_user(fd)) {
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 		if (rtdm_fd_is_compat(fd))
 			ret = compat_user_copy_results(ctx, u_res);
 		else

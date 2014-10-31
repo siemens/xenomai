@@ -18,7 +18,7 @@
 #ifndef _COBALT_KERNEL_COMPAT_H
 #define _COBALT_KERNEL_COMPAT_H
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 
 #include <linux/compat.h>
 #include <net/compat.h>
@@ -148,6 +148,6 @@ int sys32_put_iovec(struct compat_iovec __user *u_ciov,
 		    const struct iovec *iov,
 		    int iovlen);
 
-#endif /* CONFIG_COMPAT */
+#endif /* CONFIG_XENO_ARCH_SYS3264 */
 
 #endif /* !_COBALT_KERNEL_COMPAT_H */

@@ -18,7 +18,7 @@
 #ifndef _COBALT_RTDM_COMPAT_H
 #define _COBALT_RTDM_COMPAT_H
 
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 
 #include <cobalt/kernel/compat.h>
 #include <rtdm/rtdm.h>
@@ -64,11 +64,11 @@ struct compat_rtdm_setsockaddr_args {
 
 #define __COMPAT_CASE(__op)		: case __op
 
-#else	/* !CONFIG_COMPAT */
+#else	/* !CONFIG_XENO_ARCH_SYS3264 */
 
 #define __COMPAT_CASE(__op)
 
-#endif	/* !CONFIG_COMPAT */
+#endif	/* !CONFIG_XENO_ARCH_SYS3264 */
 
 #define COMPAT_CASE(__op)	case __op __COMPAT_CASE(__op  ## _COMPAT)
 

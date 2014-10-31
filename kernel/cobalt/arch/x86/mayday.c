@@ -25,7 +25,7 @@
 #include <asm/ptrace.h>
 
 static void *mayday;
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 static void *mayday_compat;
 #endif
 
@@ -105,7 +105,7 @@ int xnarch_init_mayday(void)
 	setup_mayday32(mayday);
 #else
 	setup_mayday64(mayday);
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	mayday_compat = vmalloc(PAGE_SIZE);
 	if (mayday_compat == NULL) {
 		vfree(mayday);
@@ -120,14 +120,14 @@ int xnarch_init_mayday(void)
 void xnarch_cleanup_mayday(void)
 {
 	vfree(mayday);
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_XENO_ARCH_SYS3264
 	vfree(mayday_compat);
 #endif
 }
 
 void *xnarch_get_mayday_page(void)
 {
-#if defined(CONFIG_X86_32) || !defined(CONFIG_COMPAT)
+#if defined(CONFIG_X86_32) || !defined(CONFIG_XENO_ARCH_SYS3264)
 	return mayday;
 #else
 	return test_thread_flag(TIF_IA32) ? mayday_compat : mayday;
