@@ -246,7 +246,7 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	xnticks_t tslice;
-	int ret;
+	int ret = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
