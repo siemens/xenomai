@@ -30,7 +30,7 @@ static unsigned int tsc_scale, tsc_shift;
 static struct xnarch_u32frac tsc_frac;
 static struct xnarch_u32frac bln_frac;
 
-long long cobalt_ns_to_ticks(long long ns)
+xnsticks_t cobalt_ns_to_ticks(xnsticks_t ns)
 {
 	return xnarch_nodiv_llimd(ns, tsc_frac.frac, tsc_frac.integ);
 }
@@ -53,7 +53,7 @@ unsigned long long cobalt_divrem_billion(unsigned long long value,
 
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
 
-long long cobalt_ns_to_ticks(long long ns)
+xnsticks_t cobalt_ns_to_ticks(xnsticks_t ns)
 {
 	return xnarch_llimd(ns, 1 << tsc_shift, tsc_scale);
 }
