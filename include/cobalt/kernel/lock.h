@@ -102,10 +102,6 @@ struct xnlockinfo {
 
 void xnlock_dbg_prepare_acquire(unsigned long long *start);
 void xnlock_dbg_prepare_spin(unsigned int *spin_limit);
-void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
-			 unsigned int *spin_limit,
-			 const char *file, int line,
-			 const char *function);
 void xnlock_dbg_acquired(struct xnlock *lock, int cpu,
 			 unsigned long long *start,
 			 const char *file, int line,
@@ -140,11 +136,6 @@ void xnlock_dbg_prepare_acquire(unsigned long long *start)
 
 static inline
 void xnlock_dbg_prepare_spin(unsigned int *spin_limit)
-{
-}
-
-static inline void
-xnlock_dbg_spinning(struct xnlock *lock, int cpu, unsigned int *spin_limit)
 {
 }
 

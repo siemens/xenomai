@@ -536,38 +536,11 @@ static inline void init_thread_relax_trace(struct xnthread *thread)
 
 #if XENO_DEBUG(LOCKING)
 
-#define XNLOCK_DBG_MAX_SPINS		10000000
-
 void xnlock_dbg_prepare_acquire(unsigned long long *start)
 {
 	*start = xnclock_read_raw(&nkclock);
 }
 EXPORT_SYMBOL_GPL(xnlock_dbg_prepare_acquire);
-
-void xnlock_dbg_prepare_spin(unsigned *spin_limit)
-{
-	*spin_limit = XNLOCK_DBG_MAX_SPINS;
-}
-EXPORT_SYMBOL_GPL(xnlock_dbg_prepare_spin);
-
-void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
-			 unsigned int *spin_limit,
-			 const char *file, int line, const char *function)
-{
-	if (--*spin_limit == 0) {
-		ipipe_prepare_panic();
-		printk(XENO_ERR "stuck on lock %p\n"
-				"           waiter = %s:%u (%s(), CPU #%d)\n"
-				"           owner  = %s:%u (%s(), CPU #%d)\n",
-		       lock, file, line, function, cpu,
-		       lock->file, lock->line, lock->function, lock->cpu);
-		show_stack(NULL, NULL);
-#ifndef CONFIG_SMP
-		BUG();
-#endif
-	}
-}
-EXPORT_SYMBOL_GPL(xnlock_dbg_spinning);
 
 void xnlock_dbg_acquired(struct xnlock *lock, int cpu, unsigned long long *start,
 			 const char *file, int line, const char *function)
