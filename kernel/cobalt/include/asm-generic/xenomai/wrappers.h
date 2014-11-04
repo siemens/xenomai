@@ -48,4 +48,9 @@
 #define get_current_uuid() from_kuid_munged(current_user_ns(), current_uid())
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+#define smp_mb__before_atomic()  smp_mb()
+#define smp_mb__after_atomic()   smp_mb()
+#endif
+
 #endif /* _COBALT_ASM_GENERIC_WRAPPERS_H */

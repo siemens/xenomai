@@ -344,7 +344,7 @@ void cobalt_clock_deregister(struct xnclock *clock)
 {
 	trace_cobalt_clock_deregister(clock->name, clock->id);
 	clear_bit(clock->id, cobalt_clock_extids);
-	smp_mb__after_clear_bit();
+	smp_mb__after_atomic();
 	external_clocks[clock->id] = NULL;
 	xnclock_deregister(clock);
 }

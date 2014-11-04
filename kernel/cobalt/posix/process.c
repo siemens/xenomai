@@ -976,17 +976,17 @@ static inline void init_hostrt(void) { }
 
 static inline void lock_timers(void)
 {
-	smp_mb__before_atomic_inc();
+	smp_mb__before_atomic();
 	atomic_inc(&nkclklk);
-	smp_mb__after_atomic_inc();
+	smp_mb__after_atomic();
 }
 
 static inline void unlock_timers(void)
 {
 	XENO_BUGON(COBALT, atomic_read(&nkclklk) == 0);
-	smp_mb__before_atomic_dec();
+	smp_mb__before_atomic();
 	atomic_dec(&nkclklk);
-	smp_mb__after_atomic_dec();
+	smp_mb__after_atomic();
 }
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */

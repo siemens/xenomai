@@ -153,7 +153,7 @@ void xnapc_free(int apc)
 {
 	BUG_ON(apc < 0 || apc >= BITS_PER_LONG);
 	clear_bit(apc, &xnarch_machdata.apc_map);
-	smp_mb__after_clear_bit();
+	smp_mb__after_atomic();
 }
 EXPORT_SYMBOL_GPL(xnapc_free);
 
