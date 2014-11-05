@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <cobalt/uapi/kernel/pipe.h>
 #include <alchemy/timer.h>
+#include <alchemy/compat.h>
 
 /**
  * @addtogroup alchemy_pipe
@@ -44,9 +45,9 @@ typedef struct RT_PIPE RT_PIPE;
 extern "C" {
 #endif
 
-int rt_pipe_create(RT_PIPE *pipe,
-		   const char *name,
-		   int minor, size_t poolsize);
+CURRENT_DECL(int, rt_pipe_create(RT_PIPE *pipe,
+				 const char *name,
+				 int minor, size_t poolsize));
 
 int rt_pipe_delete(RT_PIPE *pipe);
 

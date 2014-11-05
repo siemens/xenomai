@@ -20,6 +20,7 @@
 #include <trank/native/task.h>
 #include <trank/native/alarm.h>
 #include <trank/native/event.h>
+#include <trank/native/pipe.h>
 #include "../alchemy/alarm.h"
 
 #ifdef DOXYGEN_CPP
@@ -350,6 +351,80 @@ int COMPAT__rt_event_signal(RT_EVENT *event, unsigned long mask);
 int COMPAT__rt_event_clear(RT_EVENT *event,
 			   unsigned long mask, unsigned long *mask_r);
 
+/**
+ * @fn int COMPAT__rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
+ * @brief Create a message pipe.
+ *
+ * This call is the legacy form of the rt_pipe_create() service, which
+ * returns a zero status upon success. The new form returns the @a
+ * minor number assigned to the connection instead, which is useful
+ * when P_MINOR_AUTO is specified in the call (see the discussion
+ * about the @a minor parameter).
+ *
+ * This service opens a bi-directional communication channel for
+ * exchanging messages between Xenomai threads and regular Linux
+ * threads. Pipes natively preserve message boundaries, but can also
+ * be used in byte-oriented streaming mode from Xenomai to Linux.
+ *
+ * rt_pipe_create() always returns immediately, even if no thread has
+ * opened the associated special device file yet. On the contrary, the
+ * non real-time side could block upon attempt to open the special
+ * device file until rt_pipe_create() is issued on the same pipe from
+ * a Xenomai thread, unless O_NONBLOCK was given to the open(2) system
+ * call.
+ *
+ * @param pipe The address of a pipe descriptor which can be later used
+ * to identify uniquely the created object, upon success of this call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * pipe. When non-NULL and non-empty, a copy of this string is used
+ * for indexing the created pipe into the object registry.
+ *
+ * Named pipes are supported through the use of the registry. Passing
+ * a valid @a name parameter when creating a message pipe causes a
+ * symbolic link to be created from
+ * /proc/xenomai/registry/rtipc/xddp/@a name to the associated special
+ * device (i.e. /dev/rtp*), so that the specific @a minor information
+ * does not need to be known from those processes for opening the
+ * proper device file. In such a case, both sides of the pipe only
+ * need to agree upon a symbolic name to refer to the same data path,
+ * which is especially useful whenever the @a minor number is picked
+ * up dynamically using an adaptive algorithm, such as passing
+ * P_MINOR_AUTO as @a minor value.
+ *
+ * @param minor The minor number of the device associated with the
+ * pipe.  Passing P_MINOR_AUTO causes the minor number to be
+ * auto-allocated. In such a case, a symbolic link will be
+ * automatically created from
+ * /proc/xenomai/registry/rtipc/xddp/@a name to the allocated pipe
+ * device entry. Valid minor numbers range from 0 to
+ * CONFIG_XENO_OPT_PIPE_NRDEV-1.
+ *
+ * @param poolsize Specifies the size of a dedicated buffer pool for the
+ * pipe. Passing 0 means that all message allocations for this pipe are
+ * performed on the Cobalt core heap.
+ *
+ * @return This compatibility call returns zero upon
+ * success. Otherwise:
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the pipe.
+ *
+ * - -ENODEV is returned if @a minor is different from P_MINOR_AUTO
+ * and is not a valid minor number.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered pipe.
+ *
+ * - -EBUSY is returned if @a minor is already open.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
+ */
+int COMPAT__rt_pipe_create(RT_PIPE *pipe,
+			   const char *name, int minor, size_t poolsize);
 #else /* !DOXYGEN_CPP */
 
 int rt_task_create(RT_TASK *task, const char *name,
@@ -576,6 +651,16 @@ int rt_event_clear(RT_EVENT *event, unsigned long mask,
 	*mask_r = _mask;
 
 	return 0;
+}
+
+int rt_pipe_create(RT_PIPE *pipe, const char *name,
+		   int minor, size_t poolsize)
+{
+	int ret;
+
+	ret = __CURRENT(rt_pipe_create(pipe, name, minor, poolsize));
+
+	return ret < 0 ? ret : 0;
 }
 
 #endif	/* !DOXYGEN_CPP */

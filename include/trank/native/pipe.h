@@ -19,5 +19,10 @@
 #define _XENOMAI_TRANK_NATIVE_PIPE_H
 
 #include <alchemy/pipe.h>
+#include <trank/trank.h>
+
+COMPAT_DECL(int, rt_pipe_create(RT_PIPE *pipe,
+				const char *name,
+				int minor, size_t poolsize));
 
 #endif /* _XENOMAI_TRANK_NATIVE_PIPE_H */
