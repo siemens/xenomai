@@ -28,12 +28,13 @@
 struct cobalt_mutexattr {
 	int type : 3;
 	int protocol : 3;
-	int pshared : 2;
+	int pshared : 1;
+	int __pad : 1;
 };
 
 struct cobalt_condattr {
-	int clock : 6;
-	int pshared : 2;
+	int clock : 7;
+	int pshared : 1;
 };
 
 struct cobalt_threadstat {

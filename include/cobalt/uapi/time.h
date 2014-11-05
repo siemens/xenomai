@@ -27,19 +27,22 @@
  * of the POSIX and Linux kernel definitions so that no ambiguities
  * arise when porting applications in both directions.
  *
- * 0  .. 7   regular POSIX/linux clock ids.
- * 8  .. 31  statically reserved Cobalt clocks
- * 32 .. 63  dynamically registered Cobalt clocks (external)
+ * 0  .. 31   regular POSIX/linux clock ids.
+ * 32 .. 63   statically reserved Cobalt clocks
+ * 64 .. 127  dynamically registered Cobalt clocks (external)
+ *
+ * CAUTION: clock ids must fit within a 7bit value, see
+ * include/cobalt/uapi/thread.h (e.g. cobalt_condattr).
  */
-#define __COBALT_CLOCK_STATIC(nr)	((clockid_t)(nr + 8))
+#define __COBALT_CLOCK_STATIC(nr)	((clockid_t)(nr + 32))
 
 #define CLOCK_HOST_REALTIME  __COBALT_CLOCK_STATIC(0)
 
-#define COBALT_MAX_EXTCLOCKS  32
+#define COBALT_MAX_EXTCLOCKS  64
 
-#define __COBALT_CLOCK_EXT(nr)		((clockid_t)(nr) | (1 << 5))
-#define __COBALT_CLOCK_EXT_P(id)	((int)(id) & (1 << 5))
-#define __COBALT_CLOCK_EXT_INDEX(id)	((int)(id) & ~(1 << 5))
+#define __COBALT_CLOCK_EXT(nr)		((clockid_t)(nr) | (1 << 6))
+#define __COBALT_CLOCK_EXT_P(id)	((int)(id) & (1 << 6))
+#define __COBALT_CLOCK_EXT_INDEX(id)	((int)(id) & ~(1 << 6))
 
 /*
  * Additional timerfd defines
