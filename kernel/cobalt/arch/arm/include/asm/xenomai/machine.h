@@ -28,7 +28,12 @@
 
 #define XNARCH_HOST_TICK_IRQ __ipipe_hrtimer_irq
 
-#include <asm/system.h>
+#include <asm/barrier.h>
+#include <asm/compiler.h>
+#include <asm/cmpxchg.h>
+#include <asm/switch_to.h>
+#include <asm/system_info.h>
+#include <asm/system_misc.h>
 #include <asm/timex.h>
 #include <asm/processor.h>
 #include <asm/ipipe.h>
