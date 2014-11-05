@@ -141,7 +141,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #endif
 
 #ifndef __cplusplus
-#include <asm/system.h>
+#include <asm/xenomai/wrappers.h>
 #include <asm/timex.h>
 #include <asm/xenomai/atomic.h>
 #include <asm/processor.h>

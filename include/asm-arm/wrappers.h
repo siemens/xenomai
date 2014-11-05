@@ -28,6 +28,17 @@
 #include <linux/interrupt.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+#include <asm/system.h>
+#else
+#include <asm/barrier.h>
+#include <asm/compiler.h>
+#include <asm/cmpxchg.h>
+#include <asm/switch_to.h>
+#include <asm/system_info.h>
+#include <asm/system_misc.h>
+#endif
+
 #define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
@@ -91,7 +102,7 @@ static inline void fp_init(union fp_state *state)
 
 #endif
 
-#if IPIPE_MAJOR_NUMBER == 1 && /* There is no version 0. */ 	\
+#if IPIPE_MAJOR_NUMBER == 1 && /* There is no version 0. */	\
 	(IPIPE_MINOR_NUMBER < 5 || \
 	 (IPIPE_MINOR_NUMBER == 5 && IPIPE_PATCH_NUMBER < 3))
 #define __ipipe_mach_release_timer()  \

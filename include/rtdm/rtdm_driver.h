@@ -584,7 +584,7 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 {
 	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
 		    /* just warn if context was a dangling pointer */);
-	smp_mb__before_atomic_dec();
+	smp_mb__before_atomic();
 	if (unlikely(atomic_dec_and_test(&context->close_lock_count)))
 		rthal_apc_schedule(rtdm_apc);
 }

@@ -36,7 +36,7 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/console.h>
-#include <asm/system.h>
+#include <asm/xenomai/wrappers.h>
 #include <asm/hardirq.h>
 #include <asm/irq.h>
 #include <asm/io.h>
@@ -44,7 +44,6 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 #include <asm/cacheflush.h>
-#include <asm/system.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */

@@ -39,6 +39,10 @@
 #define IPIPE_CORE_APIREV  0
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+#define smp_mb__before_atomic()  smp_mb()
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 #include <asm/system.h>
 #endif /* kernel < 3.4.0 */
@@ -201,7 +205,7 @@ do {									\
 	.routine = (f),						\
 	.data = (d),						\
 }
-#define DECLARE_WORK(n,f,d)	 	struct tq_struct n = __WORK_INITIALIZER(n, f, d)
+#define DECLARE_WORK(n,f,d)		struct tq_struct n = __WORK_INITIALIZER(n, f, d)
 #define DECLARE_WORK_NODATA(n, f)	DECLARE_WORK(n, f, NULL)
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
 #define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_WORK(n, f, NULL)
@@ -755,7 +759,7 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 #define SEQ_START_TOKEN ((void *)1)
 #endif
 #ifndef SEQ_SKIP
-#define SEQ_SKIP 	0	/* not implemented. */
+#define SEQ_SKIP	0	/* not implemented. */
 #endif
 
 #if IPIPE_CORE_APIREV >= 2
