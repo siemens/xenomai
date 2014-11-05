@@ -7,6 +7,7 @@ noinst_HEADERS =	\
 	bheap.h		\
 	bufd.h		\
 	clock.h		\
+	compat.h	\
 	heap.h		\
 	init.h		\
 	intr.h		\
