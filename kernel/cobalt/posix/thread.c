@@ -301,8 +301,10 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 		*policy_r = SCHED_NORMAL;
 
 	if (base_class == &xnsched_class_rt) {
-		if (xnthread_test_state(base_thread, XNRRB))
+		if (xnthread_test_state(base_thread, XNRRB)) {
 			ns2ts(&param_ex->sched_rr_quantum, base_thread->rrperiod);
+			*policy_r = SCHED_RR;
+		}
 		goto unlock_and_exit;
 	}
 
