@@ -30,27 +30,27 @@
 
 static inline int __sys_open(const char *fname)
 {
-	return rt_dev_open(fname, 0);
+	return __RT(open(fname, 0));
 }
 
 static inline int __sys_close(int fd)
 {
-	return rt_dev_close(fd);
+	return __RT(close(fd));
 }
 
 static inline int __sys_ioctl(int fd, int request, void *arg)
 {
-	return rt_dev_ioctl(fd, request, arg);
+	return __RT(ioctl(fd, request, arg));
 }
 
 static inline ssize_t __sys_read(int fd, void *buf, size_t nbyte)
 {
-	return rt_dev_read(fd, buf, nbyte);
+	return __RT(read(fd, buf, nbyte));
 }
 
-static inline ssize_t __sys_write(int fd, void *buf, size_t nbyte)
+static inline ssize_t __sys_write(int fd, const void *buf, size_t nbyte)
 {
-	return rt_dev_write(fd, buf, nbyte);
+	return __RT(write(fd, buf, nbyte));
 }
 
 #endif /* !DOXYGEN_CPP */
