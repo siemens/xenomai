@@ -203,7 +203,7 @@ static void usage(void)
 	fprintf(stderr, "if no option is given, tune for all contexts using the default period.\n");
 }
 
-static void run_tuner(int fd, int op, int period, const char *type)
+static void run_tuner(int fd, unsigned int op, int period, const char *type)
 {
 	struct autotune_setup setup;
 	pthread_t sampler;
