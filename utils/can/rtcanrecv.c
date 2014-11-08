@@ -61,10 +61,10 @@ static void cleanup(void)
 	printf("Cleaning up...\n");
 
     if (s >= 0) {
-	ret = rt_dev_close(s);
+	ret = close(s);
 	s = -1;
 	if (ret) {
-	    fprintf(stderr, "rt_dev_close: %s\n", strerror(-ret));
+	    fprintf(stderr, "close: %s\n", strerror(-ret));
 	}
 	exit(EXIT_SUCCESS);
     }
@@ -101,22 +101,22 @@ static void rt_task(void)
 	if (with_timestamp) {
 	    iov.iov_base = (void *)&frame;
 	    iov.iov_len = sizeof(can_frame_t);
-	    ret = rt_dev_recvmsg(s, &msg, 0);
+	    ret = recvmsg(s, &msg, 0);
 	} else
-	    ret = rt_dev_recvfrom(s, (void *)&frame, sizeof(can_frame_t), 0,
+	    ret = recvfrom(s, (void *)&frame, sizeof(can_frame_t), 0,
 				  (struct sockaddr *)&addr, &addrlen);
 	if (ret < 0) {
 	    switch (ret) {
 	    case -ETIMEDOUT:
 		if (verbose)
-		    printf("rt_dev_recv: timed out");
+		    printf("recv: timed out");
 		continue;
 	    case -EBADF:
 		if (verbose)
-		    printf("rt_dev_recv: aborted because socket was closed");
+		    printf("recv: aborted because socket was closed");
 		break;
 	    default:
-		fprintf(stderr, "rt_dev_recv: %s\n", strerror(-ret));
+		fprintf(stderr, "recv: %s\n", strerror(-ret));
 	    }
 	    break;
 	}
@@ -235,9 +235,9 @@ int main(int argc, char **argv)
 	}
     }
 
-    ret = rt_dev_socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    ret = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (ret < 0) {
-	fprintf(stderr, "rt_dev_socket: %s\n", strerror(-ret));
+	fprintf(stderr, "socket: %s\n", strerror(-ret));
 	return -1;
     }
     s = ret;
@@ -255,18 +255,18 @@ int main(int argc, char **argv)
 	if (verbose)
 	    printf("s=%d, ifr_name=%s\n", s, ifr.ifr_name);
 
-	ret = rt_dev_ioctl(s, SIOCGIFINDEX, &ifr);
+	ret = ioctl(s, SIOCGIFINDEX, &ifr);
 	if (ret < 0) {
-	    fprintf(stderr, "rt_dev_ioctl GET_IFINDEX: %s\n", strerror(-ret));
+	    fprintf(stderr, "ioctl GET_IFINDEX: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }
 
     if (err_mask) {
-	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
+	ret = setsockopt(s, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
 				&err_mask, sizeof(err_mask));
 	if (ret < 0) {
-	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
+	    fprintf(stderr, "setsockopt: %s\n", strerror(-ret));
 	    goto failure;
 	}
 	if (verbose)
@@ -274,38 +274,38 @@ int main(int argc, char **argv)
     }
 
     if (filter_count) {
-	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER,
+	ret = setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER,
 				&recv_filter, filter_count *
 				sizeof(struct can_filter));
 	if (ret < 0) {
-	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
+	    fprintf(stderr, "setsockopt: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }
 
     recv_addr.can_family = AF_CAN;
     recv_addr.can_ifindex = ifr.ifr_ifindex;
-    ret = rt_dev_bind(s, (struct sockaddr *)&recv_addr,
+    ret = bind(s, (struct sockaddr *)&recv_addr,
 		      sizeof(struct sockaddr_can));
     if (ret < 0) {
-	fprintf(stderr, "rt_dev_bind: %s\n", strerror(-ret));
+	fprintf(stderr, "bind: %s\n", strerror(-ret));
 	goto failure;
     }
 
     if (timeout) {
 	if (verbose)
 	    printf("Timeout: %lld ns\n", (long long)timeout);
-	ret = rt_dev_ioctl(s, RTCAN_RTIOC_RCV_TIMEOUT, &timeout);
+	ret = ioctl(s, RTCAN_RTIOC_RCV_TIMEOUT, &timeout);
 	if (ret) {
-	    fprintf(stderr, "rt_dev_ioctl RCV_TIMEOUT: %s\n", strerror(-ret));
+	    fprintf(stderr, "ioctl RCV_TIMEOUT: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }
 
     if (with_timestamp) {
-	ret = rt_dev_ioctl(s, RTCAN_RTIOC_TAKE_TIMESTAMP, RTCAN_TAKE_TIMESTAMPS);
+	ret = ioctl(s, RTCAN_RTIOC_TAKE_TIMESTAMP, RTCAN_TAKE_TIMESTAMPS);
 	if (ret) {
-	    fprintf(stderr, "rt_dev_ioctl TAKE_TIMESTAMP: %s\n", strerror(-ret));
+	    fprintf(stderr, "ioctl TAKE_TIMESTAMP: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }

@@ -2,11 +2,13 @@ sbin_PROGRAMS = rtcanconfig
 
 bin_PROGRAMS = rtcanrecv rtcansend
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 CPPFLAGS = 						\
 	@XENO_USER_CFLAGS@ 				\
 	-I$(top_srcdir)/include
 
-LDFLAGS =
+LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 rtcanconfig_SOURCES = rtcanconfig.c
 

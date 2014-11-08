@@ -181,13 +181,13 @@ int main(int argc, char *argv[])
 	}
     }
 
-    can_fd = rt_dev_socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    can_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (can_fd < 0) {
 	fprintf(stderr, "Cannot open RTDM CAN socket. Maybe driver not loaded? \n");
 	return can_fd;
     }
 
-    ret = rt_dev_ioctl(can_fd, SIOCGIFINDEX, &u.ifr);
+    ret = ioctl(can_fd, SIOCGIFINDEX, &u.ifr);
     if (ret) {
 	fprintf(stderr,"Can't get interface index for %s, code = %d\n", ifname, ret);
 	return ret;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 	    printf("baudrate: %d\n", new_baudrate);
 	baudrate = &u.baudrate;
 	*baudrate = new_baudrate;
-	ret = rt_dev_ioctl(can_fd, SIOCSCANBAUDRATE, &u.ifr);
+	ret = ioctl(can_fd, SIOCSCANBAUDRATE, &u.ifr);
 	if (ret) {
 	    goto abort;
 	}
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 		       bittime->std.sam);
 	}
 
-	ret = rt_dev_ioctl(can_fd, SIOCSCANCUSTOMBITTIME, &u.ifr);
+	ret = ioctl(can_fd, SIOCSCANCUSTOMBITTIME, &u.ifr);
 	if (ret) {
 	    goto abort;
 	}
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 	*ctrlmode = new_ctrlmode;
 	if (verbose)
 	    printf("ctrlmode: %#x\n", new_ctrlmode);
-	ret = rt_dev_ioctl(can_fd, SIOCSCANCTRLMODE, &u.ifr);
+	ret = ioctl(can_fd, SIOCSCANCTRLMODE, &u.ifr);
 	if (ret) {
 	    goto abort;
 	}
@@ -254,16 +254,16 @@ int main(int argc, char *argv[])
     if (new_mode != -1) {
 	mode = &u.mode;
 	*mode = new_mode;
-	ret = rt_dev_ioctl(can_fd, SIOCSCANMODE, &u.ifr);
+	ret = ioctl(can_fd, SIOCSCANMODE, &u.ifr);
 	if (ret) {
 	    goto abort;
 	}
     }
 
-    rt_dev_close(can_fd);
+    close(can_fd);
     return 0;
 
  abort:
-    rt_dev_close(can_fd);
+    close(can_fd);
     return ret;
 }

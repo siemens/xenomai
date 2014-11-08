@@ -56,10 +56,10 @@ static void cleanup(void)
     usleep(100000);
 
     if (s >= 0) {
-	ret = rt_dev_close(s);
+	ret = close(s);
 	s = -1;
 	if (ret) {
-	    fprintf(stderr, "rt_dev_close: %s\n", strerror(-ret));
+	    fprintf(stderr, "close: %s\n", strerror(-ret));
 	}
 	exit(EXIT_SUCCESS);
     }
@@ -83,22 +83,22 @@ static void rt_task(void)
 	    memcpy(&frame.data[0], &i, sizeof(i));
 	/* Note: sendto avoids the definiton of a receive filter list */
 	if (use_send)
-	    ret = rt_dev_send(s, (void *)&frame, sizeof(can_frame_t), 0);
+	    ret = send(s, (void *)&frame, sizeof(can_frame_t), 0);
 	else
-	    ret = rt_dev_sendto(s, (void *)&frame, sizeof(can_frame_t), 0,
+	    ret = sendto(s, (void *)&frame, sizeof(can_frame_t), 0,
 				(struct sockaddr *)&to_addr, sizeof(to_addr));
 	if (ret < 0) {
 	    switch (ret) {
 	    case -ETIMEDOUT:
 		if (verbose)
-		    printf("rt_dev_send(to): timed out");
+		    printf("send(to): timed out");
 		break;
 	    case -EBADF:
 		if (verbose)
-		    printf("rt_dev_send(to): aborted because socket was closed");
+		    printf("send(to): aborted because socket was closed");
 		break;
 	    default:
-		fprintf(stderr, "rt_dev_send: %s\n", strerror(-ret));
+		fprintf(stderr, "send: %s\n", strerror(-ret));
 		break;
 	    }
 	    i = loops;		/* abort */
@@ -216,18 +216,18 @@ int main(int argc, char **argv)
     if (verbose)
 	printf("interface %s\n", argv[optind]);
 
-    ret = rt_dev_socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    ret = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (ret < 0) {
-	fprintf(stderr, "rt_dev_socket: %s\n", strerror(-ret));
+	fprintf(stderr, "socket: %s\n", strerror(-ret));
 	return -1;
     }
     s = ret;
 
     if (loopback >= 0) {
-	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_LOOPBACK,
+	ret = setsockopt(s, SOL_CAN_RAW, CAN_RAW_LOOPBACK,
 				&loopback, sizeof(loopback));
 	if (ret < 0) {
-	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
+	    fprintf(stderr, "setsockopt: %s\n", strerror(-ret));
 	    goto failure;
 	}
 	if (verbose)
@@ -238,9 +238,9 @@ int main(int argc, char **argv)
     if (verbose)
 	printf("s=%d, ifr_name=%s\n", s, ifr.ifr_name);
 
-    ret = rt_dev_ioctl(s, SIOCGIFINDEX, &ifr);
+    ret = ioctl(s, SIOCGIFINDEX, &ifr);
     if (ret < 0) {
-	fprintf(stderr, "rt_dev_ioctl: %s\n", strerror(-ret));
+	fprintf(stderr, "ioctl: %s\n", strerror(-ret));
 	goto failure;
     }
 
@@ -249,15 +249,15 @@ int main(int argc, char **argv)
     to_addr.can_family = AF_CAN;
     if (use_send) {
 	/* Suppress definiton of a default receive filter list */
-	ret = rt_dev_setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
+	ret = setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
 	if (ret < 0) {
-	    fprintf(stderr, "rt_dev_setsockopt: %s\n", strerror(-ret));
+	    fprintf(stderr, "setsockopt: %s\n", strerror(-ret));
 	    goto failure;
 	}
 
-	ret = rt_dev_bind(s, (struct sockaddr *)&to_addr, sizeof(to_addr));
+	ret = bind(s, (struct sockaddr *)&to_addr, sizeof(to_addr));
 	if (ret < 0) {
-	    fprintf(stderr, "rt_dev_bind: %s\n", strerror(-ret));
+	    fprintf(stderr, "bind: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }
@@ -283,9 +283,9 @@ int main(int argc, char **argv)
     if (timeout) {
 	if (verbose)
 	    printf("Timeout: %lld ns\n", (long long)timeout);
-	ret = rt_dev_ioctl(s, RTCAN_RTIOC_SND_TIMEOUT, &timeout);
+	ret = ioctl(s, RTCAN_RTIOC_SND_TIMEOUT, &timeout);
 	if (ret) {
-	    fprintf(stderr, "rt_dev_ioctl SND_TIMEOUT: %s\n", strerror(-ret));
+	    fprintf(stderr, "ioctl SND_TIMEOUT: %s\n", strerror(-ret));
 	    goto failure;
 	}
     }

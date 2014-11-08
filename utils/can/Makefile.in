@@ -143,7 +143,6 @@ AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
-CCLD = $(CC)
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -236,7 +235,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LATEX_BATCHMODE = @LATEX_BATCHMODE@
 LATEX_MODE = @LATEX_MODE@
 LD = @LD@
-LDFLAGS = 
+LDFLAGS = $(XENO_POSIX_WRAPPERS)
 LD_FILE_OPTION = @LD_FILE_OPTION@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -351,6 +350,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 rtcanconfig_SOURCES = rtcanconfig.c
 rtcanconfig_LDADD = \
 	../../lib/cobalt/libcobalt.la	\
