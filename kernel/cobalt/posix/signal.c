@@ -580,6 +580,7 @@ out:
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(__cobalt_sigqueue);
 
 COBALT_SYSCALL(sigqueue, conforming,
 	       int, (pid_t pid, int sig,

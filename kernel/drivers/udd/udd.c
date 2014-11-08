@@ -476,7 +476,7 @@ void udd_notify_event(struct udd_device *udd)
 
 	if (ur->signfy.pid > 0) {
 		sival.sival_int = atomic_read(&ur->event);
-		cobalt_sigqueue(ur->signfy.pid, ur->signfy.sig, &sival);
+		__cobalt_sigqueue(ur->signfy.pid, ur->signfy.sig, &sival);
 	}
 }
 EXPORT_SYMBOL_GPL(udd_notify_event);
