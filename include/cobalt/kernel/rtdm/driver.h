@@ -362,29 +362,6 @@ int rtdm_dev_register(struct rtdm_device *device);
 
 void rtdm_dev_unregister(struct rtdm_device *device);
 
-/* --- inter-driver API --- */
-
-#define rtdm_open		rt_dev_open
-#define rtdm_socket		rt_dev_socket
-#define rtdm_close		rt_dev_close
-#define rtdm_ioctl		rt_dev_ioctl
-#define rtdm_read		rt_dev_read
-#define rtdm_write		rt_dev_write
-#define rtdm_recvmsg		rt_dev_recvmsg
-#define rtdm_recv		rt_dev_recv
-#define rtdm_recvfrom		rt_dev_recvfrom
-#define rtdm_sendmsg		rt_dev_sendmsg
-#define rtdm_send		rt_dev_send
-#define rtdm_sendto		rt_dev_sendto
-#define rtdm_bind		rt_dev_bind
-#define rtdm_listen		rt_dev_listen
-#define rtdm_accept		rt_dev_accept
-#define rtdm_getsockopt		rt_dev_getsockopt
-#define rtdm_setsockopt		rt_dev_setsockopt
-#define rtdm_getsockname	rt_dev_getsockname
-#define rtdm_getpeername	rt_dev_getpeername
-#define rtdm_shutdown		rt_dev_shutdown
-
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 
 /* --- clock services --- */

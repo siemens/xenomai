@@ -705,7 +705,7 @@ rtdm_for_each_waiter_safe(rtdm_task_t pos, rtdm_task_t tmp, struct rtdm_wait_que
 /**
  * @brief Open a device
  *
- * Refer to rt_dev_open() for parameters and return values
+ * Refer to rtdm_open() for parameters and return values
  *
  * @coretags{secondary-only, might-switch}
  */
@@ -714,7 +714,7 @@ int rtdm_open(const char *path, int oflag, ...);
 /**
  * @brief Create a socket
  *
- * Refer to rt_dev_socket() for parameters and return values. Action
+ * Refer to rtdm_socket() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -725,7 +725,7 @@ int rtdm_socket(int protocol_family, int socket_type, int protocol);
 /**
  * @brief Close a device or socket
  *
- * Refer to rt_dev_close() for parameters and return values. Action
+ * Refer to rtdm_close() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -736,7 +736,7 @@ int rtdm_close(int fd);
 /**
  * @brief Issue an IOCTL
  *
- * Refer to rt_dev_ioctl() for parameters and return values. Action
+ * Refer to rtdm_ioctl() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -747,7 +747,7 @@ int rtdm_ioctl(int fd, int request, ...);
 /**
  * @brief Read from device
  *
- * Refer to rt_dev_read() for parameters and return values. Action
+ * Refer to rtdm_read() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -758,7 +758,7 @@ ssize_t rtdm_read(int fd, void *buf, size_t nbyte);
 /**
  * @brief Write to device
  *
- * Refer to rt_dev_write() for parameters and return values. Action
+ * Refer to rtdm_write() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -769,7 +769,7 @@ ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
 /**
  * @brief Receive message from socket
  *
- * Refer to rt_dev_recvmsg() for parameters and return values. Action
+ * Refer to rtdm_recvmsg() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -780,7 +780,7 @@ ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
 /**
  * @brief Receive message from socket
  *
- * Refer to rt_dev_recvfrom() for parameters and return values. Action
+ * Refer to rtdm_recvfrom() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -792,7 +792,7 @@ ssize_t rtdm_recvfrom(int fd, void *buf, size_t len, int flags,
 /**
  * @brief Receive message from socket
  *
- * Refer to rt_dev_recv() for parameters and return values. Action
+ * Refer to rtdm_recv() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -803,7 +803,7 @@ ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
 /**
  * @brief Transmit message to socket
  *
- * Refer to rt_dev_sendmsg() for parameters and return values. Action
+ * Refer to rtdm_sendmsg() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -814,7 +814,7 @@ ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
 /**
  * @brief Transmit message to socket
  *
- * Refer to rt_dev_sendto() for parameters and return values. Action
+ * Refer to rtdm_sendto() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -826,7 +826,7 @@ ssize_t rtdm_sendto(int fd, const void *buf, size_t len, int flags,
 /**
  * @brief Transmit message to socket
  *
- * Refer to rt_dev_send() for parameters and return values. Action
+ * Refer to rtdm_send() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -837,7 +837,7 @@ ssize_t rtdm_send(int fd, const void *buf, size_t len, int flags);
 /**
  * @brief Bind to local address
  *
- * Refer to rt_dev_bind() for parameters and return values. Action
+ * Refer to rtdm_bind() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -848,7 +848,7 @@ int rtdm_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
 /**
  * @brief Connect to remote address
  *
- * Refer to rt_dev_connect() for parameters and return values. Action
+ * Refer to rtdm_connect() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -859,7 +859,7 @@ int rtdm_connect(int fd, const struct sockaddr *serv_addr, socklen_t addrlen);
 /**
  * @brief Listen to incoming connection requests
  *
- * Refer to rt_dev_listen() for parameters and return values. Action
+ * Refer to rtdm_listen() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -870,7 +870,7 @@ int rtdm_listen(int fd, int backlog);
 /**
  * @brief Accept a connection request
  *
- * Refer to rt_dev_accept() for parameters and return values. Action
+ * Refer to rtdm_accept() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -881,7 +881,7 @@ int rtdm_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
 /**
  * @brief Shut down parts of a connection
  *
- * Refer to rt_dev_shutdown() for parameters and return values. Action
+ * Refer to rtdm_shutdown() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -892,7 +892,7 @@ int rtdm_shutdown(int fd, int how);
 /**
  * @brief Get socket option
  *
- * Refer to rt_dev_getsockopt() for parameters and return values. Action
+ * Refer to rtdm_getsockopt() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -904,7 +904,7 @@ int rtdm_getsockopt(int fd, int level, int optname, void *optval,
 /**
  * @brief Set socket option
  *
- * Refer to rt_dev_setsockopt() for parameters and return values. Action
+ * Refer to rtdm_setsockopt() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -916,7 +916,7 @@ int rtdm_setsockopt(int fd, int level, int optname, const void *optval,
 /**
  * @brief Get local socket address
  *
- * Refer to rt_dev_getsockname() for parameters and return values. Action
+ * Refer to rtdm_getsockname() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -927,7 +927,7 @@ int rtdm_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
 /**
  * @brief Get socket destination address
  *
- * Refer to rt_dev_getpeername() for parameters and return values. Action
+ * Refer to rtdm_getpeername() for parameters and return values. Action
  * depends on driver implementation, see @ref rtdm_profiles
  * "Device Profiles".
  *
@@ -962,7 +962,7 @@ int rtdm_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
  *
  * @coretags{secondary-only, might-switch}
  */
-int rt_dev_open(const char *path, int oflag, ...);
+int rtdm_open(const char *path, int oflag, ...);
 
 /**
  * @brief Create a socket
@@ -982,17 +982,17 @@ int rt_dev_open(const char *path, int oflag, ...);
  *
  * @coretags{secondary-only, might-switch}
  */
-int rt_dev_socket(int protocol_family, int socket_type, int protocol);
+int rtdm_socket(int protocol_family, int socket_type, int protocol);
 
 /**
  * @brief Close a device or socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_open() or rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_open() or rtdm_socket()
  *
  * @return 0 on success, otherwise a negative error code.
  *
- * @note If the matching rt_dev_open() or rt_dev_socket() call took place in
- * non-real-time context, rt_dev_close() must be issued within non-real-time
+ * @note If the matching rtdm_open() or rtdm_socket() call took place in
+ * non-real-time context, rtdm_close() must be issued within non-real-time
  * as well. Otherwise, the call will fail.
  *
  * Action depends on driver implementation, see @ref rtdm_profiles
@@ -1003,12 +1003,12 @@ int rt_dev_socket(int protocol_family, int socket_type, int protocol);
  *
  * @coretags{secondary-only, might-switch}
  */
-int rt_dev_close(int fd);
+int rtdm_close(int fd);
 
 /**
  * @brief Issue an IOCTL
  *
- * @param[in] fd File descriptor as returned by rt_dev_open() or rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_open() or rtdm_socket()
  * @param[in] request IOCTL code
  * @param ... Optional third argument, depending on IOCTL function
  * (@c void @c * or @c unsigned @c long)
@@ -1023,12 +1023,12 @@ int rt_dev_close(int fd);
  *
  * @coretags{task-unrestricted, might-switch}
  */
-int rt_dev_ioctl(int fd, int request, ...);
+int rtdm_ioctl(int fd, int request, ...);
 
 /**
  * @brief Read from device
  *
- * @param[in] fd File descriptor as returned by rt_dev_open()
+ * @param[in] fd File descriptor as returned by rtdm_open()
  * @param[out] buf Input buffer
  * @param[in] nbyte Number of bytes to read
  *
@@ -1042,12 +1042,12 @@ int rt_dev_ioctl(int fd, int request, ...);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
+ssize_t rtdm_read(int fd, void *buf, size_t nbyte);
 
 /**
  * @brief Write to device
  *
- * @param[in] fd File descriptor as returned by rt_dev_open()
+ * @param[in] fd File descriptor as returned by rtdm_open()
  * @param[in] buf Output buffer
  * @param[in] nbyte Number of bytes to write
  *
@@ -1061,12 +1061,12 @@ ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
+ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
 
 /**
  * @brief Receive message from socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in,out] msg Message descriptor
  * @param[in] flags Message flags
  *
@@ -1080,12 +1080,12 @@ ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
+ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
 
 /**
  * @brief Receive message from socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[out] buf Message buffer
  * @param[in] len Message buffer size
  * @param[in] flags Message flags
@@ -1102,13 +1102,13 @@ ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
-			struct sockaddr *from, socklen_t *fromlen);
+ssize_t rtdm_recvfrom(int fd, void *buf, size_t len, int flags,
+		      struct sockaddr *from, socklen_t *fromlen);
 
 /**
  * @brief Receive message from socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[out] buf Message buffer
  * @param[in] len Message buffer size
  * @param[in] flags Message flags
@@ -1123,12 +1123,12 @@ ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags);
+ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
 
 /**
  * @brief Transmit message to socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] msg Message descriptor
  * @param[in] flags Message flags
  *
@@ -1142,12 +1142,12 @@ ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
 
 /**
  * @brief Transmit message to socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] buf Message buffer
  * @param[in] len Message buffer size
  * @param[in] flags Message flags
@@ -1164,13 +1164,13 @@ ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_sendto(int fd, const void *buf, size_t len, int flags,
-		      const struct sockaddr *to, socklen_t tolen);
+ssize_t rtdm_sendto(int fd, const void *buf, size_t len, int flags,
+		    const struct sockaddr *to, socklen_t tolen);
 
 /**
  * @brief Transmit message to socket
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] buf Message buffer
  * @param[in] len Message buffer size
  * @param[in] flags Message flags
@@ -1185,12 +1185,12 @@ ssize_t rt_dev_sendto(int fd, const void *buf, size_t len, int flags,
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rt_dev_send(int fd, const void *buf, size_t len, int flags);
+ssize_t rtdm_send(int fd, const void *buf, size_t len, int flags);
 
 /**
  * @brief Bind to local address
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] my_addr Address buffer
  * @param[in] addrlen Address buffer size
  *
@@ -1204,12 +1204,12 @@ ssize_t rt_dev_send(int fd, const void *buf, size_t len, int flags);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-int rt_dev_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
+int rtdm_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
 
 /**
  * @brief Connect to remote address
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] serv_addr Address buffer
  * @param[in] addrlen Address buffer size
  *
@@ -1223,13 +1223,13 @@ int rt_dev_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
-		   socklen_t addrlen);
+int rtdm_connect(int fd, const struct sockaddr *serv_addr,
+		 socklen_t addrlen);
 
 /**
  * @brief Listen for incomming connection requests
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] backlog Maximum queue length
  *
  * @return 0 on success, otherwise negative error code
@@ -1242,12 +1242,12 @@ int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
  *
  * @coretags{task-unrestricted, might-switch}
  */
-int rt_dev_listen(int fd, int backlog);
+int rtdm_listen(int fd, int backlog);
 
 /**
  * @brief Accept connection requests
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[out] addr Buffer for remote address
  * @param[in,out] addrlen Address buffer size
  *
@@ -1261,12 +1261,12 @@ int rt_dev_listen(int fd, int backlog);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-int rt_dev_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
+int rtdm_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
 
 /**
  * @brief Shut down parts of a connection
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] how Specifies the part to be shut down (@c SHUT_xxx)
 *
  * @return 0 on success, otherwise negative error code
@@ -1279,12 +1279,12 @@ int rt_dev_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
  *
  * @coretags{secondary-only, might-switch}
  */
-int rt_dev_shutdown(int fd, int how);
+int rtdm_shutdown(int fd, int how);
 
 /**
  * @brief Get socket option
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] level Addressed stack level
  * @param[in] optname Option name ID
  * @param[out] optval Value buffer
@@ -1300,13 +1300,13 @@ int rt_dev_shutdown(int fd, int how);
  *
  * @coretags{task-unrestricted, might-switch}
  */
-int rt_dev_getsockopt(int fd, int level, int optname, void *optval,
+int rtdm_getsockopt(int fd, int level, int optname, void *optval,
 		      socklen_t *optlen);
 
 /**
  * @brief Set socket option
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[in] level Addressed stack level
  * @param[in] optname Option name ID
  * @param[in] optval Value buffer
@@ -1322,13 +1322,13 @@ int rt_dev_getsockopt(int fd, int level, int optname, void *optval,
  *
  * @coretags{task-unrestricted, might-switch}
  */
-int rt_dev_setsockopt(int fd, int level, int optname, const void *optval,
-		      socklen_t optlen);
+int rtdm_setsockopt(int fd, int level, int optname, const void *optval,
+		    socklen_t optlen);
 
 /**
  * @brief Get local socket address
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[out] name Address buffer
  * @param[in,out] namelen Address buffer size
  *
@@ -1342,12 +1342,12 @@ int rt_dev_setsockopt(int fd, int level, int optname, const void *optval,
  *
  * @coretags{task-unrestricted, might-switch}
  */
-int rt_dev_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
+int rtdm_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
 
 /**
  * @brief Get socket destination address
  *
- * @param[in] fd File descriptor as returned by rt_dev_socket()
+ * @param[in] fd File descriptor as returned by rtdm_socket()
  * @param[out] name Address buffer
  * @param[in,out] namelen Address buffer size
  *
@@ -1361,7 +1361,7 @@ int rt_dev_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
  *
  * @coretags{task-unrestricted, might-switch}
  */
-int rt_dev_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
+int rtdm_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
 
 #endif /* DOXYGEN_CPP */
 
