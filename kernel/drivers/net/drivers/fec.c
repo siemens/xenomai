@@ -1658,7 +1658,6 @@ static int fec_probe(struct platform_device *pdev)
 	/* RTnet */
 	rtdev_alloc_name(ndev, "rteth%d");
 	rt_rtdev_connect(ndev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(ndev);
 	ndev->vers = RTDEV_VERS_2_0;
 
 	/* setup board info structure */

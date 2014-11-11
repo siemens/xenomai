@@ -785,7 +785,6 @@ static int natsemi_probe1 (struct pci_dev *pdev,
 	}
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(dev);
 	dev->vers = RTDEV_VERS_2_0;
 /*** RTnet ***/
 
@@ -1129,8 +1128,6 @@ static int netdev_open(struct rtnet_device *dev)
 	long ioaddr = dev->base_addr;
 	int i;
 
-	RTNET_MOD_INC_USE_COUNT;
-
 	/* Reset the chip, just in case. */
 	natsemi_reset(dev);
 
@@ -1141,7 +1138,6 @@ static int netdev_open(struct rtnet_device *dev)
 /*** RTnet ***/
 /*	i = request_irq(dev->irq, &intr_handler, SA_SHIRQ, dev->name, dev);*/
 	if (i) {
-		RTNET_MOD_DEC_USE_COUNT;
 		return i;
 	}
 
@@ -1151,7 +1147,6 @@ static int netdev_open(struct rtnet_device *dev)
 	i = alloc_ring(dev);
 	if (i < 0) {
 		rtdm_irq_free(&np->irq_handle);
-		RTNET_MOD_DEC_USE_COUNT;
 		return i;
 	}
 	init_ring(dev);
@@ -2651,8 +2646,6 @@ static int netdev_close(struct rtnet_device *dev)
 			writel(np->SavedClkRun, (void *)(ioaddr + ClkRun));
 		}
 	}
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }

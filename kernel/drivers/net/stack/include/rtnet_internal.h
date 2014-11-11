@@ -36,9 +36,9 @@
 #define RTNET_ASSERT(expr, func) \
     if (!(expr)) \
     { \
-        rtdm_printk("Assertion failed! %s:%s:%d %s\n", \
-        __FILE__, __FUNCTION__, __LINE__, (#expr)); \
-        func \
+	rtdm_printk("Assertion failed! %s:%s:%d %s\n", \
+	__FILE__, __FUNCTION__, __LINE__, (#expr)); \
+	func \
     }
 #else
 #define RTNET_ASSERT(expr, func)
@@ -87,15 +87,15 @@ extern struct proc_dir_entry *rtnet_proc_root;
     const int max_block_len = MAX_BLOCK_LEN;                            \
     off_t __limit           = count - MAX_BLOCK_LEN;                    \
     int   __len             = 0;                                        \
-                                                                        \
+									\
     *eof = 1;                                                           \
     if (count < MAX_BLOCK_LEN)                                          \
-        return 0
+	return 0
 
 #define RTNET_PROC_PRINT(fmt, args...)                                  \
     ({                                                                  \
-        __len += snprintf(buf + __len, max_block_len, fmt, ##args);     \
-        (__len <= __limit);                                             \
+	__len += snprintf(buf + __len, max_block_len, fmt, ##args);     \
+	(__len <= __limit);                                             \
     })
 
 #define RTNET_PROC_PRINT_DONE                                           \
@@ -108,86 +108,50 @@ extern struct proc_dir_entry *rtnet_proc_root;
     off_t __pos             = 0;                                        \
     off_t __begin           = 0;                                        \
     int   __len             = 0;                                        \
-                                                                        \
+									\
     *eof = 1;                                                           \
     if (count < MAX_BLOCK_LEN)                                          \
-        return 0
+	return 0
 
 #define RTNET_PROC_PRINT_EX(fmt, args...)                               \
     ({                                                                  \
-        int len = snprintf(buf + __len, max_block_len, fmt, ##args);    \
-        __len += len;                                                   \
-        __pos += len;                                                   \
-        if (__pos < offset) {                                           \
-            __len = 0;                                                  \
-            __begin = __pos;                                            \
-        }                                                               \
-        if (__pos > __limit)                                            \
-            *eof = 0;                                                   \
-        (__pos <= __limit);                                             \
+	int len = snprintf(buf + __len, max_block_len, fmt, ##args);    \
+	__len += len;                                                   \
+	__pos += len;                                                   \
+	if (__pos < offset) {                                           \
+	    __len = 0;                                                  \
+	    __begin = __pos;                                            \
+	}                                                               \
+	if (__pos > __limit)                                            \
+	    *eof = 0;                                                   \
+	(__pos <= __limit);                                             \
     })
 
 #define RTNET_PROC_PRINT_DONE_EX                                        \
     *start = buf + (offset - __begin);                                  \
     __len -= (offset - __begin);                                        \
     if (__len > count)                                                  \
-        __len = count;                                                  \
+	__len = count;                                                  \
     if (__len < 0)                                                      \
-        __len = 0;                                                      \
+	__len = 0;                                                      \
     return __len;
 
 #endif /* CONFIG_PROC_FS */
 
-
-/* manage module reference counter */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-
-static inline void RTNET_MOD_INC_USE_COUNT_EX(struct module *module)
-{
-    if (!try_module_get(module))
-        WARN_ON(1);
-}
-
-static inline void RTNET_MOD_DEC_USE_COUNT_EX(struct module *module)
-{
-    module_put(module);
-}
-
-#else
-
-static inline void RTNET_MOD_INC_USE_COUNT_EX(struct module *module)
-{
-    __MOD_INC_USE_COUNT(module);
-}
-
-static inline void RTNET_MOD_DEC_USE_COUNT_EX(struct module *module)
-{
-    __MOD_DEC_USE_COUNT(module);
-}
-
-#endif
-
-#define RTNET_MOD_INC_USE_COUNT RTNET_MOD_INC_USE_COUNT_EX(THIS_MODULE)
-#define RTNET_MOD_DEC_USE_COUNT RTNET_MOD_DEC_USE_COUNT_EX(THIS_MODULE)
-
-#define RTNET_SET_MODULE_OWNER(some_struct) \
-    do { (some_struct)->rt_owner = THIS_MODULE; } while (0)
-
-
 #ifndef list_for_each_entry
 #define list_for_each_entry(pos, head, member)                      \
     for (pos = list_entry((head)->next, typeof(*pos), member),      \
-                          prefetch(pos->member.next);               \
-         &pos->member != (head);                                    \
-         pos = list_entry(pos->member.next, typeof(*pos), member),  \
-                          prefetch(pos->member.next))
+			  prefetch(pos->member.next);               \
+	 &pos->member != (head);                                    \
+	 pos = list_entry(pos->member.next, typeof(*pos), member),  \
+			  prefetch(pos->member.next))
 #endif
 
 
 #ifndef container_of
 #define container_of(ptr, type, member) ({                      \
-        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-        (type *)( (char *)__mptr - offsetof(type,member) );})
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+	(type *)( (char *)__mptr - offsetof(type,member) );})
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)

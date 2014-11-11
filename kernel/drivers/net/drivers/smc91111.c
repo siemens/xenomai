@@ -882,8 +882,6 @@ int __init smc_init(struct rtnet_device *dev)
 
 	PRINTK2("CARDNAME:smc_init\n");
 
-	RTNET_SET_MODULE_OWNER(dev);
-
 	/*  try a specific location */
 	if (base_addr > 0x1ff)
 		return smc_probe(dev, base_addr);
@@ -1303,9 +1301,6 @@ static int smc_open(struct rtnet_device *dev)
 	memset(dev->priv, 0, (size_t)&((struct smc_local *)0)->irq_handle);
 
 	rtnetif_start_queue(dev);
-#ifdef MODULE
-	RTNET_MOD_INC_USE_COUNT;
-#endif
 
 	// Setup the default Register Modes
 	lp->tcr_cur_mode = TCR_DEFAULT;
@@ -1825,9 +1820,6 @@ static int smc_close(struct rtnet_device *dev)
 	smc_shutdown( dev->base_addr );
 
 	/* Update the statistics here. */
-#ifdef MODULE
-	RTNET_MOD_DEC_USE_COUNT;
-#endif
 
 	return 0;
 }
@@ -1929,7 +1921,6 @@ int __init init_module(void)
 	}
 	rtdev_alloc_name(devSMC91111, "rteth%d");
 	rt_rtdev_connect(devSMC91111, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(devSMC91111);
 	devSMC91111->vers = RTDEV_VERS_2_0;
 
 	/* copy the parameters from insmod into the device structure */

@@ -675,15 +675,8 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 	}
 	rtdev_alloc_name(rtdev, "rteth%d");
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 	/*** /RTnet ***/
-
-	RTNET_SET_MODULE_OWNER(rtdev);
-
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0)
-	//SET_NETDEV_DEV(rtdev, &pdev->dev);
-#endif
 
 	priv = rtdev->priv;
 
@@ -1090,11 +1083,8 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 //	u8 diff;
 //	u32 TxPhyAddr, RxPhyAddr;
 
-	RTNET_MOD_INC_USE_COUNT;	/*** RTnet / <kk> ***/
-
 	if( priv->drvinit_fail == 1 ){
 		printk("%s: Gigabit driver open failed.\n", rtdev->name );
-		RTNET_MOD_DEC_USE_COUNT;	/*** RTnet / <kk> ***/
 		return -ENOMEM;
 	}
 
@@ -1105,7 +1095,6 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 
 	// retval = request_irq (dev->irq, rtl8169_interrupt, SA_SHIRQ, dev->name, dev);
 	if (retval) {
-		RTNET_MOD_DEC_USE_COUNT;	/*** RTnet / <kk> ***/
 		return retval;
 	}
 
@@ -1115,14 +1104,12 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 	priv->txdesc_space = pci_alloc_consistent( pdev, priv->sizeof_txdesc_space, &priv->txdesc_phy_dma_addr );
 	if( priv->txdesc_space == NULL ){
 		printk("%s: Gigabit driver alloc txdesc_space failed.\n", rtdev->name );
-		RTNET_MOD_DEC_USE_COUNT;	/*** RTnet / <kk> ***/
 		return -ENOMEM;
 	}
 	priv->sizeof_rxdesc_space = NUM_RX_DESC * sizeof(struct RxDesc)+256;
 	priv->rxdesc_space = pci_alloc_consistent( pdev, priv->sizeof_rxdesc_space, &priv->rxdesc_phy_dma_addr );
 	if( priv->rxdesc_space == NULL ){
 		printk("%s: Gigabit driver alloc rxdesc_space failed.\n", rtdev->name );
-		RTNET_MOD_DEC_USE_COUNT;	/*** RTnet / <kk> ***/
 		return -ENOMEM;
 	}
 
@@ -1957,8 +1944,6 @@ static int rtl8169_close (struct rtnet_device *rtdev)
 	}//-----------------------------------------------------------------------------
 
 	//DBG_PRINT("%s: %s() alloc_rxskb_cnt = %d\n", dev->name, __FUNCTION__, alloc_rxskb_cnt );	/*** <kk> won't work anymore ***/
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }

@@ -1168,7 +1168,6 @@ eagain:
 static int
 mpc5xxx_fec_open(struct rtnet_device *dev)
 {
-	RTNET_MOD_INC_USE_COUNT;
 	return mpc5xxx_fec_setup(dev,0);
 }
 
@@ -1639,7 +1638,6 @@ static int
 mpc5xxx_fec_close(struct rtnet_device *dev)
 {
 	int ret = mpc5xxx_fec_cleanup(dev,0);
-	RTNET_MOD_DEC_USE_COUNT;
 	return ret;
 }
 
@@ -1961,7 +1959,6 @@ mpc5xxx_fec_init(void)
 	rtdev_alloc_name(dev, "rteth%d");
 	memset(dev->priv, 0, sizeof(*priv));
 	rt_rtdev_connect(dev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(dev);
 	dev->vers = RTDEV_VERS_2_0;
 
 

@@ -980,8 +980,6 @@ static int macb_open(struct rtnet_device *rtdev)
 
 	rtnetif_start_queue(rtdev);
 
-	RTNET_MOD_INC_USE_COUNT;
-
 	return 0;
 }
 
@@ -1003,8 +1001,6 @@ static int macb_close(struct rtnet_device *rtdev)
 	rtdm_irq_free(&bp->irq_handle);
 	rt_stack_disconnect(rtdev);
 	macb_free_consistent(bp);
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }
@@ -1163,7 +1159,6 @@ static int __init macb_probe(struct platform_device *pdev)
 
 	rtdev_alloc_name(rtdev, "rteth%d");
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 
 	/* TODO: Actually, we have some interesting features... */

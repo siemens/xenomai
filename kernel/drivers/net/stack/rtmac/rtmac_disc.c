@@ -63,49 +63,59 @@ int rtmac_disc_attach(struct rtnet_device *rtdev, struct rtmac_disc *disc)
     RTNET_ASSERT(disc->attach != NULL, return -EINVAL;);
 
     if (rtdev->mac_disc) {
-        printk("RTmac: another discipline for rtdev '%s' active.\n", rtdev->name);
-        return -EBUSY;
+	printk("RTmac: another discipline for rtdev '%s' active.\n", rtdev->name);
+	return -EBUSY;
     }
 
     if (rtdev->flags & IFF_LOOPBACK)
-        return -EINVAL;
+	return -EINVAL;
 
     if (!try_module_get(disc->owner))
-        return -EIDRM;
+	return -EIDRM;
+
+    if (!rtdev_reference(rtdev)) {
+	ret = -EIDRM;
+	goto err_module_put;
+    }
 
     /* alloc memory */
     priv = kmalloc(sizeof(struct rtmac_priv) + disc->priv_size, GFP_KERNEL);
     if (!priv) {
-        printk("RTmac: kmalloc returned NULL for rtmac!\n");
-        return -ENOMEM;
+	printk("RTmac: kmalloc returned NULL for rtmac!\n");
+	return -ENOMEM;
     }
     priv->orig_start_xmit = rtdev->start_xmit;
 
     /* call attach function of discipline */
     ret = disc->attach(rtdev, priv->disc_priv);
-    if (ret < 0) {
-        kfree(priv);
-        return ret;
-    }
+    if (ret < 0)
+	goto err_kfree_priv;
 
     /* now attach RTmac to device */
     rtdev->mac_disc = disc;
     rtdev->mac_priv = priv;
     rtdev->start_xmit = disc->rt_packet_tx;
     if (disc->get_mtu)
-        rtdev->get_mtu = disc->get_mtu;
+	rtdev->get_mtu = disc->get_mtu;
     rtdev->mac_detach = rtmac_disc_detach;
-
-    RTNET_MOD_INC_USE_COUNT_EX(rtdev->rt_owner);
-    rtdev_reference(rtdev);
 
     /* create the VNIC */
     ret = rtmac_vnic_add(rtdev, disc->vnic_xmit);
     if (ret < 0) {
-        printk("RTmac: Warning, VNIC creation failed for rtdev %s.\n", rtdev->name);
+	printk("RTmac: Warning, VNIC creation failed for rtdev %s.\n", rtdev->name);
+	goto err_disc_detach;
     }
 
     return 0;
+
+  err_disc_detach:
+    disc->detach(rtdev, priv->disc_priv);
+  err_kfree_priv:
+    kfree(priv);
+    rtdev_dereference(rtdev);
+  err_module_put:
+    mdoule_put(disc->owner);
+    return ret;
 }
 
 
@@ -133,7 +143,7 @@ int rtmac_disc_detach(struct rtnet_device *rtdev)
 
     disc = rtdev->mac_disc;
     if (!disc)
-        return -ENODEV;
+	return -ENODEV;
 
     RTNET_ASSERT(disc->detach != NULL, return -EINVAL;);
 
@@ -142,12 +152,12 @@ int rtmac_disc_detach(struct rtnet_device *rtdev)
 
     ret = rtmac_vnic_unregister(rtdev);
     if (ret < 0)
-        return ret;
+	return ret;
 
     /* call release function of discipline */
     ret = disc->detach(rtdev, priv->disc_priv);
     if (ret < 0)
-        return ret;
+	return ret;
 
     rtmac_vnic_cleanup(rtdev);
 
@@ -160,7 +170,6 @@ int rtmac_disc_detach(struct rtnet_device *rtdev)
     rtdev->mac_priv   = NULL;
     rtdev->mac_detach = NULL;
 
-    RTNET_MOD_DEC_USE_COUNT_EX(rtdev->rt_owner);
     rtdev_dereference(rtdev);
 
     kfree(priv);
@@ -180,10 +189,10 @@ static struct rtmac_disc *rtmac_get_disc_by_name(const char *name)
     mutex_lock(&disc_list_lock);
 
     list_for_each(disc, &disc_list) {
-        if (strcmp(((struct rtmac_disc *)disc)->name, name) == 0) {
-            mutex_unlock(&disc_list_lock);
-            return (struct rtmac_disc *)disc;
-        }
+	if (strcmp(((struct rtmac_disc *)disc)->name, name) == 0) {
+	    mutex_unlock(&disc_list_lock);
+	    return (struct rtmac_disc *)disc;
+	}
     }
 
     mutex_unlock(&disc_list_lock);
@@ -209,19 +218,19 @@ int __rtmac_disc_register(struct rtmac_disc *disc, struct module *module)
 
     if (rtmac_get_disc_by_name(disc->name) != NULL)
     {
-        printk("RTmac: discipline '%s' already registered!\n", disc->name);
-        return -EBUSY;
+	printk("RTmac: discipline '%s' already registered!\n", disc->name);
+	return -EBUSY;
     }
 
     ret = rtnet_register_ioctls(&disc->ioctls);
     if (ret < 0)
-        return ret;
+	return ret;
 
 #ifdef CONFIG_PROC_FS
     ret = rtmac_disc_proc_register(disc);
     if (ret < 0) {
-        rtnet_unregister_ioctls(&disc->ioctls);
-        return ret;
+	rtnet_unregister_ioctls(&disc->ioctls);
+	return ret;
     }
 #endif /* CONFIG_PROC_FS */
 
@@ -257,7 +266,7 @@ void rtmac_disc_deregister(struct rtmac_disc *disc)
 
 #ifdef CONFIG_PROC_FS
 int rtmac_proc_read_disc(char *buf, char **start, off_t offset, int count,
-                         int *eof, void *data)
+			 int *eof, void *data)
 {
     struct list_head    *disc;
     RTNET_PROC_PRINT_VARS(80);
@@ -266,13 +275,13 @@ int rtmac_proc_read_disc(char *buf, char **start, off_t offset, int count,
     mutex_lock(&disc_list_lock);
 
     if (!RTNET_PROC_PRINT("Name\t\tID\n"))
-        goto done;
+	goto done;
 
     list_for_each(disc, &disc_list) {
-        if (!RTNET_PROC_PRINT("%-15s %04X\n",
-                              ((struct rtmac_disc *)disc)->name,
-                              ntohs(((struct rtmac_disc *)disc)->disc_type)))
-            break;
+	if (!RTNET_PROC_PRINT("%-15s %04X\n",
+			      ((struct rtmac_disc *)disc)->name,
+			      ntohs(((struct rtmac_disc *)disc)->disc_type)))
+	    break;
     }
 
   done:

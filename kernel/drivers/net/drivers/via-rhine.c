@@ -688,7 +688,6 @@ static int via_rhine_init_one (struct pci_dev *pdev,
 	}
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(dev);
 	dev->vers = RTDEV_VERS_2_0;
 /*** RTnet ***/
 
@@ -1155,8 +1154,6 @@ static int via_rhine_open(struct rtnet_device *dev) /*** RTnet ***/
 	void *ioaddr = (void *)dev->base_addr;
 	int i;
 
-	RTNET_MOD_INC_USE_COUNT;
-
 	/* Reset the chip. */
 	writew(CmdReset, ioaddr + ChipCmd);
 
@@ -1166,7 +1163,6 @@ static int via_rhine_open(struct rtnet_device *dev) /*** RTnet ***/
 			     RTDM_IRQTYPE_SHARED, "rt_via-rhine", dev);
 /*** RTnet ***/
 	if (i) {
-		RTNET_MOD_DEC_USE_COUNT;
 		return i;
 	}
 
@@ -1176,7 +1172,6 @@ static int via_rhine_open(struct rtnet_device *dev) /*** RTnet ***/
 
 	i = alloc_ring(dev);
 	if (i) {
-		RTNET_MOD_DEC_USE_COUNT;
 		return i;
 	}
 	alloc_rbufs(dev);
@@ -1973,8 +1968,6 @@ static int via_rhine_close(struct rtnet_device *dev) /*** RTnet ***/
 	free_rbufs(dev);
 	free_tbufs(dev);
 	free_ring(dev);
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }

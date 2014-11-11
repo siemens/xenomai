@@ -650,7 +650,6 @@ static int rtl8139_init_board (struct pci_dev *pdev,
 
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
 
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 	tp = rtdev->priv;
 	tp->pci_dev = pdev;
@@ -1165,8 +1164,6 @@ static int rtl8139_open (struct rtnet_device *rtdev)
 
 	rtl8139_init_ring (rtdev);
 	rtl8139_hw_start (rtdev);
-
-	RTNET_MOD_INC_USE_COUNT;
 
 	return 0;
 }
@@ -1754,8 +1751,6 @@ static int rtl8139_close (struct rtnet_device *rtdev)
 
 	if (rtl_chip_info[tp->chipset].flags & HasHltClk)
 		RTL_W8 (HltClk, 'H');        /* 'R' would leave the clock running. */
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }

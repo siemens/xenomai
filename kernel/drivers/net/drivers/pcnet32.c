@@ -649,7 +649,6 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
 	return -ENOMEM;
     rtdev_alloc_name(dev, "rteth%d");
     rt_rtdev_connect(dev, &RTDEV_manager);
-    RTNET_SET_MODULE_OWNER(dev);
     dev->vers = RTDEV_VERS_2_0;
 /*** RTnet ***/
 
@@ -965,8 +964,6 @@ pcnet32_open(struct rtnet_device *dev) /*** RTnet ***/
 	       dev->name, i, (u32) (lp->dma_addr + offsetof(struct pcnet32_private, init_block)),
 	       lp->a.read_csr(ioaddr, 0));
 
-
-    RTNET_MOD_INC_USE_COUNT;
 
     return 0;	/* Always succeed */
 }
@@ -1507,8 +1504,6 @@ pcnet32_close(struct rtnet_device *dev) /*** RTnet ***/
 	lp->tx_skbuff[i] = NULL;
 	lp->tx_dma_addr[i] = 0;
     }
-
-    RTNET_MOD_DEC_USE_COUNT;
 
     return 0;
 }

@@ -194,8 +194,6 @@ static int CPMVEC_ENET;
 static int
 scc_enet_open(struct rtnet_device *rtdev)
 {
-	RTNET_MOD_INC_USE_COUNT;
-
 	/* I should reset the ring buffers here, but I don't yet know
 	 * a simple way to do that.
 	 */
@@ -589,8 +587,6 @@ scc_enet_close(struct rtnet_device *rtdev)
 	*/
 	rtnetif_stop_queue(rtdev);
 
-	RTNET_MOD_DEC_USE_COUNT;
-
 	return 0;
 }
 
@@ -747,7 +743,6 @@ int __init scc_enet_init(void)
 	}
 	rtdev_alloc_name(rtdev, "rteth%d");
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 
 	cep = (struct scc_enet_private *)rtdev->priv;

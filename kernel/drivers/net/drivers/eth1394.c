@@ -387,7 +387,6 @@ static void eth1394_add_host (struct hpsb_host *host)
 	rtdev_alloc_name(dev, "rteth%d");
 	memset(dev->priv, 0, sizeof(struct eth1394_priv));
 	rt_rtdev_connect(dev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(dev);
 
 	//dev->init = eth1394_init_dev;
 

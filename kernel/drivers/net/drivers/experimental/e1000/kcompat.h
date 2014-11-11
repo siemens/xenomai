@@ -708,7 +708,7 @@ extern int _kc_is_valid_ether_addr(u8 *addr);
 #define ADVERTISE_100HALF       0x0080  /* Try for 100mbps half-duplex */
 #define ADVERTISE_100FULL       0x0100  /* Try for 100mbps full-duplex */
 #define ADVERTISE_ALL (ADVERTISE_10HALF | ADVERTISE_10FULL | \
-                       ADVERTISE_100HALF | ADVERTISE_100FULL)
+		       ADVERTISE_100HALF | ADVERTISE_100FULL)
 /* Expansion register for auto-negotiation. */
 #define EXPANSION_ENABLENPAGE   0x0004  /* This enables npage words    */
 #endif
@@ -1076,8 +1076,8 @@ static inline int _kc_pci_dma_mapping_error(dma_addr_t dma_addr)
 #undef find_next_bit
 #define find_next_bit _kc_find_next_bit
 extern unsigned long _kc_find_next_bit(const unsigned long *addr,
-                                       unsigned long size,
-                                       unsigned long offset);
+				       unsigned long size,
+				       unsigned long offset);
 #define find_first_bit(addr, size) find_next_bit((addr), (size), 0)
 
 #endif /* 2.6.0 => 2.5.28 */
@@ -1102,12 +1102,12 @@ extern unsigned long _kc_find_next_bit(const unsigned long *addr,
 #define bitmap_zero _kc_bitmap_zero
 static inline void _kc_bitmap_zero(unsigned long *dst, int nbits)
 {
-        if (nbits <= BITS_PER_LONG)
-                *dst = 0UL;
-        else {
-                int len = BITS_TO_LONGS(nbits) * sizeof(unsigned long);
-                memset(dst, 0, len);
-        }
+	if (nbits <= BITS_PER_LONG)
+		*dst = 0UL;
+	else {
+		int len = BITS_TO_LONGS(nbits) * sizeof(unsigned long);
+		memset(dst, 0, len);
+	}
 }
 #endif /* < 2.6.6 */
 
@@ -1185,34 +1185,34 @@ static inline unsigned long _kc_msleep_interruptible(unsigned int msecs)
 #undef pci_save_state
 #endif
 #define pci_save_state(X) { \
-        int i; \
-        if (adapter->pci_state) { \
-                for (i = 0; i < 16; i++) { \
-                        pci_read_config_dword((X), \
-                                              i * 4, \
-                                              &adapter->pci_state[i]); \
-                } \
-        } \
+	int i; \
+	if (adapter->pci_state) { \
+		for (i = 0; i < 16; i++) { \
+			pci_read_config_dword((X), \
+					      i * 4, \
+					      &adapter->pci_state[i]); \
+		} \
+	} \
 }
 
 #ifdef pci_restore_state
 #undef pci_restore_state
 #endif
 #define pci_restore_state(X) { \
-        int i; \
-        if (adapter->pci_state) { \
-                for (i = 0; i < 16; i++) { \
-                        pci_write_config_dword((X), \
-                                               i * 4, \
-                                               adapter->pci_state[i]); \
-                } \
-        } else { \
-                for (i = 0; i < 6; i++) { \
-                        pci_write_config_dword((X), \
-                                               PCI_BASE_ADDRESS_0 + (i * 4), \
-                                               (X)->resource[i].start); \
-                } \
-        } \
+	int i; \
+	if (adapter->pci_state) { \
+		for (i = 0; i < 16; i++) { \
+			pci_write_config_dword((X), \
+					       i * 4, \
+					       adapter->pci_state[i]); \
+		} \
+	} else { \
+		for (i = 0; i < 6; i++) { \
+			pci_write_config_dword((X), \
+					       PCI_BASE_ADDRESS_0 + (i * 4), \
+					       (X)->resource[i].start); \
+		} \
+	} \
 }
 #endif /* 2.4.6 <= x < 2.6.10 */
 
@@ -1310,7 +1310,7 @@ extern void *_kc_kzalloc(size_t size, int flags);
 #ifndef netdev_alloc_skb
 #define netdev_alloc_skb _kc_netdev_alloc_skb
 extern struct sk_buff *_kc_netdev_alloc_skb(struct net_device *dev,
-                                            unsigned int length);
+					    unsigned int length);
 #endif
 
 #ifndef skb_is_gso
@@ -1341,7 +1341,7 @@ static inline int _kc_skb_is_gso(const struct sk_buff *skb)
 #ifndef RHEL_RELEASE_VERSION
 #define RHEL_RELEASE_VERSION(a,b) 0
 #endif
-#if (!(( RHEL_RELEASE_CODE > RHEL_RELEASE_VERSION(4,4) ) && ( RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(5,0) ) || ( RHEL_RELEASE_CODE > RHEL_RELEASE_VERSION(5,0) ))) 
+#if (!(( RHEL_RELEASE_CODE > RHEL_RELEASE_VERSION(4,4) ) && ( RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(5,0) ) || ( RHEL_RELEASE_CODE > RHEL_RELEASE_VERSION(5,0) )))
 typedef irqreturn_t (*irq_handler_t)(int, void*, struct pt_regs *);
 #endif
 typedef irqreturn_t (*new_handler_t)(int, void*);
@@ -1456,7 +1456,7 @@ do { \
 #define skb_network_header(skb) (skb->nh.raw)
 #define skb_tail_pointer(skb) skb->tail
 #define skb_copy_to_linear_data_offset(skb, offset, from, len) \
-                                 memcpy(skb->data + offset, from, len)
+				 memcpy(skb->data + offset, from, len)
 #define skb_network_header_len(skb) (skb->h.raw - skb->nh.raw)
 #define pci_register_driver pci_module_init
 #define skb_mac_header(skb) skb->mac.raw
@@ -1498,11 +1498,6 @@ extern int __kc_adapter_clean(struct net_device *, int *);
 
 
 /*****************************************************************************/
-#if ( LINUX_VERSION_CODE > KERNEL_VERSION(2,6,22) )
-#undef ETHTOOL_GPERMADDR
-#undef SET_MODULE_OWNER
-#define SET_MODULE_OWNER(dev) do { } while (0)
-#endif /* > 2.6.22 */
 
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24) )
 #undef dev_get_by_name
@@ -1511,4 +1506,3 @@ extern int __kc_adapter_clean(struct net_device *, int *);
 #endif /* < 2.6.24 */
 
 #endif /* _KCOMPAT_H_ */
-

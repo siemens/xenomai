@@ -805,8 +805,6 @@ fcc_enet_close(struct rtnet_device *rtdev)
 	/* Don't know what to do yet. */
 	rtnetif_stop_queue(rtdev);
 
-	MOD_DEC_USE_COUNT;
-
 	return 0;
 }
 
@@ -1651,7 +1649,6 @@ int __init fec_enet_init(void)
 		}
 		rtdev_alloc_name(rtdev, "rteth%d");
 		rt_rtdev_connect(rtdev, &RTDEV_manager);
-		RTNET_SET_MODULE_OWNER(rtdev);
 		rtdev->vers = RTDEV_VERS_2_0;
 
 		cep = (struct fcc_enet_private *)rtdev->priv;
@@ -2233,14 +2230,12 @@ fcc_enet_open(struct rtnet_device *rtdev)
 		mii_do_cmd(dev, phy_cmd_relink);
 #endif	/* CONFIG_PM826 */
 		rtnetif_start_queue(rtdev);
-		MOD_INC_USE_COUNT;
 		return 0;		/* Success */
 	}
 	return -ENODEV;		/* No PHY we understand */
 #else
 	fep->link = 1;
 	rtnetif_start_queue(rtdev);
-	MOD_INC_USE_COUNT;
 	return 0;					/* Always succeed */
 #endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
 }

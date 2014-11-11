@@ -487,14 +487,11 @@ tulip_open(/*RTnet*/struct rtnet_device *rtdev)
 	struct tulip_private *tp = (struct tulip_private *)rtdev->priv;
 	int retval;
 
-	RTNET_MOD_INC_USE_COUNT;
-
 	if ((retval = /*RTnet*/rtdm_irq_request(&tp->irq_handle, rtdev->irq,
 						tulip_interrupt, 0, "rt_tulip",
 						rtdev))) {
 		printk("%s: Unable to install ISR for IRQ %d\n",
 			  rtdev->name,rtdev->irq);
-		RTNET_MOD_DEC_USE_COUNT;
 		return retval;
 	}
 
@@ -752,8 +749,6 @@ static int tulip_close (/*RTnet*/struct rtnet_device *rtdev)
 	}
 
 	rt_stack_disconnect(rtdev);
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }
@@ -1155,7 +1150,6 @@ static int tulip_init_one (struct pci_dev *pdev,
 	}
 	//rtdev_alloc_name(rtdev, "eth%d");//Done by register_rtdev()
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 
 	if (pci_resource_len (pdev, 0) < tulip_tbl[chip_idx].io_size) {

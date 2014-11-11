@@ -282,8 +282,6 @@ static int rt2x00_open (struct rtnet_device *rtnet_dev) {
 
     rtnetif_start_queue(rtnet_dev);
 
-    RTNET_MOD_INC_USE_COUNT;
-
     DEBUG("Exit success.\n");
 
     return 0;
@@ -310,8 +308,6 @@ static int rt2x00_close (struct rtnet_device *rtnet_dev) {
 
     rtnetif_stop_queue(rtnet_dev);
     rt_stack_disconnect(rtnet_dev);
-
-    RTNET_MOD_DEC_USE_COUNT;
 
     return 0;
 }
@@ -362,7 +358,6 @@ struct rtnet_device * rt2x00_core_probe(struct _rt2x00_dev_handler * handler,
 	goto exit;
 
     rt_rtdev_connect(rtnet_dev, &RTDEV_manager);
-    RTNET_SET_MODULE_OWNER(rtnet_dev);
     rtnet_dev->vers = RTDEV_VERS_2_0;
 
     rtwlan_dev = rtnetdev_priv(rtnet_dev);

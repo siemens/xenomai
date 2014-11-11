@@ -1066,7 +1066,6 @@ static int vortex_probe1(struct pci_dev *pdev,
 	rtdev_alloc_name(rtdev, "rteth%d");
 	memset(rtdev->priv, 0, sizeof(*vp));
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 	// *** RTnet ***
 
@@ -1883,8 +1882,6 @@ vortex_open(struct rtnet_device *rtdev)
 	int i;
 	int retval;
 
-	RTNET_MOD_INC_USE_COUNT;
-
 	// *** RTnet ***
 	rt_stack_connect(rtdev, &STACK_manager);
 
@@ -1941,7 +1938,6 @@ vortex_open(struct rtnet_device *rtdev)
 	rt_stack_disconnect(rtdev);
 	// *** RTnet ***
   out:
-	RTNET_MOD_DEC_USE_COUNT;
 	if (vortex_debug > 1)
 		printk(KERN_ERR "%s: vortex_open() fails: returning %d\n", rtdev->name, retval);
 	return retval;
@@ -2954,8 +2950,6 @@ vortex_close(struct rtnet_device *rtdev)
 			}
 		}
 	}
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }

@@ -359,10 +359,6 @@ static void tap_dev_setup(struct net_device *dev)
 #endif /* !HAVE_NET_DEVICE_OPS */
     dev->mtu             = 1500;
     dev->flags           &= ~IFF_MULTICAST;
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-    SET_MODULE_OWNER(dev);
-#endif
 }
 
 
@@ -383,7 +379,6 @@ void cleanup_tap_devices(void)
 		rtdev->hard_start_xmit = tap_device[i].orig_xmit;
 		if (rtdev->features & NETIF_F_LLTX)
 		    rtdev->start_xmit = tap_device[i].orig_xmit;
-		RTNET_MOD_DEC_USE_COUNT_EX(rtdev->rt_owner);
 		mutex_unlock(&rtdev->nrt_lock);
 
 		rtdev_dereference(rtdev);
@@ -495,7 +490,6 @@ int __init rtcap_init(void)
 		rtdev->start_xmit = rtdev->hard_start_xmit;
 
 	    tap_device[i].present |= XMIT_HOOK;
-	    RTNET_MOD_INC_USE_COUNT_EX(rtdev->rt_owner);
 
 	    mutex_unlock(&rtdev->nrt_lock);
 

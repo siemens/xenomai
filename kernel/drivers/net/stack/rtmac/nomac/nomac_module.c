@@ -39,7 +39,7 @@ DEFINE_MUTEX(nomac_nrt_lock);
 
 
 int nomac_proc_read(char *buf, char **start, off_t offset, int count,
-                    int *eof, void *data)
+		    int *eof, void *data)
 {
     struct nomac_priv *entry;
     RTNET_PROC_PRINT_VARS(80);
@@ -48,12 +48,12 @@ int nomac_proc_read(char *buf, char **start, off_t offset, int count,
     mutex_lock(&nomac_nrt_lock);
 
     if (!RTNET_PROC_PRINT("Interface       API Device      State\n"))
-        goto done;
+	goto done;
 
     list_for_each_entry(entry, &nomac_devices, list_entry) {
-        if (!RTNET_PROC_PRINT("%-15s %-15s Attached\n", entry->rtdev->name,
-                              entry->api_device.device_name))
-            break;
+	if (!RTNET_PROC_PRINT("%-15s %-15s Attached\n", entry->rtdev->name,
+			      entry->api_device.device_name))
+	    break;
     }
 
   done:
@@ -78,9 +78,7 @@ int nomac_attach(struct rtnet_device *rtdev, void *priv)
 
     ret = nomac_dev_init(rtdev, nomac);
     if (ret < 0)
-        return ret;
-
-    RTNET_MOD_INC_USE_COUNT;
+	return ret;
 
 #ifdef CONFIG_PROC_FS
     mutex_lock(&nomac_nrt_lock);
@@ -101,8 +99,6 @@ int nomac_detach(struct rtnet_device *rtdev, void *priv)
     nomac_dev_release(nomac);
 
     /* ... */
-    RTNET_MOD_DEC_USE_COUNT;
-
 #ifdef CONFIG_PROC_FS
     mutex_lock(&nomac_nrt_lock);
     list_del(&nomac->list_entry);
@@ -138,9 +134,9 @@ struct rtmac_disc nomac_disc = {
     detach:         nomac_detach,
 
     ioctls:         {
-        service_name:   "RTmac/NoMAC",
-        ioctl_type:     RTNET_IOC_TYPE_RTMAC_NOMAC,
-        handler:        nomac_ioctl
+	service_name:   "RTmac/NoMAC",
+	ioctl_type:     RTNET_IOC_TYPE_RTMAC_NOMAC,
+	handler:        nomac_ioctl
     },
 
 #ifdef CONFIG_PROC_FS
@@ -159,12 +155,12 @@ int __init nomac_init(void)
 
     ret = nomac_proto_init();
     if (ret < 0)
-        return ret;
+	return ret;
 
     ret = rtmac_disc_register(&nomac_disc);
     if (ret < 0) {
-        nomac_proto_cleanup();
-        return ret;
+	nomac_proto_cleanup();
+	return ret;
     }
 
     return 0;

@@ -1131,7 +1131,6 @@ static int e1000_probe(struct pci_dev *pdev,
     memset(netdev->priv, 0, sizeof(struct e1000_adapter));
     rt_rtdev_connect(netdev, &RTDEV_manager);
 
-    RTNET_SET_MODULE_OWNER(netdev);
 	// SET_NETDEV_DEV(netdev, &pdev->dev);
     netdev->vers = RTDEV_VERS_2_0;
 

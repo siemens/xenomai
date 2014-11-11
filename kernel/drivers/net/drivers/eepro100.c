@@ -679,7 +679,6 @@ static int speedo_found1(struct pci_dev *pdev,
 	rtdev_alloc_name(rtdev, "rteth%d");
 	memset(rtdev->priv, 0, sizeof(struct speedo_private));
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 	// *** RTnet ***
 
@@ -878,8 +877,6 @@ speedo_open(struct rtnet_device *rtdev)
 	if (speedo_debug > 1)
 		printk(KERN_DEBUG "%s: speedo_open() irq %d.\n", rtdev->name, rtdev->irq);
 
-	RTNET_MOD_INC_USE_COUNT;
-
 	pci_set_power_state(sp->pdev, 0);
 
 	/* Set up the Tx queue early.. */
@@ -897,7 +894,6 @@ speedo_open(struct rtnet_device *rtdev)
 				  speedo_interrupt, RTDM_IRQTYPE_SHARED,
 				  "rt_eepro100", rtdev);
 	if (retval) {
-		RTNET_MOD_DEC_USE_COUNT;
 		return retval;
 	}
 	// *** RTnet ***
@@ -1698,8 +1694,6 @@ speedo_close(struct rtnet_device *rtdev)
 // *** RTnet ***
 
 	pci_set_power_state(sp->pdev, 2);
-
-	RTNET_MOD_DEC_USE_COUNT;
 
 	return 0;
 }

@@ -49,9 +49,9 @@ int rtmac_vnic_rx(struct rtskb *rtskb, u16 type)
 
 
     if (rtskb_acquire(rtskb, pool) != 0) {
-        mac_priv->vnic_stats.rx_dropped++;
-        kfree_rtskb(rtskb);
-        return -1;
+	mac_priv->vnic_stats.rx_dropped++;
+	kfree_rtskb(rtskb);
+	return -1;
     }
 
     rtskb->protocol = type;
@@ -76,52 +76,52 @@ static void rtmac_vnic_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 
     while (1)
     {
-        rtskb = rtskb_dequeue(&rx_queue);
-        if (!rtskb)
-            break;
+	rtskb = rtskb_dequeue(&rx_queue);
+	if (!rtskb)
+	    break;
 
-        rtdev  = rtskb->rtdev;
-        hdrlen = rtdev->hard_header_len;
+	rtdev  = rtskb->rtdev;
+	hdrlen = rtdev->hard_header_len;
 
-        skb = dev_alloc_skb(hdrlen + rtskb->len + 2);
-        if (skb) {
-            /* the rtskb stamp is useless (different clock), get new one */
+	skb = dev_alloc_skb(hdrlen + rtskb->len + 2);
+	if (skb) {
+	    /* the rtskb stamp is useless (different clock), get new one */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,14)
-            __net_timestamp(skb);
+	    __net_timestamp(skb);
 #else
-            do_gettimeofday(&skb->stamp);
+	    do_gettimeofday(&skb->stamp);
 #endif
 
-            skb_reserve(skb, 2); /* Align IP on 16 byte boundaries */
+	    skb_reserve(skb, 2); /* Align IP on 16 byte boundaries */
 
-            /* copy Ethernet header */
-            memcpy(skb_put(skb, hdrlen),
-                   rtskb->data - hdrlen - sizeof(struct rtmac_hdr), hdrlen);
+	    /* copy Ethernet header */
+	    memcpy(skb_put(skb, hdrlen),
+		   rtskb->data - hdrlen - sizeof(struct rtmac_hdr), hdrlen);
 
-            /* patch the protocol field in the original Ethernet header */
-            ((struct ethhdr*)skb->data)->h_proto = rtskb->protocol;
+	    /* patch the protocol field in the original Ethernet header */
+	    ((struct ethhdr*)skb->data)->h_proto = rtskb->protocol;
 
-            /* copy data */
-            memcpy(skb_put(skb, rtskb->len), rtskb->data, rtskb->len);
+	    /* copy data */
+	    memcpy(skb_put(skb, rtskb->len), rtskb->data, rtskb->len);
 
-            skb->dev      = rtskb->rtdev->mac_priv->vnic;
-            skb->protocol = eth_type_trans(skb, skb->dev);
+	    skb->dev      = rtskb->rtdev->mac_priv->vnic;
+	    skb->protocol = eth_type_trans(skb, skb->dev);
 
-            stats = &rtskb->rtdev->mac_priv->vnic_stats;
+	    stats = &rtskb->rtdev->mac_priv->vnic_stats;
 
-            kfree_rtskb(rtskb);
+	    kfree_rtskb(rtskb);
 
-            stats->rx_packets++;
-            stats->rx_bytes += skb->len;
+	    stats->rx_packets++;
+	    stats->rx_bytes += skb->len;
 
-            netif_rx(skb);
-        }
-        else {
-            printk("RTmac: VNIC fails to allocate linux skb\n");
-            kfree_rtskb(rtskb);
-        }
+	    netif_rx(skb);
+	}
+	else {
+	    printk("RTmac: VNIC fails to allocate linux skb\n");
+	    kfree_rtskb(rtskb);
+	}
 
-        rtdev_dereference(rtdev);
+	rtdev_dereference(rtdev);
     }
 }
 
@@ -130,8 +130,8 @@ static void rtmac_vnic_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 static int rtmac_vnic_copy_mac(struct net_device *dev)
 {
     memcpy(dev->dev_addr,
-           (*(struct rtnet_device **)netdev_priv(dev))->dev_addr,
-           MAX_ADDR_LEN);
+	   (*(struct rtnet_device **)netdev_priv(dev))->dev_addr,
+	   MAX_ADDR_LEN);
 
     return 0;
 }
@@ -150,34 +150,34 @@ int rtmac_vnic_xmit(struct sk_buff *skb, struct net_device *dev)
 
 
     rtskb =
-        alloc_rtskb((skb->len + sizeof(struct rtmac_hdr) + 15) & ~15, pool);
+	alloc_rtskb((skb->len + sizeof(struct rtmac_hdr) + 15) & ~15, pool);
     if (!rtskb)
-        return NETDEV_TX_BUSY;
+	return NETDEV_TX_BUSY;
 
     rtskb_reserve(rtskb, rtdev->hard_header_len + sizeof(struct rtmac_hdr));
 
     data_len = skb->len - dev->hard_header_len;
     memcpy(rtskb_put(rtskb, data_len), skb->data + dev->hard_header_len,
-           data_len);
+	   data_len);
 
     res = rtmac_add_header(rtdev, ethernet->h_dest, rtskb,
-                           ntohs(ethernet->h_proto), RTMAC_FLAG_TUNNEL);
+			   ntohs(ethernet->h_proto), RTMAC_FLAG_TUNNEL);
     if (res < 0) {
-        stats->tx_dropped++;
-        kfree_rtskb(rtskb);
-        goto done;
+	stats->tx_dropped++;
+	kfree_rtskb(rtskb);
+	goto done;
     }
 
     RTNET_ASSERT(rtdev->mac_disc->nrt_packet_tx != NULL, kfree_rtskb(rtskb);
-                 goto done;);
+		 goto done;);
 
     res = rtdev->mac_disc->nrt_packet_tx(rtskb);
     if (res < 0) {
-        stats->tx_dropped++;
-        kfree_rtskb(rtskb);
+	stats->tx_dropped++;
+	kfree_rtskb(rtskb);
     } else {
-        stats->tx_packets++;
-        stats->tx_bytes += skb->len;
+	stats->tx_packets++;
+	stats->tx_bytes += skb->len;
     }
 
 done:
@@ -197,8 +197,8 @@ static struct net_device_stats *rtmac_vnic_get_stats(struct net_device *dev)
 static int rtmac_vnic_change_mtu(struct net_device *dev, int new_mtu)
 {
     if ((new_mtu < 68) ||
-        ((unsigned)new_mtu > 1500 - sizeof(struct rtmac_hdr)))
-        return -EINVAL;
+	((unsigned)new_mtu > 1500 - sizeof(struct rtmac_hdr)))
+	return -EINVAL;
     dev->mtu = new_mtu;
     return 0;
 }
@@ -219,14 +219,14 @@ void rtmac_vnic_set_max_mtu(struct rtnet_device *rtdev, unsigned int max_mtu)
     rtnl_lock();
     if ((vnic->mtu > mac_priv->vnic_max_mtu) || (prev_mtu == mac_priv->vnic_max_mtu)) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-        dev_set_mtu(vnic, mac_priv->vnic_max_mtu);
+	dev_set_mtu(vnic, mac_priv->vnic_max_mtu);
 #else   /* LINUX_VERSION_CODE < 2.6.x */
-        if (vnic->flags & IFF_UP) {
-            dev_close(vnic);
-            vnic->mtu = mac_priv->vnic_max_mtu;
-            dev_open(vnic);
-        } else
-            vnic->mtu = mac_priv->vnic_max_mtu;
+	if (vnic->flags & IFF_UP) {
+	    dev_close(vnic);
+	    vnic->mtu = mac_priv->vnic_max_mtu;
+	    dev_open(vnic);
+	} else
+	    vnic->mtu = mac_priv->vnic_max_mtu;
 #endif  /* LINUX_VERSION_CODE < 2.6.x */
     }
     rtnl_unlock();
@@ -255,10 +255,6 @@ static void rtmac_vnic_setup(struct net_device *dev)
 #endif /* !HAVE_NET_DEVICE_OPS */
 
     dev->flags           &= ~IFF_MULTICAST;
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-    SET_MODULE_OWNER(dev);
-#endif
 }
 
 static int rtmac_vnic_pool_trylock(void *cookie)
@@ -285,7 +281,7 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 
     /* does the discipline request vnic support? */
     if (!vnic_xmit)
-        return 0;
+	return 0;
 
     mac_priv->vnic = NULL;
     mac_priv->vnic_max_mtu = rtdev->mtu - sizeof(struct rtmac_hdr);
@@ -293,18 +289,18 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 
     /* create the rtskb pool */
     if (rtskb_pool_init(&mac_priv->vnic_skb_pool,
-                            vnic_rtskbs, &rtmac_vnic_pool_lock_ops,
-                            NULL) < vnic_rtskbs) {
-        res = -ENOMEM;
-        goto error;
+			    vnic_rtskbs, &rtmac_vnic_pool_lock_ops,
+			    NULL) < vnic_rtskbs) {
+	res = -ENOMEM;
+	goto error;
     }
 
     snprintf(buf, sizeof(buf), "vnic%d", rtdev->ifindex-1);
 
     vnic = alloc_netdev(sizeof(struct rtnet_device *), buf, rtmac_vnic_setup);
     if (!vnic) {
-        res = -ENOMEM;
-        goto error;
+	res = -ENOMEM;
+	goto error;
     }
 
 #ifdef HAVE_NET_DEVICE_OPS
@@ -318,7 +314,7 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 
     res = register_netdev(vnic);
     if (res < 0)
-        goto error;
+	goto error;
 
     mac_priv->vnic = vnic;
 
@@ -337,12 +333,12 @@ int rtmac_vnic_unregister(struct rtnet_device *rtdev)
     int err;
 
     if (mac_priv->vnic) {
-        err = rtskb_pool_release(&mac_priv->vnic_skb_pool);
-        if (err < 0)
-            return err;
-        unregister_netdev(mac_priv->vnic);
-        free_netdev(mac_priv->vnic);
-        mac_priv->vnic = NULL;
+	err = rtskb_pool_release(&mac_priv->vnic_skb_pool);
+	if (err < 0)
+	    return err;
+	unregister_netdev(mac_priv->vnic);
+	free_netdev(mac_priv->vnic);
+	mac_priv->vnic = NULL;
     }
 
     return 0;
@@ -352,7 +348,7 @@ int rtmac_vnic_unregister(struct rtnet_device *rtdev)
 
 #ifdef CONFIG_PROC_FS
 int rtmac_proc_read_vnic(char *buf, char **start, off_t offset, int count,
-                         int *eof, void *data)
+			 int *eof, void *data)
 {
     struct rtnet_device *rtdev;
     int                 i;
@@ -361,31 +357,31 @@ int rtmac_proc_read_vnic(char *buf, char **start, off_t offset, int count,
 
 
     if (!RTNET_PROC_PRINT("RT-NIC name\tVNIC name\n"))
-        goto done;
+	goto done;
 
     for (i = 1; i <= MAX_RT_DEVICES; i++) {
-        rtdev = rtdev_get_by_index(i);
-        if (rtdev == NULL)
-            continue;
+	rtdev = rtdev_get_by_index(i);
+	if (rtdev == NULL)
+	    continue;
 
-        if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
-            rtdev_dereference(rtdev);
-            return -ERESTARTSYS;
-        }
+	if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
+	    rtdev_dereference(rtdev);
+	    return -ERESTARTSYS;
+	}
 
-        if (rtdev->mac_priv != NULL) {
-            struct rtmac_priv *rtmac;
+	if (rtdev->mac_priv != NULL) {
+	    struct rtmac_priv *rtmac;
 
-            rtmac = (struct rtmac_priv *)rtdev->mac_priv;
-            res = RTNET_PROC_PRINT("%-15s %s\n",
-                                    rtdev->name, rtmac->vnic->name);
-        }
+	    rtmac = (struct rtmac_priv *)rtdev->mac_priv;
+	    res = RTNET_PROC_PRINT("%-15s %s\n",
+				    rtdev->name, rtmac->vnic->name);
+	}
 
-        mutex_unlock(&rtdev->nrt_lock);
-        rtdev_dereference(rtdev);
+	mutex_unlock(&rtdev->nrt_lock);
+	rtdev_dereference(rtdev);
 
-        if (!res)
-            break;
+	if (!res)
+	    break;
     }
 
   done:
@@ -414,7 +410,7 @@ void rtmac_vnic_module_cleanup(void)
     rtdm_nrtsig_destroy(&vnic_signal);
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
-        rtdev_dereference(rtskb->rtdev);
-        kfree_rtskb(rtskb);
+	rtdev_dereference(rtskb->rtdev);
+	kfree_rtskb(rtskb);
     }
 }

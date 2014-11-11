@@ -1566,8 +1566,6 @@ fec_enet_open(struct rtnet_device *rtdev)
 	 * a simple way to do that.
 	 */
 
-	RTNET_MOD_INC_USE_COUNT;
-
 #ifdef	CONFIG_RTAI_RTNET_USE_MDIO
 	fep->sequence_done = 0;
 	fep->link = 0;
@@ -1629,7 +1627,6 @@ fec_enet_close(struct rtnet_device *rtdev)
 
 	fec_stop(rtdev);
 
-	RTNET_MOD_DEC_USE_COUNT;
 	return 0;
 }
 
@@ -1959,7 +1956,6 @@ int __init fec_enet_init(void)
 	}
 	rtdev_alloc_name(rtdev, "rteth%d");
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(rtdev);
 	rtdev->vers = RTDEV_VERS_2_0;
 
 	fep = (struct fec_enet_private *)rtdev->priv;

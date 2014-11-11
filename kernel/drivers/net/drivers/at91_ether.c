@@ -1004,7 +1004,6 @@ static int at91ether_setup_rt(unsigned long phy_type, unsigned short phy_address
 
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
-	RTNET_SET_MODULE_OWNER(dev);
 	dev->vers = RTDEV_VERS_2_0;
 
 	/* Get I/O base address and IRQ */
