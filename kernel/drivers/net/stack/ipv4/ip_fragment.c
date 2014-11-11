@@ -229,7 +229,7 @@ void rt_ip_frag_invalidate_socket(struct rtsocket *sock)
         rtdm_lock_put_irqrestore(&p_coll->frags.lock, context);
     }
 }
-EXPORT_SYMBOL(rt_ip_frag_invalidate_socket);
+EXPORT_SYMBOL_GPL(rt_ip_frag_invalidate_socket);
 
 
 

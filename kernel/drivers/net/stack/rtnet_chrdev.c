@@ -342,5 +342,5 @@ void rtnet_chrdev_release(void)
 }
 
 
-EXPORT_SYMBOL(rtnet_register_ioctls);
-EXPORT_SYMBOL(rtnet_unregister_ioctls);
+EXPORT_SYMBOL_GPL(rtnet_register_ioctls);
+EXPORT_SYMBOL_GPL(rtnet_unregister_ioctls);

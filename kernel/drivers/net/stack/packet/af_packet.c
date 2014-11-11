@@ -603,4 +603,4 @@ int rt_eth_aton(unsigned char *addr_buf, const char *mac)
     return 0;
 }
 
-EXPORT_SYMBOL(rt_eth_aton);
+EXPORT_SYMBOL_GPL(rt_eth_aton);

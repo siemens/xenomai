@@ -727,26 +727,26 @@ unsigned int rt_hard_mtu(struct rtnet_device *rtdev, unsigned int priority)
 }
 
 
-EXPORT_SYMBOL(rt_alloc_etherdev);
-EXPORT_SYMBOL(rtdev_free);
+EXPORT_SYMBOL_GPL(rt_alloc_etherdev);
+EXPORT_SYMBOL_GPL(rtdev_free);
 
-EXPORT_SYMBOL(rtdev_alloc_name);
+EXPORT_SYMBOL_GPL(rtdev_alloc_name);
 
-EXPORT_SYMBOL(rt_register_rtnetdev);
-EXPORT_SYMBOL(rt_unregister_rtnetdev);
+EXPORT_SYMBOL_GPL(rt_register_rtnetdev);
+EXPORT_SYMBOL_GPL(rt_unregister_rtnetdev);
 
-EXPORT_SYMBOL(rtdev_add_event_hook);
-EXPORT_SYMBOL(rtdev_del_event_hook);
+EXPORT_SYMBOL_GPL(rtdev_add_event_hook);
+EXPORT_SYMBOL_GPL(rtdev_del_event_hook);
 
-EXPORT_SYMBOL(rtdev_get_by_name);
-EXPORT_SYMBOL(rtdev_get_by_index);
-EXPORT_SYMBOL(rtdev_get_by_hwaddr);
-EXPORT_SYMBOL(rtdev_get_loopback);
+EXPORT_SYMBOL_GPL(rtdev_get_by_name);
+EXPORT_SYMBOL_GPL(rtdev_get_by_index);
+EXPORT_SYMBOL_GPL(rtdev_get_by_hwaddr);
+EXPORT_SYMBOL_GPL(rtdev_get_loopback);
 
-EXPORT_SYMBOL(rtdev_xmit);
+EXPORT_SYMBOL_GPL(rtdev_xmit);
 
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
-EXPORT_SYMBOL(rtdev_xmit_proxy);
+EXPORT_SYMBOL_GPL(rtdev_xmit_proxy);
 #endif
 
-EXPORT_SYMBOL(rt_hard_mtu);
+EXPORT_SYMBOL_GPL(rt_hard_mtu);

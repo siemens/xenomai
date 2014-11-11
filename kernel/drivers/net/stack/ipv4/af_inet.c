@@ -45,7 +45,7 @@ struct route_solicit_params {
 
 #ifdef CONFIG_PROC_FS
 struct proc_dir_entry *ipv4_proc_root;
-EXPORT_SYMBOL(ipv4_proc_root);
+EXPORT_SYMBOL_GPL(ipv4_proc_root);
 #endif
 
 
@@ -360,4 +360,4 @@ module_init(rt_ipv4_proto_init);
 module_exit(rt_ipv4_proto_release);
 
 
-EXPORT_SYMBOL(rt_inet_aton);
+EXPORT_SYMBOL_GPL(rt_inet_aton);

@@ -277,6 +277,6 @@ void rtpc_cleanup(void)
 }
 
 
-EXPORT_SYMBOL(rtnet_rtpc_dispatch_call);
-EXPORT_SYMBOL(rtnet_rtpc_complete_call);
-EXPORT_SYMBOL(rtnet_rtpc_complete_call_nrt);
+EXPORT_SYMBOL_GPL(rtnet_rtpc_dispatch_call);
+EXPORT_SYMBOL_GPL(rtnet_rtpc_complete_call);
+EXPORT_SYMBOL_GPL(rtnet_rtpc_complete_call_nrt);

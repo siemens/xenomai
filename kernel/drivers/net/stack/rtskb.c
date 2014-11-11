@@ -40,7 +40,7 @@ static struct kmem_cache *rtskb_slab_pool;
 
 /* pool of rtskbs for global use */
 struct rtskb_pool global_pool;
-EXPORT_SYMBOL(global_pool);
+EXPORT_SYMBOL_GPL(global_pool);
 
 /* pool statistics */
 unsigned int rtskb_pools=0;
@@ -51,10 +51,10 @@ unsigned int rtskb_amount_max=0;
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
 /* RTcap interface */
 rtdm_lock_t rtcap_lock;
-EXPORT_SYMBOL(rtcap_lock);
+EXPORT_SYMBOL_GPL(rtcap_lock);
 
 void (*rtcap_handler)(struct rtskb *skb) = NULL;
-EXPORT_SYMBOL(rtcap_handler);
+EXPORT_SYMBOL_GPL(rtcap_handler);
 #endif
 
 
@@ -81,7 +81,7 @@ unsigned int rtskb_copy_and_csum_bits(const struct rtskb *skb, int offset,
     return csum;
 }
 
-EXPORT_SYMBOL(rtskb_copy_and_csum_bits);
+EXPORT_SYMBOL_GPL(rtskb_copy_and_csum_bits);
 
 
 /***
@@ -113,7 +113,7 @@ void rtskb_copy_and_csum_dev(const struct rtskb *skb, u8 *to)
     }
 }
 
-EXPORT_SYMBOL(rtskb_copy_and_csum_dev);
+EXPORT_SYMBOL_GPL(rtskb_copy_and_csum_dev);
 
 
 #ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
@@ -131,7 +131,7 @@ void rtskb_over_panic(struct rtskb *skb, int sz, void *here)
                 skb->len, sz, (skb->rtdev) ? skb->rtdev->name : "<NULL>");
 }
 
-EXPORT_SYMBOL(rtskb_over_panic);
+EXPORT_SYMBOL_GPL(rtskb_over_panic);
 
 
 /**
@@ -148,7 +148,7 @@ void rtskb_under_panic(struct rtskb *skb, int sz, void *here)
                 skb->len, sz, (skb->rtdev) ? skb->rtdev->name : "<NULL>");
 }
 
-EXPORT_SYMBOL(rtskb_under_panic);
+EXPORT_SYMBOL_GPL(rtskb_under_panic);
 #endif /* CONFIG_XENO_DRIVERS_NET_CHECKED */
 
 static struct rtskb *__rtskb_pool_dequeue(struct rtskb_pool *pool)
@@ -235,7 +235,7 @@ struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_pool *pool)
     return skb;
 }
 
-EXPORT_SYMBOL(alloc_rtskb);
+EXPORT_SYMBOL_GPL(alloc_rtskb);
 
 
 /***
@@ -292,7 +292,7 @@ void kfree_rtskb(struct rtskb *skb)
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP */
 }
 
-EXPORT_SYMBOL(kfree_rtskb);
+EXPORT_SYMBOL_GPL(kfree_rtskb);
 
 
 /***
@@ -323,7 +323,7 @@ unsigned int rtskb_pool_init(struct rtskb_pool *pool,
     return i;
 }
 
-EXPORT_SYMBOL(rtskb_pool_init);
+EXPORT_SYMBOL_GPL(rtskb_pool_init);
 
 static int rtskb_module_pool_trylock(void *cookie)
 {
@@ -346,7 +346,7 @@ unsigned int __rtskb_module_pool_init(struct rtskb_pool *pool,
 {
     return rtskb_pool_init(pool, initial_size, &rtskb_module_lock_ops, module);
 }
-EXPORT_SYMBOL(__rtskb_module_pool_init);
+EXPORT_SYMBOL_GPL(__rtskb_module_pool_init);
 
 
 /***
@@ -370,7 +370,7 @@ int rtskb_pool_release(struct rtskb_pool *pool)
     return 0;
 }
 
-EXPORT_SYMBOL(rtskb_pool_release);
+EXPORT_SYMBOL_GPL(rtskb_pool_release);
 
 
 unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
@@ -465,7 +465,7 @@ int rtskb_acquire(struct rtskb *rtskb, struct rtskb_pool *comp_pool)
     return 0;
 }
 
-EXPORT_SYMBOL(rtskb_acquire);
+EXPORT_SYMBOL_GPL(rtskb_acquire);
 
 
 /* clone rtskb to another, allocating the new rtskb from pool */

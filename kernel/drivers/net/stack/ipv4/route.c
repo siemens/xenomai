@@ -887,7 +887,7 @@ void rt_ip_routing_release(void)
 }
 
 
-EXPORT_SYMBOL(rt_ip_route_add_host);
-EXPORT_SYMBOL(rt_ip_route_del_host);
-EXPORT_SYMBOL(rt_ip_route_del_all);
-EXPORT_SYMBOL(rt_ip_route_output);
+EXPORT_SYMBOL_GPL(rt_ip_route_add_host);
+EXPORT_SYMBOL_GPL(rt_ip_route_del_host);
+EXPORT_SYMBOL_GPL(rt_ip_route_del_all);
+EXPORT_SYMBOL_GPL(rt_ip_route_output);

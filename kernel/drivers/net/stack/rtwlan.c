@@ -40,7 +40,7 @@ int rtwlan_rx(struct rtskb * rtskb, struct rtnet_device * rtnet_dev)
     return 0;
 }
 
-EXPORT_SYMBOL(rtwlan_rx);
+EXPORT_SYMBOL_GPL(rtwlan_rx);
 
 
 int rtwlan_tx(struct rtskb *rtskb, struct rtnet_device *rtnet_dev)
@@ -81,7 +81,7 @@ int rtwlan_tx(struct rtskb *rtskb, struct rtnet_device *rtnet_dev)
     return ret;
 }
 
-EXPORT_SYMBOL(rtwlan_tx);
+EXPORT_SYMBOL_GPL(rtwlan_tx);
 
 
 /**
@@ -112,7 +112,7 @@ struct rtnet_device * rtwlan_alloc_dev(int sizeof_priv)
     return rtnet_dev;
 }
 
-EXPORT_SYMBOL(rtwlan_alloc_dev);
+EXPORT_SYMBOL_GPL(rtwlan_alloc_dev);
 
 
 int rtwlan_ioctl(struct rtnet_device * rtdev,

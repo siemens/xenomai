@@ -245,7 +245,7 @@ int rt_ip_build_xmit(struct rtsocket *sk,
     kfree_rtskb(skb);
     return err;
 }
-EXPORT_SYMBOL(rt_ip_build_xmit);
+EXPORT_SYMBOL_GPL(rt_ip_build_xmit);
 
 
 

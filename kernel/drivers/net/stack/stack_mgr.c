@@ -80,7 +80,7 @@ int rtdev_add_pack(struct rtpacket_type *pt)
     return ret;
 }
 
-EXPORT_SYMBOL(rtdev_add_pack);
+EXPORT_SYMBOL_GPL(rtdev_add_pack);
 
 
 /***
@@ -107,7 +107,7 @@ int rtdev_remove_pack(struct rtpacket_type *pt)
     return ret;
 }
 
-EXPORT_SYMBOL(rtdev_remove_pack);
+EXPORT_SYMBOL_GPL(rtdev_remove_pack);
 
 
 /***
@@ -134,7 +134,7 @@ void rtnetif_rx(struct rtskb *skb)
     }
 }
 
-EXPORT_SYMBOL(rtnetif_rx);
+EXPORT_SYMBOL_GPL(rtnetif_rx);
 
 
 #if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_DRV_LOOPBACK)
@@ -234,7 +234,7 @@ void rt_stack_connect (struct rtnet_device *rtdev, struct rtnet_mgr *mgr)
     rtdev->stack_event = &mgr->event;
 }
 
-EXPORT_SYMBOL(rt_stack_connect);
+EXPORT_SYMBOL_GPL(rt_stack_connect);
 
 
 /***
@@ -245,7 +245,7 @@ void rt_stack_disconnect (struct rtnet_device *rtdev)
     rtdev->stack_event = NULL;
 }
 
-EXPORT_SYMBOL(rt_stack_disconnect);
+EXPORT_SYMBOL_GPL(rt_stack_disconnect);
 
 
 /***

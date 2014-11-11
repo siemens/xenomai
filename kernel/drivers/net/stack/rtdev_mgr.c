@@ -121,8 +121,8 @@ void rt_rtdev_mgr_delete (struct rtnet_mgr *mgr)
 }
 
 
-EXPORT_SYMBOL(rtnetif_err_rx);
-EXPORT_SYMBOL(rtnetif_err_tx);
+EXPORT_SYMBOL_GPL(rtnetif_err_rx);
+EXPORT_SYMBOL_GPL(rtnetif_err_tx);
 
-EXPORT_SYMBOL(rt_rtdev_connect);
-EXPORT_SYMBOL(rt_rtdev_disconnect);
+EXPORT_SYMBOL_GPL(rt_rtdev_connect);
+EXPORT_SYMBOL_GPL(rt_rtdev_disconnect);

@@ -151,4 +151,4 @@ int rt_ip_ioctl(struct rtdm_fd *fd, int request, void *arg)
 	    return rt_socket_if_ioctl(fd, request, arg);
     }
 }
-EXPORT_SYMBOL(rt_ip_ioctl);
+EXPORT_SYMBOL_GPL(rt_ip_ioctl);

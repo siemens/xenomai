@@ -42,13 +42,13 @@ MODULE_DESCRIPTION("RTnet stack core");
 struct rtnet_mgr STACK_manager;
 struct rtnet_mgr RTDEV_manager;
 
-EXPORT_SYMBOL(STACK_manager);
-EXPORT_SYMBOL(RTDEV_manager);
+EXPORT_SYMBOL_GPL(STACK_manager);
+EXPORT_SYMBOL_GPL(RTDEV_manager);
 
 const char rtnet_rtdm_provider_name[] =
     "(C) 1999-2008 RTnet Development Team, http://www.rtnet.org";
 
-EXPORT_SYMBOL(rtnet_rtdm_provider_name);
+EXPORT_SYMBOL_GPL(rtnet_rtdm_provider_name);
 
 
 #ifdef CONFIG_PROC_FS
@@ -57,7 +57,7 @@ EXPORT_SYMBOL(rtnet_rtdm_provider_name);
  */
 struct proc_dir_entry *rtnet_proc_root;
 
-EXPORT_SYMBOL(rtnet_proc_root);
+EXPORT_SYMBOL_GPL(rtnet_proc_root);
 
 
 static int rtnet_read_proc_devices(char *buf, char **start, off_t offset,

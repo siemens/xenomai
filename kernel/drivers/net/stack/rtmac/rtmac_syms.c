@@ -26,12 +26,12 @@
 #include <rtmac/rtmac_vnic.h>
 
 
-EXPORT_SYMBOL(__rtmac_disc_register);
-EXPORT_SYMBOL(rtmac_disc_deregister);
+EXPORT_SYMBOL_GPL(__rtmac_disc_register);
+EXPORT_SYMBOL_GPL(rtmac_disc_deregister);
 
-EXPORT_SYMBOL(rtmac_disc_attach);
-EXPORT_SYMBOL(rtmac_disc_detach);
+EXPORT_SYMBOL_GPL(rtmac_disc_attach);
+EXPORT_SYMBOL_GPL(rtmac_disc_detach);
 
-EXPORT_SYMBOL(rtmac_vnic_set_max_mtu);
+EXPORT_SYMBOL_GPL(rtmac_vnic_set_max_mtu);
 
-EXPORT_SYMBOL(rtmac_vnic_xmit);
+EXPORT_SYMBOL_GPL(rtmac_vnic_xmit);

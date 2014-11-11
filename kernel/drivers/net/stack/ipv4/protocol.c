@@ -43,7 +43,7 @@ void rt_inet_add_protocol(struct rtinet_protocol *prot)
     if ( rt_inet_protocols[hash]==NULL )
 	rt_inet_protocols[hash] = prot;
 }
-EXPORT_SYMBOL(rt_inet_add_protocol);
+EXPORT_SYMBOL_GPL(rt_inet_add_protocol);
 
 
 /***
@@ -57,7 +57,7 @@ void rt_inet_del_protocol(struct rtinet_protocol *prot)
     if ( prot==rt_inet_protocols[hash] )
 	rt_inet_protocols[hash] = NULL;
 }
-EXPORT_SYMBOL(rt_inet_del_protocol);
+EXPORT_SYMBOL_GPL(rt_inet_del_protocol);
 
 
 
@@ -92,4 +92,4 @@ int rt_inet_socket(struct rtdm_fd *fd, int protocol)
 	return -ENOPROTOOPT;
     }
 }
-EXPORT_SYMBOL(rt_inet_socket);
+EXPORT_SYMBOL_GPL(rt_inet_socket);

@@ -326,8 +326,8 @@ int rt_socket_select_bind(struct rtdm_fd *fd,
     return -EINVAL;
 }
 
-EXPORT_SYMBOL(rt_socket_select_bind);
-EXPORT_SYMBOL(rt_socket_init);
-EXPORT_SYMBOL(rt_socket_cleanup);
-EXPORT_SYMBOL(rt_socket_common_ioctl);
-EXPORT_SYMBOL(rt_socket_if_ioctl);
+EXPORT_SYMBOL_GPL(rt_socket_select_bind);
+EXPORT_SYMBOL_GPL(rt_socket_init);
+EXPORT_SYMBOL_GPL(rt_socket_cleanup);
+EXPORT_SYMBOL_GPL(rt_socket_common_ioctl);
+EXPORT_SYMBOL_GPL(rt_socket_if_ioctl);

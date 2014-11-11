@@ -137,5 +137,5 @@ unsigned short rt_eth_type_trans(struct rtskb *skb, struct rtnet_device *rtdev)
 }
 
 
-EXPORT_SYMBOL(rt_eth_header);
-EXPORT_SYMBOL(rt_eth_type_trans);
+EXPORT_SYMBOL_GPL(rt_eth_header);
+EXPORT_SYMBOL_GPL(rt_eth_type_trans);

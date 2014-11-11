@@ -73,5 +73,5 @@ void rt_memcpy_fromkerneliovec(unsigned char *kdata, struct iovec *iov,int len)
 }
 
 
-EXPORT_SYMBOL(rt_memcpy_tokerneliovec);
-EXPORT_SYMBOL(rt_memcpy_fromkerneliovec);
+EXPORT_SYMBOL_GPL(rt_memcpy_tokerneliovec);
+EXPORT_SYMBOL_GPL(rt_memcpy_fromkerneliovec);
