@@ -175,7 +175,13 @@ struct rt_tcp_dispatched_packet_send_cmd {
 
 MODULE_LICENSE("GPL");
 
-static struct tcp_socket rst_socket;
+static struct {
+	struct rtdm_dev_context dummy;
+	struct tcp_socket rst_socket;
+} rst_socket_container;
+
+#define rst_fd		(&rst_socket_container.dummy.fd)
+#define rst_socket	(*(struct tcp_socket *)rtdm_private_to_fd(rst_fd))
 
 static u32 tcp_auto_port_start = 1024;
 static u32 tcp_auto_port_mask  = ~(RT_TCP_SOCKETS-1);
@@ -837,6 +843,7 @@ static struct rtsocket *rt_tcp_dest_socket(struct rtskb *skb)
 	    rst_socket.sync.ack_seq = rt_tcp_compute_ack_seq(th, data_len);
 
 	    if (rt_ip_route_output(&rst_socket.rt, daddr, saddr) == 0) {
+		rt_socket_reference(&rst_socket.sock);
 		rt_tcp_send(&rst_socket, TCP_FLAG_ACK|TCP_FLAG_RST);
 		rtdev_dereference(rst_socket.rt.rtdev);
 	    }
@@ -985,6 +992,7 @@ static void rt_tcp_rcv(struct rtskb *skb)
 
 	if (rt_ip_route_output(&rst_socket.rt, rst_socket.daddr,
 			       rst_socket.saddr) == 0) {
+	    rt_socket_reference(&rst_socket.sock);
 	    rt_tcp_send(&rst_socket, TCP_FLAG_RST|TCP_FLAG_ACK);
 	    rtdev_dereference(rst_socket.rt.rtdev);
 	}
@@ -1347,7 +1355,7 @@ static void rt_tcp_socket_destruct(struct tcp_socket* ts)
 /***
  *  rt_tcp_close
  */
-static int rt_tcp_close(struct rtdm_fd *fd)
+static void rt_tcp_close(struct rtdm_fd *fd)
 {
     struct tcp_socket* ts = rtdm_fd_to_private(fd);
     struct rt_tcp_dispatched_packet_send_cmd send_cmd;
@@ -1403,7 +1411,7 @@ static int rt_tcp_close(struct rtdm_fd *fd)
 
     rt_tcp_socket_destruct(ts);
 
-    return rt_socket_cleanup(fd);
+    rt_socket_cleanup(fd);
 }
 
 /***
@@ -2255,11 +2263,12 @@ int __init rt_tcp_init(void)
 	INIT_HLIST_HEAD(&port_hash[i]);
 
     /* Perform essential initialization of the RST|ACK socket */
-    skbs = rt_bare_socket_init(&rst_socket.sock, IPPROTO_TCP, RT_TCP_RST_PRIO,
+    skbs = rt_bare_socket_init(rst_fd, IPPROTO_TCP, RT_TCP_RST_PRIO,
 			       RT_TCP_RST_POOL_SIZE);
     if (skbs < RT_TCP_RST_POOL_SIZE)
 	printk("rttcp: allocated only %d RST|ACK rtskbs\n", skbs);
     rst_socket.sock.prot.inet.tos = 0;
+    rst_fd->refs = 1;
     rtdm_lock_init(&rst_socket.socket_lock);
 
     /*

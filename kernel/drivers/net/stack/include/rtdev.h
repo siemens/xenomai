@@ -48,10 +48,10 @@
 
 
 enum rtnet_link_state {
-	__RTNET_LINK_STATE_XOFF = 0,
-	__RTNET_LINK_STATE_START,
-	__RTNET_LINK_STATE_PRESENT,
-	__RTNET_LINK_STATE_NOCARRIER,
+        __RTNET_LINK_STATE_XOFF = 0,
+        __RTNET_LINK_STATE_START,
+        __RTNET_LINK_STATE_PRESENT,
+        __RTNET_LINK_STATE_NOCARRIER,
 };
 
 /***
@@ -143,8 +143,8 @@ struct rtnet_device {
     unsigned int        (*get_mtu)(struct rtnet_device *rtdev,
                                    unsigned int priority);
 
-    int                 (*do_ioctl)(struct rtnet_device *rtdev, 
-				    unsigned int request, void * cmd);
+    int                 (*do_ioctl)(struct rtnet_device *rtdev,
+                                    unsigned int request, void * cmd);
     struct net_device_stats *(*get_stats)(struct rtnet_device *rtdev);
 
     /* DMA pre-mapping hooks */
@@ -199,12 +199,13 @@ struct rtnet_device *rtdev_get_loopback(void);
 
 static inline void rtdev_reference(struct rtnet_device *rtdev)
 {
+    smp_mb__before_atomic();
     atomic_inc(&rtdev->refcount);
 }
 
 static inline void rtdev_dereference(struct rtnet_device *rtdev)
 {
-    smp_mb__before_atomic_dec();
+    smp_mb__before_atomic();
     atomic_dec(&rtdev->refcount);
 }
 

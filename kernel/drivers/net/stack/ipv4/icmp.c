@@ -87,7 +87,8 @@ static struct {
     struct rtsocket socket;
 } icmp_socket_container;
 
-#define icmp_socket     icmp_socket_container.socket
+#define icmp_fd		(&icmp_socket_container.dummy.fd)
+#define icmp_socket     ((struct rtsocket *)rtdm_fd_to_private(icmp_fd))
 
 
 void rt_icmp_queue_echo_request(struct rt_proc_call *call)
@@ -133,7 +134,7 @@ void rt_icmp_cleanup_echo_requests(void)
     }
 
     /* purge any pending ICMP fragments */
-    rt_ip_frag_invalidate_socket(&icmp_socket);
+    rt_ip_frag_invalidate_socket(icmp_socket);
 }
 
 
@@ -194,9 +195,12 @@ static void rt_icmp_send_reply(struct icmp_bxm *icmp_param, struct rtskb *skb)
 			   skb->rtdev->local_ip) != 0)
 	return;
 
-    err = rt_ip_build_xmit(&icmp_socket, rt_icmp_glue_reply_bits, icmp_param,
+    rt_socket_reference(icmp_socket);
+    err = rt_ip_build_xmit(icmp_socket, rt_icmp_glue_reply_bits, icmp_param,
 			   sizeof(struct icmphdr) + icmp_param->data_len,
 			   &rt, MSG_DONTWAIT);
+    if (err)
+	    rt_socket_dereference(icmp_socket);
 
     rtdev_dereference(rt.rtdev);
 
@@ -320,9 +324,13 @@ static int rt_icmp_send_request(u32 daddr, struct icmp_bxm *icmp_param)
     size = icmp_param->head_len + icmp_param->data_len;
     if (size + 20 /* ip header */ > rt.rtdev->get_mtu(rt.rtdev, RT_ICMP_PRIO))
 	err = -EMSGSIZE;
-    else
-	err = rt_ip_build_xmit(&icmp_socket, rt_icmp_glue_request_bits,
+    else {
+	rt_socket_reference(icmp_socket);
+	err = rt_ip_build_xmit(icmp_socket, rt_icmp_glue_request_bits,
 			       icmp_param, size, &rt, MSG_DONTWAIT);
+	if (err)
+	    rt_socket_dereference(icmp_socket);
+    }
 
     rtdev_dereference(rt.rtdev);
 
@@ -342,7 +350,7 @@ int rt_icmp_send_echo(u32 daddr, u16 id, u16 sequence, size_t msg_size)
 
 
     /* first purge any potentially pending ICMP fragments */
-    rt_ip_frag_invalidate_socket(&icmp_socket);
+    rt_ip_frag_invalidate_socket(icmp_socket);
 
     icmp_param.head.icmph.type = ICMP_ECHO;
     icmp_param.head.icmph.code = 0;
@@ -440,7 +448,7 @@ struct rtsocket *rt_icmp_dest_socket(struct rtskb *skb)
 {
     /* Note that the socket's refcount is not used by this protocol.
      * The socket returned here is static and not part of the global pool. */
-    return &icmp_socket;
+    return icmp_socket;
 }
 
 
@@ -520,12 +528,13 @@ void __init rt_icmp_init(void)
     unsigned int skbs;
 
 
-    skbs = rt_bare_socket_init(&icmp_socket, IPPROTO_ICMP, RT_ICMP_PRIO,
-			       ICMP_REPLY_POOL_SIZE);
+    skbs = rt_bare_socket_init(icmp_fd, IPPROTO_ICMP, RT_ICMP_PRIO,
+			    ICMP_REPLY_POOL_SIZE);
     if (skbs < ICMP_REPLY_POOL_SIZE)
 	printk("RTnet: allocated only %d icmp rtskbs\n", skbs);
 
-    icmp_socket.prot.inet.tos = 0;
+    icmp_socket->prot.inet.tos = 0;
+    icmp_fd->refs = 1;
 
     rt_inet_add_protocol(&icmp_protocol);
 }
@@ -539,5 +548,5 @@ void rt_icmp_release(void)
 {
     rt_icmp_cleanup_echo_requests();
     rt_inet_del_protocol(&icmp_protocol);
-    rt_bare_socket_cleanup(&icmp_socket);
+    rt_bare_socket_cleanup(icmp_socket);
 }

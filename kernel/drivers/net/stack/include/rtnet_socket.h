@@ -41,7 +41,7 @@
 struct rtsocket {
     unsigned short          protocol;
 
-    struct rtskb_queue      skb_pool;
+    struct rtskb_pool       skb_pool;
     unsigned int            pool_size;
     struct mutex            pool_nrt_lock;
 
@@ -92,7 +92,7 @@ static inline struct rtdm_fd *rt_socket_fd(struct rtsocket *sock)
     rtdm_fd_unlock(rt_socket_fd(sock))
 
 int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol);
-int rt_socket_cleanup(struct rtdm_fd *fd);
+void rt_socket_cleanup(struct rtdm_fd *fd);
 int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg);
 int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg);
 int rt_socket_select_bind(struct rtdm_fd *fd,
@@ -100,7 +100,7 @@ int rt_socket_select_bind(struct rtdm_fd *fd,
 			  enum rtdm_selecttype type,
 			  unsigned fd_index);
 
-int rt_bare_socket_init(struct rtsocket *sock, unsigned short protocol,
+int rt_bare_socket_init(struct rtdm_fd *fd, unsigned short protocol,
 			unsigned int priority, unsigned int pool_size);
 
 static inline void rt_bare_socket_cleanup(struct rtsocket *sock)

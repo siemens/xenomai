@@ -158,9 +158,6 @@ static struct rtskb *add_to_collector(struct rtskb *skb, unsigned int offset, in
 
             /* Extend the chain */
             first_skb->chain_end = skb;
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-            first_skb->chain_len++;
-#endif
 
             /* Sanity check: unordered fragments are not allowed! */
             if (offset != p_coll->buf_size) {
@@ -190,9 +187,9 @@ static struct rtskb *add_to_collector(struct rtskb *skb, unsigned int offset, in
 
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
     if (rt_ip_fallback_handler) {
-	    __rtskb_push(skb, iph->ihl*4);
-	    rt_ip_fallback_handler(skb);
-	    return NULL;
+            __rtskb_push(skb, iph->ihl*4);
+            rt_ip_fallback_handler(skb);
+            return NULL;
     }
 #endif
 

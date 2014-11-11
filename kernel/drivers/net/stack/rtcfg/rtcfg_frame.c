@@ -35,7 +35,7 @@ static unsigned int num_rtskbs = 32;
 module_param(num_rtskbs, uint, 0444);
 MODULE_PARM_DESC(num_rtskbs, "Number of realtime socket buffers used by RTcfg");
 
-static struct rtskb_queue   rtcfg_pool;
+static struct rtskb_pool    rtcfg_pool;
 static rtdm_task_t          rx_task;
 static rtdm_event_t         rx_event;
 static struct rtskb_queue   rx_queue;
@@ -541,7 +541,7 @@ int __init rtcfg_init_frames(void)
     int ret;
 
 
-    if (rtskb_pool_init(&rtcfg_pool, num_rtskbs) < num_rtskbs)
+    if (rtskb_module_pool_init(&rtcfg_pool, num_rtskbs) < num_rtskbs)
         return -ENOMEM;
 
     rtskb_queue_init(&rx_queue);

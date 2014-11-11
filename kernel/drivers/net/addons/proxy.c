@@ -71,7 +71,7 @@ static unsigned int proxy_rtskbs = DEFAULT_PROXY_RTSKBS;
 module_param(proxy_rtskbs, uint, 0444);
 MODULE_PARM_DESC(proxy_rtskbs, "Number of realtime socket buffers in proxy pool");
 
-static struct rtskb_queue rtskb_pool;
+static struct rtskb_pool rtskb_pool;
 
 static struct rtskb_queue tx_queue;
 static struct rtskb_queue rx_queue;
@@ -361,7 +361,7 @@ static int __init rtnetproxy_init_module(void)
 #endif
 
     /* Initialize the proxy's rtskb pool (JK) */
-    if (rtskb_pool_init(&rtskb_pool, proxy_rtskbs) < proxy_rtskbs) {
+    if (rtskb_module_pool_init(&rtskb_pool, proxy_rtskbs) < proxy_rtskbs) {
 	err = -ENOMEM;
 	goto err1;
     }

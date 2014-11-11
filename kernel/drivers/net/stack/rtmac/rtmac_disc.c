@@ -70,6 +70,9 @@ int rtmac_disc_attach(struct rtnet_device *rtdev, struct rtmac_disc *disc)
     if (rtdev->flags & IFF_LOOPBACK)
         return -EINVAL;
 
+    if (!try_module_get(disc->owner))
+        return -EIDRM;
+
     /* alloc memory */
     priv = kmalloc(sizeof(struct rtmac_priv) + disc->priv_size, GFP_KERNEL);
     if (!priv) {
@@ -137,7 +140,9 @@ int rtmac_disc_detach(struct rtnet_device *rtdev)
     priv = rtdev->mac_priv;
     RTNET_ASSERT(priv != NULL, return -EINVAL;);
 
-    rtmac_vnic_unregister(rtdev);
+    ret = rtmac_vnic_unregister(rtdev);
+    if (ret < 0)
+        return ret;
 
     /* call release function of discipline */
     ret = disc->detach(rtdev, priv->disc_priv);
@@ -159,6 +164,8 @@ int rtmac_disc_detach(struct rtnet_device *rtdev)
     rtdev_dereference(rtdev);
 
     kfree(priv);
+
+    module_put(disc->owner);
 
     return 0;
 }
@@ -186,7 +193,7 @@ static struct rtmac_disc *rtmac_get_disc_by_name(const char *name)
 
 
 
-int rtmac_disc_register(struct rtmac_disc *disc)
+int __rtmac_disc_register(struct rtmac_disc *disc, struct module *module)
 {
     int ret;
 
@@ -197,6 +204,8 @@ int rtmac_disc_register(struct rtmac_disc *disc)
     RTNET_ASSERT(disc->nrt_packet_tx != NULL, return -EINVAL;);
     RTNET_ASSERT(disc->attach != NULL, return -EINVAL;);
     RTNET_ASSERT(disc->detach != NULL, return -EINVAL;);
+
+    disc->owner = module;
 
     if (rtmac_get_disc_by_name(disc->name) != NULL)
     {

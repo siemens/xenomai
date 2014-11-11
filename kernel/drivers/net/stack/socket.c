@@ -49,17 +49,33 @@ MODULE_PARM_DESC(socket_rtskbs, "Default number of realtime socket buffers in so
  *  internal socket functions                                           *
  ************************************************************************/
 
-int rt_bare_socket_init(struct rtsocket *sock, unsigned short protocol,
+static int rtskb_socket_pool_trylock(void *cookie)
+{
+    return rtdm_fd_lock(cookie) >= 0;
+}
+
+static void rtskb_socket_pool_unlock(void *cookie)
+{
+    rtdm_fd_unlock(cookie);
+}
+
+static const struct rtskb_pool_lock_ops rtskb_socket_pool_ops = {
+    .trylock = rtskb_socket_pool_trylock,
+    .unlock = rtskb_socket_pool_unlock,
+};
+
+int rt_bare_socket_init(struct rtdm_fd *fd,
+			unsigned short protocol,
 			unsigned int priority, unsigned int pool_size)
 {
+    struct rtsocket *sock = rtdm_fd_to_private(fd);
     sock->protocol = protocol;
     sock->priority = priority;
 
-    return rtskb_pool_init(&sock->skb_pool, pool_size);
+    return rtskb_pool_init(&sock->skb_pool,
+			pool_size, &rtskb_socket_pool_ops, fd);
 }
-EXPORT_SYMBOL(rt_bare_socket_init);
-
-
+EXPORT_SYMBOL_GPL(rt_bare_socket_init);
 
 /***
  *  rt_socket_init - initialises a new socket structure
@@ -79,10 +95,9 @@ int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol)
     rtdm_lock_init(&sock->param_lock);
     rtdm_sem_init(&sock->pending_sem, 0);
 
-    pool_size = rt_bare_socket_init(sock, protocol,
-				    RTSKB_PRIO_VALUE(SOCK_DEF_PRIO,
-						     RTSKB_DEF_RT_CHANNEL),
-				    socket_rtskbs);
+    pool_size = rt_bare_socket_init(fd, protocol,
+		RTSKB_PRIO_VALUE(SOCK_DEF_PRIO,
+				RTSKB_DEF_RT_CHANNEL), socket_rtskbs);
     sock->pool_size = pool_size;
     mutex_init(&sock->pool_nrt_lock);
 
@@ -103,10 +118,9 @@ int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol)
 /***
  *  rt_socket_cleanup - releases resources allocated for the socket
  */
-int rt_socket_cleanup(struct rtdm_fd *fd)
+void rt_socket_cleanup(struct rtdm_fd *fd)
 {
     struct rtsocket *sock  = rtdm_fd_to_private(fd);
-    int ret = 0;
 
 
     rtdm_sem_destroy(&sock->pending_sem);
@@ -115,18 +129,10 @@ int rt_socket_cleanup(struct rtdm_fd *fd)
 
     set_bit(SKB_POOL_CLOSED, &sock->flags);
 
-    if (sock->pool_size > 0) {
-	sock->pool_size -= rtskb_pool_shrink(&sock->skb_pool, sock->pool_size);
-
-	if (sock->pool_size > 0)
-	    ret = -EAGAIN;
-	else
-	    rtskb_pool_release(&sock->skb_pool);
-    }
+    if (sock->pool_size > 0)
+	rtskb_pool_release(&sock->skb_pool);
 
     mutex_unlock(&sock->pool_nrt_lock);
-
-    return ret;
 }
 
 

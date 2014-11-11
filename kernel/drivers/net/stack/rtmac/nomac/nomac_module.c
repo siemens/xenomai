@@ -96,12 +96,9 @@ int nomac_attach(struct rtnet_device *rtdev, void *priv)
 int nomac_detach(struct rtnet_device *rtdev, void *priv)
 {
     struct nomac_priv   *nomac = (struct nomac_priv *)priv;
-    int                 ret;
 
 
-    ret =  nomac_dev_release(nomac);
-    if (ret < 0)
-        return ret;
+    nomac_dev_release(nomac);
 
     /* ... */
     RTNET_MOD_DEC_USE_COUNT;

@@ -45,7 +45,7 @@ static struct rtskb_queue   rx_queue;
 int rtmac_vnic_rx(struct rtskb *rtskb, u16 type)
 {
     struct rtmac_priv *mac_priv = rtskb->rtdev->mac_priv;
-    struct rtskb_queue *pool = &mac_priv->vnic_skb_pool;
+    struct rtskb_pool *pool = &mac_priv->vnic_skb_pool;
 
 
     if (rtskb_acquire(rtskb, pool) != 0) {
@@ -142,7 +142,7 @@ int rtmac_vnic_xmit(struct sk_buff *skb, struct net_device *dev)
 {
     struct rtnet_device     *rtdev = *(struct rtnet_device **)netdev_priv(dev);
     struct net_device_stats *stats = &rtdev->mac_priv->vnic_stats;
-    struct rtskb_queue      *pool = &rtdev->mac_priv->vnic_skb_pool;
+    struct rtskb_pool       *pool = &rtdev->mac_priv->vnic_skb_pool;
     struct ethhdr           *ethernet = (struct ethhdr*)skb->data;
     struct rtskb            *rtskb;
     int                     res;
@@ -261,7 +261,19 @@ static void rtmac_vnic_setup(struct net_device *dev)
 #endif
 }
 
+static int rtmac_vnic_pool_trylock(void *cookie)
+{
+    return 1;
+}
 
+static void rtmac_vnic_pool_unlock(void *cookie)
+{
+}
+
+const struct rtskb_pool_lock_ops rtmac_vnic_pool_lock_ops = {
+    .trylock = rtmac_vnic_pool_trylock,
+    .unlock = rtmac_vnic_pool_unlock,
+};
 
 int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 {
@@ -281,7 +293,8 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 
     /* create the rtskb pool */
     if (rtskb_pool_init(&mac_priv->vnic_skb_pool,
-                        vnic_rtskbs) < vnic_rtskbs) {
+                            vnic_rtskbs, &rtmac_vnic_pool_lock_ops,
+                            NULL) < vnic_rtskbs) {
         res = -ENOMEM;
         goto error;
     }
@@ -318,16 +331,21 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 
 
 
-void rtmac_vnic_unregister(struct rtnet_device *rtdev)
+int rtmac_vnic_unregister(struct rtnet_device *rtdev)
 {
     struct rtmac_priv   *mac_priv = rtdev->mac_priv;
-
+    int err;
 
     if (mac_priv->vnic) {
+        err = rtskb_pool_release(&mac_priv->vnic_skb_pool);
+        if (err < 0)
+            return err;
         unregister_netdev(mac_priv->vnic);
         free_netdev(mac_priv->vnic);
         mac_priv->vnic = NULL;
     }
+
+    return 0;
 }
 
 

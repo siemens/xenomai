@@ -39,7 +39,7 @@ MODULE_PARM_DESC(global_rtskbs, "Number of realtime socket buffers in global poo
 static struct kmem_cache *rtskb_slab_pool;
 
 /* pool of rtskbs for global use */
-struct rtskb_queue global_pool;
+struct rtskb_pool global_pool;
 EXPORT_SYMBOL(global_pool);
 
 /* pool statistics */
@@ -151,26 +151,71 @@ void rtskb_under_panic(struct rtskb *skb, int sz, void *here)
 EXPORT_SYMBOL(rtskb_under_panic);
 #endif /* CONFIG_XENO_DRIVERS_NET_CHECKED */
 
+static struct rtskb *__rtskb_pool_dequeue(struct rtskb_pool *pool)
+{
+    struct rtskb_queue *queue = &pool->queue;
+    struct rtskb *skb;
+
+    if (pool->lock_count == 0 && !pool->lock_ops->trylock(pool->lock_cookie))
+            return NULL;
+    skb = __rtskb_dequeue(queue);
+    if (skb == NULL) {
+        if (pool->lock_count == 0) /* This can only happen if pool has 0 packets */
+            pool->lock_ops->unlock(pool->lock_cookie);
+    } else
+        ++pool->lock_count;
+
+    return skb;
+}
+
+struct rtskb *rtskb_pool_dequeue(struct rtskb_pool *pool)
+{
+    struct rtskb_queue *queue = &pool->queue;
+    rtdm_lockctx_t context;
+    struct rtskb *skb;
+
+    rtdm_lock_get_irqsave(&queue->lock, context);
+    skb = __rtskb_pool_dequeue(pool);
+    rtdm_lock_put_irqrestore(&queue->lock, context);
+
+    return skb;
+}
+EXPORT_SYMBOL_GPL(rtskb_pool_dequeue);
+
+static void __rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb)
+{
+    struct rtskb_queue *queue = &pool->queue;
+
+    __rtskb_queue_tail(queue,skb);
+    if (--pool->lock_count == 0)
+        pool->lock_ops->unlock(pool->lock_cookie);
+}
+
+void rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb)
+{
+    struct rtskb_queue *queue = &pool->queue;
+    rtdm_lockctx_t context;
+
+    rtdm_lock_get_irqsave(&queue->lock, context);
+    __rtskb_pool_queue_tail(pool, skb);
+    rtdm_lock_put_irqrestore(&queue->lock, context);
+}
+EXPORT_SYMBOL_GPL(rtskb_pool_queue_tail);
 
 /***
  *  alloc_rtskb - allocate an rtskb from a pool
  *  @size: required buffer size (to check against maximum boundary)
  *  @pool: pool to take the rtskb from
  */
-struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_queue *pool)
+struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_pool *pool)
 {
     struct rtskb *skb;
 
-
     RTNET_ASSERT(size <= SKB_DATA_ALIGN(RTSKB_SIZE), return NULL;);
 
-    skb = rtskb_dequeue(pool);
+    skb = rtskb_pool_dequeue(pool);
     if (!skb)
         return NULL;
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    pool->pool_balance--;
-    skb->chain_len = 1;
-#endif
 
     /* Load the data pointers. */
     skb->data = skb->buf_start;
@@ -228,29 +273,21 @@ void kfree_rtskb(struct rtskb *skb)
 
             rtdm_lock_put_irqrestore(&rtcap_lock, context);
 
-            rtskb_queue_tail(comp_skb->pool, comp_skb);
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-            comp_skb->pool->pool_balance++;
-#endif
+            rtskb_pool_queue_tail(comp_skb->pool, comp_skb);
         }
         else {
             rtdm_lock_put_irqrestore(&rtcap_lock, context);
 
             skb->chain_end = skb;
-            rtskb_queue_tail(skb->pool, skb);
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-            skb->pool->pool_balance++;
-#endif
+            rtskb_pool_queue_tail(skb->pool, skb);
         }
 
     } while (chain_end != skb);
 
 #else  /* CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP */
 
-    rtskb_queue_tail(skb->pool, skb);
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    skb->pool->pool_balance += skb->chain_len;
-#endif
+    rtskb_pool_queue_tail(skb->pool, skb);
+
 
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP */
 }
@@ -264,15 +301,14 @@ EXPORT_SYMBOL(kfree_rtskb);
  *  @initial_size: number of rtskbs to allocate
  *  return: number of actually allocated rtskbs
  */
-unsigned int rtskb_pool_init(struct rtskb_queue *pool,
-                             unsigned int initial_size)
+unsigned int rtskb_pool_init(struct rtskb_pool *pool,
+                            unsigned int initial_size,
+                            const struct rtskb_pool_lock_ops *lock_ops,
+                            void *lock_cookie)
 {
     unsigned int i;
 
-    rtskb_queue_init(pool);
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    pool->pool_balance = 0;
-#endif
+    rtskb_queue_init(&pool->queue);
 
     i = rtskb_pool_extend(pool, initial_size);
 
@@ -280,33 +316,64 @@ unsigned int rtskb_pool_init(struct rtskb_queue *pool,
     if (rtskb_pools > rtskb_pools_max)
         rtskb_pools_max = rtskb_pools;
 
+    pool->lock_ops = lock_ops;
+    pool->lock_count = 0;
+    pool->lock_cookie = lock_cookie;
+
     return i;
 }
 
 EXPORT_SYMBOL(rtskb_pool_init);
+
+static int rtskb_module_pool_trylock(void *cookie)
+{
+    return try_module_get(cookie);
+}
+
+static void rtskb_module_pool_unlock(void *cookie)
+{
+    module_put(cookie);
+}
+
+const struct rtskb_pool_lock_ops rtskb_module_lock_ops = {
+    .trylock = rtskb_module_pool_trylock,
+    .unlock = rtskb_module_pool_unlock,
+};
+
+unsigned int __rtskb_module_pool_init(struct rtskb_pool *pool,
+                                    unsigned int initial_size,
+                                    struct module *module)
+{
+    return rtskb_pool_init(pool, initial_size, &rtskb_module_lock_ops, module);
+}
+EXPORT_SYMBOL(__rtskb_module_pool_init);
 
 
 /***
  *  __rtskb_pool_release
  *  @pool: pool to release
  */
-void __rtskb_pool_release(struct rtskb_queue *pool)
+int rtskb_pool_release(struct rtskb_pool *pool)
 {
     struct rtskb *skb;
 
-    while ((skb = rtskb_dequeue(pool)) != NULL) {
+    if (pool->lock_count)
+        return -EBUSY;
+
+    while ((skb = rtskb_dequeue(&pool->queue)) != NULL) {
         rtdev_unmap_rtskb(skb);
         kmem_cache_free(rtskb_slab_pool, skb);
         rtskb_amount--;
     }
 
     rtskb_pools--;
+    return 0;
 }
 
-EXPORT_SYMBOL(__rtskb_pool_release);
+EXPORT_SYMBOL(rtskb_pool_release);
 
 
-unsigned int rtskb_pool_extend(struct rtskb_queue *pool,
+unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
                                unsigned int add_rtskbs)
 {
     unsigned int i;
@@ -335,7 +402,7 @@ unsigned int rtskb_pool_extend(struct rtskb_queue *pool,
         if (rtdev_map_rtskb(skb) < 0)
             break;
 
-        rtskb_queue_tail(pool, skb);
+        rtskb_queue_tail(&pool->queue, skb);
 
         rtskb_amount++;
         if (rtskb_amount > rtskb_amount_max)
@@ -346,7 +413,7 @@ unsigned int rtskb_pool_extend(struct rtskb_queue *pool,
 }
 
 
-unsigned int rtskb_pool_shrink(struct rtskb_queue *pool,
+unsigned int rtskb_pool_shrink(struct rtskb_pool *pool,
                                unsigned int rem_rtskbs)
 {
     unsigned int    i;
@@ -354,7 +421,7 @@ unsigned int rtskb_pool_shrink(struct rtskb_queue *pool,
 
 
     for (i = 0; i < rem_rtskbs; i++) {
-        if ((skb = rtskb_dequeue(pool)) == NULL)
+        if ((skb = rtskb_dequeue(&pool->queue)) == NULL)
             break;
 
         rtdev_unmap_rtskb(skb);
@@ -367,39 +434,31 @@ unsigned int rtskb_pool_shrink(struct rtskb_queue *pool,
 
 
 /* Note: acquires only the first skb of a chain! */
-int rtskb_acquire(struct rtskb *rtskb, struct rtskb_queue *comp_pool)
+int rtskb_acquire(struct rtskb *rtskb, struct rtskb_pool *comp_pool)
 {
     struct rtskb *comp_rtskb;
-    struct rtskb_queue *release_pool;
+    struct rtskb_pool *release_pool;
     rtdm_lockctx_t context;
 
 
-    rtdm_lock_get_irqsave(&comp_pool->lock, context);
+    rtdm_lock_get_irqsave(&comp_pool->queue.lock, context);
 
-    comp_rtskb = __rtskb_dequeue(comp_pool);
+    comp_rtskb = __rtskb_pool_dequeue(comp_pool);
     if (!comp_rtskb) {
-        rtdm_lock_put_irqrestore(&comp_pool->lock, context);
+        rtdm_lock_put_irqrestore(&comp_pool->queue.lock, context);
         return -ENOMEM;
     }
 
-    rtdm_lock_put(&comp_pool->lock);
-
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    comp_pool->pool_balance--;
-#endif
+    rtdm_lock_put(&comp_pool->queue.lock);
 
     comp_rtskb->chain_end = comp_rtskb;
     comp_rtskb->pool = release_pool = rtskb->pool;
 
-    rtdm_lock_get(&release_pool->lock);
+    rtdm_lock_get(&release_pool->queue.lock);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    comp_rtskb->chain_len = 1;
-    release_pool->pool_balance++;
-#endif
-    __rtskb_queue_tail(release_pool, comp_rtskb);
+    __rtskb_pool_queue_tail(release_pool, comp_rtskb);
 
-    rtdm_lock_put_irqrestore(&release_pool->lock, context);
+    rtdm_lock_put_irqrestore(&release_pool->queue.lock, context);
 
     rtskb->pool = comp_pool;
 
@@ -410,7 +469,7 @@ EXPORT_SYMBOL(rtskb_acquire);
 
 
 /* clone rtskb to another, allocating the new rtskb from pool */
-struct rtskb* rtskb_clone(struct rtskb *rtskb, struct rtskb_queue *pool)
+struct rtskb* rtskb_clone(struct rtskb *rtskb, struct rtskb_pool *pool)
 {
     struct rtskb    *clone_rtskb;
     unsigned int    total_len;
@@ -473,7 +532,7 @@ int rtskb_pools_init(void)
     rtskb_amount_max = 0;
 
     /* create the global rtskb pool */
-    if (rtskb_pool_init(&global_pool, global_rtskbs) < global_rtskbs)
+    if (rtskb_module_pool_init(&global_pool, global_rtskbs) < global_rtskbs)
         goto err_out;
 
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP

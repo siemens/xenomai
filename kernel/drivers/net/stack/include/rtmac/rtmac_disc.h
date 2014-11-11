@@ -41,7 +41,7 @@ struct rtmac_priv {
     int (*orig_start_xmit)(struct rtskb *skb, struct rtnet_device *dev);
     struct net_device       *vnic;
     struct net_device_stats vnic_stats;
-    struct rtskb_queue      vnic_skb_pool;
+    struct rtskb_pool       vnic_skb_pool;
     unsigned int            vnic_max_mtu;
 
     u8                      disc_priv[0] __attribute__ ((aligned(16)));
@@ -77,13 +77,17 @@ struct rtmac_disc {
     struct rtnet_ioctls ioctls;
 
     struct rtmac_proc_entry *proc_entries;
+
+    struct module *owner;
 };
 
 
 int rtmac_disc_attach(struct rtnet_device *rtdev, struct rtmac_disc *disc);
 int rtmac_disc_detach(struct rtnet_device *rtdev);
 
-int rtmac_disc_register(struct rtmac_disc *disc);
+int __rtmac_disc_register(struct rtmac_disc *disc, struct module *module);
+#define rtmac_disc_register(disc) __rtmac_disc_register(disc, THIS_MODULE)
+
 void rtmac_disc_deregister(struct rtmac_disc *disc);
 
 #ifdef CONFIG_PROC_FS

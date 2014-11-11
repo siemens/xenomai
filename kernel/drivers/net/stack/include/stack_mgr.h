@@ -48,9 +48,9 @@ struct rtpacket_type {
 
     int                 (*handler)(struct rtskb *, struct rtpacket_type *);
     int                 (*err_handler)(struct rtskb *, struct rtnet_device *,
-				       struct rtpacket_type *);
-    bool                (*trylock)(struct rtpacket_type *)
-    void                (*unlock)(struct rtpacket_type *)
+                                       struct rtpacket_type *);
+    bool                (*trylock)(struct rtpacket_type *);
+    void                (*unlock)(struct rtpacket_type *);
 };
 
 
@@ -59,7 +59,7 @@ int rtdev_remove_pack(struct rtpacket_type *pt);
 
 static inline bool rtdev_lock_pack(struct rtpacket_type *pt)
 {
-    ++pt->recount;
+    ++pt->refcount;
     return true;
 }
 

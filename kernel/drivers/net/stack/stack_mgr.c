@@ -59,21 +59,21 @@ int rtdev_add_pack(struct rtpacket_type *pt)
     INIT_LIST_HEAD(&pt->list_entry);
     pt->refcount = 0;
     if (pt->trylock == NULL)
-	pt->trylock = rtdev_lock_pack;
+        pt->trylock = rtdev_lock_pack;
     if (pt->unlock == NULL)
-	pt->unlock = rtdev_unlock_pack;
+        pt->unlock = rtdev_unlock_pack;
 
     rtdm_lock_get_irqsave(&rt_packets_lock, context);
 
     if (pt->type == htons(ETH_P_ALL))
 #ifdef CONFIG_XENO_DRIVERS_NET_ETH_P_ALL
-	list_add_tail(&pt->list_entry, &rt_packets_all);
+        list_add_tail(&pt->list_entry, &rt_packets_all);
 #else /* !CONFIG_XENO_DRIVERS_NET_ETH_P_ALL */
-	ret = -EINVAL;
+        ret = -EINVAL;
 #endif /* CONFIG_XENO_DRIVERS_NET_ETH_P_ALL */
     else
-	list_add_tail(&pt->list_entry,
-		      &rt_packets[ntohs(pt->type) & RTPACKET_HASH_KEY_MASK]);
+        list_add_tail(&pt->list_entry,
+                      &rt_packets[ntohs(pt->type) & RTPACKET_HASH_KEY_MASK]);
 
     rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
@@ -98,9 +98,9 @@ int rtdev_remove_pack(struct rtpacket_type *pt)
     rtdm_lock_get_irqsave(&rt_packets_lock, context);
 
     if (pt->refcount > 0)
-	ret = -EAGAIN;
+        ret = -EAGAIN;
     else
-	list_del(&pt->list_entry);
+        list_del(&pt->list_entry);
 
     rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
@@ -128,9 +128,9 @@ void rtnetif_rx(struct rtskb *skb)
     rtdev_reference(rtdev);
 
     if (unlikely(rtskb_fifo_insert_inirq(&rx.fifo, skb) < 0)) {
-	rtdm_printk("RTnet: dropping packet in %s()\n", __FUNCTION__);
-	kfryee_rtskb(skb);
-	rtdev_dereference(rtdev);
+        rtdm_printk("RTnet: dropping packet in %s()\n", __FUNCTION__);
+        kfree_rtskb(skb);
+        rtdev_dereference(rtdev);
     }
 }
 
@@ -162,46 +162,46 @@ __DELIVER_PREFIX void rt_stack_deliver(struct rtskb *rtskb)
 #ifdef CONFIG_XENO_DRIVERS_NET_ETH_P_ALL
     eth_p_all_hit = 0;
     list_for_each_entry(pt_entry, &rt_packets_all, list_entry) {
-	if (!pt_entry->trylock(pt_entry))
-	    continue;
-	rtdm_lock_put_irqrestore(&rt_packets_lock, context);
+        if (!pt_entry->trylock(pt_entry))
+            continue;
+        rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
-	pt_entry->handler(rtskb, pt_entry);
+        pt_entry->handler(rtskb, pt_entry);
 
-	rtdm_lock_get_irqsave(&rt_packets_lock, context);
-	pt_entry->unlock(pt_entry);
-	eth_p_all_hit = 1;
+        rtdm_lock_get_irqsave(&rt_packets_lock, context);
+        pt_entry->unlock(pt_entry);
+        eth_p_all_hit = 1;
     }
 #endif /* CONFIG_XENO_DRIVERS_NET_ETH_P_ALL */
 
     hash = ntohs(rtskb->protocol) & RTPACKET_HASH_KEY_MASK;
 
     list_for_each_entry(pt_entry, &rt_packets[hash], list_entry)
-	if (pt_entry->type == rtskb->protocol) {
-	    if (!pt_entry->trylock(pt_entry))
-		continue;
-	    rtdm_lock_put_irqrestore(&rt_packets_lock, context);
+        if (pt_entry->type == rtskb->protocol) {
+            if (!pt_entry->trylock(pt_entry))
+                continue;
+            rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
-	    err = pt_entry->handler(rtskb, pt_entry);
+            err = pt_entry->handler(rtskb, pt_entry);
 
-	    rtdm_lock_get_irqsave(&rt_packets_lock, context);
-	    pt_entry->unlock(pt_entry);
+            rtdm_lock_get_irqsave(&rt_packets_lock, context);
+            pt_entry->unlock(pt_entry);
 
-	    rtdev_dereference(rtdev);
+            rtdev_dereference(rtdev);
 
-	    if (likely(!err)) {
-		rtdm_lock_put_irqrestore(&rt_packets_lock, context);
-		return;
-	    }
-	}
+            if (likely(!err)) {
+                rtdm_lock_put_irqrestore(&rt_packets_lock, context);
+                return;
+            }
+        }
 
     rtdm_lock_put_irqrestore(&rt_packets_lock, context);
 
     /* Don't warn if ETH_P_ALL listener were present or when running in
        promiscuous mode (RTcap). */
     if (unlikely(!eth_p_all_hit && !(rtdev->flags & IFF_PROMISC)))
-	rtdm_printk("RTnet: no one cared for packet with layer 3 "
-		    "protocol type 0x%04x\n", ntohs(rtskb->protocol));
+        rtdm_printk("RTnet: no one cared for packet with layer 3 "
+                    "protocol type 0x%04x\n", ntohs(rtskb->protocol));
 
     kfree_rtskb(rtskb);
     rtdev_dereference(rtdev);
@@ -219,9 +219,9 @@ static void rt_stack_mgr_task(void *arg)
 
 
     while (rtdm_event_wait(mgr_event) == 0) {
-	/* we are the only reader => no locking required */
-	while ((rtskb = __rtskb_fifo_remove(&rx.fifo)))
-	    rt_stack_deliver(rtskb);
+        /* we are the only reader => no locking required */
+        while ((rtskb = __rtskb_fifo_remove(&rx.fifo)))
+            rt_stack_deliver(rtskb);
     }
 }
 
@@ -259,7 +259,7 @@ int rt_stack_mgr_init (struct rtnet_mgr *mgr)
     rtskb_fifo_init(&rx.fifo, CONFIG_XENO_DRIVERS_NET_RX_FIFO_SIZE);
 
     for (i = 0; i < RTPACKET_HASH_TBL_SIZE; i++)
-	INIT_LIST_HEAD(&rt_packets[i]);
+        INIT_LIST_HEAD(&rt_packets[i]);
 #ifdef CONFIG_XENO_DRIVERS_NET_ETH_P_ALL
     INIT_LIST_HEAD(&rt_packets_all);
 #endif /* CONFIG_XENO_DRIVERS_NET_ETH_P_ALL */
@@ -267,7 +267,7 @@ int rt_stack_mgr_init (struct rtnet_mgr *mgr)
     rtdm_event_init(&mgr->event, 0);
 
     return rtdm_task_init(&mgr->task, "rtnet-stack", rt_stack_mgr_task, mgr,
-			  stack_mgr_prio, 0);
+                          stack_mgr_prio, 0);
 }
 
 

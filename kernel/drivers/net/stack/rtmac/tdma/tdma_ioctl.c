@@ -70,8 +70,8 @@ static int tdma_ioctl_master(struct rtnet_device *rtdev,
         cycle_ms = 1;
     msleep(3*cycle_ms);
 
-    if (rtskb_pool_init(&tdma->cal_rtskb_pool,
-                        cfg->args.master.max_cal_requests) !=
+    if (rtskb_module_pool_init(&tdma->cal_rtskb_pool,
+                                cfg->args.master.max_cal_requests) !=
         cfg->args.master.max_cal_requests) {
         ret = -ENOMEM;
         goto err_out;

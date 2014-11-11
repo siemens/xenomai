@@ -1,6 +1,6 @@
 /* rtwlan.h
  *
- * This file is a rtnet adaption from ieee80211/ieee80211.h used by the 
+ * This file is a rtnet adaption from ieee80211/ieee80211.h used by the
  * rt2x00-2.0.0-b3 sourceforge project
  *
  * Merged with mainline ieee80211.h in Aug 2004.  Original ieee802_11
@@ -17,7 +17,7 @@
  * <jketreno@linux.intel.com>
  * Copyright (c) 2004-2005, Intel Corporation
  *
- * Adaption to rtnet 
+ * Adaption to rtnet
  * Copyright (c) 2006, Daniel Gregorek <dxg@gmx.de>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -75,7 +75,7 @@
 
 /* management */
 #define IEEE80211_STYPE_ASSOC_REQ	0x0000
-#define IEEE80211_STYPE_ASSOC_RESP 	0x0010
+#define IEEE80211_STYPE_ASSOC_RESP      0x0010
 #define IEEE80211_STYPE_REASSOC_REQ	0x0020
 #define IEEE80211_STYPE_REASSOC_RESP	0x0030
 #define IEEE80211_STYPE_PROBE_REQ	0x0040
@@ -112,12 +112,12 @@
 #define WLAN_FC_GET_TYPE(fc) ((fc) & IEEE80211_FCTL_FTYPE)
 #define WLAN_FC_GET_STYPE(fc) ((fc) & IEEE80211_FCTL_STYPE)
 
-#define IEEE80211_DSSS_RATE_1MB		        0x02
-#define IEEE80211_DSSS_RATE_2MB		        0x04
-#define IEEE80211_DSSS_RATE_5MB		        0x0B
-#define IEEE80211_DSSS_RATE_11MB	        0x16
-#define IEEE80211_OFDM_RATE_6MB		        0x0C
-#define IEEE80211_OFDM_RATE_9MB		        0x12
+#define IEEE80211_DSSS_RATE_1MB                 0x02
+#define IEEE80211_DSSS_RATE_2MB                 0x04
+#define IEEE80211_DSSS_RATE_5MB                 0x0B
+#define IEEE80211_DSSS_RATE_11MB                0x16
+#define IEEE80211_OFDM_RATE_6MB                 0x0C
+#define IEEE80211_OFDM_RATE_9MB                 0x12
 #define IEEE80211_OFDM_RATE_12MB		0x18
 #define IEEE80211_OFDM_RATE_18MB		0x24
 #define IEEE80211_OFDM_RATE_24MB		0x30
@@ -154,7 +154,7 @@ struct rtwlan_device {
 
     struct rtwlan_stats stats;
 
-    struct rtskb_queue skb_pool;
+    struct rtskb_pool skb_pool;
 
     int mode;
 

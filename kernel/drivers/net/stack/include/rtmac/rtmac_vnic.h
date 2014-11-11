@@ -39,7 +39,7 @@ int rtmac_vnic_xmit(struct sk_buff *skb, struct net_device *dev);
 void rtmac_vnic_set_max_mtu(struct rtnet_device *rtdev, unsigned int max_mtu);
 
 int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit);
-void rtmac_vnic_unregister(struct rtnet_device *rtdev);
+int rtmac_vnic_unregister(struct rtnet_device *rtdev);
 
 static inline void rtmac_vnic_cleanup(struct rtnet_device *rtdev)
 {

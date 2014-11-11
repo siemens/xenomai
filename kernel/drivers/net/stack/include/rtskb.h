@@ -158,7 +158,7 @@ struct rtskb {
     struct rtskb        *chain_end; /* marks the end of a rtskb chain starting
                                        with this very rtskb */
 
-    struct rtskb_queue  *pool;      /* owning pool */
+    struct rtskb_pool   *pool;      /* owning pool */
 
     unsigned int        priority;   /* bit 0..15: prio, 16..31: user-defined */
 
@@ -214,8 +214,6 @@ struct rtskb {
 
 #ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
     unsigned char       *buf_end;
-
-    int                 chain_len;
 #endif
 
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
@@ -234,9 +232,18 @@ struct rtskb_queue {
     struct rtskb        *first;
     struct rtskb        *last;
     rtdm_lock_t         lock;
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    int                 pool_balance;
-#endif
+};
+
+struct rtskb_pool_lock_ops {
+    int (*trylock)(void *cookie);
+    void (*unlock)(void *cookie);
+};
+
+struct rtskb_pool {
+    struct rtskb_queue queue;
+    const struct rtskb_pool_lock_ops *lock_ops;
+    unsigned lock_count;
+    void *lock_cookie;
 };
 
 #define QUEUE_MAX_PRIO          0
@@ -278,7 +285,11 @@ extern void rtskb_over_panic(struct rtskb *skb, int len, void *here);
 extern void rtskb_under_panic(struct rtskb *skb, int len, void *here);
 #endif
 
-extern struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_queue *pool);
+extern struct rtskb *rtskb_pool_dequeue(struct rtskb_pool *pool);
+
+extern void rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb);
+
+extern struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_pool *pool);
 #define dev_alloc_rtskb(len, pool)  alloc_rtskb(len, pool)
 
 extern void kfree_rtskb(struct rtskb *skb);
@@ -700,44 +711,29 @@ static inline dma_addr_t rtskb_data_dma_addr(struct rtskb *rtskb,
     return rtskb->buf_dma_addr + rtskb->data - rtskb->buf_start + offset;
 }
 
-extern struct rtskb_queue global_pool;
+extern struct rtskb_pool global_pool;
 
-extern unsigned int rtskb_pool_init(struct rtskb_queue *pool,
-                                    unsigned int initial_size);
-extern unsigned int rtskb_pool_init_rt(struct rtskb_queue *pool,
-                                       unsigned int initial_size);
-extern void __rtskb_pool_release(struct rtskb_queue *pool);
-extern void __rtskb_pool_release_rt(struct rtskb_queue *pool);
+extern unsigned int rtskb_pool_init(struct rtskb_pool *pool,
+                                    unsigned int initial_size,
+                                    const struct rtskb_pool_lock_ops *lock_ops,
+                                    void *lock_cookie);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-#define rtskb_pool_release(pool)                            \
-    do {                                                    \
-        RTNET_ASSERT((pool)->pool_balance == 0,             \
-                     rtdm_printk("pool: %p\n", (pool)););   \
-        __rtskb_pool_release((pool));                       \
-    } while (0)
-#define rtskb_pool_release_rt(pool)                         \
-    do {                                                    \
-        RTNET_ASSERT((pool)->pool_balance == 0,             \
-                     rtdm_printk("pool: %p\n", (pool)););   \
-        __rtskb_pool_release_rt((pool));                    \
-    } while (0)
-#else
-#define rtskb_pool_release      __rtskb_pool_release
-#define rtskb_pool_release_rt   __rtskb_pool_release_rt
-#endif
+extern unsigned int __rtskb_module_pool_init(struct rtskb_pool *pool,
+                                            unsigned int initial_size,
+                                            struct module *module);
 
-extern unsigned int rtskb_pool_extend(struct rtskb_queue *pool,
+#define rtskb_module_pool_init(pool, size) \
+    __rtskb_module_pool_init(pool, size, THIS_MODULE)
+
+extern int rtskb_pool_release(struct rtskb_pool *pool);
+
+extern unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
                                       unsigned int add_rtskbs);
-extern unsigned int rtskb_pool_extend_rt(struct rtskb_queue *pool,
-                                         unsigned int add_rtskbs);
-extern unsigned int rtskb_pool_shrink(struct rtskb_queue *pool,
+extern unsigned int rtskb_pool_shrink(struct rtskb_pool *pool,
                                       unsigned int rem_rtskbs);
-extern unsigned int rtskb_pool_shrink_rt(struct rtskb_queue *pool,
-                                         unsigned int rem_rtskbs);
-extern int rtskb_acquire(struct rtskb *rtskb, struct rtskb_queue *comp_pool);
+extern int rtskb_acquire(struct rtskb *rtskb, struct rtskb_pool *comp_pool);
 extern struct rtskb* rtskb_clone(struct rtskb *rtskb,
-                                 struct rtskb_queue *pool);
+                                 struct rtskb_pool *pool);
 
 extern int rtskb_pools_init(void);
 extern void rtskb_pools_release(void);

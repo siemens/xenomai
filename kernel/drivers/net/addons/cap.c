@@ -54,7 +54,7 @@ MODULE_PARM_DESC(rtcap_rtskbs, "Number of real-time socket buffers per "
 
 static rtdm_nrtsig_t        cap_signal;
 static struct rtskb_queue   cap_queue;
-static struct rtskb_queue   cap_pool;
+static struct rtskb_pool   cap_pool;
 
 static struct tap_device_t {
     struct net_device       *tap_dev;
@@ -69,13 +69,10 @@ static struct tap_device_t {
 
 void rtcap_rx_hook(struct rtskb *rtskb)
 {
-    if ((rtskb->cap_comp_skb = rtskb_dequeue(&cap_pool)) == 0) {
+    if ((rtskb->cap_comp_skb = rtskb_pool_dequeue(&cap_pool)) == 0) {
 	tap_device[rtskb->rtdev->ifindex].tap_dev_stats.rx_dropped++;
 	return;
     }
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    cap_pool.pool_balance--;
-#endif
 
     if (cap_queue.first == NULL)
 	cap_queue.first = rtskb;
@@ -97,13 +94,10 @@ int rtcap_xmit_hook(struct rtskb *rtskb, struct rtnet_device *rtdev)
     rtdm_lockctx_t      context;
 
 
-    if ((rtskb->cap_comp_skb = rtskb_dequeue(&cap_pool)) == 0) {
+    if ((rtskb->cap_comp_skb = rtskb_pool_dequeue(&cap_pool)) == 0) {
 	tap_dev->tap_dev_stats.rx_dropped++;
 	return tap_dev->orig_xmit(rtskb, rtdev);
     }
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    cap_pool.pool_balance--;
-#endif
 
     rtskb->cap_next  = NULL;
     rtskb->cap_start = rtskb->data;
@@ -156,10 +150,7 @@ void rtcap_kfree_rtskb(struct rtskb *rtskb)
 
 	rtdm_lock_put_irqrestore(&rtcap_lock, context);
 
-	rtskb_queue_tail(comp_skb->pool, comp_skb);
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-	comp_skb->pool->pool_balance++;
-#endif
+	rtskb_pool_queue_tail(comp_skb->pool, comp_skb);
 
 	return;
     }
@@ -167,10 +158,7 @@ void rtcap_kfree_rtskb(struct rtskb *rtskb)
     rtdm_lock_put_irqrestore(&rtcap_lock, context);
 
     rtskb->chain_end = rtskb;
-    rtskb_queue_tail(rtskb->pool, rtskb);
-#ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-    rtskb->pool->pool_balance++;
-#endif
+    rtskb_pool_queue_tail(rtskb->pool, rtskb);
 }
 
 
@@ -510,7 +498,7 @@ int __init rtcap_init(void)
 	goto error2;
     }
 
-    if (rtskb_pool_init(&cap_pool, rtcap_rtskbs * devices) <
+    if (rtskb_module_pool_init(&cap_pool, rtcap_rtskbs * devices) <
 	    rtcap_rtskbs * devices) {
 	rtskb_pool_release(&cap_pool);
 	ret = -ENOMEM;
