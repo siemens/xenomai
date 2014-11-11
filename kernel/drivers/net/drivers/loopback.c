@@ -74,8 +74,8 @@ static int rt_loopback_xmit(struct rtskb *rtskb, struct rtnet_device *rtdev)
     /* write transmission stamp - in case any protocol ever gets the idea to
        ask the lookback device for this service... */
     if (rtskb->xmit_stamp)
-        *rtskb->xmit_stamp =
-            cpu_to_be64(rtdm_clock_read() + *rtskb->xmit_stamp);
+	*rtskb->xmit_stamp =
+	    cpu_to_be64(rtdm_clock_read() + *rtskb->xmit_stamp);
 
     /* make sure that critical fields are re-intialised */
     rtskb->chain_end = rtskb;
@@ -101,8 +101,8 @@ static int __init loopback_init(void)
 
     printk("initializing loopback...\n");
 
-    if ((rtdev = rt_alloc_etherdev(0)) == NULL)
-        return -ENODEV;
+    if ((rtdev = rt_alloc_etherdev(0, 0)) == NULL)
+	return -ENODEV;
 
     rt_rtdev_connect(rtdev, &RTDEV_manager);
     RTNET_SET_MODULE_OWNER(rtdev);
@@ -119,8 +119,8 @@ static int __init loopback_init(void)
 
     if ((err = rt_register_rtnetdev(rtdev)) != 0)
     {
-        rtdev_free(rtdev);
-        return err;
+	rtdev_free(rtdev);
+	return err;
     }
 
     rt_loopback_dev = rtdev;

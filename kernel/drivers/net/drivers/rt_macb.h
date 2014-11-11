@@ -244,27 +244,27 @@
 
 /* Bit manipulation macros */
 #define MACB_BIT(name)					\
-	(1 << MACB_##name##_OFFSET)
+        (1 << MACB_##name##_OFFSET)
 #define MACB_BF(name,value)				\
-	(((value) & ((1 << MACB_##name##_SIZE) - 1))	\
-	 << MACB_##name##_OFFSET)
+        (((value) & ((1 << MACB_##name##_SIZE) - 1))	\
+         << MACB_##name##_OFFSET)
 #define MACB_BFEXT(name,value)\
-	(((value) >> MACB_##name##_OFFSET)		\
-	 & ((1 << MACB_##name##_SIZE) - 1))
+        (((value) >> MACB_##name##_OFFSET)		\
+         & ((1 << MACB_##name##_SIZE) - 1))
 #define MACB_BFINS(name,value,old)			\
-	(((old) & ~(((1 << MACB_##name##_SIZE) - 1)	\
-		    << MACB_##name##_OFFSET))		\
-	 | MACB_BF(name,value))
+        (((old) & ~(((1 << MACB_##name##_SIZE) - 1)	\
+                    << MACB_##name##_OFFSET))		\
+         | MACB_BF(name,value))
 
 /* Register access macros */
 #define macb_readl(port,reg)				\
-	__raw_readl((port)->regs + MACB_##reg)
+        __raw_readl((port)->regs + MACB_##reg)
 #define macb_writel(port,reg,value)			\
-	__raw_writel((value), (port)->regs + MACB_##reg)
+        __raw_writel((value), (port)->regs + MACB_##reg)
 
 struct dma_desc {
-	u32	addr;
-	u32	ctrl;
+        u32	addr;
+        u32	ctrl;
 };
 
 /* DMA descriptor bitfields */
@@ -328,9 +328,9 @@ struct dma_desc {
 #define MACB_TX_USED_SIZE			1
 
 struct ring_info {
-	//struct sk_buff		*skb;
-	struct rtskb  *skb;
-	dma_addr_t    mapping;
+        //struct sk_buff		*skb;
+        struct rtskb  *skb;
+        dma_addr_t    mapping;
 };
 
 /*
@@ -338,65 +338,64 @@ struct ring_info {
  * device stats by a periodic timer.
  */
 struct macb_stats {
-	u32	rx_pause_frames;
-	u32	tx_ok;
-	u32	tx_single_cols;
-	u32	tx_multiple_cols;
-	u32	rx_ok;
-	u32	rx_fcs_errors;
-	u32	rx_align_errors;
-	u32	tx_deferred;
-	u32	tx_late_cols;
-	u32	tx_excessive_cols;
-	u32	tx_underruns;
-	u32	tx_carrier_errors;
-	u32	rx_resource_errors;
-	u32	rx_overruns;
-	u32	rx_symbol_errors;
-	u32	rx_oversize_pkts;
-	u32	rx_jabbers;
-	u32	rx_undersize_pkts;
-	u32	sqe_test_errors;
-	u32	rx_length_mismatch;
-	u32	tx_pause_frames;
+        u32	rx_pause_frames;
+        u32	tx_ok;
+        u32	tx_single_cols;
+        u32	tx_multiple_cols;
+        u32	rx_ok;
+        u32	rx_fcs_errors;
+        u32	rx_align_errors;
+        u32	tx_deferred;
+        u32	tx_late_cols;
+        u32	tx_excessive_cols;
+        u32	tx_underruns;
+        u32	tx_carrier_errors;
+        u32	rx_resource_errors;
+        u32	rx_overruns;
+        u32	rx_symbol_errors;
+        u32	rx_oversize_pkts;
+        u32	rx_jabbers;
+        u32	rx_undersize_pkts;
+        u32	sqe_test_errors;
+        u32	rx_length_mismatch;
+        u32	tx_pause_frames;
 };
 
 struct macb_private {
-	void __iomem		*regs;
+        void __iomem		*regs;
 
-	unsigned int		rx_tail;
-	struct dma_desc		*rx_ring;
-	void			*rx_buffers;
+        unsigned int		rx_tail;
+        struct dma_desc		*rx_ring;
+        void			*rx_buffers;
 
-	unsigned int		tx_head, tx_tail;
-	struct dma_desc		*tx_ring;
-	struct ring_info	*tx_skb;
+        unsigned int		tx_head, tx_tail;
+        struct dma_desc		*tx_ring;
+        struct ring_info	*tx_skb;
 
-	//spinlock_t		lock;
-	struct platform_device	*pdev;
-	struct clk		*pclk;
-	struct clk		*hclk;
-	struct rtnet_device	*rtdev;
-	struct napi_struct	napi;
-	struct net_device_stats	stats;
-	struct macb_stats	hw_stats;
+        //spinlock_t		lock;
+        struct platform_device	*pdev;
+        struct clk		*pclk;
+        struct clk		*hclk;
+        struct rtnet_device	*rtdev;
+        struct napi_struct	napi;
+        struct net_device_stats	stats;
+        struct macb_stats	hw_stats;
 
-	dma_addr_t		rx_ring_dma;
-	dma_addr_t		tx_ring_dma;
-	dma_addr_t		rx_buffers_dma;
+        dma_addr_t		rx_ring_dma;
+        dma_addr_t		tx_ring_dma;
+        dma_addr_t		rx_buffers_dma;
 
-	unsigned int		rx_pending, tx_pending;
+        unsigned int		rx_pending, tx_pending;
 
-	struct mii_bus		mii_bus;
-	struct phy_device	*phy_dev;
-	unsigned int 		link;
-	unsigned int 		speed;
-	unsigned int 		duplex;
+        struct mii_bus		mii_bus;
+        struct phy_device	*phy_dev;
+        unsigned int            link;
+        unsigned int            speed;
+        unsigned int            duplex;
 
-	// RTnet
-	rtdm_lock_t lock;
-	struct rtskb_queue skb_pool;
-	rtdm_irq_t irq_handle;
+        // RTnet
+        rtdm_lock_t lock;
+        rtdm_irq_t irq_handle;
 
 };
 

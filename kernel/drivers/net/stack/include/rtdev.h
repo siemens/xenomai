@@ -48,10 +48,10 @@
 
 
 enum rtnet_link_state {
-        __RTNET_LINK_STATE_XOFF = 0,
-        __RTNET_LINK_STATE_START,
-        __RTNET_LINK_STATE_PRESENT,
-        __RTNET_LINK_STATE_NOCARRIER,
+	__RTNET_LINK_STATE_XOFF = 0,
+	__RTNET_LINK_STATE_START,
+	__RTNET_LINK_STATE_PRESENT,
+	__RTNET_LINK_STATE_NOCARRIER,
 };
 
 /***
@@ -85,7 +85,7 @@ struct rtnet_device {
     atomic_t            refcount;
 
     struct module       *rt_owner;  /* like classic owner, but      *
-                                     * forces correct macro usage   */
+				     * forces correct macro usage   */
 
     unsigned int        flags;      /* interface flags (a la BSD)   */
     unsigned long       priv_flags; /* internal flags               */
@@ -114,6 +114,8 @@ struct rtnet_device {
 
     unsigned int        add_rtskbs; /* additionally allocated global rtskbs */
 
+    struct rtskb_pool   rx_pool;
+
     /* RTmac related fields */
     struct rtmac_disc   *mac_disc;
     struct rtmac_priv   *mac_priv;
@@ -123,11 +125,11 @@ struct rtnet_device {
     int                 (*open)(struct rtnet_device *rtdev);
     int                 (*stop)(struct rtnet_device *rtdev);
     int                 (*hard_header)(struct rtskb *, struct rtnet_device *,
-                                       unsigned short type, void *daddr,
-                                       void *saddr, unsigned int len);
+				       unsigned short type, void *daddr,
+				       void *saddr, unsigned int len);
     int                 (*rebuild_header)(struct rtskb *);
     int                 (*hard_start_xmit)(struct rtskb *skb,
-                                           struct rtnet_device *dev);
+					   struct rtnet_device *dev);
     int                 (*hw_reset)(struct rtnet_device *rtdev);
 
     /* Transmission hook, managed by the stack core, RTcap, and RTmac
@@ -137,21 +139,21 @@ struct rtnet_device {
      * points to hard_start_xmit or the discipline handler.
      */
     int                 (*start_xmit)(struct rtskb *skb,
-                                      struct rtnet_device *dev);
+				      struct rtnet_device *dev);
 
     /* MTU hook, managed by the stack core and RTmac */
     unsigned int        (*get_mtu)(struct rtnet_device *rtdev,
-                                   unsigned int priority);
+				   unsigned int priority);
 
     int                 (*do_ioctl)(struct rtnet_device *rtdev,
-                                    unsigned int request, void * cmd);
+				    unsigned int request, void * cmd);
     struct net_device_stats *(*get_stats)(struct rtnet_device *rtdev);
 
     /* DMA pre-mapping hooks */
     dma_addr_t          (*map_rtskb)(struct rtnet_device *rtdev,
-                                     struct rtskb *skb);
+				     struct rtskb *skb);
     void                (*unmap_rtskb)(struct rtnet_device *rtdev,
-                                       struct rtskb *skb);
+				       struct rtskb *skb);
 };
 
 
@@ -162,7 +164,7 @@ struct rtdev_event_hook {
     void                (*register_device)(struct rtnet_device *rtdev);
     void                (*unregister_device)(struct rtnet_device *rtdev);
     void                (*ifup)(struct rtnet_device *rtdev,
-                                struct rtnet_core_cmd *up_cmd);
+				struct rtnet_core_cmd *up_cmd);
     void                (*ifdown)(struct rtnet_device *rtdev);
 };
 
@@ -171,7 +173,12 @@ extern struct mutex rtnet_devices_nrt_lock;
 extern struct rtnet_device *rtnet_devices[];
 
 
-struct rtnet_device *rt_alloc_etherdev(int sizeof_priv);
+struct rtnet_device *__rt_alloc_etherdev(unsigned sizeof_priv,
+					unsigned rx_pool_size,
+					struct module *module);
+#define rt_alloc_etherdev(priv_size, rx_size) \
+    __rt_alloc_etherdev(priv_size, rx_size, THIS_MODULE)
+
 void rtdev_free(struct rtnet_device *rtdev);
 
 int rt_register_rtnetdev(struct rtnet_device *rtdev);
@@ -197,16 +204,13 @@ struct rtnet_device *rtdev_get_by_index(int ifindex);
 struct rtnet_device *rtdev_get_by_hwaddr(unsigned short type,char *ha);
 struct rtnet_device *rtdev_get_loopback(void);
 
-static inline void rtdev_reference(struct rtnet_device *rtdev)
-{
-    smp_mb__before_atomic();
-    atomic_inc(&rtdev->refcount);
-}
+int rtdev_reference(struct rtnet_device *rtdev);
 
 static inline void rtdev_dereference(struct rtnet_device *rtdev)
 {
     smp_mb__before_atomic();
-    atomic_dec(&rtdev->refcount);
+    if (rtdev->rt_owner && atomic_dec_and_test(&rtdev->refcount))
+	module_put(rtdev->rt_owner);
 }
 
 int rtdev_xmit(struct rtskb *skb);
@@ -222,6 +226,8 @@ int rtdev_close(struct rtnet_device *rtdev);
 
 int rtdev_map_rtskb(struct rtskb *skb);
 void rtdev_unmap_rtskb(struct rtskb *skb);
+
+struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *dev, unsigned int size);
 
 #endif  /* __KERNEL__ */
 

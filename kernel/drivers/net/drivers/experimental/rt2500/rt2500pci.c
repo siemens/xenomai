@@ -1,8 +1,8 @@
 /* rt2500pci.c
  *
  * Copyright (C) 2004 - 2005 rt2x00-2.0.0-b3 SourceForge Project
- *	                     <http://rt2x00.serialmonkey.com>
- *               2006        rtnet adaption by Daniel Gregorek 
+ *			     <http://rt2x00.serialmonkey.com>
+ *               2006        rtnet adaption by Daniel Gregorek
  *                           <dxg@gmx.de>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,30 +44,30 @@
 #endif /* DRV_NAME */
 
 /* handler for direct register access from core module */
-static int rt2x00_dev_register_access(struct _rt2x00_core * core, 
+static int rt2x00_dev_register_access(struct _rt2x00_core * core,
 				      int request,
 				      u32 address,
 				      u32 * value) {
-    
+
     struct _rt2x00_pci * rt2x00pci = rt2x00_priv(core);
     u8 u8_value;
-    
+
     switch(request) {
     case IOC_RTWLAN_REGREAD:
-        rt2x00_register_read(rt2x00pci, address, value);
-        break;
+	rt2x00_register_read(rt2x00pci, address, value);
+	break;
     case IOC_RTWLAN_REGWRITE:
-        rt2x00_register_write(rt2x00pci, address, *value);
-        break;
+	rt2x00_register_write(rt2x00pci, address, *value);
+	break;
     case IOC_RTWLAN_BBPREAD:
-        rt2x00_bbp_regread(rt2x00pci, address, &u8_value);
-        *value = u8_value;
-        break;
+	rt2x00_bbp_regread(rt2x00pci, address, &u8_value);
+	*value = u8_value;
+	break;
     case IOC_RTWLAN_BBPWRITE:
-        rt2x00_bbp_regwrite(rt2x00pci, address, *value);
-        break;
+	rt2x00_bbp_regwrite(rt2x00pci, address, *value);
+	break;
     default:
-        return -1;
+	return -1;
     }
 
     return 0;
@@ -88,40 +88,40 @@ static void rt2x00_interrupt_txdone(struct _data_ring * ring) {
 
 
     do{
-        txd = DESC_ADDR_DONE(ring);
-	
-        if(rt2x00_get_field32(txd->word0, TXD_W0_OWNER_NIC)
-           || !rt2x00_get_field32(txd->word0, TXD_W0_VALID))
-            break;
+	txd = DESC_ADDR_DONE(ring);
 
-        if(ring->ring_type == RING_TX){
-            tx_result = rt2x00_get_field32(txd->word0, TXD_W0_RESULT);
-            /*	    retry_count = rt2x00_get_field32(txd->word0, TXD_W0_RETRY_COUNT); */
+	if(rt2x00_get_field32(txd->word0, TXD_W0_OWNER_NIC)
+	   || !rt2x00_get_field32(txd->word0, TXD_W0_VALID))
+	    break;
 
-            switch(tx_result) {
-            case TX_SUCCESS:
-                rtwlan_dev->stats.tx_packets++;
-                break;
-            case TX_SUCCESS_RETRY:
-                rtwlan_dev->stats.tx_retry++;
-                break;
-            case TX_FAIL_RETRY:
-                DEBUG("TX_FAIL_RETRY.\n");
-                break;
-            case TX_FAIL_INVALID:
-                DEBUG("TX_FAIL_INVALID.\n");
-                break;
-            case TX_FAIL_OTHER:
-                DEBUG("TX_FAIL_OTHER.\n");
-                break;
-            default:
-                DEBUG("Unknown tx result.\n");
-            }
-        }
+	if(ring->ring_type == RING_TX){
+	    tx_result = rt2x00_get_field32(txd->word0, TXD_W0_RESULT);
+	    /*	    retry_count = rt2x00_get_field32(txd->word0, TXD_W0_RETRY_COUNT); */
 
-        rt2x00_set_field32(&txd->word0, TXD_W0_VALID, 0);
+	    switch(tx_result) {
+	    case TX_SUCCESS:
+		rtwlan_dev->stats.tx_packets++;
+		break;
+	    case TX_SUCCESS_RETRY:
+		rtwlan_dev->stats.tx_retry++;
+		break;
+	    case TX_FAIL_RETRY:
+		DEBUG("TX_FAIL_RETRY.\n");
+		break;
+	    case TX_FAIL_INVALID:
+		DEBUG("TX_FAIL_INVALID.\n");
+		break;
+	    case TX_FAIL_OTHER:
+		DEBUG("TX_FAIL_OTHER.\n");
+		break;
+	    default:
+		DEBUG("Unknown tx result.\n");
+	    }
+	}
 
-        rt2x00_ring_index_done_inc(ring);
+	rt2x00_set_field32(&txd->word0, TXD_W0_VALID, 0);
+
+	rt2x00_ring_index_done_inc(ring);
     }while(!rt2x00_ring_empty(ring));
 
 }
@@ -130,7 +130,7 @@ static void rt2x00_interrupt_txdone(struct _data_ring * ring) {
 static void rt2x00_interrupt_rxdone(struct _data_ring * ring, nanosecs_abs_t *time_stamp) {
 
     struct _rt2x00_pci	 * rt2x00pci  = rt2x00_priv(ring->core);
-    struct rtnet_device  * rtnet_dev  = ring->core->rtnet_dev; 
+    struct rtnet_device  * rtnet_dev  = ring->core->rtnet_dev;
     struct rtwlan_device * rtwlan_dev     = rtnetdev_priv(rtnet_dev);
     struct _rxd		 * rxd = NULL;
     struct rtskb         * rtskb;
@@ -140,35 +140,34 @@ static void rt2x00_interrupt_rxdone(struct _data_ring * ring, nanosecs_abs_t *ti
 
     while(1){
 
-        rxd = DESC_ADDR(ring);
-        data = DATA_ADDR(ring);
+	rxd = DESC_ADDR(ring);
+	data = DATA_ADDR(ring);
 
-        if(rt2x00_get_field32(rxd->word0, RXD_W0_OWNER_NIC))
-            break;
+	if(rt2x00_get_field32(rxd->word0, RXD_W0_OWNER_NIC))
+	    break;
 
-        size = rt2x00_get_field32(rxd->word0, RXD_W0_DATABYTE_COUNT);
-        /*	rssi = rt2x00_get_field32(rxd->word2, RXD_W2_RSSI); */
+	size = rt2x00_get_field32(rxd->word0, RXD_W0_DATABYTE_COUNT);
+	/*	rssi = rt2x00_get_field32(rxd->word2, RXD_W2_RSSI); */
 
-        /* prepare rtskb */
-        rtskb = dev_alloc_rtskb(size + NET_IP_ALIGN, &rtwlan_dev->skb_pool);
-        if(!rtskb){
-            ERROR("Couldn't allocate rtskb, packet dropped.\n");
-            break;
-        }
-        rtskb->rtdev = rtnet_dev;
-        rtskb->time_stamp = *time_stamp;
-        rtskb_reserve(rtskb, NET_IP_ALIGN);
+	/* prepare rtskb */
+	rtskb = rtnetdev_alloc_rtskb(rtnet_dev, size + NET_IP_ALIGN);
+	if(!rtskb){
+	    ERROR("Couldn't allocate rtskb, packet dropped.\n");
+	    break;
+	}
+	rtskb->time_stamp = *time_stamp;
+	rtskb_reserve(rtskb, NET_IP_ALIGN);
 
-        memcpy(rtskb->data, data, size);
-        rtskb_put(rtskb, size);
+	memcpy(rtskb->data, data, size);
+	rtskb_put(rtskb, size);
 
-        /* give incoming frame to rtwlan stack */
-        rtwlan_rx(rtskb, rtnet_dev);
+	/* give incoming frame to rtwlan stack */
+	rtwlan_rx(rtskb, rtnet_dev);
 
-        rtwlan_dev->stats.rx_packets++;
+	rtwlan_dev->stats.rx_packets++;
 
-        rt2x00_set_field32(&rxd->word0, RXD_W0_OWNER_NIC, 1);
-        rt2x00_ring_index_inc(&rt2x00pci->rx);
+	rt2x00_set_field32(&rxd->word0, RXD_W0_OWNER_NIC, 1);
+	rt2x00_ring_index_inc(&rt2x00pci->rx);
     }
 }
 
@@ -184,30 +183,30 @@ int rt2x00_interrupt(rtdm_irq_t *irq_handle) {
     u32			reg           = 0x00000000;
 
     rtdm_lock_get(&rt2x00pci->lock);
-    
+
     rt2x00_register_read(rt2x00pci, CSR7, &reg);
     rt2x00_register_write(rt2x00pci, CSR7, reg);
 
     if(!reg) {
-        rtdm_lock_put(&rt2x00pci->lock);
-        return RTDM_IRQ_NONE;
+	rtdm_lock_put(&rt2x00pci->lock);
+	return RTDM_IRQ_NONE;
     }
 
     if(rt2x00_get_field32(reg, CSR7_TBCN_EXPIRE))		/* Beacon timer expired interrupt. */
-        DEBUG("Beacon timer expired.\n");
+	DEBUG("Beacon timer expired.\n");
     if(rt2x00_get_field32(reg, CSR7_RXDONE))		/* Rx ring done interrupt. */
-        rt2x00_interrupt_rxdone(&rt2x00pci->rx, &time_stamp);
+	rt2x00_interrupt_rxdone(&rt2x00pci->rx, &time_stamp);
     if(rt2x00_get_field32(reg, CSR7_TXDONE_ATIMRING))	/* Atim ring transmit done interrupt. */
-        DEBUG("AtimTxDone.\n");
+	DEBUG("AtimTxDone.\n");
     if(rt2x00_get_field32(reg, CSR7_TXDONE_PRIORING))	/* Priority ring transmit done interrupt. */
-        DEBUG("PrioTxDone.\n");
+	DEBUG("PrioTxDone.\n");
     if(rt2x00_get_field32(reg, CSR7_TXDONE_TXRING))	/* Tx ring transmit done interrupt. */
-        rt2x00_interrupt_txdone(&rt2x00pci->tx);
+	rt2x00_interrupt_txdone(&rt2x00pci->tx);
 
     rtdm_lock_put(&rt2x00pci->lock);
 
     if (old_packet_cnt != rtwlan_dev->stats.rx_packets)
-        rt_mark_stack_mgr(rtnet_dev);
+	rt_mark_stack_mgr(rtnet_dev);
 
     return RTDM_IRQ_HANDLED;
 }
@@ -242,7 +241,7 @@ void rt2x00_init_eeprom(struct _rt2x00_pci * rt2x00pci, struct _rt2x00_config * 
      */
     memset(&rt2x00pci->eeprom, 0x00, sizeof(rt2x00pci->eeprom));
     for(eeprom = 0; eeprom < EEPROM_BBP_SIZE; eeprom++)
-        rt2x00pci->eeprom[eeprom] = rt2x00_eeprom_read_word(rt2x00pci, EEPROM_BBP_START + eeprom);
+	rt2x00pci->eeprom[eeprom] = rt2x00_eeprom_read_word(rt2x00pci, EEPROM_BBP_START + eeprom);
 
 }
 
@@ -272,8 +271,8 @@ int rt2x00_dev_probe(struct _rt2x00_core * core, void * priv) {
     memset(rt2x00pci, 0x00, sizeof(*rt2x00pci));
 
     if(unlikely(!pci_dev)){
-        ERROR("invalid priv pointer.\n");
-        return -ENODEV;
+	ERROR("invalid priv pointer.\n");
+	return -ENODEV;
     }
     rt2x00pci->pci_dev = pci_dev;
 
@@ -282,13 +281,13 @@ int rt2x00_dev_probe(struct _rt2x00_core * core, void * priv) {
 
     rt2x00pci->csr_addr = ioremap(pci_resource_start(pci_dev, 0), pci_resource_len(pci_dev, 0));
     if(!rt2x00pci->csr_addr){
-        ERROR("ioremap failed.\n");
-        return -ENOMEM;
+	ERROR("ioremap failed.\n");
+	return -ENOMEM;
     }
 
-    rt2x00_init_eeprom(rt2x00pci, &core->config);  
+    rt2x00_init_eeprom(rt2x00pci, &core->config);
     rt2x00_dev_read_mac(rt2x00pci, core->rtnet_dev);
-  
+
     return 0;
 }
 
@@ -297,10 +296,10 @@ int rt2x00_dev_remove(struct _rt2x00_core * core) {
     struct _rt2x00_pci	*rt2x00pci = rt2x00_priv(core);
 
     if(rt2x00pci->csr_addr){
-        iounmap(rt2x00pci->csr_addr);
-        rt2x00pci->csr_addr = NULL;
+	iounmap(rt2x00pci->csr_addr);
+	rt2x00pci->csr_addr = NULL;
     }
-  
+
     return 0;
 }
 
@@ -325,20 +324,20 @@ rt2x00_clear_ring(struct _rt2x00_pci *rt2x00pci, struct _data_ring *ring) {
     memset(ring->data_addr, 0x00, ring->mem_size);
 
     for(; counter < ring->max_entries; counter++){
-        if(ring->ring_type == RING_RX){
-            rxd = (struct _rxd*)__DESC_ADDR(ring, counter);
+	if(ring->ring_type == RING_RX){
+	    rxd = (struct _rxd*)__DESC_ADDR(ring, counter);
 
-            rt2x00_set_field32(&rxd->word1, RXD_W1_BUFFER_ADDRESS, data_dma);
-            rt2x00_set_field32(&rxd->word0, RXD_W0_OWNER_NIC, 1);
-        }else{
-            txd = (struct _txd*)__DESC_ADDR(ring, counter);
-	
-            rt2x00_set_field32(&txd->word1, TXD_W1_BUFFER_ADDRESS, data_dma);
-            rt2x00_set_field32(&txd->word0, TXD_W0_VALID, 0);
-            rt2x00_set_field32(&txd->word0, TXD_W0_OWNER_NIC, 0);
-        }
+	    rt2x00_set_field32(&rxd->word1, RXD_W1_BUFFER_ADDRESS, data_dma);
+	    rt2x00_set_field32(&rxd->word0, RXD_W0_OWNER_NIC, 1);
+	}else{
+	    txd = (struct _txd*)__DESC_ADDR(ring, counter);
 
-        data_dma += ring->entry_size;
+	    rt2x00_set_field32(&txd->word1, TXD_W1_BUFFER_ADDRESS, data_dma);
+	    rt2x00_set_field32(&txd->word0, TXD_W0_VALID, 0);
+	    rt2x00_set_field32(&txd->word0, TXD_W0_OWNER_NIC, 0);
+	}
+
+	data_dma += ring->entry_size;
     }
 
     rt2x00_ring_clear_index(ring);
@@ -499,10 +498,10 @@ rt2x00_init_bbp(struct _rt2x00_pci *rt2x00pci) {
     u8		counter = 0x00;
 
     for(counter = 0x00; counter < REGISTER_BUSY_COUNT; counter++){
-        rt2x00_bbp_regread(rt2x00pci, 0x00, &value);
-        if((value != 0xff) && (value != 0x00))
-            goto continue_csr_init;
-        NOTICE("Waiting for BBP register.\n");
+	rt2x00_bbp_regread(rt2x00pci, 0x00, &value);
+	if((value != 0xff) && (value != 0x00))
+	    goto continue_csr_init;
+	NOTICE("Waiting for BBP register.\n");
     }
 
     ERROR("hardware problem, BBP register access failed, aborting.\n");
@@ -543,12 +542,12 @@ rt2x00_init_bbp(struct _rt2x00_pci *rt2x00pci) {
 
     DEBUG("Start reading EEPROM contents...\n");
     for(counter = 0; counter < EEPROM_BBP_SIZE; counter++){
-        if(rt2x00pci->eeprom[counter] != 0xffff && rt2x00pci->eeprom[counter] != 0x0000){
-            reg_id = rt2x00_get_field16(rt2x00pci->eeprom[counter], EEPROM_BBP_REG_ID);
-            value = rt2x00_get_field16(rt2x00pci->eeprom[counter], EEPROM_BBP_VALUE);
-            DEBUG("BBP reg_id: 0x%02x, value: 0x%02x.\n", reg_id, value);
-            rt2x00_bbp_regwrite(rt2x00pci, reg_id, value);
-        }
+	if(rt2x00pci->eeprom[counter] != 0xffff && rt2x00pci->eeprom[counter] != 0x0000){
+	    reg_id = rt2x00_get_field16(rt2x00pci->eeprom[counter], EEPROM_BBP_REG_ID);
+	    value = rt2x00_get_field16(rt2x00pci->eeprom[counter], EEPROM_BBP_VALUE);
+	    DEBUG("BBP reg_id: 0x%02x, value: 0x%02x.\n", reg_id, value);
+	    rt2x00_bbp_regwrite(rt2x00pci, reg_id, value);
+	}
     }
     DEBUG("...End of EEPROM contents.\n");
 
@@ -569,7 +568,7 @@ static int rt2x00_dev_radio_on(struct _rt2x00_core * core) {
     int retval;
 
     if(rt2x00_pci_alloc_rings(core))
-        goto exit_fail;
+	goto exit_fail;
 
     rt2x00_clear_ring(rt2x00pci, &rt2x00pci->rx);
     rt2x00_clear_ring(rt2x00pci, &rt2x00pci->tx);
@@ -577,12 +576,12 @@ static int rt2x00_dev_radio_on(struct _rt2x00_core * core) {
     rt2x00_init_ring_register(rt2x00pci);
 
     if(rt2x00_init_registers(rt2x00pci))
-        goto exit_fail;
+	goto exit_fail;
 
     rt2x00_init_write_mac(rt2x00pci, core->rtnet_dev);
 
     if(rt2x00_init_bbp(rt2x00pci))
-        goto exit_fail;
+	goto exit_fail;
 
     /*
      * Clear interrupts.
@@ -592,10 +591,10 @@ static int rt2x00_dev_radio_on(struct _rt2x00_core * core) {
 
     /* Register rtdm-irq */
     retval = rtdm_irq_request(&rt2x00pci->irq_handle,
-                              core->rtnet_dev->irq, 
-                              rt2x00_interrupt, 0, 
-                              core->rtnet_dev->name, 
-                              core->rtnet_dev);
+			      core->rtnet_dev->irq,
+			      rt2x00_interrupt, 0,
+			      core->rtnet_dev->name,
+			      core->rtnet_dev);
 
     /*
      * Enable interrupts.
@@ -647,7 +646,7 @@ static int rt2x00_dev_radio_off(struct _rt2x00_core * core) {
     rt2x00_pci_free_rings(core);
 
     if((retval=rtdm_irq_free(&rt2x00pci->irq_handle)) != 0)
-        ERROR("rtdm_irq_free=%d\n", retval);
+	ERROR("rtdm_irq_free=%d\n", retval);
 
     rt_stack_disconnect(core->rtnet_dev);
 
@@ -669,14 +668,14 @@ rt2x00_dev_update_autoresp(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config 
     rt2x00_register_read(rt2x00pci, TXCSR1, &reg);
 
     if(config->config_flags & CONFIG_AUTORESP)
-        rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER , 1);
+	rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER , 1);
     else
-        rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER , 0);
+	rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER , 0);
 
     rt2x00_register_write(rt2x00pci, TXCSR1, reg);
 }
 
-static void 
+static void
 rt2x00_dev_update_bbpsens(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *config) {
 
     rt2x00_bbp_regwrite(rt2x00pci, 0x11, config->bbpsens);
@@ -720,14 +719,14 @@ rt2x00_dev_update_packet_filter(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_co
      * This looks like a bug, but for an unknown reason the register seems to swap the bits !!!
      */
     if(config->config_flags & CONFIG_DROP_BCAST)
-        rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST, 1);
+	rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST, 1);
     else
-        rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST, 0);
-    
+	rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST, 0);
+
     if(config->config_flags & CONFIG_DROP_MCAST)
-        rt2x00_set_field32(&reg, RXCSR0_DROP_BCAST, 1);
+	rt2x00_set_field32(&reg, RXCSR0_DROP_BCAST, 1);
     else
-        rt2x00_set_field32(&reg, RXCSR0_DROP_BCAST, 0);
+	rt2x00_set_field32(&reg, RXCSR0_DROP_BCAST, 0);
 
     rt2x00_register_write(rt2x00pci, RXCSR0, reg);
 
@@ -740,8 +739,8 @@ rt2x00_dev_update_channel(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *
     u32			reg = 0x00000000;
 
     if(rt2x00_get_rf_value(&rt2x00pci->chip, config->channel, &rt2x00pci->channel)){
-        ERROR("RF values for chip %04x and channel %d not found.\n", rt2x00_get_rf(&rt2x00pci->chip), config->channel);
-        return;
+	ERROR("RF values for chip %04x and channel %d not found.\n", rt2x00_get_rf(&rt2x00pci->chip), config->channel);
+	return;
     }
 
     /*
@@ -753,18 +752,18 @@ rt2x00_dev_update_channel(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *
      * For RT2525 we should first set the channel to half band higher.
      */
     if(rt2x00_rf(&rt2x00pci->chip, RF2525)){
-        rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf1);
-        rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf2 + cpu_to_le32(0x00000020));
-        rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf3);
-        if(rt2x00pci->channel.rf4)
-            rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf4);
+	rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf1);
+	rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf2 + cpu_to_le32(0x00000020));
+	rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf3);
+	if(rt2x00pci->channel.rf4)
+	    rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf4);
     }
 
     rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf1);
     rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf2);
     rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf3);
     if(rt2x00pci->channel.rf4)
-        rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf4);
+	rt2x00_rf_regwrite(rt2x00pci, rt2x00pci->channel.rf4);
 
     /*
      * Channel 14 requires the Japan filter bit to be set.
@@ -779,8 +778,8 @@ rt2x00_dev_update_channel(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *
     rt2x00_register_read(rt2x00pci, CNT0, &reg);
 
     DEBUG("Switching to channel %d. RF1: 0x%08x, RF2: 0x%08x, RF3: 0x%08x, RF4: 0x%08x.\n",
-         config->channel, rt2x00pci->channel.rf1, rt2x00pci->channel.rf2,
-         rt2x00pci->channel.rf3, rt2x00pci->channel.rf4);
+	 config->channel, rt2x00pci->channel.rf1, rt2x00pci->channel.rf2,
+	 rt2x00pci->channel.rf3, rt2x00pci->channel.rf4);
 }
 
 static void
@@ -795,13 +794,13 @@ rt2x00_dev_update_rate(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *con
     rt2x00_register_read(rt2x00pci, TXCSR1, &reg);
 
     value = config->sifs + (2 * config->slot_time) + config->plcp
-        + get_preamble(config)
-        + get_duration(ACK_SIZE, capabilities.bitrate[0]);
+	+ get_preamble(config)
+	+ get_duration(ACK_SIZE, capabilities.bitrate[0]);
     rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, value);
-    
+
     value = config->sifs + config->plcp
-        + get_preamble(config)
-        + get_duration(ACK_SIZE, capabilities.bitrate[0]);
+	+ get_preamble(config)
+	+ get_duration(ACK_SIZE, capabilities.bitrate[0]);
     rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, value);
 
     rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, 0x18);
@@ -811,9 +810,9 @@ rt2x00_dev_update_rate(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *con
 
     reg = 0x00000000;
     for(counter = 0; counter < 12; counter++){
-        reg |= cpu_to_le32(0x00000001 << counter);
-        if(capabilities.bitrate[counter] == config->bitrate)
-            break;
+	reg |= cpu_to_le32(0x00000001 << counter);
+	if(capabilities.bitrate[counter] == config->bitrate)
+	    break;
     }
 
     rt2x00_register_write(rt2x00pci, ARCSR1, reg);
@@ -823,7 +822,7 @@ static void
 rt2x00_dev_update_txpower(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *config) {
 
     u8			txpower = rt2x00_get_txpower(&rt2x00pci->chip, config->txpower);
-  
+
     DEBUG("Start.\n");
 
     rt2x00_set_field32(&rt2x00pci->channel.rf3, RF3_TXPOWER, txpower);
@@ -842,43 +841,43 @@ rt2x00_dev_update_antenna(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *
     rt2x00_bbp_regread(rt2x00pci, 2, &reg_tx);
 
     /* TX antenna select */
-    if(config->antenna_tx == 1) { 
-        /* Antenna A */
-        reg_tx = (reg_tx & 0xfc) | 0x00;
-        reg    = (reg    & 0xfffcfffc) | 0x00;
+    if(config->antenna_tx == 1) {
+	/* Antenna A */
+	reg_tx = (reg_tx & 0xfc) | 0x00;
+	reg    = (reg    & 0xfffcfffc) | 0x00;
     }
-    else if(config->antenna_tx == 2) { 
-        /* Antenna B */
-        reg_tx = (reg_tx & 0xfc) | 0x02;
-        reg    = (reg    & 0xfffcfffc) | 0x00020002;
+    else if(config->antenna_tx == 2) {
+	/* Antenna B */
+	reg_tx = (reg_tx & 0xfc) | 0x02;
+	reg    = (reg    & 0xfffcfffc) | 0x00020002;
     }
     else {
-        /* Diversity */
-        reg_tx = (reg_tx & 0xfc) | 0x02;
-        reg    = (reg    & 0xfffcfffc) | 0x00020002;
+	/* Diversity */
+	reg_tx = (reg_tx & 0xfc) | 0x02;
+	reg    = (reg    & 0xfffcfffc) | 0x00020002;
     }
-        
+
     /* RX antenna select */
     if(config->antenna_rx == 1)
-        reg_rx = (reg_rx & 0xfc) | 0x00;
+	reg_rx = (reg_rx & 0xfc) | 0x00;
     else if(config->antenna_rx == 2)
-        reg_rx = (reg_rx & 0xfc) | 0x02;
+	reg_rx = (reg_rx & 0xfc) | 0x02;
     else
-        reg_rx = (reg_rx & 0xfc) | 0x02;
+	reg_rx = (reg_rx & 0xfc) | 0x02;
 
     /*
      * RT2525E and RT5222 need to flip I/Q
      */
     if(rt2x00_rf(&rt2x00pci->chip, RF5222)){
-        
-        reg |=  0x00040004;
-        reg_tx |= 0x04;
+
+	reg |=  0x00040004;
+	reg_tx |= 0x04;
     }
     else if(rt2x00_rf(&rt2x00pci->chip, RF2525E)) {
-        
-        reg |=  0x00040004;
-        reg_tx |= 0x04;
-        reg_rx |= 0xfb;
+
+	reg |=  0x00040004;
+	reg_tx |= 0x04;
+	reg_rx |= 0xfb;
     }
 
     rt2x00_register_write(rt2x00pci, BBPCSR1, reg);
@@ -952,45 +951,45 @@ rt2x00_dev_update_led(struct _rt2x00_pci *rt2x00pci, struct _rt2x00_config *conf
 static int
 rt2x00_dev_update_config(struct _rt2x00_core *core, u16 update_flags) {
 
-    struct _rt2x00_pci 	*rt2x00pci = rt2x00_priv(core);
+    struct _rt2x00_pci	*rt2x00pci = rt2x00_priv(core);
 
     DEBUG("Start.\n");
 
     if(update_flags & UPDATE_BSSID)
-        rt2x00_dev_update_bssid(rt2x00pci, &core->config);
+	rt2x00_dev_update_bssid(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_PACKET_FILTER)
-        rt2x00_dev_update_packet_filter(rt2x00pci, &core->config);
+	rt2x00_dev_update_packet_filter(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_CHANNEL)
-        rt2x00_dev_update_channel(rt2x00pci, &core->config);
+	rt2x00_dev_update_channel(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_BITRATE)
-        rt2x00_dev_update_rate(rt2x00pci, &core->config);
+	rt2x00_dev_update_rate(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_TXPOWER)
-        rt2x00_dev_update_txpower(rt2x00pci, &core->config);
+	rt2x00_dev_update_txpower(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_ANTENNA)
-        rt2x00_dev_update_antenna(rt2x00pci, &core->config);
+	rt2x00_dev_update_antenna(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_DURATION)
-        rt2x00_dev_update_duration(rt2x00pci, &core->config);
+	rt2x00_dev_update_duration(rt2x00pci, &core->config);
 
-    if(update_flags & UPDATE_RETRY) 
-        rt2x00_dev_update_retry(rt2x00pci, &core->config);
+    if(update_flags & UPDATE_RETRY)
+	rt2x00_dev_update_retry(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_PREAMBLE)
-        rt2x00_dev_update_preamble(rt2x00pci, &core->config);
+	rt2x00_dev_update_preamble(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_LED_STATUS)
-        rt2x00_dev_update_led(rt2x00pci, &core->config);
+	rt2x00_dev_update_led(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_AUTORESP)
-        rt2x00_dev_update_autoresp(rt2x00pci, &core->config);
+	rt2x00_dev_update_autoresp(rt2x00pci, &core->config);
 
     if(update_flags & UPDATE_BBPSENS)
-        rt2x00_dev_update_bbpsens(rt2x00pci, &core->config);
+	rt2x00_dev_update_bbpsens(rt2x00pci, &core->config);
 
     DEBUG("Exit.\n");
 
@@ -1036,30 +1035,30 @@ static void rt2x00_write_tx_desc(struct _rt2x00_pci *rt2x00pci, struct _txd *txd
 
     if(xmit_flags & XMIT_OFDM) {
 
-        /*
-         * convert length to microseconds.
-         */
-        length_high = (packet_size >> 6) & 0x3f;
-        length_low = (packet_size & 0x3f);
+	/*
+	 * convert length to microseconds.
+	 */
+	length_high = (packet_size >> 6) & 0x3f;
+	length_low = (packet_size & 0x3f);
     } else {
 
-        residual = get_duration_res(packet_size, rate);
-        duration = get_duration(packet_size, rate);
+	residual = get_duration_res(packet_size, rate);
+	duration = get_duration(packet_size, rate);
 
-        if(residual != 0)
-            duration++;
+	if(residual != 0)
+	    duration++;
 
-        length_high = duration >> 8;
-        length_low = duration & 0xff;
+	length_high = duration >> 8;
+	length_low = duration & 0xff;
     }
-  
+
     signal |= 0x8500 | rt2x00_get_plcp(rate);
     if(xmit_flags & XMIT_SHORT_PREAMBLE)
-        signal |= 0x0008;
+	signal |= 0x0008;
 
     service |= 0x0600 | 0x0004;
     if(residual <= (8 % 11))
-        service |= 0x0080;
+	service |= 0x0080;
 
     rt2x00_set_field32(&txd->word3, TXD_W3_PLCP_SIGNAL, signal);
     rt2x00_set_field32(&txd->word3, TXD_W3_PLCP_SERVICE, service);
@@ -1073,15 +1072,15 @@ static void rt2x00_write_tx_desc(struct _rt2x00_pci *rt2x00pci, struct _txd *txd
     rt2x00_set_field32(&txd->word2, TXD_W2_CWMIN, 1);
     rt2x00_set_field32(&txd->word2, TXD_W2_CWMAX, 2);
     rt2x00_set_field32(&txd->word2, TXD_W2_AIFS, 1);
-  
+
     /*
      * set this last, after this the device can start transmitting the packet.
      */
     rt2x00_set_field32(&txd->word0, TXD_W0_OWNER_NIC, 1);
 }
 
-static int rt2x00_dev_xmit_packet(struct _rt2x00_core * core, 
-				  struct rtskb *rtskb, 
+static int rt2x00_dev_xmit_packet(struct _rt2x00_core * core,
+				  struct rtskb *rtskb,
 				  u16 rate,
 				  u16 xmit_flags) {
 
@@ -1106,20 +1105,20 @@ static int rt2x00_dev_xmit_packet(struct _rt2x00_core * core,
 
     if(rt2x00_get_field32(txd->word0, TXD_W0_OWNER_NIC)
        || rt2x00_get_field32(txd->word0, TXD_W0_VALID)) {
-        rtdm_lock_put_irqrestore(&rt2x00pci->lock, context);
-        return -ENOMEM;
+	rtdm_lock_put_irqrestore(&rt2x00pci->lock, context);
+	return -ENOMEM;
     }
 
     /* get and patch time stamp just before the transmission */
     if (rtskb->xmit_stamp)
-        *rtskb->xmit_stamp = cpu_to_be64(rtdm_clock_read() + *rtskb->xmit_stamp);
+	*rtskb->xmit_stamp = cpu_to_be64(rtdm_clock_read() + *rtskb->xmit_stamp);
 
     /* copy rtskb to dma */
     memcpy(data, rtskb->data, rtskb->len);
 
     rt2x00_write_tx_desc(rt2x00pci, txd, rtskb->len, rate, xmit_flags);
     rt2x00_ring_index_inc(ring);
-    
+
     /* let the device do the rest ... */
     rt2x00_register_write(rt2x00pci, TXCSR0, reg);
 
@@ -1145,61 +1144,61 @@ static struct _rt2x00_dev_handler rt2x00_pci_handler = {
 };
 
 int rt2x00_pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id) {
-  
+
     struct rtnet_device	*rtnet_dev = NULL;
     int			status = 0x00000000;
 
     DEBUG("start.\n");
 
     if(id->driver_data != RT2560){
-        ERROR("detected device not supported.\n");
-        status = -ENODEV;
-        goto exit;
+	ERROR("detected device not supported.\n");
+	status = -ENODEV;
+	goto exit;
     }
 
     if(pci_enable_device(pci_dev)){
-        ERROR("enable device failed.\n");
-        status = -EIO;
-        goto exit;
+	ERROR("enable device failed.\n");
+	status = -EIO;
+	goto exit;
     }
 
     pci_set_master(pci_dev);
 
     if(pci_set_dma_mask(pci_dev, DMA_BIT_MASK(64))
        && pci_set_dma_mask(pci_dev, DMA_BIT_MASK(32))){
-        ERROR("PCI DMA not supported\n");
-        status = -EIO;
-        goto exit_disable_device;
+	ERROR("PCI DMA not supported\n");
+	status = -EIO;
+	goto exit_disable_device;
     }
 
     if(pci_request_regions(pci_dev, pci_name(pci_dev))){
-        ERROR("PCI request regions failed.\n");
-        status = -EBUSY;
-        goto exit_disable_device;
+	ERROR("PCI request regions failed.\n");
+	status = -EBUSY;
+	goto exit_disable_device;
     }
     INFO("pci_dev->irq=%d\n", pci_dev->irq);
-    
+
     rtnet_dev = rt2x00_core_probe(&rt2x00_pci_handler, pci_dev, sizeof(struct _rt2x00_pci));
 
     if(!rtnet_dev){
-        ERROR("rtnet_device allocation failed.\n");
-        status = -ENOMEM;
-        goto exit_release_regions;
+	ERROR("rtnet_device allocation failed.\n");
+	status = -ENOMEM;
+	goto exit_release_regions;
     }
-    
+
     rtnet_dev->irq = pci_dev->irq;
-    
+
     pci_set_drvdata(pci_dev, rtnet_dev);
-    
+
     return 0;
-    
+
   exit_release_regions:
     pci_release_regions(pci_dev);
-    
+
   exit_disable_device:
     if(status != -EBUSY)
-        pci_disable_device(pci_dev);
-    
+	pci_disable_device(pci_dev);
+
   exit:
     return status;
 }

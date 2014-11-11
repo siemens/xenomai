@@ -365,7 +365,6 @@ struct e1000_adapter {
 	struct rtnet_device *netdev;
 	struct pci_dev *pdev;
 
-	struct rtskb_queue skb_pool;
 	rtdm_irq_t irq_handle;
 	rtdm_irq_t rx_irq_handle;
 	rtdm_irq_t tx_irq_handle;
@@ -507,8 +506,8 @@ extern int e1000e_setup_tx_resources(struct e1000_adapter *adapter);
 extern void e1000e_free_rx_resources(struct e1000_adapter *adapter);
 extern void e1000e_free_tx_resources(struct e1000_adapter *adapter);
 extern struct rtnl_link_stats64 *e1000e_get_stats64(struct net_device *netdev,
-                                                    struct rtnl_link_stats64
-                                                    *stats);
+						    struct rtnl_link_stats64
+						    *stats);
 extern void e1000e_set_interrupt_capability(struct e1000_adapter *adapter);
 extern void e1000e_reset_interrupt_capability(struct e1000_adapter *adapter);
 extern void e1000e_get_hw_control(struct e1000_adapter *adapter);
@@ -600,12 +599,12 @@ extern s32 e1000e_get_phy_info_igp(struct e1000_hw *hw);
 extern s32 e1000_set_page_igp(struct e1000_hw *hw, u16 page);
 extern s32 e1000e_read_phy_reg_igp(struct e1000_hw *hw, u32 offset, u16 *data);
 extern s32 e1000e_read_phy_reg_igp_locked(struct e1000_hw *hw, u32 offset,
-                                          u16 *data);
+					  u16 *data);
 extern s32 e1000e_phy_hw_reset_generic(struct e1000_hw *hw);
 extern s32 e1000e_set_d3_lplu_state(struct e1000_hw *hw, bool active);
 extern s32 e1000e_write_phy_reg_igp(struct e1000_hw *hw, u32 offset, u16 data);
 extern s32 e1000e_write_phy_reg_igp_locked(struct e1000_hw *hw, u32 offset,
-                                           u16 data);
+					   u16 data);
 extern s32 e1000e_phy_sw_reset(struct e1000_hw *hw);
 extern s32 e1000e_phy_force_speed_duplex_m88(struct e1000_hw *hw);
 extern s32 e1000e_get_cfg_done(struct e1000_hw *hw);
@@ -627,10 +626,10 @@ extern s32 e1000e_write_phy_reg_bm2(struct e1000_hw *hw, u32 offset, u16 data);
 extern void e1000e_phy_force_speed_duplex_setup(struct e1000_hw *hw, u16 *phy_ctrl);
 extern s32 e1000e_write_kmrn_reg(struct e1000_hw *hw, u32 offset, u16 data);
 extern s32 e1000e_write_kmrn_reg_locked(struct e1000_hw *hw, u32 offset,
-                                        u16 data);
+					u16 data);
 extern s32 e1000e_read_kmrn_reg(struct e1000_hw *hw, u32 offset, u16 *data);
 extern s32 e1000e_read_kmrn_reg_locked(struct e1000_hw *hw, u32 offset,
-                                       u16 *data);
+				       u16 *data);
 extern s32 e1000e_phy_has_link_generic(struct e1000_hw *hw, u32 iterations,
 			       u32 usec_interval, bool *success);
 extern s32 e1000e_phy_reset_dsp(struct e1000_hw *hw);
@@ -641,12 +640,12 @@ extern s32 e1000e_write_phy_reg_mdic(struct e1000_hw *hw, u32 offset, u16 data);
 extern s32 e1000e_check_downshift(struct e1000_hw *hw);
 extern s32 e1000_read_phy_reg_hv(struct e1000_hw *hw, u32 offset, u16 *data);
 extern s32 e1000_read_phy_reg_hv_locked(struct e1000_hw *hw, u32 offset,
-                                        u16 *data);
+					u16 *data);
 extern s32 e1000_read_phy_reg_page_hv(struct e1000_hw *hw, u32 offset,
 				      u16 *data);
 extern s32 e1000_write_phy_reg_hv(struct e1000_hw *hw, u32 offset, u16 data);
 extern s32 e1000_write_phy_reg_hv_locked(struct e1000_hw *hw, u32 offset,
-                                         u16 data);
+					 u16 data);
 extern s32 e1000_write_phy_reg_page_hv(struct e1000_hw *hw, u32 offset,
 				       u16 data);
 extern s32 e1000_link_stall_workaround_hv(struct e1000_hw *hw);

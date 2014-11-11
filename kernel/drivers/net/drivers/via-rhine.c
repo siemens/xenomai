@@ -9,8 +9,8 @@
 	a complete program and may only be used when the entire operating
 	system is licensed under the GPL.
 
-	This driver is designed for the VIA VT86C100A Rhine-I. 
-	It also works with the 6102 Rhine-II, and 6105/6105M Rhine-III.   
+	This driver is designed for the VIA VT86C100A Rhine-I.
+	It also works with the 6102 Rhine-II, and 6105/6105M Rhine-III.
 
 	The author may be reached as becker@scyld.com, or C/O
 	Scyld Computing Corporation
@@ -25,10 +25,10 @@
 
 
 	Linux kernel version history:
-	
+
 	LK1.1.0:
 	- Jeff Garzik: softnet 'n stuff
-	
+
 	LK1.1.1:
 	- Justin Guyett: softnet and locking fixes
 	- Jeff Garzik: use PCI interface
@@ -45,29 +45,29 @@
 
 	LK1.1.4:
 	- Urban Widmark: fix gcc 2.95.2 problem and
-	                 remove writel's to fixed address 0x7c
+			 remove writel's to fixed address 0x7c
 
 	LK1.1.5:
 	- Urban Widmark: mdio locking, bounce buffer changes
-	                 merges from Beckers 1.05 version
-	                 added netif_running_on/off support
+			 merges from Beckers 1.05 version
+			 added netif_running_on/off support
 
 	LK1.1.6:
 	- Urban Widmark: merges from Beckers 1.08b version (VT6102 + mdio)
-	                 set netif_running_on/off on startup, del_timer_sync
-	
+			 set netif_running_on/off on startup, del_timer_sync
+
 	LK1.1.7:
 	- Manfred Spraul: added reset into tx_timeout
 
 	LK1.1.9:
 	- Urban Widmark: merges from Beckers 1.10 version
-	                 (media selection + eeprom reload)
+			 (media selection + eeprom reload)
 	- David Vrabel:  merges from D-Link "1.11" version
-	                 (disable WOL and PME on startup)
+			 (disable WOL and PME on startup)
 
 	LK1.1.10:
 	- Manfred Spraul: use "singlecopy" for unaligned buffers
-	                  don't allocate bounce buffers for !ReqTxAlign cards
+			  don't allocate bounce buffers for !ReqTxAlign cards
 
 	LK1.1.11:
 	- David Woodhouse: Set dev->base_addr before the first time we call
@@ -80,23 +80,23 @@
 	LK1.1.13 (jgarzik):
 	- Add ethtool support
 	- Replace some MII-related magic numbers with constants
-	
+
 	LK1.1.14 (Ivan G.):
- 	- fixes comments for Rhine-III
+	- fixes comments for Rhine-III
 	- removes W_MAX_TIMEOUT (unused)
 	- adds HasDavicomPhy for Rhine-I (basis: linuxfet driver; my card
 	  is R-I and has Davicom chip, flag is referenced in kernel driver)
 	- sends chip_id as a parameter to wait_for_reset since np is not
 	  initialized on first call
 	- changes mmio "else if (chip_id==VT6102)" to "else" so it will work
-	  for Rhine-III's (documentation says same bit is correct)		
+	  for Rhine-III's (documentation says same bit is correct)
 	- transmit frame queue message is off by one - fixed
 	- adds IntrNormalSummary to "Something Wicked" exclusion list
 	  so normal interrupts will not trigger the message (src: Donald Becker)
- 	(Roger Luethi)
- 	- show confused chip where to continue after Tx error
- 	- location of collision counter is chip specific
- 	- allow selecting backoff algorithm (module parameter)
+	(Roger Luethi)
+	- show confused chip where to continue after Tx error
+	- location of collision counter is chip specific
+	- allow selecting backoff algorithm (module parameter)
 
 	LK1.1.15 (jgarzik):
 	- Use new MII lib helper generic_mii_ioctl
@@ -325,7 +325,7 @@ is the send-packet routine, which enforces single-threaded use by the
 dev->priv->lock spinlock. The other thread is the interrupt handler, which
 is single threaded by the hardware and interrupt handling software.
 
-The send packet thread has partial control over the Tx ring. It locks the 
+The send packet thread has partial control over the Tx ring. It locks the
 dev->priv->lock whenever it's queuing a Tx packet. If the next slot in the ring
 is not available it stops the transmit queue by calling netif_stop_queue.
 
@@ -539,7 +539,6 @@ struct netdev_private {
 	struct mii_if_info mii_if;
 	unsigned int mii_if_force_media; /*** RTnet, support for older kernels (e.g. 2.4.19) ***/
 
-	struct rtskb_queue skb_pool; /*** RTnet ***/
 	rtdm_irq_t irq_handle;
 };
 
@@ -682,7 +681,7 @@ static int via_rhine_init_one (struct pci_dev *pdev,
 		pci_set_master (pdev);
 
 /*** RTnet ***/
-	dev = rt_alloc_etherdev(sizeof(struct netdev_private));
+	dev = rt_alloc_etherdev(sizeof(struct netdev_private), RX_RING_SIZE*2);
 	if (dev == NULL) {
 		printk (KERN_ERR "init_ethernet failed for card #%d\n", card_idx);
 		goto err_out;
@@ -796,13 +795,6 @@ static int via_rhine_init_one (struct pci_dev *pdev,
 	if (dev->mem_start)
 		option = dev->mem_start;
 
-/*** RTnet ***/
-	if (rtskb_pool_init(&np->skb_pool, RX_RING_SIZE*2) < RX_RING_SIZE*2) {
-		rtskb_pool_release(&np->skb_pool);
-		goto err_out_unmap;
-	}
-/*** RTnet ***/
-
 	/* The chip-specific entries in the device structure. */
 	dev->open = via_rhine_open;
 	dev->hard_start_xmit = via_rhine_start_tx;
@@ -821,7 +813,6 @@ static int via_rhine_init_one (struct pci_dev *pdev,
 /*** RTnet ***/
 	i = rt_register_rtnetdev(dev);
 	if (i) {
-		rtskb_pool_release(&np->skb_pool);
 		goto err_out_unmap;
 	}
 /*** RTnet ***/
@@ -948,7 +939,7 @@ void free_ring(struct rtnet_device* dev) /*** RTnet ***/
 {
 	struct netdev_private *np = dev->priv;
 
-	pci_free_consistent(np->pdev, 
+	pci_free_consistent(np->pdev,
 			    RX_RING_SIZE * sizeof(struct rx_desc) +
 			    TX_RING_SIZE * sizeof(struct tx_desc),
 			    np->rx_ring, np->rx_ring_dma);
@@ -987,12 +978,10 @@ static void alloc_rbufs(struct rtnet_device *dev) /*** RTnet ***/
 
 	/* Fill in the Rx buffers.  Handle allocation failure gracefully. */
 	for (i = 0; i < RX_RING_SIZE; i++) {
-		struct rtskb *skb = dev_alloc_rtskb(np->rx_buf_sz, &np->skb_pool); /*** RTnet ***/
+		struct rtskb *skb = rtnetdev_alloc_rtskb(dev, np->rx_buf_sz); /*** RTnet ***/
 		np->rx_skbuff[i] = skb;
 		if (skb == NULL)
 			break;
-		skb->rtdev = dev; /*** RTnet ***/
-
 		np->rx_skbuff_dma[i] =
 			pci_map_single(np->pdev, skb->tail, np->rx_buf_sz,
 						   PCI_DMA_FROMDEVICE);
@@ -1666,11 +1655,10 @@ static void via_rhine_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /
 		struct rtskb *skb; /*** RTnet ***/
 		entry = np->dirty_rx % RX_RING_SIZE;
 		if (np->rx_skbuff[entry] == NULL) {
-			skb = dev_alloc_rtskb(np->rx_buf_sz, &np->skb_pool); /*** RTnet ***/
+			skb = rtnetdev_alloc_rtskb(dev, np->rx_buf_sz); /*** RTnet ***/
 			np->rx_skbuff[entry] = skb;
 			if (skb == NULL)
 				break;			/* Better luck next round. */
-			skb->rtdev = dev; /*** RTnet ***/
 			np->rx_skbuff_dma[entry] =
 				pci_map_single(np->pdev, skb->tail, np->rx_buf_sz,
 							   PCI_DMA_FROMDEVICE);
@@ -1784,7 +1772,7 @@ static void via_rhine_error(struct rtnet_device *dev, int intr_status) /*** RTne
 		via_rhine_restart_tx(dev);
 
 	if (intr_status & ~( IntrLinkChange | IntrStatsMax | IntrTxUnderrun |
- 						 IntrTxError | IntrTxAborted | IntrNormalSummary |
+						 IntrTxError | IntrTxAborted | IntrNormalSummary |
 						 IntrTxDescRace )) {
 		if (debug > 1)
 			rtdm_printk(KERN_ERR "%s: Something Wicked happened! %8.8x.\n", /*** RTnet ***/
@@ -2000,7 +1988,6 @@ static void via_rhine_remove_one (struct pci_dev *pdev)
 
 	rt_unregister_rtnetdev(dev);
 	rt_rtdev_disconnect(dev);
-	rtskb_pool_release(&np->skb_pool);
 /*** RTnet ***/
 
 	pci_release_regions(pdev);

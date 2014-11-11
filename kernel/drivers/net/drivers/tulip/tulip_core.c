@@ -75,7 +75,7 @@ static int rx_copybreak = 100;
 /*
   Set the bus performance register.
 	Typical: Set 16 longword cache alignment, no burst limit.
-	Cache alignment bits 15:14	     Burst length 13:8
+	Cache alignment bits 15:14           Burst length 13:8
 		0000	No alignment  0x00000000 unlimited		0800 8 longwords
 		4000	8  longwords		0100 1 longword		1000 16 longwords
 		8000	16 longwords		0200 2 longwords	2000 32 longwords
@@ -420,11 +420,11 @@ media_picked:
 		} else
 			t21142_start_nway(rtdev);
 	} else if (tp->chip_id == PNIC2) {
-	        /* for initial startup advertise 10/100 Full and Half */
-	        tp->sym_advertise = 0x01E0;
-                /* enable autonegotiate end interrupt */
-	        outl(inl(ioaddr+CSR5)| 0x00008010, ioaddr + CSR5);
-	        outl(inl(ioaddr+CSR7)| 0x00008010, ioaddr + CSR7);
+		/* for initial startup advertise 10/100 Full and Half */
+		tp->sym_advertise = 0x01E0;
+		/* enable autonegotiate end interrupt */
+		outl(inl(ioaddr+CSR5)| 0x00008010, ioaddr + CSR5);
+		outl(inl(ioaddr+CSR7)| 0x00008010, ioaddr + CSR7);
 		pnic2_start_nway(rtdev);
 	} else if (tp->chip_id == LC82C168  &&  ! tp->medialock) {
 		if (tp->mii_cnt) {
@@ -490,8 +490,8 @@ tulip_open(/*RTnet*/struct rtnet_device *rtdev)
 	RTNET_MOD_INC_USE_COUNT;
 
 	if ((retval = /*RTnet*/rtdm_irq_request(&tp->irq_handle, rtdev->irq,
-	                                        tulip_interrupt, 0, "rt_tulip",
-	                                        rtdev))) {
+						tulip_interrupt, 0, "rt_tulip",
+						rtdev))) {
 		printk("%s: Unable to install ISR for IRQ %d\n",
 			  rtdev->name,rtdev->irq);
 		RTNET_MOD_DEC_USE_COUNT;
@@ -536,13 +536,12 @@ static void tulip_init_ring(/*RTnet*/struct rtnet_device *rtdev)
 		/* Note the receive buffer must be longword aligned.
 		   dev_alloc_skb() provides 16 byte alignment.  But do *not*
 		   use skb_reserve() to align the IP header! */
-		struct /*RTnet*/rtskb *skb = /*RTnet*/dev_alloc_rtskb(PKT_BUF_SZ, &tp->skb_pool);
+		struct /*RTnet*/rtskb *skb = /*RTnet*/rtnetdev_alloc_rtskb(rtdev, PKT_BUF_SZ);
 		tp->rx_buffers[i].skb = skb;
 		if (skb == NULL)
 			break;
 		mapping = pci_map_single(tp->pdev, skb->tail, PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
 		tp->rx_buffers[i].mapping = mapping;
-		skb->rtdev = rtdev;			/* Mark as being used by this device. */
 		tp->rx_ring[i].status = cpu_to_le32(DescOwned);	/* Owned by Tulip chip */
 		tp->rx_ring[i].buffer1 = cpu_to_le32(mapping);
 	}
@@ -777,7 +776,7 @@ static void build_setup_frame_hash(u16 *setup_frm, /*RTnet*/struct rtnet_device 
 	u16 *eaddrs;
 
 	memset(hash_table, 0, sizeof(hash_table));
-	set_bit_le(255, hash_table); 			/* Broadcast entry */
+	set_bit_le(255, hash_table);                    /* Broadcast entry */
 	/* This should work on big-endian machines as well. */
 	for (i = 0, mclist = rtdev->mc_list; mclist && i < rtdev->mc_count;
 	     i++, mclist = mclist->next) {
@@ -854,7 +853,7 @@ static void set_rx_mode(/*RTnet*/struct rtnet_device *rtdev)
 			tp->csr6 |= AcceptAllMulticast;
 			csr6 |= AcceptAllMulticast;
 		} else {
-			u32 mc_filter[2] = {0, 0};		 /* Multicast hash filter */
+			u32 mc_filter[2] = {0, 0};               /* Multicast hash filter */
 			int filterbit;
 			for (i = 0, mclist = rtdev->mc_list; mclist && i < rtdev->mc_count;
 				 i++, mclist = mclist->next) {
@@ -1076,7 +1075,7 @@ static int tulip_init_one (struct pci_dev *pdev,
 	 *	different driver (lmc driver)
 	 */
 
-        if (pdev->subsystem_vendor == PCI_VENDOR_ID_LMC) {
+	if (pdev->subsystem_vendor == PCI_VENDOR_ID_LMC) {
 		printk(KERN_ERR PFX "skipping LMC card.\n");
 		return -ENODEV;
 	}
@@ -1103,7 +1102,7 @@ static int tulip_init_one (struct pci_dev *pdev,
 	 */
 
 	/* 1. Intel Saturn. Switch to 8 long words burst, 8 long word cache
-	      aligned.  Aries might need this too. The Saturn errata are not 
+	      aligned.  Aries might need this too. The Saturn errata are not
 	      pretty reading but thankfully it's an old 486 chipset.
 
 	   2. The dreaded SiS496 486 chipset. Same workaround as Intel
@@ -1128,9 +1127,9 @@ static int tulip_init_one (struct pci_dev *pdev,
 		csr0 &= ~0x01f100ff;
 
 #if defined(__sparc__)
-        /* DM9102A needs 32-dword alignment/burst length on sparc - chip bug? */
-        if (pdev->vendor == 0x1282 && pdev->device == 0x9102)
-                csr0 = (csr0 & ~0xff00) | 0xe000;
+	/* DM9102A needs 32-dword alignment/burst length on sparc - chip bug? */
+	if (pdev->vendor == 0x1282 && pdev->device == 0x9102)
+		csr0 = (csr0 & ~0xff00) | 0xe000;
 #endif
 
 	/*
@@ -1149,7 +1148,7 @@ static int tulip_init_one (struct pci_dev *pdev,
 	irq = pdev->irq;
 
 	/* alloc_etherdev ensures aligned and zeroed private structures */
-	rtdev = /*RTnet*/rt_alloc_etherdev (sizeof (*tp));
+	rtdev = /*RTnet*/rt_alloc_etherdev (sizeof (*tp), RX_RING_SIZE*2);
 	if (!rtdev) {
 		printk(KERN_ERR PFX "ether device alloc failed, aborting\n");
 		return -ENOMEM;
@@ -1285,28 +1284,28 @@ static int tulip_init_one (struct pci_dev *pdev,
 #ifdef CONFIG_DDB5476
 		if ((pdev->bus->number == 0) && (PCI_SLOT(pdev->devfn) == 6)) {
 			/* DDB5476 MAC address in first EEPROM locations. */
-                       sa_offset = 0;
-                       /* No media table either */
-                       tp->flags &= ~HAS_MEDIA_TABLE;
-               }
+		       sa_offset = 0;
+		       /* No media table either */
+		       tp->flags &= ~HAS_MEDIA_TABLE;
+	       }
 #endif
 #ifdef CONFIG_DDB5477
-               if ((pdev->bus->number == 0) && (PCI_SLOT(pdev->devfn) == 4)) {
-                       /* DDB5477 MAC address in first EEPROM locations. */
-                       sa_offset = 0;
-                       /* No media table either */
-                       tp->flags &= ~HAS_MEDIA_TABLE;
-               }
+	       if ((pdev->bus->number == 0) && (PCI_SLOT(pdev->devfn) == 4)) {
+		       /* DDB5477 MAC address in first EEPROM locations. */
+		       sa_offset = 0;
+		       /* No media table either */
+		       tp->flags &= ~HAS_MEDIA_TABLE;
+	       }
 #endif
 #ifdef CONFIG_MIPS_COBALT
-               if ((pdev->bus->number == 0) &&
-                   ((PCI_SLOT(pdev->devfn) == 7) ||
-                    (PCI_SLOT(pdev->devfn) == 12))) {
-                       /* Cobalt MAC address in first EEPROM locations. */
-                       sa_offset = 0;
-                       /* No media table either */
-                       tp->flags &= ~HAS_MEDIA_TABLE;
-               }
+	       if ((pdev->bus->number == 0) &&
+		   ((PCI_SLOT(pdev->devfn) == 7) ||
+		    (PCI_SLOT(pdev->devfn) == 12))) {
+		       /* Cobalt MAC address in first EEPROM locations. */
+		       sa_offset = 0;
+		       /* No media table either */
+		       tp->flags &= ~HAS_MEDIA_TABLE;
+	       }
 #endif
 		for (i = 0; i < 6; i ++) {
 			rtdev->dev_addr[i] = ee_data[i + sa_offset];
@@ -1421,14 +1420,7 @@ static int tulip_init_one (struct pci_dev *pdev,
 	rtdev->hard_start_xmit = tulip_start_xmit;
 	rtdev->get_stats = tulip_get_stats;
 
-	/*RTnet*/
-	if (rtskb_pool_init(&tp->skb_pool, RX_RING_SIZE*2) < RX_RING_SIZE*2)
-		goto err_out_free_ring;
-	/*RTnet*/
-
-
 	if (/*RTnet*/rt_register_rtnetdev(rtdev)) {
-		/*RTnet*/rtskb_pool_release(&tp->skb_pool);
 		goto err_out_free_ring;
 	}
 
@@ -1487,7 +1479,7 @@ static int tulip_init_one (struct pci_dev *pdev,
 			t21142_start_nway(rtdev);
 		break;
 	case PNIC2:
-	        /* just do a reset for sanity sake */
+		/* just do a reset for sanity sake */
 		outl(0x0000, ioaddr + CSR13);
 		outl(0x0000, ioaddr + CSR14);
 		break;
@@ -1566,7 +1558,6 @@ static void tulip_remove_one (struct pci_dev *pdev)
 #endif
 	/*RTnet*/
 	rt_rtdev_disconnect(rtdev);
-	rtskb_pool_release(&tp->skb_pool);
 	rtdev_free (rtdev);
 	/*RTnet*/
 	pci_release_regions (pdev);

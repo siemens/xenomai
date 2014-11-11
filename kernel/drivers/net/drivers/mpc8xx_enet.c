@@ -145,7 +145,6 @@ MODULE_PARM_DESC(rtnet_scc, "SCCx port for RTnet, x=1..3 (default=1)");
 struct scc_enet_private {
 	/* The addresses of a Tx/Rx-in-place packets/buffers. */
 	struct rtskb *tx_skbuff[TX_RING_SIZE];
-	struct  rtskb_queue skb_pool;
 	ushort	skb_cur;
 	ushort	skb_dirty;
 
@@ -195,7 +194,7 @@ static int CPMVEC_ENET;
 static int
 scc_enet_open(struct rtnet_device *rtdev)
 {
-        RTNET_MOD_INC_USE_COUNT;
+	RTNET_MOD_INC_USE_COUNT;
 
 	/* I should reset the ring buffers here, but I don't yet know
 	 * a simple way to do that.
@@ -250,7 +249,7 @@ scc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 
 	cep->stats.tx_bytes += skb->len;
 	cep->skb_cur = (cep->skb_cur+1) & TX_RING_MOD_MASK;
-	
+
 	/* Prevent interrupts from changing the Tx ring from underneath us. */
 	// *** RTnet ***
 #if 0
@@ -287,7 +286,7 @@ scc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 		bdp++;
 
 	if (bdp->cbd_sc & BD_ENET_TX_READY) {
-	        rtnetif_stop_queue(rtdev);
+		rtnetif_stop_queue(rtdev);
 		cep->tx_full = 1;
 	}
 
@@ -545,13 +544,12 @@ scc_enet_rx(struct rtnet_device *rtdev, int* packets, nanosecs_abs_t *time_stamp
 		 * include that when passing upstream as it messes up
 		 * bridging applications.
 		 */
-		skb = dev_alloc_rtskb(pkt_len-4, &cep->skb_pool);
+		skb = rtnetdev_alloc_rtskb(rtdev, pkt_len-4);
 		if (skb == NULL) {
 			rtdm_printk("%s: Memory squeeze, dropping packet.\n", rtdev->name);
 			cep->stats.rx_dropped++;
 		}
 		else {
-			skb->rtdev = rtdev;
 			rtskb_put(skb,pkt_len-4); /* Make room */
 			memcpy(skb->data,
 			       cep->rx_vaddr[bdp - cep->rx_bd_base],
@@ -628,7 +626,7 @@ static void set_multicast_list(struct net_device *dev)
 	ep = (scc_enet_t *)dev->base_addr;
 
 	if (dev->flags&IFF_PROMISC) {
-	  
+
 		/* Log any net taps. */
 		printk("%s: Promiscuous mode enabled.\n", dev->name);
 		cep->sccp->scc_pmsr |= SCC_PMSR_PRO;
@@ -656,7 +654,7 @@ static void set_multicast_list(struct net_device *dev)
 			dmi = dev->mc_list;
 
 			for (i=0; i<dev->mc_count; i++) {
-				
+
 				/* Only support group multicast for now.
 				*/
 				if (!(dmi->dmi_addr[0] & 1))
@@ -710,7 +708,7 @@ int __init scc_enet_init(void)
 
 	bd = (bd_t *)__res;
 
-	/* Configure the SCC parameters (this has formerly be done 
+	/* Configure the SCC parameters (this has formerly be done
 	 * by macro definitions).
 	 */
 	switch (rtnet_scc) {
@@ -739,7 +737,10 @@ int __init scc_enet_init(void)
 
 	/* Allocate some private information and create an Ethernet device instance.
 	*/
-	rtdev = rtdev_root = rt_alloc_etherdev(sizeof(struct scc_enet_private));
+	if (!rx_pool_size)
+		rx_pool_size = RX_RING_SIZE * 2;
+	rtdev = rtdev_root = rt_alloc_etherdev(sizeof(struct scc_enet_private),
+					rx_pool_size);
 	if (rtdev == NULL) {
 		printk(KERN_ERR "enet: Could not allocate ethernet device.\n");
 		return -1;
@@ -891,7 +892,7 @@ int __init scc_enet_init(void)
 #ifdef CONFIG_FEC_ENET
 	/* We need a second MAC address if FEC is used by Linux */
 	for (i=5; i>=0; i--)
-		*eap++ = rtdev->dev_addr[i] = (bd->bi_enetaddr[i] | 
+		*eap++ = rtdev->dev_addr[i] = (bd->bi_enetaddr[i] |
 					     (i==3 ? 0x80 : 0));
 #else
 	for (i=5; i>=0; i--)
@@ -973,7 +974,7 @@ int __init scc_enet_init(void)
 		rtdev_free(rtdev);
 		return i;
 	}
-	
+
 
 	/* Set GSMR_H to enable all normal operating modes.
 	 * Set GSMR_L to enable Ethernet to MC68160.
@@ -1044,19 +1045,11 @@ int __init scc_enet_init(void)
 
 	if (!rx_pool_size)
 		rx_pool_size = RX_RING_SIZE * 2;
-	if (rtskb_pool_init(&cep->skb_pool, rx_pool_size) < rx_pool_size) {
-		rtdm_irq_disable(&cep->irq_handle);
-		rtdm_irq_free(&cep->irq_handle);
-		rtskb_pool_release(&cep->skb_pool);
-		rtdev_free(rtdev);
-		return -ENOMEM;
-	}
 
 	if ((i = rt_register_rtnetdev(rtdev))) {
 		printk(KERN_ERR "Couldn't register rtdev\n");
 		rtdm_irq_disable(&cep->irq_handle);
 		rtdm_irq_free(&cep->irq_handle);
-		rtskb_pool_release(&cep->skb_pool);
 		rtdev_free(rtdev);
 		return i;
 	}
@@ -1065,11 +1058,11 @@ int __init scc_enet_init(void)
 	*/
 	sccp->scc_gsmrl |= (SCC_GSMRL_ENR | SCC_GSMRL_ENT);
 
-	printk("%s: CPM ENET Version 0.2 on SCC%d, irq %d, addr %02x:%02x:%02x:%02x:%02x:%02x\n", 
+	printk("%s: CPM ENET Version 0.2 on SCC%d, irq %d, addr %02x:%02x:%02x:%02x:%02x:%02x\n",
 	       rtdev->name, SCC_ENET+1, rtdev->irq,
 	       rtdev->dev_addr[0], rtdev->dev_addr[1], rtdev->dev_addr[2],
 	       rtdev->dev_addr[3], rtdev->dev_addr[4], rtdev->dev_addr[5]);
-	
+
 	return 0;
 }
 
@@ -1093,7 +1086,6 @@ static void __exit scc_enet_cleanup(void)
 		rt_rtdev_disconnect(rtdev);
 
 		printk("%s: unloaded\n", rtdev->name);
-		rtskb_pool_release(&cep->skb_pool);
 		rtdev_free(rtdev);
 		rtdev_root = NULL;
 	}

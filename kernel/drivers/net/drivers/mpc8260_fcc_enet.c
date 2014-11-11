@@ -15,7 +15,7 @@
  * will be much more memory efficient and will easily handle lots of
  * small packets.  Since this is a cache coherent processor and CPM,
  * I could also preallocate SKB's and use them directly on the interface.
- * 
+ *
  * Ported to RTnet from "linuxppc_2_4_devel/arch/ppc/8260_io/fcc_enet.c".
  * Copyright (c) 2003 Wolfgang Grandegger (wg@denx.de)
  */
@@ -374,7 +374,6 @@ static fcc_info_t fcc_ports[] = {
 struct fcc_enet_private {
 	/* The addresses of a Tx/Rx-in-place packets/buffers. */
 	struct	rtskb *tx_skbuff[TX_RING_SIZE];
-	struct  rtskb_queue skb_pool;
 	ushort	skb_cur;
 	ushort	skb_dirty;
 
@@ -510,7 +509,7 @@ fcc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 		bdp++;
 
 	if (bdp->cbd_sc & BD_ENET_TX_READY) {
-	        rtnetif_stop_queue(rtdev);
+		rtnetif_stop_queue(rtdev);
 		cep->tx_full = 1;
 	}
 
@@ -687,7 +686,7 @@ static int fcc_enet_interrupt(rtdm_irq_t *irq_handle)
 		cp = cpmp;
 		cp->cp_cpcr =
 		    mk_cr_cmd(cep->fip->fc_cpmpage, cep->fip->fc_cpmblock,
-		    		0x0c, CPM_CR_RESTART_TX) | CPM_CR_FLG;
+				0x0c, CPM_CR_RESTART_TX) | CPM_CR_FLG;
 		while (cp->cp_cpcr & CPM_CR_FLG); // looks suspicious - how long may it take?
 	    }
 	    rtdm_lock_put(&cep->lock);
@@ -696,7 +695,7 @@ static int fcc_enet_interrupt(rtdm_irq_t *irq_handle)
 	/* Check for receive busy, i.e. packets coming but no place to
 	 * put them.
 	 */
-        if (int_events & FCC_ENET_BSY) {
+	if (int_events & FCC_ENET_BSY) {
 		cep->stats.rx_dropped++;
 	}
 
@@ -764,14 +763,13 @@ for (;;) {
 		cep->stats.rx_bytes += pkt_len;
 
 		/* This does 16 byte alignment, much more than we need. */
-		skb = dev_alloc_rtskb(pkt_len, &cep->skb_pool);
+		skb = rtnetdev_alloc_rtskb(rtdev, pkt_len);
 
 		if (skb == NULL) {
 			rtdm_printk("%s: Memory squeeze, dropping packet.\n", rtdev->name);
 			cep->stats.rx_dropped++;
 		}
 		else {
-			skb->rtdev = rtdev;
 			rtskb_put(skb,pkt_len); /* Make room */
 			memcpy(skb->data,
 			       (unsigned char *)__va(bdp->cbd_bufaddr),
@@ -1538,7 +1536,7 @@ return;
 	ep = (fcc_enet_t *)dev->base_addr;
 
 	if (dev->flags&IFF_PROMISC) {
-	  
+
 		/* Log any net taps. */
 		printk("%s: Promiscuous mode enabled.\n", dev->name);
 		cep->fccp->fcc_fpsmr |= FCC_PSMR_PRO;
@@ -1562,7 +1560,7 @@ return;
 			dmi = dev->mc_list;
 
 			for (i=0; i<dev->mc_count; i++) {
-				
+
 				/* Only support group multicast for now.
 				*/
 				if (!(dmi->dmi_addr[0] & 1))
@@ -1603,17 +1601,17 @@ int fcc_enet_set_mac_address(struct net_device *dev, void *p)
 
 	cep = (struct fcc_enet_private *)(dev->priv);
 	ep = cep->ep;
-	
-        if (netif_running(dev))
-                return -EBUSY;
 
-        memcpy(dev->dev_addr, addr->sa_data, dev->addr_len);
-	
+	if (netif_running(dev))
+		return -EBUSY;
+
+	memcpy(dev->dev_addr, addr->sa_data, dev->addr_len);
+
 	eap = (unsigned char *) &(ep->fen_paddrh);
 	for (i=5; i>=0; i--)
 		*eap++ = addr->sa_data[i];
 
-        return 0;
+	return 0;
 }
 #endif /* ORIGINAL_VERSION */
 
@@ -1632,7 +1630,7 @@ int __init fec_enet_init(void)
 	immap = (immap_t *)IMAP_ADDR;	/* and to internal registers */
 	io = &immap->im_ioport;
 
-	for (np = 0, fip = fcc_ports; 
+	for (np = 0, fip = fcc_ports;
 	     np < sizeof(fcc_ports) / sizeof(fcc_info_t);
 	     np++, fip++) {
 
@@ -1642,7 +1640,11 @@ int __init fec_enet_init(void)
 
 		/* Allocate some private information and create an Ethernet device instance.
 		*/
-		rtdev = rt_alloc_etherdev(sizeof(struct fcc_enet_private));
+		if (!rx_pool_size)
+			rx_pool_size = RX_RING_SIZE * 2;
+
+		rtdev = rt_alloc_etherdev(sizeof(struct fcc_enet_private),
+					rx_pool_size);
 		if (rtdev == NULL) {
 			printk(KERN_ERR "fcc_enet: Could not allocate ethernet device.\n");
 			return -1;
@@ -1672,34 +1674,23 @@ int __init fec_enet_init(void)
 		rtdev->hard_header = &rt_eth_header;
 		rtdev->get_stats = fcc_enet_get_stats;
 
-		if (!rx_pool_size)
-			rx_pool_size = RX_RING_SIZE * 2;
-		if (rtskb_pool_init(&cep->skb_pool, rx_pool_size) < rx_pool_size) {
-			rtdm_irq_disable(&cep->irq_handle);
-			rtdm_irq_free(&cep->irq_handle);
-			rtskb_pool_release(&cep->skb_pool);
-			rtdev_free(rtdev);
-			return -ENOMEM;
-		}
-
 		if ((i = rt_register_rtnetdev(rtdev))) {
 			rtdm_irq_disable(&cep->irq_handle);
 			rtdm_irq_free(&cep->irq_handle);
-			rtskb_pool_release(&cep->skb_pool);
 			rtdev_free(rtdev);
 			return i;
 		}
 		init_fcc_startup(fip, rtdev);
 
-		printk("%s: FCC%d ENET Version 0.4, %02x:%02x:%02x:%02x:%02x:%02x\n", 
+		printk("%s: FCC%d ENET Version 0.4, %02x:%02x:%02x:%02x:%02x:%02x\n",
 		       rtdev->name, fip->fc_fccnum + 1,
 		       rtdev->dev_addr[0], rtdev->dev_addr[1], rtdev->dev_addr[2],
 		       rtdev->dev_addr[3], rtdev->dev_addr[4], rtdev->dev_addr[5]);
 
 #ifdef	CONFIG_RTAI_RTNET_USE_MDIO
 		/* Queue up command to detect the PHY and initialize the
-	 	 * remainder of the interface.
-	 	 */
+		 * remainder of the interface.
+		 */
 		cep->phy_addr = 0;
 		mii_queue(dev, mk_mii_read(MII_REG_PHYIR1), mii_discover_phy);
 #endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
@@ -1862,7 +1853,7 @@ init_fcc_param(fcc_info_t *fip, struct rtnet_device *rtdev,
 	ep->fen_genfcc.fcc_tiptr = mem_addr+32;
 	ep->fen_padptr = mem_addr+64;
 	memset((char *)(&(immap->im_dprambase[(mem_addr+64)])), 0x88, 32);
-	
+
 	ep->fen_genfcc.fcc_rbptr = 0;
 	ep->fen_genfcc.fcc_tbptr = 0;
 	ep->fen_genfcc.fcc_rcrc = 0;
@@ -1915,7 +1906,7 @@ init_fcc_param(fcc_info_t *fip, struct rtnet_device *rtdev,
 	}
 #elif defined(CONFIG_PM826)
 	*eap++ = rtdev->dev_addr[5] = bd->bi_enetaddr[5] + fip->fc_fccnum + 1;
-        for (i=4; i>=0; i--) {
+	for (i=4; i>=0; i--) {
 		*eap++ = rtdev->dev_addr[i] = bd->bi_enetaddr[i];
 	}
 #else
@@ -2200,7 +2191,7 @@ fcc_stop(struct net_device *dev)
 	fccp->fcc_gfmr &= ~(FCC_GFMR_ENR | FCC_GFMR_ENT);
 }
 #endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
-	
+
 static void
 fcc_restart(struct rtnet_device *rtdev, int duplex)
 {
@@ -2249,7 +2240,7 @@ fcc_enet_open(struct rtnet_device *rtdev)
 #else
 	fep->link = 1;
 	rtnetif_start_queue(rtdev);
-        MOD_INC_USE_COUNT;
+	MOD_INC_USE_COUNT;
 	return 0;					/* Always succeed */
 #endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
 }
@@ -2262,8 +2253,8 @@ static void __exit fcc_enet_cleanup(void)
 	fcc_info_t *fip;
 	int np;
 
-	for (np = 0, fip = fcc_ports; 
-	     np < sizeof(fcc_ports) / sizeof(fcc_info_t); 
+	for (np = 0, fip = fcc_ports;
+	     np < sizeof(fcc_ports) / sizeof(fcc_info_t);
 	     np++, fip++) {
 
 		/* Skip FCC ports not used for RTnet. */
@@ -2289,7 +2280,6 @@ static void __exit fcc_enet_cleanup(void)
 		rt_rtdev_disconnect(rtdev);
 
 		printk("%s: unloaded\n", rtdev->name);
-		rtskb_pool_release(&cep->skb_pool);
 		rtdev_free(rtdev);
 		fip++;
 	}

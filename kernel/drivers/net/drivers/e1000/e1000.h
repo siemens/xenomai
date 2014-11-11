@@ -339,7 +339,6 @@ struct e1000_adapter {
 
 	/* OS defined structs */
 	struct rtnet_device *netdev;
-        struct rtskb_queue skb_pool;
 	struct pci_dev *pdev;
 	struct net_device_stats net_stats;
 

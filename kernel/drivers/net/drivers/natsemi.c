@@ -137,7 +137,7 @@
 	* big endian support with CFG:BEM instead of cpu_to_le32
 	* support for an external PHY
 	* NAPI
-	
+
 	Ported to RTNET: December 2003, Erik Buit <e.buit@student.utwente.nl>
 */
 
@@ -270,7 +270,7 @@ MODULE_PARM_DESC(max_interrupt_work,
 MODULE_PARM_DESC(mtu, "DP8381x MTU (all boards)");
 MODULE_PARM_DESC(debug, "DP8381x default debug level");
 /*** RTnet ***
-MODULE_PARM_DESC(rx_copybreak, 
+MODULE_PARM_DESC(rx_copybreak,
 	"DP8381x copy breakpoint for copy-only-tiny-frames");
  *** RTnet ***/
 MODULE_PARM_DESC(options, "DP8381x: Bits 0-3: media type, bit 17: full duplex");
@@ -352,7 +352,7 @@ Datasheet is available from:
 http://www.national.com/pf/DP/DP83815.html
 
 IVc. Errata
-	
+
 None characterised.
 */
 
@@ -685,7 +685,6 @@ struct netdev_private {
 	rtdm_lock_t lock;
 	u32 msg_enable;
 
-	struct rtskb_queue skb_pool; /*** RTnet ***/
 	rtdm_irq_t irq_handle;
 };
 
@@ -779,7 +778,7 @@ static int natsemi_probe1 (struct pci_dev *pdev,
 		pci_set_master(pdev);
 
 /*** RTnet ***/
-	dev = rt_alloc_etherdev(sizeof(struct netdev_private));
+	dev = rt_alloc_etherdev(sizeof(struct netdev_private), RX_RING_SIZE*2);
 	if (dev == NULL) {
 		rtdm_printk(KERN_ERR "init_ethernet failed for card #%d\n", find_cnt);
 		goto err_out;
@@ -841,13 +840,6 @@ static int natsemi_probe1 (struct pci_dev *pdev,
 	if (dev->mem_start)
 		option = dev->mem_start;
 
-/*** RTnet ***/
-	if (rtskb_pool_init(&np->skb_pool, RX_RING_SIZE*2) < RX_RING_SIZE*2) {
-		rtskb_pool_release(&np->skb_pool);
-		goto err_out_unmap;
-	}
-/*** RTnet ***/
-	
 	/* The lower four bits are the media type. */
 	if (option) {
 		if (option & 0x200)
@@ -878,11 +870,10 @@ static int natsemi_probe1 (struct pci_dev *pdev,
 /*** RTnet ***/
 	i = rt_register_rtnetdev(dev);
 	if (i) {
-		rtskb_pool_release(&np->skb_pool);
 		goto err_out_unmap;
 	}
 /*** RTnet ***/
-	
+
 	rtnetif_carrier_off(dev);
 
 	if (netif_msg_drv(np)) {
@@ -1351,7 +1342,7 @@ static void init_registers(struct rtnet_device *dev)
 	/* DRTH: 2: start tx if 64 bytes are in the fifo
 	 * FLTH: 0x10: refill with next packet if 512 bytes are free
 	 * MXDMA: 0: up to 256 byte bursts.
-	 * 	MXDMA must be <= FLTH
+	 *	MXDMA must be <= FLTH
 	 * ECRETRY=1
 	 * ATP=1
 	 */
@@ -1407,7 +1398,7 @@ static void netdev_timer(unsigned long data)
 	struct net_device *dev = (struct net_device *)data;
 	struct netdev_private *np = dev->priv;
 	int next_tick = 5*HZ;
-	long ioaddr = dev->base_addr;		
+	long ioaddr = dev->base_addr;
 	u16 dspcfg;
 
 	if (netif_msg_timer(np)) {
@@ -1543,11 +1534,10 @@ static void refill_rx(struct rtnet_device *dev)
 		struct rtskb *skb;
 		int entry = np->dirty_rx % RX_RING_SIZE;
 		if (np->rx_skbuff[entry] == NULL) {
-			skb = dev_alloc_rtskb(np->rx_buf_sz, &np->skb_pool);
+			skb = rtnetdev_alloc_rtskb(dev, np->rx_buf_sz);
 			np->rx_skbuff[entry] = skb;
 			if (skb == NULL)
 				break; /* Better luck next round. */
-			skb->rtdev = dev; /* Mark as being used by this device. */
 			np->rx_dma[entry] = pci_map_single(np->pci_dev,
 				skb->data, np->rx_buf_sz, PCI_DMA_FROMDEVICE);
 			np->rx_ring[entry].addr = cpu_to_le32(np->rx_dma[entry]);
@@ -2677,7 +2667,6 @@ static void natsemi_remove1 (struct pci_dev *pdev)
 
 	rt_unregister_rtnetdev(dev);
 	rt_rtdev_disconnect(dev);
-	rtskb_pool_release(&np->skb_pool);
 /*** RTnet ***/
 
 	pci_release_regions (pdev);

@@ -264,7 +264,6 @@ struct igb_adapter {
 
 	/* OS defined structs */
 	struct rtnet_device *netdev;
-	struct rtskb_queue skb_pool;
 
 	// struct napi_struct napi;
 	struct pci_dev *pdev;

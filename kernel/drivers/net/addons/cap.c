@@ -288,6 +288,12 @@ static void rtcap_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 
 static int tap_dev_open(struct net_device *dev)
 {
+    int err;
+
+    err = try_module_get(THIS_MODULE);
+    if (err == 0)
+	return -EIDRM;
+
     memcpy(dev->dev_addr,
 	   (*(struct rtnet_device **)netdev_priv(dev))->dev_addr,
 	   MAX_ADDR_LEN);
@@ -295,7 +301,11 @@ static int tap_dev_open(struct net_device *dev)
     return 0;
 }
 
-
+static int tap_dev_stop(struct net_device *dev)
+{
+    module_put(THIS_MODULE);
+    return 0;
+}
 
 static int tap_dev_xmit(struct sk_buff *skb, struct net_device *dev)
 {
@@ -324,6 +334,7 @@ static int tap_dev_change_mtu(struct net_device *dev, int new_mtu)
 #ifdef HAVE_NET_DEVICE_OPS
 static const struct net_device_ops tap_netdev_ops = {
     .ndo_open       = tap_dev_open,
+    .ndo_stop       = tap_dev_stop,
     .ndo_start_xmit = tap_dev_xmit,
     .ndo_get_stats  = tap_dev_get_stats,
     .ndo_change_mtu = tap_dev_change_mtu,

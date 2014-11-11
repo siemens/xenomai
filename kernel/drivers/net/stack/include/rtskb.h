@@ -290,7 +290,6 @@ extern struct rtskb *rtskb_pool_dequeue(struct rtskb_pool *pool);
 extern void rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb);
 
 extern struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_pool *pool);
-#define dev_alloc_rtskb(len, pool)  alloc_rtskb(len, pool)
 
 extern void kfree_rtskb(struct rtskb *skb);
 #define dev_kfree_rtskb(a)  kfree_rtskb(a)

@@ -270,7 +270,7 @@ static void rtmac_vnic_pool_unlock(void *cookie)
 {
 }
 
-const struct rtskb_pool_lock_ops rtmac_vnic_pool_lock_ops = {
+static const struct rtskb_pool_lock_ops rtmac_vnic_pool_lock_ops = {
     .trylock = rtmac_vnic_pool_trylock,
     .unlock = rtmac_vnic_pool_unlock,
 };

@@ -26,7 +26,7 @@
 		PCI DMA API fixes, adding pci_dma_sync_single calls where neccesary
 
 	2002 May 16 Jan Kiszka <Jan.Kiszka@web.de>
-	        Ported to RTnet (RTAI version)
+		Ported to RTnet (RTAI version)
 */
 
 static const char *version =
@@ -333,12 +333,12 @@ static inline int rt_wait_for_cmd_done(long cmd_ioaddr, const char *cmd)
 
     t0 = rtdm_clock_read();
     while (inb(cmd_ioaddr) != 0) {
-        if (wait-- == 0) {
-            rtdm_printk(KERN_ALERT "eepro100: rt_wait_for_cmd_done(%s) "
-                        "timeout!\n", cmd);
-            return 1;
-        }
-        rtdm_task_busy_sleep(1000);
+	if (wait-- == 0) {
+	    rtdm_printk(KERN_ALERT "eepro100: rt_wait_for_cmd_done(%s) "
+			"timeout!\n", cmd);
+	    return 1;
+	}
+	rtdm_task_busy_sleep(1000);
     }
     return 0;
 }
@@ -348,9 +348,9 @@ static inline int rt_wait_for_cmd_done(long cmd_ioaddr, const char *cmd)
     int wait = CONFIG_XENO_DRIVERS_NET_DRV_EEPRO100_CMDTIMEOUT;
 
     while (inb(cmd_ioaddr) != 0) {
-        if (wait-- == 0)
-            return 1;
-        rtdm_task_busy_sleep(1000);
+	if (wait-- == 0)
+	    return 1;
+	rtdm_task_busy_sleep(1000);
     }
     return 0;
 }
@@ -408,9 +408,9 @@ enum SCBPort_cmds {
 };
 
 /* The Speedo3 Rx and Tx frame/buffer descriptors. */
-struct descriptor {			    /* A generic descriptor. */
+struct descriptor {                         /* A generic descriptor. */
 	s32 cmd_status;				/* All command and status fields. */
-	u32 link;				    /* struct descriptor *  */
+	u32 link;                                   /* struct descriptor *  */
 	unsigned char params[0];
 };
 
@@ -493,7 +493,6 @@ struct speedo_private {
 	/* The addresses of a Tx/Rx-in-place packets/buffers. */
 	struct rtskb *tx_skbuff[TX_RING_SIZE];
 	struct rtskb *rx_skbuff[RX_RING_SIZE];
-	struct rtskb_queue skb_pool;
 	// *** RTnet ***
 
 	/* Mapped addresses of the rings. */
@@ -671,7 +670,7 @@ static int speedo_found1(struct pci_dev *pdev,
 		return -1;
 
 	// *** RTnet ***
-	rtdev = rt_alloc_etherdev(sizeof(struct speedo_private));
+	rtdev = rt_alloc_etherdev(sizeof(struct speedo_private), RX_RING_SIZE*2);
 	if (rtdev == NULL) {
 		printk(KERN_ERR "eepro100: Could not allocate ethernet device.\n");
 		pci_free_consistent(pdev, size, tx_ring_space, tx_ring_dma);
@@ -784,7 +783,7 @@ static int speedo_found1(struct pci_dev *pdev,
 	sp->rx_bug = (eeprom[3] & 0x03) == 3 ? 0 : 1;
 	if (((pdev->device > 0x1030 && (pdev->device < 0x1039)))
 	    || (pdev->device == 0x2449)) {
-	    	sp->chip_id = 1;
+		sp->chip_id = 1;
 	}
 
 	if (sp->rx_bug)
@@ -800,16 +799,8 @@ static int speedo_found1(struct pci_dev *pdev,
 	rtdev->get_stats = &speedo_get_stats;
 	//rtdev->do_ioctl = NULL;
 
-	if (rtskb_pool_init(&sp->skb_pool, RX_RING_SIZE*2) < RX_RING_SIZE*2) {
-		rtskb_pool_release(&sp->skb_pool);
-		pci_free_consistent(pdev, size, tx_ring_space, tx_ring_dma);
-		rtdev_free(rtdev);
-		return -ENOMEM;
-	}
-
 	if ( (i=rt_register_rtnetdev(rtdev)) )
 	{
-		rtskb_pool_release(&sp->skb_pool);
 		pci_free_consistent(pdev, size, tx_ring_space, tx_ring_dma);
 		rtdev_free(rtdev);
 		return i;
@@ -1070,13 +1061,12 @@ speedo_init_rx_ring(struct rtnet_device *rtdev)
 
 	for (i = 0; i < RX_RING_SIZE; i++) {
 		struct rtskb *skb;
-		skb = dev_alloc_rtskb(PKT_BUF_SZ + 2 + sizeof(struct RxFD), &sp->skb_pool);
+		skb = rtnetdev_alloc_rtskb(rtdev, PKT_BUF_SZ + 2 + sizeof(struct RxFD));
 		sp->rx_skbuff[i] = skb;
 		if (skb == NULL)
 			break;			/* OK.  Just initially short of Rx bufs. */
 		// *** RTnet ***
 		rtskb_reserve(skb, 2);  /* IP header alignment */
-		skb->rtdev = rtdev;		/* Mark as being used by this device. */
 		// *** RTnet ***
 		rxf = (struct RxFD *)skb->tail;
 		sp->rx_ringp[i] = rxf;
@@ -1426,7 +1416,7 @@ static inline struct RxFD *speedo_rx_alloc(struct rtnet_device *rtdev, int entry
 	struct RxFD *rxf;
 	struct rtskb *skb;
 	/* Get a fresh skbuff to replace the consumed one. */
-	skb = dev_alloc_rtskb(PKT_BUF_SZ + 2 + sizeof(struct RxFD), &sp->skb_pool);
+	skb = rtnetdev_alloc_rtskb(rtdev, PKT_BUF_SZ + 2 + sizeof(struct RxFD));
 	sp->rx_skbuff[entry] = skb;
 	if (skb == NULL) {
 		sp->rx_ringp[entry] = NULL;
@@ -1437,9 +1427,6 @@ static inline struct RxFD *speedo_rx_alloc(struct rtnet_device *rtdev, int entry
 	sp->rx_ring_dma[entry] =
 		pci_map_single(sp->pdev, rxf,
 					   PKT_BUF_SZ + sizeof(struct RxFD), PCI_DMA_FROMDEVICE);
-	// *** RTnet ***
-	skb->rtdev = rtdev;
-	// *** RTnet ***
 	rtskb_reserve(skb, sizeof(struct RxFD));
 	rxf->rx_buf_addr = 0xffffffff;
 	pci_dma_sync_single_for_device(sp->pdev, sp->rx_ring_dma[entry],
@@ -1451,7 +1438,7 @@ static inline void speedo_rx_link(struct rtnet_device *rtdev, int entry,
 								  struct RxFD *rxf, dma_addr_t rxf_dma)
 {
 	struct speedo_private *sp = (struct speedo_private *)rtdev->priv;
-	rxf->status = cpu_to_le32(0xC0000001); 	/* '1' for driver use only. */
+	rxf->status = cpu_to_le32(0xC0000001);  /* '1' for driver use only. */
 	rxf->link = 0;			/* None yet. */
 	rxf->count = cpu_to_le32(PKT_BUF_SZ << 16);
 	sp->last_rxf->link = cpu_to_le32(rxf_dma);
@@ -1575,7 +1562,6 @@ speedo_rx(struct rtnet_device *rtdev, int* packets, nanosecs_abs_t *time_stamp)
 			   copying to a properly sized skbuff. */
 			if (pkt_len < rx_copybreak
 				&& (skb = dev_alloc_rtskb(pkt_len + 2)) != 0) {
-				skb->rtdev = rtdev;
 				rtskb_reserve(skb, 2);	/* Align IP on 16 byte boundaries */
 				/* 'skb_put()' points to the start of sk_buff data area. */
 				pci_dma_sync_single(sp->pdev, sp->rx_ring_dma[entry],
@@ -1950,7 +1936,6 @@ static void eepro100_remove_one (struct pci_dev *pdev)
 	pci_disable_device(pdev);
 
 	// *** RTnet ***
-	rtskb_pool_release(&sp->skb_pool);
 	rtdev_free(rtdev);
 	// *** RTnet ***
 }

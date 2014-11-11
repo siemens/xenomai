@@ -28,35 +28,35 @@ unsigned int tulip_max_interrupt_work;
 #define MIT_SIZE 15
 unsigned int mit_table[MIT_SIZE+1] =
 {
-        /*  CRS11 21143 hardware Mitigation Control Interrupt
-            We use only RX mitigation we other techniques for
-            TX intr. mitigation.
+	/*  CRS11 21143 hardware Mitigation Control Interrupt
+	    We use only RX mitigation we other techniques for
+	    TX intr. mitigation.
 
-           31    Cycle Size (timer control)
-           30:27 TX timer in 16 * Cycle size
-           26:24 TX No pkts before Int.
-           23:20 RX timer in Cycle size
-           19:17 RX No pkts before Int.
-           16       Continues Mode (CM)
-        */
+	   31    Cycle Size (timer control)
+	   30:27 TX timer in 16 * Cycle size
+	   26:24 TX No pkts before Int.
+	   23:20 RX timer in Cycle size
+	   19:17 RX No pkts before Int.
+	   16       Continues Mode (CM)
+	*/
 
-        0x0,             /* IM disabled */
-        0x80150000,      /* RX time = 1, RX pkts = 2, CM = 1 */
-        0x80150000,
-        0x80270000,
-        0x80370000,
-        0x80490000,
-        0x80590000,
-        0x80690000,
-        0x807B0000,
-        0x808B0000,
-        0x809D0000,
-        0x80AD0000,
-        0x80BD0000,
-        0x80CF0000,
-        0x80DF0000,
+	0x0,             /* IM disabled */
+	0x80150000,      /* RX time = 1, RX pkts = 2, CM = 1 */
+	0x80150000,
+	0x80270000,
+	0x80370000,
+	0x80490000,
+	0x80590000,
+	0x80690000,
+	0x807B0000,
+	0x808B0000,
+	0x809D0000,
+	0x80AD0000,
+	0x80BD0000,
+	0x80CF0000,
+	0x80DF0000,
 //       0x80FF0000      /* RX time = 16, RX pkts = 7, CM = 1 */
-        0x80F10000      /* RX time = 16, RX pkts = 0, CM = 1 */
+	0x80F10000      /* RX time = 16, RX pkts = 0, CM = 1 */
 };
 #endif
 
@@ -74,7 +74,7 @@ int tulip_refill_rx(/*RTnet*/struct rtnet_device *rtdev)
 			struct /*RTnet*/rtskb *skb;
 			dma_addr_t mapping;
 
-			skb = tp->rx_buffers[entry].skb = /*RTnet*/dev_alloc_rtskb(PKT_BUF_SZ, &tp->skb_pool);
+			skb = tp->rx_buffers[entry].skb = /*RTnet*/rtnetdev_alloc_rtskb(rtdev, PKT_BUF_SZ);
 			if (skb == NULL)
 				break;
 
@@ -82,7 +82,6 @@ int tulip_refill_rx(/*RTnet*/struct rtnet_device *rtdev)
 						 PCI_DMA_FROMDEVICE);
 			tp->rx_buffers[entry].mapping = mapping;
 
-			skb->rtdev = rtdev;			/* Mark as being used by this device. */
 			tp->rx_ring[entry].buffer1 = cpu_to_le32(mapping);
 			refilled++;
 		}
@@ -159,14 +158,13 @@ static int tulip_rx(/*RTnet*/struct rtnet_device *rtdev, nanosecs_abs_t *time_st
 			   to a minimally-sized skbuff. */
 			if (pkt_len < tulip_rx_copybreak
 				&& (skb = /*RTnet*/dev_alloc_rtskb(pkt_len + 2)) != NULL) {
-				skb->rtdev = rtdev;
 				/*RTnet*/rtskb_reserve(skb, 2);	/* 16 byte align the IP header */
 				pci_dma_sync_single(tp->pdev,
 						    tp->rx_buffers[entry].mapping,
 						    pkt_len, PCI_DMA_FROMDEVICE);
 #if ! defined(__alpha__)
 				//eth_copy_and_sum(skb, tp->rx_buffers[entry].skb->tail,
-				//		 pkt_len, 0);
+				//               pkt_len, 0);
 				memcpy(rtskb_put(skb, pkt_len),
 				       tp->rx_buffers[entry].skb->tail,
 				       pkt_len);
@@ -175,7 +173,7 @@ static int tulip_rx(/*RTnet*/struct rtnet_device *rtdev, nanosecs_abs_t *time_st
 				       tp->rx_buffers[entry].skb->tail,
 				       pkt_len);
 #endif
-			} else { 	/* Pass up the skb already on the Rx ring. */
+			} else {        /* Pass up the skb already on the Rx ring. */
 #endif /*RTnet*/
 			{
 				unsigned char *temp = /*RTnet*/rtskb_put(skb = tp->rx_buffers[entry].skb, pkt_len);
@@ -355,7 +353,7 @@ int tulip_interrupt(rtdm_irq_t *irq_handle)
 				}
 			}
 			if (csr5 & RxDied) {		/* Missed a Rx frame. */
-                                tp->stats.rx_missed_errors += inl(ioaddr + CSR8) & 0xffff;
+				tp->stats.rx_missed_errors += inl(ioaddr + CSR8) & 0xffff;
 				tp->stats.rx_errors++;
 				tulip_start_rxtx(tp);
 			}
@@ -403,19 +401,19 @@ int tulip_interrupt(rtdm_irq_t *irq_handle)
 				/*RTnet*/rtdm_printk(KERN_WARNING "%s: Too much work during an interrupt, "
 					   "csr5=0x%8.8x. (%lu) (%d,%d,%d)\n", rtdev->name, csr5, tp->nir, tx, rx, oi);
 
-                       /* Acknowledge all interrupt sources. */
-                        outl(0x8001ffff, ioaddr + CSR5);
-                        if (tp->flags & HAS_INTR_MITIGATION) {
-                     /* Josip Loncaric at ICASE did extensive experimentation
+		       /* Acknowledge all interrupt sources. */
+			outl(0x8001ffff, ioaddr + CSR5);
+			if (tp->flags & HAS_INTR_MITIGATION) {
+		     /* Josip Loncaric at ICASE did extensive experimentation
 			to develop a good interrupt mitigation setting.*/
-                                outl(0x8b240000, ioaddr + CSR11);
-                        } else if (tp->chip_id == LC82C168) {
+				outl(0x8b240000, ioaddr + CSR11);
+			} else if (tp->chip_id == LC82C168) {
 				/* the LC82C168 doesn't have a hw timer.*/
 				outl(0x00, ioaddr + CSR7);
 			} else {
-                          /* Mask all interrupting sources, set timer to
+			  /* Mask all interrupting sources, set timer to
 				re-enable. */
-                        }
+			}
 			break;
 		}
 

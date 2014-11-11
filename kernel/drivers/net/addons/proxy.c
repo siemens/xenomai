@@ -306,7 +306,24 @@ static int rtnetproxy_accept_fastpath(struct net_device *dev, struct dst_entry *
 #endif
 
 #ifdef HAVE_NET_DEVICE_OPS
+static int rtnetproxy_open(struct net_device *dev)
+{
+    int err = try_module_get(THIS_MODULE);
+    if (err == 0)
+	return -EIDRM;
+
+    return 0;
+}
+
+static int rtnetproxy_stop(struct net_device *dev)
+{
+    module_put(THIS_MODULE);
+    return 0;
+}
+
 static const struct net_device_ops rtnetproxy_netdev_ops = {
+    .ndo_open		    = rtnetproxy_open,
+    .ndo_stop		    = rtnetproxy_stop,
     .ndo_start_xmit         = rtnetproxy_xmit,
 #ifdef  HAVE_SET_RX_MODE
     .ndo_set_rx_mode        = fake_multicast_support,

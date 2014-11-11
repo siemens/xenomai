@@ -32,14 +32,14 @@
  .   EEPROM interface for configuration
  .
  . Arguments:
- . 	io	= for the base address
+ .	io	= for the base address
  .	irq	= for the IRQ
  .	nowait	= 0 for normal wait states, 1 eliminates additional wait states
  .
  . author:
- . 	Erik Stahlman				( erik@vt.edu )
- . 	Daris A Nevil				( dnevil@snmc.com )
- .  	Pramod B Bhardwaj   			(pramod.bhardwaj@smsc.com)
+ .	Erik Stahlman				( erik@vt.edu )
+ .	Daris A Nevil				( dnevil@snmc.com )
+ .	Pramod B Bhardwaj			(pramod.bhardwaj@smsc.com)
  .
  .
  . Hardware multicast code from Peter Cammaert ( pc@denkart.be )
@@ -183,7 +183,7 @@ static unsigned int smc_portlist[] __initdata =
 /* store this information for the driver.. */
 struct smc_local {
 
- 	// these are things that the kernel wants me to keep, so users
+// these are things that the kernel wants me to keep, so users
 	// can find out semi-useless statistics of how well the card is
 	// performing
 	struct net_device_stats stats;
@@ -193,8 +193,8 @@ struct smc_local {
 	// desired memory.  Then, I'll send it out and free it.
 	struct rtskb * saved_skb;
 
- 	// This keeps track of how many packets that I have
- 	// sent out.  When an TX_EMPTY interrupt comes, I know
+	// This keeps track of how many packets that I have
+	// sent out.  When an TX_EMPTY interrupt comes, I know
 	// that all of these have been sent.
 	int	packets_waiting;
 
@@ -305,7 +305,6 @@ struct smc_local {
 
 #endif // CONFIG_SYSCTL
 
-	struct rtskb_queue skb_pool;
 	rtdm_irq_t irq_handle;
 };
 
@@ -454,13 +453,13 @@ static void smc_write_phy_register(int ioaddr, byte phyaddr, byte phyreg, word p
 #ifdef DISABLED____CONFIG_SYSCTL
 static void smc_sysctl_register(struct rtnet_device *);
 static void smc_sysctl_unregister(struct rtnet_device *);
-#endif /* CONFIG_SYSCTL */ 
+#endif /* CONFIG_SYSCTL */
 
 /*
  . Function: smc_reset( struct device* dev )
  . Purpose:
- .  	This sets the SMC91111 chip to its normal state, hopefully from whatever
- . 	mess that any other DOS driver has put it in.
+ .	This sets the SMC91111 chip to its normal state, hopefully from whatever
+ .	mess that any other DOS driver has put it in.
  .
  . Maybe I should reset more registers to defaults in here?  SOFTRST  should
  . do that for me.
@@ -475,7 +474,7 @@ static void smc_sysctl_unregister(struct rtnet_device *);
 */
 static void smc_reset( struct rtnet_device* dev )
 {
-	//struct smc_local *lp 	= (struct smc_local *)dev->priv;
+	//struct smc_local *lp	= (struct smc_local *)dev->priv;
 	int	ioaddr = dev->base_addr;
 
 	PRINTK2("%s:smc_reset\n", dev->name);
@@ -529,7 +528,7 @@ static void smc_reset( struct rtnet_device* dev )
 
 	/* Note:  It doesn't seem that waiting for the MMU busy is needed here,
 	   but this is a place where future chipsets _COULD_ break.  Be wary
- 	   of issuing another MMU command right after this */
+	   of issuing another MMU command right after this */
 
 	/* Disable all interrupts */
 	outb( 0, ioaddr + IM_REG );
@@ -545,8 +544,8 @@ static void smc_reset( struct rtnet_device* dev )
 */
 static void smc_enable( struct rtnet_device *dev )
 {
-	unsigned short ioaddr 	= dev->base_addr;
-	struct smc_local *lp 	= (struct smc_local *)dev->priv;
+	unsigned short ioaddr	= dev->base_addr;
+	struct smc_local *lp	= (struct smc_local *)dev->priv;
 
 	PRINTK2("%s:smc_enable\n", dev->name);
 
@@ -609,15 +608,15 @@ static void smc_shutdown( int ioaddr )
  .	on the floor.  This should never happen, because of TBUSY.
  . o	if the saved_skb is null, then replace it with the current packet,
  . o	See if I can sending it now.
- . o 	(NO): Enable interrupts and let the interrupt handler deal with it.
+ . o	(NO): Enable interrupts and let the interrupt handler deal with it.
  . o	(YES):Send it now.
 */
 static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * dev )
 {
-	struct smc_local *lp 	= (struct smc_local *)dev->priv;
-	unsigned short ioaddr 	= dev->base_addr;
-	word 			length;
-	unsigned short 		numPages;
+	struct smc_local *lp	= (struct smc_local *)dev->priv;
+	unsigned short ioaddr	= dev->base_addr;
+	word			length;
+	unsigned short		numPages;
 	word			time_out;
 	word			status;
 
@@ -669,9 +668,9 @@ static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * de
 	SMC_SELECT_BANK( 2 );
 	outw( MC_ALLOC | numPages, ioaddr + MMU_CMD_REG );
 	/*
- 	. Performance Hack
+	. Performance Hack
 	.
- 	. wait a short amount of time.. if I can send a packet now, I send
+	. wait a short amount of time.. if I can send a packet now, I send
 	. it now.  Otherwise, I enable an interrupt and wait for one to be
 	. available.
 	.
@@ -686,11 +685,11 @@ static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * de
 		if ( status & IM_ALLOC_INT ) {
 			/* acknowledge the interrupt */
 			outb( IM_ALLOC_INT, ioaddr + INT_REG );
-  			break;
+			break;
 		}
-   	} while ( -- time_out );
+	} while ( -- time_out );
 
-   	if ( !time_out ) {
+	if ( !time_out ) {
 #if 0
 		/* oh well, wait until the chip finds memory later */
 		SMC_ENABLE_INT( IM_ALLOC_INT );
@@ -700,10 +699,10 @@ static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * de
 		/* and when we set the interrupt bit */
 		status = inb( ioaddr + INT_REG );
 		if ( !(status & IM_ALLOC_INT) ) {
-      			PRINTK2("%s: memory allocation deferred. \n",
+			PRINTK2("%s: memory allocation deferred. \n",
 				dev->name);
 			/* it's deferred, but I'll handle it later */
-      			return 0;
+			return 0;
 			}
 
 		/* Looks like it did sneak in, so disable */
@@ -730,7 +729,7 @@ static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * de
  .	This sends the actual packet to the SMC9xxx chip.
  .
  . Algorithm:
- . 	First, see if a saved_skb is available.
+ .	First, see if a saved_skb is available.
  .		( this should NOT be called if there is no 'saved_skb'
  .	Now, find the packet number that the chip allocated
  .	Point the data pointers at it in memory
@@ -738,15 +737,15 @@ static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * de
  .	Dump the packet to chip memory
  .	Check if a last byte is needed ( odd length packet )
  .		if so, set the control flag right
- . 	Tell the card to send it
+ .	Tell the card to send it
  .	Enable the transmit interrupt, so I know if it failed
- . 	Free the kernel data if I actually sent it.
+ .	Free the kernel data if I actually sent it.
 */
 static void smc_hardware_send_packet( struct rtnet_device * dev )
 {
 	struct smc_local *lp = (struct smc_local *)dev->priv;
-	byte	 		packet_no;
-	struct rtskb * 	skb = lp->saved_skb;
+	byte			packet_no;
+	struct rtskb *	skb = lp->saved_skb;
 	word			length;
 	unsigned short		ioaddr;
 	byte			* buf;
@@ -781,7 +780,7 @@ static void smc_hardware_send_packet( struct rtnet_device * dev )
 	/* point to the beginning of the packet */
 	outw( PTR_AUTOINC , ioaddr + PTR_REG );
 
-   	PRINTK3("%s: Trying to xmit packet of length %x\n",
+	PRINTK3("%s: Trying to xmit packet of length %x\n",
 		dev->name, length);
 
 #if defined(SMC_DEBUG) && (SMC_DEBUG > 2)
@@ -790,7 +789,7 @@ static void smc_hardware_send_packet( struct rtnet_device * dev )
 #endif
 
 	/* send the packet length ( +6 for status, length and ctl byte )
- 	   and the status word ( set to zeros ) */
+	   and the status word ( set to zeros ) */
 #ifdef USE_32_BIT
 	outl(  (length +6 ) << 16 , ioaddr + DATA_REG );
 #else
@@ -803,8 +802,8 @@ static void smc_hardware_send_packet( struct rtnet_device * dev )
 	/* send the actual data
 	 . I _think_ it's faster to send the longs first, and then
 	 . mop up by sending the last word.  It depends heavily
- 	 . on alignment, at least on the 486.  Maybe it would be
- 	 . a good idea to check which is optimal?  But that could take
+	 . on alignment, at least on the 486.  Maybe it would be
+	 . a good idea to check which is optimal?  But that could take
 	 . almost as much time as is saved?
 	*/
 #ifdef USE_32_BIT
@@ -954,7 +953,7 @@ int __init smc_findirq( int ioaddr )
 	outb( IM_ALLOC_INT, ioaddr + IM_REG );
 
 	/*
- 	 . Allocate 512 bytes of memory.  Note that the chip was just
+	 . Allocate 512 bytes of memory.  Note that the chip was just
 	 . reset so all the memory is available
 	*/
 	outw( MC_ALLOC | 1, ioaddr + MMU_CMD_REG );
@@ -1006,7 +1005,7 @@ int __init smc_findirq( int ioaddr )
  .
  . Algorithm:
  .	(1) see if the high byte of BANK_SELECT is 0x33
- . 	(2) compare the ioaddr with the base register's address
+ .	(2) compare the ioaddr with the base register's address
  .	(3) see if I recognize the chip ID in the appropriate register
  .
  .---------------------------------------------------------------------
@@ -1031,12 +1030,12 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 	static unsigned version_printed = 0;
 	unsigned int	bank;
 
-        const char *version_string;
+	const char *version_string;
 
 	/*registers */
 	word	revision_register;
 	word	base_address_register;
-	word  	memory_info_register;
+	word	memory_info_register;
 	/*=> Pramod */
 	struct smc_local *lp;
 	/*<= Pramod */
@@ -1060,7 +1059,7 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 	}
 
 	/* well, we've already written once, so hopefully another time won't
- 	   hurt.  This time, I need to switch the bank register to bank 1,
+	   hurt.  This time, I need to switch the bank register to bank 1,
 	   so I can access the base address register */
 	SMC_SELECT_BANK(1);
 	base_address_register = inw( ioaddr + BASE_REG );
@@ -1101,7 +1100,7 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 	dev->base_addr = ioaddr;
 
 	/*
- 	 . Get the MAC address ( bank 1, regs 4 - 9 )
+	 . Get the MAC address ( bank 1, regs 4 - 9 )
 	*/
 	SMC_SELECT_BANK( 1 );
 	for ( i = 0; i < 6; i += 2 )
@@ -1122,8 +1121,8 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 
 	/*
 	 Now, I want to find out more about the chip.  This is sort of
- 	 redundant, but it's cleaner to have it in both, rather than having
- 	 one VERY long probe procedure.
+	 redundant, but it's cleaner to have it in both, rather than having
+	 one VERY long probe procedure.
 	*/
 	SMC_SELECT_BANK(3);
 	revision_register  = inw( ioaddr + REV_REG );
@@ -1141,7 +1140,7 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 	/*
 	 . If dev->irq is 0, then the device has to be banged on to see
 	 . what the IRQ is.
- 	 .
+	 .
 	 . This banging doesn't always detect the IRQ, for unknown reasons.
 	 . a workaround is to reset the chip and try again.
 	 .
@@ -1152,7 +1151,7 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 	 .
 	 . Specifying an IRQ is done with the assumption that the user knows
 	 . what (s)he is doing.  No checking is done!!!!
- 	 .
+	 .
 	*/
 	if ( dev->irq < 2 ) {
 		int	trials;
@@ -1206,13 +1205,6 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 	/* set the private data to zero by default */
 	memset(dev->priv, 0, sizeof(struct smc_local));
 
-	if (rtskb_pool_init(&((struct smc_local *)dev->priv)->skb_pool, 4*2) < 4*2) {
-		rtskb_pool_release(&((struct smc_local *)dev->priv)->skb_pool);
-		//kfree(dev->priv);
-		//dev->priv = NULL;
-		return -ENOMEM;
-	}
-
 	/* Fill in the fields of the device structure with ethernet values. */
 //	ether_setup(dev);
 
@@ -1220,23 +1212,23 @@ static int __init smc_probe(struct rtnet_device *dev, int ioaddr )
 
 	/* Grab the IRQ */
     retval = rtdm_irq_request(&((struct smc_local *)dev->priv)->irq_handle,
-                              dev->irq, &smc_interrupt, 0,
-                              "rt_smx91111", dev);
+			      dev->irq, &smc_interrupt, 0,
+			      "rt_smx91111", dev);
     if (retval) {
-       	  printk("%s: unable to get IRQ %d (irqval=%d).\n",
+	  printk("%s: unable to get IRQ %d (irqval=%d).\n",
 		dev->name, dev->irq, retval);
 		//kfree (dev->priv);
 		//dev->priv = NULL;
 		goto err_out;
 	}
 
-	dev->open		        = smc_open;
-	dev->stop		        = smc_close;
-	dev->hard_start_xmit   	= smc_wait_to_send_packet;
+	dev->open			= smc_open;
+	dev->stop			= smc_close;
+	dev->hard_start_xmit	= smc_wait_to_send_packet;
 	dev->get_stats			= smc_query_statistics;
 //	dev->tx_timeout			= smc_timeout;
 #ifdef	HAVE_MULTICAST
-//	dev->set_multicast_list 	= &smc_set_multicast_list;
+//	dev->set_multicast_list		= &smc_set_multicast_list;
 #endif
 
 	/* => Store the ChipRevision and ChipID, to be used in resolving the Odd-Byte issue in RevB of LAN91C111; Pramod */
@@ -1301,14 +1293,14 @@ static void print_packet( byte * buf, int length )
  */
 static int smc_open(struct rtnet_device *dev)
 {
-	struct smc_local *lp 	= (struct smc_local *)dev->priv;
+	struct smc_local *lp	= (struct smc_local *)dev->priv;
 	int	ioaddr = dev->base_addr;
 	int	i;	/* used to set hw ethernet address */
 
 	PRINTK2("%s:smc_open\n", dev->name);
 
 	/* clear out all the junk that was put here before... */
-	memset(dev->priv, 0, (size_t)&((struct smc_local *)0)->skb_pool);
+	memset(dev->priv, 0, (size_t)&((struct smc_local *)0)->irq_handle);
 
 	rtnetif_start_queue(dev);
 #ifdef MODULE
@@ -1411,8 +1403,8 @@ static void smc_timeout (struct net_device *dev)
 static inline void smc_rcv(struct rtnet_device *dev)
 {
 	struct smc_local *lp = (struct smc_local *)dev->priv;
-	int 	ioaddr = dev->base_addr;
-	int 	packet_number;
+	int	ioaddr = dev->base_addr;
+	int	packet_number;
 	word	status;
 	word	packet_length;
 	nanosecs_abs_t	time_stamp = rtdm_clock_read();
@@ -1438,8 +1430,8 @@ static inline void smc_rcv(struct rtnet_device *dev)
 	inw( ioaddr + MMU_CMD_REG ); /* min delay to avoid errors... */
 
 	/* First two words are status and packet_length */
-	status 		= inw( ioaddr + DATA_REG );
-	packet_length 	= inw( ioaddr + DATA_REG );
+	status		= inw( ioaddr + DATA_REG );
+	packet_length	= inw( ioaddr + DATA_REG );
 
 	packet_length &= 0x07ff;  /* mask off top bits */
 
@@ -1455,7 +1447,7 @@ static inline void smc_rcv(struct rtnet_device *dev)
 			lp->stats.multicast++;
 
 		// Allocate enough memory for entire receive frame, to be safe
-		skb = alloc_rtskb(packet_length, &lp->skb_pool);
+		skb = rtnetdev_alloc_rtskb(dev, packet_length);
 
 		/* Adjust for having already read the first two words */
 		packet_length -= 4;
@@ -1473,8 +1465,6 @@ static inline void smc_rcv(struct rtnet_device *dev)
 		*/
 		/* TODO: Should I use 32bit alignment here ? */
 		rtskb_reserve( skb, 2 );   /* 16 bit alignment */
-
-		skb->rtdev = dev;
 
 		/* =>
     ODD-BYTE ISSUE : The odd byte problem has been fixed in the LAN91C111 Rev B.
@@ -1568,8 +1558,8 @@ done:
 static int smc_interrupt(rtdm_irq_t *irq_handle)
 {
 	struct rtnet_device *dev = rtdm_irq_get_arg(irq_handle, struct rtnet_device);
-	int ioaddr 		= dev->base_addr;
-	struct smc_local *lp 	= (struct smc_local *)dev->priv;
+	int ioaddr		= dev->base_addr;
+	struct smc_local *lp	= (struct smc_local *)dev->priv;
 
 	byte	status;
 	word	card_stats;
@@ -1615,7 +1605,7 @@ static int smc_interrupt(rtdm_irq_t *irq_handle)
 	 * The packet reception will take some time (up to several hundred us).
 	 * Re-enable other irqs now so that no critical deadline will be missed.
 	 */
-	rtos_irq_release_lock();
+	hard_local_irq_enable();
 
 	/* set a timeout value, so I don't stay here forever */
 	timeout = 4;
@@ -1721,7 +1711,7 @@ static int smc_interrupt(rtdm_irq_t *irq_handle)
 	if (old_packet_cnt != lp->stats.rx_packets)
 		rt_mark_stack_mgr(dev);
 
-	rtos_irq_reacquire_lock();
+	hard_local_irq_disable();
 
 	//dev->interrupt = 0;
 	PRINTK3("%s: Interrupt done\n", dev->name);
@@ -1932,7 +1922,7 @@ int __init init_module(void)
 		printk(KERN_WARNING
 		CARDNAME": You shouldn't use auto-probing with insmod!\n" );
 
-	devSMC91111 = rt_alloc_etherdev(sizeof(struct smc_local));
+	devSMC91111 = rt_alloc_etherdev(sizeof(struct smc_local), 4*2);
 	if (devSMC91111 == NULL) {
 		printk (KERN_ERR "init_ethernet failed\n");
 		return -ENODEV;
@@ -1954,7 +1944,6 @@ int __init init_module(void)
 		release_region(devSMC91111->base_addr, SMC_IO_EXTENT);
 
 		rtdm_irq_free(&((struct smc_local *)devSMC91111)->irq_handle);
-		rtskb_pool_release(&((struct smc_local *)devSMC91111->priv)->skb_pool);
 
 		rtdev_free(devSMC91111);
 
@@ -1977,7 +1966,6 @@ void __exit cleanup_module(void)
 
 	if (devSMC91111->priv) {
 		rtdm_irq_free(&((struct smc_local *)devSMC91111->priv)->irq_handle);
-		rtskb_pool_release(&((struct smc_local *)devSMC91111->priv)->skb_pool);
 	}
 
 	rtdev_free(devSMC91111);
@@ -2492,7 +2480,7 @@ static int smc_sysctl_handler(ctl_table *ctl, int write, struct file * filp,
 			smc_modify_reg(2, ioaddr, PTR_REG, val);
 			break;
 
-		case CTL_SMC_REG_DR:	// Data 
+		case CTL_SMC_REG_DR:	// Data
 			smc_modify_reg(2, ioaddr, DATA_REG, val);
 			break;
 
@@ -2591,7 +2579,7 @@ static int smc_sysctl_handler(ctl_table *ctl, int write, struct file * filp,
 
 	} // end if
 
-        return ret;
+	return ret;
 }
 
 /*------------------------------------------------------------
@@ -3734,8 +3722,8 @@ static void smc_phy_configure(struct rtnet_device* dev)
  ************************************************************************/
 static void smc_phy_interrupt(struct net_device* dev)
 {
-	int ioaddr 		= dev->base_addr;
-	struct smc_local *lp 	= (struct smc_local *)dev->priv;
+	int ioaddr		= dev->base_addr;
+	struct smc_local *lp	= (struct smc_local *)dev->priv;
 	byte phyaddr = lp->phyaddr;
 	word phy18;
 

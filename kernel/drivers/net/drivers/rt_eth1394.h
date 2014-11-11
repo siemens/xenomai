@@ -1,8 +1,8 @@
 /*
  * eth1394.h -- Driver for Ethernet emulation over FireWire, (adapted from Linux1394)
- * 		working under RTnet.
+ *		working under RTnet.
  *
- * Copyright (C) 2005 	Zhang Yuchen <yuchen623@gmail.com>
+ * Copyright (C) 2005	Zhang Yuchen <yuchen623@gmail.com>
  *
  * Mainly based on work by Emanuel Pirker and Andreas E. Bombe
  *
@@ -100,7 +100,7 @@ struct eth1394_uf_hdr {
 struct eth1394_arp {
 	u16 hw_type;		/* 0x0018	*/
 	u16 proto_type;		/* 0x0080	*/
-	u8 hw_addr_len;		/* 2 		*/
+	u8 hw_addr_len;		/* 2		*/
 	u8 ip_addr_len;		/* 4		*/
 	u16 opcode;		/* ARP Opcode: 1 for req, 2 for resp	*/
 	/* Above is exactly the same format as struct arphdr */
@@ -222,11 +222,10 @@ struct eth1394_priv {
 	struct hpsb_iso	*iso;
 	struct pdg_list pdg[ALL_NODES]; /* partial RX datagram lists     */
 	int dgl[NODE_SET];              /* Outgoing datagram label per node */
-	
+
 	/* The addresses of a Tx/Rx-in-place packets/buffers. */
 	struct rtskb *tx_skbuff[TX_RING_SIZE];
 	struct rtskb *rx_skbuff[RX_RING_SIZE];
-	struct rtskb_queue skb_pool;
 	struct packet_task ptask_list[20]; //the list of pre-allocated ptask structure
 };
 

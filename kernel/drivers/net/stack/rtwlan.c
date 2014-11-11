@@ -1,7 +1,7 @@
 /* rtwlan.c
  *
  * rtwlan protocol stack
- * Copyright (c) 2006, Daniel Gregorek <dxg@gmx.de> 
+ * Copyright (c) 2006, Daniel Gregorek <dxg@gmx.de>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,8 +47,8 @@ int rtwlan_tx(struct rtskb *rtskb, struct rtnet_device *rtnet_dev)
 {
     struct rtwlan_device * rtwlan_dev = rtnetdev_priv(rtnet_dev);
     struct ieee80211_hdr_3addr header = {	/* Ensure zero initialized */
-        .duration_id = 0,
-        .seq_ctl = 0
+	.duration_id = 0,
+	.seq_ctl = 0
     };
     int ret;
     u8 dest[ETH_ALEN], src[ETH_ALEN];
@@ -58,10 +58,10 @@ int rtwlan_tx(struct rtskb *rtskb, struct rtnet_device *rtnet_dev)
     memcpy(src, rtskb->data + ETH_ALEN, ETH_ALEN);
 
     if(rtwlan_dev->mode == RTWLAN_TXMODE_MCAST) {
-        memcpy(dest, rtnet_dev->dev_addr, ETH_ALEN);
-        dest[0] |= 0x01;
+	memcpy(dest, rtnet_dev->dev_addr, ETH_ALEN);
+	dest[0] |= 0x01;
     } else {
-        memcpy(dest, rtskb->data, ETH_ALEN);        
+	memcpy(dest, rtskb->data, ETH_ALEN);
     }
 
     /*
@@ -95,15 +95,16 @@ EXPORT_SYMBOL_GPL(rtwlan_tx);
  * A 32-byte alignment is enforced for the private data area.
  */
 
-struct rtnet_device * rtwlan_alloc_dev(int sizeof_priv)
+struct rtnet_device *rtwlan_alloc_dev(unsigned sizeof_priv, unsigned rx_pool_size)
 {
     struct rtnet_device *rtnet_dev;
 
     RTWLAN_DEBUG("Start.\n");
 
-    rtnet_dev = rt_alloc_etherdev(sizeof(struct rtwlan_device) + sizeof_priv);
+    rtnet_dev = rt_alloc_etherdev(sizeof(struct rtwlan_device) + sizeof_priv,
+			    rx_pool_size);
     if (!rtnet_dev)
-        return NULL;
+	return NULL;
 
     rtnet_dev->hard_start_xmit = rtwlan_tx;
 
@@ -116,43 +117,43 @@ EXPORT_SYMBOL_GPL(rtwlan_alloc_dev);
 
 
 int rtwlan_ioctl(struct rtnet_device * rtdev,
-                 unsigned int request,
-                 unsigned long arg)
+		 unsigned int request,
+		 unsigned long arg)
 {
     struct rtwlan_cmd cmd;
     int ret=0;
 
     if (copy_from_user(&cmd, (void *)arg, sizeof(cmd)) != 0)
-        return -EFAULT;
+	return -EFAULT;
 
     switch(request) {
     case IOC_RTWLAN_IFINFO:
-        if (cmd.args.info.ifindex > 0)
-            rtdev = rtdev_get_by_index(cmd.args.info.ifindex);
-        else
-            rtdev = rtdev_get_by_name(cmd.head.if_name);
-        if (rtdev == NULL)
-            return -ENODEV;
+	if (cmd.args.info.ifindex > 0)
+	    rtdev = rtdev_get_by_index(cmd.args.info.ifindex);
+	else
+	    rtdev = rtdev_get_by_name(cmd.head.if_name);
+	if (rtdev == NULL)
+	    return -ENODEV;
 
-        if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
-            rtdev_dereference(rtdev);
-            return -ERESTARTSYS;
-        }
+	if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
+	    rtdev_dereference(rtdev);
+	    return -ERESTARTSYS;
+	}
 
-        if (rtdev->do_ioctl)
-            ret = rtdev->do_ioctl(rtdev, request, &cmd);
-        else 
-            ret = -ENORTWLANDEV;
+	if (rtdev->do_ioctl)
+	    ret = rtdev->do_ioctl(rtdev, request, &cmd);
+	else
+	    ret = -ENORTWLANDEV;
 
-        memcpy(cmd.head.if_name, rtdev->name, IFNAMSIZ);
-        cmd.args.info.ifindex      = rtdev->ifindex;
-        cmd.args.info.flags        = rtdev->flags;
+	memcpy(cmd.head.if_name, rtdev->name, IFNAMSIZ);
+	cmd.args.info.ifindex      = rtdev->ifindex;
+	cmd.args.info.flags        = rtdev->flags;
 
-        mutex_unlock(&rtdev->nrt_lock);
+	mutex_unlock(&rtdev->nrt_lock);
 
-        rtdev_dereference(rtdev);
+	rtdev_dereference(rtdev);
 
-        break;
+	break;
 
     case IOC_RTWLAN_TXMODE:
     case IOC_RTWLAN_BITRATE:
@@ -167,24 +168,24 @@ int rtwlan_ioctl(struct rtnet_device * rtdev,
     case IOC_RTWLAN_BBPWRITE:
     case IOC_RTWLAN_BBPREAD:
     case IOC_RTWLAN_BBPSENS:
-        if (mutex_lock_interruptible(&rtdev->nrt_lock))
-            return -ERESTARTSYS;
+	if (mutex_lock_interruptible(&rtdev->nrt_lock))
+	    return -ERESTARTSYS;
 
-            if (rtdev->do_ioctl)
-                ret = rtdev->do_ioctl(rtdev, request, &cmd);
-            else
-                ret = -ENORTWLANDEV;
+	    if (rtdev->do_ioctl)
+		ret = rtdev->do_ioctl(rtdev, request, &cmd);
+	    else
+		ret = -ENORTWLANDEV;
 
-            mutex_unlock(&rtdev->nrt_lock);
+	    mutex_unlock(&rtdev->nrt_lock);
 
-            break;
+	    break;
 
     default:
-        ret = -ENOTTY;
+	ret = -ENOTTY;
     }
 
     if (copy_to_user((void *)arg, &cmd, sizeof(cmd)) != 0)
-        return -EFAULT;
+	return -EFAULT;
 
     return ret;
 }
@@ -199,7 +200,7 @@ struct rtnet_ioctls rtnet_wlan_ioctls = {
 int __init rtwlan_init(void)
 {
     if (rtnet_register_ioctls(&rtnet_wlan_ioctls))
-        rtdm_printk(KERN_ERR "Failed to register rtnet_wlan_ioctl!\n");
+	rtdm_printk(KERN_ERR "Failed to register rtnet_wlan_ioctl!\n");
 
     return 0;
 }

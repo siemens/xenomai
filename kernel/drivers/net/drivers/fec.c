@@ -294,7 +294,6 @@ struct fec_enet_private {
 	struct device *dev;
 	rtdm_irq_t irq_handle[3];
 	rtdm_nrtsig_t mdio_done_sig;
-	struct rtskb_queue skb_pool;
 	struct net_device_stats stats;
 };
 
@@ -761,8 +760,7 @@ fec_enet_rx(struct rtnet_device *ndev, int *packets, nanosecs_abs_t *time_stamp)
 		 * include that when passing upstream as it messes up
 		 * bridging applications.
 		 */
-		skb = dev_alloc_rtskb(pkt_len - 4 + NET_IP_ALIGN,
-				      &fep->skb_pool); /* RTnet */
+		skb = rtnetdev_alloc_rtskb(ndev, pkt_len - 4 + NET_IP_ALIGN); /* RTnet */
 
 		if (unlikely(!skb)) {
 			printk("%s: Memory squeeze, dropping packet.\n",
@@ -773,7 +771,6 @@ fec_enet_rx(struct rtnet_device *ndev, int *packets, nanosecs_abs_t *time_stamp)
 			rtskb_put(skb, pkt_len - 4);	/* Make room */
 			memcpy(skb->data, data, pkt_len - 4);
 			skb->protocol = rt_eth_type_trans(skb, ndev);
-			skb->rtdev = ndev;
 			skb->time_stamp = *time_stamp;
 			rtnetif_rx(skb);
 			(*packets)++; /* RTnet */
@@ -1284,8 +1281,7 @@ static int fec_enet_alloc_buffers(struct rtnet_device *ndev)
 
 	bdp = fep->rx_bd_base;
 	for (i = 0; i < RX_RING_SIZE; i++) {
-		skb = dev_alloc_rtskb(FEC_ENET_RX_FRSIZE,
-				      &fep->skb_pool); /* RTnet */
+		skb = rtnetdev_alloc_rtskb(netdev, FEC_ENET_RX_FRSIZE); /* RTnet */
 		if (!skb) {
 			fec_enet_free_buffers(ndev);
 			return -ENOMEM;
@@ -1653,7 +1649,7 @@ static int fec_probe(struct platform_device *pdev)
 		return -EBUSY;
 
 	/* Init network device */
-	ndev = rt_alloc_etherdev(sizeof(struct fec_enet_private));
+	ndev = rt_alloc_etherdev(sizeof(struct fec_enet_private), rx_pool_size);
 	if (!ndev) {
 		ret = -ENOMEM;
 		goto failed_alloc_etherdev;
@@ -1762,13 +1758,6 @@ static int fec_probe(struct platform_device *pdev)
 	/* Carrier starts down, phylib will bring it up */
 	rtnetif_carrier_off(ndev);
 
-	/* RTnet: setup the RTnet socket buffer */
-	if (rtskb_pool_init(&fep->skb_pool, rx_pool_size) < rx_pool_size) {
-		printk("[RTNet] Not enough memory\n");
-		ret = -ENOMEM;
-		goto failed_init;
-	}
-
 	/* RTnet: register the network interface */
 	ret = rt_register_rtnetdev(ndev);
 	if (ret)
@@ -1777,7 +1766,6 @@ static int fec_probe(struct platform_device *pdev)
 	return 0;
 
 failed_register:
-	rtskb_pool_release(&fep->skb_pool);
 	fec_enet_mii_remove(fep);
 failed_mii_init:
 failed_init:
@@ -1836,7 +1824,6 @@ static int fec_drv_remove(struct platform_device *pdev)
 
 	/* RTnet */
 	free_netdev(fep->netdev);
-	rtskb_pool_release(&fep->skb_pool);
 	rtdev_free(ndev);
 
 	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);

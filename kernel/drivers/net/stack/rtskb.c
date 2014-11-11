@@ -327,15 +327,19 @@ EXPORT_SYMBOL_GPL(rtskb_pool_init);
 
 static int rtskb_module_pool_trylock(void *cookie)
 {
-    return try_module_get(cookie);
+    int err = 1;
+    if (cookie)
+	err = try_module_get(cookie);
+    return err;
 }
 
 static void rtskb_module_pool_unlock(void *cookie)
 {
-    module_put(cookie);
+    if (cookie)
+	module_put(cookie);
 }
 
-const struct rtskb_pool_lock_ops rtskb_module_lock_ops = {
+static const struct rtskb_pool_lock_ops rtskb_module_lock_ops = {
     .trylock = rtskb_module_pool_trylock,
     .unlock = rtskb_module_pool_unlock,
 };

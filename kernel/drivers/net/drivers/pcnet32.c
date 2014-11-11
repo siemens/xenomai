@@ -201,7 +201,7 @@ static int full_duplex[MAX_UNITS];
  * v1.22:  changed pci scanning code to make PPC people happy
  *	   fixed switching to 32bit mode in pcnet32_open() (thanks
  *	   to Michael Richard <mcr@solidum.com> for noticing this one)
- *	   added sub vendor/device id matching (thanks again to 
+ *	   added sub vendor/device id matching (thanks again to
  *	   Michael Richard <mcr@solidum.com>)
  *	   added chip id for 79c973/975 (thanks to Zach Brown <zab@zabbo.net>)
  * v1.23   fixed small bug, when manual selecting MII speed/duplex
@@ -218,9 +218,9 @@ static int full_duplex[MAX_UNITS];
  *	   Copyright (C) 2000 MIPS Technologies, Inc.  All rights reserved.
  * v1.26p  Fix oops on rmmod+insmod; plug i/o resource leak - Paul Gortmaker
  * v1.27   improved CSR/PROM address detection, lots of cleanups,
- * 	   new pcnet32vlb module option, HP-PARISC support,
- * 	   added module parameter descriptions,
- * 	   initial ethtool support - Helge Deller <deller@gmx.de>
+ *	   new pcnet32vlb module option, HP-PARISC support,
+ *	   added module parameter descriptions,
+ *	   initial ethtool support - Helge Deller <deller@gmx.de>
  * v1.27a  Sun Feb 10 2002 Go Taniguchi <go@turbolinux.co.jp>
  *	   use alloc_etherdev and register_netdev
  *	   fix pci probe not increment cards_found
@@ -311,7 +311,7 @@ struct pcnet32_private {
     struct pcnet32_rx_head    rx_ring[RX_RING_SIZE];
     struct pcnet32_tx_head    tx_ring[TX_RING_SIZE];
     struct pcnet32_init_block init_block;
-    dma_addr_t 		dma_addr;	/* DMA address of beginning of this object,
+    dma_addr_t		dma_addr;	/* DMA address of beginning of this object,
 					   returned by pci_alloc_consistent */
     struct pci_dev	*pci_dev;	/* Pointer to the associated pci device structure */
     const char		*name;
@@ -319,7 +319,6 @@ struct pcnet32_private {
 /*** RTnet ***/
     struct rtskb *tx_skbuff[TX_RING_SIZE];
     struct rtskb *rx_skbuff[RX_RING_SIZE];
-    struct rtskb_queue skb_pool;
 /*** RTnet ***/
     dma_addr_t		tx_dma_addr[TX_RING_SIZE];
     dma_addr_t		rx_dma_addr[RX_RING_SIZE];
@@ -510,8 +509,8 @@ static int pcnet32_probe_pci(struct pci_dev *pdev, const struct pci_device_id *e
 
     ioaddr = pci_resource_start (pdev, 0);
     if (!ioaddr) {
-        printk (KERN_ERR PFX "card has no PCI IO resources, aborting\n");
-        return -ENODEV;
+	printk (KERN_ERR PFX "card has no PCI IO resources, aborting\n");
+	return -ENODEV;
     }
 
     if (!pci_dma_supported(pdev, PCNET32_DMA_MASK)) {
@@ -543,7 +542,7 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
     // *** RTnet ***
     cards_found++;
     if (cards[cards_found] == 0)
-        return -ENODEV;
+	return -ENODEV;
     // *** RTnet ***
 
     /* reset the chip */
@@ -645,9 +644,9 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
     }
 
 /*** RTnet ***/
-    dev = rt_alloc_etherdev(0);
+    dev = rt_alloc_etherdev(0, RX_RING_SIZE*2);
     if (dev == NULL)
-        return -ENOMEM;
+	return -ENOMEM;
     rtdev_alloc_name(dev, "rteth%d");
     rt_rtdev_connect(dev, &RTDEV_manager);
     RTNET_SET_MODULE_OWNER(dev);
@@ -812,17 +811,6 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
 	}
     }
 
-/*** RTnet ***/
-    if (rtskb_pool_init(&lp->skb_pool, RX_RING_SIZE*2) < RX_RING_SIZE*2) {
-        rtskb_pool_release(&lp->skb_pool);
-        pci_free_consistent(lp->pci_dev, sizeof(*lp), lp, lp->dma_addr);
-        release_region(ioaddr, PCNET32_TOTAL_SIZE);
-        rtdev_free(dev);
-        return -ENOMEM;
-    }
-/*** RTnet ***/
-
-
     /* The PCNET32-specific entries in the device structure. */
     dev->open = &pcnet32_open;
     dev->hard_start_xmit = &pcnet32_start_xmit;
@@ -842,11 +830,10 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
 /*** RTnet ***/
     if ((i=rt_register_rtnetdev(dev)))
     {
-        rtskb_pool_release(&lp->skb_pool);
-        pci_free_consistent(lp->pci_dev, sizeof(*lp), lp, lp->dma_addr);
-        release_region(ioaddr, PCNET32_TOTAL_SIZE);
-        rtdev_free(dev);
-        return i;
+	pci_free_consistent(lp->pci_dev, sizeof(*lp), lp, lp->dma_addr);
+	release_region(ioaddr, PCNET32_TOTAL_SIZE);
+	rtdev_free(dev);
+	return i;
     }
 /*** RTnet ***/
 
@@ -865,14 +852,14 @@ pcnet32_open(struct rtnet_device *dev) /*** RTnet ***/
 
 /*** RTnet ***/
     if (dev->irq == 0)
-        return -EAGAIN;
+	return -EAGAIN;
 
     rt_stack_connect(dev, &STACK_manager);
 
     i = rtdm_irq_request(&lp->irq_handle, dev->irq, pcnet32_interrupt,
-                         RTDM_IRQTYPE_SHARED, "rt_pcnet32", dev);
+			 RTDM_IRQTYPE_SHARED, "rt_pcnet32", dev);
     if (i)
-        return i;
+	return i;
 /*** RTnet ***/
 
     /* Check for a valid station address */
@@ -1006,10 +993,10 @@ pcnet32_purge_tx_ring(struct net_device *dev)
 
     for (i = 0; i < TX_RING_SIZE; i++) {
 	if (lp->tx_skbuff[i]) {
-            pci_unmap_single(lp->pci_dev, lp->tx_dma_addr[i], lp->tx_skbuff[i]->len, PCI_DMA_TODEVICE);
+	    pci_unmap_single(lp->pci_dev, lp->tx_dma_addr[i], lp->tx_skbuff[i]->len, PCI_DMA_TODEVICE);
 	    dev_kfree_skb(lp->tx_skbuff[i]);
 	    lp->tx_skbuff[i] = NULL;
-            lp->tx_dma_addr[i] = 0;
+	    lp->tx_dma_addr[i] = 0;
 	}
     }
 }
@@ -1028,17 +1015,17 @@ pcnet32_init_ring(struct rtnet_device *dev) /*** RTnet ***/
     lp->dirty_rx = lp->dirty_tx = 0;
 
     for (i = 0; i < RX_RING_SIZE; i++) {
-        struct rtskb *rx_skbuff = lp->rx_skbuff[i]; /*** RTnet ***/
+	struct rtskb *rx_skbuff = lp->rx_skbuff[i]; /*** RTnet ***/
 	if (rx_skbuff == NULL) {
-	    if (!(rx_skbuff = lp->rx_skbuff[i] = dev_alloc_rtskb (PKT_BUF_SZ, &lp->skb_pool))) { /*** RTnet ***/
+		if (!(rx_skbuff = lp->rx_skbuff[i] = rtnetdev_alloc_rtskb (dev, PKT_BUF_SZ))) { /*** RTnet ***/
 		/* there is not much, we can do at this point */
-		printk(KERN_ERR "%s: pcnet32_init_ring dev_alloc_rtskb failed.\n",dev->name);
+		printk(KERN_ERR "%s: pcnet32_init_ring rtnetdev_alloc_rtskb failed.\n",dev->name);
 		return -1;
 	    }
 	    rtskb_reserve (rx_skbuff, 2); /*** RTnet ***/
 	}
-        lp->rx_dma_addr[i] = pci_map_single(lp->pci_dev, rx_skbuff->tail,
-                                            rx_skbuff->len, PCI_DMA_FROMDEVICE);
+	lp->rx_dma_addr[i] = pci_map_single(lp->pci_dev, rx_skbuff->tail,
+					    rx_skbuff->len, PCI_DMA_FROMDEVICE);
 	lp->rx_ring[i].base = (u32)le32_to_cpu(lp->rx_dma_addr[i]);
 	lp->rx_ring[i].buf_length = le16_to_cpu(-PKT_BUF_SZ);
 	lp->rx_ring[i].status = le16_to_cpu(0x8000);
@@ -1048,7 +1035,7 @@ pcnet32_init_ring(struct rtnet_device *dev) /*** RTnet ***/
     for (i = 0; i < TX_RING_SIZE; i++) {
 	lp->tx_ring[i].base = 0;
 	lp->tx_ring[i].status = 0;
-        lp->tx_dma_addr[i] = 0;
+	lp->tx_dma_addr[i] = 0;
     }
 
     lp->init_block.tlen_rlen = le16_to_cpu(TX_RING_LEN_BITS | RX_RING_LEN_BITS);
@@ -1169,13 +1156,13 @@ pcnet32_start_xmit(struct rtskb *skb, struct rtnet_device *dev) /*** RTnet ***/
 
     lp->tx_skbuff[entry] = skb;
     lp->tx_dma_addr[entry] = pci_map_single(lp->pci_dev,
-        skb->data, skb->len, PCI_DMA_TODEVICE);
+	skb->data, skb->len, PCI_DMA_TODEVICE);
     lp->tx_ring[entry].base = (u32)le32_to_cpu(lp->tx_dma_addr[entry]);
 
 /*** RTnet ***/
     /* get and patch time stamp just before the transmission */
     if (skb->xmit_stamp)
-        *skb->xmit_stamp = cpu_to_be64(rtdm_clock_read() + *skb->xmit_stamp);
+	*skb->xmit_stamp = cpu_to_be64(rtdm_clock_read() + *skb->xmit_stamp);
 /*** RTnet ***/
 
     wmb();
@@ -1206,7 +1193,7 @@ static int pcnet32_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
 {
     nanosecs_abs_t time_stamp = rtdm_clock_read(); /*** RTnet ***/
     struct rtnet_device *dev =
-        rtdm_irq_get_arg(irq_handle, struct rtnet_device); /*** RTnet ***/
+	rtdm_irq_get_arg(irq_handle, struct rtnet_device); /*** RTnet ***/
     struct pcnet32_private *lp;
     unsigned long ioaddr;
     u16 csr0,rap;
@@ -1293,11 +1280,11 @@ static int pcnet32_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
 
 		/* We must free the original skb */
 		if (lp->tx_skbuff[entry]) {
-                    pci_unmap_single(lp->pci_dev, lp->tx_dma_addr[entry],
+		    pci_unmap_single(lp->pci_dev, lp->tx_dma_addr[entry],
 			lp->tx_skbuff[entry]->len, PCI_DMA_TODEVICE);
 		    dev_kfree_rtskb(lp->tx_skbuff[entry]); /*** RTnet ***/
 		    lp->tx_skbuff[entry] = 0;
-                    lp->tx_dma_addr[entry] = 0;
+		    lp->tx_dma_addr[entry] = 0;
 		}
 		dirty_tx++;
 	    }
@@ -1362,7 +1349,7 @@ static int pcnet32_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
     rtdm_lock_put(&lp->lock);
 
     if (old_packet_cnt != lp->stats.rx_packets)
-        rt_mark_stack_mgr(dev);
+	rt_mark_stack_mgr(dev);
 
     return ret;
 /*** RTnet ***/
@@ -1407,14 +1394,13 @@ pcnet32_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /*** RTnet ***/
 		/*if (pkt_len > rx_copybreak)*/ {
 		    struct rtskb *newskb;
 
-		    if ((newskb = dev_alloc_rtskb (PKT_BUF_SZ, &lp->skb_pool))) {
+		    if ((newskb = rtnetdev_alloc_rtskb (dev, PKT_BUF_SZ))) {
 			rtskb_reserve (newskb, 2);
 			skb = lp->rx_skbuff[entry];
 			pci_unmap_single(lp->pci_dev, lp->rx_dma_addr[entry], skb->len, PCI_DMA_FROMDEVICE);
 			rtskb_put (skb, pkt_len);
 			lp->rx_skbuff[entry] = newskb;
-			newskb->rtdev = dev; /*** RTnet ***/
-                        lp->rx_dma_addr[entry] =
+			lp->rx_dma_addr[entry] =
 				pci_map_single(lp->pci_dev, newskb->tail,
 					newskb->len, PCI_DMA_FROMDEVICE);
 			lp->rx_ring[entry].base = le32_to_cpu(lp->rx_dma_addr[entry]);
@@ -1427,7 +1413,7 @@ pcnet32_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /*** RTnet ***/
 /*** RTnet ***/
 
 		if (skb == NULL) {
-                    int i;
+		    int i;
 		    rtdm_printk(KERN_ERR "%s: Memory squeeze, deferring packet.\n", dev->name);
 		    for (i = 0; i < RX_RING_SIZE; i++)
 			if ((short)le16_to_cpu(lp->rx_ring[(entry+i) & RX_RING_MOD_MASK].status) < 0)
@@ -1440,7 +1426,6 @@ pcnet32_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /*** RTnet ***/
 		    }
 		    break;
 		}
-		skb->rtdev = dev; /*** RTnet ***/
 /*** RTnet ***/
 #if 0
 		if (!rx_in_place) {
@@ -1498,7 +1483,7 @@ pcnet32_close(struct rtnet_device *dev) /*** RTnet ***/
 
 /*** RTnet ***/
     if ( (i=rtdm_irq_free(&lp->irq_handle))<0 )
-        return i;
+	return i;
 
     rt_stack_disconnect(dev);
 /*** RTnet ***/
@@ -1507,20 +1492,20 @@ pcnet32_close(struct rtnet_device *dev) /*** RTnet ***/
     for (i = 0; i < RX_RING_SIZE; i++) {
 	lp->rx_ring[i].status = 0;
 	if (lp->rx_skbuff[i]) {
-            pci_unmap_single(lp->pci_dev, lp->rx_dma_addr[i], lp->rx_skbuff[i]->len, PCI_DMA_FROMDEVICE);
+	    pci_unmap_single(lp->pci_dev, lp->rx_dma_addr[i], lp->rx_skbuff[i]->len, PCI_DMA_FROMDEVICE);
 	    dev_kfree_rtskb(lp->rx_skbuff[i]); /*** RTnet ***/
-        }
+	}
 	lp->rx_skbuff[i] = NULL;
-        lp->rx_dma_addr[i] = 0;
+	lp->rx_dma_addr[i] = 0;
     }
 
     for (i = 0; i < TX_RING_SIZE; i++) {
 	if (lp->tx_skbuff[i]) {
-            pci_unmap_single(lp->pci_dev, lp->tx_dma_addr[i], lp->tx_skbuff[i]->len, PCI_DMA_TODEVICE);
+	    pci_unmap_single(lp->pci_dev, lp->tx_dma_addr[i], lp->tx_skbuff[i]->len, PCI_DMA_TODEVICE);
 	    dev_kfree_rtskb(lp->tx_skbuff[i]); /*** RTnet ***/
-        }
+	}
 	lp->tx_skbuff[i] = NULL;
-        lp->tx_dma_addr[i] = 0;
+	lp->tx_dma_addr[i] = 0;
     }
 
     RTNET_MOD_DEC_USE_COUNT;
@@ -1838,7 +1823,6 @@ static void __exit pcnet32_cleanup_module(void)
 	release_region(pcnet32_dev->base_addr, PCNET32_TOTAL_SIZE);
 	pci_free_consistent(lp->pci_dev, sizeof(*lp), lp, lp->dma_addr);
 /*** RTnet ***/
-	rtskb_pool_release(&lp->skb_pool);
 	rtdev_free(pcnet32_dev);
 /*** RTnet ***/
 	pcnet32_dev = next_dev;
@@ -1850,11 +1834,3 @@ static void __exit pcnet32_cleanup_module(void)
 
 module_init(pcnet32_init_module);
 module_exit(pcnet32_cleanup_module);
-
-/*
- * Local variables:
- *  compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c pcnet32.c"
- *  c-indent-level: 4
- *  tab-width: 8
- * End:
- */

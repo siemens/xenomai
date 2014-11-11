@@ -190,25 +190,25 @@ static inline int ieee80211_get_hdrlen(u16 fc)
     u16 stype = WLAN_FC_GET_STYPE(fc);
 
     switch (WLAN_FC_GET_TYPE(fc)) {
-        case IEEE80211_FTYPE_DATA:
-            if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
-                hdrlen = IEEE80211_4ADDR_LEN;
-            if (stype & IEEE80211_STYPE_QOS_DATA)
-                hdrlen += 2;
-            break;
+	case IEEE80211_FTYPE_DATA:
+	    if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
+		hdrlen = IEEE80211_4ADDR_LEN;
+	    if (stype & IEEE80211_STYPE_QOS_DATA)
+		hdrlen += 2;
+	    break;
 
-        case IEEE80211_FTYPE_CTL:
-            switch (WLAN_FC_GET_STYPE(fc)) {
-                case IEEE80211_STYPE_CTS:
-                case IEEE80211_STYPE_ACK:
-                    hdrlen = IEEE80211_1ADDR_LEN;
-                    break;
+	case IEEE80211_FTYPE_CTL:
+	    switch (WLAN_FC_GET_STYPE(fc)) {
+		case IEEE80211_STYPE_CTS:
+		case IEEE80211_STYPE_ACK:
+		    hdrlen = IEEE80211_1ADDR_LEN;
+		    break;
 
-                default:
-                    hdrlen = IEEE80211_2ADDR_LEN;
-                    break;
-            }
-            break;
+		default:
+		    hdrlen = IEEE80211_2ADDR_LEN;
+		    break;
+	    }
+	    break;
     }
 
     return hdrlen;
@@ -218,15 +218,15 @@ static inline int ieee80211_get_hdrlen(u16 fc)
 static inline int ieee80211_is_ofdm_rate(u8 rate)
 {
     switch (rate & ~IEEE80211_BASIC_RATE_MASK) {
-        case IEEE80211_OFDM_RATE_6MB:
-        case IEEE80211_OFDM_RATE_9MB:
-        case IEEE80211_OFDM_RATE_12MB:
-        case IEEE80211_OFDM_RATE_18MB:
-        case IEEE80211_OFDM_RATE_24MB:
-        case IEEE80211_OFDM_RATE_36MB:
-        case IEEE80211_OFDM_RATE_48MB:
-        case IEEE80211_OFDM_RATE_54MB:
-            return 1;
+	case IEEE80211_OFDM_RATE_6MB:
+	case IEEE80211_OFDM_RATE_9MB:
+	case IEEE80211_OFDM_RATE_12MB:
+	case IEEE80211_OFDM_RATE_18MB:
+	case IEEE80211_OFDM_RATE_24MB:
+	case IEEE80211_OFDM_RATE_36MB:
+	case IEEE80211_OFDM_RATE_48MB:
+	case IEEE80211_OFDM_RATE_54MB:
+	    return 1;
     }
     return 0;
 }
@@ -234,11 +234,11 @@ static inline int ieee80211_is_ofdm_rate(u8 rate)
 static inline int ieee80211_is_dsss_rate(u8 rate)
 {
     switch (rate & ~IEEE80211_BASIC_RATE_MASK) {
-        case IEEE80211_DSSS_RATE_1MB:
-        case IEEE80211_DSSS_RATE_2MB:
-        case IEEE80211_DSSS_RATE_5MB:
-        case IEEE80211_DSSS_RATE_11MB:
-            return 1;
+	case IEEE80211_DSSS_RATE_1MB:
+	case IEEE80211_DSSS_RATE_2MB:
+	case IEEE80211_DSSS_RATE_5MB:
+	case IEEE80211_DSSS_RATE_11MB:
+	    return 1;
     }
     return 0;
 }
@@ -249,7 +249,7 @@ static inline void * rtwlan_priv(struct rtwlan_device *rtwlan_dev)
     return (void *)rtwlan_dev + sizeof(struct rtwlan_device);
 }
 
-struct rtnet_device * rtwlan_alloc_dev(int sizeof_priv);
+struct rtnet_device * rtwlan_alloc_dev(unsigned sizeof_priv, unsigned rx_pool_size);
 int rtwlan_rx(struct rtskb * rtskb, struct rtnet_device * rtnet_dev);
 int rtwlan_tx(struct rtskb * rtskb, struct rtnet_device * rtnet_dev);
 

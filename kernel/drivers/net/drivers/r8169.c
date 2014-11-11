@@ -17,10 +17,10 @@ RTL8169_VERSION "1.1"	<2002/10/4>
 RTL8169_VERSION "1.2"	<2003/6/17>
 	Update driver module name.
 	Modify ISR.
-        Add chip mcfg.
+	Add chip mcfg.
 
 RTL8169_VERSION "1.3"	<2003/6/20>
-        Add chip pcfg.
+	Add chip pcfg.
 	Add priv->phy_timer_t, rtl8169_phy_timer_t_handler()
 	Add rtl8169_hw_PHY_config()
 	Add rtl8169_hw_PHY_reset()
@@ -97,10 +97,10 @@ RTL8169_VERSION "2.2"	<2004/08/09>
 
 #ifdef RTL8169_DEBUG
 	#define assert(expr) \
-        	if(!(expr)) { printk( "Assertion failed! %s,%s,%s,line=%d\n", #expr,__FILE__,__FUNCTION__,__LINE__); }
+		if(!(expr)) { printk( "Assertion failed! %s,%s,%s,line=%d\n", #expr,__FILE__,__FUNCTION__,__LINE__); }
 	/*** RTnet / <kk>: rt_assert must be used instead of assert() within interrupt context! ***/
 	#define rt_assert(expr) \
-        	if(!(expr)) { rtdm_printk( "Assertion failed! %s,%s,%s,line=%d\n", #expr,__FILE__,__FUNCTION__,__LINE__); }
+		if(!(expr)) { rtdm_printk( "Assertion failed! %s,%s,%s,line=%d\n", #expr,__FILE__,__FUNCTION__,__LINE__); }
 	/*** RTnet / <kk>: RT_DBG_PRINT must be used instead of DBG_PRINT() within interrupt context! ***/
 	#define DBG_PRINT( fmt, args...)   printk("r8169: " fmt, ## args);
 	#define RT_DBG_PRINT( fmt, args...)   rtdm_printk("r8169: " fmt, ## args);
@@ -206,8 +206,8 @@ static int max_interrupt_work = 20;
 
 const static struct {
 	const char *name;
-	u8 mcfg;		 /* depend on RTL8169 docs */
-	u32 RxConfigMask; 	/* should clear the bits supported by this chip */
+	u8 mcfg;                 /* depend on RTL8169 docs */
+	u32 RxConfigMask;       /* should clear the bits supported by this chip */
 } rtl_chip_info[] = {
 	{ "RTL8169",  MCFG_METHOD_1,  0xff7e1880 },
 	{ "RTL8169s/8110s",  MCFG_METHOD_2,  0xff7e1880 },
@@ -265,17 +265,17 @@ enum RTL8169_registers {
 
 enum RTL8169_register_content {
 	/*InterruptStatusBits*/
-	SYSErr 		= 0x8000,
+	SYSErr          = 0x8000,
 	PCSTimeout	= 0x4000,
 	SWInt		= 0x0100,
 	TxDescUnavail	= 0x80,
-	RxFIFOOver 	= 0x40,
-	LinkChg 	= 0x20,
-	RxOverflow 	= 0x10,
-	TxErr 	= 0x08,
-	TxOK 	= 0x04,
-	RxErr 	= 0x02,
-	RxOK 	= 0x01,
+	RxFIFOOver      = 0x40,
+	LinkChg         = 0x20,
+	RxOverflow      = 0x10,
+	TxErr   = 0x08,
+	TxOK    = 0x04,
+	RxErr   = 0x02,
+	RxOK    = 0x01,
 
 	/*RxStatusDesc*/
 	RxRES = 0x00200000,
@@ -355,7 +355,7 @@ enum RTL8169_register_content {
 	_1000_Full	= 0x10,
 
 	/*_TBICSRBit*/
-	TBILinkOK 	= 0x02000000,
+	TBILinkOK       = 0x02000000,
 };
 
 
@@ -432,7 +432,6 @@ struct rtl8169_private {
 #endif //end #ifdef RTL8169_DYNAMIC_CONTROL
 
 	unsigned char   linkstatus;
-	struct rtskb_queue skb_pool;	/*** RTnet ***/
 	rtdm_irq_t irq_handle;			/*** RTnet ***/
 };
 
@@ -492,13 +491,13 @@ static void rtl8169_pcierr_interrupt(struct rtnet_device *rtdev);
 
 #ifdef RTL8169_DEBUG
 unsigned alloc_rxskb_cnt = 0;
-#define RTL8169_ALLOC_RXSKB(bufsize) 	dev_alloc_skb(bufsize); alloc_rxskb_cnt ++ ;
-#define RTL8169_FREE_RXSKB(skb) 	kfree_skb(skb); alloc_rxskb_cnt -- ;
-#define RTL8169_NETIF_RX(skb) 		netif_rx(skb); alloc_rxskb_cnt -- ;
+#define RTL8169_ALLOC_RXSKB(bufsize)    dev_alloc_skb(bufsize); alloc_rxskb_cnt ++ ;
+#define RTL8169_FREE_RXSKB(skb)         kfree_skb(skb); alloc_rxskb_cnt -- ;
+#define RTL8169_NETIF_RX(skb)           netif_rx(skb); alloc_rxskb_cnt -- ;
 #else
-#define RTL8169_ALLOC_RXSKB(bufsize) 	dev_alloc_skb(bufsize);
-#define RTL8169_FREE_RXSKB(skb) 	kfree_skb(skb);
-#define RTL8169_NETIF_RX(skb) 		netif_rx(skb);
+#define RTL8169_ALLOC_RXSKB(bufsize)    dev_alloc_skb(bufsize);
+#define RTL8169_FREE_RXSKB(skb)         kfree_skb(skb);
+#define RTL8169_NETIF_RX(skb)           netif_rx(skb);
 #endif //end #ifdef RTL8169_DEBUG
 
 
@@ -669,7 +668,7 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 	*dev_out = NULL;
 
 	/*** RTnet ***/
-	rtdev = rt_alloc_etherdev(sizeof(struct rtl8169_private));
+	rtdev = rt_alloc_etherdev(sizeof(struct rtl8169_private), RX_RING_SIZE*2);
 	if (rtdev == NULL) {
 		printk (KERN_ERR PFX "unable to alloc new ethernet\n");
 		return -ENOMEM;
@@ -858,21 +857,21 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 	}
 
 	rtdev->open		= rtl8169_open;
-	rtdev->hard_start_xmit 	= rtl8169_start_xmit;
-	rtdev->get_stats    	= rtl8169_get_stats;
-	rtdev->stop 		= rtl8169_close;
-	/* dev->tx_timeout 	= rtl8169_tx_timeout; */			/*** RTnet ***/
+	rtdev->hard_start_xmit  = rtl8169_start_xmit;
+	rtdev->get_stats        = rtl8169_get_stats;
+	rtdev->stop             = rtl8169_close;
+	/* dev->tx_timeout      = rtl8169_tx_timeout; */			/*** RTnet ***/
 	/* dev->set_multicast_list = rtl8169_set_rx_mode; */	/*** RTnet ***/
-	/* dev->watchdog_timeo 	= TX_TIMEOUT; */				/*** RTnet ***/
-	rtdev->irq 		= pdev->irq;
-	rtdev->base_addr 		= (unsigned long) ioaddr;
+	/* dev->watchdog_timeo  = TX_TIMEOUT; */				/*** RTnet ***/
+	rtdev->irq              = pdev->irq;
+	rtdev->base_addr                = (unsigned long) ioaddr;
 
 #ifdef RTL8169_JUMBO_FRAME_SUPPORT
 	rtdev->change_mtu		= rtl8169_change_mtu;
 #endif //end #ifdef RTL8169_JUMBO_FRAME_SUPPORT
 
 #ifdef RTL8169_IOCTL_SUPPORT
-	rtdev->do_ioctl 		= rtl8169_ioctl;
+	rtdev->do_ioctl                 = rtl8169_ioctl;
 #endif //end #ifdef RTL8169_IOCTL_SUPPORT
 
 #ifdef RTL8169_DYNAMIC_CONTROL
@@ -880,8 +879,8 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 #endif //end #ifdef RTL8169_DYNAMIC_CONTROL
 
 	priv = rtdev->priv;				// private data //
-	priv->pci_dev 	= pdev;
-	priv->ioaddr 	= ioaddr;
+	priv->pci_dev   = pdev;
+	priv->ioaddr    = ioaddr;
 
 //#ifdef RTL8169_JUMBO_FRAME_SUPPORT
 	priv->curr_mtu_size = rtdev->mtu;
@@ -898,22 +897,10 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 	DBG_PRINT("priv->hw_rx_pkt_len = %d \n", priv->hw_rx_pkt_len);
 	DBG_PRINT("-------------------------- \n");
 
-	/*** RTnet: initialize real-time socket buffer pool ***/
-	if (rtskb_pool_init(&priv->skb_pool, RX_RING_SIZE*2) < RX_RING_SIZE*2) {
-		rtskb_pool_release(&priv->skb_pool);
-		/* clean up... */
-		pci_release_regions (pdev);
-		rt_rtdev_disconnect(rtdev);
-		rtdev_free(rtdev);
-		return -ENOMEM;
-	}
-	/*** /RTnet ***/
-
 	rtdm_lock_init(&priv->lock);	/*** RTnet ***/
 
 	/*** RTnet ***/
-	if (rt_register_rtnetdev(rtdev) > 0) {
-		rtskb_pool_release(&priv->skb_pool);
+	if (rt_register_rtnetdev(rtdev) < 0) {
 		/* clean up... */
 		pci_release_regions (pdev);
 		rt_rtdev_disconnect(rtdev);
@@ -1004,8 +991,8 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 
 			// enable 1000 Full Mode
 //			RTL8169_WRITE_GMII_REG( ioaddr, PHY_1000_CTRL_REG, PHY_Cap_1000_Full );
-			RTL8169_WRITE_GMII_REG( ioaddr, PHY_1000_CTRL_REG, PHY_Cap_1000_Full | PHY_Cap_1000_Half);	//rtl8168		
-		
+			RTL8169_WRITE_GMII_REG( ioaddr, PHY_1000_CTRL_REG, PHY_Cap_1000_Full | PHY_Cap_1000_Half);	//rtl8168
+
 		}// end of if( option > 0 )
 
 		// Enable auto-negotiation and restart auto-nigotiation
@@ -1040,7 +1027,7 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 			if(option & _100bps){
 				priv->linkstatus = (option & FullDup) ? _100_Full : _100_Half;
 			}
-            else{
+	    else{
 				priv->linkstatus = (option & FullDup) ? _10_Full : _10_Half;
 			}
 		}
@@ -1073,7 +1060,6 @@ static void rtl8169_remove_one (struct pci_dev *pdev)
 	/*** RTnet ***/
 	rt_unregister_rtnetdev(rtdev);
 	rt_rtdev_disconnect(rtdev);
-	rtskb_pool_release(&priv->skb_pool);
 	/*** /RTnet ***/
 
 #ifdef RTL8169_USE_IO
@@ -1157,7 +1143,7 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 
 		for(i=0;i<NUM_RX_DESC;i++){
 			//skb = RTL8169_ALLOC_RXSKB(MAX_RX_SKBDATA_SIZE);	/*** <kk> ***/
-			skb = dev_alloc_rtskb(priv->rx_buf_size, &priv->skb_pool); /*** RTnet ***/;
+			skb = rtnetdev_alloc_rtskb(rtdev, priv->rx_buf_size); /*** RTnet ***/;
 			if( skb != NULL ) {
 				rtskb_reserve (skb, 2);	// 16 byte align the IP fields. //
 				priv->Rx_skbuff[i] = skb;
@@ -1390,7 +1376,7 @@ static void rtl8169_init_ring (struct rtnet_device *rtdev)
 	struct pci_dev *pdev = priv->pci_dev;
 	int i;
 	struct rtskb	*skb;
-	
+
 
 	priv->cur_rx = 0;
 	priv->cur_tx = 0;
@@ -1522,7 +1508,7 @@ static int rtl8169_start_xmit (struct rtskb *skb, struct rtnet_device *rtdev)
 		}
 
 		txbuf_dma_addr = pci_map_single(pdev, skb->data, len, PCI_DMA_TODEVICE);
-		
+
 		priv->TxDescArray[entry].buf_addr = cpu_to_le32(txbuf_dma_addr);
 
 		/* <kk> print TX frame debug informations? */
@@ -1536,20 +1522,20 @@ static int rtl8169_start_xmit (struct rtskb *skb, struct rtnet_device *rtdev)
 			if (proto == 0x9021 && !(r8169_debug & DEBUG_TX_SYNC)) {
 				/* don't show TDMA Sync frames for better debugging, so look at RTmac frame type... */
 				unsigned short type;
-				
+
 				if (skb->len < 16) break;	/* packet too small! */
 				type = be16_to_cpu(*((unsigned short *)(skb->data + 14)));
 
 				if (type == 0x0001) {
 					/* TDMA-Frame; get Message ID */
 					unsigned short tdma_version;
-					
+
 					if (skb->len < 20) break;	/* packet too small! */
 					tdma_version = be16_to_cpu(*((unsigned short *)(skb->data + 18)));
 
 					if (tdma_version == 0x0201) {
 						unsigned short tdma_id;
-						
+
 						if (skb->len < 22) break;	/* packet too small! */
 						tdma_id = be16_to_cpu(*((unsigned short *)(skb->data + 20)));
 
@@ -1646,7 +1632,7 @@ static void rtl8169_tx_interrupt (struct rtnet_device *rtdev, struct rtl8169_pri
 			r8169_callback_tx(&(priv->rt), 1, priv->Tx_skbuff[dirty_tx % NUM_TX_DESC]->len);
 #endif //end #ifdef RTL8169_DYNAMIC_CONTROL
 
-			if (priv->txdesc_array_dma_addr[entry]) 
+			if (priv->txdesc_array_dma_addr[entry])
 				pci_unmap_single(priv->pci_dev, priv->txdesc_array_dma_addr[entry], priv->Tx_skbuff[entry]->len, PCI_DMA_TODEVICE);	/*** ##KK## ***/
 			dev_kfree_rtskb( priv->Tx_skbuff[entry] );	/*** RTnet; previously: dev_kfree_skb_irq() - luckily we're within an IRQ ***/
 			priv->Tx_skbuff[entry] = NULL;
@@ -1726,13 +1712,12 @@ static void rtl8169_rx_interrupt (struct rtnet_device *rtdev, struct rtl8169_pri
 			{// -----------------------------------------------------
 				rx_skb = priv->Rx_skbuff[cur_rx];
 				// n_skb = RTL8169_ALLOC_RXSKB(MAX_RX_SKBDATA_SIZE);	/*** <kk> ***/
-				n_skb = dev_alloc_rtskb(priv->rx_buf_size, &priv->skb_pool);	/*** RTnet ***/
+				n_skb = rtnetdev_alloc_rtskb(rtdev, priv->rx_buf_size);	/*** RTnet ***/
 				if( n_skb != NULL ) {
 					rtskb_reserve (n_skb, 2);	// 16 byte align the IP fields. //
 
 					// Indicate rx_skb
 					if( rx_skb != NULL ){
-						rx_skb->rtdev = rtdev;
 						pci_dma_sync_single_for_cpu(pdev, priv->rx_skbuff_dma_addr[cur_rx], sizeof(struct RxDesc), PCI_DMA_FROMDEVICE);
 
 						rtskb_put ( rx_skb, pkt_size );
@@ -1937,7 +1922,7 @@ static int rtl8169_close (struct rtnet_device *rtdev)
 	/*** /RTnet ***/
 
 	rtl8169_tx_clear (priv);
-	
+
 	//2004-05-11
 	if(priv->txdesc_space != NULL){
 		pci_free_consistent(
@@ -2016,7 +2001,7 @@ static void rtl8169_set_rx_mode (struct rtnet_device *rtdev)
 	u32 mc_filter[2];	/* Multicast hash filter */
 	int rx_mode;
 	u32 tmp=0;
-	
+
 
 	if (rtdev->flags & IFF_PROMISC) {
 		/* Unconditionally log net taps. */

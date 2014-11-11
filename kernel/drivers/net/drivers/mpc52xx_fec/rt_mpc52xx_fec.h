@@ -1,4 +1,3 @@
-
 /*
  * arch/ppc/5xxx_io/fec.h
  *
@@ -33,8 +32,8 @@
 /* Tunable constants */
 #define MPC5xxx_FEC_RECV_BUFFER_SIZE	1518	/* max receive packet size */
 #define MPC5xxx_FEC_RECV_BUFFER_SIZE_BC 2048	/* max receive packet size */
-#define MPC5xxx_FEC_TBD_NUM   		256	/* max transmit packets */
-#define MPC5xxx_FEC_RBD_NUM  		256	/* max receive packets */
+#define MPC5xxx_FEC_TBD_NUM		256	/* max transmit packets */
+#define MPC5xxx_FEC_RBD_NUM		256	/* max receive packets */
 
 struct mpc5xxx_fec {
 	volatile u32 fec_id;			/* FEC + 0x000 */
@@ -277,7 +276,7 @@ struct fec_queue {
 	u16 finish_index;
 };
 
-#ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO 
+#ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO
 #define MII_ADVERTISE_HALF	(ADVERTISE_100HALF | ADVERTISE_10HALF | \
 				 ADVERTISE_CSMA)
 
@@ -323,7 +322,6 @@ struct mpc5xxx_fec_priv {
 	struct mpc5xxx_sdma *sdma;
 	struct fec_queue r_queue;
 	struct rtskb *rskb[MPC5xxx_FEC_RBD_NUM];
-	struct rtskb_queue skb_pool;
 	struct fec_queue t_queue;
 	struct rtskb *tskb[MPC5xxx_FEC_TBD_NUM];
 	rtdm_lock_t lock;

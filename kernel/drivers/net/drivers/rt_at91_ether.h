@@ -104,7 +104,6 @@ struct at91_private
 	/* RT Net */
 	rtdm_irq_t irq_handle;
 	rtdm_irq_t phy_irq_handle;
-	struct rtskb_queue skb_pool;
 };
 
 #endif

@@ -407,7 +407,7 @@ static int macb_rx_frame(struct macb_private *bp,unsigned int first_frag,
 
 	len = MACB_BFEXT(RX_FRMLEN, bp->rx_ring[last_frag].ctrl);
 
-	skb = dev_alloc_rtskb(len + RX_OFFSET,&bp->skb_pool);
+	skb = rtnetdev_alloc_rtskb(bp->rtdev, len + RX_OFFSET);
 	if (!skb) {
 		rtdm_printk(KERN_NOTICE "Low memory, packet dropped.\n");
 		wmb();
@@ -415,7 +415,6 @@ static int macb_rx_frame(struct macb_private *bp,unsigned int first_frag,
 	}
 
 	rtskb_reserve(skb, RX_OFFSET);
-	skb->rtdev = bp->rtdev;
 	skb->time_stamp = *time_stamp;
 	skb->ip_summed = CHECKSUM_NONE;
 	rtskb_put(skb, len);
@@ -1151,11 +1150,11 @@ static int __init macb_probe(struct platform_device *pdev)
 	}
 
 	err = -ENOMEM;
-	rtdev = rt_alloc_etherdev(sizeof(*bp));
+	rtdev = rt_alloc_etherdev(sizeof(*bp), rx_pool_size);
 	if (rtdev==NULL) {
 		rtdm_printk(KERN_ERR"%s: Unable to alloc new net device\n",
 			    pdev->name);
-	        return -ENOMEM;
+		return -ENOMEM;
 	}
 	if (!rtdev) {
 		rtdm_printk( "etherdev alloc failed, aborting.\n");
@@ -1226,12 +1225,6 @@ static int __init macb_probe(struct platform_device *pdev)
 
 	rtdev->base_addr = regs->start;
 
-	if (rtskb_pool_init(&bp->skb_pool, rx_pool_size) < rx_pool_size) {
-		err = -ENOMEM;
-		rtskb_pool_release(&bp->skb_pool);
-		goto err_out;
-	}
-
 	/* Set MII management clock divider */
 	pclk_hz = clk_get_rate(bp->pclk);
 	if (pclk_hz <= 20000000)
@@ -1291,7 +1284,6 @@ err_out_unregister_netdev:
 err_out_free_irq:
 	rtdm_printk ("err_out_free_irq!!!\n");
 	rtdm_irq_free(&bp->irq_handle);
-	rtskb_pool_release(&bp->skb_pool);
 	rtdev_free(rtdev);
 	return err;
 
@@ -1339,7 +1331,6 @@ static int __exit macb_remove(struct platform_device *pdev)
 #endif
 		clk_disable(bp->pclk);
 		clk_put(bp->pclk);
-		rtskb_pool_release(&bp->skb_pool);
 
 		platform_set_drvdata(pdev, NULL);
 		rtdev_free(rtdev);

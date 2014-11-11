@@ -33,7 +33,7 @@
  *
  * Added code for Multicast support, Frederic Goddeeris, Paul Geerinckx
  * Copyright (c) 2002 Siemens Atea
- * 
+ *
  * Ported to RTnet from "linuxppc_2_4_devel/arch/ppc/8xx_io/fec.c".
  * Copyright (c) 2003 Wolfgang Grandegger (wg@denx.de)
  */
@@ -176,7 +176,6 @@ typedef struct {
 struct fec_enet_private {
 	/* The addresses of a Tx/Rx-in-place packets/buffers. */
 	struct	rtskb *tx_skbuff[TX_RING_SIZE];
-	struct  rtskb_queue skb_pool;
 	ushort	skb_cur;
 	ushort	skb_dirty;
 
@@ -381,7 +380,7 @@ fec_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	/* Get and patch time stamp just before the transmission */
 	if (skb->xmit_stamp)
 		*skb->xmit_stamp = cpu_to_be64(rtdm_clock_read() + *skb->xmit_stamp);
-	
+
 	/* Push the data cache so the CPM does not get stale memory
 	 * data.
 	 */
@@ -409,7 +408,7 @@ fec_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	}
 
 	if (bdp->cbd_sc & BD_ENET_TX_READY) {
-	        rtnetif_stop_queue(rtdev);
+		rtnetif_stop_queue(rtdev);
 		fep->tx_full = 1;
 	}
 
@@ -675,13 +674,12 @@ while (!(bdp->cbd_sc & BD_ENET_RX_EMPTY)) {
 	 * include that when passing upstream as it messes up
 	 * bridging applications.
 	 */
-	skb = dev_alloc_rtskb(pkt_len-4, &fep->skb_pool);
+	skb = rtnetdev_alloc_rtskb(rtdev, pkt_len-4);
 
 	if (skb == NULL) {
 		rtdm_printk("%s: Memory squeeze, dropping packet.\n", rtdev->name);
 		fep->stats.rx_dropped++;
 	} else {
-		skb->rtdev = rtdev;
 		rtskb_put(skb,pkt_len-4); /* Make room */
 		memcpy(skb->data, data, pkt_len-4);
 		skb->protocol=rt_eth_type_trans(skb,rtdev);
@@ -1214,7 +1212,7 @@ static phy_info_t phy_info_dp83843 = {
 
 	(const phy_cmd_t []) {  /* config */
 		{ mk_mii_write(MII_REG_ANAR, 0x01E1), NULL  }, /* Auto-Negociation Register Control set to    */
-		                                               /* auto-negociate 10/100MBps, Half/Full duplex */
+							       /* auto-negociate 10/100MBps, Half/Full duplex */
 		{ mk_mii_read(MII_REG_CR),   mii_parse_cr   },
 		{ mk_mii_read(MII_REG_ANAR), mii_parse_anar },
 		{ mk_mii_end, }
@@ -1222,7 +1220,7 @@ static phy_info_t phy_info_dp83843 = {
 	(const phy_cmd_t []) {  /* startup */
 		{ mk_mii_write(MII_DP83843_MIPSCR, 0x0002), NULL }, /* Enable interrupts */
 		{ mk_mii_write(MII_REG_CR, 0x1200), NULL         }, /* Enable and Restart Auto-Negotiation */
-		{ mk_mii_read(MII_REG_SR), mii_parse_sr	         },
+		{ mk_mii_read(MII_REG_SR), mii_parse_sr		 },
 		{ mk_mii_read(MII_REG_CR), mii_parse_cr },
 		{ mk_mii_read(MII_DP83843_PHYSTS), mii_parse_dp83843_physts },
 		{ mk_mii_end, }
@@ -1288,7 +1286,7 @@ static phy_info_t phy_info_dp83846a = {
 
 	(const phy_cmd_t []) {  /* config */
 		{ mk_mii_write(MII_REG_ANAR, 0x01E1), NULL  }, /* Auto-Negociation Register Control set to    */
-		                                               /* auto-negociate 10/100MBps, Half/Full duplex */
+							       /* auto-negociate 10/100MBps, Half/Full duplex */
 		{ mk_mii_read(MII_REG_CR),   mii_parse_cr   },
 		{ mk_mii_read(MII_REG_ANAR), mii_parse_anar },
 		{ mk_mii_end, }
@@ -1533,12 +1531,12 @@ mii_link_interrupt(int irq, void * dev_id, struct pt_regs * regs)
 	volatile fec_t *fecp = &(immap->im_cpm.cp_fec);
 	unsigned int ecntrl = fecp->fec_ecntrl;
 
-        /*
-         * Acknowledge the interrupt if possible. If we have not
-         * found the PHY yet we can't process or acknowledge the
-         * interrupt now. Instead we ignore this interrupt for now,
-         * which we can do since it is edge triggered. It will be
-         * acknowledged later by fec_enet_open().
+	/*
+	 * Acknowledge the interrupt if possible. If we have not
+	 * found the PHY yet we can't process or acknowledge the
+	 * interrupt now. Instead we ignore this interrupt for now,
+	 * which we can do since it is edge triggered. It will be
+	 * acknowledged later by fec_enet_open().
 	 */
 	if (fep->phy) {
 		/*
@@ -1599,12 +1597,12 @@ fec_enet_open(struct rtnet_device *rtdev)
 		}
 
 #if defined(CONFIG_IP_PNP)
-        rtdm_printk("%s: Waiting for the link to be up...\n", rtdev->name);
+	rtdm_printk("%s: Waiting for the link to be up...\n", rtdev->name);
 
-        while(fep->link == 0 || ((((volatile fec_t*)rtdev->base_addr)->fec_ecntrl & FEC_ECNTRL_ETHER_EN) == 0))
-        {
-            schedule();
-        }
+	while(fep->link == 0 || ((((volatile fec_t*)rtdev->base_addr)->fec_ecntrl & FEC_ECNTRL_ETHER_EN) == 0))
+	{
+	    schedule();
+	}
 #endif /* CONFIG_IP_PNP */
 
 #endif /* CONFIG_RTAI_RTNET_USE_MDIO && CONFIG_FEC_DP83846A */
@@ -1791,16 +1789,16 @@ static u32 fec_mulicast_calc_crc(char *pAddr)
 	u8	msb;
 
 	for (byte_count=0; byte_count<6; byte_count++) {
-        	byte = pAddr[byte_count];
+		byte = pAddr[byte_count];
 		for (bit_count=0; bit_count<8; bit_count++) {
-            		msb = crc >> 31;
-            		crc <<= 1;
-            		if (msb ^ (byte & 0x1)) {
-                		crc ^= FEC_CRC_POLY;
-   	    		}
-            		byte >>= 1;
+			msb = crc >> 31;
+			crc <<= 1;
+			if (msb ^ (byte & 0x1)) {
+				crc ^= FEC_CRC_POLY;
+			}
+			byte >>= 1;
 		}
-        }
+	}
 	return (crc);
 }
 
@@ -1950,7 +1948,11 @@ int __init fec_enet_init(void)
 
 	bd = (bd_t *)__res;
 
-	rtdev = rtdev_root = rt_alloc_etherdev(sizeof(struct fec_enet_private));
+	if (!rx_pool_size)
+		rx_pool_size = RX_RING_SIZE * 2;
+
+	rtdev = rtdev_root = rt_alloc_etherdev(sizeof(struct fec_enet_private),
+					rx_pool_size);
 	if (rtdev == NULL) {
 		printk(KERN_ERR "enet: Could not allocate ethernet device.\n");
 		return -1;
@@ -2098,20 +2100,9 @@ int __init fec_enet_init(void)
 	rtdev->hard_header = &rt_eth_header;
 	rtdev->get_stats = fec_enet_get_stats;
 
-	if (!rx_pool_size)
-		rx_pool_size = RX_RING_SIZE * 2;
-	if (rtskb_pool_init(&fep->skb_pool, rx_pool_size) < rx_pool_size) {
-		rtdm_irq_disable(&fep->irq_handle);
-		rtdm_irq_free(&fep->irq_handle);
-		rtskb_pool_release(&fep->skb_pool);
-		rtdev_free(rtdev);
-		return -ENOMEM;
-	}
-
 	if ((i = rt_register_rtnetdev(rtdev))) {
 		rtdm_irq_disable(&fep->irq_handle);
 		rtdm_irq_free(&fep->irq_handle);
-		rtskb_pool_release(&fep->skb_pool);
 		rtdev_free(rtdev);
 		return i;
 	}
@@ -2425,7 +2416,6 @@ static void __exit fec_enet_cleanup(void)
 		rt_rtdev_disconnect(rtdev);
 
 		printk("%s: unloaded\n", rtdev->name);
-		rtskb_pool_release(&fep->skb_pool);
 		rtdev_free(rtdev);
 		rtdev_root = NULL;
 	}

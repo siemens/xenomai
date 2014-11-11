@@ -138,7 +138,7 @@ struct e1000_rx_buffer {
 	dma_addr_t dma;
 	struct page *page;
 };
-	
+
 #ifdef CONFIG_E1000_MQ
 struct e1000_queue_stats {
 	u64 packets;
@@ -340,7 +340,6 @@ struct e1000_adapter {
 
 	/* OS defined structs */
 	struct rtnet_device *netdev;
-	struct rtskb_queue skb_pool;
 	struct pci_dev *pdev;
 	struct net_device_stats net_stats;
 

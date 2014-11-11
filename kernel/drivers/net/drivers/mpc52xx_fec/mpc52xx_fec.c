@@ -613,7 +613,7 @@ static phy_info_t phy_info_dp83847 = {
 
 	(const phy_cmd_t []) {  /* config */
 		{ mk_mii_write(MII_REG_ANAR, 0x01E1), NULL  }, /* Auto-Negociation Register Control set to    */
-		                                               /* auto-negociate 10/100MBps, Half/Full duplex */
+							       /* auto-negociate 10/100MBps, Half/Full duplex */
 		{ mk_mii_read(MII_REG_CR),   mii_parse_cr   },
 		{ mk_mii_read(MII_REG_ANAR), mii_parse_anar },
 		{ mk_mii_end, }
@@ -782,7 +782,7 @@ mpc5xxx_fec_link_up(struct rtnet_device *dev)
 	}
 }
 
-/* 
+/*
  * Execute the ack_int command set and schedules next timer call back.
  */
 static void mdio_timer_callback(unsigned long data)
@@ -817,25 +817,25 @@ static void mii_display_status(struct rtnet_device *dev)
     printk("%s: status: ", dev->name);
 
     if (!priv->link) {
-        printk("link down");
+	printk("link down");
     } else {
-        printk("link up");
+	printk("link up");
 
-        switch(s & PHY_STAT_SPMASK) {
-        case PHY_STAT_100FDX: printk(", 100 Mbps Full Duplex"); break;
-        case PHY_STAT_100HDX: printk(", 100 Mbps Half Duplex"); break;
-        case PHY_STAT_10FDX:  printk(", 10 Mbps Full Duplex");  break;
-        case PHY_STAT_10HDX:  printk(", 10 Mbps Half Duplex");  break;
-        default:
-            printk(", Unknown speed/duplex");
-        }
+	switch(s & PHY_STAT_SPMASK) {
+	case PHY_STAT_100FDX: printk(", 100 Mbps Full Duplex"); break;
+	case PHY_STAT_100HDX: printk(", 100 Mbps Half Duplex"); break;
+	case PHY_STAT_10FDX:  printk(", 10 Mbps Full Duplex");  break;
+	case PHY_STAT_10HDX:  printk(", 10 Mbps Half Duplex");  break;
+	default:
+	    printk(", Unknown speed/duplex");
+	}
 
-        if (s & PHY_STAT_ANC)
-            printk(", auto-negotiation complete");
+	if (s & PHY_STAT_ANC)
+	    printk(", auto-negotiation complete");
     }
 
     if (s & PHY_STAT_FAULT)
-        printk(", remote fault");
+	printk(", remote fault");
 
     printk(".\n");
 }
@@ -951,10 +951,9 @@ mpc5xxx_fec_setup(struct rtnet_device *dev, int reinit)
 	for(i=0;i<MPC5xxx_FEC_RBD_NUM;i++) {
 		BDIdx bdi_a;
 		if(!reinit) {
-			skb = dev_alloc_rtskb(sizeof *rbuf, &priv->skb_pool);
+			skb = dev_alloc_rtskb(sizeof *rbuf, dev);
 			if (skb == 0)
 				goto eagain;
-			skb->rtdev = dev;
 #ifdef MUST_UNALIGN_RECEIVE_DATA
 			rtskb_reserve(skb,2);
 #endif
@@ -1133,7 +1132,7 @@ mpc5xxx_fec_setup(struct rtnet_device *dev, int reinit)
 					mpc5xxx_fec_restart(dev, 0);
 				}
 			}
-  		}
+		}
 #endif /* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 #endif
 	}
@@ -1209,7 +1208,7 @@ mpc5xxx_fec_hard_start_xmit(struct rtskb *skb, struct rtnet_device *dev)
 #endif
 	/* Zero out up to the minimum length ethernet packet size,
 	 * so we don't inadvertently expose sensitive data
-	 */ 
+	 */
 	pad = ETH_ZLEN - skb->len;
 	if (pad > 0) {
 		skb = rtskb_padto(skb, ETH_ZLEN);
@@ -1405,7 +1404,7 @@ mpc5xxx_fec_receive_interrupt(rtdm_irq_t *irq_handle)
 			}
 			else {
 				/* allocate replacement skb */
-				nskb = dev_alloc_rtskb(sizeof *nrbuf, &priv->skb_pool);
+				nskb = dev_alloc_rtskb(sizeof *nrbuf, dev);
 				if (nskb == NULL) {
 					/* memory squeeze, drop */
 					discard=3;
@@ -1428,7 +1427,6 @@ mpc5xxx_fec_receive_interrupt(rtdm_irq_t *irq_handle)
 			nrbuf = (struct mpc5xxx_rbuf *)skb->data;
 		}
 		else {
-			nskb->rtdev = dev;
 #ifdef MUST_UNALIGN_RECEIVE_DATA
 			rtskb_reserve(nskb,2);
 #endif
@@ -1954,7 +1952,10 @@ mpc5xxx_fec_init(void)
 	printk("mpc5xxx_fec_init\n");
 #endif
 
-	dev = rt_alloc_etherdev(sizeof(*priv));
+	if (!rx_pool_size)
+		rx_pool_size = MPC5xxx_FEC_RBD_NUM * 2;
+
+	dev = rt_alloc_etherdev(sizeof(*priv), rx_pool_size);
 	if (!dev)
 		return -EIO;
 	rtdev_alloc_name(dev, "rteth%d");
@@ -1989,13 +1990,6 @@ mpc5xxx_fec_init(void)
 #endif /* ORIGINAL_CODE */
 	dev->flags &= ~IFF_RUNNING;
 
-	if (!rx_pool_size)
-		rx_pool_size = MPC5xxx_FEC_RBD_NUM * 2;
-	if (rtskb_pool_init(&priv->skb_pool, rx_pool_size) < rx_pool_size) {
-		err = -ENOMEM;
-		goto abort;
-	}
-
 	if ((err = rt_register_rtnetdev(dev)))
 		goto abort;
 
@@ -2018,7 +2012,6 @@ mpc5xxx_fec_init(void)
 	return 0;
 
 abort:
-	rtskb_pool_release(&priv->skb_pool);
 	rtdev_free(dev);
 
 	return err;
@@ -2033,7 +2026,6 @@ mpc5xxx_fec_uninit(void)
 	rt_stack_disconnect(dev);
 	rt_unregister_rtnetdev(dev);
 	rt_rtdev_disconnect(dev);
-	rtskb_pool_release(&priv->skb_pool);
 	printk("%s: unloaded\n", dev->name);
 	rtdev_free(dev);
 	dev->priv = NULL;

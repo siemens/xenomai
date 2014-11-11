@@ -500,8 +500,8 @@ static void igb_configure_msix(struct igb_adapter *adapter)
 		/* Turn on MSI-X capability first, or our settings
 		 * won't stick.  And it will take days to debug. */
 		wr32(E1000_GPIE, E1000_GPIE_MSIX_MODE |
-				   E1000_GPIE_PBA | E1000_GPIE_EIAME | 
- 				   E1000_GPIE_NSICR);
+				   E1000_GPIE_PBA | E1000_GPIE_EIAME |
+				   E1000_GPIE_NSICR);
 
 	for (i = 0; i < adapter->num_tx_queues; i++) {
 		struct igb_ring *tx_ring = &adapter->tx_ring[i];
@@ -720,7 +720,7 @@ static int igb_request_irq(struct igb_adapter *adapter)
 
 #ifdef CONFIG_PCI_MSI
 	if (adapter->flags & IGB_FLAG_HAS_MSI) {
-	        err = rtdm_irq_request(&adapter->irq_handle,
+		err = rtdm_irq_request(&adapter->irq_handle,
 				       adapter->pdev->irq, igb_intr_msi, 0,
 				       netdev->name, netdev);
 		if (!err)
@@ -1132,10 +1132,10 @@ static int igb_probe(struct pci_dev *pdev,
 	u32 part_num;
 	int bars, need_ioport;
 	static int board_idx = -1;
-	
+
 	board_idx++;
-        if (cards[board_idx] == 0)
-                return -ENODEV;
+	if (cards[board_idx] == 0)
+		return -ENODEV;
 
 	/* do not allocate ioport bars when not needed */
 	need_ioport = igb_is_need_ioport(pdev);
@@ -1175,7 +1175,7 @@ static int igb_probe(struct pci_dev *pdev,
 	err = pci_enable_pcie_error_reporting(pdev);
 	if (err) {
 		dev_err(&pdev->dev, "pci_enable_pcie_error_reporting failed "
-		        "0x%x\n", err);
+			"0x%x\n", err);
 		/* non-fatal, continue */
 	}
 
@@ -1183,7 +1183,7 @@ static int igb_probe(struct pci_dev *pdev,
 	pci_save_state(pdev);
 
 	err = -ENOMEM;
-	netdev = rt_alloc_etherdev(sizeof(struct igb_adapter));
+	netdev = rt_alloc_etherdev(sizeof(struct igb_adapter), 16);
 
 	if (!netdev)
 		goto err_alloc_etherdev;
@@ -1527,8 +1527,6 @@ static void igb_remove(struct pci_dev *pdev)
 #endif
 	igb_free_queues(adapter);
 
-	rtskb_pool_release(&adapter->skb_pool);
-
 	iounmap(adapter->hw.hw_addr);
 	if (adapter->hw.flash_address)
 		iounmap(adapter->hw.flash_address);
@@ -1539,7 +1537,7 @@ static void igb_remove(struct pci_dev *pdev)
 	err = pci_disable_pcie_error_reporting(pdev);
 	if (err)
 		dev_err(&pdev->dev,
-		        "pci_disable_pcie_error_reporting failed 0x%x\n", err);
+			"pci_disable_pcie_error_reporting failed 0x%x\n", err);
 
 	pci_disable_device(pdev);
 }
@@ -1571,12 +1569,6 @@ static int igb_sw_init(struct igb_adapter *adapter)
 	/* Having more queues than CPUs doesn't make sense. */
 	adapter->num_rx_queues = min_t(u32, IGB_MAX_RX_QUEUES, num_online_cpus());
 	adapter->num_tx_queues = min_t(u32, IGB_MAX_TX_QUEUES, num_online_cpus());
-
-        if (rtskb_pool_init(&adapter->skb_pool, 16) < 16)
-        {
-            rtskb_pool_release(&adapter->skb_pool);
-            return -ENOMEM;
-        }
 
 #ifdef CONFIG_PCI_MSI
 	/* This call may decrease the number of queues depending on
@@ -1644,7 +1636,7 @@ static int igb_open(struct rtnet_device *netdev)
 	/* From here on the code is the same as igb_up() */
 	clear_bit(__IGB_DOWN, &adapter->state);
 
-#ifdef CONFIG_IGB_NAPI	
+#ifdef CONFIG_IGB_NAPI
 	for (i = 0; i < adapter->num_rx_queues; i++)
 		napi_enable(&adapter->rx_ring[i].napi);
 #endif
@@ -1772,7 +1764,7 @@ static int igb_setup_all_tx_resources(struct igb_adapter *adapter)
 	for (i = 0; i < IGB_MAX_TX_QUEUES; i++) {
 		r_idx = i % adapter->num_tx_queues;
 		adapter->multi_tx_table[i] = &adapter->tx_ring[r_idx];
-	}	
+	}
 	return err;
 }
 
@@ -1966,7 +1958,7 @@ static void igb_setup_rctl(struct igb_adapter *adapter)
 		break;
 	default:
 		srrctl = ALIGN(adapter->rx_buffer_len, 1024)
-		         >> E1000_SRRCTL_BSIZEPKT_SHIFT;
+			 >> E1000_SRRCTL_BSIZEPKT_SHIFT;
 		break;
 	}
 
@@ -2164,7 +2156,7 @@ static void igb_unmap_and_free_tx_resource(struct igb_adapter *adapter,
 {
 	buffer_info->dma = 0;
 	if (buffer_info->skb) {
-	        kfree_rtskb(buffer_info->skb);
+		kfree_rtskb(buffer_info->skb);
 		buffer_info->skb = NULL;
 	}
 	buffer_info->time_stamp = 0;
@@ -2235,7 +2227,7 @@ void igb_free_rx_resources(struct igb_ring *rx_ring)
 #ifdef CONFIG_IGB_LRO
 	vfree(rx_ring->lro_mgr.lro_arr);
 	rx_ring->lro_mgr.lro_arr = NULL;
-#endif 
+#endif
 
 	pci_free_consistent(pdev, rx_ring->size, rx_ring->desc, rx_ring->dma);
 
@@ -2442,7 +2434,7 @@ static void igb_watchdog_task(struct work_struct *work)
 			/* Links status message must follow this format */
 			rtdm_printk(KERN_INFO "igb: %s NIC Link is Up %d Mbps %s, "
 				 "Flow Control: %s\n",
-			         netdev->name,
+				 netdev->name,
 				 adapter->link_speed,
 				 adapter->link_duplex == FULL_DUPLEX ?
 				 "Full Duplex" : "Half Duplex",
@@ -2457,11 +2449,11 @@ static void igb_watchdog_task(struct work_struct *work)
 			adapter->tx_timeout_factor = 1;
 			switch (adapter->link_speed) {
 			case SPEED_10:
-			        // netdev->tx_queue_len = 10;
+				// netdev->tx_queue_len = 10;
 				adapter->tx_timeout_factor = 14;
 				break;
 			case SPEED_100:
-			        // netdev->tx_queue_len = 100;
+				// netdev->tx_queue_len = 100;
 				/* maybe add some timeout factor ? */
 				break;
 			}
@@ -3043,7 +3035,7 @@ static int igb_xmit_frame_ring_adv(struct rtskb *skb,
 	// if (igb_maybe_stop_tx(netdev, tx_ring, skb_shinfo(skb)->nr_frags + 4)) {
 	if (igb_maybe_stop_tx(netdev, tx_ring, MAX_SKB_FRAGS + 4)) {
 		/* this is a hard error */
-	        rtdm_lock_put_irqrestore(&tx_ring->lock, context);
+		rtdm_lock_put_irqrestore(&tx_ring->lock, context);
 		return NETDEV_TX_BUSY;
 	}
 	// skb_orphan(skb);
@@ -3471,7 +3463,7 @@ static void igb_update_rx_dca(struct igb_ring *rx_ring)
 		if (hw->mac.type == e1000_82576) {
 			dca_rxctrl &= ~E1000_DCA_RXCTRL_CPUID_MASK_82576;
 			dca_rxctrl |= dca_get_tag(cpu) <<
-			              E1000_DCA_RXCTRL_CPUID_SHIFT;
+				      E1000_DCA_RXCTRL_CPUID_SHIFT;
 		} else {
 			dca_rxctrl &= ~E1000_DCA_RXCTRL_CPUID_MASK;
 			dca_rxctrl |= dca_get_tag(cpu);
@@ -3498,7 +3490,7 @@ static void igb_update_tx_dca(struct igb_ring *tx_ring)
 		if (hw->mac.type == e1000_82576) {
 			dca_txctrl &= ~E1000_DCA_TXCTRL_CPUID_MASK_82576;
 			dca_txctrl |= dca_get_tag(cpu) <<
-			              E1000_DCA_TXCTRL_CPUID_SHIFT;
+				      E1000_DCA_TXCTRL_CPUID_SHIFT;
 		} else {
 			dca_txctrl &= ~E1000_DCA_TXCTRL_CPUID_MASK;
 			dca_txctrl |= dca_get_tag(cpu);
@@ -3552,7 +3544,7 @@ static int __igb_notify_dca(struct device *dev, void *data)
 	case DCA_PROVIDER_REMOVE:
 		if (adapter->flags & IGB_FLAG_DCA_ENABLED) {
 			/* without this a class_device is left
- 			 * hanging around in the sysfs model */
+			 * hanging around in the sysfs model */
 			dca_remove_requester(dev);
 			dev_info(&adapter->pdev->dev, "DCA disabled\n");
 			adapter->flags &= ~IGB_FLAG_DCA_ENABLED;
@@ -3565,12 +3557,12 @@ static int __igb_notify_dca(struct device *dev, void *data)
 }
 
 static int igb_notify_dca(struct notifier_block *nb, unsigned long event,
-                          void *p)
+			  void *p)
 {
 	int ret_val;
 
 	ret_val = driver_for_each_device(&igb_driver.driver, NULL, &event,
-	                                 __igb_notify_dca);
+					 __igb_notify_dca);
 
 	return ret_val ? NOTIFY_BAD : NOTIFY_DONE;
 }
@@ -3817,7 +3809,7 @@ static bool igb_clean_tx_irq(struct igb_ring *tx_ring)
 		/* only one queue */
 		if (rtnetif_queue_stopped(netdev) &&
 		    !(test_bit(__IGB_DOWN, &adapter->state))) {
-		        rtnetif_wake_queue(netdev);
+			rtnetif_wake_queue(netdev);
 			++adapter->restart_queue;
 		}
 	}
@@ -3878,15 +3870,15 @@ static bool igb_clean_tx_irq(struct igb_ring *tx_ring)
  * @priv: pointer to the receive descriptor for the current sk_buff
  **/
 static int igb_get_skb_hdr(struct rtskb *skb, void **iphdr, void **tcph,
-                           u64 *hdr_flags, void *priv)
+			   u64 *hdr_flags, void *priv)
 {
 	union e1000_adv_rx_desc *rx_desc = priv;
 	u16 pkt_type = rx_desc->wb.lower.lo_dword.pkt_info &
-	               (E1000_RXDADV_PKTTYPE_IPV4 | E1000_RXDADV_PKTTYPE_TCP);
+		       (E1000_RXDADV_PKTTYPE_IPV4 | E1000_RXDADV_PKTTYPE_TCP);
 
 	/* Verify that this is a valid IPv4 TCP packet */
 	if (pkt_type != (E1000_RXDADV_PKTTYPE_IPV4 |
-	                  E1000_RXDADV_PKTTYPE_TCP))
+			  E1000_RXDADV_PKTTYPE_TCP))
 		return -1;
 
 	/* Set network headers */
@@ -3903,23 +3895,23 @@ static int igb_get_skb_hdr(struct rtskb *skb, void **iphdr, void **tcph,
 
 /**
  * igb_receive_skb - helper function to handle rx indications
- * @ring: pointer to receive ring receving this packet 
+ * @ring: pointer to receive ring receving this packet
  * @status: descriptor status field as written by hardware
  * @rx_desc: descriptor vlan field as written by hardware (no le/be conversion)
  * @skb: pointer to sk_buff to be indicated to stack
  **/
 static void igb_receive_skb(struct igb_ring *ring, u8 status,
-                            union e1000_adv_rx_desc * rx_desc,
-                            struct rtskb *skb)
+			    union e1000_adv_rx_desc * rx_desc,
+			    struct rtskb *skb)
 {
 #ifdef CONFIG_IGB_LRO
 	if (ring->adapter->netdev->features & NETIF_F_LRO &&
 	    skb->ip_summed == CHECKSUM_UNNECESSARY) {
 		if (vlan_extracted)
 			lro_vlan_hwaccel_receive_skb(&ring->lro_mgr, skb,
-			                   ring->adapter->vlgrp,
-			                   le16_to_cpu(rx_desc->wb.upper.vlan),
-			                   rx_desc);
+					   ring->adapter->vlgrp,
+					   le16_to_cpu(rx_desc->wb.upper.vlan),
+					   rx_desc);
 		else
 			lro_receive_skb(&ring->lro_mgr,skb, rx_desc);
 		ring->lro_used = 1;
@@ -4151,10 +4143,10 @@ static void igb_alloc_rx_buffers_adv(struct igb_ring *rx_ring,
 			else
 				bufsz = adapter->rx_buffer_len;
 			bufsz += NET_IP_ALIGN;
-			skb = dev_alloc_rtskb(bufsz, &adapter->skb_pool);
+			skb = rtnetdev_alloc_rtskb(adapter->netdev, bufsz);
 
 			if (!skb) {
-			        adapter->net_stats.rx_dropped++;
+				adapter->net_stats.rx_dropped++;
 				adapter->alloc_rx_buff_failed++;
 				goto no_buffers;
 			}
@@ -4165,8 +4157,6 @@ static void igb_alloc_rx_buffers_adv(struct igb_ring *rx_ring,
 			 */
 
 			rtskb_reserve(skb, NET_IP_ALIGN);
-
-			skb->rtdev = adapter->netdev;
 
 			buffer_info->skb = skb;
 			buffer_info->dma = rtskb_data_dma_addr(skb, 0);
@@ -4230,7 +4220,7 @@ static int igb_mii_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd)
 		if (!capable(CAP_NET_ADMIN))
 			return -EPERM;
 		if (igb_read_phy_reg(&adapter->hw, data->reg_num & 0x1F,
-		                     &data->val_out))
+				     &data->val_out))
 			return -EIO;
 		break;
 	case SIOCSMIIREG:
@@ -4529,7 +4519,7 @@ static pci_ers_result_t igb_io_slot_reset(struct pci_dev *pdev)
 	err = pci_cleanup_aer_uncorrect_error_status(pdev);
 	if (err) {
 		dev_err(&pdev->dev, "pci_cleanup_aer_uncorrect_error_status "
-		        "failed 0x%0x\n", err);
+			"failed 0x%0x\n", err);
 		/* non-fatal, continue */
 	}
 

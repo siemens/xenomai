@@ -625,14 +625,13 @@ static void e1000_alloc_rx_buffers(struct e1000_adapter *adapter,
 			goto map_skb;
 		}
 
-		skb = dev_alloc_rtskb(bufsz, &adapter->skb_pool);
+		skb = rtnetdev_alloc_rtskb(adapter->netdev, bufsz);
 		if (!skb) {
 			/* Better luck next round */
 			adapter->alloc_rx_buff_failed++;
 			break;
 		}
 		rtskb_reserve(skb, NET_IP_ALIGN);
-		skb->rtdev = adapter->netdev;
 
 		buffer_info->skb = skb;
 map_skb:
@@ -1633,10 +1632,6 @@ void e1000e_free_rx_resources(struct e1000_adapter *adapter)
  **/
 static int e1000_alloc_queues(struct e1000_adapter *adapter)
 {
-	if (rtskb_pool_init(&adapter->skb_pool,
-			    RT_E1000E_NUM_RXD) < RT_E1000E_NUM_RXD)
-		goto err;
-
 	adapter->tx_ring = kzalloc(sizeof(struct e1000_ring), GFP_KERNEL);
 	if (!adapter->tx_ring)
 		goto err;
@@ -1652,7 +1647,6 @@ err:
 	e_err("Unable to allocate memory for queues\n");
 	kfree(adapter->rx_ring);
 	kfree(adapter->tx_ring);
-	rtskb_pool_release(&adapter->skb_pool);
 	return -ENOMEM;
 }
 
@@ -3154,7 +3148,7 @@ static void e1000_watchdog_task(struct work_struct *work)
 			tctl |= E1000_TCTL_EN;
 			ew32(TCTL, tctl);
 
-                        /*
+			/*
 			 * Perform any post-link-up configuration before
 			 * reporting link up.
 			 */
@@ -3459,7 +3453,7 @@ static void e1000_reset_task(struct work_struct *work)
  * Returns the address of the device statistics structure.
  **/
 struct rtnl_link_stats64 *e1000e_get_stats64(struct net_device *netdev,
-                                             struct rtnl_link_stats64 *stats)
+					     struct rtnl_link_stats64 *stats)
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 
@@ -3684,7 +3678,7 @@ static void e1000_power_off(struct pci_dev *pdev, bool sleep, bool wake)
 }
 
 static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
-                                    bool wake)
+				    bool wake)
 {
 	struct rtnet_device *netdev = pci_get_drvdata(pdev);
 	struct e1000_adapter *adapter = netdev->priv;
@@ -3702,7 +3696,7 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
 
 		pci_read_config_word(us_dev, pos + PCI_EXP_DEVCTL, &devctl);
 		pci_write_config_word(us_dev, pos + PCI_EXP_DEVCTL,
-		                      (devctl & ~PCI_EXP_DEVCTL_CERE));
+				      (devctl & ~PCI_EXP_DEVCTL_CERE));
 
 		e1000_power_off(pdev, sleep, wake);
 
@@ -3873,7 +3867,7 @@ static void e1000_print_device_info(struct e1000_adapter *adapter)
 	e_info("(PCI Express:2.5GT/s:%s) %pM\n",
 	       /* bus width */
 	       ((hw->bus.width == e1000_bus_width_pcie_x4) ? "Width x4" :
-	        "Width x1"),
+		"Width x1"),
 	       /* MAC address */
 	       netdev->dev_addr);
 	e_info("Intel(R) PRO/%s Network Connection\n",
@@ -3996,8 +3990,8 @@ static int e1000_probe(struct pci_dev *pdev,
 	}
 
 	err = pci_request_selected_regions_exclusive(pdev,
-	                                  pci_select_bars(pdev, IORESOURCE_MEM),
-	                                  e1000e_driver_name);
+					  pci_select_bars(pdev, IORESOURCE_MEM),
+					  e1000e_driver_name);
 	if (err)
 		goto err_pci_reg;
 
@@ -4011,7 +4005,7 @@ static int e1000_probe(struct pci_dev *pdev,
 		goto err_alloc_etherdev;
 
 	err = -ENOMEM;
-	netdev = rt_alloc_etherdev(sizeof(struct e1000_adapter));
+	netdev = rt_alloc_etherdev(sizeof(struct e1000_adapter), RT_E1000E_NUM_RXD);
 	if (!netdev)
 		goto err_alloc_etherdev;
 
@@ -4057,7 +4051,7 @@ static int e1000_probe(struct pci_dev *pdev,
 	netdev->open = e1000_open;
 	netdev->stop = e1000_close;
 	netdev->hard_start_xmit = e1000_xmit_frame;
-        //netdev->get_stats = e1000_get_stats;
+	//netdev->get_stats = e1000_get_stats;
 	netdev->map_rtskb = e1000_map_rtskb;
 	netdev->unmap_rtskb = e1000_unmap_rtskb;
 	strncpy(netdev->name, pci_name(pdev), sizeof(netdev->name) - 1);
@@ -4265,7 +4259,7 @@ err_ioremap:
 	rtdev_free(netdev);
 err_alloc_etherdev:
 	pci_release_selected_regions(pdev,
-	                             pci_select_bars(pdev, IORESOURCE_MEM));
+				     pci_select_bars(pdev, IORESOURCE_MEM));
 err_pci_reg:
 err_dma:
 	pci_disable_device(pdev);
@@ -4327,13 +4321,11 @@ static void e1000_remove(struct pci_dev *pdev)
 	kfree(adapter->tx_ring);
 	kfree(adapter->rx_ring);
 
-	rtskb_pool_release(&adapter->skb_pool);
-
 	iounmap(adapter->hw.hw_addr);
 	if (adapter->hw.flash_address)
 		iounmap(adapter->hw.flash_address);
 	pci_release_selected_regions(pdev,
-	                             pci_select_bars(pdev, IORESOURCE_MEM));
+				     pci_select_bars(pdev, IORESOURCE_MEM));
 
 	rtdev_free(netdev);
 

@@ -172,7 +172,7 @@ static void update_linkspeed(struct rtnet_device *dev, int silent)
 	unsigned int bmsr, bmcr, lpa, mac_cfg;
 	unsigned int speed, duplex;
 	int val=0;
-	
+
 	mdio_read(dev, lp->mii.phy_id, MII_BMSR);
 	if (mdio_read(dev, lp->mii.phy_id, MII_BMSR) & BMSR_LSTATUS)
 	  val = 1;
@@ -517,7 +517,7 @@ static int inline hash_bit_value(int bitnr, __u8 *addr)
 /*
  * Return the hash index value for the specified address.
  */
-#if 0 
+#if 0
 static int hash_get_index(__u8 *addr)
 {
 	int i, j, bitval;
@@ -759,7 +759,7 @@ static int at91ether_tx(struct rtskb *skb, struct rtnet_device *dev)
 				on this skb, he also reports -ENETDOWN and printk's, so either
 				we free and return(0) or don't free and return 1 */
 	}
-	
+
 	return 0;
 }
 
@@ -816,11 +816,10 @@ static void at91ether_rx(struct rtnet_device *dev, int *packets, nanosecs_abs_t 
 	while (dlist->descriptors[lp->rxBuffIndex].addr & EMAC_DESC_DONE) {
 		p_recv = dlist->recv_buf[lp->rxBuffIndex];
 		pktlen = dlist->descriptors[lp->rxBuffIndex].size & 0x7ff;	/* Length of frame including FCS */
-		skb = dev_alloc_rtskb(pktlen + 2, &lp->skb_pool);
+		skb = rtnetdev_alloc_rtskb(dev, pktlen + 2);
 		if (skb != NULL) {
 			rtskb_reserve(skb, 2);
 			memcpy(rtskb_put(skb, pktlen), p_recv, pktlen);
-			skb->rtdev = dev;
 			skb->protocol = rt_eth_type_trans(skb, dev);
 			skb->time_stamp = *time_stamp;
 			lp->stats.rx_bytes += pktlen;
@@ -855,7 +854,7 @@ static int at91ether_interrupt(rtdm_irq_t *irq_handle)
 {
 	struct rtnet_device *dev = rtdm_irq_get_arg(irq_handle, struct rtnet_device);
 	struct at91_private *lp = dev->priv;
-	unsigned long intstatus, ctl;	
+	unsigned long intstatus, ctl;
 	nanosecs_abs_t time_stamp = rtdm_clock_read();
 	int packets=0;
 
@@ -974,7 +973,7 @@ static int at91ether_close_rt(struct rtnet_device *dev)
 				| AT91_EMAC_TUND | AT91_EMAC_RTRY | AT91_EMAC_TCOM
 				| AT91_EMAC_ROVR | AT91_EMAC_ABT);
 
-	rtnetif_stop_queue(dev);  
+	rtnetif_stop_queue(dev);
 
 	clk_disable(lp->ether_clk);		/* Disable Peripheral clock */
 
@@ -999,7 +998,7 @@ static int at91ether_setup_rt(unsigned long phy_type, unsigned short phy_address
 	struct resource *res;
 	int ret;
 
-	dev = rt_alloc_etherdev(sizeof(struct at91_private)); /* RTnet */
+	dev = rt_alloc_etherdev(sizeof(struct at91_private), MAX_RX_DESCR); /* RTnet */
 	if (!dev)
 	  return -ENOMEM;
 
@@ -1030,7 +1029,7 @@ static int at91ether_setup_rt(unsigned long phy_type, unsigned short phy_address
 	lp->ether_clk = ether_clk;
 	platform_set_drvdata(pdev, dev);
 
-	rtdm_lock_init(&lp->lock); 
+	rtdm_lock_init(&lp->lock);
 
 	/*ether_setup(dev);*/
 	dev->open = at91ether_open_rt;
@@ -1041,14 +1040,6 @@ static int at91ether_setup_rt(unsigned long phy_type, unsigned short phy_address
 	/*dev->set_mac_address = set_mac_address;*/
 	/*dev->ethtool_ops = &at91ether_ethtool_ops;*/
 	/*dev->do_ioctl = at91ether_ioctl_rt;*/
-
-	/* Setup the RT Net Socket Buffer */
-	if (rtskb_pool_init(&lp->skb_pool, MAX_RX_DESCR) < MAX_RX_DESCR)
-	  {
-	    printk("[RTNet] Not enough memory\n");
-	    ret = -ENOMEM;
-	    goto err_out;
-	  }
 
 	get_mac_address(dev);		/* Get ethernet address and store it in dev->dev_addr */
 	update_mac_address(dev);	/* Program ethernet address into MAC */
@@ -1129,7 +1120,6 @@ static int at91ether_setup_rt(unsigned long phy_type, unsigned short phy_address
 	return 0;
 
  err_out:
-	rtskb_pool_release(&lp->skb_pool);
 	return ret;
 }
 
@@ -1189,7 +1179,6 @@ static int at91ether_remove(struct platform_device *pdev)
 	rt_rtdev_disconnect(dev);
 	dma_free_coherent(NULL, sizeof(struct recv_desc_bufs), lp->dlist, (dma_addr_t)lp->dlist_phys);
 	clk_put(lp->ether_clk);
-	rtskb_pool_release(&lp->skb_pool);
 	platform_set_drvdata(pdev, NULL);
 	rtdev_free(dev);
 	return 0;
