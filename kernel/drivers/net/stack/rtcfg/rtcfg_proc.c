@@ -156,7 +156,7 @@ rtnet_rtcfg_dev_conn_state_show(struct xnvfile_regular_iterator *it, void *d)
 				conn->mac_addr[2], conn->mac_addr[3],
 				conn->mac_addr[4], conn->mac_addr[5]);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 	if ((conn->addr_type & RTCFG_ADDR_MASK) == RTCFG_ADDR_IP)
 		xnvfile_printf(it, "ip:\t\t\t%u.%u.%u.%u\n",
 					NIPQUAD(conn->addr.ip_addr));
@@ -180,7 +180,7 @@ void rtcfg_update_conn_proc_entries(int ifindex)
 
 	list_for_each_entry(conn, &dev->spec.srv.conn_list, entry) {
 		switch (conn->addr_type & RTCFG_ADDR_MASK) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 		case RTCFG_ADDR_IP:
 			snprintf(name_buf, 64, "CLIENT_%u.%u.%u.%u",
 					NIPQUAD(conn->addr.ip_addr));

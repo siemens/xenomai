@@ -46,7 +46,7 @@
 #include <asm/uaccess.h>
 #include <asm/cpm_8260.h>
 
-#ifdef CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO
 #error "MDIO for PHY configuration is not yet supported!"
 #endif
 
@@ -74,7 +74,7 @@ MODULE_PARM_DESC(rtnet_fcc, "FCCx port for RTnet (default=1)");
  */
 #define TX_TIMEOUT	(2*HZ)
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 /* Forward declarations of some structures to support different PHYs */
 
 typedef struct {
@@ -122,7 +122,7 @@ typedef struct {
 #define PHY_STAT_10FDX	0x2000  /* 10 Mbit full duplex selected	*/
 #define PHY_STAT_100HDX	0x4000  /* 100 Mbit half duplex selected */
 #define PHY_STAT_100FDX	0x8000  /* 100 Mbit full duplex selected */
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 /* The number of Tx and Rx buffers.  These are allocated from the page
  * pool.  The code may assume these are power of two, so it is best
@@ -390,7 +390,7 @@ struct fcc_enet_private {
 	rtdm_lock_t lock;
 	rtdm_irq_t irq_handle;
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	uint	phy_id;
 	uint	phy_id_done;
 	uint	phy_status;
@@ -400,7 +400,7 @@ struct fcc_enet_private {
 	uint	sequence_done;
 
 	uint	phy_addr;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	int	link;
 	int	old_link;
@@ -417,7 +417,7 @@ static void init_fcc_ioports(fcc_info_t *fip, volatile iop8260_t *io,
 static void init_fcc_param(fcc_info_t *fip, struct rtnet_device *rtdev,
 	volatile immap_t *immap);
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 static int	mii_queue(struct net_device *dev, int request, void (*func)(uint, struct net_device *));
 static uint	mii_send_receive(fcc_info_t *fip, uint cmd);
 
@@ -429,7 +429,7 @@ static void	fcc_stop(struct net_device *dev);
 #define mk_mii_write(REG, VAL)	(0x50020000 | ((REG & 0x1f) << 18) | \
 						(VAL & 0xffff))
 #define mk_mii_end	0
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 
 static int
@@ -815,7 +815,7 @@ static struct net_device_stats *fcc_enet_get_stats(struct rtnet_device *rtdev)
 	return &cep->stats;
 }
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 
 /* NOTE: Most of the following comes from the FEC driver for 860. The
  * overall structure of MII code has been retained (as it's proved stable
@@ -1505,7 +1505,7 @@ mii_link_interrupt(int irq, void * dev_id, struct pt_regs * regs)
 }
 #endif	/* !CONFIG_PM826 */
 
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 #ifdef ORIGINAL_VERSION
 /* Set or clear the multicast filter for this adaptor.
@@ -1684,13 +1684,13 @@ int __init fec_enet_init(void)
 		       rtdev->dev_addr[0], rtdev->dev_addr[1], rtdev->dev_addr[2],
 		       rtdev->dev_addr[3], rtdev->dev_addr[4], rtdev->dev_addr[5]);
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 		/* Queue up command to detect the PHY and initialize the
 		 * remainder of the interface.
 		 */
 		cep->phy_addr = 0;
 		mii_queue(dev, mk_mii_read(MII_REG_PHYIR1), mii_discover_phy);
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 	}
 
 	return 0;
@@ -1763,7 +1763,7 @@ init_fcc_ioports(fcc_info_t *fip, volatile iop8260_t *io,
 	io->iop_pdirc &= ~(fip->fc_trxclocks);
 	io->iop_pparc |= fip->fc_trxclocks;
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* ....and the MII serial clock/data.
 	*/
 #ifndef	CONFIG_PM826
@@ -1772,7 +1772,7 @@ init_fcc_ioports(fcc_info_t *fip, volatile iop8260_t *io,
 #endif	/* CONFIG_PM826 */
 	IOP_DIR(io,fip->fc_port) |= (fip->fc_mdio | fip->fc_mdck);
 	IOP_PAR(io,fip->fc_port) &= ~(fip->fc_mdio | fip->fc_mdck);
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	/* Configure Serial Interface clock routing.
 	 * First, clear all FCC bits to zero,
@@ -2037,14 +2037,14 @@ init_fcc_startup(fcc_info_t *fip, struct rtnet_device *rtdev)
 	}
 
 
-#if defined (CONFIG_RTAI_RTNET_USE_MDIO) && !defined (CONFIG_PM826)
+#if defined (CONFIG_XENO_DRIVERS_NET_USE_MDIO) && !defined (CONFIG_PM826)
 # ifndef PHY_INTERRUPT
 #  error Want to use MDIO, but PHY_INTERRUPT not defined!
 # endif
 	if (request_8xxirq(PHY_INTERRUPT, mii_link_interrupt, 0,
 							"mii", dev) < 0)
 		printk("Can't get MII IRQ %d\n", PHY_INTERRUPT);
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO, CONFIG_PM826 */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO, CONFIG_PM826 */
 
 	/* Set GFMR to enable Ethernet operating mode.
 	 */
@@ -2071,7 +2071,7 @@ init_fcc_startup(fcc_info_t *fip, struct rtnet_device *rtdev)
 	ads_csr_addr[1] &= ~BCSR1_FETHIEN;	/* Enable */
 #endif
 
-#if defined(CONFIG_RTAI_RTNET_USE_MDIO) || defined(CONFIG_TQM8260)
+#if defined(CONFIG_XENO_DRIVERS_NET_USE_MDIO) || defined(CONFIG_TQM8260)
 	/* start in full duplex mode, and negotiate speed */
 	fcc_restart (rtdev, 1);
 #else
@@ -2080,7 +2080,7 @@ init_fcc_startup(fcc_info_t *fip, struct rtnet_device *rtdev)
 #endif
 }
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 /* MII command/status interface.
  * I'm not going to describe all of the details.  You can find the
  * protocol definition in many other places, including the data sheet
@@ -2187,7 +2187,7 @@ fcc_stop(struct net_device *dev)
 	/* Disable transmit/receive */
 	fccp->fcc_gfmr &= ~(FCC_GFMR_ENR | FCC_GFMR_ENT);
 }
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 static void
 fcc_restart(struct rtnet_device *rtdev, int duplex)
@@ -2212,7 +2212,7 @@ fcc_enet_open(struct rtnet_device *rtdev)
 {
 	struct fcc_enet_private *fep = rtdev->priv;
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	fep->sequence_done = 0;
 	fep->link = 0;
 
@@ -2237,7 +2237,7 @@ fcc_enet_open(struct rtnet_device *rtdev)
 	fep->link = 1;
 	rtnetif_start_queue(rtdev);
 	return 0;					/* Always succeed */
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 }
 
 static void __exit fcc_enet_cleanup(void)

@@ -336,7 +336,7 @@ static void rtcfg_conn_check_cfg_timeout(struct rtcfg_connection *conn)
         conn->cfg_offs = 0;
         conn->flags    = 0;
 
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
         if (conn->addr_type == RTCFG_ADDR_IP) {
             struct rtnet_device *rtdev;
 
@@ -376,7 +376,7 @@ static void rtcfg_conn_check_heartbeat(struct rtcfg_connection *conn)
         conn->cfg_offs = 0;
         conn->flags    = 0;
 
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
         if ((conn->addr_type & RTCFG_ADDR_MASK) == RTCFG_ADDR_IP) {
             struct rtnet_device *rtdev = rtdev_get_by_index(conn->ifindex);
 

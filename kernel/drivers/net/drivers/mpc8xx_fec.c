@@ -65,7 +65,7 @@
 #include <asm/uaccess.h>
 #include <asm/commproc.h>
 
-#ifdef CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO
 #error "MDIO for PHY configuration is not yet supported!"
 #endif
 
@@ -93,7 +93,7 @@ MODULE_PARM_DESC(rx_pool_size, "Receive buffer pool size");
  */
 #define FEC_CRC_POLY   0x04C11DB7
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 /* Forward declarations of some structures to support different PHYs
 */
 
@@ -111,7 +111,7 @@ typedef struct {
 	const phy_cmd_t *ack_int;
 	const phy_cmd_t *shutdown;
 } phy_info_t;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 /* The number of Tx and Rx buffers.  These are allocated from the page
  * pool.  The code may assume these are power of two, so it is best
@@ -196,7 +196,7 @@ struct fec_enet_private {
 	rtdm_lock_t lock;
 	rtdm_irq_t irq_handle;
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	uint	phy_id;
 	uint	phy_id_done;
 	uint	phy_status;
@@ -210,7 +210,7 @@ struct fec_enet_private {
 
 	struct timer_list phy_timer_list;
 	u16 old_status;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	int	link;
 	int	old_link;
@@ -226,9 +226,9 @@ static int fec_enet_interrupt(rtdm_irq_t *irq_handle);
 static int  fec_enet_close(struct rtnet_device *dev);
 static void fec_restart(struct rtnet_device *rtdev, int duplex);
 static void fec_stop(struct rtnet_device *rtdev);
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 static void fec_enet_mii(struct net_device *dev);
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 static struct net_device_stats *fec_enet_get_stats(struct rtnet_device *rtdev);
 #ifdef ORIGINAL_VERSION
 static void set_multicast_list(struct net_device *dev);
@@ -238,7 +238,7 @@ static struct rtnet_device *rtdev_root = NULL; /* for cleanup */
 
 static	ushort	my_enet_addr[3];
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 static int fec_enet_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
 static int netdev_ethtool_ioctl(struct net_device *dev, void *useraddr);
 
@@ -281,13 +281,13 @@ static void mii_queue_relink(uint mii_reg, struct net_device *dev, uint data);
 #define mk_mii_write(REG, VAL)	(0x50020000 | ((REG & 0x1f) << 18) | \
 						(VAL & 0xffff))
 #define mk_mii_end	0
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 /* Transmitter timeout.
 */
 #define TX_TIMEOUT (2*HZ)
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 /* Register definitions for the PHY.
 */
 
@@ -319,7 +319,7 @@ static void mii_queue_relink(uint mii_reg, struct net_device *dev, uint data);
 #define PHY_STAT_10FDX	0x2000  /* 10 Mbit full duplex selected	*/
 #define PHY_STAT_100HDX	0x4000  /* 100 Mbit half duplex selected */
 #define PHY_STAT_100FDX	0x8000  /* 100 Mbit full duplex selected */
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 
 static int
@@ -515,12 +515,12 @@ static int fec_enet_interrupt(rtdm_irq_t *irq_handle)
 		}
 
 		if (int_events & FEC_ENET_MII) {
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 			fec_enet_mii(dev);
 #else
 		rtdm_printk("%s[%d] %s: unexpected FEC_ENET_MII event\n",
 			__FILE__,__LINE__,__FUNCTION__);
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 		}
 
 	}
@@ -727,7 +727,7 @@ rx_processing_done:
 }
 
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 static void
 fec_enet_mii(struct net_device *dev)
 {
@@ -1513,9 +1513,9 @@ mii_discover_phy(uint mii_reg, struct net_device *dev, uint data)
 		}
 	}
 }
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 /* This interrupt occurs when the PHY detects a link change.
 */
 static void
@@ -1555,7 +1555,7 @@ mii_link_interrupt(int irq, void * dev_id, struct pt_regs * regs)
 	}
 
 }
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 static int
 fec_enet_open(struct rtnet_device *rtdev)
@@ -1566,7 +1566,7 @@ fec_enet_open(struct rtnet_device *rtdev)
 	 * a simple way to do that.
 	 */
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	fep->sequence_done = 0;
 	fep->link = 0;
 
@@ -1578,7 +1578,7 @@ fec_enet_open(struct rtnet_device *rtdev)
 
 		mii_do_cmd(dev, fep->phy->startup);
 
-#if defined(CONFIG_RTAI_RTNET_USE_MDIO) && defined(CONFIG_FEC_DP83846A)
+#if defined(CONFIG_XENO_DRIVERS_NET_USE_MDIO) && defined(CONFIG_FEC_DP83846A)
 		if(fep->phy == &phy_info_dp83846a)
 		{
 			/* Initializing timers
@@ -1603,18 +1603,18 @@ fec_enet_open(struct rtnet_device *rtdev)
 	}
 #endif /* CONFIG_IP_PNP */
 
-#endif /* CONFIG_RTAI_RTNET_USE_MDIO && CONFIG_FEC_DP83846A */
+#endif /* CONFIG_XENO_DRIVERS_NET_USE_MDIO && CONFIG_FEC_DP83846A */
 
 		netif_start_queue(dev);
 		return 0;		/* Success */
 	}
 	return -ENODEV;		/* No PHY we understand */
-#else	/* !CONFIG_RTAI_RTNET_USE_MDIO */
+#else	/* !CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 	fep->link = 1;
 	rtnetif_start_queue(rtdev);
 
 	return 0;	/* Success */
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 }
 
@@ -1637,7 +1637,7 @@ static struct net_device_stats *fec_enet_get_stats(struct rtnet_device *rtdev)
 	return &fep->stats;
 }
 
-#ifdef CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO
 
 #if defined(CONFIG_FEC_DP83846A)
 /* Execute the ack_int command set and schedules next timer call back.  */
@@ -1768,7 +1768,7 @@ static int netdev_ethtool_ioctl (struct net_device *dev, void *useraddr)
 	return -EOPNOTSUPP;
 }
 
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 
 #ifdef ORIGINAL_VERSION
@@ -2061,7 +2061,7 @@ int __init fec_enet_init(void)
 /* If MDIO is disabled the PHY should not be allowed to
  * generate interrupts telling us to read the PHY.
  */
-# ifdef CONFIG_RTAI_RTNET_USE_MDIO
+# ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* Make Port C, bit 15 an input that causes interrupts.
 	*/
 	immap->im_ioport.iop_pcpar &= ~0x0001;
@@ -2069,14 +2069,14 @@ int __init fec_enet_init(void)
 	immap->im_ioport.iop_pcso  &= ~0x0001;
 	immap->im_ioport.iop_pcint |=  0x0001;
 	cpm_install_handler(CPMVEC_PIO_PC15, mii_link_interrupt, dev);
-# endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+# endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	/* Make LEDS reflect Link status.
 	*/
 	*((uint *) RPX_CSR_ADDR) &= ~BCSR2_FETHLEDMODE;
 #endif	/* CONFIG_RPXCLASSIC */
 
-#ifdef CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef CONFIG_XENO_DRIVERS_NET_USE_MDIO
 # ifndef PHY_INTERRUPT
 #  error Want to use MII, but PHY_INTERRUPT not defined!
 # endif
@@ -2085,7 +2085,7 @@ int __init fec_enet_init(void)
 
 	if (request_8xxirq(PHY_INTERRUPT, mii_link_interrupt, 0, "mii", dev) != 0)
 		panic("Could not allocate MII IRQ!");
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	rtdev->base_addr = (unsigned long)fecp;
 
@@ -2103,13 +2103,13 @@ int __init fec_enet_init(void)
 		return i;
 	}
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	dev->do_ioctl = fec_enet_ioctl;
 
 	for (i=0; i<NMII-1; i++)
 		mii_cmds[i].mii_next = &mii_cmds[i+1];
 	mii_free = mii_cmds;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 #ifndef CONFIG_ICU862
 	/* Configure all of port D for MII.
@@ -2138,10 +2138,10 @@ int __init fec_enet_init(void)
 		immap->im_ioport.utmode |= 0x80;
 	}
 
-# ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+# ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* Now configure MII_MDC pin */
 	immap->im_ioport.iop_pdpar |= (0x8000 >> 8);
-# endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+# endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 #endif  /* CONFIG_ICU862 */
 
 	/* Bits moved from Rev. D onward.
@@ -2151,14 +2151,14 @@ int __init fec_enet_init(void)
 	else
 		immap->im_ioport.iop_pddir = 0x1fff;	/* Rev. D and later */
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* Set MII speed to 2.5 MHz
 	*/
 	fecp->fec_mii_speed = fep->phy_speed =
 	    ((((bd->bi_intfreq + 4999999) / 2500000) / 2 ) & 0x3F ) << 1;
 #else
 	fecp->fec_mii_speed = 0;	/* turn off MDIO */
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 #ifndef ORIGINAL_VERSION
 	printk("%s: FEC ENET Version 0.3, irq %d, addr %02x:%02x:%02x:%02x:%02x:%02x\n",
@@ -2167,7 +2167,7 @@ int __init fec_enet_init(void)
 	       rtdev->dev_addr[3], rtdev->dev_addr[4], rtdev->dev_addr[5]);
 #else
 	printk ("%s: FEC ENET Version 0.3, FEC irq %d"
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 		", with MDIO"
 #endif
 #ifdef PHY_INTERRUPT
@@ -2183,13 +2183,13 @@ int __init fec_enet_init(void)
 		printk("%02x%c", rtdev->dev_addr[i], (i==5) ? '\n' : ':');
 #endif /* ORIGINAL_VERSION */
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO	/* start in full duplex mode, and negotiate speed */
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO	/* start in full duplex mode, and negotiate speed */
 	fec_restart (dev, 1);
 #else			/* always use half duplex mode only */
 	fec_restart (rtdev, 0);
 #endif
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* Queue up command to detect the PHY and initialize the
 	 * remainder of the interface.
 	 */
@@ -2198,7 +2198,7 @@ int __init fec_enet_init(void)
 	mii_queue(dev, mk_mii_read(MII_REG_PHYIR1), mii_discover_phy, 0);
 
 	fep->old_status = 0;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	return 0;
 }
@@ -2317,11 +2317,11 @@ fec_restart(struct rtnet_device *rtdev, int duplex)
 	*/
 	fecp->fec_fun_code = 0x78000000;
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* Set MII speed.
 	*/
 	fecp->fec_mii_speed = fep->phy_speed;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	/* Clear any outstanding interrupt.
 	*/
@@ -2385,11 +2385,11 @@ fec_stop(struct rtnet_device *rtdev)
 	fecp->fec_ivec = (FEC_INTERRUPT/2) << 29;
 	fecp->fec_imask = FEC_ENET_MII;
 
-#ifdef	CONFIG_RTAI_RTNET_USE_MDIO
+#ifdef	CONFIG_XENO_DRIVERS_NET_USE_MDIO
 	/* Set MII speed.
 	*/
 	fecp->fec_mii_speed = fep->phy_speed;
-#endif	/* CONFIG_RTAI_RTNET_USE_MDIO */
+#endif	/* CONFIG_XENO_DRIVERS_NET_USE_MDIO */
 
 	/* Disable FEC
 	*/

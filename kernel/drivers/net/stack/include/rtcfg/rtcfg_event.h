@@ -76,7 +76,7 @@ struct rtcfg_device {
 	struct {
 	    unsigned int            addr_type;
 	    union {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 		u32                 ip_addr;
 #endif
 	    } srv_addr;

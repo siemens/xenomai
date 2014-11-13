@@ -311,7 +311,7 @@ static int rtcfg_server_add(struct rtcfg_cmd *cmd_event)
     new_conn->ifindex      = cmd_event->internal.data.ifindex;
     new_conn->state        = RTCFG_CONN_SEARCHING;
     new_conn->addr_type    = cmd_event->args.add.addr_type;
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
     new_conn->addr.ip_addr = cmd_event->args.add.ip_addr;
 #endif
     new_conn->stage1_data  = cmd_event->args.add.stage1_data;
@@ -320,7 +320,7 @@ static int rtcfg_server_add(struct rtcfg_cmd *cmd_event)
     new_conn->cfg_timeout  = ((u64)cmd_event->args.add.timeout) * 1000000;
 
     if (cmd_event->args.add.addr_type == RTCFG_ADDR_IP) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 	struct rtnet_device *rtdev;
 
 	/* MAC address yet unknown -> use broadcast address */
@@ -358,7 +358,7 @@ static int rtcfg_server_add(struct rtcfg_cmd *cmd_event)
 	conn = list_entry(entry, struct rtcfg_connection, entry);
 
 	if (
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 	    ((addr_type == RTCFG_ADDR_IP) &&
 	     (conn->addr.ip_addr == cmd_event->args.add.ip_addr)) ||
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4 */
@@ -413,7 +413,7 @@ static int rtcfg_server_del(struct rtcfg_cmd *cmd_event)
 	conn = list_entry(entry, struct rtcfg_connection, entry);
 
 	if ((addr_type == conn->addr_type) && (
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 	     ((addr_type == RTCFG_ADDR_IP) &&
 	      (conn->addr.ip_addr == cmd_event->args.add.ip_addr)) ||
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4 */
@@ -521,7 +521,7 @@ static int rtcfg_server_recv_announce(int ifindex, RTCFG_EVENT event_id,
 	conn = list_entry(entry, struct rtcfg_connection, entry);
 
 	switch (announce->addr_type) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
 	    u32 announce_addr;
 	    case RTCFG_ADDR_IP:
 		memcpy(&announce_addr, announce->addr, 4);

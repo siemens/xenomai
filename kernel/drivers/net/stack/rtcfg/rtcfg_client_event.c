@@ -586,7 +586,7 @@ static void rtcfg_client_recv_stage_1(int ifindex, struct rtskb *rtskb)
     addr_type = stage_1_cfg->addr_type;
 
     switch (stage_1_cfg->addr_type) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
         case RTCFG_ADDR_IP: {
             struct rtnet_device *rtdev, *tmp;
             u32                 daddr, saddr, mask, bcast;
@@ -758,7 +758,7 @@ static int rtcfg_client_recv_announce(int ifindex, struct rtskb *rtskb)
     }
 
     switch (announce_frm->addr_type) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
         case RTCFG_ADDR_IP:
             if (rtskb->len < sizeof(struct rtcfg_frm_announce) +
                     RTCFG_ADDRSIZE_IP) {
@@ -1029,7 +1029,7 @@ static void rtcfg_client_recv_dead_station(int ifindex, struct rtskb *rtskb)
     }
 
     switch (dead_station_frm->addr_type) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
         case RTCFG_ADDR_IP: {
             u32 ip;
 
@@ -1109,7 +1109,7 @@ static void rtcfg_client_update_server(int ifindex, struct rtskb *rtskb)
     __rtskb_pull(rtskb, sizeof(struct rtcfg_frm_stage_1_cfg));
 
     switch (stage_1_cfg->addr_type) {
-#ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4)
         case RTCFG_ADDR_IP: {
             struct rtnet_device *rtdev;
             u32                 daddr, saddr;

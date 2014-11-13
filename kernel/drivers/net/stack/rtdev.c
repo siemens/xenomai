@@ -61,6 +61,7 @@ int rtdev_reference(struct rtnet_device *rtdev)
     }
     return 1;
 }
+EXPORT_SYMBOL_GPL(rtdev_reference);
 
 struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *rtdev, unsigned int size)
 {
