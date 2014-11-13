@@ -45,32 +45,28 @@ module_param(start_timer, int, 0444);
 MODULE_PARM_DESC(start_timer, "set to non-zero to start RTAI timer");
 #endif
 
-#ifdef CONFIG_PROC_FS
-int tdma_proc_read(char *buf, char **start, off_t offset, int count,
-		    int *eof, void *data)
+#ifdef CONFIG_XENO_OPT_VFILE
+int tdma_proc_read(struct xnvfile_regular_iterator *it, void *data)
 {
-    struct rtnet_device *rtdev = NULL;
+    int                 d, err = 0;
+    struct rtnet_device *rtdev;
     struct tdma_priv    *tdma;
     const char          *state;
-    int                 d;
 #ifdef CONFIG_XENO_DRIVERS_NET_TDMA_MASTER
     u64                 cycle;
 #endif
-    RTNET_PROC_PRINT_VARS(80);
 
-
-    if (!RTNET_PROC_PRINT("Interface       API Device      Operation Mode  "
-			  "Cycle   State\n"))
-	goto done;
+    xnvfile_printf(it, "Interface       API Device      Operation Mode  "
+	    "Cycle   State\n");
 
     for (d = 1; d <= MAX_RT_DEVICES; d++) {
 	rtdev = rtdev_get_by_index(d);
 	if (!rtdev)
 	    continue;
 
-	if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
+	err = mutex_lock_interruptible(&rtdev->nrt_lock);
+	if (err < 0) {
 	    rtdev_dereference(rtdev);
-	    rtdev = NULL;
 	    break;
 	}
 
@@ -78,9 +74,9 @@ int tdma_proc_read(char *buf, char **start, off_t offset, int count,
 	    goto unlock_dev;
 	tdma = (struct tdma_priv *)rtdev->mac_priv->disc_priv;
 
-	if (!RTNET_PROC_PRINT("%-15s %-15s ", rtdev->name,
-			      tdma->api_device.device_name))
-	    break;
+	xnvfile_printf(it, "%-15s %-15s ",
+		    rtdev->name, tdma->api_device.name);
+
 	if (test_bit(TDMA_FLAG_CALIBRATED, &tdma->flags)) {
 #ifdef CONFIG_XENO_DRIVERS_NET_TDMA_MASTER
 	    if (test_bit(TDMA_FLAG_BACKUP_MASTER, &tdma->flags) &&
@@ -95,59 +91,47 @@ int tdma_proc_read(char *buf, char **start, off_t offset, int count,
 	if (test_bit(TDMA_FLAG_MASTER, &tdma->flags)) {
 	    cycle = tdma->cycle_period + 500;
 	    do_div(cycle, 1000);
-	    if (test_bit(TDMA_FLAG_BACKUP_MASTER, &tdma->flags)) {
-		if (!RTNET_PROC_PRINT("Backup Master   %-7ld %s\n",
-				      (unsigned long)cycle, state))
-		    break;
-	    } else {
-		if (!RTNET_PROC_PRINT("Master          %-7ld %s\n",
-				      (unsigned long)cycle, state))
-		    break;
-	    }
+	    if (test_bit(TDMA_FLAG_BACKUP_MASTER, &tdma->flags))
+		xnvfile_printf(it, "Backup Master   %-7ld %s\n",
+			    (unsigned long)cycle, state);
+	    else
+		xnvfile_printf(it, "Master          %-7ld %s\n",
+			    (unsigned long)cycle, state);
 	} else
 #endif /* CONFIG_XENO_DRIVERS_NET_TDMA_MASTER */
-	    if (!RTNET_PROC_PRINT("Slave           -       %s\n", state))
-		break;
+	      xnvfile_printf(it, "Slave           -       %s\n", state);
+
 unlock_dev:
 	mutex_unlock(&rtdev->nrt_lock);
 	rtdev_dereference(rtdev);
-	rtdev = NULL;
     }
 
-done:
-    if (rtdev) {
-	mutex_unlock(&rtdev->nrt_lock);
-	rtdev_dereference(rtdev);
-    }
-    RTNET_PROC_PRINT_DONE;
+    return err;
 }
 
 
 
-int tdma_slots_proc_read(char *buf, char **start, off_t offset, int count,
-			 int *eof, void *data)
+int tdma_slots_proc_read(struct xnvfile_regular_iterator *it, void *data)
 {
-    struct rtnet_device *rtdev = NULL;
+    int                 d, i, err = 0;
+    struct rtnet_device *rtdev;
     struct tdma_priv    *tdma;
     struct tdma_slot    *slot;
-    int                 d, i;
     int                 jnt_id;
     u64                 slot_offset;
-    RTNET_PROC_PRINT_VARS(80);
 
 
-    if (!RTNET_PROC_PRINT("Interface       "
-			  "Slots (id[->joint]:offset:phasing/period:size)\n"))
-	goto done;
+    xnvfile_printf(it, "Interface       "
+		"Slots (id[->joint]:offset:phasing/period:size)\n");
 
     for (d = 1; d <= MAX_RT_DEVICES; d++) {
 	rtdev = rtdev_get_by_index(d);
 	if (!rtdev)
 	    continue;
 
-	if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
+	err = mutex_lock_interruptible(&rtdev->nrt_lock);
+	if (err < 0) {
 	    rtdev_dereference(rtdev);
-	    rtdev = NULL;
 	    break;
 	}
 
@@ -155,15 +139,13 @@ int tdma_slots_proc_read(char *buf, char **start, off_t offset, int count,
 	    goto unlock_dev;
 	tdma = (struct tdma_priv *)rtdev->mac_priv->disc_priv;
 
-	if (!RTNET_PROC_PRINT("%-15s ", rtdev->name))
-	    break;
+	xnvfile_printf(it, "%-15s ", rtdev->name);
 
 #ifdef CONFIG_XENO_DRIVERS_NET_TDMA_MASTER
 	if (test_bit(TDMA_FLAG_BACKUP_MASTER, &tdma->flags)) {
 	    slot_offset = tdma->backup_sync_inc - tdma->cycle_period + 500;
 	    do_div(slot_offset, 1000);
-	    if (!RTNET_PROC_PRINT("bak:%ld  ", (unsigned long)slot_offset))
-		break;
+	    xnvfile_printf(it, "bak:%ld  ", (unsigned long)slot_offset);
 	}
 #endif /* CONFIG_XENO_DRIVERS_NET_TDMA_MASTER */
 
@@ -176,42 +158,32 @@ int tdma_slots_proc_read(char *buf, char **start, off_t offset, int count,
 		    continue;
 
 		if (slot->queue == &slot->local_queue) {
-		    if (!RTNET_PROC_PRINT("%d", i))
-			goto done;
+		    xnvfile_printf(it, "%d", i);
 		} else
 		    for (jnt_id = 0; jnt_id <= tdma->max_slot_id; jnt_id++)
 			if (&tdma->slot_table[jnt_id]->local_queue ==
 			    slot->queue) {
-			    if (!RTNET_PROC_PRINT("%d->%d", i, jnt_id))
-				goto done;
+			    xnvfile_printf(it, "%d->%d", i, jnt_id);
 			    break;
 			}
 
 		slot_offset = slot->offset + 500;
 		do_div(slot_offset, 1000);
-		if (!RTNET_PROC_PRINT(":%ld:%d/%d:%d  ",
-			(unsigned long)slot_offset, slot->phasing + 1,
-			slot->period, slot->mtu))
-		    goto done;
+		xnvfile_printf(it, ":%ld:%d/%d:%d  ",
+			    (unsigned long)slot_offset, slot->phasing + 1,
+			    slot->period, slot->mtu);
 	    }
 
-	if (!RTNET_PROC_PRINT("\n"))
-	    break;
+	xnvfile_printf(it, "\n");
 
 unlock_dev:
 	mutex_unlock(&rtdev->nrt_lock);
 	rtdev_dereference(rtdev);
-	rtdev = NULL;
     }
 
-done:
-    if (rtdev) {
-	mutex_unlock(&rtdev->nrt_lock);
-	rtdev_dereference(rtdev);
-    }
-    RTNET_PROC_PRINT_DONE;
+    return err;
 }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 
 
@@ -261,7 +233,6 @@ int tdma_detach(struct rtnet_device *rtdev, void *priv)
 {
     struct tdma_priv    *tdma = (struct tdma_priv *)priv;
     struct tdma_job     *job, *tmp;
-    int                 err;
 
 
     set_bit(TDMA_FLAG_SHUTDOWN, &tdma->flags);
@@ -270,9 +241,7 @@ int tdma_detach(struct rtnet_device *rtdev, void *priv)
     rtdm_event_destroy(&tdma->xmit_event);
     rtdm_event_destroy(&tdma->worker_wakeup);
 
-    err = tdma_dev_release(tdma);
-    if (err < 0)
-	return err;
+    tdma_dev_release(tdma);
 
     rtdm_task_join_nrt(&tdma->worker_task, 100);
 
@@ -298,13 +267,12 @@ int tdma_detach(struct rtnet_device *rtdev, void *priv)
 
 
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 struct rtmac_proc_entry tdma_proc_entries[] = {
     { name: "tdma", handler: tdma_proc_read },
     { name: "tdma_slots", handler: tdma_slots_proc_read },
-    { name: NULL, handler: NULL }
 };
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct rtmac_disc tdma_disc = {
     name:           "TDMA",
@@ -328,9 +296,10 @@ struct rtmac_disc tdma_disc = {
 	handler:        tdma_ioctl
     },
 
-#ifdef CONFIG_PROC_FS
-    proc_entries:   tdma_proc_entries
-#endif /* CONFIG_PROC_FS */
+#ifdef CONFIG_XENO_OPT_VFILE
+    proc_entries:   tdma_proc_entries,
+    nr_proc_entries: ARRAY_SIZE(tdma_proc_entries),
+#endif /* CONFIG_XENO_OPT_VFILE */
 };
 
 

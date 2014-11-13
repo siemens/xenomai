@@ -79,8 +79,6 @@ static int rt_loopback_xmit(struct rtskb *rtskb, struct rtnet_device *rtdev)
     /* parse the Ethernet header as usual */
     rtskb->protocol = rt_eth_type_trans(rtskb, rtdev);
 
-    rtdev_reference(rtdev);
-
     rt_stack_deliver(rtskb);
 
     return 0;

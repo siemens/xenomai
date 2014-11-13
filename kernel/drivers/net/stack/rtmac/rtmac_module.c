@@ -38,7 +38,7 @@ int __init rtmac_init(void)
 
     printk("RTmac: init realtime media access control\n");
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     ret = rtmac_proc_register();
     if (ret < 0)
         return ret;
@@ -58,7 +58,7 @@ error2:
     rtmac_vnic_module_cleanup();
 
 error1:
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rtmac_proc_release();
 #endif
     return ret;
@@ -70,7 +70,7 @@ void rtmac_release(void)
 {
     rtmac_proto_release();
     rtmac_vnic_module_cleanup();
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rtmac_proc_release();
 #endif
 

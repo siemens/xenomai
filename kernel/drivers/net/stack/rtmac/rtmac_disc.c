@@ -114,7 +114,7 @@ int rtmac_disc_attach(struct rtnet_device *rtdev, struct rtmac_disc *disc)
     kfree(priv);
     rtdev_dereference(rtdev);
   err_module_put:
-    mdoule_put(disc->owner);
+    module_put(disc->owner);
     return ret;
 }
 
@@ -226,13 +226,13 @@ int __rtmac_disc_register(struct rtmac_disc *disc, struct module *module)
     if (ret < 0)
 	return ret;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     ret = rtmac_disc_proc_register(disc);
     if (ret < 0) {
 	rtnet_unregister_ioctls(&disc->ioctls);
 	return ret;
     }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
     mutex_lock(&disc_list_lock);
 
@@ -257,36 +257,30 @@ void rtmac_disc_deregister(struct rtmac_disc *disc)
 
     rtnet_unregister_ioctls(&disc->ioctls);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rtmac_disc_proc_unregister(disc);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 }
 
 
 
-#ifdef CONFIG_PROC_FS
-int rtmac_proc_read_disc(char *buf, char **start, off_t offset, int count,
-			 int *eof, void *data)
+#ifdef CONFIG_XENO_OPT_VFILE
+int rtnet_rtmac_disciplines_show(struct xnvfile_regular_iterator *it, void *d)
 {
-    struct list_head    *disc;
-    RTNET_PROC_PRINT_VARS(80);
+    struct rtmac_disc    *disc;
+    int err;
 
+    err = mutex_lock_interruptible(&disc_list_lock);
+    if (err < 0)
+	return err;
 
-    mutex_lock(&disc_list_lock);
+    xnvfile_printf(it, "Name\t\tID\n");
 
-    if (!RTNET_PROC_PRINT("Name\t\tID\n"))
-	goto done;
+    list_for_each_entry(disc, &disc_list, list)
+	xnvfile_printf(it, "%-15s %04X\n",disc->name, ntohs(disc->disc_type));
 
-    list_for_each(disc, &disc_list) {
-	if (!RTNET_PROC_PRINT("%-15s %04X\n",
-			      ((struct rtmac_disc *)disc)->name,
-			      ntohs(((struct rtmac_disc *)disc)->disc_type)))
-	    break;
-    }
-
-  done:
     mutex_unlock(&disc_list_lock);
 
-    RTNET_PROC_PRINT_DONE;
+    return 0;
 }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */

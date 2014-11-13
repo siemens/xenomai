@@ -157,7 +157,11 @@ drop1:
     dev_kfree_skb(skb);
 
     rtskb->rtdev = rtnetproxy_rtdev;
-    rtdev_reference(rtnetproxy_rtdev);
+    if (rtdev_reference(rtnetproxy_rtdev) == 0) {
+	dev->stats.tx_dropped++;
+	kfree_rtskb(rtskb);
+	return NETDEV_TX_BUSY;
+    }
 
 #else /* !CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP */
     iph = (struct iphdr *)(skb->data + sizeof(struct ethhdr));
@@ -223,7 +227,6 @@ static void rtnetproxy_recv(struct rtskb *rtskb)
 	return;
     }
 
-    rtdev_reference(rtskb->rtdev);
     rtskb_queue_tail(&rx_queue, rtskb);
     rtdm_nrtsig_pend(&rtnetproxy_rx_signal);
 }
@@ -283,7 +286,6 @@ static void rtnetproxy_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
 	rtnetproxy_kernel_recv(rtskb);
-	rtdev_dereference(rtskb->rtdev);
 	kfree_rtskb(rtskb);
     }
 }
@@ -453,7 +455,6 @@ static void __exit rtnetproxy_cleanup_module(void)
     }
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
-	rtdev_dereference(rtskb->rtdev);
 	kfree_rtskb(rtskb);
     }
 

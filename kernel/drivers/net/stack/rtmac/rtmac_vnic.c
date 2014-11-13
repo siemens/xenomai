@@ -56,7 +56,6 @@ int rtmac_vnic_rx(struct rtskb *rtskb, u16 type)
 
     rtskb->protocol = type;
 
-    rtdev_reference(rtskb->rtdev);
     rtskb_queue_tail(&rx_queue, rtskb);
     rtdm_nrtsig_pend(&vnic_signal);
 
@@ -120,8 +119,6 @@ static void rtmac_vnic_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 	    printk("RTmac: VNIC fails to allocate linux skb\n");
 	    kfree_rtskb(rtskb);
 	}
-
-	rtdev_dereference(rtdev);
     }
 }
 
@@ -346,48 +343,40 @@ int rtmac_vnic_unregister(struct rtnet_device *rtdev)
 
 
 
-#ifdef CONFIG_PROC_FS
-int rtmac_proc_read_vnic(char *buf, char **start, off_t offset, int count,
-			 int *eof, void *data)
+#ifdef CONFIG_XENO_OPT_VFILE
+int rtnet_rtmac_vnics_show(struct xnvfile_regular_iterator *it, void *d)
 {
     struct rtnet_device *rtdev;
     int                 i;
-    int                 res = 0;
-    RTNET_PROC_PRINT_VARS(80);
+    int                 err;
 
-
-    if (!RTNET_PROC_PRINT("RT-NIC name\tVNIC name\n"))
-	goto done;
+    xnvfile_printf(it, "RT-NIC name\tVNIC name\n");
 
     for (i = 1; i <= MAX_RT_DEVICES; i++) {
 	rtdev = rtdev_get_by_index(i);
 	if (rtdev == NULL)
 	    continue;
 
-	if (mutex_lock_interruptible(&rtdev->nrt_lock)) {
+	err = mutex_lock_interruptible(&rtdev->nrt_lock);
+	if (err < 0) {
 	    rtdev_dereference(rtdev);
-	    return -ERESTARTSYS;
+	    return err;
 	}
 
 	if (rtdev->mac_priv != NULL) {
 	    struct rtmac_priv *rtmac;
 
 	    rtmac = (struct rtmac_priv *)rtdev->mac_priv;
-	    res = RTNET_PROC_PRINT("%-15s %s\n",
-				    rtdev->name, rtmac->vnic->name);
+	    xnvfile_printf(it, "%-15s %s\n", rtdev->name, rtmac->vnic->name);
 	}
 
 	mutex_unlock(&rtdev->nrt_lock);
 	rtdev_dereference(rtdev);
-
-	if (!res)
-	    break;
     }
 
-  done:
-    RTNET_PROC_PRINT_DONE;
+    return 0;
 }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 
 
@@ -410,7 +399,6 @@ void rtmac_vnic_module_cleanup(void)
     rtdm_nrtsig_destroy(&vnic_signal);
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
-	rtdev_dereference(rtskb->rtdev);
 	kfree_rtskb(rtskb);
     }
 }

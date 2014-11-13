@@ -29,8 +29,8 @@
 #include <rtnet_internal.h>
 
 
-#ifdef CONFIG_PROC_FS
-extern struct proc_dir_entry *ipv4_proc_root;
+#ifdef CONFIG_XENO_OPT_VFILE
+extern struct xnvfile_directory ipv4_proc_root;
 #endif
 
 #endif  /* __RTNET_AF_INET_H_ */

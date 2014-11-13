@@ -44,7 +44,7 @@ static int tdma_dev_open(struct rtdm_fd *fd, int oflags)
 }
 
 
-static int tdma_dev_close(struct rtdm_fd *fd)
+static void tdma_dev_close(struct rtdm_fd *fd)
 {
     struct tdma_dev_ctx *ctx = rtdm_fd_to_private(fd);
 
@@ -53,8 +53,6 @@ static int tdma_dev_close(struct rtdm_fd *fd)
 	if (ctx->cycle_waiter)
 	    rtdm_task_unblock(ctx->cycle_waiter);
 			    );
-
-    return 0;
 }
 
 

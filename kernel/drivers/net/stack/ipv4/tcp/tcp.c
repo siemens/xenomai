@@ -573,6 +573,9 @@ static int rt_ip_build_frame(struct rtskb *skb, struct rtsocket *sk,
 
     RTNET_ASSERT(rtdev->hard_header, return -EBADF;);
 
+    if (!rtdev_reference(rt->rtdev))
+	return -EIDRM;
+
     iph->ihl      = 5;    /* 20 byte header only - no TCP options */
 
     skb->nh.iph   = iph;
@@ -589,7 +592,6 @@ static int rt_ip_build_frame(struct rtskb *skb, struct rtsocket *sk,
     iph->check    = 0; /* required to compute correct checksum */
     iph->check    = ip_fast_csum((u8 *)iph, 5 /*iph->ihl*/);
 
-    rtdev_reference(rt->rtdev);
     ret = rtdev->hard_header(skb, rtdev, ETH_P_IP, rt->dev_addr,
 			     rtdev->dev_addr, skb->len);
     rtdev_dereference(rt->rtdev);
@@ -2140,7 +2142,7 @@ static struct rtdm_device tcp_device = {
     .label = "tcp",
 };
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 /***
  *  rt_tcp_proc_read
  */
@@ -2162,8 +2164,7 @@ static inline char* rt_tcp_string_of_state(u8 state)
     }
 }
 
-static int rt_tcp_proc_read(char *buf, char **start, off_t offset,
-			    int count, int *eof, void *data)
+static int rtnet_ipv4_tcp_show(struct xnvfile_regular_iterator *it, void *data)
 {
     rtdm_lockctx_t context;
     struct tcp_socket *ts;
@@ -2173,13 +2174,9 @@ static int rt_tcp_proc_read(char *buf, char **start, off_t offset,
     char dbuffer[24];
     int state;
     int index;
-    int ret;
 
-    RTNET_PROC_PRINT_VARS_EX(80);
-
-    if (!RTNET_PROC_PRINT_EX("Hash    Local Address           "
-			     "Foreign Address         State\n"))
-	goto done;
+    xnvfile_printf(it, "Hash    Local Address           "
+	    "Foreign Address         State\n");
 
     for (index = 0; index < RT_TCP_SOCKETS; index++) {
 	rtdm_lock_get_irqsave(&tcp_socket_base_lock, context);
@@ -2202,35 +2199,29 @@ static int rt_tcp_proc_read(char *buf, char **start, off_t offset,
 	    snprintf(dbuffer, sizeof(dbuffer), "%u.%u.%u.%u:%u",
 		     NIPQUAD(daddr), ntohs(dport));
 
-	    ret = RTNET_PROC_PRINT_EX("%04X    %-23s %-23s %s\n",
-				      sport & port_hash_mask, sbuffer, dbuffer,
-				      rt_tcp_string_of_state(state));
-	    if (!ret)
-		break;
+	    xnvfile_printf(it, "%04X    %-23s %-23s %s\n",
+		    sport & port_hash_mask, sbuffer, dbuffer,
+		    rt_tcp_string_of_state(state));
 	}
     }
 
- done:
-    RTNET_PROC_PRINT_DONE_EX;
+    return 0;
 }
+
+static struct xnvfile_regular_ops rtnet_ipv4_tcp_vfile_ops = {
+	.show = rtnet_ipv4_tcp_show,
+};
+
+static struct xnvfile_regular rtnet_ipv4_tcp_vfile = {
+	.ops = &rtnet_ipv4_tcp_vfile_ops,
+};
 
 /***
  *  rt_tcp_proc_register
  */
 static int __init rt_tcp_proc_register(void)
 {
-    struct proc_dir_entry *proc_entry;
-
-    proc_entry = create_proc_entry("tcp", S_IFREG | S_IRUGO | S_IWUSR,
-				   ipv4_proc_root);
-
-    if (!proc_entry) {
-	return -EPERM;
-    }
-
-    proc_entry->read_proc = rt_tcp_proc_read;
-
-    return 0;
+    return xnvfile_init_regular("tcp", &rtnet_ipv4_tcp_vfile, &ipv4_proc_root);
 }
 
 /***
@@ -2239,9 +2230,9 @@ static int __init rt_tcp_proc_register(void)
 
 static void rt_tcp_proc_unregister(void)
 {
-    remove_proc_entry("tcp", ipv4_proc_root);
+    xnvfile_destroy_regular(&rtnet_ipv4_tcp_vfile);
 }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /***
  *  rt_tcp_init
@@ -2280,12 +2271,12 @@ int __init rt_tcp_init(void)
 	goto out_1;
     }
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     if ((ret = rt_tcp_proc_register()) < 0) {
 	rtdm_printk("rttcp: cann't initialize proc entry: %d\n", -ret);
 	goto out_2;
     }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
     rt_inet_add_protocol(&tcp_protocol);
 
@@ -2299,9 +2290,9 @@ int __init rt_tcp_init(void)
 
  out_3:
     rt_inet_del_protocol(&tcp_protocol);
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rt_tcp_proc_unregister();
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
  out_2:
     timerwheel_cleanup();
@@ -2320,9 +2311,9 @@ void __exit rt_tcp_release(void)
 {
     rt_inet_del_protocol(&tcp_protocol);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rt_tcp_proc_unregister();
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
     timerwheel_cleanup();
 

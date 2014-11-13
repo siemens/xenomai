@@ -48,10 +48,9 @@ static inline void rtmac_vnic_cleanup(struct rtnet_device *rtdev)
     rtskb_pool_release(&mac_priv->vnic_skb_pool);
 }
 
-
-int rtmac_proc_read_vnic(char *buf, char **start, off_t offset,
-                         int count, int *eof, void *data);
-
+#ifdef CONFIG_XENO_OPT_VFILE
+int rtnet_rtmac_vnics_show(struct xnvfile_regular_iterator *it, void *data);
+#endif
 
 int __init rtmac_vnic_module_init(void);
 void rtmac_vnic_module_cleanup(void);

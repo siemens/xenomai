@@ -27,7 +27,7 @@
 
 #include <rtnet_internal.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 extern struct mutex nrt_proc_lock;
 
@@ -56,6 +56,6 @@ static inline void rtcfg_unlockwr_proc(int ifindex)
 #define rtcfg_lockwr_proc(x)    do {} while (0)
 #define rtcfg_unlockwr_proc(x)  do {} while (0)
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 #endif /* __RTCFG_PROC_H_ */

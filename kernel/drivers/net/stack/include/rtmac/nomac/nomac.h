@@ -43,7 +43,7 @@ struct nomac_priv {
     struct rtdm_device          api_device;
     /* ... */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     struct list_head            list_entry;
 #endif
 };

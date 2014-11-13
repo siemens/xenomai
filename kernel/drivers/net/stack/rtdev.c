@@ -56,9 +56,8 @@ int rtdev_reference(struct rtnet_device *rtdev)
     if (rtdev->rt_owner && __atomic_add_unless(&rtdev->refcount, 1, 0) == 0) {
 	if (!try_module_get(rtdev->rt_owner))
 	    return 0;
-	if (atomic_add_return(1, &rtdev->refcount) == 1)
-	    break;
-	module_put(rtdev->rt_owner);
+	if (atomic_inc_return(&rtdev->refcount) != 1)
+	    module_put(rtdev->rt_owner);
     }
     return 1;
 }
@@ -272,6 +271,8 @@ struct rtnet_device *rtdev_alloc(unsigned sizeof_priv, unsigned rx_pool_size)
 	return NULL;
     }
 
+    memset(rtdev, 0, alloc_size);
+
     ret = rtskb_pool_init(&rtdev->rx_pool, rx_pool_size, &rtdev_ops, rtdev);
     if (ret < rx_pool_size) {
 	printk(KERN_ERR "RTnet: cannot allocate rtnet device RX pool\n");
@@ -279,8 +280,6 @@ struct rtnet_device *rtdev_alloc(unsigned sizeof_priv, unsigned rx_pool_size)
 	kfree(rtdev);
 	return NULL;
     }
-
-    memset(rtdev, 0, alloc_size);
 
     rtdm_mutex_init(&rtdev->xmit_mutex);
     rtdm_lock_init(&rtdev->rtdev_lock);

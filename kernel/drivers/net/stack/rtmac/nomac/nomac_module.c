@@ -33,35 +33,28 @@
 #include <rtmac/nomac/nomac_proto.h>
 
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 LIST_HEAD(nomac_devices);
 DEFINE_MUTEX(nomac_nrt_lock);
 
 
-int nomac_proc_read(char *buf, char **start, off_t offset, int count,
-		    int *eof, void *data)
+int nomac_proc_read(struct xnvfile_regular_iterator *it, void *data)
 {
     struct nomac_priv *entry;
-    RTNET_PROC_PRINT_VARS(80);
-
 
     mutex_lock(&nomac_nrt_lock);
 
-    if (!RTNET_PROC_PRINT("Interface       API Device      State\n"))
-	goto done;
+    xnvfile_printf(it, "Interface       API Device      State\n");
 
-    list_for_each_entry(entry, &nomac_devices, list_entry) {
-	if (!RTNET_PROC_PRINT("%-15s %-15s Attached\n", entry->rtdev->name,
-			      entry->api_device.device_name))
-	    break;
-    }
+    list_for_each_entry(entry, &nomac_devices, list_entry)
+	xnvfile_printf(it, "%-15s %-15s Attached\n", entry->rtdev->name,
+		    entry->api_device.name);
 
-  done:
     mutex_unlock(&nomac_nrt_lock);
 
-    RTNET_PROC_PRINT_DONE;
+    return 0;
 }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 
 
@@ -80,11 +73,11 @@ int nomac_attach(struct rtnet_device *rtdev, void *priv)
     if (ret < 0)
 	return ret;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     mutex_lock(&nomac_nrt_lock);
     list_add(&nomac->list_entry, &nomac_devices);
     mutex_unlock(&nomac_nrt_lock);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
     return 0;
 }
@@ -99,23 +92,22 @@ int nomac_detach(struct rtnet_device *rtdev, void *priv)
     nomac_dev_release(nomac);
 
     /* ... */
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     mutex_lock(&nomac_nrt_lock);
     list_del(&nomac->list_entry);
     mutex_unlock(&nomac_nrt_lock);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
     return 0;
 }
 
 
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 struct rtmac_proc_entry nomac_proc_entries[] = {
     { name: "nomac", handler: nomac_proc_read },
-    { name: NULL, handler: NULL }
 };
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct rtmac_disc nomac_disc = {
     name:           "NoMAC",
@@ -139,9 +131,10 @@ struct rtmac_disc nomac_disc = {
 	handler:        nomac_ioctl
     },
 
-#ifdef CONFIG_PROC_FS
-    proc_entries:   nomac_proc_entries
-#endif /* CONFIG_PROC_FS */
+#ifdef CONFIG_XENO_OPT_VFILE
+    proc_entries:   nomac_proc_entries,
+    nr_proc_entries: ARRAY_SIZE(nomac_proc_entries),
+#endif /* CONFIG_XENO_OPT_VFILE */
 };
 
 

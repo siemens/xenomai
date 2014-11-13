@@ -49,8 +49,8 @@ struct rtmac_priv {
 
 struct rtmac_proc_entry {
     const char *name;
-    int (*handler)(char *buf, char **start, off_t offset, int count, int *eof,
-                   void *data);
+    int (*handler)(struct xnvfile_regular_iterator *it, void *data);
+    struct xnvfile_regular vfile;
 };
 
 struct rtmac_disc {
@@ -63,11 +63,11 @@ struct rtmac_disc {
     int                 (*packet_rx)(struct rtskb *skb);
     /* rt_packet_tx prototype must be compatible with hard_start_xmit */
     int                 (*rt_packet_tx)(struct rtskb *skb,
-                                        struct rtnet_device *dev);
+					struct rtnet_device *dev);
     int                 (*nrt_packet_tx)(struct rtskb *skb);
 
     unsigned int        (*get_mtu)(struct rtnet_device *rtdev,
-                                   unsigned int priority);
+				   unsigned int priority);
 
     vnic_xmit_handler   vnic_xmit;
 
@@ -77,6 +77,7 @@ struct rtmac_disc {
     struct rtnet_ioctls ioctls;
 
     struct rtmac_proc_entry *proc_entries;
+    unsigned nr_proc_entries;
 
     struct module *owner;
 };
@@ -90,10 +91,9 @@ int __rtmac_disc_register(struct rtmac_disc *disc, struct module *module);
 
 void rtmac_disc_deregister(struct rtmac_disc *disc);
 
-#ifdef CONFIG_PROC_FS
-int rtmac_proc_read_disc(char *buf, char **start, off_t offset,
-                         int count, int *eof, void *data);
-#endif /* CONFIG_PROC_FS */
+#ifdef CONFIG_XENO_OPT_VFILE
+int rtnet_rtmac_disciplines_show(struct xnvfile_regular_iterator *it, void *d);
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 
 #endif /* __RTMAC_DISC_H_ */

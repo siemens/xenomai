@@ -66,35 +66,37 @@ struct rtcfg_device {
     rtdm_task_t                     timer_task;
     unsigned int                    flags;
     unsigned int                    burstrate;
-#ifdef CONFIG_PROC_FS
-    struct proc_dir_entry           *proc_entry;
+#ifdef CONFIG_XENO_OPT_VFILE
+    struct xnvfile_directory        proc_entry;
+    struct xnvfile_regular          proc_state_vfile;
+    struct xnvfile_regular	    proc_stations_vfile;
 #endif
 
     union {
-        struct {
-            unsigned int            addr_type;
-            union {
+	struct {
+	    unsigned int            addr_type;
+	    union {
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4
-                u32                 ip_addr;
+		u32                 ip_addr;
 #endif
-            } srv_addr;
-            u8                      srv_mac_addr[MAX_ADDR_LEN];
-            u8                      *stage2_buffer;
-            u32                     cfg_len;
-            u32                     cfg_offs;
-            unsigned int            packet_counter;
-            u32                     chain_len;
-            struct rtskb            *stage2_chain;
-            u32                     max_stations;
-            struct rtcfg_station    *station_addr_list;
-        } clt;
+	    } srv_addr;
+	    u8                      srv_mac_addr[MAX_ADDR_LEN];
+	    u8                      *stage2_buffer;
+	    u32                     cfg_len;
+	    u32                     cfg_offs;
+	    unsigned int            packet_counter;
+	    u32                     chain_len;
+	    struct rtskb            *stage2_chain;
+	    u32                     max_stations;
+	    struct rtcfg_station    *station_addr_list;
+	} clt;
 
-        struct {
-            u32                     clients_configured;
-            struct list_head        conn_list;
-            u16                     heartbeat;
-            u64                     heartbeat_timeout;
-        } srv;
+	struct {
+	    u32                     clients_configured;
+	    struct list_head        conn_list;
+	    u16                     heartbeat;
+	    u64                     heartbeat_timeout;
+	} srv;
     } spec;
 };
 

@@ -65,7 +65,7 @@ int __init rtcfg_init(void)
     if (ret != 0)
         goto error2;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     ret = rtcfg_init_proc();
     if (ret != 0) {
         rtcfg_cleanup_frames();
@@ -92,7 +92,7 @@ int __init rtcfg_init(void)
 
 void rtcfg_cleanup(void)
 {
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rtcfg_cleanup_proc();
 #endif
     rtcfg_cleanup_frames();

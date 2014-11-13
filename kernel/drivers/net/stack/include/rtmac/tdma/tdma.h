@@ -150,7 +150,7 @@ struct tdma_priv {
     u64                         backup_sync_inc;
 #endif
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     struct list_head            list_entry;
 #endif
 };

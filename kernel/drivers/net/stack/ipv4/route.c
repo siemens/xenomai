@@ -35,7 +35,7 @@
 /* FIXME: should also become some tunable parameter */
 #define ROUTER_FORWARD_PRIO \
     RTSKB_PRIO_VALUE(QUEUE_MAX_PRIO+(QUEUE_MIN_PRIO-QUEUE_MAX_PRIO+1)/2, \
-                     RTSKB_DEF_RT_CHANNEL)
+		     RTSKB_DEF_RT_CHANNEL)
 
 
 /* First-level routing: explicite host routes */
@@ -89,7 +89,7 @@ static DEFINE_RTDM_LOCK(net_table_lock);
 
 module_param(net_hash_key_shift, uint, 0444);
 MODULE_PARM_DESC(net_hash_key_shift, "destination right shift for "
-                 "network hash key (default: 8)");
+		 "network hash key (default: 8)");
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
 
@@ -97,232 +97,385 @@ MODULE_PARM_DESC(net_hash_key_shift, "destination right shift for "
 /***
  *  proc filesystem section
  */
-#ifdef CONFIG_PROC_FS
-static int rt_route_read_proc(char *buf, char **start, off_t offset, int count,
-                              int *eof, void *data)
+#ifdef CONFIG_XENO_OPT_VFILE
+static int rtnet_ipv4_route_show(struct xnvfile_regular_iterator *it, void *d)
 {
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
     u32 mask;
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
-    RTNET_PROC_PRINT_VARS(256);
 
-
-    if (!RTNET_PROC_PRINT("Host routes allocated/total:\t%d/%d\n"
-                          "Host hash table size:\t\t%d\n",
-                          allocated_host_routes,
-                          CONFIG_XENO_DRIVERS_NET_RTIPV4_HOST_ROUTES,
-                          HOST_HASH_TBL_SIZE))
-        goto done;
+    xnvfile_printf(it, "Host routes allocated/total:\t%d/%d\n"
+	    "Host hash table size:\t\t%d\n",
+	    allocated_host_routes,
+	    CONFIG_XENO_DRIVERS_NET_RTIPV4_HOST_ROUTES,
+	    HOST_HASH_TBL_SIZE);
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
     mask = NET_HASH_KEY_MASK << net_hash_key_shift;
-    if (!RTNET_PROC_PRINT("Network routes allocated/total:\t%d/%d\n"
-                          "Network hash table size:\t%d\n"
-                          "Network hash key shift/mask:\t%d/%08X\n",
-                          allocated_net_routes,
-                          CONFIG_XENO_DRIVERS_NET_RTIPV4_NET_ROUTES, NET_HASH_TBL_SIZE,
-                          net_hash_key_shift, mask))
-        goto done;
+    xnvfile_printf(it, "Network routes allocated/total:\t%d/%d\n"
+	    "Network hash table size:\t%d\n"
+	    "Network hash key shift/mask:\t%d/%08X\n",
+	    allocated_net_routes,
+	    CONFIG_XENO_DRIVERS_NET_RTIPV4_NET_ROUTES, NET_HASH_TBL_SIZE,
+	    net_hash_key_shift, mask);
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_ROUTER
-    RTNET_PROC_PRINT("IP Router:\t\t\tyes\n");
+    xnvfile_printf(it, "IP Router:\t\t\tyes\n");
 #else
-    RTNET_PROC_PRINT("IP Router:\t\t\tno\n");
+    xnvfile_printf(it, "IP Router:\t\t\tno\n");
 #endif
 
-  done:
-    RTNET_PROC_PRINT_DONE;
+    return 0;
 }
 
-
-
-static int rt_host_route_read_proc(char *buf, char **start, off_t offset,
-                                   int count, int *eof, void *data)
+static int rtnet_ipv4_module_lock(struct xnvfile *vfile)
 {
-    struct host_route   *entry_ptr;
-    struct dest_route   dest_host;
-    unsigned int        key;
-    unsigned int        index;
-    unsigned int        i;
-    rtdm_lockctx_t      context;
-    int                 res;
-    RTNET_PROC_PRINT_VARS_EX(80);
+    bool res = try_module_get(THIS_MODULE);
+    if (!res)
+	return -EIDRM;
 
+    return 0;
+}
 
-    if (!RTNET_PROC_PRINT_EX("Hash\tDestination\tHW Address\t\tDevice\n"))
-        goto done;
+static void rtnet_ipv4_module_unlock(struct xnvfile *vfile)
+{
+    module_put(THIS_MODULE);
+}
 
-    for (key = 0; key < HOST_HASH_TBL_SIZE; key++) {
-        index = 0;
-        while (1) {
-            rtdm_lock_get_irqsave(&host_table_lock, context);
+static struct xnvfile_lock_ops rtnet_ipv4_module_lock_ops = {
+    .get = rtnet_ipv4_module_lock,
+    .put = rtnet_ipv4_module_unlock,
+};
 
-            entry_ptr = host_hash_tbl[key];
+static struct xnvfile_regular_ops rtnet_ipv4_route_vfile_ops = {
+    .show = rtnet_ipv4_route_show,
+};
 
-            for (i = 0; (i < index) && (entry_ptr != NULL); i++)
-                entry_ptr = entry_ptr->next;
+static struct xnvfile_regular rtnet_ipv4_route_vfile = {
+    .entry = {
+	.lockops = &rtnet_ipv4_module_lock_ops,
+    },
+    .ops = &rtnet_ipv4_route_vfile_ops,
+};
 
-            if (entry_ptr == NULL) {
-                rtdm_lock_put_irqrestore(&host_table_lock, context);
-                break;
-            }
+static rtdm_lockctx_t rtnet_ipv4_host_route_lock_ctx;
 
-            memcpy(&dest_host, &entry_ptr->dest_host,
-                   sizeof(struct dest_route));
-            rtdev_reference(dest_host.rtdev);
+static int rtnet_ipv4_host_route_lock(struct xnvfile *vfile)
+{
+    rtdm_lock_get_irqsave(&host_table_lock, rtnet_ipv4_host_route_lock_ctx);
+    return 0;
+}
 
-            rtdm_lock_put_irqrestore(&host_table_lock, context);
+static void rtnet_ipv4_host_route_unlock(struct xnvfile *vfile)
+{
+    rtdm_lock_put_irqrestore(&host_table_lock, rtnet_ipv4_host_route_lock_ctx);
+}
 
-            res = RTNET_PROC_PRINT_EX("%02X\t%u.%u.%u.%-3u\t"
-                    "%02X:%02X:%02X:%02X:%02X:%02X\t%s\n",
-                    key, NIPQUAD(dest_host.ip),
-                    dest_host.dev_addr[0], dest_host.dev_addr[1],
-                    dest_host.dev_addr[2], dest_host.dev_addr[3],
-                    dest_host.dev_addr[4], dest_host.dev_addr[5],
-                    dest_host.rtdev->name);
-            rtdev_dereference(dest_host.rtdev);
-            if (!res)
-                goto done;
+static struct xnvfile_lock_ops rtnet_ipv4_host_route_lock_ops = {
+    .get = rtnet_ipv4_host_route_lock,
+    .put = rtnet_ipv4_host_route_unlock,
+};
 
-            index++;
-        }
+struct rtnet_ipv4_host_route_priv {
+    unsigned key;
+    struct host_route *entry_ptr;
+};
+
+struct rtnet_ipv4_host_route_data {
+    unsigned key;
+    char name[IFNAMSIZ];
+    struct dest_route dest_host;
+};
+
+struct xnvfile_rev_tag host_route_tag;
+
+static int rtnet_ipv4_host_route_rewind(struct xnvfile_snapshot_iterator *it)
+{
+    struct rtnet_ipv4_host_route_priv *priv = xnvfile_iterator_priv(it);
+    struct host_route *entry_ptr;
+    unsigned key;
+    int err;
+
+    err = rtnet_ipv4_module_lock(NULL);
+    if (err < 0)
+	return err;
+
+    for (key = 0; key < HOST_HASH_TBL_SIZE; key++)
+	if ((entry_ptr = host_hash_tbl[key]))
+	    break;
+
+    priv->key = key;
+    priv->entry_ptr = entry_ptr;
+    return allocated_host_routes;
+}
+
+static void rtnet_ipv4_host_route_end(struct xnvfile_snapshot_iterator *it,
+				    void *buf)
+{
+    rtnet_ipv4_module_unlock(NULL);
+}
+
+static int rtnet_ipv4_host_route_next(struct xnvfile_snapshot_iterator *it,
+				    void *data)
+{
+    struct rtnet_ipv4_host_route_priv *priv = xnvfile_iterator_priv(it);
+    struct rtnet_ipv4_host_route_data *p = data;
+    struct rtnet_device *rtdev;
+
+    if (priv->entry_ptr == NULL) {
+	if (++priv->key >= HOST_HASH_TBL_SIZE)
+	    return 0;
+
+	priv->entry_ptr = host_hash_tbl[priv->key];
+	if (priv->entry_ptr == NULL)
+	    return VFILE_SEQ_SKIP;
     }
 
-  done:
-    RTNET_PROC_PRINT_DONE_EX;
+    rtdev = priv->entry_ptr->dest_host.rtdev;
+
+    if (!rtdev_reference(rtdev))
+	return -EIDRM;
+
+    memcpy(&p->name, rtdev->name, sizeof(p->name));
+
+    rtdev_dereference(rtdev);
+
+    p->key = priv->key;
+
+    memcpy(&p->dest_host, &priv->entry_ptr->dest_host, sizeof(p->dest_host));
+
+    priv->entry_ptr = priv->entry_ptr->next;
+
+    return 1;
 }
 
+static int rtnet_ipv4_host_route_show(struct xnvfile_snapshot_iterator *it,
+				    void *data)
+{
+    struct rtnet_ipv4_host_route_data *p = data;
 
+    if (p == NULL) {
+	xnvfile_printf(it, "Hash\tDestination\tHW Address\t\tDevice\n");
+	return 0;
+    }
+
+    xnvfile_printf(it, "%02X\t%u.%u.%u.%-3u\t"
+		"%02X:%02X:%02X:%02X:%02X:%02X\t%s\n",
+		p->key, NIPQUAD(p->dest_host.ip),
+		p->dest_host.dev_addr[0], p->dest_host.dev_addr[1],
+		p->dest_host.dev_addr[2], p->dest_host.dev_addr[3],
+		p->dest_host.dev_addr[4], p->dest_host.dev_addr[5],
+		p->name);
+    return 0;
+}
+
+static struct xnvfile_snapshot_ops rtnet_ipv4_host_route_vfile_ops = {
+    .rewind = rtnet_ipv4_host_route_rewind,
+    .end = rtnet_ipv4_host_route_end,
+    .next = rtnet_ipv4_host_route_next,
+    .show = rtnet_ipv4_host_route_show,
+};
+
+static struct xnvfile_snapshot rtnet_ipv4_host_route_vfile = {
+    .entry = {
+	.lockops = &rtnet_ipv4_host_route_lock_ops,
+    },
+    .privsz = sizeof(struct rtnet_ipv4_host_route_priv),
+    .datasz = sizeof(struct rtnet_ipv4_host_route_data),
+    .tag = &host_route_tag,
+    .ops = &rtnet_ipv4_host_route_vfile_ops,
+};
+
+static struct xnvfile_link rtnet_ipv4_arp_vfile;
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
-static int rt_net_route_read_proc(char *buf, char **start, off_t offset,
-                                  int count, int *eof, void *data)
+static rtdm_lockctx_t rtnet_ipv4_net_route_lock_ctx;
+
+static int rtnet_ipv4_net_route_lock(struct xnvfile *vfile)
 {
-    struct net_route    *entry_ptr;
-    u32                 dest_net_ip;
-    u32                 dest_net_mask;
-    u32                 gw_ip;
-    unsigned int        key;
-    unsigned int        index;
-    unsigned int        i;
-    rtdm_lockctx_t      context;
-    RTNET_PROC_PRINT_VARS_EX(80);
+    rtdm_lock_get_irqsave(&net_table_lock, rtnet_ipv4_net_route_lock_ctx);
+    return 0;
+}
 
+static void rtnet_ipv4_net_route_unlock(struct xnvfile *vfile)
+{
+    rtdm_lock_put_irqrestore(&net_table_lock, rtnet_ipv4_net_route_lock_ctx);
+}
 
-    if (!RTNET_PROC_PRINT_EX("Hash\tDestination\tMask\t\t\tGateway\n"))
-        goto done;
+static struct xnvfile_lock_ops rtnet_ipv4_net_route_lock_ops = {
+    .get = rtnet_ipv4_net_route_lock,
+    .put = rtnet_ipv4_net_route_unlock,
+};
 
-    for (key = 0; key < NET_HASH_TBL_SIZE + 1; key++) {
-        index = 0;
-        while (1) {
-            rtdm_lock_get_irqsave(&net_table_lock, context);
+struct rtnet_ipv4_net_route_priv {
+    unsigned key;
+    struct net_route *entry_ptr;
+};
 
-            entry_ptr = net_hash_tbl[key];
+struct rtnet_ipv4_net_route_data {
+    unsigned key;
+    u32 dest_net_ip;
+    u32 dest_net_mask;
+    u32 gw_ip;
+};
 
-            for (i = 0; (i < index) && (entry_ptr != NULL); i++)
-                entry_ptr = entry_ptr->next;
+struct xnvfile_rev_tag net_route_tag;
 
-            if (entry_ptr == NULL) {
-                rtdm_lock_put_irqrestore(&net_table_lock, context);
-                break;
-            }
+static int rtnet_ipv4_net_route_rewind(struct xnvfile_snapshot_iterator *it)
+{
+    struct rtnet_ipv4_net_route_priv *priv = xnvfile_iterator_priv(it);
+    struct net_route *entry_ptr;
+    unsigned key;
+    int err;
 
-            dest_net_ip   = entry_ptr->dest_net_ip;
-            dest_net_mask = entry_ptr->dest_net_mask;
-            gw_ip         = entry_ptr->gw_ip;
+    err = rtnet_ipv4_module_lock(NULL);
+    if (err < 0)
+	return err;
 
-            rtdm_lock_put_irqrestore(&net_table_lock, context);
+    for (key = 0; key < NET_HASH_TBL_SIZE + 1; key++)
+	if ((entry_ptr = net_hash_tbl[key]))
+	    break;
 
-            if (key < NET_HASH_TBL_SIZE) {
-                if (!RTNET_PROC_PRINT_EX("%02X\t%u.%u.%u.%-3u\t%u.%u.%u.%-3u"
-                                         "\t\t%u.%u.%u.%-3u\n",
-                                         key, NIPQUAD(dest_net_ip),
-                                         NIPQUAD(dest_net_mask),
-                                         NIPQUAD(gw_ip)))
-                    goto done;
-            } else {
-                if (!RTNET_PROC_PRINT_EX("*\t%u.%u.%u.%-3u\t%u.%u.%u.%-3u\t\t"
-                                         "%u.%u.%u.%-3u\n",
-                                         NIPQUAD(dest_net_ip),
-                                         NIPQUAD(dest_net_mask),
-                                         NIPQUAD(gw_ip)))
-                    goto done;
-            }
+    priv->key = key;
+    priv->entry_ptr = entry_ptr;
+    return allocated_net_routes;
+}
 
-            index++;
-        }
+static void rtnet_ipv4_net_route_end(struct xnvfile_snapshot_iterator *it,
+				    void *buf)
+{
+    rtnet_ipv4_module_unlock(NULL);
+}
+
+static int rtnet_ipv4_net_route_next(struct xnvfile_snapshot_iterator *it,
+				    void *data)
+{
+    struct rtnet_ipv4_net_route_priv *priv = xnvfile_iterator_priv(it);
+    struct rtnet_ipv4_net_route_data *p = data;
+
+    if (priv->entry_ptr == NULL) {
+	if (++priv->key >= NET_HASH_TBL_SIZE + 1)
+	    return 0;
+
+	priv->entry_ptr = net_hash_tbl[priv->key];
+	if (priv->entry_ptr == NULL)
+	    return VFILE_SEQ_SKIP;
     }
 
-  done:
-    RTNET_PROC_PRINT_DONE_EX;
+    p->key = priv->key;
+    p->dest_net_ip = priv->entry_ptr->dest_net_ip;
+    p->dest_net_mask = priv->entry_ptr->dest_net_mask;
+    p->gw_ip = priv->entry_ptr->gw_ip;
+
+    priv->entry_ptr = priv->entry_ptr->next;
+
+    return 1;
 }
+
+static int rtnet_ipv4_net_route_show(struct xnvfile_snapshot_iterator *it,
+				    void *data)
+{
+    struct rtnet_ipv4_net_route_data *p = data;
+
+    if (p == NULL) {
+	xnvfile_printf(it, "Hash\tDestination\tMask\t\t\tGateway\n");
+	return 0;
+    }
+
+    if (p->key < NET_HASH_TBL_SIZE)
+	xnvfile_printf(it, "%02X\t%u.%u.%u.%-3u\t%u.%u.%u.%-3u"
+		    "\t\t%u.%u.%u.%-3u\n",
+		    p->key, NIPQUAD(p->dest_net_ip),
+		    NIPQUAD(p->dest_net_mask),
+		    NIPQUAD(p->gw_ip));
+    else
+	xnvfile_printf(it, "*\t%u.%u.%u.%-3u\t%u.%u.%u.%-3u\t\t"
+		    "%u.%u.%u.%-3u\n",
+		    NIPQUAD(p->dest_net_ip),
+		    NIPQUAD(p->dest_net_mask),
+		    NIPQUAD(p->gw_ip));
+
+    return 0;
+}
+
+static struct xnvfile_snapshot_ops rtnet_ipv4_net_route_vfile_ops = {
+    .rewind = rtnet_ipv4_net_route_rewind,
+    .end = rtnet_ipv4_net_route_end,
+    .next = rtnet_ipv4_net_route_next,
+    .show = rtnet_ipv4_net_route_show,
+};
+
+static struct xnvfile_snapshot rtnet_ipv4_net_route_vfile = {
+    .entry = {
+	.lockops = &rtnet_ipv4_net_route_lock_ops,
+    },
+    .privsz = sizeof(struct rtnet_ipv4_net_route_priv),
+    .datasz = sizeof(struct rtnet_ipv4_net_route_data),
+    .tag = &net_route_tag,
+    .ops = &rtnet_ipv4_net_route_vfile_ops,
+};
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
 
 
 static int __init rt_route_proc_register(void)
 {
-    struct proc_dir_entry *proc_entry;
+    int err;
 
+    err = xnvfile_init_regular("route",
+			    &rtnet_ipv4_route_vfile, &ipv4_proc_root);
+    if (err < 0)
+	goto err1;
 
-    proc_entry = create_proc_entry("route", S_IFREG | S_IRUGO | S_IWUSR,
-                                   ipv4_proc_root);
-    if (!proc_entry)
-        goto err1;
-    proc_entry->read_proc = rt_route_read_proc;
-
-    proc_entry = create_proc_entry("host_route", S_IFREG | S_IRUGO | S_IWUSR,
-                                   ipv4_proc_root);
-    if (!proc_entry)
-        goto err2;
-    proc_entry->read_proc = rt_host_route_read_proc;
+    err = xnvfile_init_snapshot("host_route",
+				&rtnet_ipv4_host_route_vfile, &ipv4_proc_root);
+    if (err < 0)
+	goto err2;
 
     /* create "arp" as an alias for "host_route" */
-    proc_entry = create_proc_entry("arp", S_IFREG | S_IRUGO | S_IWUSR,
-                                   ipv4_proc_root);
-    if (!proc_entry)
-        goto err3;
-    proc_entry->read_proc = rt_host_route_read_proc;
+    err = xnvfile_init_link("arp", "host_route",
+			    &rtnet_ipv4_arp_vfile, &ipv4_proc_root);
+    if (err < 0)
+	goto err3;
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
-    proc_entry = create_proc_entry("net_route", S_IFREG | S_IRUGO | S_IWUSR,
-                                   ipv4_proc_root);
-    if (!proc_entry)
-        goto err4;
-    proc_entry->read_proc = rt_net_route_read_proc;
+    err = xnvfile_init_snapshot("net_route",
+				&rtnet_ipv4_net_route_vfile, &ipv4_proc_root);
+    if (err < 0)
+	goto err4;
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
     return 0;
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
   err4:
-    remove_proc_entry("arp", ipv4_proc_root);
+    xnvfile_destroy_link(&rtnet_ipv4_arp_vfile);
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
   err3:
-    remove_proc_entry("host_route", ipv4_proc_root);
+    xnvfile_destroy_snapshot(&rtnet_ipv4_host_route_vfile);
 
   err2:
-    remove_proc_entry("route", ipv4_proc_root);
+    xnvfile_destroy_regular(&rtnet_ipv4_route_vfile);
 
   err1:
-    /*ERRMSG*/printk("RTnet: unable to initialize /proc entries (route)\n");
-    return -1;
+    printk("RTnet: unable to initialize /proc entries (route)\n");
+    return err;
 }
 
 
 
 static void rt_route_proc_unregister(void)
 {
-    remove_proc_entry("route", ipv4_proc_root);
-    remove_proc_entry("arp", ipv4_proc_root);
-    remove_proc_entry("host_route", ipv4_proc_root);
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
-    remove_proc_entry("net_route", ipv4_proc_root);
+    xnvfile_destroy_snapshot(&rtnet_ipv4_net_route_vfile);
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
+    xnvfile_destroy_link(&rtnet_ipv4_arp_vfile);
+    xnvfile_destroy_snapshot(&rtnet_ipv4_host_route_vfile);
+    xnvfile_destroy_regular(&rtnet_ipv4_route_vfile);
 }
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 
 
@@ -338,8 +491,8 @@ static inline struct host_route *rt_alloc_host_route(void)
     rtdm_lock_get_irqsave(&host_table_lock, context);
 
     if ((rt = free_host_route) != NULL) {
-        free_host_route = rt->next;
-        allocated_host_routes++;
+	free_host_route = rt->next;
+	allocated_host_routes++;
     }
 
     rtdm_lock_put_irqrestore(&host_table_lock, context);
@@ -367,7 +520,7 @@ static inline void rt_free_host_route(struct host_route *rt)
  *  rt_ip_route_add_host: add or update host route
  */
 int rt_ip_route_add_host(u32 addr, unsigned char *dev_addr,
-                         struct rtnet_device *rtdev)
+			 struct rtnet_device *rtdev)
 {
     rtdm_lockctx_t      context;
     struct host_route   *new_route;
@@ -379,51 +532,53 @@ int rt_ip_route_add_host(u32 addr, unsigned char *dev_addr,
     rtdm_lock_get_irqsave(&rtdev->rtdev_lock, context);
 
     if ((!test_bit(PRIV_FLAG_UP, &rtdev->priv_flags) ||
-        test_and_set_bit(PRIV_FLAG_ADDING_ROUTE, &rtdev->priv_flags))) {
-        rtdm_lock_put_irqrestore(&rtdev->rtdev_lock, context);
-        return -EBUSY;
+	test_and_set_bit(PRIV_FLAG_ADDING_ROUTE, &rtdev->priv_flags))) {
+	rtdm_lock_put_irqrestore(&rtdev->rtdev_lock, context);
+	return -EBUSY;
     }
 
     rtdm_lock_put_irqrestore(&rtdev->rtdev_lock, context);
 
     if ((new_route = rt_alloc_host_route()) != NULL) {
-        new_route->dest_host.ip    = addr;
-        new_route->dest_host.rtdev = rtdev;
-        memcpy(new_route->dest_host.dev_addr, dev_addr, rtdev->addr_len);
+	new_route->dest_host.ip    = addr;
+	new_route->dest_host.rtdev = rtdev;
+	memcpy(new_route->dest_host.dev_addr, dev_addr, rtdev->addr_len);
     }
 
     key = ntohl(addr) & HOST_HASH_KEY_MASK;
 
     rtdm_lock_get_irqsave(&host_table_lock, context);
 
+    xnvfile_touch_tag(&host_route_tag);
+
     rt = host_hash_tbl[key];
     while (rt != NULL) {
-        if ((rt->dest_host.ip == addr) &&
-            (rt->dest_host.rtdev->local_ip == rtdev->local_ip)) {
-            rt->dest_host.rtdev = rtdev;
-            memcpy(rt->dest_host.dev_addr, dev_addr, rtdev->addr_len);
+	if ((rt->dest_host.ip == addr) &&
+	    (rt->dest_host.rtdev->local_ip == rtdev->local_ip)) {
+	    rt->dest_host.rtdev = rtdev;
+	    memcpy(rt->dest_host.dev_addr, dev_addr, rtdev->addr_len);
 
-            if (new_route)
-                rt_free_host_route(new_route);
+	    if (new_route)
+		rt_free_host_route(new_route);
 
-            rtdm_lock_put_irqrestore(&host_table_lock, context);
+	    rtdm_lock_put_irqrestore(&host_table_lock, context);
 
-            goto out;
-        }
+	    goto out;
+	}
 
-        rt = rt->next;
+	rt = rt->next;
     }
 
     if (new_route) {
-        new_route->next    = host_hash_tbl[key];
-        host_hash_tbl[key] = new_route;
+	new_route->next    = host_hash_tbl[key];
+	host_hash_tbl[key] = new_route;
 
-        rtdm_lock_put_irqrestore(&host_table_lock, context);
+	rtdm_lock_put_irqrestore(&host_table_lock, context);
     } else {
-        rtdm_lock_put_irqrestore(&host_table_lock, context);
+	rtdm_lock_put_irqrestore(&host_table_lock, context);
 
-        /*ERRMSG*/rtdm_printk("RTnet: no more host routes available\n");
-        ret = -ENOBUFS;
+	/*ERRMSG*/rtdm_printk("RTnet: no more host routes available\n");
+	ret = -ENOBUFS;
     }
 
   out:
@@ -452,19 +607,21 @@ int rt_ip_route_del_host(u32 addr, struct rtnet_device *rtdev)
 
     rt = host_hash_tbl[key];
     while (rt != NULL) {
-        if ((rt->dest_host.ip == addr) &&
-            (!rtdev || (rt->dest_host.rtdev->local_ip == rtdev->local_ip))) {
-            *last_ptr = rt->next;
+	if ((rt->dest_host.ip == addr) &&
+	    (!rtdev || (rt->dest_host.rtdev->local_ip == rtdev->local_ip))) {
+	    *last_ptr = rt->next;
 
-            rt_free_host_route(rt);
+	    rt_free_host_route(rt);
 
-            rtdm_lock_put_irqrestore(&host_table_lock, context);
+	    xnvfile_touch_tag(&host_route_tag);
 
-            return 0;
-        }
+	    rtdm_lock_put_irqrestore(&host_table_lock, context);
 
-        last_ptr = &rt->next;
-        rt = rt->next;
+	    return 0;
+	}
+
+	last_ptr = &rt->next;
+	rt = rt->next;
     }
 
     rtdm_lock_put_irqrestore(&host_table_lock, context);
@@ -488,31 +645,31 @@ void rt_ip_route_del_all(struct rtnet_device *rtdev)
 
     for (key = 0; key < HOST_HASH_TBL_SIZE; key++) {
       host_start_over:
-        last_host_ptr = &host_hash_tbl[key];
+	last_host_ptr = &host_hash_tbl[key];
 
-        rtdm_lock_get_irqsave(&host_table_lock, context);
+	rtdm_lock_get_irqsave(&host_table_lock, context);
 
-        host_rt = host_hash_tbl[key];
-        while (host_rt != NULL) {
-            if (host_rt->dest_host.rtdev == rtdev) {
-                *last_host_ptr = host_rt->next;
+	host_rt = host_hash_tbl[key];
+	while (host_rt != NULL) {
+	    if (host_rt->dest_host.rtdev == rtdev) {
+		*last_host_ptr = host_rt->next;
 
-                rt_free_host_route(host_rt);
+		rt_free_host_route(host_rt);
 
-                rtdm_lock_put_irqrestore(&host_table_lock, context);
+		rtdm_lock_put_irqrestore(&host_table_lock, context);
 
-                goto host_start_over;
-            }
+		goto host_start_over;
+	    }
 
-            last_host_ptr = &host_rt->next;
-            host_rt = host_rt->next;
-        }
+	    last_host_ptr = &host_rt->next;
+	    host_rt = host_rt->next;
+	}
 
-        rtdm_lock_put_irqrestore(&host_table_lock, context);
+	rtdm_lock_put_irqrestore(&host_table_lock, context);
     }
 
     if ((ip = rtdev->local_ip) != 0)
-        rt_ip_route_del_host(ip, rtdev);
+	rt_ip_route_del_host(ip, rtdev);
 }
 
 
@@ -520,7 +677,7 @@ void rt_ip_route_del_all(struct rtnet_device *rtdev)
  *  rt_ip_route_get_host - check if specified host route is resolved
  */
 int rt_ip_route_get_host(u32 addr, char *if_name, unsigned char *dev_addr,
-                         struct rtnet_device *rtdev)
+			 struct rtnet_device *rtdev)
 {
     rtdm_lockctx_t      context;
     struct host_route   *rt;
@@ -533,17 +690,17 @@ int rt_ip_route_get_host(u32 addr, char *if_name, unsigned char *dev_addr,
 
     rt = host_hash_tbl[key];
     while (rt != NULL) {
-        if ((rt->dest_host.ip == addr) &&
-            (!rtdev || rt->dest_host.rtdev->local_ip == rtdev->local_ip)) {
-            memcpy(dev_addr, rt->dest_host.dev_addr,
-                   rt->dest_host.rtdev->addr_len);
-            strncpy(if_name, rt->dest_host.rtdev->name, IFNAMSIZ);
+	if ((rt->dest_host.ip == addr) &&
+	    (!rtdev || rt->dest_host.rtdev->local_ip == rtdev->local_ip)) {
+	    memcpy(dev_addr, rt->dest_host.dev_addr,
+		   rt->dest_host.rtdev->addr_len);
+	    strncpy(if_name, rt->dest_host.rtdev->name, IFNAMSIZ);
 
-            rtdm_lock_put_irqrestore(&host_table_lock, context);
-            return 0;
-        }
+	    rtdm_lock_put_irqrestore(&host_table_lock, context);
+	    return 0;
+	}
 
-        rt = rt->next;
+	rt = rt->next;
     }
 
     rtdm_lock_put_irqrestore(&host_table_lock, context);
@@ -565,8 +722,8 @@ static inline struct net_route *rt_alloc_net_route(void)
     rtdm_lock_get_irqsave(&net_table_lock, context);
 
     if ((rt = free_net_route) != NULL) {
-        free_net_route = rt->next;
-        allocated_net_routes++;
+	free_net_route = rt->next;
+	allocated_net_routes++;
     }
 
     rtdm_lock_put_irqrestore(&net_table_lock, context);
@@ -606,49 +763,51 @@ int rt_ip_route_add_net(u32 addr, u32 mask, u32 gw_addr)
     addr &= mask;
 
     if ((new_route = rt_alloc_net_route()) != NULL) {
-        new_route->dest_net_ip   = addr;
-        new_route->dest_net_mask = mask;
-        new_route->gw_ip         = gw_addr;
+	new_route->dest_net_ip   = addr;
+	new_route->dest_net_mask = mask;
+	new_route->gw_ip         = gw_addr;
     }
 
     shifted_mask = NET_HASH_KEY_MASK << net_hash_key_shift;
     if ((mask & shifted_mask) == shifted_mask)
-        key = (ntohl(addr) >> net_hash_key_shift) & NET_HASH_KEY_MASK;
+	key = (ntohl(addr) >> net_hash_key_shift) & NET_HASH_KEY_MASK;
     else
-        key = NET_HASH_TBL_SIZE;
+	key = NET_HASH_TBL_SIZE;
     last_ptr = &net_hash_tbl[key];
 
     rtdm_lock_get_irqsave(&net_table_lock, context);
 
+    xnvfile_touch_tag(&net_route_tag);
+
     rt = net_hash_tbl[key];
     while (rt != NULL) {
-        if ((rt->dest_net_ip == addr) && (rt->dest_net_mask == mask)) {
-            rt->gw_ip = gw_addr;
+	if ((rt->dest_net_ip == addr) && (rt->dest_net_mask == mask)) {
+	    rt->gw_ip = gw_addr;
 
-            if (new_route)
-                rt_free_net_route(new_route);
+	    if (new_route)
+		rt_free_net_route(new_route);
 
-            rtdm_lock_put_irqrestore(&net_table_lock, context);
+	    rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-            return 0;
-        }
+	    return 0;
+	}
 
-        last_ptr = &rt->next;
-        rt = rt->next;
+	last_ptr = &rt->next;
+	rt = rt->next;
     }
 
     if (new_route) {
-        new_route->next = *last_ptr;
-        *last_ptr       = new_route;
+	new_route->next = *last_ptr;
+	*last_ptr       = new_route;
 
-        rtdm_lock_put_irqrestore(&net_table_lock, context);
+	rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-        return 0;
+	return 0;
     } else {
-        rtdm_lock_put_irqrestore(&net_table_lock, context);
+	rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-        /*ERRMSG*/rtdm_printk("RTnet: no more network routes available\n");
-        return -ENOBUFS;
+	/*ERRMSG*/rtdm_printk("RTnet: no more network routes available\n");
+	return -ENOBUFS;
     }
 }
 
@@ -670,27 +829,29 @@ int rt_ip_route_del_net(u32 addr, u32 mask)
 
     shifted_mask = NET_HASH_KEY_MASK << net_hash_key_shift;
     if ((mask & shifted_mask) == shifted_mask)
-        key = (ntohl(addr) >> net_hash_key_shift) & NET_HASH_KEY_MASK;
+	key = (ntohl(addr) >> net_hash_key_shift) & NET_HASH_KEY_MASK;
     else
-        key = NET_HASH_TBL_SIZE;
+	key = NET_HASH_TBL_SIZE;
     last_ptr = &net_hash_tbl[key];
 
     rtdm_lock_get_irqsave(&net_table_lock, context);
 
     rt = net_hash_tbl[key];
     while (rt != NULL) {
-        if ((rt->dest_net_ip == addr) && (rt->dest_net_mask == mask)) {
-            *last_ptr = rt->next;
+	if ((rt->dest_net_ip == addr) && (rt->dest_net_mask == mask)) {
+	    *last_ptr = rt->next;
 
-            rt_free_net_route(rt);
+	    rt_free_net_route(rt);
 
-            rtdm_lock_put_irqrestore(&net_table_lock, context);
+	    xnvfile_touch_tag(&net_route_tag);
 
-            return 0;
-        }
+	    rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-        last_ptr = &rt->next;
-        rt = rt->next;
+	    return 0;
+	}
+
+	last_ptr = &rt->next;
+	rt = rt->next;
     }
 
     rtdm_lock_put_irqrestore(&net_table_lock, context);
@@ -731,73 +892,78 @@ int rt_ip_route_output(struct dest_route *rt_buf, u32 daddr, u32 saddr)
 
     host_rt = host_hash_tbl[key];
     if (likely(saddr == INADDR_ANY))
-        while (host_rt != NULL) {
-            if (host_rt->dest_host.ip == daddr) {
-              host_route_found:
-                memcpy(rt_buf->dev_addr, &host_rt->dest_host.dev_addr,
-                       sizeof(rt_buf->dev_addr));
-                rt_buf->rtdev = host_rt->dest_host.rtdev;
-                rtdev_reference(rt_buf->rtdev);
+	while (host_rt != NULL) {
+	    if (host_rt->dest_host.ip == daddr) {
+	      host_route_found:
+		if (!rtdev_reference(host_rt->dest_host.rtdev)) {
+		    rtdm_lock_put_irqrestore(&host_table_lock, context);
+		    goto next;
+		}
 
-                rtdm_lock_put_irqrestore(&host_table_lock, context);
+		memcpy(rt_buf->dev_addr, &host_rt->dest_host.dev_addr,
+		       sizeof(rt_buf->dev_addr));
+		rt_buf->rtdev = host_rt->dest_host.rtdev;
 
-                rt_buf->ip = DADDR;
+		rtdm_lock_put_irqrestore(&host_table_lock, context);
 
-                return 0;
-            }
-            host_rt = host_rt->next;
-        }
+		rt_buf->ip = DADDR;
+
+		return 0;
+	    }
+	  next:
+	    host_rt = host_rt->next;
+	}
     else
-        while (host_rt != NULL) {
-            if ((host_rt->dest_host.ip == daddr) &&
-                (host_rt->dest_host.rtdev->local_ip == saddr))
-                goto host_route_found;
-            host_rt = host_rt->next;
-        }
+	while (host_rt != NULL) {
+	    if ((host_rt->dest_host.ip == daddr) &&
+		(host_rt->dest_host.rtdev->local_ip == saddr))
+		goto host_route_found;
+	    host_rt = host_rt->next;
+	}
 
     rtdm_lock_put_irqrestore(&host_table_lock, context);
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
     if (lookup_gw) {
-        lookup_gw = 0;
-        key = (ntohl(daddr) >> net_hash_key_shift) & NET_HASH_KEY_MASK;
+	lookup_gw = 0;
+	key = (ntohl(daddr) >> net_hash_key_shift) & NET_HASH_KEY_MASK;
 
-        rtdm_lock_get_irqsave(&net_table_lock, context);
+	rtdm_lock_get_irqsave(&net_table_lock, context);
 
-        net_rt = net_hash_tbl[key];
-        while (net_rt != NULL) {
-            if (net_rt->dest_net_ip == (daddr & net_rt->dest_net_mask)) {
-                daddr = net_rt->gw_ip;
+	net_rt = net_hash_tbl[key];
+	while (net_rt != NULL) {
+	    if (net_rt->dest_net_ip == (daddr & net_rt->dest_net_mask)) {
+		daddr = net_rt->gw_ip;
 
-                rtdm_lock_put_irqrestore(&net_table_lock, context);
+		rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-                /* start over, now using the gateway ip as destination */
-                goto restart;
-            }
+		/* start over, now using the gateway ip as destination */
+		goto restart;
+	    }
 
-            net_rt = net_rt->next;
-        }
+	    net_rt = net_rt->next;
+	}
 
-        rtdm_lock_put_irqrestore(&net_table_lock, context);
+	rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-        /* last try: no hash key */
-        rtdm_lock_get_irqsave(&net_table_lock, context);
+	/* last try: no hash key */
+	rtdm_lock_get_irqsave(&net_table_lock, context);
 
-        net_rt = net_hash_tbl[NET_HASH_TBL_SIZE];
-        while (net_rt != NULL) {
-            if (net_rt->dest_net_ip == (daddr & net_rt->dest_net_mask)) {
-                daddr = net_rt->gw_ip;
+	net_rt = net_hash_tbl[NET_HASH_TBL_SIZE];
+	while (net_rt != NULL) {
+	    if (net_rt->dest_net_ip == (daddr & net_rt->dest_net_mask)) {
+		daddr = net_rt->gw_ip;
 
-                rtdm_lock_put_irqrestore(&net_table_lock, context);
+		rtdm_lock_put_irqrestore(&net_table_lock, context);
 
-                /* start over, now using the gateway ip as destination */
-                goto restart;
-            }
+		/* start over, now using the gateway ip as destination */
+		goto restart;
+	    }
 
-            net_rt = net_rt->next;
-        }
+	    net_rt = net_rt->next;
+	}
 
-        rtdm_lock_put_irqrestore(&net_table_lock, context);
+	rtdm_lock_put_irqrestore(&net_table_lock, context);
     }
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
@@ -815,27 +981,27 @@ int rt_ip_route_forward(struct rtskb *rtskb, u32 daddr)
 
 
     if (likely((daddr == rtdev->local_ip) || (daddr == rtdev->broadcast_ip) ||
-        (rtdev->flags & IFF_LOOPBACK)))
-        return 0;
+	(rtdev->flags & IFF_LOOPBACK)))
+	return 0;
 
     if (rtskb_acquire(rtskb, &global_pool) != 0) {
-        /*ERRMSG*/rtdm_printk("RTnet: router overloaded, dropping packet\n");
-        goto error;
+	/*ERRMSG*/rtdm_printk("RTnet: router overloaded, dropping packet\n");
+	goto error;
     }
 
     if (rt_ip_route_output(&dest, daddr, INADDR_ANY) < 0) {
-        /*ERRMSG*/rtdm_printk("RTnet: unable to forward packet from %u.%u.%u.%u\n",
-                              NIPQUAD(rtskb->nh.iph->saddr));
-        goto error;
+	/*ERRMSG*/rtdm_printk("RTnet: unable to forward packet from %u.%u.%u.%u\n",
+			      NIPQUAD(rtskb->nh.iph->saddr));
+	goto error;
     }
 
     rtskb->rtdev    = dest.rtdev;
     rtskb->priority = ROUTER_FORWARD_PRIO;
 
     if ((dest.rtdev->hard_header) &&
-        (dest.rtdev->hard_header(rtskb, dest.rtdev, ETH_P_IP, dest.dev_addr,
-                                 dest.rtdev->dev_addr, rtskb->len) < 0))
-        goto error;
+	(dest.rtdev->hard_header(rtskb, dest.rtdev, ETH_P_IP, dest.dev_addr,
+				 dest.rtdev->dev_addr, rtskb->len) < 0))
+	goto error;
 
     rtdev_xmit(rtskb);
 
@@ -858,20 +1024,20 @@ int __init rt_ip_routing_init(void)
 
 
     for (i = 0; i < CONFIG_XENO_DRIVERS_NET_RTIPV4_HOST_ROUTES-2; i++)
-        host_routes[i].next = &host_routes[i+1];
+	host_routes[i].next = &host_routes[i+1];
     free_host_route = &host_routes[0];
 
 #ifdef CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING
     for (i = 0; i < CONFIG_XENO_DRIVERS_NET_RTIPV4_NET_ROUTES-2; i++)
-        net_routes[i].next = &net_routes[i+1];
+	net_routes[i].next = &net_routes[i+1];
     free_net_route = &net_routes[0];
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4_NETROUTING */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     return rt_route_proc_register();
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
     return 0;
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 }
 
 
@@ -881,9 +1047,9 @@ int __init rt_ip_routing_init(void)
  */
 void rt_ip_routing_release(void)
 {
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
     rt_route_proc_unregister();
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 }
 
 

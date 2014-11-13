@@ -13,4 +13,4 @@ rtmac-y := \
 	rtmac_proc.o \
 	rtmac_proto.o \
 	rtmac_syms.o \
-	rtmac_vnic.c
+	rtmac_vnic.o
