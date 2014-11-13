@@ -211,7 +211,7 @@ static const int multicast_filter_limit = 32;
 #define DEFAULT_RX_POOL_SIZE    16
 
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 /*** RTnet ***/
 
@@ -252,8 +252,8 @@ module_param(debug, int, 0444);
 MODULE_PARM(rx_copybreak, "i");
  *** RTnet ***/
 module_param(backoff, int, 0444);
-compat_module_int_param_array(options, MAX_UNITS);
-compat_module_int_param_array(full_duplex, MAX_UNITS);
+module_param_array(options, int, NULL, 0444);
+module_param_array(full_duplex, int, NULL, 0444);
 MODULE_PARM_DESC(max_interrupt_work, "VIA Rhine maximum events handled per interrupt");
 MODULE_PARM_DESC(debug, "VIA Rhine debug level (0-7)");
 /*** RTnet ***
@@ -1188,13 +1188,6 @@ static int via_rhine_open(struct rtnet_device *dev) /*** RTnet ***/
 
 /*** RTnet ***/
 	/* Set the timer to check for link beat. */
-#if 0
-	init_timer(&np->timer);
-	np->timer.expires = jiffies + 2;
-	np->timer.data = (unsigned long)dev;
-	np->timer.function = &via_rhine_timer;				/* timer handler */
-	add_timer(&np->timer);
-#endif
 /*** RTnet ***/
 
 	return 0;
@@ -1227,79 +1220,6 @@ static void via_rhine_check_duplex(struct rtnet_device *dev) /*** RTnet ***/
 
 
 /*** RTnet ***/
-#if 0
-static void via_rhine_timer(unsigned long data)
-{
-	struct net_device *dev = (struct net_device *)data;
-	struct netdev_private *np = dev->priv;
-	void *ioaddr = (void *)dev->base_addr;
-	int next_tick = 10*HZ;
-	int mii_status;
-
-	if (debug > 3) {
-		printk(KERN_DEBUG "%s: VIA Rhine monitor tick, status %4.4x.\n",
-			   dev->name, readw(ioaddr + IntrStatus));
-	}
-
-	spin_lock_irq (&np->lock);
-
-	via_rhine_check_duplex(dev);
-
-	/* make IFF_RUNNING follow the MII status bit "Link established" */
-	mii_status = mdio_read(dev, np->phys[0], MII_BMSR);
-	if ( (mii_status & BMSR_LSTATUS) != (np->mii_status & BMSR_LSTATUS) ) {
-		if (mii_status & BMSR_LSTATUS)
-			netif_carrier_on(dev);
-		else
-			netif_carrier_off(dev);
-	}
-	np->mii_status = mii_status;
-
-	spin_unlock_irq (&np->lock);
-
-	np->timer.expires = jiffies + next_tick;
-	add_timer(&np->timer);
-}
-
-
-static void via_rhine_tx_timeout (struct net_device *dev)
-{
-	struct netdev_private *np = dev->priv;
-	void *ioaddr = (void *)dev->base_addr;
-
-	printk (KERN_WARNING "%s: Transmit timed out, status %4.4x, PHY status "
-		"%4.4x, resetting...\n",
-		dev->name, readw (ioaddr + IntrStatus),
-		mdio_read (dev, np->phys[0], MII_BMSR));
-
-	dev->if_port = 0;
-
-	/* protect against concurrent rx interrupts */
-	disable_irq(np->pdev->irq);
-
-	spin_lock(&np->lock);
-
-	/* Reset the chip. */
-	writew(CmdReset, ioaddr + ChipCmd);
-
-	/* clear all descriptors */
-	free_tbufs(dev);
-	free_rbufs(dev);
-	alloc_tbufs(dev);
-	alloc_rbufs(dev);
-
-	/* Reinitialize the hardware. */
-	wait_for_reset(dev, np->chip_id, dev->name);
-	init_registers(dev);
-
-	spin_unlock(&np->lock);
-	enable_irq(np->pdev->irq);
-
-	dev->trans_start = jiffies;
-	np->stats.tx_errors++;
-	netif_wake_queue(dev);
-}
-#endif
 /*** RTnet ***/
 
 static int via_rhine_start_tx(struct rtskb *skb, struct rtnet_device *dev) /*** RTnet ***/
@@ -1446,16 +1366,6 @@ static int via_rhine_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
 			if (intr_status & IntrTxErrSummary) {
 /*** RTnet ***/
 				rtdm_printk(KERN_ERR "%s: via_rhine_interrupt(), Transmissions error\n", dev->name);
-#if 0
-				int cnt = 20;
-				/* Avoid scavenging before Tx engine turned off */
-				while ((readw(ioaddr+ChipCmd) & CmdTxOn) && --cnt)
-					udelay(5);
-				if (debug > 2 && !cnt)
-					rtdm_printk(KERN_WARNING "%s: via_rhine_interrupt() " /*** RTnet ***/
-						   "Tx engine still on.\n",
-						   dev->name);
-#endif
 /*** RTnet ***/
 			}
 			via_rhine_tx(dev);
@@ -1599,26 +1509,6 @@ static void via_rhine_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /
 			/* Check if the packet is long enough to accept without copying
 			   to a minimally-sized skbuff. */
 /*** RTnet ***/
-#if 0
-			if (pkt_len < rx_copybreak &&
-				(skb = dev_alloc_skb(pkt_len + 2)) != NULL) {
-				skb->dev = dev;
-				skb_reserve(skb, 2);	/* 16 byte align the IP header */
-				pci_dma_sync_single(np->pdev, np->rx_skbuff_dma[entry],
-						    np->rx_buf_sz, PCI_DMA_FROMDEVICE);
-
-				/* *_IP_COPYSUM isn't defined anywhere and eth_copy_and_sum
-				   is memcpy for all archs so this is kind of pointless right
-				   now ... or? */
-#if HAS_IP_COPYSUM                     /* Call copy + cksum if available. */
-				eth_copy_and_sum(skb, np->rx_skbuff[entry]->tail, pkt_len, 0);
-				skb_put(skb, pkt_len);
-#else
-				memcpy(skb_put(skb, pkt_len), np->rx_skbuff[entry]->tail,
-					   pkt_len);
-#endif
-			} else {
-#endif
 			{
 /*** RTnet ***/
 				skb = np->rx_skbuff[entry];
@@ -1820,112 +1710,6 @@ static void via_rhine_set_rx_mode(struct rtnet_device *dev) /*** RTnet ***/
 }
 
 /*** RTnet ***/
-#if 0
-static int netdev_ethtool_ioctl (struct net_device *dev, void *useraddr)
-{
-	struct netdev_private *np = dev->priv;
-	u32 ethcmd;
-
-	if (get_user(ethcmd, (u32 *)useraddr))
-		return -EFAULT;
-
-	switch (ethcmd) {
-	case ETHTOOL_GDRVINFO: {
-		struct ethtool_drvinfo info = { ETHTOOL_GDRVINFO };
-		strcpy (info.driver, DRV_NAME);
-		strcpy (info.version, DRV_VERSION);
-		strcpy (info.bus_info, np->pdev->slot_name);
-		if (copy_to_user (useraddr, &info, sizeof (info)))
-			return -EFAULT;
-		return 0;
-	}
-
-	/* get settings */
-	case ETHTOOL_GSET: {
-		struct ethtool_cmd ecmd = { ETHTOOL_GSET };
-		if (!(np->drv_flags & CanHaveMII))
-			break;
-		spin_lock_irq(&np->lock);
-		mii_ethtool_gset(&np->mii_if, &ecmd);
-		spin_unlock_irq(&np->lock);
-		if (copy_to_user(useraddr, &ecmd, sizeof(ecmd)))
-			return -EFAULT;
-		return 0;
-	}
-	/* set settings */
-	case ETHTOOL_SSET: {
-		int r;
-		struct ethtool_cmd ecmd;
-		if (!(np->drv_flags & CanHaveMII))
-			break;
-		if (copy_from_user(&ecmd, useraddr, sizeof(ecmd)))
-			return -EFAULT;
-		spin_lock_irq(&np->lock);
-		r = mii_ethtool_sset(&np->mii_if, &ecmd);
-		spin_unlock_irq(&np->lock);
-		return r;
-	}
-	/* restart autonegotiation */
-	case ETHTOOL_NWAY_RST: {
-		if (!(np->drv_flags & CanHaveMII))
-			break;
-		return mii_nway_restart(&np->mii_if);
-	}
-	/* get link status */
-	case ETHTOOL_GLINK: {
-		struct ethtool_value edata = {ETHTOOL_GLINK};
-		if (!(np->drv_flags & CanHaveMII))
-			break;
-		edata.data = mii_link_ok(&np->mii_if);
-		if (copy_to_user(useraddr, &edata, sizeof(edata)))
-			return -EFAULT;
-		return 0;
-	}
-
-	/* get message-level */
-	case ETHTOOL_GMSGLVL: {
-		struct ethtool_value edata = {ETHTOOL_GMSGLVL};
-		edata.data = debug;
-		if (copy_to_user(useraddr, &edata, sizeof(edata)))
-			return -EFAULT;
-		return 0;
-	}
-	/* set message-level */
-	case ETHTOOL_SMSGLVL: {
-		struct ethtool_value edata;
-		if (copy_from_user(&edata, useraddr, sizeof(edata)))
-			return -EFAULT;
-		debug = edata.data;
-		return 0;
-	}
-	default:
-		break;
-	}
-
-	return -EOPNOTSUPP;
-}
-
-static int netdev_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
-{
-	struct netdev_private *np = dev->priv;
-	struct mii_ioctl_data *data = (struct mii_ioctl_data *) & rq->ifr_data;
-	int rc;
-
-	if (!netif_running(dev))
-		return -EINVAL;
-
-	if (cmd == SIOCETHTOOL)
-		rc = netdev_ethtool_ioctl(dev, (void *) rq->ifr_data);
-
-	else {
-		spin_lock_irq(&np->lock);
-		rc = generic_mii_ioctl(&np->mii_if, data, cmd, NULL);
-		spin_unlock_irq(&np->lock);
-	}
-
-	return rc;
-}
-#endif
 /*** RTnet ***/
 
 static int via_rhine_close(struct rtnet_device *dev) /*** RTnet ***/
@@ -1977,7 +1761,6 @@ static void via_rhine_remove_one (struct pci_dev *pdev)
 {
  /*** RTnet ***/
 	struct rtnet_device *dev = pci_get_drvdata(pdev);
-	struct netdev_private *np = dev->priv;
 
 	rt_unregister_rtnetdev(dev);
 	rt_rtdev_disconnect(dev);
@@ -2009,7 +1792,7 @@ static int __init via_rhine_init (void)
 #ifdef MODULE
 	printk(version);
 #endif
-	return compat_pci_register_driver (&via_rhine_driver);
+	return pci_register_driver (&via_rhine_driver);
 }
 
 

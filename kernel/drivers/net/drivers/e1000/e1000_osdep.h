@@ -1,25 +1,25 @@
 /*******************************************************************************
 
-  
+
   Copyright(c) 1999 - 2006 Intel Corporation. All rights reserved.
-  
-  This program is free software; you can redistribute it and/or modify it 
-  under the terms of the GNU General Public License as published by the Free 
-  Software Foundation; either version 2 of the License, or (at your option) 
+
+  This program is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the Free
+  Software Foundation; either version 2 of the License, or (at your option)
   any later version.
-  
-  This program is distributed in the hope that it will be useful, but WITHOUT 
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for 
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
   more details.
-  
+
   You should have received a copy of the GNU General Public License along with
-  this program; if not, write to the Free Software Foundation, Inc., 59 
+  this program; if not, write to the Free Software Foundation, Inc., 59
   Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-  
+
   The full GNU General Public License is included in this distribution in the
   file called LICENSE.
-  
+
   Contact Information:
   Linux NICS <linux.nics@intel.com>
   e1000-devel Mailing List <e1000-devel@lists.sourceforge.net>
@@ -47,7 +47,7 @@
 #ifndef msec_delay
 #define msec_delay(x)	do { if(in_interrupt()) { \
 				/* Don't mdelay in interrupt context! */ \
-	                	BUG(); \
+				BUG(); \
 			} else { \
 				msleep(x); \
 			} } while (0)
@@ -91,44 +91,44 @@ typedef enum {
 
 #define E1000_WRITE_REG(a, reg, value) ( \
     writel((value), ((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg))))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg))))
 
 #define E1000_READ_REG(a, reg) ( \
     readl((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg)))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg)))
 
 #define E1000_WRITE_REG_ARRAY(a, reg, offset, value) ( \
     writel((value), ((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
-        ((offset) << 2))))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
+	((offset) << 2))))
 
 #define E1000_READ_REG_ARRAY(a, reg, offset) ( \
     readl((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
-        ((offset) << 2)))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
+	((offset) << 2)))
 
 #define E1000_READ_REG_ARRAY_DWORD E1000_READ_REG_ARRAY
 #define E1000_WRITE_REG_ARRAY_DWORD E1000_WRITE_REG_ARRAY
 
 #define E1000_WRITE_REG_ARRAY_WORD(a, reg, offset, value) ( \
     writew((value), ((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
-        ((offset) << 1))))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
+	((offset) << 1))))
 
 #define E1000_READ_REG_ARRAY_WORD(a, reg, offset) ( \
     readw((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
-        ((offset) << 1)))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
+	((offset) << 1)))
 
 #define E1000_WRITE_REG_ARRAY_BYTE(a, reg, offset, value) ( \
     writeb((value), ((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
-        (offset))))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
+	(offset))))
 
 #define E1000_READ_REG_ARRAY_BYTE(a, reg, offset) ( \
     readb((a)->hw_addr + \
-        (((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
-        (offset)))
+	(((a)->mac_type >= e1000_82543) ? E1000_##reg : E1000_82542_##reg) + \
+	(offset)))
 
 #define E1000_WRITE_FLUSH(a) E1000_READ_REG(a, STATUS)
 

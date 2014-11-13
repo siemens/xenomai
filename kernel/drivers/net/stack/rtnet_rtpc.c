@@ -31,7 +31,7 @@
 #include <linux/wait.h>
 
 #include <rtnet_rtpc.h>
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 
 
 static DEFINE_RTDM_LOCK(pending_calls_lock);

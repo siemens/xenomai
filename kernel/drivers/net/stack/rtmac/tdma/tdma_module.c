@@ -28,7 +28,7 @@
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 #include <rtmac/rtmac_vnic.h>
 #include <rtmac/tdma/tdma.h>
 #include <rtmac/tdma/tdma_dev.h>
@@ -36,14 +36,6 @@
 #include <rtmac/tdma/tdma_proto.h>
 #include <rtmac/tdma/tdma_worker.h>
 
-
-/* RTAI-specific: start scheduling timer */
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-static int start_timer = 0;
-
-module_param(start_timer, int, 0444);
-MODULE_PARM_DESC(start_timer, "set to non-zero to start RTAI timer");
-#endif
 
 #ifdef CONFIG_XENO_OPT_VFILE
 int tdma_proc_read(struct xnvfile_regular_iterator *it, void *data)
@@ -316,11 +308,6 @@ int __init tdma_init(void)
     if (ret < 0)
 	return ret;
 
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-	rtos_timer_start();
-#endif
-
     return 0;
 }
 
@@ -329,11 +316,6 @@ int __init tdma_init(void)
 void tdma_release(void)
 {
     rtmac_disc_deregister(&tdma_disc);
-
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-	rtos_timer_stop();
-#endif
 
     printk("RTmac/TDMA: unloaded\n");
 }

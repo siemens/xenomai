@@ -116,8 +116,8 @@ module_param(tulip_debug, int, 0444);
 module_param(max_interrupt_work, int, 0444);
 /*MODULE_PARM(rx_copybreak, "i");*/
 module_param(csr0, int, 0444);
-compat_module_int_param_array(options, MAX_UNITS);
-compat_module_int_param_array(full_duplex, MAX_UNITS);
+module_param_array(options, int, NULL, 0444);
+module_param_array(full_duplex, int, NULL, 0444);
 
 #define PFX DRV_NAME ": "
 
@@ -128,7 +128,7 @@ int tulip_debug = 1;
 #endif
 
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 
 
@@ -752,199 +752,6 @@ static int tulip_close (/*RTnet*/struct rtnet_device *rtdev)
 
 	return 0;
 }
-
-#if 0
-/* Set or clear the multicast filter for this adaptor.
-   Note that we only use exclusion around actually queueing the
-   new frame, not around filling tp->setup_frame.  This is non-deterministic
-   when re-entered but still correct. */
-
-#undef set_bit_le
-#define set_bit_le(i,p) do { ((char *)(p))[(i)/8] |= (1<<((i)%8)); } while(0)
-
-static void build_setup_frame_hash(u16 *setup_frm, /*RTnet*/struct rtnet_device *rtdev)
-{
-	struct tulip_private *tp = (struct tulip_private *)rtdev->priv;
-	u16 hash_table[32];
-	struct dev_mc_list *mclist;
-	int i;
-	u16 *eaddrs;
-
-	memset(hash_table, 0, sizeof(hash_table));
-	set_bit_le(255, hash_table);                    /* Broadcast entry */
-	/* This should work on big-endian machines as well. */
-	for (i = 0, mclist = rtdev->mc_list; mclist && i < rtdev->mc_count;
-	     i++, mclist = mclist->next) {
-		int index = ether_crc_le(ETH_ALEN, mclist->dmi_addr) & 0x1ff;
-
-		set_bit_le(index, hash_table);
-
-		for (i = 0; i < 32; i++) {
-			*setup_frm++ = hash_table[i];
-			*setup_frm++ = hash_table[i];
-		}
-		setup_frm = &tp->setup_frame[13*6];
-	}
-
-	/* Fill the final entry with our physical address. */
-	eaddrs = (u16 *)rtdev->dev_addr;
-	*setup_frm++ = eaddrs[0]; *setup_frm++ = eaddrs[0];
-	*setup_frm++ = eaddrs[1]; *setup_frm++ = eaddrs[1];
-	*setup_frm++ = eaddrs[2]; *setup_frm++ = eaddrs[2];
-}
-
-static void build_setup_frame_perfect(u16 *setup_frm, /*RTnet*/struct rtnet_device *rtdev)
-{
-	struct tulip_private *tp = (struct tulip_private *)rtdev->priv;
-	struct dev_mc_list *mclist;
-	int i;
-	u16 *eaddrs;
-
-	/* We have <= 14 addresses so we can use the wonderful
-	   16 address perfect filtering of the Tulip. */
-	for (i = 0, mclist = rtdev->mc_list; i < rtdev->mc_count;
-	     i++, mclist = mclist->next) {
-		eaddrs = (u16 *)mclist->dmi_addr;
-		*setup_frm++ = *eaddrs; *setup_frm++ = *eaddrs++;
-		*setup_frm++ = *eaddrs; *setup_frm++ = *eaddrs++;
-		*setup_frm++ = *eaddrs; *setup_frm++ = *eaddrs++;
-	}
-	/* Fill the unused entries with the broadcast address. */
-	memset(setup_frm, 0xff, (15-i)*12);
-	setup_frm = &tp->setup_frame[15*6];
-
-	/* Fill the final entry with our physical address. */
-	eaddrs = (u16 *)rtdev->dev_addr;
-	*setup_frm++ = eaddrs[0]; *setup_frm++ = eaddrs[0];
-	*setup_frm++ = eaddrs[1]; *setup_frm++ = eaddrs[1];
-	*setup_frm++ = eaddrs[2]; *setup_frm++ = eaddrs[2];
-}
-
-
-static void set_rx_mode(/*RTnet*/struct rtnet_device *rtdev)
-{
-	struct tulip_private *tp = (struct tulip_private *)rtdev->priv;
-	long ioaddr = rtdev->base_addr;
-	int csr6;
-
-	csr6 = inl(ioaddr + CSR6) & ~0x00D5;
-
-	tp->csr6 &= ~0x00D5;
-	if (rtdev->flags & IFF_PROMISC) {			/* Set promiscuous. */
-		tp->csr6 |= AcceptAllMulticast | AcceptAllPhys;
-		csr6 |= AcceptAllMulticast | AcceptAllPhys;
-		/* Unconditionally log net taps. */
-		printk(KERN_INFO "%s: Promiscuous mode enabled.\n", rtdev->name);
-	} else if ((rtdev->mc_count > 1000)  ||  (rtdev->flags & IFF_ALLMULTI)) {
-		/* Too many to filter well -- accept all multicasts. */
-		tp->csr6 |= AcceptAllMulticast;
-		csr6 |= AcceptAllMulticast;
-	} else	if (tp->flags & MC_HASH_ONLY) {
-		/* Some work-alikes have only a 64-entry hash filter table. */
-		/* Should verify correctness on big-endian/__powerpc__ */
-		struct dev_mc_list *mclist;
-		int i;
-		if (rtdev->mc_count > 64) {		/* Arbitrary non-effective limit. */
-			tp->csr6 |= AcceptAllMulticast;
-			csr6 |= AcceptAllMulticast;
-		} else {
-			u32 mc_filter[2] = {0, 0};               /* Multicast hash filter */
-			int filterbit;
-			for (i = 0, mclist = rtdev->mc_list; mclist && i < rtdev->mc_count;
-				 i++, mclist = mclist->next) {
-				if (tp->flags & COMET_MAC_ADDR)
-					filterbit = ether_crc_le(ETH_ALEN, mclist->dmi_addr);
-				else
-					filterbit = ether_crc(ETH_ALEN, mclist->dmi_addr) >> 26;
-				filterbit &= 0x3f;
-				mc_filter[filterbit >> 5] |= cpu_to_le32(1 << (filterbit & 31));
-				if (tulip_debug > 2) {
-					printk(KERN_INFO "%s: Added filter for %2.2x:%2.2x:%2.2x:"
-						   "%2.2x:%2.2x:%2.2x  %8.8x bit %d.\n", rtdev->name,
-						   mclist->dmi_addr[0], mclist->dmi_addr[1],
-						   mclist->dmi_addr[2], mclist->dmi_addr[3],
-						   mclist->dmi_addr[4], mclist->dmi_addr[5],
-						   ether_crc(ETH_ALEN, mclist->dmi_addr), filterbit);
-				}
-			}
-			if (mc_filter[0] == tp->mc_filter[0]  &&
-				mc_filter[1] == tp->mc_filter[1])
-				;				/* No change. */
-			else if (tp->flags & IS_ASIX) {
-				outl(2, ioaddr + CSR13);
-				outl(mc_filter[0], ioaddr + CSR14);
-				outl(3, ioaddr + CSR13);
-				outl(mc_filter[1], ioaddr + CSR14);
-			} else if (tp->flags & COMET_MAC_ADDR) {
-				outl(mc_filter[0], ioaddr + 0xAC);
-				outl(mc_filter[1], ioaddr + 0xB0);
-			}
-			tp->mc_filter[0] = mc_filter[0];
-			tp->mc_filter[1] = mc_filter[1];
-		}
-	} else {
-		unsigned long flags;
-
-		/* Note that only the low-address shortword of setup_frame is valid!
-		   The values are doubled for big-endian architectures. */
-		if (rtdev->mc_count > 14) { /* Must use a multicast hash table. */
-			build_setup_frame_hash(tp->setup_frame, dev);
-		} else {
-			build_setup_frame_perfect(tp->setup_frame, dev);
-		}
-
-		spin_lock_irqsave(&tp->lock, flags);
-
-		if (tp->cur_tx - tp->dirty_tx > TX_RING_SIZE - 2) {
-			/* Same setup recently queued, we need not add it. */
-		} else {
-			u32 tx_flags = 0x08000000 | 192;
-			unsigned int entry;
-			int dummy = -1;
-
-			/* Now add this frame to the Tx list. */
-
-			entry = tp->cur_tx++ % TX_RING_SIZE;
-
-			if (entry != 0) {
-				/* Avoid a chip errata by prefixing a dummy entry. */
-				tp->tx_buffers[entry].skb = NULL;
-				tp->tx_buffers[entry].mapping = 0;
-				tp->tx_ring[entry].length =
-					(entry == TX_RING_SIZE-1) ? cpu_to_le32(DESC_RING_WRAP) : 0;
-				tp->tx_ring[entry].buffer1 = 0;
-				/* Must set DescOwned later to avoid race with chip */
-				dummy = entry;
-				entry = tp->cur_tx++ % TX_RING_SIZE;
-			}
-
-			tp->tx_buffers[entry].skb = NULL;
-			tp->tx_buffers[entry].mapping =
-				pci_map_single(tp->pdev, tp->setup_frame,
-					       sizeof(tp->setup_frame),
-					       PCI_DMA_TODEVICE);
-			/* Put the setup frame on the Tx list. */
-			if (entry == TX_RING_SIZE-1)
-				tx_flags |= DESC_RING_WRAP;		/* Wrap ring. */
-			tp->tx_ring[entry].length = cpu_to_le32(tx_flags);
-			tp->tx_ring[entry].buffer1 =
-				cpu_to_le32(tp->tx_buffers[entry].mapping);
-			tp->tx_ring[entry].status = cpu_to_le32(DescOwned);
-			if (dummy >= 0)
-				tp->tx_ring[dummy].status = cpu_to_le32(DescOwned);
-			if (tp->cur_tx - tp->dirty_tx >= TX_RING_SIZE - 2)
-				rtnetif_stop_queue(rtdev);
-
-			/* Trigger an immediate transmit demand. */
-			outl(0, ioaddr + CSR1);
-		}
-
-		spin_unlock_irqrestore(&tp->lock, flags);
-	}
-
-	outl(csr6, ioaddr + CSR6);
-}
-#endif /* set_rx_mode */
 
 #ifdef XXX_CONFIG_TULIP_MWI
 static void tulip_mwi_config (struct pci_dev *pdev,
@@ -1580,7 +1387,7 @@ static int __init tulip_init (void)
 	tulip_max_interrupt_work = max_interrupt_work;
 
 	/* probe for and init boards */
-	return compat_pci_register_driver (&tulip_driver);
+	return pci_register_driver (&tulip_driver);
 }
 
 

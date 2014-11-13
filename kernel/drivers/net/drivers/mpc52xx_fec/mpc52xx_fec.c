@@ -856,20 +856,6 @@ mpc5xxx_fec_rx_task_setup(int num_bufs, int maxbufsize)
 	static TaskSetupParamSet_t params;
 	int tasknum;
 
-#if 0
-	printk("0x%p\n", TaskBDIdxTable);
-	printk("0x%p\n", TaskSetup_TASK_FEC_TX);
-	printk("0x%p\n", TaskSetup_TASK_FEC_RX);
-	printk("0x%p\n", TASK_FEC_TX_api);
-	printk("0x%p\n", TASK_FEC_RX_api);
-	printk("0x%p\n", TaskStart);
-	printk("0x%p\n", TaskBDAssign);
-	printk("0x%p\n", TaskBDRelease);
-	printk("0x%p\n", MBarGlobal);
-	printk("0x%p\n", TaskBDReset);
-	printk("0x%p\n", TaskStop);
-#endif
-
 	params.NumBD = num_bufs;
 	params.Size.MaxBuf = maxbufsize;
 	params.StartAddrSrc = RFIFO_DATA;
@@ -1497,44 +1483,6 @@ mpc5xxx_fec_reinit(struct rtnet_device *dev)
 }
 
 
-#if 0
-#define LONG_REF(x) (*((volatile unsigned long*)x))
-#define SHORT_REF(x) (*((volatile unsigned short*)x))
-static void
-checkrxbd(struct rtnet_device *dev)
-{
-	struct mpc5xxx_fec_priv *priv = (struct mpc5xxx_fec_priv *)dev->priv;
-	int i;
-	int stat[64];
-	for(i=0;i<64;i++) {
-		stat[i] = TaskGetBD(priv->r_tasknum,i)->Status;
-	}
-	for(i=0;i<64;i++) {
-		printk("status[%i]=0x%08x\n",i,stat[i]);
-	}
-	printk("SDMA IRQ pending = 0x%08x\n",LONG_REF(0xf0001214));
-	printk("SDMA IRQ mask    = 0x%08x\n",LONG_REF(0xf0001218));
-	printk("SDMA Task CTRL0  = 0x%04x\n",SHORT_REF(0xf000121c));
-	printk("SDMA Task CTRL1  = 0x%04x\n",SHORT_REF(0xf000121e));
-	printk("SDMA Task CTRL2  = 0x%04x\n",SHORT_REF(0xf0001220));
-	printk("SDMA Task CTRL3  = 0x%04x\n",SHORT_REF(0xf0001222));
-	printk("SDMA Task CTRL4  = 0x%04x\n",SHORT_REF(0xf0001224));
-	printk("SDMA Task CTRL5  = 0x%04x\n",SHORT_REF(0xf0001226));
-	printk("SDMA Task CTRL6  = 0x%04x\n",SHORT_REF(0xf0001228));
-	printk("SDMA Task CTRL7  = 0x%04x\n",SHORT_REF(0xf000122a));
-	printk("SDMA Task CTRL8  = 0x%04x\n",SHORT_REF(0xf000122c));
-	printk("SDMA Task CTRL9  = 0x%04x\n",SHORT_REF(0xf000122e));
-	printk("SDMA Task CTRL10 = 0x%04x\n",SHORT_REF(0xf0001230));
-	printk("SDMA Task CTRL11 = 0x%04x\n",SHORT_REF(0xf0001232));
-	printk("SDMA Task CTRL12 = 0x%04x\n",SHORT_REF(0xf0001234));
-	printk("SDMA Task CTRL13 = 0x%04x\n",SHORT_REF(0xf0001236));
-	printk("SDMA Task CTRL14 = 0x%04x\n",SHORT_REF(0xf0001238));
-	printk("SDMA Task CTRL15 = 0x%04x\n",SHORT_REF(0xf000123a));
-	printk("r_tasknum=%i\n",priv->r_tasknum);
-	printk("t_tasknum=%i\n",priv->t_tasknum);
-}
-#endif	/* 0 */
-
 static int
 mpc5xxx_fec_interrupt(rtdm_irq_t *irq_handle)
 {
@@ -1621,13 +1569,6 @@ mpc5xxx_fec_cleanup(struct rtnet_device *dev, int reinit)
 			dev_kfree_rtskb(rx_fifo_skb[i]);
 		}
 	}
-#if 0
-	else {
-		for (i=0; i<MPC5xxx_FEC_RBD_NUM; i++) {
-			dev_kfree_rtskb(rx_fifo_skb[i]);
-		}
-	}
-#endif
 
 	mpc5xxx_fec_get_stats(dev);
 

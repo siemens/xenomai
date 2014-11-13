@@ -29,7 +29,7 @@
 
 #include <linux/module.h>
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 
 
 #ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
@@ -73,22 +73,9 @@ extern const char rtnet_rtdm_provider_name[];
 
 
 #ifdef CONFIG_XENO_OPT_VFILE
-
-#include <linux/proc_fs.h>
-
 extern struct xnvfile_directory rtnet_proc_root;
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 #include <linux/mutex.h>
-#else
-#include <asm/semaphore.h>
-#define mutex                           semaphore
-#define DEFINE_MUTEX(m)                 DECLARE_MUTEX(m)
-#define mutex_init(m)                   init_MUTEX(m)
-#define mutex_lock(m)                   down(m)
-#define mutex_lock_interruptible(m)     down_interruptible(m)
-#define mutex_unlock(m)                 up(m)
-#endif
 
 #endif /* __RTNET_INTERNAL_H_ */

@@ -25,7 +25,7 @@
 #ifndef __RTCFG_H_INTERNAL_
 #define __RTCFG_H_INTERNAL_
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

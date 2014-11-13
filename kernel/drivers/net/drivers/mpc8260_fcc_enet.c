@@ -64,11 +64,7 @@ static unsigned int rtnet_fcc = 1;
 MODULE_PARM(rtnet_fcc, "i");
 MODULE_PARM_DESC(rtnet_fcc, "FCCx port for RTnet (default=1)");
 
-#if 0
-#define RT_DEBUG(fmt,args...)	rtdm_printk (fmt ,##args)
-#else
 #define RT_DEBUG(fmt,args...)
-#endif
 
 /* The transmitter timeout
  */
@@ -478,12 +474,7 @@ fcc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	cep->stats.tx_bytes += skb->len;
 	cep->skb_cur = (cep->skb_cur+1) & TX_RING_MOD_MASK;
 
-#if 0
-	rtdm_irq_disable(&cep->irq_handle);
-	rtdm_lock_get(&cep->lock);
-#else
 	rtdm_lock_get_irqsave(&cep->lock, context);
-#endif
 
 	/* Get and patch time stamp just before the transmission */
 	if (skb->xmit_stamp)
@@ -494,10 +485,6 @@ fcc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	 */
 	bdp->cbd_sc |= (BD_ENET_TX_READY | BD_ENET_TX_INTR | BD_ENET_TX_LAST | BD_ENET_TX_TC);
 
-#if 0
-	/* Errata says don't do this. */
-	cep->fccp->fcc_ftodr = 0x8000;
-#endif
 #ifdef ORIGINAL_VERSION
 	dev->trans_start = jiffies;
 #endif
@@ -515,12 +502,7 @@ fcc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 
 	cep->cur_tx = (cbd_t *)bdp;
 
-#if 0
-	rtdm_lock_put(&cep->lock);
-	rtdm_irq_enable(&cep->irq_handle);
-#else
 	rtdm_lock_put_irqrestore(&cep->lock, context);
-#endif
 
 	return 0;
 }
@@ -964,14 +946,6 @@ static phy_info_t phy_info_lxt970 = {
 	"LXT970",
 
 	(const phy_cmd_t []) {  /* config */
-#if 0
-//		{ mk_mii_write(MII_REG_ANAR, 0x0021), NULL },
-
-		/* Set default operation of 100-TX....for some reason
-		 * some of these bits are set on power up, which is wrong.
-		 */
-		{ mk_mii_write(MII_LXT970_CONFIG, 0), NULL },
-#endif
 		{ mk_mii_read(MII_REG_CR), mii_parse_cr },
 		{ mk_mii_read(MII_REG_ANAR), mii_parse_anar },
 		{ mk_mii_end, }
@@ -1205,9 +1179,6 @@ static phy_info_t phy_info_79c873 = {
 		{ mk_mii_end, }
 	},
 	(const phy_cmd_t []) {  /* startup */
-#if 0
-		{ mk_mii_write(MII_79C873_IER, 0xff00), NULL },
-#endif
 		{ mk_mii_write(MII_REG_CR, 0x1200), NULL }, /* autonegotiate */
 #ifdef	CONFIG_PM826
 		{ mk_mii_read(MII_REG_SR), mii_waitfor_anc },
@@ -1810,24 +1781,10 @@ init_fcc_param(fcc_info_t *fip, struct rtnet_device *rtdev,
 	 * These are relative offsets in the DP ram address space.
 	 * Initialize base addresses for the buffer descriptors.
 	 */
-#if 0
-	/* I really want to do this, but for some reason it doesn't
-	 * work with the data cache enabled, so I allocate from the
-	 * main memory instead.
-	 */
-	i = m8260_cpm_dpalloc(sizeof(cbd_t) * RX_RING_SIZE, 8);
-	ep->fen_genfcc.fcc_rbase = (uint)&immap->im_dprambase[i];
-	cep->rx_bd_base = (cbd_t *)&immap->im_dprambase[i];
-
-	i = m8260_cpm_dpalloc(sizeof(cbd_t) * TX_RING_SIZE, 8);
-	ep->fen_genfcc.fcc_tbase = (uint)&immap->im_dprambase[i];
-	cep->tx_bd_base = (cbd_t *)&immap->im_dprambase[i];
-#else
 	cep->rx_bd_base = (cbd_t *)m8260_cpm_hostalloc(sizeof(cbd_t) * RX_RING_SIZE, 8);
 	ep->fen_genfcc.fcc_rbase = __pa(cep->rx_bd_base);
 	cep->tx_bd_base = (cbd_t *)m8260_cpm_hostalloc(sizeof(cbd_t) * TX_RING_SIZE, 8);
 	ep->fen_genfcc.fcc_tbase = __pa(cep->tx_bd_base);
-#endif
 
 	cep->dirty_tx = cep->cur_tx = cep->tx_bd_base;
 	cep->cur_rx = cep->rx_bd_base;
@@ -2262,14 +2219,8 @@ static void __exit fcc_enet_cleanup(void)
 		rtdm_irq_free(&cep->irq_handle);
 
 		init_fcc_shutdown(fip, cep, immap);
-#if 0
-		/* This two functions do not exist or are not exported */
-		m8260_cpm_dpfree(ep->fen_genfcc.fcc_rbase);
-		m8260_cpm_dpfree(ep->fen_genfcc.fcc_tbase);
-#else
 		printk("%s: cleanup incomplete (m8260_cpm_dpfree does not exit)!\n",
 		       rtdev->name);
-#endif
 		rt_stack_disconnect(rtdev);
 		rt_unregister_rtnetdev(rtdev);
 		rt_rtdev_disconnect(rtdev);

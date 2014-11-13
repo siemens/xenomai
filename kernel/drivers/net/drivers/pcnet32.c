@@ -63,7 +63,7 @@ DRV_NAME ".c:v" DRV_VERSION " " DRV_RELDATE " Jan.Kiszka@web.de\n";
 #define DEFAULT_RX_POOL_SIZE    16
 
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 /*** RTnet ***/
 
@@ -608,12 +608,6 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
 	 */
 	/* switch to home wiring mode */
 	media = a->read_bcr(ioaddr, 49);
-#if 0
-	if (pcnet32_debug > 2)
-	    printk(KERN_DEBUG PFX "media value %#x.\n",  media);
-	media &= ~3;
-	media |= 1;
-#endif
 	if (pcnet32_debug > 2)
 	    printk(KERN_DEBUG PFX "media reset to %#x.\n",  media);
 	a->write_bcr(ioaddr, 49, media);
@@ -1044,64 +1038,6 @@ pcnet32_init_ring(struct rtnet_device *dev) /*** RTnet ***/
 }
 
 /*** RTnet ***/
-#if 0
-static void
-pcnet32_restart(struct net_device *dev, unsigned int csr0_bits)
-{
-    struct pcnet32_private *lp = dev->priv;
-    unsigned long ioaddr = dev->base_addr;
-    int i;
-
-    pcnet32_purge_tx_ring(dev);
-    if (pcnet32_init_ring(dev))
-	return;
-
-    /* ReInit Ring */
-    lp->a.write_csr (ioaddr, 0, 1);
-    i = 0;
-    while (i++ < 100)
-	if (lp->a.read_csr (ioaddr, 0) & 0x0100)
-	    break;
-
-    lp->a.write_csr (ioaddr, 0, csr0_bits);
-}
-
-
-static void
-pcnet32_tx_timeout (struct net_device *dev)
-{
-    struct pcnet32_private *lp = dev->priv;
-    unsigned long ioaddr = dev->base_addr, flags;
-
-    spin_lock_irqsave(&lp->lock, flags);
-    /* Transmitter timeout, serious problems. */
-	printk(KERN_ERR "%s: transmit timed out, status %4.4x, resetting.\n",
-	       dev->name, lp->a.read_csr(ioaddr, 0));
-	lp->a.write_csr (ioaddr, 0, 0x0004);
-	lp->stats.tx_errors++;
-	if (pcnet32_debug > 2) {
-	    int i;
-	    printk(KERN_DEBUG " Ring data dump: dirty_tx %d cur_tx %d%s cur_rx %d.",
-	       lp->dirty_tx, lp->cur_tx, lp->tx_full ? " (full)" : "",
-	       lp->cur_rx);
-	    for (i = 0 ; i < RX_RING_SIZE; i++)
-	    printk("%s %08x %04x %08x %04x", i & 1 ? "" : "\n ",
-		   lp->rx_ring[i].base, -lp->rx_ring[i].buf_length,
-		   lp->rx_ring[i].msg_length, (unsigned)lp->rx_ring[i].status);
-	    for (i = 0 ; i < TX_RING_SIZE; i++)
-	    printk("%s %08x %04x %08x %04x", i & 1 ? "" : "\n ",
-		   lp->tx_ring[i].base, -lp->tx_ring[i].length,
-		   lp->tx_ring[i].misc, (unsigned)lp->tx_ring[i].status);
-	    printk("\n");
-	}
-	pcnet32_restart(dev, 0x0042);
-
-	dev->trans_start = jiffies;
-	netif_start_queue(dev);
-
-	spin_unlock_irqrestore(&lp->lock, flags);
-}
-#endif
 /*** RTnet ***/
 
 
@@ -1324,13 +1260,6 @@ static int pcnet32_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
 	}
 
 /*** RTnet ***/
-#if 0
-	if (must_restart) {
-	    /* stop the chip to clear the error condition, then restart */
-	    lp->a.write_csr (ioaddr, 0, 0x0004);
-	    pcnet32_restart(dev, 0x0002);
-	}
-#endif
 /*** RTnet ***/
     }
 
@@ -1424,15 +1353,6 @@ pcnet32_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /*** RTnet ***/
 		    break;
 		}
 /*** RTnet ***/
-#if 0
-		if (!rx_in_place) {
-		    skb_reserve(skb,2); /* 16 byte align */
-		    skb_put(skb,pkt_len);	/* Make room */
-		    eth_copy_and_sum(skb,
-				     (unsigned char *)(lp->rx_skbuff[entry]->tail),
-				     pkt_len,0);
-		}
-#endif
 		lp->stats.rx_bytes += skb->len;
 		skb->protocol=rt_eth_type_trans(skb,dev);
 		skb->time_stamp = *time_stamp;
@@ -1526,226 +1446,6 @@ pcnet32_get_stats(struct rtnet_device *rtdev)
     return &lp->stats;
 }
 
-#if 0
-/* taken from the sunlance driver, which it took from the depca driver */
-static void pcnet32_load_multicast (struct net_device *dev)
-{
-    struct pcnet32_private *lp = dev->priv;
-    volatile struct pcnet32_init_block *ib = &lp->init_block;
-    volatile u16 *mcast_table = (u16 *)&ib->filter;
-    struct dev_mc_list *dmi=dev->mc_list;
-    char *addrs;
-    int i;
-    u32 crc;
-
-    /* set all multicast bits */
-    if (dev->flags & IFF_ALLMULTI){
-	ib->filter[0] = 0xffffffff;
-	ib->filter[1] = 0xffffffff;
-	return;
-    }
-    /* clear the multicast filter */
-    ib->filter[0] = 0;
-    ib->filter[1] = 0;
-
-    /* Add addresses */
-    for (i = 0; i < dev->mc_count; i++){
-	addrs = dmi->dmi_addr;
-	dmi   = dmi->next;
-
-	/* multicast address? */
-	if (!(*addrs & 1))
-	    continue;
-
-	crc = ether_crc_le(6, addrs);
-	crc = crc >> 26;
-	mcast_table [crc >> 4] |= cpu_to_le16(1 << (crc & 0xf));
-    }
-    return;
-}
-
-
-/*
- * Set or clear the multicast filter for this adaptor.
- */
-static void pcnet32_set_multicast_list(struct net_device *dev)
-{
-    unsigned long ioaddr = dev->base_addr, flags;
-    struct pcnet32_private *lp = dev->priv;
-
-    spin_lock_irqsave(&lp->lock, flags);
-    if (dev->flags&IFF_PROMISC) {
-	/* Log any net taps. */
-	printk(KERN_INFO "%s: Promiscuous mode enabled.\n", dev->name);
-	lp->init_block.mode = le16_to_cpu(0x8000 | (lp->options & PCNET32_PORT_PORTSEL) << 7);
-    } else {
-	lp->init_block.mode = le16_to_cpu((lp->options & PCNET32_PORT_PORTSEL) << 7);
-	pcnet32_load_multicast (dev);
-    }
-
-    lp->a.write_csr (ioaddr, 0, 0x0004); /* Temporarily stop the lance. */
-
-    pcnet32_restart(dev, 0x0042); /*  Resume normal operation */
-    spin_unlock_irqrestore(&lp->lock, flags);
-}
-
-static int mdio_read(struct net_device *dev, int phy_id, int reg_num)
-{
-	struct pcnet32_private *lp = dev->priv;
-	unsigned long ioaddr = dev->base_addr;
-	u16 val_out;
-	int phyaddr;
-
-	if (!lp->mii)
-		return 0;
-
-	phyaddr = lp->a.read_bcr(ioaddr, 33);
-
-	lp->a.write_bcr(ioaddr, 33, ((phy_id & 0x1f) << 5) | (reg_num & 0x1f));
-	val_out = lp->a.read_bcr(ioaddr, 34);
-	lp->a.write_bcr(ioaddr, 33, phyaddr);
-
-	return val_out;
-}
-
-static void mdio_write(struct net_device *dev, int phy_id, int reg_num, int val)
-{
-	struct pcnet32_private *lp = dev->priv;
-	unsigned long ioaddr = dev->base_addr;
-	int phyaddr;
-
-	if (!lp->mii)
-		return;
-
-	phyaddr = lp->a.read_bcr(ioaddr, 33);
-
-	lp->a.write_bcr(ioaddr, 33, ((phy_id & 0x1f) << 5) | (reg_num & 0x1f));
-	lp->a.write_bcr(ioaddr, 34, val);
-	lp->a.write_bcr(ioaddr, 33, phyaddr);
-}
-
-static int pcnet32_ethtool_ioctl (struct net_device *dev, void *useraddr)
-{
-	struct pcnet32_private *lp = dev->priv;
-	u32 ethcmd;
-	int phyaddr = 0;
-	int phy_id = 0;
-	unsigned long ioaddr = dev->base_addr;
-
-	if (lp->mii) {
-		phyaddr = lp->a.read_bcr (ioaddr, 33);
-		phy_id = (phyaddr >> 5) & 0x1f;
-		lp->mii_if.phy_id = phy_id;
-	}
-
-	if (copy_from_user (&ethcmd, useraddr, sizeof (ethcmd)))
-		return -EFAULT;
-
-	switch (ethcmd) {
-	case ETHTOOL_GDRVINFO: {
-		struct ethtool_drvinfo info = { ETHTOOL_GDRVINFO };
-		strcpy (info.driver, DRV_NAME);
-		strcpy (info.version, DRV_VERSION);
-		if (lp->pci_dev)
-			strcpy (info.bus_info, lp->pci_dev->slot_name);
-		else
-			sprintf(info.bus_info, "VLB 0x%lx", dev->base_addr);
-		if (copy_to_user (useraddr, &info, sizeof (info)))
-			return -EFAULT;
-		return 0;
-	}
-
-	/* get settings */
-	case ETHTOOL_GSET: {
-		struct ethtool_cmd ecmd = { ETHTOOL_GSET };
-		spin_lock_irq(&lp->lock);
-		mii_ethtool_gset(&lp->mii_if, &ecmd);
-		spin_unlock_irq(&lp->lock);
-		if (copy_to_user(useraddr, &ecmd, sizeof(ecmd)))
-			return -EFAULT;
-		return 0;
-	}
-	/* set settings */
-	case ETHTOOL_SSET: {
-		int r;
-		struct ethtool_cmd ecmd;
-		if (copy_from_user(&ecmd, useraddr, sizeof(ecmd)))
-			return -EFAULT;
-		spin_lock_irq(&lp->lock);
-		r = mii_ethtool_sset(&lp->mii_if, &ecmd);
-		spin_unlock_irq(&lp->lock);
-		return r;
-	}
-	/* restart autonegotiation */
-	case ETHTOOL_NWAY_RST: {
-		return mii_nway_restart(&lp->mii_if);
-	}
-	/* get link status */
-	case ETHTOOL_GLINK: {
-		struct ethtool_value edata = {ETHTOOL_GLINK};
-		edata.data = mii_link_ok(&lp->mii_if);
-		if (copy_to_user(useraddr, &edata, sizeof(edata)))
-			return -EFAULT;
-		return 0;
-	}
-
-	/* get message-level */
-	case ETHTOOL_GMSGLVL: {
-		struct ethtool_value edata = {ETHTOOL_GMSGLVL};
-		edata.data = pcnet32_debug;
-		if (copy_to_user(useraddr, &edata, sizeof(edata)))
-			return -EFAULT;
-		return 0;
-	}
-	/* set message-level */
-	case ETHTOOL_SMSGLVL: {
-		struct ethtool_value edata;
-		if (copy_from_user(&edata, useraddr, sizeof(edata)))
-			return -EFAULT;
-		pcnet32_debug = edata.data;
-		return 0;
-	}
-	default:
-		break;
-	}
-
-	return -EOPNOTSUPP;
-}
-
-static int pcnet32_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
-{
-    unsigned long ioaddr = dev->base_addr;
-    struct pcnet32_private *lp = dev->priv;
-    struct mii_ioctl_data *data = (struct mii_ioctl_data *)&rq->ifr_data;
-    int phyaddr = lp->a.read_bcr (ioaddr, 33);
-
-    if (cmd == SIOCETHTOOL)
-	return pcnet32_ethtool_ioctl(dev, (void *) rq->ifr_data);
-
-    if (lp->mii) {
-	switch(cmd) {
-	case SIOCGMIIPHY:		/* Get address of MII PHY in use. */
-	    data->phy_id = (phyaddr >> 5) & 0x1f;
-	    /* Fall Through */
-	case SIOCGMIIREG:		/* Read MII PHY register. */
-	    lp->a.write_bcr (ioaddr, 33, ((data->phy_id & 0x1f) << 5) | (data->reg_num & 0x1f));
-	    data->val_out = lp->a.read_bcr (ioaddr, 34);
-	    lp->a.write_bcr (ioaddr, 33, phyaddr);
-	    return 0;
-	case SIOCSMIIREG:		/* Write MII PHY register. */
-	    if (!capable(CAP_NET_ADMIN))
-		return -EPERM;
-	    lp->a.write_bcr (ioaddr, 33, ((data->phy_id & 0x1f) << 5) | (data->reg_num & 0x1f));
-	    lp->a.write_bcr (ioaddr, 34, data->val_in);
-	    lp->a.write_bcr (ioaddr, 33, phyaddr);
-	    return 0;
-	default:
-	    return -EOPNOTSUPP;
-	}
-    }
-    return -EOPNOTSUPP;
-}
-#endif
 /*** RTnet ***/
 
 static struct pci_driver pcnet32_driver = {
@@ -1770,9 +1470,9 @@ module_param(tx_start_pt, int, 0444);
 MODULE_PARM_DESC(tx_start_pt, DRV_NAME " transmit start point (0-3)");
 module_param(pcnet32vlb, int, 0444);
 MODULE_PARM_DESC(pcnet32vlb, DRV_NAME " Vesa local bus (VLB) support (0/1)");
-compat_module_int_param_array(options, MAX_UNITS);
+module_param_array(options, int, NULL, 0444);
 MODULE_PARM_DESC(options, DRV_NAME " initial option setting(s) (0-15)");
-compat_module_int_param_array(full_duplex, MAX_UNITS);
+module_param_array(full_duplex, int, NULL, 0444);
 MODULE_PARM_DESC(full_duplex, DRV_NAME " full duplex setting(s) (1)");
 
 MODULE_AUTHOR("Jan Kiszka");
@@ -1790,7 +1490,7 @@ static int __init pcnet32_init_module(void)
 	tx_start = tx_start_pt;
 
     /* find the PCI devices */
-    if (!compat_pci_register_driver(&pcnet32_driver))
+    if (!pci_register_driver(&pcnet32_driver))
 	pcnet32_have_pci = 1;
 
     /* should we find any remaining VLbus devices ? */

@@ -23,7 +23,7 @@
  */
 
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 #include <stack_mgr.h>
 #include <rtmac/rtmac_disc.h>
 #include <rtmac/rtmac_proto.h>
@@ -38,10 +38,6 @@ int rtmac_proto_rx(struct rtskb *skb, struct rtpacket_type *pt)
 
 
     if (disc == NULL) {
-#if 0 /* switch this warning off until we control error message output */
-        /*ERROR*/rtdm_printk("RTmac: received RTmac packet on unattached "
-                             "device %s\n", skb->rtdev->name);
-#endif
         goto error;
     }
 

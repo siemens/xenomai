@@ -32,15 +32,6 @@
 #include <rtnet_chrdev.h>
 #include <rtnet_port.h> /* for netdev_priv() */
 
-
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-static int start_timer = 0;
-
-module_param(start_timer, int, 0444);
-MODULE_PARM_DESC(start_timer, "set to non-zero if RTAI timer was not yet "
-		 "started");
-#endif
-
 MODULE_LICENSE("GPL");
 
 static unsigned int rtcap_rtskbs = 128;
@@ -165,7 +156,6 @@ void rtcap_kfree_rtskb(struct rtskb *rtskb)
 
 static void convert_timestamp(nanosecs_abs_t timestamp, struct sk_buff *skb)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
 # ifdef CONFIG_KTIME_SCALAR
     skb->tstamp.tv64 = timestamp;
 # else /* !CONFIG_KTIME_SCALAR */
@@ -174,21 +164,6 @@ static void convert_timestamp(nanosecs_abs_t timestamp, struct sk_buff *skb)
     rem = do_div(timestamp, NSEC_PER_SEC);
     skb->tstamp = ktime_set((long)timestamp, rem);
 # endif /* !CONFIG_KTIME_SCALAR */
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,14)
-    struct timeval tv;
-
-    tv.tv_usec = do_div(timestamp, NSEC_PER_SEC);
-    tv.tv_sec = (long)timestamp;
-    tv.tv_usec /= 1000;
-    skb_set_timestamp(skb, &tv);
-#else /* KERNEL_VERSION < 2.6.14 */
-# ifndef NSEC_PER_SEC
-#  define NSEC_PER_SEC (1000000000L)
-# endif
-    skb->stamp.tv_usec = do_div(timestamp, NSEC_PER_SEC);
-    skb->stamp.tv_sec = (long)timestamp;
-    skb->stamp.tv_usec /= 1000;
-#endif
 }
 
 
@@ -331,7 +306,6 @@ static int tap_dev_change_mtu(struct net_device *dev, int new_mtu)
 
 
 
-#ifdef HAVE_NET_DEVICE_OPS
 static const struct net_device_ops tap_netdev_ops = {
     .ndo_open       = tap_dev_open,
     .ndo_stop       = tap_dev_stop,
@@ -339,24 +313,12 @@ static const struct net_device_ops tap_netdev_ops = {
     .ndo_get_stats  = tap_dev_get_stats,
     .ndo_change_mtu = tap_dev_change_mtu,
 };
-#endif /* HAVE_NET_DEVICE_OPS */
 
 static void tap_dev_setup(struct net_device *dev)
 {
     ether_setup(dev);
 
-#ifdef HAVE_NET_DEVICE_OPS
     dev->netdev_ops      = &tap_netdev_ops;
-#else /* !HAVE_NET_DEVICE_OPS */
-    dev->open            = tap_dev_open;
-    dev->hard_start_xmit = tap_dev_xmit;
-    dev->get_stats       = tap_dev_get_stats;
-    dev->change_mtu      = tap_dev_change_mtu;
-    dev->set_mac_address = NULL;
-#ifdef HAVE_VALIDATE_ADDR
-    dev->validate_addr   = NULL;
-#endif
-#endif /* !HAVE_NET_DEVICE_OPS */
     dev->mtu             = 1500;
     dev->flags           &= ~IFF_MULTICAST;
 }
@@ -406,11 +368,6 @@ int __init rtcap_init(void)
 
 
     printk("RTcap: real-time capturing interface\n");
-
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-	rtos_timer_start();
-#endif
 
     rtskb_queue_init(&cap_queue);
 
@@ -534,11 +491,6 @@ void rtcap_cleanup(void)
 {
     rtdm_lockctx_t  context;
 
-
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-	rtos_timer_stop();
-#endif
 
     rtdm_nrtsig_destroy(&cap_signal);
 

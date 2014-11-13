@@ -54,9 +54,7 @@
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
 #include <linux/of_net.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 #include <linux/pinctrl/consumer.h>
-#endif
 
 #include <asm/cacheflush.h>
 
@@ -75,11 +73,6 @@
 MODULE_AUTHOR("Maintainer: Wolfgang Grandegger <wg@denx.de>");
 MODULE_DESCRIPTION("RTnet driver for the FEC Ethernet");
 MODULE_LICENSE("GPL");
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)
-#define clk_prepare_enable(clk)		do { clk_enable(clk); } while(0)
-#define clk_disable_unprepare(clk)	do { clk_disable(clk); } while(0)
-#endif
 
 #if defined(CONFIG_ARM)
 #define FEC_ALIGNMENT	0xf
@@ -246,12 +239,8 @@ struct fec_enet_private {
 
 	struct net_device *netdev; /* linux netdev needed for phy handling */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	struct clk *clk_ipg;
 	struct clk *clk_ahb;
-#else
-	struct clk *clk;
-#endif
 
 	/* The saved address of a sent-in-place packet/buffer, for skfree(). */
 	unsigned char *tx_bounce[TX_RING_SIZE];
@@ -1131,11 +1120,7 @@ static int fec_enet_mii_init(struct platform_device *pdev)
 	 * Reference Manual has an error on this, and gets fixed on i.MX6Q
 	 * document.
 	 */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	fep->phy_speed = DIV_ROUND_UP(clk_get_rate(fep->clk_ahb), 5000000);
-#else
-	fep->phy_speed = DIV_ROUND_UP(clk_get_rate(fep->clk), 5000000);
-#endif
 	if (id_entry->driver_data & FEC_QUIRK_ENET_MAC)
 		fep->phy_speed--;
 	fep->phy_speed <<= 1;
@@ -1632,9 +1617,7 @@ static int fec_probe(struct platform_device *pdev)
 	struct resource *r;
 	const struct of_device_id *of_id;
 	static int dev_id;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	struct pinctrl *pinctrl;
-#endif
 
 	of_id = of_match_device(fec_dt_ids, &pdev->dev);
 	if (of_id)
@@ -1715,7 +1698,6 @@ static int fec_probe(struct platform_device *pdev)
 		}
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
 	if (IS_ERR(pinctrl)) {
 		ret = PTR_ERR(pinctrl);
@@ -1736,15 +1718,6 @@ static int fec_probe(struct platform_device *pdev)
 
 	clk_prepare_enable(fep->clk_ahb);
 	clk_prepare_enable(fep->clk_ipg);
-#else
-	fep->clk = clk_get(&pdev->dev, "fec_clk");
-	if (IS_ERR(fep->clk)) {
-		ret = PTR_ERR(fep->clk);
-		goto failed_clk;
-	}
-
-	clk_prepare_enable(fep->clk);
-#endif
 
 	ret = fec_enet_init(ndev);
 	if (ret)
@@ -1768,15 +1741,9 @@ failed_register:
 	fec_enet_mii_remove(fep);
 failed_mii_init:
 failed_init:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	clk_disable_unprepare(fep->clk_ahb);
 	clk_disable_unprepare(fep->clk_ipg);
-#else
-	clk_disable_unprepare(fep->clk);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 failed_pin:
-#endif
 failed_clk:
 	for (i = 0; i < FEC_IRQ_NUM; i++) {
 		irq = platform_get_irq(pdev, i);
@@ -1813,12 +1780,8 @@ static int fec_drv_remove(struct platform_device *pdev)
 			rtdm_irq_free(&fep->irq_handle[i]);
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	clk_disable_unprepare(fep->clk_ahb);
 	clk_disable_unprepare(fep->clk_ipg);
-#else
-	clk_disable_unprepare(fep->clk);
-#endif
 	iounmap(fep->hwp);
 
 	/* RTnet */
@@ -1845,12 +1808,8 @@ fec_suspend(struct device *dev)
 		fec_stop(ndev);
 		rtnetif_device_detach(ndev);
 	}
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	clk_disable_unprepare(fep->clk_ahb);
 	clk_disable_unprepare(fep->clk_ipg);
-#else
-	clk_disable_unprepare(fep->clk);
-#endif
 	return 0;
 }
 
@@ -1860,12 +1819,8 @@ fec_resume(struct device *dev)
 	struct rtnet_device *ndev = dev_get_drvdata(dev);
 	struct fec_enet_private *fep = rtnetdev_priv(ndev);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	clk_prepare_enable(fep->clk_ahb);
 	clk_prepare_enable(fep->clk_ipg);
-#else
-	clk_prepare_enable(fep->clk);
-#endif
 	if (rtnetif_running(ndev)) {
 		fec_restart(ndev, fep->full_duplex);
 		rtnetif_device_attach(ndev);
@@ -1898,23 +1853,4 @@ static struct platform_driver fec_driver = {
 	.remove	= fec_drv_remove,
 };
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)
-static int __init
-fec_enet_module_init(void)
-{
-	printk(KERN_INFO "RT FEC Ethernet Driver\n");
-
-	return platform_driver_register(&fec_driver);
-}
-
-static void __exit
-fec_enet_cleanup(void)
-{
-	platform_driver_unregister(&fec_driver);
-}
-
-module_exit(fec_enet_cleanup);
-module_init(fec_enet_module_init);
-#else
 module_platform_driver(fec_driver);
-#endif

@@ -460,24 +460,6 @@ static void update_mac_address(struct rtnet_device *dev)
 /*
  * Store the new hardware address in dev->dev_addr, and update the MAC.
  */
-#if 0
-static int set_mac_address(struct rtnet_device *dev, void* addr)
-{
-	struct sockaddr *address = addr;
-
-	if (!is_valid_ether_addr(address->sa_data))
-		return -EADDRNOTAVAIL;
-
-	memcpy(dev->dev_addr, address->sa_data, dev->addr_len);
-	update_mac_address(dev);
-
-	printk("%s: Setting MAC address to %02x:%02x:%02x:%02x:%02x:%02x\n", dev->name,
-		dev->dev_addr[0], dev->dev_addr[1], dev->dev_addr[2],
-		dev->dev_addr[3], dev->dev_addr[4], dev->dev_addr[5]);
-
-	return 0;
-}
-#endif
 
 static int inline hash_bit_value(int bitnr, __u8 *addr)
 {
@@ -517,176 +499,17 @@ static int inline hash_bit_value(int bitnr, __u8 *addr)
 /*
  * Return the hash index value for the specified address.
  */
-#if 0
-static int hash_get_index(__u8 *addr)
-{
-	int i, j, bitval;
-	int hash_index = 0;
-
-	for (j = 0; j < 6; j++) {
-		for (i = 0, bitval = 0; i < 8; i++)
-			bitval ^= hash_bit_value(i*6 + j, addr);
-
-		hash_index |= (bitval << j);
-	}
-
-	return hash_index;
-}
-#endif
 /*
  * Add multicast addresses to the internal multicast-hash table.
  */
 
-#if 0
-static void at91ether_sethashtable(struct rtnet_device *dev)
-{
-	struct dev_mc_list *curr;
-	unsigned long mc_filter[2];
-	unsigned int i, bitnr;
-
-	mc_filter[0] = mc_filter[1] = 0;
-
-	curr = dev->mc_list;
-	for (i = 0; i < dev->mc_count; i++, curr = curr->next) {
-		if (!curr) break;	/* unexpected end of list */
-
-		bitnr = hash_get_index(curr->dmi_addr);
-		mc_filter[bitnr >> 5] |= 1 << (bitnr & 31);
-	}
-
-	at91_emac_write(AT91_EMAC_HSH, mc_filter[0]);
-	at91_emac_write(AT91_EMAC_HSL, mc_filter[1]);
-}
-#endif
-
 /*
  * Enable/Disable promiscuous and multicast modes.
  */
-#if 0
-static void at91ether_set_rx_mode(struct rtnet_device *dev)
-{
-	unsigned long cfg;
-
-	cfg = at91_emac_read(AT91_EMAC_CFG);
-
-	if (dev->flags & IFF_PROMISC)			/* Enable promiscuous mode */
-		cfg |= AT91_EMAC_CAF;
-	else if (dev->flags & (~IFF_PROMISC))		/* Disable promiscuous mode */
-		cfg &= ~AT91_EMAC_CAF;
-
-	if (dev->flags & IFF_ALLMULTI) {		/* Enable all multicast mode */
-		at91_emac_write(AT91_EMAC_HSH, -1);
-		at91_emac_write(AT91_EMAC_HSL, -1);
-		cfg |= AT91_EMAC_MTI;
-	} else if (dev->mc_count > 0) {			/* Enable specific multicasts */
-		at91ether_sethashtable(dev);
-		cfg |= AT91_EMAC_MTI;
-	} else if (dev->flags & (~IFF_ALLMULTI)) {	/* Disable all multicast mode */
-		at91_emac_write(AT91_EMAC_HSH, 0);
-		at91_emac_write(AT91_EMAC_HSL, 0);
-		cfg &= ~AT91_EMAC_MTI;
-	}
-
-	at91_emac_write(AT91_EMAC_CFG, cfg);
-}
-#endif
 
 /* ......................... ETHTOOL SUPPORT ........................... */
 
 
-
-#if 0
-static int at91ether_get_settings(struct rtnet_device *dev, struct ethtool_cmd *cmd)
-{
-	struct at91_private *lp = dev->priv;
-	int ret;
-	rtdm_lockctx_t context;
-
-	rtdm_lock_get_irqsave(&lp->lock, context);
-	enable_mdi();
-
-	ret = mii_ethtool_gset(&lp->mii, cmd);
-
-	disable_mdi();
-	rtdm_lock_put_irqrestore(&lp->lock, context);
-
-	if (lp->phy_media == PORT_FIBRE) {		/* override media type since mii.c doesn't know */
-		cmd->supported = SUPPORTED_FIBRE;
-		cmd->port = PORT_FIBRE;
-	}
-
-	return ret;
-}
-
-static int at91ether_set_settings(struct rtnet_device *dev, struct ethtool_cmd *cmd)
-{
-	struct at91_private *lp = dev->priv;
-	int ret;
-	rtdm_lockctx_t context;
-
-	rtdm_lock_get_irqsave(&lp->lock, context);
-	enable_mdi();
-
-	ret = mii_ethtool_sset(&lp->mii, cmd);
-
-	disable_mdi();
-	rtdm_lock_put_irqrestore(&lp->lock, context);
-
-	return ret;
-}
-
-static int at91ether_nwayreset(struct rtnet_device *dev)
-{
-	struct at91_private *lp = dev->priv;
-	int ret;
-	rtdm_lockctx_t context;
-
-	rtdm_lock_get_irqsave(&lp->lock, context);
-	enable_mdi();
-
-	ret = mii_nway_restart(&lp->mii);
-
-	disable_mdi();
-	rtdm_lock_put_irqrestore(&lp->lock, context);
-
-	return ret;
-}
-
-static void at91ether_get_drvinfo(struct rtnet_device *dev, struct ethtool_drvinfo *info)
-{
-	strlcpy(info->driver, DRV_NAME, sizeof(info->driver));
-	strlcpy(info->version, DRV_VERSION, sizeof(info->version));
-	/*strlcpy(info->bus_info, dev->class_dev.dev->bus_id, sizeof(info->bus_info));*/
-}
-
-static const struct ethtool_ops at91ether_ethtool_ops = {
-	.get_settings	= at91ether_get_settings,
-	.set_settings	= at91ether_set_settings,
-	.get_drvinfo	= at91ether_get_drvinfo,
-	.nway_reset	= at91ether_nwayreset,
-	.get_link	= ethtool_op_get_link,
-};
-#endif
-
-#if 0
-static int at91ether_ioctl_rt(struct rtnet_device *dev, struct ifreq *rq, int cmd)
-{
-	struct at91_private *lp = dev->priv;
-	int res;
-	rtdm_lockctx_t context;
-
-	if (!rtnetif_running(dev))
-	  return -EINVAL;
-
-	rtdm_lock_get_irqsave(&lp->lock, context);
-	enable_mdi();
-	res = generic_mii_ioctl(&lp->mii, if_mii(rq), cmd, NULL);
-	disable_mdi();
-	rtdm_lock_put_irqrestore(&lp->lock, context);
-
-	return res;
-}
-#endif
 
 /* ................................ MAC ................................ */
 
@@ -766,39 +589,6 @@ static int at91ether_tx(struct rtskb *skb, struct rtnet_device *dev)
 /*
  * Update the current statistics from the internal statistics registers.
  */
-#if 0
-static struct rtnet_device_stats *at91ether_stats(struct rtnet_device *dev)
-{
-	struct at91_private *lp = dev->priv;
-	int ale, lenerr, seqe, lcol, ecol;
-
-	if (rtnetif_running(dev)) {
-		lp->stats.rx_packets += at91_emac_read(AT91_EMAC_OK);		/* Good frames received */
-		ale = at91_emac_read(AT91_EMAC_ALE);
-		lp->stats.rx_frame_errors += ale;				/* Alignment errors */
-		lenerr = at91_emac_read(AT91_EMAC_ELR) + at91_emac_read(AT91_EMAC_USF);
-		lp->stats.rx_length_errors += lenerr;				/* Excessive Length or Undersize Frame error */
-		seqe = at91_emac_read(AT91_EMAC_SEQE);
-		lp->stats.rx_crc_errors += seqe;				/* CRC error */
-		lp->stats.rx_fifo_errors += at91_emac_read(AT91_EMAC_DRFC);	/* Receive buffer not available */
-		lp->stats.rx_errors += (ale + lenerr + seqe
-			+ at91_emac_read(AT91_EMAC_CDE) + at91_emac_read(AT91_EMAC_RJB));
-
-		lp->stats.tx_packets += at91_emac_read(AT91_EMAC_FRA);		/* Frames successfully transmitted */
-		lp->stats.tx_fifo_errors += at91_emac_read(AT91_EMAC_TUE);	/* Transmit FIFO underruns */
-		lp->stats.tx_carrier_errors += at91_emac_read(AT91_EMAC_CSE);	/* Carrier Sense errors */
-		lp->stats.tx_heartbeat_errors += at91_emac_read(AT91_EMAC_SQEE);/* Heartbeat error */
-
-		lcol = at91_emac_read(AT91_EMAC_LCOL);
-		ecol = at91_emac_read(AT91_EMAC_ECOL);
-		lp->stats.tx_window_errors += lcol;			/* Late collisions */
-		lp->stats.tx_aborted_errors += ecol;			/* 16 collisions */
-
-		lp->stats.collisions += (at91_emac_read(AT91_EMAC_SCOL) + at91_emac_read(AT91_EMAC_MCOL) + lcol + ecol);
-	}
-	return &lp->stats;
-}
-#endif
 /*
  * Extract received frame from buffer descriptors and sent to upper layers.
  * (Called from interrupt context)

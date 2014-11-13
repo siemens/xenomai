@@ -59,18 +59,13 @@
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
 static int media[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = -1 };
 static unsigned int rx_pool_size = DEFAULT_RX_POOL_SIZE;
-compat_module_int_param_array(cards, MAX_UNITS);
-compat_module_int_param_array(media, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
+module_param_array(media, int, NULL, 0444);
 module_param(rx_pool_size, uint, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 MODULE_PARM_DESC(media, "8139too: Bits 4+9: force full duplex, bit 5: 100Mbps");
 MODULE_PARM_DESC(rx_pool_size, "number of receive buffers");
 
-#if 0	/* FIXME: before we can use this option, a wrapper for duplex_lock vs. force_media has to be created */
-static int full_duplex[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = -1 };
-compat_module_int_param_array(full_duplex, MAX_UNITS);
-MODULE_PARM_DESC (full_duplex, "8139too: Force full duplex for board(s) (1)");
-#endif
 /* *** RTnet *** */
 
 
@@ -847,29 +842,6 @@ static int rtl8139_init_one (struct pci_dev *pdev,
 
 	pci_set_drvdata (pdev, rtdev);
 
-#if 0
-	/* Find the connected MII xcvrs.
-	   Doing this in open() would allow detecting external xcvrs later, but
-	   takes too much time. */
-#ifdef CONFIG_8139TOO_8129
-	if (tp->drv_flags & HAS_MII_XCVR) {
-		int phy, phy_idx = 0;
-		for (phy = 0; phy < 32 && phy_idx < sizeof(tp->phys); phy++) {
-			int mii_status = mdio_read(rtdev, phy, 1);
-			if (mii_status != 0xffff  &&  mii_status != 0x0000) {
-				u16 advertising = mdio_read(rtdev, phy, 4);
-				tp->phys[phy_idx++] = phy;
-				rtdm_printk(KERN_INFO "%s: MII transceiver %d status 0x%4.4x advertising %4.4x.\n",
-					    rtdev->name, phy, mii_status, advertising);
-			}
-		}
-		if (phy_idx == 0) {
-			rtdm_printk(KERN_INFO "%s: No MII transceivers found! Assuming SYM transceiver.\n", rtdev->name);
-			tp->phys[0] = 32;
-		}
-	} else
-#endif
-#endif
 	tp->phys[0] = 32;
 
 	/* The lower four bits are the media type. */
@@ -880,15 +852,6 @@ static int rtl8139_init_one (struct pci_dev *pdev,
 		if (tp->default_port)
 			tp->medialock = 1;
 	}
-#if 0	/* FIXME: create wrapper for duplex_lock vs. force_media in newer kernels */
-	if (board_idx < MAX_UNITS  &&  full_duplex[board_idx] > 0)
-		tp->mii.full_duplex = full_duplex[board_idx];
-	if (tp->mii.full_duplex) {
-		rtdm_printk(KERN_INFO "%s: Media type forced to Full Duplex.\n", rtdev->name);
-		/* Changing the MII-advertised media because might prevent re-connection. */
-		tp->mii.duplex_lock = 1;
-	}
-#endif
 	if (tp->default_port) {
 		rtdm_printk(KERN_INFO "  Forcing %dMbps %s-duplex operation.\n",
 			    (option & 0x20 ? 100 : 10),
@@ -1437,77 +1400,6 @@ static void rtl8139_rx_err
 	/* RTnet-TODO: We really need an error manager to handle such issues... */
 	rtdm_printk("%s: FATAL - Ethernet frame had errors, status %8.8x.\n",
 		    rtdev->name, rx_status);
-#if 0
-	tp->stats.rx_errors++;
-	if (!(rx_status & RxStatusOK)) {
-		if (rx_status & RxTooLong) {
-			printk ("%s: Oversized Ethernet frame, status %4.4x!\n",
-				 rtdev->name, rx_status);
-			/* A.C.: The chip hangs here. */
-		}
-		if (rx_status & (RxBadSymbol | RxBadAlign))
-			tp->stats.rx_frame_errors++;
-		if (rx_status & (RxRunt | RxTooLong))
-			tp->stats.rx_length_errors++;
-		if (rx_status & RxCRCErr)
-			tp->stats.rx_crc_errors++;
-	} else {
-		tp->xstats.rx_lost_in_ring++;
-	}
-
-#ifdef CONFIG_8139_NEW_RX_RESET
-	tmp8 = RTL_R8 (ChipCmd);
-	RTL_W8 (ChipCmd, tmp8 & ~CmdRxEnb);
-	RTL_W8 (ChipCmd, tmp8);
-	RTL_W32 (RxConfig, tp->rx_config);
-	tp->cur_rx = 0;
-#else
-	/* Reset the receiver, based on RealTek recommendation. (Bug?) */
-
-	/* disable receive */
-	RTL_W8_F (ChipCmd, CmdTxEnb);
-	tmp_work = 200;
-	while (--tmp_work > 0) {
-		udelay(1);
-		tmp8 = RTL_R8 (ChipCmd);
-		if (!(tmp8 & CmdRxEnb))
-			break;
-	}
-	if (tmp_work <= 0)
-		printk (KERN_WARNING PFX "rx stop wait too long\n");
-	/* restart receive */
-	tmp_work = 200;
-	while (--tmp_work > 0) {
-		RTL_W8_F (ChipCmd, CmdRxEnb | CmdTxEnb);
-		udelay(1);
-		tmp8 = RTL_R8 (ChipCmd);
-		if ((tmp8 & CmdRxEnb) && (tmp8 & CmdTxEnb))
-			break;
-	}
-	if (tmp_work <= 0)
-		printk (KERN_WARNING PFX "tx/rx enable wait too long\n");
-
-	/* and reinitialize all rx related registers */
-	RTL_W8_F (Cfg9346, Cfg9346_Unlock);
-	/* Must enable Tx/Rx before setting transfer thresholds! */
-	RTL_W8 (ChipCmd, CmdRxEnb | CmdTxEnb);
-
-	tp->rx_config = rtl8139_rx_config | AcceptBroadcast | AcceptMyPhys;
-	RTL_W32 (RxConfig, tp->rx_config);
-	tp->cur_rx = 0;
-
-	printk("init buffer addresses\n");
-
-	/* Lock Config[01234] and BMCR register writes */
-	RTL_W8 (Cfg9346, Cfg9346_Lock);
-
-	/* init Rx ring buffer DMA address */
-	RTL_W32_F (RxBuf, tp->rx_ring_dma);
-
-	/* A.C.: Reset the multicast list. */
-	__set_rx_mode (rtdev);
-#endif
-#endif
 }
 
 
@@ -1608,19 +1500,6 @@ static void rtl8139_weird_interrupt (struct rtnet_device *rtdev,
 
 	if ((status & RxUnderrun) && link_changed && (tp->drv_flags & HAS_LNK_CHNG)) {
 		/* Really link-change on new chips. */
-#if 0	/* FIXME: create wrapper for duplex_lock vs. force_media */
-		int lpar = RTL_R16 (NWayLPAR);
-		int duplex = (lpar & LPA_100FULL) || (lpar & 0x01C0) == 0x0040;
-				|| tp->mii.duplex_lock;
-		if (tp->mii.full_duplex != duplex) {
-			tp->mii.full_duplex = duplex;
-#if 0
-			RTL_W8 (Cfg9346, Cfg9346_Unlock);
-			RTL_W8 (Config1, tp->mii.full_duplex ? 0x60 : 0x20);
-			RTL_W8 (Cfg9346, Cfg9346_Lock);
-#endif
-		}
-#endif
 		status &= ~RxUnderrun;
 	}
 
@@ -1827,7 +1706,7 @@ static int __init rtl8139_init_module (void)
 	printk (KERN_INFO RTL8139_DRIVER_NAME "\n");
 #endif
 
-	return compat_pci_register_driver (&rtl8139_pci_driver);
+	return pci_register_driver (&rtl8139_pci_driver);
 }
 
 

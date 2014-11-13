@@ -54,7 +54,7 @@
 
 #include <rtdev.h>
 #include <rtskb.h>
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 #include <ipv4/ip_input.h>
 #include <ipv4/route.h>
 #include <rtnet_port.h>
@@ -140,9 +140,7 @@ static int rtnetproxy_xmit(struct sk_buff *skb, struct net_device *dev)
 	break;
     default:
 drop1:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	dev->stats.tx_dropped++;
-#endif
 	dev_kfree_skb(skb);
 	return NETDEV_TX_OK;
     }
@@ -172,9 +170,7 @@ drop1:
 
     if (rt_ip_route_output(&rt, daddr, INADDR_ANY) < 0) {
 drop2:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	dev->stats.tx_dropped++;
-#endif
 	kfree_rtskb(rtskb);
 	return NETDEV_TX_OK;
     }
@@ -190,10 +186,8 @@ drop2:
     rtskb->rtdev = rt.rtdev;
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     dev->stats.tx_packets++;
     dev->stats.tx_bytes += len;
-#endif
 
     rtskb_queue_tail(&tx_queue, rtskb);
     rtdm_event_signal(&rtnetproxy_tx_event);
@@ -219,9 +213,7 @@ static void rtnetproxy_recv(struct rtskb *rtskb)
 {
     /* Acquire rtskb (JK) */
     if (rtskb_acquire(rtskb, &rtskb_pool) != 0) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	dev_rtnetproxy->stats.rx_dropped++;
-#endif
 	rtdm_printk("rtnetproxy_recv: No free rtskb in pool\n");
 	kfree_rtskb(rtskb);
 	return;
@@ -259,17 +251,11 @@ static inline void rtnetproxy_kernel_recv(struct rtskb *rtskb)
     skb->pkt_type = PACKET_HOST;  /* Extremely important! Why?!? */
 
     /* the rtskb stamp is useless (different clock), get new one */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,14)
     __net_timestamp(skb);
-#else
-    do_gettimeofday(&skb->stamp);
-#endif
 
     dev->last_rx = jiffies;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     dev->stats.rx_bytes+=skb->len;
     dev->stats.rx_packets++;
-#endif
 
     netif_rx(skb);  /* pass it to the received stuff */
 
@@ -307,7 +293,6 @@ static int rtnetproxy_accept_fastpath(struct net_device *dev, struct dst_entry *
 }
 #endif
 
-#ifdef HAVE_NET_DEVICE_OPS
 static int rtnetproxy_open(struct net_device *dev)
 {
     int err = try_module_get(THIS_MODULE);
@@ -327,13 +312,8 @@ static const struct net_device_ops rtnetproxy_netdev_ops = {
     .ndo_open		    = rtnetproxy_open,
     .ndo_stop		    = rtnetproxy_stop,
     .ndo_start_xmit         = rtnetproxy_xmit,
-#ifdef  HAVE_SET_RX_MODE
     .ndo_set_rx_mode        = fake_multicast_support,
-#else
-    .ndo_set_multicast_list = fake_multicast_support,
-#endif
 };
-#endif /* HAVE_NET_DEVICE_OPS */
 
 /* ************************************************************************
  *  device init
@@ -351,15 +331,7 @@ static void __init rtnetproxy_init(struct net_device *dev)
 #endif
     dev->flags &= ~IFF_MULTICAST;
 
-#ifdef HAVE_NET_DEVICE_OPS
     dev->netdev_ops      = &rtnetproxy_netdev_ops;
-#else /* !HAVE_NET_DEVICE_OPS */
-    dev->hard_start_xmit = rtnetproxy_xmit;
-    dev->set_multicast_list = fake_multicast_support;
-#ifdef CONFIG_NET_FASTROUTE
-    dev->accept_fastpath = rtnetproxy_accept_fastpath;
-#endif
-#endif /* !HAVE_NET_DEVICE_OPS */
 }
 
 /* ************************************************************************

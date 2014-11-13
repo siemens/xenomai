@@ -118,25 +118,12 @@ MODULE_PARM_DESC(max_partial_datagrams,
 static int eth1394_header(struct rtskb *skb, struct rtnet_device *dev,
 			    unsigned short type, void *daddr, void *saddr,
 			    unsigned len);
-#if 0
-static int eth1394_rebuild_header(struct rtskb *skb);
-static int eth1394_header_parse(struct rtskb *skb, unsigned char *haddr);
-static int eth1394_header_cache(struct neighbour *neigh, struct hh_cache *hh);
-static void eth1394_header_cache_update(struct hh_cache *hh,
-					  struct rtnet_device *dev,
-					  unsigned char * haddr);
-static int eth1394_mac_addr(struct rtnet_device *dev, void *p);
-#endif
 
 static int eth1394_write(struct hpsb_host *host,struct hpsb_packet *packet, unsigned int length);
 
 static inline void purge_partial_datagram(struct list_head *old);
 static int eth1394_tx(struct rtskb *skb, struct rtnet_device *dev);
 static void eth1394_iso(struct hpsb_iso *iso, void *arg);
-
-#if 0
-static int eth1394_do_ioctl(struct rtnet_device *dev, struct ifreq *ifr, int cmd);
-#endif
 
 /* Function for incoming 1394 packets */
 static struct hpsb_address_ops eth1394_ops = {
@@ -264,31 +251,6 @@ static struct net_device_stats *eth1394_stats (struct rtnet_device *dev)
 {
 	return &(((struct eth1394_priv *)dev->priv)->stats);
 }
-
-#if 0
-static void eth1394_tx_timeout (struct rtnet_device *dev)
-{
-	ETH1394_PRINT (KERN_ERR, dev->name, "Timeout, resetting host %s\n",
-		       ((struct eth1394_priv *)(dev->priv))->host->driver->name);
-
-	highlevel_host_reset (((struct eth1394_priv *)(dev->priv))->host);
-
-	rtnetif_wake_queue (dev);
-	return;
-}
-
-static int eth1394_change_mtu(struct rtnet_device *dev, int new_mtu)
-{
-	struct eth1394_priv *priv = (struct eth1394_priv *)dev->priv;
-	int phy_id = NODEID_TO_NODE(priv->host->node_id);
-
-	if ((new_mtu < 68) || (new_mtu > min(ETH1394_DATA_LEN, (int)(priv->maxpayload[phy_id] -
-					     (sizeof(union eth1394_hdr) + ETHER1394_GASP_OVERHEAD)))))
-		return -EINVAL;
-	dev->mtu = new_mtu;
-	return 0;
-}
-#endif
 
 static inline void eth1394_register_limits(int nodeid, u16 maxpayload,
 					     unsigned char sspd,
@@ -552,79 +514,6 @@ static int eth1394_header(struct rtskb *skb, struct rtnet_device *dev,
 
 }
 
-#if 0
-/* Rebuild the faked MAC header. This is called after an ARP
- * (or in future other address resolution) has completed on this
- * rtskb. We now let ARP fill in the other fields.
- *
- * This routine CANNOT use cached dst->neigh!
- * Really, it is used only when dst->neigh is wrong.
- */
-static int eth1394_rebuild_header(struct rtskb *skb)
-{
-	struct ethhdr *eth = (struct ethhdr *)skb->data;
-	struct rtnet_device *dev = skb->rtdev;
-
-	switch (eth->h_proto)
-	{
-#ifdef CONFIG_INET
-	case __constant_htons(ETH_P_IP):
-		return arp_find((unsigned char*)&eth->h_dest, skb);
-#endif
-	default:
-		rtdm_printk(KERN_DEBUG
-		       "%s: unable to resolve type %X addresses.\n",
-		       dev->name, (int)eth->h_proto);
-		break;
-	}
-
-	return 0;
-}
-
-static int eth1394_header_parse(struct rtskb *skb, unsigned char *haddr)
-{
-	struct rtnet_device *dev = skb->rtdev;
-	memcpy(haddr, dev->dev_addr, ETH_ALEN);
-	return ETH_ALEN;
-}
-
-
-static int eth1394_header_cache(struct neighbour *neigh, struct hh_cache *hh)
-{
-	unsigned short type = hh->hh_type;
-	struct ethhdr *eth = (struct ethhdr*)(((u8*)hh->hh_data) + 6);
-	struct rtnet_device *dev = neigh->dev;
-
-	if (type == __constant_htons(ETH_P_802_3)) {
-		return -1;
-	}
-
-	eth->h_proto = type;
-	memcpy(eth->h_dest, neigh->ha, dev->addr_len);
-
-	hh->hh_len = ETH_HLEN;
-	return 0;
-}
-
-/* Called by Address Resolution module to notify changes in address. */
-static void eth1394_header_cache_update(struct hh_cache *hh,
-					  struct rtnet_device *dev,
-					  unsigned char * haddr)
-{
-	memcpy(((u8*)hh->hh_data) + 6, haddr, dev->addr_len);
-}
-
-static int eth1394_mac_addr(struct rtnet_device *dev, void *p)
-{
-	if (rtnetif_running(dev))
-		return -EBUSY;
-
-	/* Not going to allow setting the MAC address, we really need to use
-	 * the real one suppliled by the hardware */
-	 return -EINVAL;
-}
-#endif
-
 
 /******************************************
  * Datagram reception code
@@ -644,10 +533,6 @@ static inline u16 eth1394_type_trans(struct rtskb *skb,
 	if (*eth->h_dest & 1) {
 		if (memcmp(eth->h_dest, dev->broadcast, dev->addr_len)==0)
 			skb->pkt_type = PACKET_BROADCAST;
-#if 0
-		else
-			skb->pkt_type = PACKET_MULTICAST;
-#endif
 	} else {
 		if (memcmp(eth->h_dest, dev->dev_addr, dev->addr_len))
 			skb->pkt_type = PACKET_OTHERHOST;
@@ -1631,55 +1516,6 @@ fail:
 
 	return 0;  /* returning non-zero causes serious problems */
 }
-
-#if 0
-static int eth1394_do_ioctl(struct rtnet_device *dev, struct ifreq *ifr, int cmd)
-{
-	switch(cmd) {
-		case SIOCETHTOOL:
-			return eth1394_ethtool_ioctl(dev, (void *) ifr->ifr_data);
-
-		case SIOCGMIIPHY:		/* Get address of MII PHY in use. */
-		case SIOCGMIIREG:		/* Read MII PHY register. */
-		case SIOCSMIIREG:		/* Write MII PHY register. */
-		default:
-			return -EOPNOTSUPP;
-	}
-
-	return 0;
-}
-
-static int eth1394_ethtool_ioctl(struct rtnet_device *dev, void *useraddr)
-{
-	u32 ethcmd;
-
-	if (get_user(ethcmd, (u32 *)useraddr))
-		return -EFAULT;
-
-	switch (ethcmd) {
-		case ETHTOOL_GDRVINFO: {
-			struct ethtool_drvinfo info = { ETHTOOL_GDRVINFO };
-			strcpy (info.driver, driver_name);
-			strcpy (info.version, "$Rev: 1043 $");
-			/* FIXME XXX provide sane businfo */
-			strcpy (info.bus_info, "ieee1394");
-			if (copy_to_user (useraddr, &info, sizeof (info)))
-				return -EFAULT;
-			break;
-		}
-		case ETHTOOL_GSET:
-		case ETHTOOL_SSET:
-		case ETHTOOL_NWAY_RST:
-		case ETHTOOL_GLINK:
-		case ETHTOOL_GMSGLVL:
-		case ETHTOOL_SMSGLVL:
-		default:
-			return -EOPNOTSUPP;
-	}
-
-	return 0;
-}
-#endif
 
 static int eth1394_init(void)
 {

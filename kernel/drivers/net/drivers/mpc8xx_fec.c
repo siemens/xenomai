@@ -79,11 +79,7 @@ static unsigned int rx_pool_size =  0;
 MODULE_PARM(rx_pool_size, "i");
 MODULE_PARM_DESC(rx_pool_size, "Receive buffer pool size");
 
-#if 0
-#define RT_DEBUG(fmt,args...)	rtdm_printk (fmt ,##args)
-#else
 #define RT_DEBUG(fmt,args...)
-#endif
 
 /* multicast support
  */
@@ -370,12 +366,7 @@ fec_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	fep->stats.tx_bytes += skb->len;
 	fep->skb_cur = (fep->skb_cur+1) & TX_RING_MOD_MASK;
 
-#if 0
-	rtdm_irq_disable(&fep->irq_handle);
-	rtdm_lock_get(&fep->lock);
-#else
 	rtdm_lock_get_irqsave(&fep->lock, context);
-#endif
 
 	/* Get and patch time stamp just before the transmission */
 	if (skb->xmit_stamp)
@@ -414,12 +405,7 @@ fec_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 
 	fep->cur_tx = (cbd_t *)bdp;
 
-#if 0
-	rtdm_lock_put(&fep->lock);
-	rtdm_irq_enable(&fep->irq_handle);
-#else
 	rtdm_lock_put_irqrestore(&fep->lock, context);
-#endif
 
 	return 0;
 }
@@ -575,9 +561,6 @@ fec_enet_tx(struct rtnet_device *rtdev)
 
 		/* Free the sk buffer associated with this last transmit.
 		 */
-#if 0
-		rtdm_printk("TXI: %x %x %x\n", bdp, skb, fep->skb_dirty);
-#endif
 		dev_kfree_rtskb(skb);
 		fep->tx_skbuff[fep->skb_dirty] = NULL;
 		fep->skb_dirty = (fep->skb_dirty + 1) & TX_RING_MOD_MASK;
@@ -704,26 +687,14 @@ rx_processing_done:
 	else
 		bdp++;
 
-#if 1
 	/* Doing this here will keep the FEC running while we process
 	 * incoming frames.  On a heavily loaded network, we should be
 	 * able to keep up at the expense of system resources.
 	 */
 	fecp->fec_r_des_active = 0x01000000;
-#endif
    } /* while (!(bdp->cbd_sc & BD_ENET_RX_EMPTY)) */
 	fep->cur_rx = (cbd_t *)bdp;
 
-#if 0
-	/* Doing this here will allow us to process all frames in the
-	 * ring before the FEC is allowed to put more there.  On a heavily
-	 * loaded network, some frames may be lost.  Unfortunately, this
-	 * increases the interrupt overhead since we can potentially work
-	 * our way back to the interrupt return only to come right back
-	 * here.
-	 */
-	fecp->fec_r_des_active = 0x01000000;
-#endif
 }
 
 
@@ -859,12 +830,6 @@ static void mii_parse_anar(uint mii_reg, struct net_device *dev, uint data)
 
 	fep->phy_status = s;
 }
-#if 0
-static void mii_disp_reg(uint mii_reg, struct net_device *dev, uint data)
-{
-	printk("reg %u = 0x%04x\n", (mii_reg >> 18) & 0x1f, mii_reg & 0xffff);
-}
-#endif
 
 /* ------------------------------------------------------------------------- */
 /* The Level one LXT970 is used by many boards				     */
@@ -905,14 +870,6 @@ static phy_info_t phy_info_lxt970 = {
 	"LXT970",
 
 	(const phy_cmd_t []) {  /* config */
-#if 0
-//		{ mk_mii_write(MII_REG_ANAR, 0x0021), NULL },
-
-		/* Set default operation of 100-TX....for some reason
-		 * some of these bits are set on power up, which is wrong.
-		 */
-		{ mk_mii_write(MII_LXT970_CONFIG, 0), NULL },
-#endif
 		{ mk_mii_read(MII_REG_CR), mii_parse_cr },
 		{ mk_mii_read(MII_REG_ANAR), mii_parse_anar },
 		{ mk_mii_end, }
@@ -1885,43 +1842,6 @@ static void set_multicast_list(struct net_device *dev)
 				pmc = pmc->next;
 			}
 		}
-#if 0
-		else {
-			/* Clear filter and add the addresses in the list.
-			*/
-			ep->sen_gaddr1 = 0;
-			ep->sen_gaddr2 = 0;
-			ep->sen_gaddr3 = 0;
-			ep->sen_gaddr4 = 0;
-
-			dmi = dev->mc_list;
-
-			for (i=0; i<dev->mc_count; i++) {
-
-				/* Only support group multicast for now.
-				*/
-				if (!(dmi->dmi_addr[0] & 1))
-					continue;
-
-				/* The address in dmi_addr is LSB first,
-				 * and taddr is MSB first.  We have to
-				 * copy bytes MSB first from dmi_addr.
-				 */
-				mcptr = (u_char *)dmi->dmi_addr + 5;
-				tdptr = (u_char *)&ep->sen_taddrh;
-				for (j=0; j<6; j++)
-					*tdptr++ = *mcptr--;
-
-				/* Ask CPM to run CRC and set bit in
-				 * filter mask.
-				 */
-				cpmp->cp_cpcr = mk_cr_cmd(CPM_CR_CH_SCC1, CPM_CR_SET_GADDR) | CPM_CR_FLG;
-				/* this delay is necessary here -- Cort */
-				udelay(10);
-				while (cpmp->cp_cpcr & CPM_CR_FLG);
-			}
-		}
-#endif
 	}
 }
 #endif /* ORIGINAL_VERSION */

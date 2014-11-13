@@ -645,9 +645,6 @@ int rtdev_open(struct rtnet_device *rtdev)
     if ( !ret )  {
 	rtdev->flags |= (IFF_UP | IFF_RUNNING);
 	set_bit(__RTNET_LINK_STATE_START, &rtdev->link_state);
-#if 0
-	dev_mc_upload(dev);                 /* Initialize multicasting status   */
-#endif
     } else
 	rtdev_dereference(rtdev);
 

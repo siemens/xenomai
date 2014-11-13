@@ -24,7 +24,7 @@
 
 #include <linux/init.h>
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 #include <rtcfg_chrdev.h>
 #include <rtcfg/rtcfg.h>
 #include <rtcfg/rtcfg_file.h>

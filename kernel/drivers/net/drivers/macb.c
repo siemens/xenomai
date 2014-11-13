@@ -37,9 +37,6 @@
 #define DEFAULT_RX_POOL_SIZE    8
 // RTnet
 
-#include <asm/arch/board.h>
-#include <asm/arch/cpu.h>
-
 #include "rt_macb.h"
 
 #define RX_BUFFER_SIZE		128
@@ -265,11 +262,7 @@ static int macb_mii_init(struct macb_private *bp)
 	bp->mii_bus.read = &macb_mdio_read;
 	bp->mii_bus.write = &macb_mdio_write;
 	bp->mii_bus.reset = &macb_mdio_reset;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26)
 	snprintf(bp->mii_bus.id, MII_BUS_ID_SIZE, "%x", bp->pdev->id);
-#else
-	bp->mii_bus.id = bp->pdev->id;
-#endif
 	bp->mii_bus.priv = bp;
 	//bp->mii_bus.dev = &bp->dev->dev;
 	bp->mii_bus.dev = &bp->pdev->dev;
@@ -305,20 +298,6 @@ err_out_free_mdio_irq:
 err_out:
 	return err;
 }
-
-#if 0
-static void macb_update_stats(struct macb_private *bp)
-{
-	u32 __iomem *reg = bp->regs + MACB_PFR;
-	u32 *p = &bp->hw_stats.rx_pause_frames;
-	u32 *end = &bp->hw_stats.tx_pause_frames + 1;
-
-	WARN_ON((unsigned long)(end - p - 1) != (MACB_TPF - MACB_PFR) / 4);
-
-	for(; p < end; p++, reg++)
-		*p += __raw_readl(reg);
-}
-#endif
 
 static void macb_tx(struct macb_private *bp)
 {
@@ -503,54 +482,6 @@ static int macb_rx(struct macb_private *bp,int budget, nanosecs_abs_t *time_stam
 
 	return received;
 }
-
-#if 0
-static int macb_poll(struct napi_struct *napi, int budget)
-{
-	struct macb *bp = container_of(napi, struct macb, napi);
-	struct net_device *dev = bp->dev;
-	int work_done;
-	u32 status;
-
-	status = macb_readl(bp, RSR);
-	macb_writel(bp, RSR, status);
-
-	work_done = 0;
-	if (!status) {
-
-		//This may happen if an interrupt was pending before
-		//this function was called last time, and no packets
-		//have been received since.
-		netif_rx_complete(dev, napi);
-		goto out;
-	}
-
-	dev_dbg(&bp->pdev->dev, "poll: status = %08lx, budget = %d\n",
-		(unsigned long)status, budget);
-
-	if (!(status & MACB_BIT(REC))) {
-		dev_warn(&bp->pdev->dev,
-			 "No RX buffers complete, status = %02lx\n",
-			 (unsigned long)status);
-		netif_rx_complete(dev, napi);
-		goto out;
-	}
-
-	work_done = macb_rx(bp, budget);
-	if (work_done < budget)
-		netif_rx_complete(dev, napi);
-
-	//
-	//We've done what we can to clean the buffers. Make sure we
-	//get notified when new packets arrive.
-	//
-out:
-	macb_writel(bp, IER, MACB_RX_INT_FLAGS);
-
-	// TODO: Handle errors
-	return work_done;
-}
-#endif
 
 static int macb_interrupt(rtdm_irq_t *irq_handle)
 {
@@ -869,86 +800,14 @@ static inline int hash_bit_value(int bitnr, __u8 *addr)
 /*
  * Return the hash index value for the specified address.
  */
-#if 0
-static int hash_get_index(__u8 *addr)
-{
-	int i, j, bitval;
-	int hash_index = 0;
-
-	for (j = 0; j < 6; j++) {
-		for (i = 0, bitval = 0; i < 8; i++)
-			bitval ^= hash_bit_value(i*6 + j, addr);
-
-		hash_index |= (bitval << j);
-	}
-
-	return hash_index;
-}
-#endif
 
 /*
  * Add multicast addresses to the internal multicast-hash table.
  */
-#if 0
-static void macb_sethashtable(struct rtnet_device *rtdev)
-{
-	struct dev_mc_list *curr;
-	unsigned long mc_filter[2];
-	unsigned int i, bitnr;
-	struct macb_private *bp = rtdev->priv;//netdev_priv(dev);
-
-	mc_filter[0] = mc_filter[1] = 0;
-
-	curr = rtdev->mc_list;
-	for (i = 0; i < rtdev->mc_count; i++, curr = curr->next) {
-		if (!curr) break;	/* unexpected end of list */
-
-		bitnr = hash_get_index(curr->dmi_addr);
-		mc_filter[bitnr >> 5] |= 1 << (bitnr & 31);
-	}
-
-	macb_writel(bp, HRB, mc_filter[0]);
-	macb_writel(bp, HRT, mc_filter[1]);
-}
-#endif
 
 /*
  * Enable/Disable promiscuous and multicast modes.
  */
-#if 0
-static void macb_set_rx_mode(struct rtnet_device *rtdev)
-{
-	unsigned long cfg;
-	struct macb_private *bp = rtdev->priv;//netdev_priv(dev);
-
-	cfg = macb_readl(bp, NCFGR);
-
-	if (rtdev->flags & IFF_PROMISC)
-		/* Enable promiscuous mode */
-		cfg |= MACB_BIT(CAF);
-	else if (rtdev->flags & (~IFF_PROMISC))
-		 /* Disable promiscuous mode */
-		cfg &= ~MACB_BIT(CAF);
-
-	if (rtdev->flags & IFF_ALLMULTI) {
-		/* Enable all multicast mode */
-		macb_writel(bp, HRB, -1);
-		macb_writel(bp, HRT, -1);
-		cfg |= MACB_BIT(NCFGR_MTI);
-	} else if (rtdev->mc_count > 0) {
-		/* Enable specific multicasts */
-		macb_sethashtable(rtdev);
-		cfg |= MACB_BIT(NCFGR_MTI);
-	} else if (rtdev->flags & (~IFF_ALLMULTI)) {
-		/* Disable all multicast mode */
-		macb_writel(bp, HRB, 0);
-		macb_writel(bp, HRT, 0);
-		cfg &= ~MACB_BIT(NCFGR_MTI);
-	}
-
-	macb_writel(bp, NCFGR, cfg);
-}
-#endif
 
 static int macb_open(struct rtnet_device *rtdev)
 {
@@ -1004,52 +863,6 @@ static int macb_close(struct rtnet_device *rtdev)
 
 	return 0;
 }
-
-#if 0
-static struct net_device_stats *macb_get_stats(struct rtnet_device *rtdev)
-{
-	struct macb_private *bp = rtdev->priv;//netdev_priv(dev);
-
-	struct net_device_stats *nstat = &bp->stats;
-	struct macb_stats *hwstat = &bp->hw_stats;
-
-	/* read stats from hardware */
-	macb_update_stats(bp);
-
-	/* Convert HW stats into netdevice stats */
-	nstat->rx_errors = (hwstat->rx_fcs_errors +
-			    hwstat->rx_align_errors +
-			    hwstat->rx_resource_errors +
-			    hwstat->rx_overruns +
-			    hwstat->rx_oversize_pkts +
-			    hwstat->rx_jabbers +
-			    hwstat->rx_undersize_pkts +
-			    hwstat->sqe_test_errors +
-			    hwstat->rx_length_mismatch);
-	nstat->tx_errors = (hwstat->tx_late_cols +
-			    hwstat->tx_excessive_cols +
-			    hwstat->tx_underruns +
-			    hwstat->tx_carrier_errors);
-	nstat->collisions = (hwstat->tx_single_cols +
-			     hwstat->tx_multiple_cols +
-			     hwstat->tx_excessive_cols);
-	nstat->rx_length_errors = (hwstat->rx_oversize_pkts +
-				   hwstat->rx_jabbers +
-				   hwstat->rx_undersize_pkts +
-				   hwstat->rx_length_mismatch);
-	nstat->rx_over_errors = hwstat->rx_resource_errors;
-	nstat->rx_crc_errors = hwstat->rx_fcs_errors;
-	nstat->rx_frame_errors = hwstat->rx_align_errors;
-	nstat->rx_fifo_errors = hwstat->rx_overruns;
-	/* XXX: What does "missed" mean? */
-	nstat->tx_aborted_errors = hwstat->tx_excessive_cols;
-	nstat->tx_carrier_errors = hwstat->tx_carrier_errors;
-	nstat->tx_fifo_errors = hwstat->tx_underruns;
-	/* Don't know about heartbeat or window errors... */
-
-	return nstat;
-}
-#endif
 
 /*
 static int macb_get_settings(struct rtnet_device *rtdev, struct ethtool_cmd *cmd)

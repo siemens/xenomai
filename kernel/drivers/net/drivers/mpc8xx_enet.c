@@ -68,11 +68,7 @@ static unsigned int rtnet_scc = 1; /* SCC1 */
 MODULE_PARM(rtnet_scc, "i");
 MODULE_PARM_DESC(rtnet_scc, "SCCx port for RTnet, x=1..3 (default=1)");
 
-#if 0
-#define RT_DEBUG(fmt,args...)	printk (fmt ,##args)
-#else
 #define RT_DEBUG(fmt,args...)
-#endif
 
 /*
  *				Theory of Operation
@@ -250,12 +246,7 @@ scc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 
 	/* Prevent interrupts from changing the Tx ring from underneath us. */
 	// *** RTnet ***
-#if 0
-	rtdm_irq_disable(&cep->irq_handle);
-	rtdm_lock_get(&cep->lock);
-#else
 	rtdm_lock_get_irqsave(&cep->lock, context);
-#endif
 
 	/* Get and patch time stamp just before the transmission */
 	if (skb->xmit_stamp)
@@ -272,9 +263,6 @@ scc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	 * its the last BD of the frame, and to put the CRC on the end.
 	 */
 	bdp->cbd_sc |= (BD_ENET_TX_READY | BD_ENET_TX_INTR | BD_ENET_TX_LAST | BD_ENET_TX_TC);
-#if 0
-	dev->trans_start = jiffies;
-#endif
 
 	/* If this was the last BD in the ring, start at the beginning again.
 	*/
@@ -291,12 +279,7 @@ scc_enet_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 	cep->cur_tx = (cbd_t *)bdp;
 
 	// *** RTnet ***
-#if 0
-	rtdm_lock_put(&cep->lock);
-	rtdm_irq_enable(&cep->irq_handle);
-#else
 	rtdm_lock_put_irqrestore(&cep->lock, context);
-#endif
 
 	return 0;
 }

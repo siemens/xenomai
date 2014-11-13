@@ -690,25 +690,6 @@ static int smc_wait_to_send_packet( struct rtskb * skb, struct rtnet_device * de
 	} while ( -- time_out );
 
 	if ( !time_out ) {
-#if 0
-		/* oh well, wait until the chip finds memory later */
-		SMC_ENABLE_INT( IM_ALLOC_INT );
-
-		/* Check the status bit one more time just in case */
-		/* it snuk in between the time we last checked it */
-		/* and when we set the interrupt bit */
-		status = inb( ioaddr + INT_REG );
-		if ( !(status & IM_ALLOC_INT) ) {
-			PRINTK2("%s: memory allocation deferred. \n",
-				dev->name);
-			/* it's deferred, but I'll handle it later */
-			return 0;
-			}
-
-		/* Looks like it did sneak in, so disable */
-		/* the interrupt */
-		SMC_DISABLE_INT( IM_ALLOC_INT );
-#endif
 		kfree_rtskb(skb);
 		lp->saved_skb = NULL;
 		rtnetif_wake_queue(dev);
@@ -896,25 +877,6 @@ int __init smc_init(struct rtnet_device *dev)
 	/* couldn't find anything */
 	return -ENODEV;
 }
-
-
-#if 0
-/*-------------------------------------------------------------------------
- |
- | smc_destructor( struct device * dev )
- |   Input parameters:
- |	dev, pointer to the device structure
- |
- |   Output:
- |	None.
- |
- ---------------------------------------------------------------------------
-*/
-void smc_destructor(struct net_device *dev)
-{
-	PRINTK2("CARDNAME:smc_destructor\n");
-}
-#endif
 
 
 #ifndef NO_AUTOPROBE
@@ -1246,7 +1208,6 @@ err_out:
 #if defined(SMC_DEBUG) && (SMC_DEBUG > 2)
 static void print_packet( byte * buf, int length )
 {
-#if 1
 	int i;
 	int remainder;
 	int lines;
@@ -1277,7 +1238,6 @@ static void print_packet( byte * buf, int length )
 		rtdm_printk("%02x%02x ", a, b );
 	}
 	rtdm_printk("\n");
-#endif
 #endif
 }
 #endif
@@ -1353,35 +1313,6 @@ static int smc_open(struct rtnet_device *dev)
 	rtnetif_start_queue(dev);
 	return 0;
 }
-
-#if 0
-/*--------------------------------------------------------
- . Called by the kernel to send a packet out into the void
- . of the net.  This routine is largely based on
- . skeleton.c, from Becker.
- .--------------------------------------------------------
-*/
-static void smc_timeout (struct net_device *dev)
-{
-
-	PRINTK3("%s:smc_send_packet\n", dev->name);
-
-	/* If we get here, some higher level has decided we are broken.
-	There should really be a "kick me" function call instead. */
-	printk(KERN_WARNING "%s: transmit timed out, %s?\n",dev->name, tx_done(dev) ? "IRQ conflict" :"network cable problem");
-	/* "kick" the adaptor */
-	smc_reset( dev );
-	smc_enable( dev );
-
-	/* Reconfigure the PHY */
-	smc_phy_configure(dev);
-
-	netif_wake_queue(dev);
-	dev->trans_start = jiffies;
-	/* clear anything saved */
-	((struct smc_local *)dev->priv)->saved_skb = NULL;
-}
-#endif
 
 /*-------------------------------------------------------------
  .
@@ -1636,12 +1567,6 @@ static int smc_interrupt(rtdm_irq_t *irq_handle)
 			lp->stats.collisions += card_stats & 0xF;
 
 			/* these are for when linux supports these statistics */
-#if 0
-			card_stats >>= 4;
-			/* deferred */
-			card_stats >>= 4;
-			/* excess deferred */
-#endif
 			SMC_SELECT_BANK( 2 );
 			PRINTK2(KERN_WARNING "%s: TX_BUFFER_EMPTY handled\n",
 				dev->name);
@@ -1657,18 +1582,6 @@ static int smc_interrupt(rtdm_irq_t *irq_handle)
 			/* clear this interrupt so it doesn't happen again */
 			mask &= ~IM_ALLOC_INT;
 
-#if 0
-			smc_hardware_send_packet( dev );
-
-			/* enable xmit interrupts based on this */
-			mask |= ( IM_TX_EMPTY_INT | IM_TX_INT );
-
-			/* and let the card send more packets to me */
-			rtnetif_wake_queue(dev);
-
-			PRINTK2("%s: Handoff done successfully.\n",
-				dev->name);
-#endif
 		} else if (status & IM_RX_OVRN_INT ) {
 			lp->stats.rx_errors++;
 			lp->stats.rx_fifo_errors++;
@@ -1712,89 +1625,6 @@ static int smc_interrupt(rtdm_irq_t *irq_handle)
 	PRINTK3("%s: Interrupt done\n", dev->name);
 	return RTDM_IRQ_HANDLED;
 }
-
-
-#if 0
-/*************************************************************************
- . smc_tx
- .
- . Purpose:  Handle a transmit error message.   This will only be called
- .   when an error, because of the AUTO_RELEASE mode.
- .
- . Algorithm:
- .	Save pointer and packet no
- .	Get the packet no from the top of the queue
- .	check if it's valid ( if not, is this an error??? )
- .	read the status word
- .	record the error
- .	( resend?  Not really, since we don't want old packets around )
- .	Restore saved values
- ************************************************************************/
-static void smc_tx( struct net_device * dev )
-{
-	int	ioaddr = dev->base_addr;
-	struct smc_local *lp = (struct smc_local *)dev->priv;
-	byte saved_packet;
-	byte packet_no;
-	word tx_status;
-
-
-	PRINTK3("%s:smc_tx\n", dev->name);
-
-	/* assume bank 2  */
-
-	saved_packet = inb( ioaddr + PN_REG );
-	packet_no = inw( ioaddr + RXFIFO_REG );
-	packet_no &= 0x7F;
-
-	/* If the TX FIFO is empty then nothing to do */
-	if ( packet_no & TXFIFO_TEMPTY )
-		return;
-
-	/* select this as the packet to read from */
-	outb( packet_no, ioaddr + PN_REG );
-
-	/* read the first word (status word) from this packet */
-	outw( PTR_AUTOINC | PTR_READ, ioaddr + PTR_REG );
-
-	tx_status = inw( ioaddr + DATA_REG );
-	PRINTK3("%s: TX DONE STATUS: %4x \n", dev->name, tx_status);
-
-	lp->stats.tx_errors++;
-	if ( tx_status & TS_LOSTCAR ) lp->stats.tx_carrier_errors++;
-	if ( tx_status & TS_LATCOL  ) {
-		printk(KERN_DEBUG
-			"%s: Late collision occurred on last xmit.\n",
-			dev->name);
-		lp->stats.tx_window_errors++;
-		lp->ctl_forcol = 0; // Reset forced collsion
-	}
-#if 0
-	if ( tx_status & TS_16COL ) { ... }
-#endif
-
-	if ( tx_status & TS_SUCCESS ) {
-		printk("%s: Successful packet caused interrupt \n", dev->name);
-	}
-	/* re-enable transmit */
-	SMC_SELECT_BANK( 0 );
-	outw( inw( ioaddr + TCR_REG ) | TCR_ENABLE, ioaddr + TCR_REG );
-
-	/* kill the packet */
-	SMC_SELECT_BANK( 2 );
-	outw( MC_FREEPKT, ioaddr + MMU_CMD_REG );
-
-	/* one less packet waiting for me */
-	lp->packets_waiting--;
-
-	/* Don't change Packet Number Reg until busy bit is cleared */
-	/* Per LAN91C111 Spec, Page 50 */
-	while ( inw( ioaddr + MMU_CMD_REG ) & MC_BUSY );
-
-	outb( saved_packet, ioaddr + PN_REG );
-	return;
-}
-#endif
 
 
 /*----------------------------------------------------
@@ -2047,13 +1877,8 @@ static const char smc_info_string[] =
 /*------------------------------------------------------------
  . Sysctl handler for all integer parameters
  .-------------------------------------------------------------*/
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,8)
 static int smc_sysctl_handler(ctl_table *ctl, int write, struct file * filp,
 				void *buffer, size_t *lenp, loff_t *ppos)
-#else
-static int smc_sysctl_handler(ctl_table *ctl, int write, struct file * filp,
-				void *buffer, size_t *lenp)
-#endif
 {
 	struct rtnet_device *dev = (struct rtnet_device*)ctl->extra1;
 	struct smc_local *lp = (struct smc_local *)ctl->extra2;
@@ -3702,99 +3527,5 @@ static void smc_phy_configure(struct rtnet_device* dev)
 }
 
 
-
-#if 0
-/*************************************************************************
- . smc_phy_interrupt
- .
- . Purpose:  Handle interrupts relating to PHY register 18. This is
- .  called from the "hard" interrupt handler.
- .
- ************************************************************************/
-static void smc_phy_interrupt(struct net_device* dev)
-{
-	int ioaddr		= dev->base_addr;
-	struct smc_local *lp	= (struct smc_local *)dev->priv;
-	byte phyaddr = lp->phyaddr;
-	word phy18;
-
-	PRINTK2("%s: smc_phy_interrupt\n", dev->name);
-
-  while (1)
-	{
-	// Read PHY Register 18, Status Output
-	phy18 = smc_read_phy_register(ioaddr, phyaddr, PHY_INT_REG);
-
-	// Exit if not more changes
-	if (phy18 == lp->lastPhy18)
-		break;
-
-#if defined(SMC_DEBUG) && (SMC_DEBUG > 1 )
-
-	PRINTK2("%s:     phy18=0x%x\n", dev->name, phy18);
-	PRINTK2("%s: lastPhy18=0x%x\n", dev->name, lp->lastPhy18);
-
-	// Handle events
-	if ((phy18 & PHY_INT_LNKFAIL) != (lp->lastPhy18 & PHY_INT_LNKFAIL))
-		{
-		PRINTK2("%s: PHY Link Fail=%x\n", dev->name,
-			phy18 & PHY_INT_LNKFAIL);
-		}
-
-	if ((phy18 & PHY_INT_LOSSSYNC) != (lp->lastPhy18 & PHY_INT_LOSSSYNC))
-		{
-		PRINTK2("%s: PHY LOSS SYNC=%x\n", dev->name,
-			phy18 & PHY_INT_LOSSSYNC);
-		}
-
-	if ((phy18 & PHY_INT_CWRD) != (lp->lastPhy18 & PHY_INT_CWRD))
-		{
-		PRINTK2("%s: PHY INVALID 4B5B code=%x\n", dev->name,
-			phy18 & PHY_INT_CWRD);
-		}
-
-	if ((phy18 & PHY_INT_SSD) != (lp->lastPhy18 & PHY_INT_SSD))
-		{
-		PRINTK2("%s: PHY No Start Of Stream=%x\n", dev->name,
-			phy18 & PHY_INT_SSD);
-		}
-
-	if ((phy18 & PHY_INT_ESD) != (lp->lastPhy18 & PHY_INT_ESD))
-		{
-		PRINTK2("%s: PHY No End Of Stream=%x\n", dev->name,
-			phy18 & PHY_INT_ESD);
-		}
-
-	if ((phy18 & PHY_INT_RPOL) != (lp->lastPhy18 & PHY_INT_RPOL))
-		{
-		PRINTK2("%s: PHY Reverse Polarity Detected=%x\n", dev->name,
-			phy18 & PHY_INT_RPOL);
-		}
-
-	if ((phy18 & PHY_INT_JAB) != (lp->lastPhy18 & PHY_INT_JAB))
-		{
-		PRINTK2("%s: PHY Jabber Detected=%x\n", dev->name,
-			phy18 & PHY_INT_JAB);
-		}
-
-	if ((phy18 & PHY_INT_SPDDET) != (lp->lastPhy18 & PHY_INT_SPDDET))
-		{
-		PRINTK2("%s: PHY Speed Detect=%x\n", dev->name,
-			phy18 & PHY_INT_SPDDET);
-		}
-
-	if ((phy18 & PHY_INT_DPLXDET) != (lp->lastPhy18 & PHY_INT_DPLXDET))
-		{
-		PRINTK2("%s: PHY Duplex Detect=%x\n", dev->name,
-			phy18 & PHY_INT_DPLXDET);
-		}
-#endif
-
-	// Update the last phy 18 variable
-	lp->lastPhy18 = phy18;
-
-	} // end while
-}
-#endif
 
 MODULE_LICENSE("GPL");

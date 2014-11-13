@@ -25,7 +25,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 #include <rtmac/rtmac_vnic.h>
 #include <rtmac/nomac/nomac.h>
 #include <rtmac/nomac/nomac_dev.h>

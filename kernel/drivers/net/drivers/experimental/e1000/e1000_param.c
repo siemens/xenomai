@@ -476,13 +476,6 @@ void e1000_check_options(struct e1000_adapter *adapter)
 
 		/* modify min and default if 82573 for slow ping w/a,
 		 * a value greater than 8 needs to be set for RDTR */
-#if 0 
-                // Disable for rtnet
-		if (adapter->hw.mac.type == e1000_82573) {
-			opt.def = 32;
-			opt.arg.r.min = 8;
-		}
-#endif
 
 #ifdef module_param_array
 		if (num_RxIntDelay > bd) {

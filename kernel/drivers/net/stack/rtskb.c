@@ -62,19 +62,19 @@ EXPORT_SYMBOL_GPL(rtcap_handler);
  *  rtskb_copy_and_csum_bits
  */
 unsigned int rtskb_copy_and_csum_bits(const struct rtskb *skb, int offset,
-                                      u8 *to, int len, unsigned int csum)
+				      u8 *to, int len, unsigned int csum)
 {
     int copy;
 
     /* Copy header. */
     if ((copy = skb->len-offset) > 0) {
-        if (copy > len)
-            copy = len;
-        csum = csum_partial_copy_nocheck(skb->data+offset, to, copy, csum);
-        if ((len -= copy) == 0)
-            return csum;
-        offset += copy;
-        to += copy;
+	if (copy > len)
+	    copy = len;
+	csum = csum_partial_copy_nocheck(skb->data+offset, to, copy, csum);
+	if ((len -= copy) == 0)
+	    return csum;
+	offset += copy;
+	to += copy;
     }
 
     RTNET_ASSERT(len == 0, );
@@ -93,23 +93,23 @@ void rtskb_copy_and_csum_dev(const struct rtskb *skb, u8 *to)
     unsigned int csstart;
 
     if (skb->ip_summed == CHECKSUM_PARTIAL) {
-        csstart = skb->h.raw - skb->data;
+	csstart = skb->h.raw - skb->data;
 
-        if (csstart > skb->len)
-            BUG();
+	if (csstart > skb->len)
+	    BUG();
     } else
-        csstart = skb->len;
+	csstart = skb->len;
 
     memcpy(to, skb->data, csstart);
 
     csum = 0;
     if (csstart != skb->len)
-        csum = rtskb_copy_and_csum_bits(skb, csstart, to+csstart, skb->len-csstart, 0);
+	csum = rtskb_copy_and_csum_bits(skb, csstart, to+csstart, skb->len-csstart, 0);
 
     if (skb->ip_summed == CHECKSUM_PARTIAL) {
-        unsigned int csstuff = csstart + skb->csum;
+	unsigned int csstuff = csstart + skb->csum;
 
-        *((unsigned short *)(to + csstuff)) = csum_fold(csum);
+	*((unsigned short *)(to + csstuff)) = csum_fold(csum);
     }
 }
 
@@ -128,7 +128,7 @@ EXPORT_SYMBOL_GPL(rtskb_copy_and_csum_dev);
 void rtskb_over_panic(struct rtskb *skb, int sz, void *here)
 {
     rtdm_printk("RTnet: rtskb_put :over: %p:%d put:%d dev:%s\n", here,
-                skb->len, sz, (skb->rtdev) ? skb->rtdev->name : "<NULL>");
+		skb->len, sz, (skb->rtdev) ? skb->rtdev->name : "<NULL>");
 }
 
 EXPORT_SYMBOL_GPL(rtskb_over_panic);
@@ -145,7 +145,7 @@ EXPORT_SYMBOL_GPL(rtskb_over_panic);
 void rtskb_under_panic(struct rtskb *skb, int sz, void *here)
 {
     rtdm_printk("RTnet: rtskb_push :under: %p:%d put:%d dev:%s\n", here,
-                skb->len, sz, (skb->rtdev) ? skb->rtdev->name : "<NULL>");
+		skb->len, sz, (skb->rtdev) ? skb->rtdev->name : "<NULL>");
 }
 
 EXPORT_SYMBOL_GPL(rtskb_under_panic);
@@ -157,13 +157,13 @@ static struct rtskb *__rtskb_pool_dequeue(struct rtskb_pool *pool)
     struct rtskb *skb;
 
     if (pool->lock_count == 0 && !pool->lock_ops->trylock(pool->lock_cookie))
-            return NULL;
+	    return NULL;
     skb = __rtskb_dequeue(queue);
     if (skb == NULL) {
-        if (pool->lock_count == 0) /* This can only happen if pool has 0 packets */
-            pool->lock_ops->unlock(pool->lock_cookie);
+	if (pool->lock_count == 0) /* This can only happen if pool has 0 packets */
+	    pool->lock_ops->unlock(pool->lock_cookie);
     } else
-        ++pool->lock_count;
+	++pool->lock_count;
 
     return skb;
 }
@@ -188,7 +188,7 @@ static void __rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb)
 
     __rtskb_queue_tail(queue,skb);
     if (--pool->lock_count == 0)
-        pool->lock_ops->unlock(pool->lock_cookie);
+	pool->lock_ops->unlock(pool->lock_cookie);
 }
 
 void rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb)
@@ -215,7 +215,7 @@ struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_pool *pool)
 
     skb = rtskb_pool_dequeue(pool);
     if (!skb)
-        return NULL;
+	return NULL;
 
     /* Load the data pointers. */
     skb->data = skb->buf_start;
@@ -260,27 +260,27 @@ void kfree_rtskb(struct rtskb *skb)
     chain_end = skb->chain_end;
 
     do {
-        skb      = next_skb;
-        next_skb = skb->next;
+	skb      = next_skb;
+	next_skb = skb->next;
 
-        rtdm_lock_get_irqsave(&rtcap_lock, context);
+	rtdm_lock_get_irqsave(&rtcap_lock, context);
 
-        if (skb->cap_flags & RTSKB_CAP_SHARED) {
-            skb->cap_flags &= ~RTSKB_CAP_SHARED;
+	if (skb->cap_flags & RTSKB_CAP_SHARED) {
+	    skb->cap_flags &= ~RTSKB_CAP_SHARED;
 
-            comp_skb  = skb->cap_comp_skb;
-            skb->pool = xchg(&comp_skb->pool, skb->pool);
+	    comp_skb  = skb->cap_comp_skb;
+	    skb->pool = xchg(&comp_skb->pool, skb->pool);
 
-            rtdm_lock_put_irqrestore(&rtcap_lock, context);
+	    rtdm_lock_put_irqrestore(&rtcap_lock, context);
 
-            rtskb_pool_queue_tail(comp_skb->pool, comp_skb);
-        }
-        else {
-            rtdm_lock_put_irqrestore(&rtcap_lock, context);
+	    rtskb_pool_queue_tail(comp_skb->pool, comp_skb);
+	}
+	else {
+	    rtdm_lock_put_irqrestore(&rtcap_lock, context);
 
-            skb->chain_end = skb;
-            rtskb_pool_queue_tail(skb->pool, skb);
-        }
+	    skb->chain_end = skb;
+	    rtskb_pool_queue_tail(skb->pool, skb);
+	}
 
     } while (chain_end != skb);
 
@@ -302,9 +302,9 @@ EXPORT_SYMBOL_GPL(kfree_rtskb);
  *  return: number of actually allocated rtskbs
  */
 unsigned int rtskb_pool_init(struct rtskb_pool *pool,
-                            unsigned int initial_size,
-                            const struct rtskb_pool_lock_ops *lock_ops,
-                            void *lock_cookie)
+			    unsigned int initial_size,
+			    const struct rtskb_pool_lock_ops *lock_ops,
+			    void *lock_cookie)
 {
     unsigned int i;
 
@@ -314,7 +314,7 @@ unsigned int rtskb_pool_init(struct rtskb_pool *pool,
 
     rtskb_pools++;
     if (rtskb_pools > rtskb_pools_max)
-        rtskb_pools_max = rtskb_pools;
+	rtskb_pools_max = rtskb_pools;
 
     pool->lock_ops = lock_ops;
     pool->lock_count = 0;
@@ -345,8 +345,8 @@ static const struct rtskb_pool_lock_ops rtskb_module_lock_ops = {
 };
 
 unsigned int __rtskb_module_pool_init(struct rtskb_pool *pool,
-                                    unsigned int initial_size,
-                                    struct module *module)
+				    unsigned int initial_size,
+				    struct module *module)
 {
     return rtskb_pool_init(pool, initial_size, &rtskb_module_lock_ops, module);
 }
@@ -362,12 +362,12 @@ int rtskb_pool_release(struct rtskb_pool *pool)
     struct rtskb *skb;
 
     if (pool->lock_count)
-        return -EBUSY;
+	return -EBUSY;
 
     while ((skb = rtskb_dequeue(&pool->queue)) != NULL) {
-        rtdev_unmap_rtskb(skb);
-        kmem_cache_free(rtskb_slab_pool, skb);
-        rtskb_amount--;
+	rtdev_unmap_rtskb(skb);
+	kmem_cache_free(rtskb_slab_pool, skb);
+	rtskb_amount--;
     }
 
     rtskb_pools--;
@@ -378,7 +378,7 @@ EXPORT_SYMBOL_GPL(rtskb_pool_release);
 
 
 unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
-                               unsigned int add_rtskbs)
+			       unsigned int add_rtskbs)
 {
     unsigned int i;
     struct rtskb *skb;
@@ -387,30 +387,30 @@ unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
     RTNET_ASSERT(pool != NULL, return -EINVAL;);
 
     for (i = 0; i < add_rtskbs; i++) {
-        /* get rtskb from slab pool */
-        if (!(skb = kmem_cache_alloc(rtskb_slab_pool, GFP_KERNEL))) {
-            printk(KERN_ERR "RTnet: rtskb allocation from slab pool failed\n");
-            break;
-        }
+	/* get rtskb from slab pool */
+	if (!(skb = kmem_cache_alloc(rtskb_slab_pool, GFP_KERNEL))) {
+	    printk(KERN_ERR "RTnet: rtskb allocation from slab pool failed\n");
+	    break;
+	}
 
-        /* fill the header with zero */
-        memset(skb, 0, sizeof(struct rtskb));
+	/* fill the header with zero */
+	memset(skb, 0, sizeof(struct rtskb));
 
-        skb->chain_end = skb;
-        skb->pool = pool;
-        skb->buf_start = ((unsigned char *)skb) + ALIGN_RTSKB_STRUCT_LEN;
+	skb->chain_end = skb;
+	skb->pool = pool;
+	skb->buf_start = ((unsigned char *)skb) + ALIGN_RTSKB_STRUCT_LEN;
 #ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
-        skb->buf_end = skb->buf_start + SKB_DATA_ALIGN(RTSKB_SIZE) - 1;
+	skb->buf_end = skb->buf_start + SKB_DATA_ALIGN(RTSKB_SIZE) - 1;
 #endif
 
-        if (rtdev_map_rtskb(skb) < 0)
-            break;
+	if (rtdev_map_rtskb(skb) < 0)
+	    break;
 
-        rtskb_queue_tail(&pool->queue, skb);
+	rtskb_queue_tail(&pool->queue, skb);
 
-        rtskb_amount++;
-        if (rtskb_amount > rtskb_amount_max)
-            rtskb_amount_max = rtskb_amount;
+	rtskb_amount++;
+	if (rtskb_amount > rtskb_amount_max)
+	    rtskb_amount_max = rtskb_amount;
     }
 
     return i;
@@ -418,19 +418,19 @@ unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
 
 
 unsigned int rtskb_pool_shrink(struct rtskb_pool *pool,
-                               unsigned int rem_rtskbs)
+			       unsigned int rem_rtskbs)
 {
     unsigned int    i;
     struct rtskb    *skb;
 
 
     for (i = 0; i < rem_rtskbs; i++) {
-        if ((skb = rtskb_dequeue(&pool->queue)) == NULL)
-            break;
+	if ((skb = rtskb_dequeue(&pool->queue)) == NULL)
+	    break;
 
-        rtdev_unmap_rtskb(skb);
-        kmem_cache_free(rtskb_slab_pool, skb);
-        rtskb_amount--;
+	rtdev_unmap_rtskb(skb);
+	kmem_cache_free(rtskb_slab_pool, skb);
+	rtskb_amount--;
     }
 
     return i;
@@ -449,8 +449,8 @@ int rtskb_acquire(struct rtskb *rtskb, struct rtskb_pool *comp_pool)
 
     comp_rtskb = __rtskb_pool_dequeue(comp_pool);
     if (!comp_rtskb) {
-        rtdm_lock_put_irqrestore(&comp_pool->queue.lock, context);
-        return -ENOMEM;
+	rtdm_lock_put_irqrestore(&comp_pool->queue.lock, context);
+	return -ENOMEM;
     }
 
     rtdm_lock_put(&comp_pool->queue.lock);
@@ -480,11 +480,11 @@ struct rtskb* rtskb_clone(struct rtskb *rtskb, struct rtskb_pool *pool)
 
     clone_rtskb = alloc_rtskb(rtskb->end - rtskb->buf_start, pool);
     if (clone_rtskb == NULL)
-        return NULL;
+	return NULL;
 
     /* Note: We don't clone
-        - rtskb.sk
-        - rtskb.xmit_stamp
+	- rtskb.sk
+	- rtskb.xmit_stamp
        until real use cases show up. */
 
     clone_rtskb->priority   = rtskb->priority;
@@ -520,14 +520,10 @@ EXPORT_SYMBOL_GPL(rtskb_clone);
 int rtskb_pools_init(void)
 {
     rtskb_slab_pool = kmem_cache_create("rtskb_slab_pool",
-        ALIGN_RTSKB_STRUCT_LEN + SKB_DATA_ALIGN(RTSKB_SIZE),
-        0, SLAB_HWCACHE_ALIGN, NULL
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
-        , NULL
-#endif
-        );
+	ALIGN_RTSKB_STRUCT_LEN + SKB_DATA_ALIGN(RTSKB_SIZE),
+	0, SLAB_HWCACHE_ALIGN, NULL);
     if (rtskb_slab_pool == NULL)
-        return -ENOMEM;
+	return -ENOMEM;
 
     /* reset the statistics (cache is accounted separately) */
     rtskb_pools      = 0;
@@ -537,7 +533,7 @@ int rtskb_pools_init(void)
 
     /* create the global rtskb pool */
     if (rtskb_module_pool_init(&global_pool, global_rtskbs) < global_rtskbs)
-        goto err_out;
+	goto err_out;
 
 #ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
     rtdm_lock_init(&rtcap_lock);

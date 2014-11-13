@@ -49,7 +49,7 @@ static int rt2x00_radio_on(struct _rt2x00_core * core);
 static int rt2x00_radio_off(struct _rt2x00_core * core);
 
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 
 /*
@@ -410,13 +410,10 @@ EXPORT_SYMBOL_GPL(rt2x00_core_probe);
 
 void rt2x00_core_remove(struct rtnet_device * rtnet_dev) {
 
-    struct rtwlan_device * rtwlan_dev = rtnetdev_priv(rtnet_dev);
-
     rt_unregister_rtnetdev(rtnet_dev);
     rt_rtdev_disconnect(rtnet_dev);
 
     rtdev_free(rtnet_dev);
-
 }
 EXPORT_SYMBOL_GPL(rt2x00_core_remove);
 

@@ -25,7 +25,7 @@
 #ifndef __TDMA_WORKER_H_
 #define __TDMA_WORKER_H_
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 
 
 #define DEF_WORKER_PRIO         RTDM_TASK_HIGHEST_PRIORITY

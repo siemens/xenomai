@@ -117,7 +117,7 @@ static int media[MAX_UNITS] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
 /*** RTnet ***/
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 /*** /RTnet ***/
 
@@ -438,23 +438,13 @@ struct rtl8169_private {
 
 MODULE_AUTHOR ("Realtek, modified for RTnet by Klaus.Keppler@gmx.de");
 MODULE_DESCRIPTION ("RealTek RTL-8169 Gigabit Ethernet driver");
-compat_module_int_param_array(media, MAX_UNITS);
+module_param_array(media, int, NULL, 0444);
 MODULE_LICENSE("GPL");
 
 
 static int rtl8169_open (struct rtnet_device *rtdev);
 static int rtl8169_start_xmit (struct rtskb *skb, struct rtnet_device *rtdev);
 
-/*** RTnet ***
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-typedef	int				irqreturn_t;
-#define	IRQ_NONE		0
-#define	IRQ_HANDLED		1
-static void rtl8169_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
-#else
-static irqreturn_t rtl8169_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
-#endif
- *** /RTnet ***/
 static int rtl8169_interrupt(rtdm_irq_t *irq_handle);
 
 static void rtl8169_init_ring (struct rtnet_device *rtdev);
@@ -556,97 +546,6 @@ int RTL8169_READ_GMII_REG( unsigned long ioaddr, int RegAddr )
 #ifdef RTL8169_DYNAMIC_CONTROL
 #include "r8169_callback.c"
 #endif
-
-
-#if 0 /*** RTnet ***/
-#define rtl8169_request_timer( timer, timer_expires, timer_func, timer_data ) \
-{ \
-	init_timer(timer); \
-	timer->expires = (unsigned long)(jiffies + timer_expires); \
-	timer->data = (unsigned long)(timer_data); \
-	timer->function = (void *)(timer_func); \
-	add_timer(timer); \
-	DBG_PRINT("request_timer at 0x%08lx\n", (unsigned long)timer); \
-}
-
-#define rtl8169_delete_timer( del_timer_t ) \
-{ \
-	del_timer(del_timer_t); \
-	DBG_PRINT("delete_timer at 0x%08lx\n", (unsigned long)del_timer_t); \
-}
-
-#define rtl8169_mod_timer( timer, timer_expires ) \
-{ \
-	mod_timer( timer, jiffies + timer_expires ); \
-}
-#endif /* #if 0 */ /*** /RTnet ***/
-
-
-#if 0 /*** RTnet ***/
-//======================================================================================================
-//======================================================================================================
-void rtl8169_phy_timer_t_handler( void	*timer_data )
-{
-	struct net_device *dev = (struct net_device *)timer_data;
-	struct rtl8169_private *priv = (struct rtl8169_private *) (dev->priv);
-	unsigned long ioaddr = priv->ioaddr;
-
-	assert( priv->mcfg > MCFG_METHOD_1 );
-	assert( priv->pcfg < PCFG_METHOD_3 );
-
-	if( RTL_R8(PHYstatus) & LinkStatus ){
-		priv->phy_link_down_cnt = 0 ;
-	}
-	else{
-		priv->phy_link_down_cnt ++ ;
-		if( priv->phy_link_down_cnt >= 12 ){
-			// If link on 1000, perform phy reset.
-			if( RTL8169_READ_GMII_REG( ioaddr, PHY_1000_CTRL_REG ) & PHY_Cap_1000_Full )
-			{
-				DBG_PRINT("rtl8169_hw_PHY_reset\n");
-				rtl8169_hw_PHY_reset( dev );
-			}
-
-			priv->phy_link_down_cnt = 0 ;
-		}
-	}
-
-	//---------------------------------------------------------------------------
-	//mod_timer is a more efficient way to update the expire field of an active timer.
-	//---------------------------------------------------------------------------
-//	rtl8169_mod_timer( (&priv->phy_timer_t), 100 );
-}
-#endif /* #if 0 */ /*** /RTnet ***/
-
-
-#if 0 /*** RTnet ***/
-//======================================================================================================
-//======================================================================================================
-void rtl8169_timer_handler( void *timer_data )
-{
-	struct net_device *dev = (struct net_device *)timer_data;
-	struct rtl8169_private *priv = (struct rtl8169_private *) (dev->priv);
-
-	if( (priv->mcfg > MCFG_METHOD_1) && (priv->pcfg < PCFG_METHOD_3) ){
-		DBG_PRINT("FIX PCS -> rtl8169_phy_timer_t_handler\n");
-		priv->phy_link_down_cnt = 0;
-		rtl8169_phy_timer_t_handler( timer_data );
-	}
-
-
-#ifdef RTL8169_DYNAMIC_CONTROL
-	{
-		struct r8169_cb_t *rt = &(priv->rt);
-		if( priv->linkstatus == _1000_Full ){
-			r8169_callback(rt);
-		}
-	}
-#endif //end #ifdef RTL8169_DYNAMIC_CONTROL
-
-
-	rtl8169_mod_timer( (&priv->r8169_timer), priv->expire_time );
-}
-#endif /* #if 0 */ /*** /RTnet ***/
 
 
 
@@ -1046,7 +945,6 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 static void rtl8169_remove_one (struct pci_dev *pdev)
 {
 	struct rtnet_device *rtdev = pci_get_drvdata(pdev);
-	struct rtl8169_private *priv = rtdev->priv;	/*** RTnet ***/
 
 	assert (rtdev != NULL);
 
@@ -1148,11 +1046,6 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 	rtl8169_hw_start(rtdev);
 
 	// ------------------------------------------------------
-#if 0 /*** RTnet ***/
-	DBG_PRINT("FIX PCS -> rtl8169_request_timer\n");
-	priv->expire_time = RTL8169_TIMER_EXPIRE_TIME;
-	rtl8169_request_timer( (&priv->r8169_timer), priv->expire_time, rtl8169_timer_handler, ((void *)dev) );  //in open()
-#endif /* #if 0 */	/*** /RTnet ***/
 
 	//DBG_PRINT("%s: %s() alloc_rxskb_cnt = %d\n", dev->name, __FUNCTION__, alloc_rxskb_cnt );	/*** <kk> won't work anymore... ***/
 
@@ -1168,32 +1061,6 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 
 
 //======================================================================================================
-#if 0 /*** RTnet ***/
-static void rtl8169_hw_PHY_reset(struct net_device *dev)
-{
-	int val, phy_reset_expiretime = 50;
-	struct rtl8169_private *priv = dev->priv;
-	unsigned long ioaddr = priv->ioaddr;
-
-	DBG_PRINT("%s: Reset RTL8169s PHY\n", dev->name);
-
-	val = ( RTL8169_READ_GMII_REG( ioaddr, 0 ) | 0x8000 ) & 0xffff;
-	RTL8169_WRITE_GMII_REG( ioaddr, 0, val );
-
-	do //waiting for phy reset
-	{
-		if( RTL8169_READ_GMII_REG( ioaddr, 0 ) & 0x8000 ){
-			phy_reset_expiretime --;
-			udelay(100);
-		}
-		else{
-			break;
-		}
-	}while( phy_reset_expiretime >= 0 );
-
-	assert( phy_reset_expiretime > 0 );
-}
-#endif /* #if 0 */ /*** /RTnet ***/
 
 
 
@@ -1431,33 +1298,6 @@ static void rtl8169_tx_clear (struct rtl8169_private *priv)
 
 
 //======================================================================================================
-#if 0 /*** RTnet ***/
-static void rtl8169_tx_timeout (struct net_device *dev)
-{
-	struct rtl8169_private *priv = dev->priv;
-	unsigned long ioaddr = priv->ioaddr;
-	u8 tmp8;
-
-	/* disable Tx, if not already */
-	tmp8 = RTL_R8( ChipCmd );
-	if (tmp8 & CmdTxEnb){
-		RTL_W8 ( ChipCmd, tmp8 & ~CmdTxEnb);
-	}
-
-	/* Disable interrupts by clearing the interrupt mask. */
-	RTL_W16 ( IntrMask, 0x0000);
-
-	/* Stop a shared interrupt from scavenging while we are. */
-	spin_lock_irq (&priv->lock);
-	rtl8169_tx_clear (priv);
-	spin_unlock_irq (&priv->lock);
-
-
-	rtl8169_hw_start (dev);
-
-	netif_wake_queue (dev);
-}
-#endif /* #if 0 */ /*** RTnet ***/
 
 
 
@@ -1775,13 +1615,6 @@ static void rtl8169_rx_interrupt (struct rtnet_device *rtdev, struct rtl8169_pri
 
 //======================================================================================================
 /* The interrupt handler does all of the Rx thread work and cleans up after the Tx thread. */
-/*** RTnet ***
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-static void rtl8169_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
-#else
-static irqreturn_t rtl8169_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
-#endif
- *** /RTnet ***/
 static int rtl8169_interrupt(rtdm_irq_t *irq_handle)
 {
 	/* struct net_device *dev = (struct net_device *) dev_instance; */	/*** RTnet ***/
@@ -1892,14 +1725,6 @@ static int rtl8169_close (struct rtnet_device *rtdev)
 	RTL_W32( RxMissed, 0);
 
 	rtdm_lock_put_irqrestore(&priv->lock, context);	/*** RTnet ***/
-
-	/*** RTnet ***
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-	synchronize_irq ();
-#else
-	synchronize_irq (dev->irq);
-#endif
-	*** /RTnet ***/
 
 	/*** RTnet ***/
 	if ( (i=rtdm_irq_free(&priv->irq_handle))<0 )
@@ -2057,7 +1882,7 @@ static int __init rtl8169_init_module (void)
 		r8169_debug = debug;
 	}
 	if (r8169_debug & DEBUG_RUN) printk("Initializing " MODULENAME " driver");
-	return compat_pci_register_driver (&rtl8169_pci_driver);
+	return pci_register_driver (&rtl8169_pci_driver);
 }
 
 
@@ -2116,15 +1941,6 @@ static void rtl8169_irq_mask_and_ack(unsigned long ioaddr)
 
 	RTL_W16(IntrStatus, 0xffff);
 }
-
-#if 0 /*** RTnet ***/
-static void rtl8169_asic_down(unsigned long ioaddr)
-{
-	RTL_W8(ChipCmd, 0x00);
-	rtl8169_irq_mask_and_ack(ioaddr);
-	RTL_R16(CPlusCmd);
-}
-#endif /* #if 0 */
 
 static void rtl8169_pcierr_interrupt(struct rtnet_device *rtdev)
 {

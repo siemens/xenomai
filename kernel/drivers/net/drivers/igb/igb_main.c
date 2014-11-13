@@ -133,7 +133,7 @@ static const struct e1000_info *igb_info_tbl[] = {
 
 #define MAX_UNITS 8
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (eg. 1,0,1)");
 
 static struct pci_device_id igb_pci_tbl[] = {
@@ -1217,15 +1217,6 @@ static int igb_probe(struct pci_dev *pdev,
 	netdev->get_stats = igb_get_stats;
 	netdev->map_rtskb = igb_map_rtskb;
 	netdev->unmap_rtskb = igb_unmap_rtskb;
-#if 0
-	netdev->do_ioctl = igb_ioctl;
-	netdev->set_multicast_list = igb_set_multi;
-	netdev->set_mac_address = igb_set_mac;
-	netdev->change_mtu = igb_change_mtu;
-
-	// No ethtool support for now
-	igb_set_ethtool_ops(netdev);
-#endif
 #ifdef IGB_HAVE_TX_TIMEOUT
 	netdev->tx_timeout = igb_tx_timeout;
 #endif
@@ -2307,31 +2298,6 @@ static void igb_clean_all_rx_rings(struct igb_adapter *adapter)
 		igb_clean_rx_ring(&adapter->rx_ring[i]);
 }
 
-#if 0
-/**
- * igb_set_mac - Change the Ethernet Address of the NIC
- * @netdev: network interface device structure
- * @p: pointer to an address structure
- *
- * Returns 0 on success, negative on failure
- **/
-static int igb_set_mac(struct net_device *netdev, void *p)
-{
-	struct igb_adapter *adapter = netdev->priv;
-	struct sockaddr *addr = p;
-
-	if (!is_valid_ether_addr(addr->sa_data))
-		return -EADDRNOTAVAIL;
-
-	memcpy(netdev->dev_addr, addr->sa_data, netdev->addr_len);
-	memcpy(adapter->hw.mac.addr, addr->sa_data, netdev->addr_len);
-
-	adapter->hw.mac.ops.rar_set(&adapter->hw, adapter->hw.mac.addr, 0);
-
-	return 0;
-}
-#endif
-
 /**
  * igb_set_multi - Multicast and Promiscuous mode set
  * @netdev: network interface device structure
@@ -2533,207 +2499,6 @@ enum latency_range {
 	bulk_latency = 2,
 	latency_invalid = 255
 };
-
-#if 0
-/**
- * igb_update_ring_itr - update the dynamic ITR value based on packet size
- *
- *      Stores a new ITR value based on strictly on packet size.  This
- *      algorithm is less sophisticated than that used in igb_update_itr,
- *      due to the difficulty of synchronizing statistics across multiple
- *      receive rings.  The divisors and thresholds used by this fuction
- *      were determined based on theoretical maximum wire speed and testing
- *      data, in order to minimize response time while increasing bulk
- *      throughput.
- *      This functionality is controlled by the InterruptThrottleRate module
- *      parameter (see igb_param.c)
- *      NOTE:  This function is called only when operating in a multiqueue
- *             receive environment.
- * @rx_ring: pointer to ring
- **/
-static void igb_update_ring_itr(struct igb_ring *rx_ring)
-{
-	int new_val = rx_ring->itr_val;
-	int avg_wire_size = 0;
-	struct igb_adapter *adapter = rx_ring->adapter;
-
-	if (!rx_ring->total_packets)
-		goto clear_counts; /* no packets, so don't do anything */
-
-	/* For non-gigabit speeds, just fix the interrupt rate at 4000
-	 * ints/sec - ITR timer value of 120 ticks.
-	 */
-	if (adapter->link_speed != SPEED_1000) {
-		new_val = 120;
-		goto set_itr_val;
-	}
-	avg_wire_size = rx_ring->total_bytes / rx_ring->total_packets;
-
-	/* Add 24 bytes to size to account for CRC, preamble, and gap */
-	avg_wire_size += 24;
-
-	/* Don't starve jumbo frames */
-	avg_wire_size = min(avg_wire_size, 3000);
-
-	/* Give a little boost to mid-size frames */
-	if ((avg_wire_size > 300) && (avg_wire_size < 1200))
-		new_val = avg_wire_size / 3;
-	else
-		new_val = avg_wire_size / 2;
-
-set_itr_val:
-	if (new_val != rx_ring->itr_val) {
-		rx_ring->itr_val = new_val;
-		rx_ring->set_itr = 1;
-	}
-clear_counts:
-	rx_ring->total_bytes = 0;
-	rx_ring->total_packets = 0;
-}
-
-
-/**
- * igb_update_itr - update the dynamic ITR value based on statistics
- *      Stores a new ITR value based on packets and byte
- *      counts during the last interrupt.  The advantage of per interrupt
- *      computation is faster updates and more accurate ITR for the current
- *      traffic pattern.  Constants in this function were computed
- *      based on theoretical maximum wire speed and thresholds were set based
- *      on testing data as well as attempting to minimize response time
- *      while increasing bulk throughput.
- *      this functionality is controlled by the InterruptThrottleRate module
- *      parameter (see igb_param.c)
- *      NOTE:  These calculations are only valid when operating in a single-
- *             queue environment.
- * @adapter: pointer to adapter
- * @itr_setting: current adapter->itr
- * @packets: the number of packets during this measurement interval
- * @bytes: the number of bytes during this measurement interval
- **/
-static unsigned int igb_update_itr(struct igb_adapter *adapter, u16 itr_setting,
-				   int packets, int bytes)
-{
-	unsigned int retval = itr_setting;
-
-	if (packets == 0)
-		goto update_itr_done;
-
-	switch (itr_setting) {
-	case lowest_latency:
-		/* handle TSO and jumbo frames */
-		if (bytes/packets > 8000)
-			retval = bulk_latency;
-		else if ((packets < 5) && (bytes > 512))
-			retval = low_latency;
-		break;
-	case low_latency:  /* 50 usec aka 20000 ints/s */
-		if (bytes > 10000) {
-			/* this if handles the TSO accounting */
-			if (bytes/packets > 8000) {
-				retval = bulk_latency;
-			} else if ((packets < 10) || ((bytes/packets) > 1200)) {
-				retval = bulk_latency;
-			} else if ((packets > 35)) {
-				retval = lowest_latency;
-			}
-		} else if (bytes/packets > 2000) {
-			retval = bulk_latency;
-		} else if (packets <= 2 && bytes < 512) {
-			retval = lowest_latency;
-		}
-		break;
-	case bulk_latency: /* 250 usec aka 4000 ints/s */
-		if (bytes > 25000) {
-			if (packets > 35)
-				retval = low_latency;
-		} else if (bytes < 6000) {
-			retval = low_latency;
-		}
-		break;
-	}
-
-update_itr_done:
-	return retval;
-}
-
-
-static void igb_set_itr(struct igb_adapter *adapter)
-{
-	u16 current_itr;
-	u32 new_itr = adapter->itr;
-
-	/* for non-gigabit speeds, just fix the interrupt rate at 4000 */
-	if (adapter->link_speed != SPEED_1000) {
-		current_itr = 0;
-		new_itr = 4000;
-		goto set_itr_now;
-	}
-
-	adapter->rx_itr = igb_update_itr(adapter,
-				    adapter->rx_itr,
-				    adapter->rx_ring->total_packets,
-				    adapter->rx_ring->total_bytes);
-
-	if (adapter->rx_ring->buddy) {
-		adapter->tx_itr = igb_update_itr(adapter,
-					    adapter->tx_itr,
-					    adapter->tx_ring->total_packets,
-					    adapter->tx_ring->total_bytes);
-
-		current_itr = max(adapter->rx_itr, adapter->tx_itr);
-	} else {
-		current_itr = adapter->rx_itr;
-	}
-
-	/* conservative mode (itr 3) eliminates the lowest_latency setting */
-	if (adapter->itr_setting == 3 &&
-	    current_itr == lowest_latency)
-		current_itr = low_latency;
-
-	switch (current_itr) {
-	/* counts and packets in update_itr are dependent on these numbers */
-	case lowest_latency:
-		new_itr = 70000;
-		break;
-	case low_latency:
-		new_itr = 20000; /* aka hwitr = ~200 */
-		break;
-	case bulk_latency:
-		new_itr = 4000;
-		break;
-	default:
-		break;
-	}
-
-set_itr_now:
-	adapter->rx_ring->total_bytes = 0;
-	adapter->rx_ring->total_packets = 0;
-	if (adapter->rx_ring->buddy) {
-		adapter->rx_ring->buddy->total_bytes = 0;
-		adapter->rx_ring->buddy->total_packets = 0;
-	}
-
-	if (new_itr != adapter->itr) {
-		/* this attempts to bias the interrupt rate towards Bulk
-		 * by adding intermediate steps when interrupt rate is
-		 * increasing */
-		new_itr = new_itr > adapter->itr ?
-			     min(adapter->itr + (new_itr >> 2), new_itr) :
-			     new_itr;
-		/* Don't write the value here; it resets the adapter's
-		 * internal timer, and causes us to delay far longer than
-		 * we should between interrupts.  Instead, we write the ITR
-		 * value at the beginning of the next interrupt so the timing
-		 * ends up being correct.
-		 */
-		adapter->itr = new_itr;
-		adapter->rx_ring->itr_val = 1000000000 / (new_itr * 256);
-		adapter->rx_ring->set_itr = 1;
-	}
-
-	return;
-}
-#endif
 
 
 #define IGB_TX_FLAGS_CSUM		0x00000001
@@ -3137,78 +2902,6 @@ igb_get_stats(struct rtnet_device *netdev)
 	return &adapter->net_stats;
 }
 
-#if 0
-/**
- * igb_change_mtu - Change the Maximum Transfer Unit
- * @netdev: network interface device structure
- * @new_mtu: new value for maximum frame size
- *
- * Returns 0 on success, negative on failure
- **/
-static int igb_change_mtu(struct net_device *netdev, int new_mtu)
-{
-	struct igb_adapter *adapter = netdev->priv;
-	int max_frame = new_mtu + ETH_HLEN + ETH_FCS_LEN;
-
-	if ((max_frame < ETH_ZLEN + ETH_FCS_LEN) ||
-	    (max_frame > MAX_JUMBO_FRAME_SIZE)) {
-		dev_err(&adapter->pdev->dev, "Invalid MTU setting\n");
-		return -EINVAL;
-	}
-
-#define MAX_STD_JUMBO_FRAME_SIZE 9234
-	if (max_frame > MAX_STD_JUMBO_FRAME_SIZE) {
-		dev_err(&adapter->pdev->dev, "MTU > 9216 not supported.\n");
-		return -EINVAL;
-	}
-
-	while (test_and_set_bit(__IGB_RESETTING, &adapter->state))
-		msleep(1);
-	/* igb_down has a dependency on max_frame_size */
-	adapter->max_frame_size = max_frame;
-	if (rtnetif_running(netdev))
-		igb_down(adapter);
-
-	/* NOTE: netdev_alloc_skb reserves 16 bytes, and typically NET_IP_ALIGN
-	 * means we reserve 2 more, this pushes us to allocate from the next
-	 * larger slab size.
-	 * i.e. RXBUFFER_2048 --> size-4096 slab
-	 */
-
-	if (max_frame <= IGB_RXBUFFER_256)
-		adapter->rx_buffer_len = IGB_RXBUFFER_256;
-	else if (max_frame <= IGB_RXBUFFER_512)
-		adapter->rx_buffer_len = IGB_RXBUFFER_512;
-	else if (max_frame <= IGB_RXBUFFER_1024)
-		adapter->rx_buffer_len = IGB_RXBUFFER_1024;
-	else if (max_frame <= IGB_RXBUFFER_2048)
-		adapter->rx_buffer_len = IGB_RXBUFFER_2048;
-	else
-#if (PAGE_SIZE / 2) > IGB_RXBUFFER_16384
-		adapter->rx_buffer_len = IGB_RXBUFFER_16384;
-#else
-		adapter->rx_buffer_len = PAGE_SIZE / 2;
-#endif
-	/* adjust allocation if LPE protects us, and we aren't using SBP */
-	if ((max_frame == ETH_FRAME_LEN + ETH_FCS_LEN) ||
-	     (max_frame == MAXIMUM_ETHERNET_VLAN_SIZE))
-		adapter->rx_buffer_len = MAXIMUM_ETHERNET_VLAN_SIZE;
-
-	dev_info(&adapter->pdev->dev, "changing MTU from %d to %d\n",
-		 netdev->mtu, new_mtu);
-	netdev->mtu = new_mtu;
-
-	if (rtnetif_running(netdev))
-		igb_up(adapter);
-	else
-		igb_reset(adapter);
-
-	clear_bit(__IGB_RESETTING, &adapter->state);
-
-	return 0;
-}
-#endif
-
 /**
  * igb_update_stats - Update the board statistics counters
  * @adapter: board private structure
@@ -3396,28 +3089,6 @@ static int igb_msix_tx(rtdm_irq_t *irq_handle)
 	return RTDM_IRQ_HANDLED;
 }
 #endif /* CONFIG_PCI_MSI */
-
-#if 0
-static void igb_write_itr(struct igb_ring *ring)
-{
-	struct e1000_hw *hw = &ring->adapter->hw;
-	if ((ring->adapter->itr_setting & 3) && ring->set_itr) {
-		switch (hw->mac.type) {
-		case e1000_82576:
-			wr32(ring->itr_register,
-			     ring->itr_val |
-			     0x80000000);
-			break;
-		default:
-			wr32(ring->itr_register,
-			     ring->itr_val |
-			     (ring->itr_val << 16));
-			break;
-		}
-		ring->set_itr = 0;
-	}
-}
-#endif
 
 #ifdef CONFIG_PCI_MSI
 static int igb_msix_rx(rtdm_irq_t *irq_handle)
@@ -4195,58 +3866,6 @@ no_buffers:
 		writel(i, adapter->hw.hw_addr + rx_ring->tail);
 	}
 }
-
-#if 0
-/**
- * igb_mii_ioctl -
- * @netdev:
- * @ifreq:
- * @cmd:
- **/
-static int igb_mii_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd)
-{
-	struct igb_adapter *adapter = netdev->priv;
-	struct mii_ioctl_data *data = if_mii(ifr);
-
-	if (adapter->hw.phy.media_type != e1000_media_type_copper)
-		return -EOPNOTSUPP;
-
-	switch (cmd) {
-	case SIOCGMIIPHY:
-		data->phy_id = adapter->hw.phy.addr;
-		break;
-	case SIOCGMIIREG:
-		if (!capable(CAP_NET_ADMIN))
-			return -EPERM;
-		if (igb_read_phy_reg(&adapter->hw, data->reg_num & 0x1F,
-				     &data->val_out))
-			return -EIO;
-		break;
-	case SIOCSMIIREG:
-	default:
-		return -EOPNOTSUPP;
-	}
-	return 0;
-}
-
-/**
- * igb_ioctl -
- * @netdev:
- * @ifreq:
- * @cmd:
- **/
-static int igb_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd)
-{
-	switch (cmd) {
-	case SIOCGMIIPHY:
-	case SIOCGMIIREG:
-	case SIOCSMIIREG:
-		return igb_mii_ioctl(netdev, ifr, cmd);
-	default:
-		return -EOPNOTSUPP;
-	}
-}
-#endif
 
 int igb_set_spd_dplx(struct igb_adapter *adapter, u16 spddplx)
 {

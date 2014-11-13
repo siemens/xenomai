@@ -113,7 +113,7 @@ static int debug = -1;	/* The debug level */
 #define MAX_UNITS               8
 
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 // *** RTnet ***
 
@@ -121,8 +121,8 @@ MODULE_AUTHOR("Maintainer: Jan Kiszka <Jan.Kiszka@web.de>");
 MODULE_DESCRIPTION("Intel i82557/i82558/i82559 PCI EtherExpressPro driver");
 MODULE_LICENSE("GPL");
 module_param(debug, int, 0444);
-compat_module_int_param_array(options, MAX_UNITS);
-compat_module_int_param_array(full_duplex, MAX_UNITS);
+module_param_array(options, int, NULL, 0444);
+module_param_array(full_duplex, int, NULL, 0444);
 module_param(txfifo, int, 0444);
 module_param(rxfifo, int, 0444);
 module_param(txdmacount, int, 0444);
@@ -1143,14 +1143,6 @@ speedo_start_xmit(struct rtskb *skb, struct rtnet_device *rtdev)
 // *** RTnet ***
 // Disabled to gain shorter worst-case execution times.
 // Hope this bug is not relevant for us
-#if 0
-	/* workaround for hardware bug on 10 mbit half duplex */
-
-	if ((sp->partner == 0) || (sp->chip_id == 1)) {
-		rt_wait_for_cmd_done(ioaddr + SCBCmd);
-		outb(0 , ioaddr + SCBCmd);
-	}
-#endif
 
 	/* Trigger the command unit resume. */
 	if (rt_wait_for_cmd_done(ioaddr + SCBCmd, __FUNCTION__) != 0) {
@@ -1225,28 +1217,6 @@ static void speedo_tx_buffer_gc(struct rtnet_device *rtdev)
 	}
 
 // *** RTnet ***
-#if 0
-	if (speedo_debug && (int)(sp->cur_tx - dirty_tx) > TX_RING_SIZE) {
-		printk(KERN_ERR "out-of-sync dirty pointer, %d vs. %d,"
-			   " full=%d.\n",
-			   dirty_tx, sp->cur_tx, sp->tx_full);
-		dirty_tx += TX_RING_SIZE;
-	}
-
-	while (sp->mc_setup_head != NULL
-		   && (int)(dirty_tx - sp->mc_setup_head->tx - 1) > 0) {
-		struct speedo_mc_block *t;
-		if (speedo_debug > 1)
-			printk(KERN_DEBUG "%s: freeing mc frame.\n", rtdev->name);
-		pci_unmap_single(sp->pdev, sp->mc_setup_head->frame_dma,
-				sp->mc_setup_head->len, PCI_DMA_TODEVICE);
-		t = sp->mc_setup_head->next;
-		kfree(sp->mc_setup_head);
-		sp->mc_setup_head = t;
-	}
-	if (sp->mc_setup_head == NULL)
-		sp->mc_setup_tail = NULL;
-#endif
 // *** RTnet ***
 
 	sp->dirty_tx = dirty_tx;
@@ -1553,27 +1523,6 @@ speedo_rx(struct rtnet_device *rtdev, int* packets, nanosecs_abs_t *time_stamp)
 			struct rtskb *skb;
 
 // *** RTnet ***
-#if 0
-			/* Check if the packet is long enough to just accept without
-			   copying to a properly sized skbuff. */
-			if (pkt_len < rx_copybreak
-				&& (skb = dev_alloc_rtskb(pkt_len + 2)) != 0) {
-				rtskb_reserve(skb, 2);	/* Align IP on 16 byte boundaries */
-				/* 'skb_put()' points to the start of sk_buff data area. */
-				pci_dma_sync_single(sp->pdev, sp->rx_ring_dma[entry],
-					sizeof(struct RxFD) + pkt_len, PCI_DMA_FROMDEVICE);
-
-#if 1 || USE_IP_CSUM
-				/* Packet is in one chunk -- we can copy + cksum. */
-				//eth_copy_and_sum(skb, sp->rx_skbuff[entry]->tail, pkt_len, 0);
-				memcpy(skb->data, sp->rx_skbuff[entry]->tail, pkt_len);
-				rtskb_put(skb, pkt_len);
-#else
-				memcpy(skb_put(skb, pkt_len), sp->rx_skbuff[entry]->tail,
-					   pkt_len);
-#endif
-			} else {
-#endif
 			{
 // *** RTnet ***
 				/* Pass up the already-filled skbuff. */
@@ -1679,18 +1628,6 @@ speedo_close(struct rtnet_device *rtdev)
 	}
 
 // *** RTnet ***
-#if 0
-	/* Free multicast setting blocks. */
-	for (i = 0; sp->mc_setup_head != NULL; i++) {
-		struct speedo_mc_block *t;
-		t = sp->mc_setup_head->next;
-		kfree(sp->mc_setup_head);
-		sp->mc_setup_head = t;
-	}
-	sp->mc_setup_tail = NULL;
-	if (speedo_debug > 0)
-		printk(KERN_DEBUG "%s: %d multicast blocks dropped.\n", rtdev->name, i);
-#endif
 // *** RTnet ***
 
 	pci_set_power_state(sp->pdev, 2);
@@ -1794,16 +1731,6 @@ static void set_rx_mode(struct rtnet_device *rtdev)
 		setup_params = (u16 *)&sp->tx_ring[entry].tx_desc_addr;
 		*setup_params++ = cpu_to_le16(0); /* mc_count */
 // *** RTnet ***
-#if 0
-		/* Fill in the multicast addresses. */
-		for (i = 0, mclist = rtdev->mc_list; i < rtdev->mc_count;
-			 i++, mclist = mclist->next) {
-			eaddrs = (u16 *)mclist->dmi_addr;
-			*setup_params++ = *eaddrs++;
-			*setup_params++ = *eaddrs++;
-			*setup_params++ = *eaddrs++;
-		}
-#endif
 // *** RTnet ***
 
 		wait_for_cmd_done(ioaddr + SCBCmd);
@@ -1817,88 +1744,6 @@ static void set_rx_mode(struct rtnet_device *rtdev)
 		}
 		//spin_unlock_irqrestore(&sp->lock, flags);
 // *** RTnet ***
-#if 0
-	} else if (new_rx_mode == 0) {
-		struct dev_mc_list *mclist;
-		u16 *setup_params, *eaddrs;
-		struct speedo_mc_block *mc_blk;
-		struct descriptor *mc_setup_frm;
-		int i;
-
-		mc_blk = kmalloc(sizeof(*mc_blk) + 2 + multicast_filter_limit*6,
-						 GFP_ATOMIC);
-		if (mc_blk == NULL) {
-			printk(KERN_ERR "%s: Failed to allocate a setup frame.\n",
-				   rtdev->name);
-			sp->rx_mode = -1; /* We failed, try again. */
-			return;
-		}
-		mc_blk->next = NULL;
-		mc_blk->len = 2 + multicast_filter_limit*6;
-		mc_blk->frame_dma =
-			pci_map_single(sp->pdev, &mc_blk->frame, mc_blk->len,
-					PCI_DMA_TODEVICE);
-		mc_setup_frm = &mc_blk->frame;
-
-		/* Fill the setup frame. */
-		if (speedo_debug > 1)
-			printk(KERN_DEBUG "%s: Constructing a setup frame at %p.\n",
-				   rtdev->name, mc_setup_frm);
-		mc_setup_frm->cmd_status =
-			cpu_to_le32(CmdSuspend | CmdIntr | CmdMulticastList);
-		/* Link set below. */
-		setup_params = (u16 *)&mc_setup_frm->params;
-		*setup_params++ = cpu_to_le16(rtdev->mc_count*6);
-		/* Fill in the multicast addresses. */
-		for (i = 0, mclist = rtdev->mc_list; i < rtdev->mc_count;
-			 i++, mclist = mclist->next) {
-			eaddrs = (u16 *)mclist->dmi_addr;
-			*setup_params++ = *eaddrs++;
-			*setup_params++ = *eaddrs++;
-			*setup_params++ = *eaddrs++;
-		}
-
-		/* Disable interrupts while playing with the Tx Cmd list. */
-		spin_lock_irqsave(&sp->lock, flags);
-
-		if (sp->mc_setup_tail)
-			sp->mc_setup_tail->next = mc_blk;
-		else
-			sp->mc_setup_head = mc_blk;
-		sp->mc_setup_tail = mc_blk;
-		mc_blk->tx = sp->cur_tx;
-
-		entry = sp->cur_tx++ % TX_RING_SIZE;
-		last_cmd = sp->last_cmd;
-		sp->last_cmd = mc_setup_frm;
-
-		/* Change the command to a NoOp, pointing to the CmdMulti command. */
-		sp->tx_skbuff[entry] = 0;
-		sp->tx_ring[entry].status = cpu_to_le32(CmdNOp);
-		sp->tx_ring[entry].link = cpu_to_le32(mc_blk->frame_dma);
-
-		/* Set the link in the setup frame. */
-		mc_setup_frm->link =
-			cpu_to_le32(TX_RING_ELEM_DMA(sp, (entry + 1) % TX_RING_SIZE));
-
-		pci_dma_sync_single(sp->pdev, mc_blk->frame_dma,
-				mc_blk->len, PCI_DMA_TODEVICE);
-
-		wait_for_cmd_done(ioaddr + SCBCmd);
-		clear_suspend(last_cmd);
-		/* Immediately trigger the command unit resume. */
-		outb(CUResume, ioaddr + SCBCmd);
-
-		if ((int)(sp->cur_tx - sp->dirty_tx) >= TX_QUEUE_LIMIT) {
-			rtnetif_stop_queue(rtdev);
-			sp->tx_full = 1;
-		}
-		spin_unlock_irqrestore(&sp->lock, flags);
-
-		if (speedo_debug > 5)
-			printk(" CmdMCSetup frame length %d in entry %d.\n",
-				   rtdev->mc_count, entry);
-#endif
 // *** RTnet ***
 	}
 
@@ -1986,7 +1831,7 @@ static int __init eepro100_init_module(void)
 	debug = speedo_debug; /* touch debug variable */
 #endif /* RTNET_DRV_EEPRO100_DBG */
 
-	return compat_pci_register_driver(&eepro100_driver);
+	return pci_register_driver(&eepro100_driver);
 }
 
 static void __exit eepro100_cleanup_module(void)

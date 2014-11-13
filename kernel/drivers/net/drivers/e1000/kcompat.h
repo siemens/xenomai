@@ -1,25 +1,25 @@
 /*******************************************************************************
 
-  
+
   Copyright(c) 1999 - 2006 Intel Corporation. All rights reserved.
-  
-  This program is free software; you can redistribute it and/or modify it 
-  under the terms of the GNU General Public License as published by the Free 
-  Software Foundation; either version 2 of the License, or (at your option) 
+
+  This program is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the Free
+  Software Foundation; either version 2 of the License, or (at your option)
   any later version.
-  
-  This program is distributed in the hope that it will be useful, but WITHOUT 
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for 
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
   more details.
-  
+
   You should have received a copy of the GNU General Public License along with
-  this program; if not, write to the Free Software Foundation, Inc., 59 
+  this program; if not, write to the Free Software Foundation, Inc., 59
   Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-  
+
   The full GNU General Public License is included in this distribution in the
   file called LICENSE.
-  
+
   Contact Information:
   Linux NICS <linux.nics@intel.com>
   e1000-devel Mailing List <e1000-devel@lists.sourceforge.net>
@@ -411,336 +411,6 @@ struct _kc_ethtool_pauseparam {
 #define ETHTOOL_STSO		0x0000001f /* Set TSO enable (ethtool_value) */
 #endif
 
-/*****************************************************************************/
-/* 2.4.3 => 2.4.0 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,3) )
-
-/**************************************/
-/* PCI DRIVER API */
-
-#ifndef pci_set_dma_mask
-#define pci_set_dma_mask _kc_pci_set_dma_mask
-extern int _kc_pci_set_dma_mask(struct pci_dev *dev, dma_addr_t mask);
-#endif
-
-#ifndef pci_request_regions
-#define pci_request_regions _kc_pci_request_regions
-extern int _kc_pci_request_regions(struct pci_dev *pdev, char *res_name);
-#endif
-
-#ifndef pci_release_regions
-#define pci_release_regions _kc_pci_release_regions
-extern void _kc_pci_release_regions(struct pci_dev *pdev);
-#endif
-
-/**************************************/
-/* NETWORK DRIVER API */
-
-#ifndef alloc_etherdev
-#define alloc_etherdev _kc_alloc_etherdev
-extern struct net_device * _kc_alloc_etherdev(int sizeof_priv);
-#endif
-
-#ifndef is_valid_ether_addr
-#define is_valid_ether_addr _kc_is_valid_ether_addr
-extern int _kc_is_valid_ether_addr(u8 *addr);
-#endif
-
-/**************************************/
-/* MISCELLANEOUS */
-
-#ifndef INIT_TQUEUE
-#define INIT_TQUEUE(_tq, _routine, _data)		\
-	do {						\
-		INIT_LIST_HEAD(&(_tq)->list);		\
-		(_tq)->sync = 0;			\
-		(_tq)->routine = _routine;		\
-		(_tq)->data = _data;			\
-	} while (0)
-#endif
-
-#endif /* 2.4.3 => 2.4.0 */
-
-/*****************************************************************************/
-/* 2.4.6 => 2.4.3 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,6) )
-
-#ifndef pci_set_power_state
-#define pci_set_power_state _kc_pci_set_power_state
-extern int _kc_pci_set_power_state(struct pci_dev *dev, int state);
-#endif
-
-#ifndef pci_save_state
-#define pci_save_state _kc_pci_save_state
-extern int _kc_pci_save_state(struct pci_dev *dev, u32 *buffer);
-#endif
-
-#ifndef pci_restore_state
-#define pci_restore_state _kc_pci_restore_state
-extern int _kc_pci_restore_state(struct pci_dev *pdev, u32 *buffer);
-#endif
-
-#ifndef pci_enable_wake
-#define pci_enable_wake _kc_pci_enable_wake
-extern int _kc_pci_enable_wake(struct pci_dev *pdev, u32 state, int enable);
-#endif
-
-/* PCI PM entry point syntax changed, so don't support suspend/resume */
-#undef CONFIG_PM
-
-#endif /* 2.4.6 => 2.4.3 */
-
-/*****************************************************************************/
-/* 2.4.10 => 2.4.6 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,10) )
-
-/**************************************/
-/* MODULE API */
-
-#ifndef MODULE_LICENSE
-	#define MODULE_LICENSE(X)
-#endif
-
-/**************************************/
-/* OTHER */
-
-#define prefetch(x)
-
-#undef min
-#define min(x,y) ({ \
-	const typeof(x) _x = (x);	\
-	const typeof(y) _y = (y);	\
-	(void) (&_x == &_y);		\
-	_x < _y ? _x : _y; })
-
-#undef max
-#define max(x,y) ({ \
-	const typeof(x) _x = (x);	\
-	const typeof(y) _y = (y);	\
-	(void) (&_x == &_y);		\
-	_x > _y ? _x : _y; })
-
-#endif /* 2.4.10 -> 2.4.6 */
-
-
-/*****************************************************************************/
-/* 2.4.13 => 2.4.10 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,13) )
-
-/**************************************/
-/* PCI DMA MAPPING */
-
-#ifndef virt_to_page
-	#define virt_to_page(v) (mem_map + (virt_to_phys(v) >> PAGE_SHIFT))
-#endif
-
-#ifndef pci_map_page
-#define pci_map_page _kc_pci_map_page
-extern u64 _kc_pci_map_page(struct pci_dev *dev, struct page *page, unsigned long offset, size_t size, int direction);
-#endif
-
-#ifndef pci_unmap_page
-#define pci_unmap_page _kc_pci_unmap_page
-extern void _kc_pci_unmap_page(struct pci_dev *dev, u64 dma_addr, size_t size, int direction);
-#endif
-
-/* pci_set_dma_mask takes dma_addr_t, which is only 32-bits prior to 2.4.13 */
-
-#undef DMA_32BIT_MASK
-#define DMA_32BIT_MASK	0xffffffff
-#undef DMA_64BIT_MASK
-#define DMA_64BIT_MASK	0xffffffff
-
-#endif /* 2.4.13 => 2.4.10 */
-
-/*****************************************************************************/
-/* 2.4.17 => 2.4.12 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,17) )
-
-#ifndef __devexit_p
-	#define __devexit_p(x) &(x)
-#endif
-
-#endif /* 2.4.17 => 2.4.13 */
-
-/*****************************************************************************/
-/* 2.4.22 => 2.4.17 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,22) )
-#define pci_name(x)	((x)->slot_name)
-#endif
-
-/*****************************************************************************/
-/* 2.4.23 => 2.4.22 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,23) )
-#ifdef CONFIG_E1000_NAPI
-#ifndef netif_poll_disable
-#define netif_poll_disable(x) _kc_netif_poll_disable(x)
-static inline void _kc_netif_poll_disable(struct net_device *netdev)
-{
-	while (test_and_set_bit(__LINK_STATE_RX_SCHED, &netdev->state)) {
-		/* No hurry */
-		current->state = TASK_INTERRUPTIBLE;
-		schedule_timeout(1);
-	}
-}
-#endif
-#ifndef netif_poll_enable
-#define netif_poll_enable(x) _kc_netif_poll_enable(x)
-static inline void _kc_netif_poll_enable(struct net_device *netdev)
-{
-	clear_bit(__LINK_STATE_RX_SCHED, &netdev->state);
-}
-#endif
-#endif
-#endif
-
-/*****************************************************************************/
-/* 2.5.28 => 2.4.23 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,5,28) )
-
-static inline void _kc_synchronize_irq(void) { synchronize_irq(); }
-#undef synchronize_irq
-#define synchronize_irq(X) _kc_synchronize_irq()
-
-#include <linux/tqueue.h>
-#define work_struct tq_struct
-#define INIT_WORK INIT_TQUEUE
-#define schedule_work schedule_task
-#define flush_scheduled_work flush_scheduled_tasks
-
-#endif /* 2.5.28 => 2.4.17 */
-
-/*****************************************************************************/
-/* 2.6.0 => 2.5.28 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) )
-#define MODULE_INFO(version, _version)
-
-#define pci_set_consistent_dma_mask(dev,mask) 1
-
-#ifndef skb_fill_page_desc
-#define skb_fill_page_desc _kc_skb_fill_page_desc
-extern void _kc_skb_fill_page_desc(struct sk_buff *skb, int i, struct page *page, int off, int size);
-#endif
-#endif /* 2.6.0 => 2.5.28 */
-
-/*****************************************************************************/
-/* 2.6.4 => 2.6.0 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,4) )
-#define MODULE_VERSION(_version) MODULE_INFO(version, _version)
-#endif /* 2.6.4 => 2.6.0 */
-
-/*****************************************************************************/
-/* 2.6.5 => 2.6.0 */
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,5) )
-#define pci_dma_sync_single_for_cpu	pci_dma_sync_single
-// #define pci_dma_sync_single_for_device	pci_dma_sync_single_for_cpu
-#endif /* 2.6.5 => 2.6.0 */
-
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,25) || \
-    ( LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) && \
-      LINUX_VERSION_CODE < KERNEL_VERSION(2,6,4) ) )
-//#define ETHTOOL_OPS_COMPAT
-#endif
-
-#ifndef HAVE_NETIF_MSG
-#define HAVE_NETIF_MSG 1
-enum {
-	NETIF_MSG_DRV		= 0x0001,
-	NETIF_MSG_PROBE		= 0x0002,
-	NETIF_MSG_LINK		= 0x0004,
-	NETIF_MSG_TIMER		= 0x0008,
-	NETIF_MSG_IFDOWN	= 0x0010,
-	NETIF_MSG_IFUP		= 0x0020,
-	NETIF_MSG_RX_ERR	= 0x0040,
-	NETIF_MSG_TX_ERR	= 0x0080,
-	NETIF_MSG_TX_QUEUED	= 0x0100,
-	NETIF_MSG_INTR		= 0x0200,
-	NETIF_MSG_TX_DONE	= 0x0400,
-	NETIF_MSG_RX_STATUS	= 0x0800,
-	NETIF_MSG_PKTDATA	= 0x1000,
-	NETIF_MSG_HW		= 0x2000,
-	NETIF_MSG_WOL		= 0x4000,
-};
-#endif /* ! HAVE_NETIF_MSG */
-
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,7) )
-#undef if_mii
-#define if_mii _kc_if_mii
-static inline struct mii_ioctl_data *_kc_if_mii(struct ifreq *rq)
-{
-       return (struct mii_ioctl_data *) &rq->ifr_ifru;
-}
-#endif /* < 2.6.7 */
-
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,8) )
-#define msleep(x)	do { set_current_state(TASK_UNINTERRUPTIBLE); \
-				schedule_timeout((x * HZ)/1000 + 2); \
-			} while (0)
-#endif
-
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,9) )
-#define msleep_interruptible(x)	do {set_current_state(TASK_INTERRUPTIBLE); \
-					schedule_timeout((x * HZ)/1000); \
-				} while (0)
-#endif
-
-#if ( LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,6) && \
-      LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) )
-#ifdef pci_save_state
-#undef pci_save_state
-#endif
-#define pci_save_state(X) { \
-	int i; \
-	if (adapter->pci_state) { \
-		for (i = 0; i < 16; i++) { \
-			pci_read_config_dword((X), \
-					      i * 4, \
-					      &adapter->pci_state[i]); \
-		} \
-	} \
-}
-
-#ifdef pci_restore_state
-#undef pci_restore_state
-#endif
-#define pci_restore_state(X) { \
-	int i; \
-	if (adapter->pci_state) { \
-		for (i = 0; i < 16; i++) { \
-			pci_write_config_dword((X), \
-					       i * 4, \
-					       adapter->pci_state[i]); \
-		} \
-	} else { \
-		for (i = 0; i < 6; i++) { \
-			pci_write_config_dword((X), \
-					       PCI_BASE_ADDRESS_0 + (i * 4), \
-					       (X)->resource[i].start); \
-		} \
-		pci_write_config_byte((X), PCI_INTERRUPT_LINE, (X)->irq); \
-	} \
-}
-#endif /* 2.4.6 <= x < 2.6.10 */
-
-#if (( LINUX_VERSION_CODE < KERNEL_VERSION(2,4,27) ) || \
-     (( LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) ) && \
-      ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,3) )))
-#define netdev_priv(x) x->priv
-#endif
-
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) )
-#ifdef module_param_array_named
-#undef module_param_array_named
-#define module_param_array_named(name, array, type, nump, perm)          \
-	static struct kparam_array __param_arr_##name                    \
-	= { ARRAY_SIZE(array), nump, param_set_##type, param_get_##type, \
-	    sizeof(array[0]), array };                                   \
-	module_param_call(name, param_array_set, param_array_get,        \
-			  &__param_arr_##name, perm)
-#endif /* module_param_array_named */
-
-#endif /* < 2.6.10 */
-
 #ifndef NET_IP_ALIGN
 #define NET_IP_ALIGN 2
 #endif
@@ -763,31 +433,14 @@ static inline struct mii_ioctl_data *_kc_if_mii(struct ifreq *rq)
 #define skb_header_cloned(x) 0
 #endif /* SKB_DATAREF_SHIFT not defined */
 
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11) )
-#define PCI_D0      0
-#define PCI_D1      1
-#define PCI_D2      2
-#define PCI_D3hot   3
-#define PCI_D3cold  4
-#define pci_choose_state(pdev,state) state
-#define PMSG_SUSPEND 3
-#endif
-
-#if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14) )
-#define pm_message_t u32
-#endif
-
 #ifndef WARN_ON
 #define WARN_ON(x)
 #endif
 
-#if ( LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,12) )
 #define USE_DRIVER_SHUTDOWN_HANDLER
-#endif
 
 #ifndef SA_PROBEIRQ
 #define SA_PROBEIRQ 0
 #endif
 
 #endif /* _KCOMPAT_H_ */
-

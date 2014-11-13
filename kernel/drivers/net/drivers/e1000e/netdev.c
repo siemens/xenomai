@@ -48,11 +48,7 @@
 #include <linux/cpu.h>
 #include <linux/smp.h>
 #include <linux/version.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)
-#include <linux/pm_qos_params.h>
-#else
 #include <linux/pm_qos.h>
-#endif
 #include <linux/pm_runtime.h>
 #include <linux/aer.h>
 #include <linux/prefetch.h>
@@ -2198,7 +2194,7 @@ static void e1000_set_multi(struct rtnet_device *netdev)
 
 	e1000_update_mc_addr_list(hw, NULL, 0);
 
-	if (netdev->features & NETIF_F_HW_VLAN_RX)
+	if (netdev->features & NETIF_F_HW_VLAN_CTAG_RX)
 		e1000e_vlan_strip_enable(adapter);
 	else
 		e1000e_vlan_strip_disable(adapter);
@@ -3444,59 +3440,6 @@ static void e1000_reset_task(struct work_struct *work)
 	e1000e_reinit_locked(adapter);
 }
 
-#if 0
-/**
- * e1000_get_stats64 - Get System Network Statistics
- * @netdev: network interface device structure
- * @stats: rtnl_link_stats64 pointer
- *
- * Returns the address of the device statistics structure.
- **/
-struct rtnl_link_stats64 *e1000e_get_stats64(struct net_device *netdev,
-					     struct rtnl_link_stats64 *stats)
-{
-	struct e1000_adapter *adapter = netdev_priv(netdev);
-
-	memset(stats, 0, sizeof(struct rtnl_link_stats64));
-	spin_lock(&adapter->stats64_lock);
-	/* Fill out the OS statistics structure */
-	stats->rx_bytes = adapter->stats.gorc;
-	stats->rx_packets = adapter->stats.gprc;
-	stats->tx_bytes = adapter->stats.gotc;
-	stats->tx_packets = adapter->stats.gptc;
-	stats->multicast = adapter->stats.mprc;
-	stats->collisions = adapter->stats.colc;
-
-	/* Rx Errors */
-
-	/*
-	 * RLEC on some newer hardware can be incorrect so build
-	 * our own version based on RUC and ROC
-	 */
-	stats->rx_errors = adapter->stats.rxerrc +
-		adapter->stats.crcerrs + adapter->stats.algnerrc +
-		adapter->stats.ruc + adapter->stats.roc +
-		adapter->stats.cexterr;
-	stats->rx_length_errors = adapter->stats.ruc +
-					      adapter->stats.roc;
-	stats->rx_crc_errors = adapter->stats.crcerrs;
-	stats->rx_frame_errors = adapter->stats.algnerrc;
-	stats->rx_missed_errors = adapter->stats.mpc;
-
-	/* Tx Errors */
-	stats->tx_errors = adapter->stats.ecol +
-				       adapter->stats.latecol;
-	stats->tx_aborted_errors = adapter->stats.ecol;
-	stats->tx_window_errors = adapter->stats.latecol;
-	stats->tx_carrier_errors = adapter->stats.tncrs;
-
-	/* Tx Dropped needs to be maintained elsewhere */
-
-	spin_unlock(&adapter->stats64_lock);
-	return stats;
-}
-#endif
-
 static int e1000_init_phy_wakeup(struct e1000_adapter *adapter, u32 wufc)
 {
 	struct e1000_hw *hw = &adapter->hw;
@@ -3964,23 +3907,14 @@ static int e1000_probe(struct pci_dev *pdev,
 	pci_using_dac = 0;
 	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
 	if (!err) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
-		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
-#else
 		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
-#endif
 		if (!err)
 			pci_using_dac = 1;
 	} else {
 		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
 		if (err) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
-			err = pci_set_consistent_dma_mask(pdev,
-							  DMA_BIT_MASK(32));
-#else
 			err = dma_set_coherent_mask(&pdev->dev,
 						    DMA_BIT_MASK(32));
-#endif
 			if (err) {
 				dev_err(&pdev->dev, "No usable DMA "
 					"configuration, aborting\n");
@@ -4095,15 +4029,15 @@ static int e1000_probe(struct pci_dev *pdev,
 
 	/* Set initial default active device features */
 	netdev->features = (NETIF_F_SG |
-			    NETIF_F_HW_VLAN_RX |
-			    NETIF_F_HW_VLAN_TX |
+			    NETIF_F_HW_VLAN_CTAG_RX |
+			    NETIF_F_HW_VLAN_CTAG_TX |
 			    NETIF_F_TSO |
 			    NETIF_F_TSO6 |
 			    NETIF_F_RXCSUM |
 			    NETIF_F_HW_CSUM);
 
 	if (adapter->flags & FLAG_HAS_HW_VLAN_FILTER)
-		netdev->features |= NETIF_F_HW_VLAN_FILTER;
+		netdev->features |= NETIF_F_HW_VLAN_CTAG_FILTER;
 
 	if (pci_using_dac) {
 		netdev->features |= NETIF_F_HIGHDMA;
@@ -4230,10 +4164,8 @@ static int e1000_probe(struct pci_dev *pdev,
 
 	e1000_print_device_info(adapter);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
 	if (pci_dev_run_wake(pdev))
 		pm_runtime_put_noidle(&pdev->dev);
-#endif
 
 	return 0;
 
@@ -4305,10 +4237,8 @@ static void e1000_remove(struct pci_dev *pdev)
 		clear_bit(__E1000_DOWN, &adapter->state);
 	rt_unregister_rtnetdev(netdev);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
 	if (pci_dev_run_wake(pdev))
 		pm_runtime_get_noresume(&pdev->dev);
-#endif
 
 	/*
 	 * Release control of h/w to f/w.  If f/w is AMT enabled, this

@@ -93,7 +93,7 @@ struct rtnet_device {
     unsigned short      hard_header_len;    /* hardware hdr length  */
     unsigned int        mtu;        /* eth = 1536, tr = 4...        */
     void                *priv;      /* pointer to private data      */
-    int                 features;   /* [RT]NETIF_F_*                */
+    netdev_features_t   features;   /* [RT]NETIF_F_*                */
 
     /* Interface address info. */
     unsigned char       broadcast[MAX_ADDR_LEN];    /* hw bcast add */

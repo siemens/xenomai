@@ -32,16 +32,7 @@
 #include <rtcfg/rtcfg_proc.h>
 
 
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-static int start_timer = 1;
-
-module_param(start_timer, int, 0444);
-MODULE_PARM_DESC(start_timer, "set to zero if RTAI timer is already running");
-#endif
-
 MODULE_LICENSE("GPL");
-
-
 
 int __init rtcfg_init(void)
 {
@@ -50,26 +41,21 @@ int __init rtcfg_init(void)
 
     printk("RTcfg: init real-time configuration distribution protocol\n");
 
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-        rtos_timer_start();
-#endif
-
     ret = rtcfg_init_ioctls();
     if (ret != 0)
-        goto error1;
+	goto error1;
 
     rtcfg_init_state_machines();
 
     ret = rtcfg_init_frames();
     if (ret != 0)
-        goto error2;
+	goto error2;
 
 #ifdef CONFIG_XENO_OPT_VFILE
     ret = rtcfg_init_proc();
     if (ret != 0) {
-        rtcfg_cleanup_frames();
-        goto error2;
+	rtcfg_cleanup_frames();
+	goto error2;
     }
 #endif
 
@@ -80,11 +66,6 @@ int __init rtcfg_init(void)
     rtcfg_cleanup_ioctls();
 
   error1:
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-        rtos_timer_stop();
-#endif
-
     return ret;
 }
 
@@ -98,11 +79,6 @@ void rtcfg_cleanup(void)
     rtcfg_cleanup_frames();
     rtcfg_cleanup_state_machines();
     rtcfg_cleanup_ioctls();
-
-#ifdef CONFIG_RTOS_STARTSTOP_TIMER
-    if (start_timer)
-        rtos_timer_stop();
-#endif
 
     printk("RTcfg: unloaded\n");
 }

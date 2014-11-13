@@ -32,7 +32,7 @@
 
 #include <rtdev.h>
 #include <rtnet.h>
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 #include <stack_mgr.h>
 
 #include <rtdm/driver.h>

@@ -251,7 +251,7 @@ MODULE_PARM_DESC(debug, "Debug level (0=none,...,16=all)");
 #define MAX_UNITS           8
 
 static int cards[MAX_UNITS] = { [0 ... (MAX_UNITS-1)] = 1 };
-compat_module_int_param_array(cards, MAX_UNITS);
+module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (eg. 1,0,1)");
 
 
@@ -277,7 +277,7 @@ e1000_init_module(void)
 
 	printk(KERN_INFO "%s\n", e1000_copyright);
 
-	ret = compat_pci_register_driver(&e1000_driver);
+	ret = pci_register_driver(&e1000_driver);
 	return ret;
 }
 
@@ -656,15 +656,10 @@ e1000_reset(struct e1000_adapter *adapter)
 }
 
 static void
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 e1000_reset_task(struct work_struct *work)
 {
 	struct e1000_adapter *adapter =
 		container_of(work, struct e1000_adapter, reset_task);
-#else
-e1000_reset_task(struct e1000_adapter *adapter)
-{
-#endif
 
 	e1000_reinit_locked(adapter);
 }
@@ -863,13 +858,8 @@ static int e1000_probe(struct pci_dev *pdev,
 	adapter->phy_info_timer.function = &e1000_update_phy_info;
 	adapter->phy_info_timer.data = (unsigned long) adapter;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 	INIT_WORK(&adapter->reset_task,
 		(void (*)(struct work_struct *))e1000_reset_task);
-#else
-	INIT_WORK(&adapter->reset_task,
-		(void (*)(void *))e1000_reset_task, adapter);
-#endif
 
 	/* we're going to reset, so assume we have no link for now */
 
@@ -2875,23 +2865,6 @@ e1000_clean_rx_irq(struct e1000_adapter *adapter,
 		/* code added for copybreak, this should improve
 		 * performance for small packets with large amounts
 		 * of reassembly being done in the stack */
-#if 0
-#define E1000_CB_LENGTH 256
-		if (length < E1000_CB_LENGTH) {
-			struct rtskb *new_skb =
-			    dev_alloc_rtskb(length + NET_IP_ALIGN, &adapter->skb_pool);
-			if (new_skb) {
-				rtskb_reserve(new_skb, NET_IP_ALIGN);
-				memcpy(new_skb->data - NET_IP_ALIGN,
-				       skb->data - NET_IP_ALIGN,
-				       length + NET_IP_ALIGN);
-				/* save the skb in buffer_info as good */
-				buffer_info->skb = skb;
-				skb = new_skb;
-				rtskb_put(skb, length);
-			}
-		} else
-#endif
 		rtskb_put(skb, length);
 
 		/* end copybreak code */

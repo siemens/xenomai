@@ -23,7 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 
-#include <rtnet_sys.h>
+#include <rtdm/driver.h>
 
 #include <rtmac/rtmac_disc.h>
 #include <rtmac/rtmac_proc.h>

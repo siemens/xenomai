@@ -45,7 +45,7 @@
 #ifndef msec_delay
 #define msec_delay(x)	do { if(in_interrupt()) { \
 				/* Don't sleep in interrupt context! */ \
-	                	BUG(); \
+				BUG(); \
 			} else { \
 				msleep(x); \
 			} } while (0)
@@ -76,8 +76,8 @@
 #define DEBUGOUT7 DEBUGOUT3
 
 #define E1000_REGISTER(a, reg) (((a)->mac.type >= e1000_82543) \
-                               ? reg                           \
-                               : e1000_translate_register_82542(reg))
+			       ? reg                           \
+			       : e1000_translate_register_82542(reg))
 
 #define E1000_WRITE_REG(a, reg, value) ( \
     writel((value), ((a)->hw_addr + E1000_REGISTER(a, reg))))

@@ -153,28 +153,6 @@ static int tulip_rx(/*RTnet*/struct rtnet_device *rtdev, nanosecs_abs_t *time_st
 			}
 #endif
 
-#if 0 /*RTnet*/
-			/* Check if the packet is long enough to accept without copying
-			   to a minimally-sized skbuff. */
-			if (pkt_len < tulip_rx_copybreak
-				&& (skb = /*RTnet*/dev_alloc_rtskb(pkt_len + 2)) != NULL) {
-				/*RTnet*/rtskb_reserve(skb, 2);	/* 16 byte align the IP header */
-				pci_dma_sync_single(tp->pdev,
-						    tp->rx_buffers[entry].mapping,
-						    pkt_len, PCI_DMA_FROMDEVICE);
-#if ! defined(__alpha__)
-				//eth_copy_and_sum(skb, tp->rx_buffers[entry].skb->tail,
-				//               pkt_len, 0);
-				memcpy(rtskb_put(skb, pkt_len),
-				       tp->rx_buffers[entry].skb->tail,
-				       pkt_len);
-#else
-				memcpy(/*RTnet*/rtskb_put(skb, pkt_len),
-				       tp->rx_buffers[entry].skb->tail,
-				       pkt_len);
-#endif
-			} else {        /* Pass up the skb already on the Rx ring. */
-#endif /*RTnet*/
 			{
 				unsigned char *temp = /*RTnet*/rtskb_put(skb = tp->rx_buffers[entry].skb, pkt_len);
 
@@ -335,52 +313,6 @@ int tulip_interrupt(rtdm_irq_t *irq_handle)
 		if (csr5 & AbnormalIntr) {	/* Abnormal error summary bit. */
 			if (csr5 == 0xffffffff)
 				break;
-#if 0 /*RTnet*/
-			if (csr5 & TxJabber) tp->stats.tx_errors++;
-			if (csr5 & TxFIFOUnderflow) {
-				if ((tp->csr6 & 0xC000) != 0xC000)
-					tp->csr6 += 0x4000;	/* Bump up the Tx threshold */
-				else
-					tp->csr6 |= 0x00200000;  /* Store-n-forward. */
-				/* Restart the transmit process. */
-				tulip_restart_rxtx(tp);
-				outl(0, ioaddr + CSR1);
-			}
-			if (csr5 & (RxDied | RxNoBuf)) {
-				if (tp->flags & COMET_MAC_ADDR) {
-					outl(tp->mc_filter[0], ioaddr + 0xAC);
-					outl(tp->mc_filter[1], ioaddr + 0xB0);
-				}
-			}
-			if (csr5 & RxDied) {		/* Missed a Rx frame. */
-				tp->stats.rx_missed_errors += inl(ioaddr + CSR8) & 0xffff;
-				tp->stats.rx_errors++;
-				tulip_start_rxtx(tp);
-			}
-			/*
-			 * NB: t21142_lnk_change() does a del_timer_sync(), so be careful if this
-			 * call is ever done under the spinlock
-			 */
-			if (csr5 & (TPLnkPass | TPLnkFail | 0x08000000)) {
-				if (tp->link_change)
-					(tp->link_change)(rtdev, csr5);
-			}
-			if (csr5 & SytemError) {
-				int error = (csr5 >> 23) & 7;
-				/* oops, we hit a PCI error.  The code produced corresponds
-				 * to the reason:
-				 *  0 - parity error
-				 *  1 - master abort
-				 *  2 - target abort
-				 * Note that on parity error, we should do a software reset
-				 * of the chip to get it back into a sane state (according
-				 * to the 21142/3 docs that is).
-				 *   -- rmk
-				 */
-				/*RTnet*/rtdm_printk(KERN_ERR "%s: (%lu) System Error occured (%d)\n",
-					rtdev->name, tp->nir, error);
-			}
-#endif /*RTnet*/
 			/*RTnet*/rtdm_printk(KERN_ERR "%s: Error detected, "
 			    "device may not work any more (csr5=%08x)!\n", rtdev->name, csr5);
 			/* Clear all error sources, included undocumented ones! */
