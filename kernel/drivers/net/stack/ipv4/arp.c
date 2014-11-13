@@ -170,11 +170,14 @@ int rt_arp_rcv(struct rtskb *skb, struct rtpacket_type *pt)
     if (tip == rtdev->local_ip) {
 	rt_ip_route_add_host(sip, sha, rtdev);
 
-#ifndef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP
-	if (arp->ar_op == __constant_htons(ARPOP_REQUEST))
-	    rt_arp_send(ARPOP_REPLY, ETH_P_ARP, sip, rtdev, tip, sha,
-			rtdev->dev_addr, sha);
+#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP
+	if (!rt_ip_fallback_handler)
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP */
+		if (arp->ar_op == __constant_htons(ARPOP_REQUEST)) {
+			rt_arp_send(ARPOP_REPLY, ETH_P_ARP, sip, rtdev, tip, sha,
+				rtdev->dev_addr, sha);
+			goto out1;
+		}
     }
 
 out:
@@ -184,6 +187,7 @@ out:
 	    return 0;
     }
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_PROXY_ARP */
+out1:
     kfree_rtskb(skb);
     return 0;
 }
