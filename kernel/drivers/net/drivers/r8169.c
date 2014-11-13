@@ -69,6 +69,7 @@ RTL8169_VERSION "2.2"	<2004/08/09>
  */
 
 #include <linux/module.h>
+#include <linux/pci-aspm.h>
 #include <linux/pci.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
@@ -92,7 +93,7 @@ RTL8169_VERSION "2.2"	<2004/08/09>
 
 #undef RTL8169_IOCTL_SUPPORT	/*** RTnet: do not enable! ***/
 #undef RTL8169_DYNAMIC_CONTROL
-#define RTL8169_USE_IO
+#undef RTL8169_USE_IO
 
 
 #ifdef RTL8169_DEBUG
@@ -181,12 +182,12 @@ static int max_interrupt_work = 20;
 #define RTL_R32(reg)        ((unsigned long) inl (ioaddr + (reg)))
 #else
 /* write/read MMIO register */
-#define RTL_W8(reg, val8)   writeb ((val8), ioaddr + (reg))
-#define RTL_W16(reg, val16) writew ((val16), ioaddr + (reg))
-#define RTL_W32(reg, val32) writel ((val32), ioaddr + (reg))
-#define RTL_R8(reg)         readb (ioaddr + (reg))
-#define RTL_R16(reg)        readw (ioaddr + (reg))
-#define RTL_R32(reg)        ((unsigned long) readl (ioaddr + (reg)))
+#define RTL_W8(reg, val8)   writeb ((val8), (void *)ioaddr + (reg))
+#define RTL_W16(reg, val16) writew ((val16), (void *)ioaddr + (reg))
+#define RTL_W32(reg, val32) writel ((val32), (void *)ioaddr + (reg))
+#define RTL_R8(reg)         readb ((void *)ioaddr + (reg))
+#define RTL_R16(reg)        readw ((void *)ioaddr + (reg))
+#define RTL_R32(reg)        ((unsigned long) readl ((void *)ioaddr + (reg)))
 #endif
 
 #define MCFG_METHOD_1		0x01
@@ -216,9 +217,10 @@ const static struct {
 
 
 static struct pci_device_id rtl8169_pci_tbl[] = {
-	{ PCI_VENDOR_ID_REALTEK, 0x8167, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ 0x10ec, 0x8169, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ 0x1186, 0x4300, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },	/* <kk> D-Link DGE-528T */
+	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8136), 0, 0, 2 },
+	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8167), 0, 0, 1 },
+	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK,	0x8169), 0, 0, 1 },
+	{ PCI_DEVICE(PCI_VENDOR_ID_DLINK,	0x4300), 0, 0, 1 },	/* <kk> D-Link DGE-528T */
 	{0,},
 };
 
@@ -309,6 +311,9 @@ enum RTL8169_register_content {
 	TxInterFrameGapShift = 24,
 	TxDMAShift = 8,
 
+	/* Config2 register */
+	MSIEnable	= (1 << 5),
+
 	/*rtl8169_PHYstatus*/
 	TBI_Enable	= 0x80,
 	TxFlowCtrl	= 0x40,
@@ -385,6 +390,12 @@ struct RxDesc {
 
 typedef struct timer_list rt_timer_t;
 
+enum rtl8169_features {
+	RTL_FEATURE_WOL		= (1 << 0),
+	RTL_FEATURE_MSI		= (1 << 1),
+	RTL_FEATURE_GMII	= (1 << 2),
+};
+
 
 struct rtl8169_private {
 	unsigned long ioaddr;                /* memory map physical address*/
@@ -433,6 +444,8 @@ struct rtl8169_private {
 
 	unsigned char   linkstatus;
 	rtdm_irq_t irq_handle;			/*** RTnet ***/
+
+	unsigned features;
 };
 
 
@@ -551,7 +564,7 @@ int RTL8169_READ_GMII_REG( unsigned long ioaddr, int RegAddr )
 
 //======================================================================================================
 //======================================================================================================
-static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_out, unsigned long *ioaddr_out)
+static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_out, unsigned long *ioaddr_out, int region)
 {
 	unsigned long ioaddr = 0;
 	struct rtnet_device *rtdev;
@@ -579,19 +592,27 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 
 	priv = rtdev->priv;
 
+	/* disable ASPM completely as that cause random device stop working
+	 * problems as well as full system hangs for some PCIe devices users */
+	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
+				     PCIE_LINK_STATE_CLKPM);
+
 	// enable device (incl. PCI PM wakeup and hotplug setup)
 	rc = pci_enable_device (pdev);
 	if (rc)
 		goto err_out;
 
-	mmio_start = pci_resource_start (pdev, 1);
-	mmio_end = pci_resource_end (pdev, 1);
-	mmio_flags = pci_resource_flags (pdev, 1);
-	mmio_len = pci_resource_len (pdev, 1);
+	if (pci_set_mwi(pdev) < 0)
+		printk("R8169: Mem-Wr-Inval unavailable\n");
+
+	mmio_start = pci_resource_start (pdev, region);
+	mmio_end = pci_resource_end (pdev, region);
+	mmio_flags = pci_resource_flags (pdev, region);
+	mmio_len = pci_resource_len (pdev, region);
 
 	// make sure PCI base addr 1 is MMIO
 	if (!(mmio_flags & IORESOURCE_MEM)) {
-		printk (KERN_ERR PFX "region #1 not an MMIO resource, aborting\n");
+		printk (KERN_ERR PFX "region #%d not an MMIO resource, aborting\n", region);
 		rc = -ENODEV;
 		goto err_out;
 	}
@@ -636,6 +657,19 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 		}
 	}
 
+	{
+		u8 cfg2 = RTL_R8(Config2) & ~MSIEnable;
+		if (region) {
+			if (pci_enable_msi(pdev))
+				printk("R8169: no MSI, Back to INTx.\n");
+			else {
+				cfg2 |= MSIEnable;
+				priv->features |= RTL_FEATURE_MSI;
+			}
+		}
+		RTL_W8(Config2, cfg2);
+	}
+
 	// identify config method
 	{
 		unsigned long val32 = (RTL_R32(TxConfig)&0x7c800000);
@@ -656,6 +690,7 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 			priv->mcfg = MCFG_METHOD_1;
 		}
 	}
+
 	{
 		unsigned char val8 = (unsigned char)(RTL8169_READ_GMII_REG(ioaddr,3)&0x000f);
 		if( val8 == 0x00 ){
@@ -715,6 +750,7 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 	struct rtl8169_private *priv = NULL;
 	unsigned long ioaddr = 0;
 	static int board_idx = -1;
+	int region = ent->driver_data;
 	int i;
 	int option = -1, Cap10_100 = 0, Cap1000 = 0;
 
@@ -732,7 +768,7 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 		return -ENODEV;
 	/*** RTnet ***/
 
-	i = rtl8169_init_board (pdev, &rtdev, &ioaddr);
+	i = rtl8169_init_board (pdev, &rtdev, &ioaddr, region);
 	if (i < 0) {
 		return i;
 	}
@@ -945,6 +981,7 @@ static int rtl8169_init_one (struct pci_dev *pdev, const struct pci_device_id *e
 static void rtl8169_remove_one (struct pci_dev *pdev)
 {
 	struct rtnet_device *rtdev = pci_get_drvdata(pdev);
+	struct rtl8169_private *priv = rtdev->priv;;
 
 	assert (rtdev != NULL);
 
@@ -952,6 +989,9 @@ static void rtl8169_remove_one (struct pci_dev *pdev)
 	rt_unregister_rtnetdev(rtdev);
 	rt_rtdev_disconnect(rtdev);
 	/*** /RTnet ***/
+
+	if (priv->features & RTL_FEATURE_MSI)
+		pci_disable_msi(pdev);
 
 #ifdef RTL8169_USE_IO
 #else
@@ -988,6 +1028,7 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 
 	/*** RTnet ***/
 	rt_stack_connect(rtdev, &STACK_manager);
+
 	retval = rtdm_irq_request(&priv->irq_handle, rtdev->irq, rtl8169_interrupt, 0, "rt_r8169", rtdev);
 	/*** /RTnet ***/
 
@@ -995,6 +1036,7 @@ static int rtl8169_open (struct rtnet_device *rtdev)
 	if (retval) {
 		return retval;
 	}
+
 
 	//2004-05-11
 	// Allocate tx/rx descriptor space
