@@ -182,12 +182,12 @@ AC_ARG_ENABLE(debug,
 		debug_symbols=y
 		;;
 	y | yes | partial)
-	    	debug_mode=partial
-	    	debug_symbols=y
+		debug_mode=partial
+		debug_symbols=y
 		;;
 	full)
 		debug_mode=full
-	    	debug_symbols=y
+		debug_symbols=y
 		;;
 	n | no)
 		debug_mode=
@@ -934,6 +934,9 @@ AC_CONFIG_FILES([ \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
 	utils/autotune/Makefile \
+	utils/net/rtnet \
+	utils/net/rtnet.conf \
+	utils/net/Makefile \
 	demo/Makefile \
 	demo/posix/Makefile \
 	demo/posix/cobalt/Makefile \

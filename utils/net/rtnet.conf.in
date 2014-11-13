@@ -5,13 +5,13 @@
 # RTnet installation path
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
-RTNET_MOD="@RTNET_MODULE_DIR@"
+RTNET_MOD="/lib/modules/`uname -r`/kernel/drivers/xenomai/net"
 RTIFCONFIG="@sbindir@/rtifconfig"
 RTCFG="@sbindir@/rtcfg"
 TDMACFG="@sbindir@/tdmacfg"
 
 # Module suffix: ".o" for 2.4 kernels, ".ko" for later versions
-MODULE_EXT="@RTNET_MODULE_EXT@"
+MODULE_EXT=".ko"
 
 
 
