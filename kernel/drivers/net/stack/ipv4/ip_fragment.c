@@ -33,7 +33,7 @@
 
 #include <ipv4/ip_fragment.h>
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
 #include <ipv4/ip_input.h>
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_PROXY */
 
@@ -185,7 +185,7 @@ static struct rtskb *add_to_collector(struct rtskb *skb, unsigned int offset, in
         rtdm_lock_put_irqrestore(&p_coll->frags.lock, context);
     }
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
     if (rt_ip_fallback_handler) {
             __rtskb_push(skb, iph->ihl*4);
             rt_ip_fallback_handler(skb);
@@ -285,7 +285,7 @@ struct rtskb *rt_ip_defrag(struct rtskb *skb, struct rtinet_protocol *ipprot)
     {
         /* Get the destination socket */
         if ((sock = ipprot->dest_socket(skb)) == NULL) {
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
                 if (rt_ip_fallback_handler) {
                     __rtskb_push(skb, iph->ihl*4);
                     rt_ip_fallback_handler(skb);

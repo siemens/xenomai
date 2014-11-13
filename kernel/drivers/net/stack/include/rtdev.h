@@ -215,7 +215,7 @@ static inline void rtdev_dereference(struct rtnet_device *rtdev)
 
 int rtdev_xmit(struct rtskb *skb);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
 int rtdev_xmit_proxy(struct rtskb *skb);
 #endif
 

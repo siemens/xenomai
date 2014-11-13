@@ -720,7 +720,7 @@ int rtdev_xmit(struct rtskb *rtskb)
 
 
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
 /***
  *      rtdev_xmit_proxy - send rtproxy packet
  */
@@ -781,7 +781,7 @@ EXPORT_SYMBOL_GPL(rtdev_get_loopback);
 
 EXPORT_SYMBOL_GPL(rtdev_xmit);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
 EXPORT_SYMBOL_GPL(rtdev_xmit_proxy);
 #endif
 

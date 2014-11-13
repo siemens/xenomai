@@ -2,8 +2,9 @@ menu "Add-Ons"
     depends on XENO_DRIVERS_NET
 
 config XENO_DRIVERS_NET_ADDON_RTCAP
-    depends on XENO_DRIVERS_NET
-    bool "Real-Time Capturing Support"
+    depends on XENO_DRIVERS_NET && m
+    select ETHERNET
+    tristate "Real-Time Capturing Support"
     default n
     ---help---
     This feature allows to capture real-time packets traversing the RTnet
@@ -17,8 +18,9 @@ config XENO_DRIVERS_NET_ADDON_RTCAP
     For further information see Documentation/README.rtcap.
 
 config XENO_DRIVERS_NET_ADDON_PROXY
-    bool "IP protocol proxy for Linux"
-    depends on XENO_DRIVERS_NET_RTIPV4
+    depends on XENO_DRIVERS_NET_RTIPV4 && m
+    select ETHERNET
+    tristate "IP protocol proxy for Linux"
     default n
     ---help---
     Enables a forward-to-Linux module for all IP protocols that are not
@@ -29,8 +31,8 @@ config XENO_DRIVERS_NET_ADDON_PROXY
     See Documentation/README.rtnetproxy for further information.
 
 config XENO_DRIVERS_NET_ADDON_PROXY_ARP
-    bool "Enable ARP handling via protocol proxy"
     depends on XENO_DRIVERS_NET_ADDON_PROXY
+    bool "Enable ARP handling via protocol proxy"
     default n
     ---help---
     Enables ARP support for the IP protocol proxy. Incoming ARP replies

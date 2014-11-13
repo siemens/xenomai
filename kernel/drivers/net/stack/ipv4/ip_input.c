@@ -31,7 +31,7 @@
 #include <ipv4/protocol.h>
 #include <ipv4/route.h>
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
 #include <ipv4/ip_input.h>
 
 rt_ip_fallback_handler_t rt_ip_fallback_handler = NULL;
@@ -70,7 +70,7 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
         } else {
             /* Get the destination socket */
             if ((sock = ipprot->dest_socket(skb)) == NULL) {
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
                 if (rt_ip_fallback_handler) {
                     __rtskb_push(skb, iph->ihl*4);
                     rt_ip_fallback_handler(skb);
@@ -95,7 +95,7 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
 
         /* Deliver the packet to the next layer */
         ipprot->rcv_handler(skb);
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
     } else if (rt_ip_fallback_handler) {
         /* If a fallback handler for IP protocol has been installed,
          * call it. */

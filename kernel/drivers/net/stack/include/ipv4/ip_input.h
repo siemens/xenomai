@@ -27,7 +27,7 @@
 
 extern int rt_ip_rcv(struct rtskb *skb, struct rtpacket_type *pt);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_PROXY
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
 typedef void (*rt_ip_fallback_handler_t)(struct rtskb *skb);
 
 /*

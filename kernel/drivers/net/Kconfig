@@ -1,6 +1,7 @@
 menu "RTnet"
 
 config XENO_DRIVERS_NET
+       select NET
        tristate "RTnet, TCP/IP socket interface"
 
 source "drivers/xenomai/net/stack/Kconfig"

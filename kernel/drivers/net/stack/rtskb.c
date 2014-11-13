@@ -48,7 +48,7 @@ unsigned int rtskb_pools_max=0;
 unsigned int rtskb_amount=0;
 unsigned int rtskb_amount_max=0;
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP)
 /* RTcap interface */
 rtdm_lock_t rtcap_lock;
 EXPORT_SYMBOL_GPL(rtcap_lock);
@@ -228,7 +228,7 @@ struct rtskb *alloc_rtskb(unsigned int size, struct rtskb_pool *pool)
     skb->pkt_type = PACKET_HOST;
     skb->xmit_stamp = NULL;
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP)
     skb->cap_flags = 0;
 #endif
 
@@ -244,7 +244,7 @@ EXPORT_SYMBOL_GPL(alloc_rtskb);
  */
 void kfree_rtskb(struct rtskb *skb)
 {
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP)
     rtdm_lockctx_t  context;
     struct rtskb    *comp_skb;
     struct rtskb    *next_skb;
@@ -255,7 +255,7 @@ void kfree_rtskb(struct rtskb *skb)
     RTNET_ASSERT(skb != NULL, return;);
     RTNET_ASSERT(skb->pool != NULL, return;);
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP)
     next_skb  = skb;
     chain_end = skb->chain_end;
 
@@ -535,7 +535,7 @@ int rtskb_pools_init(void)
     if (rtskb_module_pool_init(&global_pool, global_rtskbs) < global_rtskbs)
 	goto err_out;
 
-#ifdef CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP
+#if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_RTCAP)
     rtdm_lock_init(&rtcap_lock);
 #endif
 
