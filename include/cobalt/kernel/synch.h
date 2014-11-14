@@ -153,6 +153,8 @@ int xnsynch_acquire(struct xnsynch *synch,
 		    xnticks_t timeout,
 		    xntmode_t timeout_mode);
 
+int xnsynch_try_acquire(struct xnsynch *synch);
+
 struct xnthread *xnsynch_release(struct xnsynch *synch,
 				 struct xnthread *thread);
 

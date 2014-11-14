@@ -1248,58 +1248,50 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	struct xnthread *curr_thread;
-	int err = 0;
+	struct xnthread *curr;
+	int ret;
 	spl_t s;
 
 	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	curr_thread = xnthread_current();
-	trace_cobalt_driver_mutex_wait(mutex, curr_thread);
+	curr = xnthread_current();
+	trace_cobalt_driver_mutex_wait(mutex, curr);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(mutex->synch_base.status & RTDM_SYNCH_DELETED))
-		err = -EIDRM;
-	else if (!xnthread_try_grab(curr_thread, &mutex->synch_base)) {
-		/* Redefinition to clarify XENO_ASSERT output */
-		#define mutex_owner xnsynch_owner(&mutex->synch_base)
-		if (!XENO_ASSERT(COBALT, mutex_owner != curr_thread)) {
-			err = -EDEADLK;
-			goto unlock_out;
-		}
-
-		/* non-blocking mode */
-		if (timeout < 0) {
-			err = -EWOULDBLOCK;
-			goto unlock_out;
-		}
-
-restart:
-		if (timeout_seq && (timeout > 0)) {
-			/* timeout sequence */
-			xnsynch_acquire(&mutex->synch_base, *timeout_seq,
-					XN_ABSOLUTE);
-		} else
-			/* infinite or relative timeout */
-			xnsynch_acquire(&mutex->synch_base, timeout, XN_RELATIVE);
-
-		if (unlikely(xnthread_test_info(curr_thread,
-						XNTIMEO | XNRMID | XNBREAK))) {
-			if (xnthread_test_info(curr_thread, XNTIMEO))
-				err = -ETIMEDOUT;
-			else if (xnthread_test_info(curr_thread, XNRMID))
-				err = -EIDRM;
-			else /*  XNBREAK */
-				goto restart;
-		}
+	if (unlikely(mutex->synch_base.status & RTDM_SYNCH_DELETED)) {
+		ret = -EIDRM;
+		goto out;
 	}
 
-unlock_out:
+	ret = xnsynch_try_acquire(&mutex->synch_base);
+	if (ret != -EBUSY)
+		goto out;
+
+	if (timeout < 0) {
+		ret = -EWOULDBLOCK;
+		goto out;
+	}
+
+	for (;;) {
+		if (timeout_seq && timeout > 0) /* timeout sequence */
+			ret = xnsynch_acquire(&mutex->synch_base, *timeout_seq,
+					      XN_ABSOLUTE);
+		else		/* infinite or relative timeout */
+			ret = xnsynch_acquire(&mutex->synch_base, timeout,
+					      XN_RELATIVE);
+		if (ret == 0)
+			break;
+		if (ret & XNBREAK)
+			continue;
+		ret = ret & XNTIMEO ? -ETIMEDOUT : -EIDRM;
+		break;
+	}
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 EXPORT_SYMBOL_GPL(rtdm_mutex_timedlock);

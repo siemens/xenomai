@@ -555,6 +555,11 @@ DEFINE_EVENT(synch_wait_event, cobalt_synch_sleepon,
 	TP_ARGS(synch, thread)
 );
 
+DEFINE_EVENT(synch_wait_event, cobalt_synch_try_acquire,
+	TP_PROTO(struct xnsynch *synch, struct xnthread *thread),
+	TP_ARGS(synch, thread)
+);
+
 DEFINE_EVENT(synch_wait_event, cobalt_synch_acquire,
 	TP_PROTO(struct xnsynch *synch, struct xnthread *thread),
 	TP_ARGS(synch, thread)

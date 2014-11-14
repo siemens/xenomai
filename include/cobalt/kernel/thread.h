@@ -317,22 +317,6 @@ void xnthread_set_sync_window(struct xnthread *thread, int state_bits)
 	}
 }
 
-static inline int xnthread_try_grab(struct xnthread *thread,
-				    struct xnsynch *synch)
-{
-	XENO_BUGON(COBALT, xnsynch_fastlock_p(synch));
-
-	if (xnsynch_owner(synch) != NULL)
-		return 0;
-
-	xnsynch_set_owner(synch, thread);
-
-	if (xnthread_test_state(thread, XNWEAK))
-		thread->res_count++;
-
-	return 1;
-}
-
 static inline int normalize_priority(int prio)
 {
 	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;

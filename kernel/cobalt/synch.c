@@ -300,6 +300,59 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 }
 
 /**
+ * @fn int xnsynch_try_acquire(struct xnsynch *synch);
+ * @brief Try acquiring the ownership of a synchronization object.
+ *
+ * This service should be called by upper interfaces wanting the
+ * current thread to acquire the ownership of the given resource. If
+ * the resource is already assigned to another thread, the call
+ * returns with an error code.
+ *
+ * This service must be used only with synchronization objects that
+ * track ownership (XNSYNCH_OWNER set.
+ *
+ * @param synch The descriptor address of the synchronization object
+ * to acquire.
+ *
+ * @return Zero is returned if @a synch has been successfully
+ * acquired. Otherwise:
+ *
+ * - -EDEADLK is returned if @a synch is currently held by the calling
+ * thread.
+ *
+ * - -EBUSY is returned if @a synch is currently held by another
+ * thread.
+ *
+ * @coretags{primary-only}
+ */
+int xnsynch_try_acquire(struct xnsynch *synch)
+{
+	struct xnthread *curr;
+	atomic_t *lockp;
+	xnhandle_t h;
+
+	primary_mode_only();
+
+	XENO_BUGON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
+
+	curr = xnthread_current();
+	lockp = xnsynch_fastlock(synch);
+	trace_cobalt_synch_try_acquire(synch, curr);
+
+	h = atomic_cmpxchg(lockp, XN_NO_HANDLE, curr->handle);
+	if (h != XN_NO_HANDLE)
+		return xnhandle_get_id(h) == curr->handle ?
+			-EDEADLK : -EBUSY;
+
+	xnsynch_set_owner(synch, curr);
+	if (xnthread_test_state(curr, XNWEAK))
+		curr->res_count++;
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xnsynch_try_acquire);
+
+/**
  * @fn int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
  * @brief Acquire the ownership of a synchronization object.
  *
@@ -332,12 +385,16 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * signal/unblock conditions which might have happened while waiting.
  *
  * @coretags{primary-only, might-switch}
+ *
+ * @note Unlike xnsynch_try_acquire(), this call does NOT check for
+ * invalid recursive locking request, which means that such request
+ * will always cause a deadlock for the caller.
  */
 int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		    xntmode_t timeout_mode)
 {
-	xnhandle_t threadh, fastlock, old;
-	struct xnthread *thread, *owner;
+	struct xnthread *curr, *owner;
+	xnhandle_t currh, h, oldh;
 	atomic_t *lockp;
 	spl_t s;
 
@@ -345,17 +402,18 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	XENO_BUGON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
 
-	thread = xnthread_current();
-	threadh = thread->handle;
+	curr = xnthread_current();
+	currh = curr->handle;
 	lockp = xnsynch_fastlock(synch);
-	trace_cobalt_synch_acquire(synch, thread);
+	trace_cobalt_synch_acquire(synch, curr);
 redo:
-	fastlock = atomic_cmpxchg(lockp, XN_NO_HANDLE, threadh);
-
-	if (likely(fastlock == XN_NO_HANDLE)) {
-		if (xnthread_test_state(thread, XNWEAK))
-			thread->res_count++;
-		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
+	/* Basic form of xnsynch_try_acquire(). */
+	h = atomic_cmpxchg(lockp, XN_NO_HANDLE, currh);
+	if (likely(h == XN_NO_HANDLE)) {
+		xnsynch_set_owner(synch, curr);
+		if (xnthread_test_state(curr, XNWEAK))
+			curr->res_count++;
+		xnthread_clear_info(curr, XNRMID | XNTIMEO | XNBREAK);
 		return 0;
 	}
 
@@ -368,53 +426,52 @@ redo:
 	 * avoid cmpxchg where possible. Only if it appears not to be
 	 * set, start with cmpxchg directly.
 	 */
-	if (xnsynch_fast_is_claimed(fastlock)) {
-		old = atomic_read(lockp);
+	if (xnsynch_fast_is_claimed(h)) {
+		oldh = atomic_read(lockp);
 		goto test_no_owner;
 	}
 
 	do {
-		old = atomic_cmpxchg(lockp, fastlock,
-				     xnsynch_fast_claimed(fastlock));
-		if (likely(old == fastlock))
+		oldh = atomic_cmpxchg(lockp, h, xnsynch_fast_claimed(h));
+		if (likely(oldh == h))
 			break;
 	test_no_owner:
-		if (old == XN_NO_HANDLE) {
+		if (oldh == XN_NO_HANDLE) {
 			/* Mutex released from another cpu. */
 			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
 		}
-		fastlock = old;
-	} while (!xnsynch_fast_is_claimed(fastlock));
+		h = oldh;
+	} while (!xnsynch_fast_is_claimed(h));
 
-	owner = xnthread_lookup(fastlock);
+	owner = xnthread_lookup(h);
 	if (owner == NULL) {
 		/*
 		 * The handle is broken, therefore pretend that the
 		 * synch object was deleted to signal an error.
 		 */
-		xnthread_set_info(thread, XNRMID);
+		xnthread_set_info(curr, XNRMID);
 		goto out;
 	}
 
 	xnsynch_set_owner(synch, owner);
-	xnsynch_detect_relaxed_owner(synch, thread);
+	xnsynch_detect_relaxed_owner(synch, curr);
 
 	if ((synch->status & XNSYNCH_PRIO) == 0) { /* i.e. FIFO */
-		list_add_tail(&thread->plink, &synch->pendq);
+		list_add_tail(&curr->plink, &synch->pendq);
 		goto block;
 	}
 
-	if (thread->wprio > owner->wprio) {
+	if (curr->wprio > owner->wprio) {
 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
-			synch->owner = thread;
-			xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
+			synch->owner = curr;
+			xnthread_clear_info(curr, XNRMID | XNTIMEO | XNBREAK);
 			xnthread_set_info(owner, XNROBBED);
 			goto grab;
 		}
 
-		list_add_priff(thread, &synch->pendq, wprio, plink);
+		list_add_priff(curr, &synch->pendq, wprio, plink);
 
 		if (synch->status & XNSYNCH_PIP) {
 			if (!xnthread_test_state(owner, XNBOOST)) {
@@ -427,21 +484,21 @@ redo:
 			else
 				synch->status |= XNSYNCH_CLAIMED;
 
-			synch->wprio = thread->wprio;
+			synch->wprio = curr->wprio;
 			list_add_priff(synch, &owner->claimq, wprio, link);
-			xnsynch_renice_thread(owner, thread);
+			xnsynch_renice_thread(owner, curr);
 		}
 	} else
-		list_add_priff(thread, &synch->pendq, wprio, plink);
+		list_add_priff(curr, &synch->pendq, wprio, plink);
 block:
-	xnthread_suspend(thread, XNPEND, timeout, timeout_mode, synch);
-	thread->wwake = NULL;
-	xnthread_clear_info(thread, XNWAKEN);
+	xnthread_suspend(curr, XNPEND, timeout, timeout_mode, synch);
+	curr->wwake = NULL;
+	xnthread_clear_info(curr, XNWAKEN);
 
-	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
+	if (xnthread_test_info(curr, XNRMID | XNTIMEO | XNBREAK))
 		goto out;
 
-	if (xnthread_test_info(thread, XNROBBED)) {
+	if (xnthread_test_info(curr, XNROBBED)) {
 		/*
 		 * Somebody stole us the ownership while we were ready
 		 * to run, waiting for the CPU: we need to wait again
@@ -451,27 +508,27 @@ block:
 			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
 		}
-		timeout = xntimer_get_timeout_stopped(&thread->rtimer);
+		timeout = xntimer_get_timeout_stopped(&curr->rtimer);
 		if (timeout > 1) { /* Otherwise, it's too late. */
 			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
 		}
-		xnthread_set_info(thread, XNTIMEO);
+		xnthread_set_info(curr, XNTIMEO);
 		goto out;
 	}
  grab:
-	if (xnthread_test_state(thread, XNWEAK))
-		thread->res_count++;
+	if (xnthread_test_state(curr, XNWEAK))
+		curr->res_count++;
 
 	if (xnsynch_pended_p(synch))
-		threadh = xnsynch_fast_claimed(threadh);
+		currh = xnsynch_fast_claimed(currh);
 
 	/* Set new ownership for this mutex. */
-	atomic_set(lockp, threadh);
+	atomic_set(lockp, currh);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return (int)xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
+	return (int)xnthread_test_info(curr, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 
