@@ -531,7 +531,7 @@ static void rtl8139_hw_start (struct rtnet_device *rtdev);
 
 #define RTL_R8(reg)                inb (((unsigned long)ioaddr) + (reg))
 #define RTL_R16(reg)                inw (((unsigned long)ioaddr) + (reg))
-#define RTL_R32(reg)                ((unsigned long) inl (((unsigned long)ioaddr) + (reg)))
+#define RTL_R32(reg)                inl (((unsigned long)ioaddr) + (reg))
 #define RTL_W8(reg, val8)        outb ((val8), ((unsigned long)ioaddr) + (reg))
 #define RTL_W16(reg, val16)        outw ((val16), ((unsigned long)ioaddr) + (reg))
 #define RTL_W32(reg, val32)        outl ((val32), ((unsigned long)ioaddr) + (reg))
@@ -580,7 +580,7 @@ static void rtl8139_hw_start (struct rtnet_device *rtdev);
 /* read MMIO register */
 #define RTL_R8(reg)                readb (ioaddr + (reg))
 #define RTL_R16(reg)                readw (ioaddr + (reg))
-#define RTL_R32(reg)                ((unsigned long) readl (ioaddr + (reg)))
+#define RTL_R32(reg)                readl (ioaddr + (reg))
 
 #endif /* USE_IO_OPS */
 
@@ -654,6 +654,13 @@ static int rtl8139_init_board (struct pci_dev *pdev,
 	if (rc)
 		goto err_out;
 
+	rc = pci_request_regions (pdev, "rtnet8139too");
+	if (rc)
+		goto err_out;
+
+	/* enable PCI bus-mastering */
+	pci_set_master (pdev);
+
 	mmio_start = pci_resource_start (pdev, 1);
 	mmio_flags = pci_resource_flags (pdev, 1);
 	mmio_len = pci_resource_len (pdev, 1);
@@ -692,13 +699,6 @@ static int rtl8139_init_board (struct pci_dev *pdev,
 	}
 #endif
 
-	rc = pci_request_regions (pdev, "rtnet8139too");
-	if (rc)
-		goto err_out;
-
-	/* enable PCI bus-mastering */
-	pci_set_master (pdev);
-
 #ifdef USE_IO_OPS
 	ioaddr = (void *) pio_start;
 	rtdev->base_addr = pio_start;
@@ -733,6 +733,9 @@ static int rtl8139_init_board (struct pci_dev *pdev,
 			goto match;
 		}
 
+	rtdm_printk("rt8139too: unknown chip version, assuming RTL-8139\n");
+	rtdm_printk("rt8139too: TxConfig = 0x%08x\n", RTL_R32 (TxConfig));
+
 	tp->chipset = 0;
 
 match:
@@ -749,8 +752,11 @@ match:
 		}
 		if (rtl_chip_info[tp->chipset].flags & HasLWake) {
 			tmp8 = RTL_R8 (Config4);
-			if (tmp8 & LWPTN)
+			if (tmp8 & LWPTN) {
+				RTL_W8 (Cfg9346, Cfg9346_Unlock);
 				RTL_W8 (Config4, tmp8 & ~LWPTN);
+				RTL_W8 (Cfg9346, Cfg9346_Lock);
+			}
 		}
 	} else {
 		tmp8 = RTL_R8 (Config1);
@@ -1093,7 +1099,6 @@ static void mdio_write (struct rtnet_device *rtdev, int phy_id, int location,
 #endif
 }
 
-
 static int rtl8139_open (struct rtnet_device *rtdev)
 {
 	struct rtl8139_private *tp = rtdev->priv;
@@ -1135,16 +1140,17 @@ static int rtl8139_open (struct rtnet_device *rtdev)
 static void rtl_check_media (struct rtnet_device *rtdev)
 {
 	struct rtl8139_private *tp = rtdev->priv;
+	u16 mii_lpa;
 
-	if (tp->phys[0] >= 0) {
-		u16 mii_lpa = mdio_read(rtdev, tp->phys[0], MII_LPA);
-		if (mii_lpa == 0xffff)
-			;                                        /* Not there */
-		else
-		  if ( ((mii_lpa & LPA_100FULL) == LPA_100FULL) ||
-		       ((mii_lpa & 0x00C0) == LPA_10FULL) )
-			       tp->mii.full_duplex = 1;
-	}
+	if (tp->phys[0] < 0)
+		return;
+
+	mii_lpa = mdio_read(rtdev, tp->phys[0], MII_LPA);
+	if (mii_lpa == 0xffff)
+		return;
+
+	tp->mii.full_duplex = (mii_lpa & LPA_100FULL) == LPA_100FULL ||
+		(mii_lpa & 0x00C0) == LPA_10FULL;
 }
 
 
@@ -1168,6 +1174,11 @@ static void rtl8139_hw_start (struct rtnet_device *rtdev)
 	RTL_W32_F (MAC0 + 0, cpu_to_le32 (*(u32 *) (rtdev->dev_addr + 0)));
 	RTL_W32_F (MAC0 + 4, cpu_to_le32 (*(u32 *) (rtdev->dev_addr + 4)));
 
+	tp->cur_rx = 0;
+
+	/* init Rx ring buffer DMA address */
+	RTL_W32_F (RxBuf, tp->rx_ring_dma);
+
 	/* Must enable Tx/Rx before setting transfer thresholds! */
 	RTL_W8 (ChipCmd, CmdRxEnb | CmdTxEnb);
 
@@ -1176,8 +1187,6 @@ static void rtl8139_hw_start (struct rtnet_device *rtdev)
 
 	/* Check this value: the documentation for IFG contradicts ifself. */
 	RTL_W32 (TxConfig, rtl8139_tx_config);
-
-	tp->cur_rx = 0;
 
 	rtl_check_media (rtdev);
 
@@ -1190,9 +1199,6 @@ static void rtl8139_hw_start (struct rtnet_device *rtdev)
 
 	/* Lock Config[01234] and BMCR register writes */
 	RTL_W8 (Cfg9346, Cfg9346_Lock);
-
-	/* init Rx ring buffer DMA address */
-	RTL_W32_F (RxBuf, tp->rx_ring_dma);
 
 	/* init Tx buffer DMA addresses */
 	for (i = 0; i < NUM_TX_DESC; i++)
