@@ -221,7 +221,7 @@ struct rtdm_profile_info {
 	/** Reserved */
 	unsigned int magic;
 	struct module *owner;
-};	
+};
 
 /**
  * @brief RTDM driver
@@ -288,7 +288,7 @@ struct rtdm_driver {
  */
 #define RTDM_PROFILE_INFO(__name, __id, __subid, __version)	\
 {								\
-	.name = ( # __name ), 					\
+	.name = ( # __name ),					\
 	.class_id = (__id),					\
 	.subclass_id = (__subid),				\
 	.version = (__version),					\
@@ -829,44 +829,41 @@ static inline int rtdm_irq_disable(rtdm_irq_t *irq_handle)
  * @{
  */
 
-typedef unsigned rtdm_nrtsig_t;
-
+typedef struct rtdm_nrtsig rtdm_nrtsig_t;
 /**
  * Non-real-time signal handler
  *
- * @param[in] nrt_sig Signal handle as returned by rtdm_nrtsig_init()
+ * @param[in] nrt_sig Signal handle pointer as passed to rtdm_nrtsig_init()
  * @param[in] arg Argument as passed to rtdm_nrtsig_init()
  *
  * @note The signal handler will run in soft-IRQ context of the non-real-time
  * subsystem. Note the implications of this context, e.g. no invocation of
  * blocking operations.
  */
-typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t nrt_sig, void *arg);
+typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t *nrt_sig, void *arg);
+
+struct rtdm_nrtsig {
+	rtdm_nrtsig_handler_t handler;
+	void *arg;
+};
+
 /** @} rtdm_nrtsignal */
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
-				   rtdm_nrtsig_handler_t handler, void *arg)
+static inline void rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
+				rtdm_nrtsig_handler_t handler, void *arg)
 {
-	*nrt_sig = ipipe_alloc_virq();
-	if (*nrt_sig == 0)
-		return -EAGAIN;
-
-	ipipe_request_irq(ipipe_root_domain, *nrt_sig, handler, arg, NULL);
-
-	return 0;
+	nrt_sig->handler = handler;
+	nrt_sig->arg = arg;
 }
 
 static inline void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
 {
-	ipipe_free_irq(ipipe_root_domain, *nrt_sig);
-	ipipe_free_virq(*nrt_sig);
+	nrt_sig->handler = NULL;
+	nrt_sig->arg = NULL;
 }
 
-static inline void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
-{
-	ipipe_raise_irq(*nrt_sig);
-}
+void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
 #endif /* !DOXYGEN_CPP */
 
 /* --- timer services --- */
@@ -1059,10 +1056,10 @@ static inline int __deprecated rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 		int __ret = 0;							\
 		for (;;) {							\
 			__end = rtdm_clock_read_monotonic() + __spin_ns;	\
-			for (;;) {      					\
+			for (;;) {						\
 				if (__condition)				\
 					goto done;				\
-				if (rtdm_clock_read_monotonic() >= __end) 	\
+				if (rtdm_clock_read_monotonic() >= __end)	\
 					break;					\
 			}							\
 			__ret = rtdm_task_sleep(__sleep_ns);			\

@@ -328,7 +328,7 @@ int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
  * @coretags{primary-only, might-switch}
  */
 int rtdm_task_busy_wait(bool condition, nanosecs_rel_t spin_ns,
-	                nanosecs_rel_t sleep_ns);
+			nanosecs_rel_t sleep_ns);
 
 #endif /* DOXYGEN_CPP */
 
@@ -1410,8 +1410,6 @@ int rtdm_irq_disable(rtdm_irq_t *irq_handle);
 
 /** @} Interrupt Management Services */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
-
 /**
  * @ingroup rtdm_driver_interface
  * @defgroup rtdm_nrtsignal Non-Real-Time Signalling Services
@@ -1423,6 +1421,8 @@ int rtdm_irq_disable(rtdm_irq_t *irq_handle);
  * releases the CPU to the non-real-time part.
  * @{
  */
+
+#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
 /**
  * @brief Register a non-real-time signal handler
@@ -1448,6 +1448,22 @@ int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig, rtdm_nrtsig_handler_t handler,
  * @coretags{task-unrestricted}
  */
 void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig);
+#endif /* DOXYGEN_CPP */
+
+struct nrtsig_work {
+	struct ipipe_work_header work;
+	struct rtdm_nrtsig *nrtsig;
+};
+
+static void nrtsig_execute(struct ipipe_work_header *work)
+{
+	struct rtdm_nrtsig *nrtsig;
+	struct nrtsig_work *w;
+
+	w = container_of(work, typeof(*w), work);
+	nrtsig = w->nrtsig;
+	nrtsig->handler(nrtsig, nrtsig->arg);
+}
 
 /**
  * Trigger non-real-time signal
@@ -1456,10 +1472,20 @@ void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig);
  *
  * @coretags{unrestricted}
  */
-void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
+void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
+{
+	struct nrtsig_work nrtsig_work = {
+		.work = {
+			.size = sizeof(nrtsig_work),
+			.handler = nrtsig_execute,
+		},
+		.nrtsig = nrt_sig,
+	};
+	ipipe_post_work_root(&nrtsig_work, work);
+}
+EXPORT_SYMBOL_GPL(rtdm_nrtsig_pend);
 /** @} Non-Real-Time Signalling Services */
 
-#endif /* DOXYGEN_CPP */
 
 /**
  * @ingroup rtdm_driver_interface
@@ -1486,7 +1512,7 @@ static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 {
 	unsigned long addr, len, pfn, to;
 	int ret = 0;
-	
+
 	to = (unsigned long)va;
 	addr = vma->vm_start;
 	len = vma->vm_end - vma->vm_start;

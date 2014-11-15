@@ -520,7 +520,7 @@ static int rtswitch_create_ktask(struct rtswitch_context *ctx,
 	return err;
 }
 
-static void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
+static void rtswitch_utask_waker(rtdm_nrtsig_t *sig, void *arg)
 {
 	struct rtswitch_context *ctx = (struct rtswitch_context *)arg;
 	up(&ctx->utask->nrt_synch);
@@ -529,7 +529,6 @@ static void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
 static int rtswitch_open(struct rtdm_fd *fd, int oflags)
 {
 	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
-	int err;
 
 	ctx->tasks = NULL;
 	ctx->tasks_count = ctx->next_index = ctx->cpu = ctx->switches_count = 0;
@@ -538,9 +537,7 @@ static int rtswitch_open(struct rtdm_fd *fd, int oflags)
 	ctx->error.last_switch.from = ctx->error.last_switch.to = -1;
 	ctx->pause_us = 0;
 
-	err = rtdm_nrtsig_init(&ctx->wake_utask, rtswitch_utask_waker, ctx);
-	if (err)
-		return err;
+	rtdm_nrtsig_init(&ctx->wake_utask, rtswitch_utask_waker, ctx);
 
 	rtdm_timer_init(&ctx->wake_up_delay, timed_wake_up, "switchtest timer");
 

@@ -81,7 +81,7 @@ int __a4l_free_irq(struct a4l_irq_descriptor * dsc)
 
 /* --- Synchronization section --- */
 
-static void a4l_nrt_sync_handler(rtdm_nrtsig_t nrt_sig, void *arg)
+static void a4l_nrt_sync_handler(rtdm_nrtsig_t *nrt_sig, void *arg)
 {
 	struct a4l_sync *snc = (struct a4l_sync *) arg;
 	wake_up_interruptible(&snc->wq);
@@ -101,7 +101,7 @@ int a4l_init_sync(struct a4l_sync *snc)
 	rtdm_event_init(&snc->rtdm_evt, 0);
 
 	/* Initializes the gateway to NRT context */
-	ret = rtdm_nrtsig_init(&snc->nrt_sig, a4l_nrt_sync_handler, snc);
+	rtdm_nrtsig_init(&snc->nrt_sig, a4l_nrt_sync_handler, snc);
 
 	return ret;
 }
