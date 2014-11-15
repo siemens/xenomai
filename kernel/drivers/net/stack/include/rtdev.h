@@ -46,6 +46,8 @@
 #define NETIF_F_LLTX                    4096
 #endif
 
+#define RTDEV_TX_OK		0
+#define RTDEV_TX_BUSY	1
 
 enum rtnet_link_state {
 	__RTNET_LINK_STATE_XOFF = 0,
@@ -156,7 +158,6 @@ struct rtnet_device {
 				       struct rtskb *skb);
 };
 
-
 struct rtnet_core_cmd;
 
 struct rtdev_event_hook {
@@ -228,6 +229,37 @@ int rtdev_map_rtskb(struct rtskb *skb);
 void rtdev_unmap_rtskb(struct rtskb *skb);
 
 struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *dev, unsigned int size);
+
+#define rtnetdev_priv(dev) ((dev)->priv)
+
+#define rtdev_emerg(__dev, format, args...) \
+	pr_emerg("%s: " format, (__dev)->name, ##args)
+#define rtdev_alert(__dev, format, args...) \
+	pr_alert("%s: " format, (__dev)->name, ##args)
+#define rtdev_crit(__dev, format, args...) \
+	pr_crit("%s: " format, (__dev)->name, ##args)
+#define rtdev_err(__dev, format, args...) \
+	pr_err("%s: " format, (__dev)->name, ##args)
+#define rtdev_warn(__dev, format, args...) \
+	pr_warn("%s: " format, (__dev)->name, ##args)
+#define rtdev_notice(__dev, format, args...) \
+	pr_notice("%s: " format, (__dev)->name, ##args)
+#define rtdev_info(__dev, format, args...) \
+	pr_info("%s: " format, (__dev)->name, ##args)
+#define rtdev_dbg(__dev, format, args...) \
+	pr_debug("%s: " format, (__dev)->name, ##args)
+
+#ifdef VERBOSE_DEBUG
+#define rtdev_vdbg rtdev_dbg
+#else
+#define rtdev_vdbg(__dev, format, args...)			\
+({								\
+	if (0)							\
+		pr_debug("%s: " format, (__dev)->name, ##args);	\
+								\
+	0;							\
+})
+#endif
 
 #endif  /* __KERNEL__ */
 

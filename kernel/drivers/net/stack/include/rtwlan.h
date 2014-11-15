@@ -129,14 +129,6 @@
 #define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define MAC_ARG(x) ((u8*)(x))[0],((u8*)(x))[1],((u8*)(x))[2],((u8*)(x))[3],((u8*)(x))[4],((u8*)(x))[5]
 
-/*
- * pointer to private data.
- */
-static inline void * rtnetdev_priv(struct rtnet_device *rtnet_dev)
-{
-    return (char *)rtnet_dev + ((sizeof(struct rtnet_device) + 31) & ~31);
-}
-
 #ifdef CONFIG_RTWLAN_DEBUG
 #define RTWLAN_DEBUG_PRINTK(__message...)	do{ rtdm_printk(__message); }while(0)
 #define RTWLAN_DEBUG(__message,__args...)	RTWLAN_DEBUG_PRINTK(KERN_DEBUG  "rtwlan->%s: Debug - " __message,__FUNCTION__,##__args);
