@@ -745,7 +745,7 @@ int xnintr_init(struct xnintr *intr, const char *name,
 	intr->cookie = NULL;
 	intr->name = name ? : "<unknown>";
 	intr->flags = flags;
-	intr->status = 0;
+	intr->status = _XN_IRQSTAT_DISABLED;
 	intr->unhandled = 0;
 	raw_spin_lock_init(&intr->lock);
 #ifdef CONFIG_XENO_OPT_SHIRQ
