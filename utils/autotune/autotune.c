@@ -29,7 +29,7 @@
 
 static int tune_irqlat, tune_kernlat, tune_userlat;
 
-static int reset, noload, quiet;
+static int reset, noload, quiet, background;
 
 static const struct option base_options[] = {
 	{
@@ -73,12 +73,24 @@ static const struct option base_options[] = {
 #define quiet_opt	6
 		.name = "quiet",
 		.flag = &quiet,
+		.val = 2
+	},
+	{
+#define semiquiet_opt	7
+		.name = "semi-quiet",
+		.flag = &quiet,
 		.val = 1
 	},
 	{
-#define period_opt	7
+#define period_opt	8
 		.name = "period",
 		.has_arg = 1,
+	},
+	{
+#define background_opt	9
+		.name = "background",
+		.flag = &background,
+		.val = 1,
 	},
 	{
 		.name = NULL,
@@ -198,7 +210,9 @@ static void usage(void)
 	fprintf(stderr, "   --period		set the sampling period\n");
 	fprintf(stderr, "   --reset		reset core timer gravity to factory defaults\n");
 	fprintf(stderr, "   --noload		disable load generation\n");
-	fprintf(stderr, "   --quiet		tame down verbosity\n");
+	fprintf(stderr, "   --semi-quiet	tame down verbosity\n");
+	fprintf(stderr, "   --quiet		disable all output\n");
+	fprintf(stderr, "   --background	run in the background\n");
 	fprintf(stderr, "   --help		print this help\n\n");
 	fprintf(stderr, "if no option is given, tune for all contexts using the default period.\n");
 }
@@ -266,6 +280,8 @@ int main(int argc, char *const argv[])
 			break;
 		case noload_opt:
 		case quiet_opt:
+		case semiquiet_opt:
+		case background_opt:
 			break;
 		case irq_opt:
 		case kernel_opt:
@@ -277,6 +293,9 @@ int main(int argc, char *const argv[])
 			return EINVAL;
 		}
 	}
+
+	if (background)
+		daemon(0, 0);
 
 	fd = open("/dev/rtdm/autotune", O_RDONLY);
 	if (fd < 0)

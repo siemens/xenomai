@@ -665,7 +665,7 @@ static int autotune_ioctl_nrt(struct rtdm_fd *fd, unsigned int request, void *ar
 	context->tuner = tuner;
 	context->setup = setup;
 
-	if (!setup.quiet)
+	if (setup.quiet <= 1)
 		printk(XENO_INFO "autotune(%s) started\n", tuner->name);
 
 	return ret;
@@ -728,8 +728,11 @@ static void autotune_close(struct rtdm_fd *fd)
 
 	context = rtdm_fd_to_private(fd);
 	tuner = context->tuner;
-	if (tuner)
+	if (tuner) {
+		if (context->setup.quiet <= 1)
+			printk(XENO_INFO "autotune finished\n");
 		tuner->destroy_tuner(tuner);
+	}
 }
 
 static struct rtdm_driver autotune_driver = {
