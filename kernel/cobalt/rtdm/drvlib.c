@@ -1484,6 +1484,38 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
 	ipipe_post_work_root(&nrtsig_work, work);
 }
 EXPORT_SYMBOL_GPL(rtdm_nrtsig_pend);
+
+struct lostage_schedule_work {
+	struct ipipe_work_header work;
+	struct work_struct *lostage_work;
+};
+
+static void lostage_schedule_work(struct ipipe_work_header *work)
+{
+	struct lostage_schedule_work *w;
+
+	w = container_of(work, typeof(*w), work);
+	schedule_work(w->lostage_work);
+}
+
+/**
+ * Put a work task in Linux non real-time global workqueue from primary mode.
+ *
+ * @param lostage_work
+ */
+void rtdm_schedule_nrt_work(struct work_struct *lostage_work)
+{
+	struct lostage_schedule_work macb_work = {
+		.work = {
+			.size = sizeof(macb_work),
+			.handler = lostage_schedule_work,
+		},
+		.lostage_work = lostage_work,
+	};
+	ipipe_post_work_root(&macb_work, work);
+}
+EXPORT_SYMBOL_GPL(rtdm_schedule_nrt_work);
+
 /** @} Non-Real-Time Signalling Services */
 
 

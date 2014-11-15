@@ -847,6 +847,7 @@ struct rtdm_nrtsig {
 	void *arg;
 };
 
+void rtdm_schedule_nrt_work(struct work_struct *lostage_work);
 /** @} rtdm_nrtsignal */
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
