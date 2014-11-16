@@ -599,6 +599,11 @@ struct macb {
 
 	struct net_device	*phy_phony_net_device;
 	rtdm_irq_t		irq_handle;
+
+	/* AT91RM9200 transmit */
+	struct rtskb *skb;			/* holds skb until xmit interrupt completes */
+	dma_addr_t skb_physaddr;		/* phys addr from pci_map_single */
+	int skb_length;				/* saved skb length for pci_unmap_single */
 };
 
 extern const struct ethtool_ops macb_ethtool_ops;
