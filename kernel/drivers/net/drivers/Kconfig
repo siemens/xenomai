@@ -122,6 +122,7 @@ config XENO_DRIVERS_NET_DRV_AT91_ETHER
 
 config XENO_DRIVERS_NET_DRV_MACB
     depends on XENO_DRIVERS_NET && ARCH_AT91
+    select AT91_PROGRAMMABLE_CLOCKS
     tristate "MACB AT91SAM926x devices"
     ---help---
     Driver for internal MAC-controller on AT91SAM926x microcontrollers.
