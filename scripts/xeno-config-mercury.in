@@ -122,18 +122,16 @@ while test $# -gt 0; do
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
-	    if test -z "$skin_list"; then
-		echo "no RTOS skin specified, missing --skin before --cflags" 1>&2
-		exit 1
-	    fi
-	    cflags="$XENO_BASE_CFLAGS"
+	    test -z "$skin_list" && skin_list=posix
 	    for skin in $skin_list; do
 		case "$skin" in
 		    vxworks|psos|alchemy|smokey)
 			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
 			;;
+		    posix|rtdm)
+			;;
 		    *)
-			echo "unknown RTOS skin: $skin" 1>&2
+			echo "$skin is not a user-space API" 1>&2
 			exit 1
 			;;
 		esac
@@ -141,38 +139,25 @@ while test $# -gt 0; do
 	    echo $cflags
 	    ;;
 	--kcflags)
-	    if test -z "$skin_list"; then
-		echo "no kernel API specified, missing --skin before --kcflags" 1>&2
-		exit 1
-	    fi
-	    kcflags=
 	    for skin in $skin_list; do
-		case "$skin" in
-		    rtdm)
-		    	;;
-		    *)
-			echo "unknown kernel API: $skin" 1>&2
-			exit 1
-			;;
-		esac
+		if test \! "$skin" = rtdm; then
+		    echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
+		    exit 1
+		fi
 	    done
-	    echo $kcflags
 	    ;;
 	--ldflags)
-	    if test -z "$skin_list"; then
-		echo "no skin specified, missing --skin before --ldflags" 1>&2
-		exit 1
-	    fi
+	    test -z "$skin_list" && skin_list=posix
 	    ldflags="$WRAP_MAIN $XENO_BASE_LDFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
-		    posix)
+		    posix|rtdm)
 			;;
 		    vxworks|psos|alchemy|smokey)
 			ldflags="-l$skin $ldflags"
 			;;
 		    *)
-			echo "unknown skin: $skin" 1>&2
+			echo "unknown API: $skin" 1>&2
 			exit 1
 			;;
 		esac
@@ -189,6 +174,7 @@ while test $# -gt 0; do
             dump_info
             ;;
         *)
+	 echo "invalid option: $1" 1>&2
          usage 1 1>&2
          ;;
     esac

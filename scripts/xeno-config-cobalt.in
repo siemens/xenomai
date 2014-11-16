@@ -158,7 +158,7 @@ while test $# -gt 0; do
 	    ;;
 	--cflags)
 	    if test -z "$skin_list"; then
-		echo "no RTOS skin specified, missing --skin before --cflags" 1>&2
+		echo "no API specified, missing --skin before --cflags" 1>&2
 		exit 1
 	    fi
 	    cflags="$XENO_BASE_CFLAGS"
@@ -171,7 +171,7 @@ while test $# -gt 0; do
 			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
 			;;
 		    *)
-			echo "unknown RTOS skin: $skin" 1>&2
+			echo "$skin is not a user-space API" 1>&2
 			exit 1
 			;;
 		esac
@@ -179,17 +179,14 @@ while test $# -gt 0; do
 	    echo $cflags
 	    ;;
 	--kcflags)
-	    if test -z "$skin_list"; then
-		echo "no kernel API specified, missing --skin before --kcflags" 1>&2
-		exit 1
-	    fi
+	    test -z "$skin_list" && skin_list=rtdm
 	    for skin in $skin_list; do
 		case "$skin" in
 		    rtdm)
 			kcflags='-Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai'
 		    	;;
 		    *)
-			echo "unknown kernel API: $skin" 1>&2
+			echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
 			exit 1
 			;;
 		esac
@@ -198,7 +195,7 @@ while test $# -gt 0; do
 	    ;;
 	--ldflags)
 	    if test -z "$skin_list"; then
-		echo "no skin specified, missing --skin before --ldflags" 1>&2
+		echo "no API specified, missing --skin before --ldflags" 1>&2
 		exit 1
 	    fi
 	    ldflags=
@@ -206,7 +203,7 @@ while test $# -gt 0; do
 	    copperplate=
 	    for skin in $skin_list; do
 		case "$skin" in
-		    posix|cobalt)
+		    posix|cobalt|rtdm)
 			ldflags="`dump_wrappers cobalt.wrappers` $ldflags"
 			;;
 		    vxworks|psos|alchemy|smokey)
@@ -217,7 +214,7 @@ while test $# -gt 0; do
 			fi
 			;;
 		    *)
-			echo "unknown skin: $skin" 1>&2
+			echo "unknown API: $skin" 1>&2
 			exit 1
 			;;
 		esac
