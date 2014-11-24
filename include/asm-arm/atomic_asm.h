@@ -242,7 +242,7 @@ static inline int xnarch_atomic_dec_and_test(xnarch_atomic_t *v)
 
 #include <linux/bitops.h>
 #include <asm/atomic.h>
-#include <asm/system.h>
+#include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/hal.h>
 
 static inline void
