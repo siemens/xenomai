@@ -492,6 +492,25 @@ void __xnthread_cleanup(struct xnthread *curr)
 	wake_up(&nkjoinq);
 }
 
+/*
+ * Unwinds xnthread_init() ops for an unmapped thread.  Since the
+ * latter must be dormant, it can't be part of any runqueue.
+ */
+void __xnthread_discard(struct xnthread *thread)
+{
+	spl_t s;
+
+	xntimer_destroy(&thread->rtimer);
+	xntimer_destroy(&thread->ptimer);
+
+	xnlock_get_irqsave(&nklock, s);
+	list_del(&thread->glink);
+	nknrthreads--;
+	xnvfile_touch_tag(&nkthreadlist_tag);
+	xnthread_deregister(thread);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 /**
  * @fn void xnthread_init(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
  * @brief Initialize a new thread.

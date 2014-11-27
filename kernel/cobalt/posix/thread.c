@@ -345,10 +345,10 @@ unlock_and_exit:
 	return 0;
 }
 
-static inline int pthread_create(struct cobalt_thread **thread_p,
-				 int policy,
-				 const struct sched_param_ex *param_ex,
-				 struct task_struct *task)
+static int pthread_create(struct cobalt_thread **thread_p,
+			  int policy,
+			  const struct sched_param_ex *param_ex,
+			  struct task_struct *task)
 {
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
@@ -414,6 +414,20 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 	*thread_p = thread;
 
 	return 0;
+}
+
+static void pthread_discard(struct cobalt_thread *thread)
+{
+	spl_t s;
+
+	xnsynch_destroy(&thread->monitor_synch);
+	xnsynch_destroy(&thread->sigwait);
+
+	xnlock_get_irqsave(&nklock, s);
+	list_del(&thread->link);
+	xnlock_put_irqrestore(&nklock, s);
+	__xnthread_discard(&thread->threadbase);
+	xnfree(thread);
 }
 
 static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
@@ -566,8 +580,10 @@ int __cobalt_thread_create(unsigned long pth, int policy,
 		return ret;
 
 	ret = cobalt_map_user(&thread->threadbase, u_winoff);
-	if (ret)
-		goto fail;
+	if (ret) {
+		pthread_discard(thread);
+		return ret;
+	}
 
 	if (!thread_hash(&hkey, thread, task_pid_vnr(p))) {
 		ret = -EAGAIN;
@@ -617,11 +633,13 @@ cobalt_thread_shadow(struct task_struct *p,
 	trace_cobalt_pthread_create(hkey->u_pth, SCHED_NORMAL, &param_ex);
 	ret = pthread_create(&thread, SCHED_NORMAL, &param_ex, p);
 	if (ret)
-		return ERR_PTR(-ret);
+		return ERR_PTR(ret);
 
 	ret = cobalt_map_user(&thread->threadbase, u_winoff);
-	if (ret)
-		goto fail;
+	if (ret) {
+		pthread_discard(thread);
+		return ERR_PTR(ret);
+	}
 
 	if (!thread_hash(hkey, thread, task_pid_vnr(p))) {
 		ret = -EAGAIN;

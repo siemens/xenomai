@@ -332,6 +332,8 @@ void __xnthread_test_cancel(struct xnthread *curr);
 
 void __xnthread_cleanup(struct xnthread *curr);
 
+void __xnthread_discard(struct xnthread *thread);
+
 /**
  * @fn struct xnthread *xnthread_current(void)
  * @brief Retrieve the current Cobalt core TCB.
