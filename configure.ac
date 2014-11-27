@@ -295,7 +295,7 @@ AC_MSG_CHECKING(whether the registry should be enabled)
 AC_ARG_ENABLE(registry,
 	AS_HELP_STRING([--enable-registry], [Export real-time objects to a registry]),
 	[case "$enableval" in
-	y | yes) use_registry=y; registry_root=/mnt/xenomai ;;
+	y | yes) use_registry=y; registry_root=/var/run/xenomai ;;
 	/*) use_registry=y; registry_root=$enableval ;;
 	*) unset use_registry ;;
 	esac])

@@ -104,7 +104,7 @@ filesystem.  The hierarchy of the Xenomai registry is organized as
 follows:
 
 ----------------------------------------------------------------------------    
-    /mount-point            /* registry fs root, defaults to /mnt/xenomai */
+    /mount-point            /* registry fs root, defaults to /var/run/xenomai*/
         /session            /* shared session name or "anon" */
             /pid            /* application (main) pid */
                /skin        /* API name: alchemy/vxworks/psos/... */
