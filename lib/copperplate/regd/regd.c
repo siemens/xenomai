@@ -39,8 +39,6 @@
 #include "../internal.h"
 #include "sysregfs.h"
 
-#define DEFAULT_ROOT "/mnt/xenomai/anon"
-
 /* Allow use of oldish umount2(). */
 #ifndef MNT_DETACH
 #define MNT_DETACH 0
@@ -52,7 +50,7 @@
 			printf("regd: " fmt "\n", ##args);	\
 	} while (0)
 
-static const char *rootdir = DEFAULT_ROOT;
+static const char *rootdir = DEFAULT_REGISTRY_ROOT"/"DEFAULT_REGISTRY_SESSION;
 
 static int sockfd;
 

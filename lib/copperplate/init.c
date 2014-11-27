@@ -40,8 +40,8 @@
 
 struct coppernode __node_info = {
 	.mem_pool = 1024 * 1024, /* Default, 1Mb. */
-	.session_label = "anon",
-	.registry_root = "/mnt/xenomai",
+	.session_label = DEFAULT_REGISTRY_SESSION,
+	.registry_root = DEFAULT_REGISTRY_ROOT,
 	.no_mlock = 0,
 	.no_registry = 0,
 	.no_sanity = !CONFIG_XENO_SANITY,
