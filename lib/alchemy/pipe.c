@@ -129,8 +129,13 @@ DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
  *
  * @apitags{thread-unrestricted, switch-secondary}
  */
+#ifndef DOXYGEN_CPP
+CURRENT_IMPL(int, rt_pipe_create,
+	     (RT_PIPE *pipe, const char *name, int minor, size_t poolsize))
+#else
 int rt_pipe_create(RT_PIPE *pipe,
 		   const char *name, int minor, size_t poolsize)
+#endif
 {
 	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
