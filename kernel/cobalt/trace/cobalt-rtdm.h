@@ -75,7 +75,8 @@ DECLARE_EVENT_CLASS(fd_request_status,
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid = task->pid;
-		__entry->dev	= rtdm_fd_to_context(fd)->device;
+		__entry->dev =
+			!IS_ERR(fd) ? rtdm_fd_to_context(fd)->device : NULL;
 		__entry->ufd = ufd;
 	),
 
