@@ -15,7 +15,7 @@ menuconfig XENOMAI
 	  Please visit http://xenomai.org for more information.
 
 if XENOMAI
-source "arch/@LINUX_ARCH@/xenomai/Kconfig"
+source "arch/$ARCH/xenomai/Kconfig"
 endif
 
 if APM || CPU_FREQ || ACPI_PROCESSOR || INTEL_IDLE
