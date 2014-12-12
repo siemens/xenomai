@@ -987,7 +987,7 @@ out:
 lock_break:
 	if (xnthread_test_state(thread, XNWARN) &&
 	    !xnthread_test_info(thread, XNLBALERT)) {
-		xnthread_set_info(thread, XNLBALERT);
+		xnthread_set_info(thread, XNLBALERT | XNKICKED);
 		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_LOCK_BREAK);
 	}
 abort:
