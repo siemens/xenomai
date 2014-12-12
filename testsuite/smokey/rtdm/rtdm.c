@@ -97,7 +97,7 @@ static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 	check("open", open(devname, O_RDWR), -EBUSY);
 	dev2 = check("open", open(devname2, O_RDWR), dev);
 	check("close", close(dev2), 0);
-	usleep(300000);
+	usleep(301000);
 	dev = check("open", open(devname, O_RDWR), dev);
 
 	printf("Normal close\n");
