@@ -693,15 +693,23 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 	xnlock_get_irqsave(&nklock, s);
 
 	/* Enforce exclusive open for the message queues. */
-	if (state->status & XNPIPE_USER_CONN) {
+	if (state->status & (XNPIPE_USER_CONN | XNPIPE_USER_LCONN)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EBUSY;
 	}
 
-	state->status |= XNPIPE_USER_CONN;
+	state->status |= XNPIPE_USER_LCONN;
+
+	xnlock_put_irqrestore(&nklock, s);
+
 	file->private_data = state;
 	init_waitqueue_head(&state->readq);
 	init_waitqueue_head(&state->syncq);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	state->status |= XNPIPE_USER_CONN;
+	state->status &= ~XNPIPE_USER_LCONN;
 	state->wcount = 0;
 
 	state->status &=
