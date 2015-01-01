@@ -70,6 +70,9 @@
 #undef CONFIG_XENO_REGISTRY
 
 /* config */
+#undef CONFIG_XENO_REGISTRY_ROOT
+
+/* config */
 #undef CONFIG_XENO_REVISION_LEVEL
 
 /* config */

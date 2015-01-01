@@ -290,19 +290,22 @@ AM_CONDITIONAL(XENO_PSHARED,[test x$use_pshared = xy])
 dnl Registry support in user-space (FUSE-based, default: off)
 
 use_registry=
+registry_root=
 AC_MSG_CHECKING(whether the registry should be enabled)
 AC_ARG_ENABLE(registry,
 	AS_HELP_STRING([--enable-registry], [Export real-time objects to a registry]),
 	[case "$enableval" in
-	y | yes) use_registry=y ;;
+	y | yes) use_registry=y; registry_root=/mnt/xenomai ;;
+	/*) use_registry=y; registry_root=$enableval ;;
 	*) unset use_registry ;;
 	esac])
-AC_MSG_RESULT(${use_registry:-no})
+AC_MSG_RESULT(${use_registry:-no}${registry_root:+[,] mounted on ${registry_root}})
 
 if test x$use_registry = xy; then
 	PKG_CHECK_MODULES(FUSE, fuse)
 	FUSE_CFLAGS="$FUSE_CFLAGS -DFUSE_USE_VERSION=25"
 	AC_DEFINE(CONFIG_XENO_REGISTRY,1,[config])
+	AC_DEFINE_UNQUOTED(CONFIG_XENO_REGISTRY_ROOT,"$registry_root",[config])
 fi
 AM_CONDITIONAL(XENO_REGISTRY,[test x$use_registry = xy])
 

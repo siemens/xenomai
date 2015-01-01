@@ -40,13 +40,15 @@
 
 struct coppernode __node_info = {
 	.mem_pool = 1024 * 1024, /* Default, 1Mb. */
-	.session_label = DEFAULT_REGISTRY_SESSION,
-	.registry_root = DEFAULT_REGISTRY_ROOT,
 	.no_mlock = 0,
 	.no_registry = 0,
 	.no_sanity = !CONFIG_XENO_SANITY,
 	.reset_session = 0,
 	.silent_mode = 0,
+#ifdef CONFIG_XENO_REGISTRY
+	.session_label = DEFAULT_REGISTRY_SESSION,
+	.registry_root = DEFAULT_REGISTRY_ROOT,
+#endif
 };
 
 pid_t __node_id;
@@ -177,7 +179,7 @@ static void usage(void)
 
 	print_version();
         fprintf(stderr, "usage: program <options>, where options may be:\n");
-        fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
+       fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
         fprintf(stderr, "--no-mlock                       do not lock memory at init (Mercury only)\n");
         fprintf(stderr, "--registry-root=<path>           root path of registry\n");
         fprintf(stderr, "--no-registry                    suppress object registration\n");

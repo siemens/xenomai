@@ -30,8 +30,10 @@
 #include <boilerplate/sched.h>
 #include <copperplate/heapobj.h>
 
-#define DEFAULT_REGISTRY_ROOT		"/mnt/xenomai"
+#ifdef CONFIG_XENO_REGISTRY
+#define DEFAULT_REGISTRY_ROOT		CONFIG_XENO_REGISTRY_ROOT
 #define DEFAULT_REGISTRY_SESSION	"anon"
+#endif
 
 struct coppernode {
 	unsigned int mem_pool;

@@ -12933,12 +12933,12 @@ if test "${enable_debug+set}" = set; then :
 		debug_symbols=y
 		;;
 	y | yes | partial)
-	    	debug_mode=partial
-	    	debug_symbols=y
+		debug_mode=partial
+		debug_symbols=y
 		;;
 	full)
 		debug_mode=full
-	    	debug_symbols=y
+		debug_symbols=y
 		;;
 	n | no)
 		debug_mode=
@@ -13091,18 +13091,20 @@ fi
 
 
 use_registry=
+registry_root=
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the registry should be enabled" >&5
 $as_echo_n "checking whether the registry should be enabled... " >&6; }
 # Check whether --enable-registry was given.
 if test "${enable_registry+set}" = set; then :
   enableval=$enable_registry; case "$enableval" in
-	y | yes) use_registry=y ;;
+	y | yes) use_registry=y; registry_root=/mnt/xenomai ;;
+	/*) use_registry=y; registry_root=$enableval ;;
 	*) unset use_registry ;;
 	esac
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${use_registry:-no}" >&5
-$as_echo "${use_registry:-no}" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${use_registry:-no}${registry_root:+, mounted on ${registry_root}}" >&5
+$as_echo "${use_registry:-no}${registry_root:+, mounted on ${registry_root}}" >&6; }
 
 if test x$use_registry = xy; then
 
@@ -13319,6 +13321,11 @@ fi
 	FUSE_CFLAGS="$FUSE_CFLAGS -DFUSE_USE_VERSION=25"
 
 $as_echo "#define CONFIG_XENO_REGISTRY 1" >>confdefs.h
+
+
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_REGISTRY_ROOT "$registry_root"
+_ACEOF
 
 fi
  if test x$use_registry = xy; then
@@ -14342,7 +14349,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/smokey/Makefile lib/trank/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/switchtest/Makefile testsuite/smokey/Makefile testsuite/smokey/arith/Makefile testsuite/smokey/sched-quota/Makefile testsuite/smokey/sched-tp/Makefile testsuite/smokey/rtdm/Makefile testsuite/smokey/vdso-access/Makefile testsuite/smokey/cond-torture/Makefile testsuite/smokey/mutex-torture/Makefile testsuite/smokey/xddp/Makefile testsuite/smokey/iddp/Makefile testsuite/smokey/bufp/Makefile testsuite/smokey/fork-exec/Makefile testsuite/clocktest/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile utils/autotune/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile include/smokey/Makefile include/trank/Makefile include/trank/posix/Makefile include/trank/native/Makefile include/trank/rtdm/Makefile doc/Makefile doc/doxygen/Makefile doc/doxygen/xeno3prm-common.conf doc/doxygen/xeno3prm-html.conf doc/doxygen/xeno3prm-latex.conf doc/gitdoc/Makefile doc/asciidoc/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/smokey/Makefile lib/trank/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/switchtest/Makefile testsuite/smokey/Makefile testsuite/smokey/arith/Makefile testsuite/smokey/sched-quota/Makefile testsuite/smokey/sched-tp/Makefile testsuite/smokey/rtdm/Makefile testsuite/smokey/vdso-access/Makefile testsuite/smokey/cond-torture/Makefile testsuite/smokey/mutex-torture/Makefile testsuite/smokey/xddp/Makefile testsuite/smokey/iddp/Makefile testsuite/smokey/bufp/Makefile testsuite/smokey/fork-exec/Makefile testsuite/smokey/sigdebug/Makefile testsuite/clocktest/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile utils/autotune/Makefile utils/net/rtnet utils/net/rtnet.conf utils/net/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile include/smokey/Makefile include/trank/Makefile include/trank/posix/Makefile include/trank/native/Makefile include/trank/rtdm/Makefile doc/Makefile doc/doxygen/Makefile doc/doxygen/xeno3prm-common.conf doc/doxygen/xeno3prm-html.conf doc/doxygen/xeno3prm-latex.conf doc/gitdoc/Makefile doc/asciidoc/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -15462,6 +15469,7 @@ do
     "testsuite/smokey/iddp/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/smokey/iddp/Makefile" ;;
     "testsuite/smokey/bufp/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/smokey/bufp/Makefile" ;;
     "testsuite/smokey/fork-exec/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/smokey/fork-exec/Makefile" ;;
+    "testsuite/smokey/sigdebug/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/smokey/sigdebug/Makefile" ;;
     "testsuite/clocktest/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/clocktest/Makefile" ;;
     "testsuite/xeno-test/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/xeno-test/Makefile" ;;
     "testsuite/regression/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/regression/Makefile" ;;
@@ -15472,6 +15480,9 @@ do
     "utils/ps/Makefile") CONFIG_FILES="$CONFIG_FILES utils/ps/Makefile" ;;
     "utils/slackspot/Makefile") CONFIG_FILES="$CONFIG_FILES utils/slackspot/Makefile" ;;
     "utils/autotune/Makefile") CONFIG_FILES="$CONFIG_FILES utils/autotune/Makefile" ;;
+    "utils/net/rtnet") CONFIG_FILES="$CONFIG_FILES utils/net/rtnet" ;;
+    "utils/net/rtnet.conf") CONFIG_FILES="$CONFIG_FILES utils/net/rtnet.conf" ;;
+    "utils/net/Makefile") CONFIG_FILES="$CONFIG_FILES utils/net/Makefile" ;;
     "demo/Makefile") CONFIG_FILES="$CONFIG_FILES demo/Makefile" ;;
     "demo/posix/Makefile") CONFIG_FILES="$CONFIG_FILES demo/posix/Makefile" ;;
     "demo/posix/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES demo/posix/cobalt/Makefile" ;;
