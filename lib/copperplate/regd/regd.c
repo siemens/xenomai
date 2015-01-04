@@ -99,7 +99,7 @@ static const struct option options[] = {
 #define linger_opt	3
 		.name = "linger",
 		.has_arg = 0,
-		.flag = NULL,
+		.flag = &linger,
 		.val = 1,
 	},
 	{
@@ -273,7 +273,7 @@ static void handle_requests(void)
 {
 	struct itimerspec its;
 	fd_set refset, set;
-	int ret, s, tmfd;
+	int ret, s, tmfd = -1;
 	uint64_t exp;
 	char c;
 
