@@ -371,8 +371,9 @@ static void create_system_fs(const char *arg0, const char *rootdir)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = cleanup_handler;
 	sigaction(SIGTERM, &sa, NULL);
-	sigaction(SIGHUP, &sa, NULL);
 	sigaction(SIGINT, &sa, NULL);
+	sa.sa_handler = SIG_IGN;
+	sigaction(SIGHUP, &sa, NULL);
 
 	for (d = sysreg_dirs; d->path != NULL; d++)
 		registry_add_dir(d->path);
