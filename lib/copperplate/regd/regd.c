@@ -17,7 +17,6 @@
  */
 
 #include <sys/types.h>
-#include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -39,11 +38,6 @@
 #include <boilerplate/hash.h>
 #include "../internal.h"
 #include "sysregfs.h"
-
-/* Allow use of oldish umount2(). */
-#ifndef MNT_DETACH
-#define MNT_DETACH 0
-#endif
 
 #define note(fmt, args...)					\
 	do {							\
@@ -263,6 +257,25 @@ fail_nopath:
 	return ret;
 }
 
+static void unmount(const char *path)
+{
+	int flags;
+	char *cmd;
+
+	/*
+	 * Silence stderr while we run the shell command - it may complain
+	 * about an already unmounted path.
+	 */
+	flags = fcntl(2, F_GETFD);
+	if (flags >= 0)
+		fcntl(2, F_SETFD, flags | FD_CLOEXEC);
+
+	if (asprintf(&cmd, "/usr/bin/fusermount -uzq %s", path) > 0) {
+		system(cmd);
+		free(cmd);
+	}
+}
+
 static void unregister_client(int s)
 {
 	struct client *c;
@@ -271,7 +284,7 @@ static void unregister_client(int s)
 		if (c->sockfd == s) {
 			pvlist_remove(&c->next);
 			note("deleting mount point %s", c->mountpt);
-			umount2(c->mountpt, MNT_DETACH);
+			unmount(c->mountpt);
 			rmdir(c->mountpt);
 			free(c->mountpt);
 			free(c);
@@ -282,7 +295,7 @@ static void unregister_client(int s)
 
 static void delete_system_fs(void)
 {
-	umount2(sysroot, MNT_DETACH);
+	unmount(sysroot);
 	rmdir(sysroot);
 	rmdir(rootdir);
 }
