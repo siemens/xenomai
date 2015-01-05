@@ -22,6 +22,8 @@
 
 void cobalt_init_umm(__u32 vdso_offset);
 
+void cobalt_unmap_umm(void);
+
 struct xnvdso;
 
 extern struct xnvdso *cobalt_vdso;

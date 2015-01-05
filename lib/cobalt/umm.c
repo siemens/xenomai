@@ -75,7 +75,7 @@ static void *__map_umm(const char *name, uint32_t *size_r)
 
 #define map_umm(__name, __size_r)  __map_umm("/dev/rtdm/" __name, __size_r)
 
-static void unmap_on_fork(void)
+void cobalt_unmap_umm(void)
 {
 	void *addr;
 
@@ -120,8 +120,6 @@ static void init_bind(void)
 static void init_loadup(__u32 vdso_offset)
 {
 	uint32_t size;
-
-	pthread_atfork(NULL, NULL, unmap_on_fork);
 
 	cobalt_umm_shared = map_umm(COBALT_MEMDEV_SHARED, &size);
 	if (cobalt_umm_shared == MAP_FAILED) {

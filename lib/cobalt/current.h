@@ -93,4 +93,6 @@ void cobalt_init_current_keys(void);
 
 void cobalt_set_tsd(__u32 u_winoff);
 
+void cobalt_clear_tsd(void);
+
 #endif /* _LIB_COBALT_CURRENT_H */

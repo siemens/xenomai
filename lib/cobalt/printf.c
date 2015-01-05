@@ -670,7 +670,7 @@ static void spawn_printer_thread(void)
 	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
 }
 
-static void forked_child_init(void)
+void cobalt_print_init_atfork(void)
 {
 	struct print_buffer *my_buffer = pthread_getspecific(buffer_key);
 	struct print_buffer **pbuffer = &first_buffer;
@@ -791,7 +791,6 @@ void cobalt_print_init(void)
 	pthread_cond_init(&printer_wakeup, NULL);
 
 	spawn_printer_thread();
-	pthread_atfork(NULL, NULL, forked_child_init);
 
 	rt_print_auto_init(1);
 	atexit(rt_print_flush_buffers);

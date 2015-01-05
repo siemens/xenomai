@@ -107,6 +107,24 @@ static void low_init(void)
 
 static void __init_cobalt(void);
 
+static void cobalt_fork_handler(void)
+{
+	cobalt_unmap_umm();
+	cobalt_clear_tsd();
+	cobalt_print_init_atfork();
+#ifdef HAVE_PTHREAD_ATFORK
+	/*
+	 * Upon fork, in case the parent required init deferral, this
+	 * is the forkee's responsibility to call __libcobalt_init()
+	 * for bootstrapping the services the same way. On systems
+	 * with no fork() support, clients are not supposed to, well,
+	 * fork in the first place, so we don't take any provision for
+	 * this event.
+	 */
+	__init_cobalt();
+#endif
+}
+
 void __libcobalt_init(void)
 {
 	struct sigaction sa;
@@ -118,21 +136,12 @@ void __libcobalt_init(void)
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGDEBUG, &sa, &__cobalt_orig_sigdebug);
 
-#ifdef HAVE_PTHREAD_ATFORK
 	/*
-	 * Upon fork, in case the parent required init deferral, this
-	 * is the forkee's responsibility to call __libcobalt_init()
-	 * for bootstrapping the services the same way. On systems
-	 * with no fork() support, clients are not supposed to, well,
-	 * fork in the first place, so we don't take any provision for
-	 * this event.
-	 *
 	 * NOTE: a placeholder for pthread_atfork() may return an
 	 * error status with uClibc, so we don't check the return
 	 * value on purpose.
 	 */
-	pthread_atfork(NULL, NULL, __init_cobalt);
-#endif
+	pthread_atfork(NULL, NULL, cobalt_fork_handler);
 
 	if (sizeof(struct cobalt_mutex_shadow) > sizeof(pthread_mutex_t)) {
 		report_error("sizeof(pthread_mutex_t): %d <"

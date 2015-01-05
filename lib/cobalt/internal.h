@@ -45,6 +45,8 @@ void cobalt_thread_init(void);
 
 void cobalt_print_init(void);
 
+void cobalt_print_init_atfork(void);
+
 void cobalt_print_exit(void);
 
 void cobalt_ticks_init(unsigned long long freq);

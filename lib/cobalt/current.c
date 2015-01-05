@@ -26,8 +26,6 @@
 
 static DEFINE_PRIVATE_LIST(tsd_hooks);
 
-static void child_fork_handler(void);
-
 #ifdef HAVE_TLS
 
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
@@ -53,7 +51,7 @@ static inline void __cobalt_clear_tsd(void)
 
 static void init_current_keys(void)
 {
-	pthread_atfork(NULL, NULL, &child_fork_handler);
+	cobalt_current = XN_NO_HANDLE;
 }
 
 #else /* !HAVE_TLS */
@@ -85,8 +83,6 @@ static void init_current_keys(void)
 	if (err)
 		goto error_exit;
 
-	pthread_atfork(NULL, NULL, &child_fork_handler);
-
 	err = pthread_key_create(&cobalt_current_window_key, NULL);
 	if (err) {
 	  error_exit:
@@ -97,7 +93,7 @@ static void init_current_keys(void)
 
 #endif /* !HAVE_TLS */
 
-static void child_fork_handler(void)
+void cobalt_clear_tsd(void)
 {
 	struct cobalt_tsd_hook *th;
 
