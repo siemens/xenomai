@@ -12,7 +12,7 @@ index 9ceccef..3c94fa7 100644
  
  comment "Processor and Board Settings"
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index 17b5e92..ae780a2 100644
+index 17b5e92..f9a5b33 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
 @@ -28,7 +28,7 @@
@@ -32,7 +32,7 @@ index 17b5e92..ae780a2 100644
 -#define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    16
 -#define IPIPE_PATCH_NUMBER    1
-+#define IPIPE_CORE_RELEASE	4
++#define IPIPE_CORE_RELEASE	5
  
  #ifdef CONFIG_SMP
  #error "I-pipe/blackfin: SMP not implemented"
@@ -500,7 +500,7 @@ index 15b16d3..ef40c94 100644
  
  #endif
 diff --git a/arch/blackfin/include/asm/thread_info.h b/arch/blackfin/include/asm/thread_info.h
-index 55f473b..9a433a56 100644
+index 55f473b..82764e2 100644
 --- a/arch/blackfin/include/asm/thread_info.h
 +++ b/arch/blackfin/include/asm/thread_info.h
 @@ -28,6 +28,8 @@
@@ -518,8 +518,8 @@ index 55f473b..9a433a56 100644
  	struct restart_block restart_block;
 +#ifdef CONFIG_IPIPE
 +	unsigned long ipipe_flags;
-+	struct ipipe_threadinfo ipipe_data;
 +#endif
++	struct ipipe_threadinfo ipipe_data;
  #ifndef CONFIG_SMP
  	struct l1_scratch_task_info l1_task_info;
  #endif
@@ -2201,10 +2201,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..fce2e35
+index 0000000..912f689
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,473 @@
+@@ -0,0 +1,455 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2503,25 +2503,7 @@ index 0000000..fce2e35
 +
 +#define ipipe_task_threadinfo(p) (&task_thread_info(p)->ipipe_data)
 +
-+static inline void ipipe_enable_irq(unsigned int irq)
-+{
-+	struct irq_desc *desc;
-+	struct irq_chip *chip;
-+
-+	desc = irq_to_desc(irq);
-+	if (desc == NULL)
-+		return;
-+
-+	chip = irq_desc_get_chip(desc);
-+
-+	if (WARN_ON_ONCE(chip->irq_enable == NULL && chip->irq_unmask == NULL))
-+		return;
-+
-+	if (chip->irq_enable)
-+		chip->irq_enable(&desc->irq_data);
-+	else
-+		chip->irq_unmask(&desc->irq_data);
-+}
++void ipipe_enable_irq(unsigned int irq);
 +
 +static inline void ipipe_disable_irq(unsigned int irq)
 +{
@@ -3367,10 +3349,10 @@ index 0000000..6521852
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_debug.h b/include/linux/ipipe_debug.h
 new file mode 100644
-index 0000000..b6bf8c6
+index 0000000..577abfd
 --- /dev/null
 +++ b/include/linux/ipipe_debug.h
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,100 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_debug.h
 + *
@@ -3463,9 +3445,11 @@ index 0000000..b6bf8c6
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +#define IPIPE_WARN(c)		WARN_ON(c)
 +#define IPIPE_WARN_ONCE(c)	WARN_ON_ONCE(c)
++#define IPIPE_BUG_ON(c)		BUG_ON(c)
 +#else
 +#define IPIPE_WARN(c)		do { (void)(c); } while (0)
 +#define IPIPE_WARN_ONCE(c)	do { (void)(c); } while (0)
++#define IPIPE_BUG_ON(c)		do { (void)(c); } while (0)
 +#endif
 +
 +#endif /* !__LINUX_IPIPE_DEBUG_H */
@@ -5403,10 +5387,10 @@ index 0000000..c3ffe63
 +obj-$(CONFIG_IPIPE_LEGACY) += compat.o
 diff --git a/kernel/ipipe/compat.c b/kernel/ipipe/compat.c
 new file mode 100644
-index 0000000..1147bf4
+index 0000000..da3183f
 --- /dev/null
 +++ b/kernel/ipipe/compat.c
-@@ -0,0 +1,268 @@
+@@ -0,0 +1,273 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/compat.c
 + *
@@ -5675,12 +5659,17 @@ index 0000000..1147bf4
 +		ipd->legacy.priority = IPIPE_ROOT_PRIO;
 +	}
 +}
++
++notrace int __ipipe_check_root(void) /* hw IRQs off */
++{
++	return __ipipe_root_p;
++}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..ccb5dd7
+index 0000000..c5b022b
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1903 @@
+@@ -0,0 +1,1929 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -5776,7 +5765,7 @@ index 0000000..ccb5dd7
 + */
 +extern unsigned long __ipipe_root_status
 +__attribute__((alias(__stringify(ipipe_percpu))));
-+EXPORT_SYMBOL_GPL(__ipipe_root_status);
++EXPORT_SYMBOL(__ipipe_root_status);
 +
 +#endif /* !CONFIG_SMP */
 +
@@ -7142,6 +7131,7 @@ index 0000000..ccb5dd7
 +	int irq;
 +
 +	p = __ipipe_current_context;
++respin:
 +	ipd = p->domain;
 +
 +	__set_bit(IPIPE_STALL_FLAG, &p->status);
@@ -7185,7 +7175,32 @@ index 0000000..ccb5dd7
 +			hard_local_irq_disable();
 +		}
 +
++		/*
++		 * We may have migrated to a different CPU (1) upon
++		 * return from the handler, or downgraded from the
++		 * head domain to the root one (2), the opposite way
++		 * is NOT allowed though.
++		 *
++		 * (1) reload the current per-cpu context pointer, so
++		 * that we further pull pending interrupts from the
++		 * proper per-cpu log.
++		 *
++		 * (2) check the stall bit to know whether we may
++		 * dispatch any interrupt pending for the root domain,
++		 * and respin the entire dispatch loop if
++		 * so. Otherwise, immediately return to the caller,
++		 * _without_ affecting the stall state for the root
++		 * domain, since we do not own it at this stage.  This
++		 * case is basically reflecting what may happen in
++		 * dispatch_irq_head() for the fast path.
++		 */
 +		p = __ipipe_current_context;
++		if (p->domain != ipd) {
++			IPIPE_BUG_ON(ipd == ipipe_root_domain);
++			if (test_bit(IPIPE_STALL_FLAG, &p->status))
++				return;
++			goto respin;
++		}
 +	}
 +
 +	if (ipd == ipipe_root_domain)
@@ -9536,7 +9551,7 @@ index 0000000..5cce0bc
 +#endif /* !CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index dc04c16..f353415 100644
+index dc04c16..2296ca9 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -15,6 +15,7 @@
@@ -9562,7 +9577,7 @@ index dc04c16..f353415 100644
  static void irq_state_clr_disabled(struct irq_desc *desc)
  {
  	irqd_clear(&desc->irq_data, IRQD_IRQ_DISABLED);
-@@ -180,8 +173,10 @@ int irq_startup(struct irq_desc *desc, bool resend)
+@@ -180,8 +173,13 @@ int irq_startup(struct irq_desc *desc, bool resend)
  	desc->depth = 0;
  
  	if (desc->irq_data.chip->irq_startup) {
@@ -9570,10 +9585,28 @@ index dc04c16..f353415 100644
  		ret = desc->irq_data.chip->irq_startup(&desc->irq_data);
  		irq_state_clr_masked(desc);
 +		hard_cond_local_irq_restore(flags);
++#ifdef CONFIG_IPIPE
++		desc->istate &= ~IPIPE_IRQS_NEEDS_STARTUP;
++#endif
  	} else {
  		irq_enable(desc);
  	}
-@@ -205,12 +200,14 @@ void irq_shutdown(struct irq_desc *desc)
+@@ -194,9 +192,12 @@ void irq_shutdown(struct irq_desc *desc)
+ {
+ 	irq_state_set_disabled(desc);
+ 	desc->depth = 1;
+-	if (desc->irq_data.chip->irq_shutdown)
++	if (desc->irq_data.chip->irq_shutdown) {
+ 		desc->irq_data.chip->irq_shutdown(&desc->irq_data);
+-	else if (desc->irq_data.chip->irq_disable)
++#ifdef CONFIG_IPIPE
++		desc->istate |= ~IPIPE_IRQS_NEEDS_STARTUP;
++#endif
++	} else if (desc->irq_data.chip->irq_disable)
+ 		desc->irq_data.chip->irq_disable(&desc->irq_data);
+ 	else
+ 		desc->irq_data.chip->irq_mask(&desc->irq_data);
+@@ -205,12 +206,14 @@ void irq_shutdown(struct irq_desc *desc)
  
  void irq_enable(struct irq_desc *desc)
  {
@@ -9588,7 +9621,7 @@ index dc04c16..f353415 100644
  }
  
  /**
-@@ -237,11 +234,13 @@ void irq_disable(struct irq_desc *desc)
+@@ -237,11 +240,13 @@ void irq_disable(struct irq_desc *desc)
  
  void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
  {
@@ -9602,7 +9635,7 @@ index dc04c16..f353415 100644
  }
  
  void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
-@@ -275,9 +274,13 @@ void mask_irq(struct irq_desc *desc)
+@@ -275,9 +280,13 @@ void mask_irq(struct irq_desc *desc)
  
  void unmask_irq(struct irq_desc *desc)
  {
@@ -9616,7 +9649,7 @@ index dc04c16..f353415 100644
  	}
  }
  
-@@ -398,7 +401,9 @@ void
+@@ -398,7 +407,9 @@ void
  handle_level_irq(unsigned int irq, struct irq_desc *desc)
  {
  	raw_spin_lock(&desc->lock);
@@ -9626,14 +9659,14 @@ index dc04c16..f353415 100644
  
  	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
  		if (!irq_check_poll(desc))
-@@ -435,6 +440,15 @@ static inline void preflow_handler(struct irq_desc *desc)
+@@ -435,6 +446,15 @@ static inline void preflow_handler(struct irq_desc *desc)
  static inline void preflow_handler(struct irq_desc *desc) { }
  #endif
  
 +#ifdef CONFIG_IPIPE
 +static void cond_release_fasteoi_irq(struct irq_desc *desc)
 +{
-+	if (desc->irq_data.chip->irq_release && 
++	if (desc->irq_data.chip->irq_release &&
 +	    !irqd_irq_disabled(&desc->irq_data) && !desc->threads_oneshot)
 +		desc->irq_data.chip->irq_release(&desc->irq_data);
 +}
@@ -9642,7 +9675,7 @@ index dc04c16..f353415 100644
  /**
   *	handle_fasteoi_irq - irq handler for transparent controllers
   *	@irq:	the interrupt number
-@@ -467,17 +481,26 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
+@@ -467,17 +487,26 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
  		goto out;
  	}
  
@@ -9669,7 +9702,7 @@ index dc04c16..f353415 100644
  out_unlock:
  	raw_spin_unlock(&desc->lock);
  	return;
-@@ -525,7 +548,9 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
+@@ -525,7 +554,9 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
  	kstat_incr_irqs_this_cpu(irq, desc);
  
  	/* Start handling the irq */
@@ -9679,7 +9712,7 @@ index dc04c16..f353415 100644
  
  	do {
  		if (unlikely(!desc->action)) {
-@@ -613,6 +638,18 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -613,6 +644,18 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_incr_irqs_this_cpu(irq, desc);
  
@@ -9698,7 +9731,7 @@ index dc04c16..f353415 100644
  	if (chip->irq_ack)
  		chip->irq_ack(&desc->irq_data);
  
-@@ -620,6 +657,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -620,6 +663,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	if (chip->irq_eoi)
  		chip->irq_eoi(&desc->irq_data);
@@ -9706,7 +9739,7 @@ index dc04c16..f353415 100644
  }
  
  /**
-@@ -643,17 +681,144 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
+@@ -643,17 +687,180 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_incr_irqs_this_cpu(irq, desc);
  
@@ -9726,7 +9759,7 @@ index dc04c16..f353415 100644
  		chip->irq_eoi(&desc->irq_data);
 +#else
 +	if ((desc->percpu_enabled == NULL ||
-+	     cpumask_test_cpu(smp_processor_id(), desc->percpu_enabled)) && 
++	     cpumask_test_cpu(smp_processor_id(), desc->percpu_enabled)) &&
 +	    !irqd_irq_masked(&desc->irq_data) &&
 +	    !desc->threads_oneshot &&
 +	    desc->ipipe_end)
@@ -9769,8 +9802,8 @@ index dc04c16..f353415 100644
 +
 +	if (desc->irq_data.chip->irq_eoi)
 +		desc->irq_data.chip->irq_eoi(&desc->irq_data);
-+}
-+
+ }
+ 
 +void __ipipe_nop_irq(unsigned irq, struct irq_desc *desc)
 +{
 +}
@@ -9781,8 +9814,8 @@ index dc04c16..f353415 100644
 +	 * XXX: Do NOT fold this into __ipipe_nop_irq(), see
 +	 * ipipe_chained_irq_p().
 +	 */
- }
- 
++}
++
 +static void __ipipe_ack_bad_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	handle_bad_irq(irq, desc);
@@ -9837,6 +9870,42 @@ index dc04c16..f353415 100644
 +	return handle;
 +}
 +
++void ipipe_enable_irq(unsigned int irq)
++{
++	struct irq_desc *desc;
++	struct irq_chip *chip;
++	unsigned long flags;
++
++	desc = irq_to_desc(irq);
++	if (desc == NULL)
++		return;
++
++	chip = irq_desc_get_chip(desc);
++
++	if (chip->irq_startup && (desc->istate & IPIPE_IRQS_NEEDS_STARTUP)) {
++
++		ipipe_root_only();
++
++		raw_spin_lock_irqsave(&desc->lock, flags);
++		if (desc->istate & IPIPE_IRQS_NEEDS_STARTUP) {
++			desc->istate &= ~IPIPE_IRQS_NEEDS_STARTUP;
++			chip->irq_startup(&desc->irq_data);
++		}
++		raw_spin_unlock_irqrestore(&desc->lock, flags);
++
++		return;
++	}
++
++	if (WARN_ON_ONCE(chip->irq_enable == NULL && chip->irq_unmask == NULL))
++		return;
++
++	if (chip->irq_enable)
++		chip->irq_enable(&desc->irq_data);
++	else
++		chip->irq_unmask(&desc->irq_data);
++}
++EXPORT_SYMBOL_GPL(ipipe_enable_irq);
++
 +#else /* !CONFIG_IPIPE */
 +
 +irq_flow_handler_t
@@ -9851,7 +9920,7 @@ index dc04c16..f353415 100644
  void
  __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		  const char *name)
-@@ -671,6 +836,8 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -671,6 +878,8 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  			goto out;
  	}
  
@@ -10010,11 +10079,35 @@ index 452d6f2..7f20d7c 100644
  	return 0;
  }
  
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index 001fa5b..4dad5c7 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -53,6 +53,9 @@ enum {
+ 	IRQS_WAITING		= 0x00000080,
+ 	IRQS_PENDING		= 0x00000200,
+ 	IRQS_SUSPENDED		= 0x00000800,
++#ifdef CONFIG_IPIPE
++	IPIPE_IRQS_NEEDS_STARTUP= 0x80000000,
++#endif
+ };
+ 
+ #include "debug.h"
 diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 8ab8e93..12ad1d2 100644
+index 8ab8e93..5261b2a 100644
 --- a/kernel/irq/irqdesc.c
 +++ b/kernel/irq/irqdesc.c
-@@ -270,11 +270,13 @@ int __init early_irq_init(void)
+@@ -91,6 +91,9 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
+ 	for_each_possible_cpu(cpu)
+ 		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
+ 	desc_smp_init(desc, node);
++#ifdef CONFIG_IPIPE
++	desc->istate |= IPIPE_IRQS_NEEDS_STARTUP;
++#endif
+ }
+ 
+ int nr_irqs = NR_IRQS;
+@@ -270,11 +273,13 @@ int __init early_irq_init(void)
  	return arch_early_irq_init();
  }
  
@@ -10102,6 +10195,97 @@ index 4b082b5..67447fc 100644
  /*
   * The __lock_function inlines are taken from
   * include/linux/spinlock_api_smp.h
+diff --git a/kernel/module.c b/kernel/module.c
+index 6716a1f..5a1cc7e 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -879,7 +879,7 @@ static inline void print_unload_info(struct seq_file *m, struct module *mod)
+ 	seq_printf(m, " %lu ", module_refcount(mod));
+ 
+ 	/* Always include a trailing , so userspace can differentiate
+-           between this and the old multi-field proc format. */
++	   between this and the old multi-field proc format. */
+ 	list_for_each_entry(use, &mod->source_list, source_list) {
+ 		printed_something = 1;
+ 		seq_printf(m, "%s,", use->source->name);
+@@ -948,7 +948,7 @@ bool try_module_get(struct module *module)
+ 	bool ret = true;
+ 
+ 	if (module) {
+-		preempt_disable();
++		unsigned long flags = hard_preempt_disable();
+ 
+ 		if (likely(module_is_live(module))) {
+ 			__this_cpu_inc(module->refptr->incs);
+@@ -956,7 +956,7 @@ bool try_module_get(struct module *module)
+ 		} else
+ 			ret = false;
+ 
+-		preempt_enable();
++		hard_preempt_enable(flags);
+ 	}
+ 	return ret;
+ }
+@@ -965,12 +965,12 @@ EXPORT_SYMBOL(try_module_get);
+ void module_put(struct module *module)
+ {
+ 	if (module) {
+-		preempt_disable();
++		unsigned long flags = hard_preempt_disable();
+ 		smp_wmb(); /* see comment in module_refcount */
+ 		__this_cpu_inc(module->refptr->decs);
+ 
+ 		trace_module_put(module, _RET_IP_);
+-		preempt_enable();
++		hard_preempt_enable(flags);
+ 	}
+ }
+ EXPORT_SYMBOL(module_put);
+@@ -1130,7 +1130,7 @@ static unsigned long maybe_relocated(unsigned long crc,
+ static int check_version(Elf_Shdr *sechdrs,
+ 			 unsigned int versindex,
+ 			 const char *symname,
+-			 struct module *mod, 
++			 struct module *mod,
+ 			 const unsigned long *crc,
+ 			 const struct module *crc_owner)
+ {
+@@ -1199,7 +1199,7 @@ static inline int same_magic(const char *amagic, const char *bmagic,
+ static inline int check_version(Elf_Shdr *sechdrs,
+ 				unsigned int versindex,
+ 				const char *symname,
+-				struct module *mod, 
++				struct module *mod,
+ 				const unsigned long *crc,
+ 				const struct module *crc_owner)
+ {
+@@ -2252,7 +2252,7 @@ static char elf_type(const Elf_Sym *sym, const struct load_info *info)
+ }
+ 
+ static bool is_core_symbol(const Elf_Sym *src, const Elf_Shdr *sechdrs,
+-                           unsigned int shnum)
++			   unsigned int shnum)
+ {
+ 	const Elf_Shdr *sec;
+ 
+@@ -3035,7 +3035,7 @@ static int do_init_module(struct module *mod)
+ 		ret = do_one_initcall(mod->init);
+ 	if (ret < 0) {
+ 		/* Init routine failed: abort.  Try to protect us from
+-                   buggy refcounters. */
++		   buggy refcounters. */
+ 		mod->state = MODULE_STATE_GOING;
+ 		synchronize_sched();
+ 		module_put(mod);
+@@ -3170,7 +3170,7 @@ out:
+ 
+ static int unknown_module_param_cb(char *param, char *val, const char *modname)
+ {
+-	/* Check for magic 'dyndbg' arg */ 
++	/* Check for magic 'dyndbg' arg */
+ 	int ret = ddebug_dyndbg_module_param_cb(param, val, modname);
+ 	if (ret != 0)
+ 		pr_warn("%s: unknown parameter '%s' ignored\n", modname, param);
 diff --git a/kernel/panic.c b/kernel/panic.c
 index 6d63003..2a26737 100644
 --- a/kernel/panic.c
