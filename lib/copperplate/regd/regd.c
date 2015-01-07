@@ -359,12 +359,13 @@ static void create_system_fs(const char *arg0, const char *rootdir)
 	if (ret)
 		error(1, -ret, "create_directory_recursive(\"%s\")", mountpt);
 
+	atexit(delete_system_fs);
+
 	CPU_ZERO(&__node_info.cpu_affinity);
 	__node_info.session_label = session;
 	__node_info.registry_root = rootdir;
 	sysroot = mountpt;
 	copperplate_bootstrap_minimal(arg0, mountpt);
-	atexit(delete_system_fs);
 
 	note("mounted system fs at %s", mountpt);
 
