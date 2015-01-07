@@ -147,6 +147,12 @@ static int create_directory_recursive(const char *dir) /* absolute path */
 		p = strtok(NULL, "/");
 	}
 
+	if (shared) {
+		ret = chmod(dir, 0775 | S_ISGID);
+		if (ret)
+			return -errno;
+	}
+
 	free(s);
 	chdir(rootdir);		/* Back to rootdir */
 
