@@ -283,6 +283,7 @@ static void delete_system_fs(void)
 {
 	umount2(sysroot, MNT_DETACH);
 	rmdir(sysroot);
+	rmdir(rootdir);
 }
 
 static void handle_requests(void)
