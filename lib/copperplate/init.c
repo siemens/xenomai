@@ -477,7 +477,8 @@ static int parse_skin_options(int *argcp, int largc, char **uargv,
  * code only, such as sysregd. No code traversed should depend on
  * __node_info.
  */
-void copperplate_bootstrap_minimal(const char *arg0, char *mountpt)
+void copperplate_bootstrap_minimal(const char *arg0, char *mountpt,
+				   int shared_registry)
 {
 	int ret;
 
@@ -497,7 +498,7 @@ void copperplate_bootstrap_minimal(const char *arg0, char *mountpt)
 		goto fail;
 	}
 
-	ret = __registry_pkg_init(arg0, mountpt);
+	ret = __registry_pkg_init(arg0, mountpt, shared_registry);
 	if (ret)
 		goto fail;
 

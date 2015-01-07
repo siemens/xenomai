@@ -60,6 +60,8 @@ static int daemonize;
 
 static int linger;
 
+static int shared;
+
 struct client {
 	char *mountpt;
 	int sockfd;
@@ -71,6 +73,7 @@ static DEFINE_PRIVATE_LIST(client_list);
 static void usage(void)
 {
 	fprintf(stderr, "usage: regd [--root=<dir>]   set registry root directory\n");
+	fprintf(stderr, "            [--shared]       share registry between different users\n");
 	fprintf(stderr, "            [--daemonize]    run in the background\n");
 	fprintf(stderr, "            [--linger]       disable timed exit on idleness\n");
 }
@@ -100,6 +103,13 @@ static const struct option options[] = {
 		.name = "linger",
 		.has_arg = 0,
 		.flag = &linger,
+		.val = 1,
+	},
+	{
+#define shared_opt	4
+		.name = "shared",
+		.has_arg = 0,
+		.flag = &shared,
 		.val = 1,
 	},
 	{
@@ -365,7 +375,7 @@ static void create_system_fs(const char *arg0, const char *rootdir)
 	__node_info.session_label = session;
 	__node_info.registry_root = rootdir;
 	sysroot = mountpt;
-	copperplate_bootstrap_minimal(arg0, mountpt);
+	copperplate_bootstrap_minimal(arg0, mountpt, shared);
 
 	note("mounted system fs at %s", mountpt);
 
@@ -403,6 +413,7 @@ int main(int argc, char *const *argv)
 			return 0;
 		case daemonize_opt:
 		case linger_opt:
+		case shared_opt:
 			break;
 		case root_opt:
 			rootdir = optarg;

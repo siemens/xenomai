@@ -76,7 +76,7 @@ void registry_destroy_file(struct fsobj *fsobj);
 
 void registry_touch_file(struct fsobj *fsobj);
 
-int __registry_pkg_init(const char *arg0, char *mountpt);
+int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry);
 
 int registry_pkg_init(const char *arg0);
 
@@ -126,7 +126,7 @@ void registry_touch_file(struct fsobj *fsobj)
 }
 
 static inline
-int __registry_pkg_init(const char *arg0, char *mountpt)
+int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
 {
 	return 0;
 }

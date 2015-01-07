@@ -60,6 +60,7 @@ static pthread_t regfs_thid;
 struct regfs_data {
 	const char *arg0;
 	char *mountpt;
+	int shared;
 	sem_t sync;
 	int status;
 	pthread_mutex_t lock;
@@ -579,7 +580,8 @@ static void *registry_thread(void *arg)
 	av[2] = "-f";
 	av[3] = p->mountpt;
 	av[4] = "-o";
-	av[5] = "allow_other,default_permissions";
+	av[5] = p->shared ? "default_permissions,allow_other"
+			  : "default_permissions";
 	av[6] = NULL;
 
 	/*
@@ -719,7 +721,7 @@ static void pkg_cleanup(void)
 	registry_pkg_destroy();
 }
 
-int __registry_pkg_init(const char *arg0, char *mountpt)
+int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
 {
 	struct regfs_data *p = regfs_get_context();
 	pthread_mutexattr_t mattr;
@@ -751,6 +753,7 @@ int __registry_pkg_init(const char *arg0, char *mountpt)
 	pthread_attr_setscope(&thattr, PTHREAD_SCOPE_PROCESS);
 	p->arg0 = arg0;
 	p->mountpt = mountpt;
+	p->shared = shared_registry;
 	p->status = -EINVAL;
 	__STD(sem_init(&p->sync, 0, 0));
 
@@ -797,7 +800,7 @@ int registry_pkg_init(const char *arg0)
 	if (ret)
 		return ret;
 
-	return __bt(__registry_pkg_init(arg0, mountpt));
+	return __bt(__registry_pkg_init(arg0, mountpt, 0));
 }
 
 void registry_pkg_destroy(void)
