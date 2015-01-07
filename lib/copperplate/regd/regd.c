@@ -320,7 +320,7 @@ static void handle_requests(void)
 			}
 		}
 		for (s = sockfd + 1; s < FD_SETSIZE; s++) {
-			if (!FD_ISSET(s, &set) || linger || s == tmfd)
+			if (!FD_ISSET(s, &set) || s == tmfd)
 				continue;
 			ret = __STD(recv(s, &c, sizeof(c), 0));
 			if (ret <= 0) {
