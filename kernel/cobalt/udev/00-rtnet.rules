@@ -1,5 +1,2 @@
-# RTnet management device
-KERNEL=="rtnet", MODE="0660", GROUP="xenomai"
-
 # Don't let udev mess with our special network names
 KERNEL=="vnic*|rteth*|rtlo", NAME="$env{INTERFACE_NAME}"
