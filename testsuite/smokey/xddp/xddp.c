@@ -137,7 +137,6 @@ static void *realtime_thread2(void *arg)
 		fail("setsockopt");
 
 	sem_sync(&semsync);
-	sem_post(&semsync); /* unleash regular thread */
 
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sipc_family = AF_RTIPC;
@@ -197,7 +196,9 @@ static void *regular_thread(void *arg)
 		     XDDP_PORT_LABEL) < 0)
 		fail("asprintf");
 
-	fd = open(devname, O_RDWR);
+	do
+		fd = open(devname, O_RDWR);
+	while (fd < 0 && errno == ENOENT);
 	free(devname);
 	if (fd < 0)
 		fail("open");
