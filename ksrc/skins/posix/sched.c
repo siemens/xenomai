@@ -69,7 +69,7 @@
  * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
  * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.
  *
- * @retval 0 on success;
+ * @retval The minimum priority of @a policy on success;
  * @retval -1 with @a errno set if:
  * - EINVAL, @a policy is invalid.
  *
@@ -105,7 +105,7 @@ int sched_get_priority_min(int policy)
  * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
  * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.
  *
- * @retval 0 on success;
+ * @retval The maximum priority of @a policy on success;
  * @retval -1 with @a errno set if:
  * - EINVAL, @a policy is invalid.
  *
