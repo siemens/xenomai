@@ -122,6 +122,7 @@ while test $# -gt 0; do
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
+	    cflags="$XENO_BASE_CFLAGS"
 	    test -z "$skin_list" && skin_list=posix
 	    for skin in $skin_list; do
 		case "$skin" in
