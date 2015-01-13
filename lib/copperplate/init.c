@@ -46,7 +46,7 @@ struct coppernode __node_info = {
 	.reset_session = 0,
 	.silent_mode = 0,
 #ifdef CONFIG_XENO_REGISTRY
-	.session_label = DEFAULT_REGISTRY_SESSION,
+	.session_label = NULL,
 	.registry_root = DEFAULT_REGISTRY_ROOT,
 #endif
 };

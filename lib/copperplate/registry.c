@@ -35,6 +35,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <fuse.h>
+#include <pwd.h>
 #include <xeno_config.h>
 #include "boilerplate/hash.h"
 #include "copperplate/heapobj.h"
@@ -787,11 +788,19 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
 
 int registry_pkg_init(const char *arg0)
 {
+	struct passwd *pw = NULL;
 	char *mountpt, *sessdir;
 	int ret;
 
-	ret = asprintf(&sessdir, "%s/%s",
-		       __node_info.registry_root, __node_info.session_label);
+	if (__node_info.session_label) {
+		pw = getpwuid(geteuid());
+		if (!pw)
+			return -errno;
+		ret = asprintf(&sessdir, "%s/%s/%s", __node_info.registry_root,
+			       pw->pw_name, __node_info.session_label);
+	} else
+		ret = asprintf(&sessdir, "%s/%s", __node_info.registry_root,
+			       DEFAULT_REGISTRY_SESSION);
 	if (ret < 0)
 		return -ENOMEM;
 

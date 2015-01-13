@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <boilerplate/list.h>
 #include <boilerplate/hash.h>
 #include "../internal.h"
@@ -50,7 +51,7 @@
 			printf("regd: " fmt "\n", ##args);	\
 	} while (0)
 
-static const char *rootdir = DEFAULT_REGISTRY_ROOT"/"DEFAULT_REGISTRY_SESSION;
+static char *rootdir;
 
 static int sockfd;
 
@@ -406,6 +407,7 @@ static void create_system_fs(const char *arg0, const char *rootdir)
 
 int main(int argc, char *const *argv)
 {
+	struct passwd *pw = NULL;
 	int lindex, opt, ret;
 	struct sigaction sa;
 
@@ -429,6 +431,18 @@ int main(int argc, char *const *argv)
 			usage();
 			exit(1);
 		}
+	}
+
+	if (rootdir == NULL) {
+		pw = getpwuid(geteuid());
+		if (!pw)
+			return -errno;
+		ret = asprintf(&rootdir, "%s/%s/%s",
+			       DEFAULT_REGISTRY_ROOT,
+			       pw->pw_name,
+			       DEFAULT_REGISTRY_SESSION);
+		if (ret < 0)
+			return -ENOMEM;
 	}
 
 	memset(&sa, 0, sizeof(sa));

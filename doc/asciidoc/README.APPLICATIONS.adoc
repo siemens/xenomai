@@ -78,7 +78,7 @@ link:installing-xenomai-3-x[configuration switch]).
 *--no-registry*::
 
 	This switch disables registry support at runtime. No real-time
-	objects will be exported to +/var/run/xenomai/<session>/<pid>+,
+	objects will be exported to +/var/run/xenomai/[<user>/]<session>/<pid>+,
 	despite the registry code was compiled in.
 
 *--no-sanity*::
@@ -111,8 +111,8 @@ link:installing-xenomai-3-x[configuration switch]).
 
 [normal]
 	This label is also used to form the registry mount point for
-	each process, e.g. +/var/run/xenomai/<session>/<pid>+. See
-	+--enable-registry+ from the build options.
+	each process, e.g. +/var/run/xenomai/[<user>/]<session>/<pid>+.
+	See +--enable-registry+ from the build options.
 
 [normal]
 	By default, _anon_ is used as the session label.

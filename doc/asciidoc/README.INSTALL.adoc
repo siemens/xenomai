@@ -413,11 +413,12 @@ Generic configuration options (both cores)
 
 [normal]
 	When this option is enabled, the system creates a file
-	hierachy under `/var/run/xenomai/<session>/<pid>` (by default),
-	where you can access the internal state of the active
-	real-time objects. The session label is obtained from the
-	--session runtime switch. E.g. looking at the properties of a
-	VxWorks task could be done as follows:
+	hierachy under `/var/run/xenomai/[<user>/]<session>/<pid>`
+	(by default), where you can access the internal state of the
+	active real-time objects. The session label is obtained from
+	the --session runtime switch. If left out, it is "anon" and
+	the user name is not inserted as well. E.g. looking at the
+	properties of a VxWorks task could be done as follows:
 
 --------------------------------------------------------------------
 		$ cat /var/run/xenomai/anon/12656/vxworks/tasks/windTask
