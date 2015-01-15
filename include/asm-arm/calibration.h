@@ -41,6 +41,8 @@ static inline unsigned long xnarch_get_sched_latency (void)
 	return 8500;
 #elif defined(CONFIG_ARCH_AT91SAM9263)
 	return 11000;
+#elif defined(CONFIG_SOC_IMX6Q)
+	return 6000;
 #elif defined(CONFIG_ARCH_MX51)
 	return 5000;
 #elif defined(CONFIG_ARCH_MX53)
