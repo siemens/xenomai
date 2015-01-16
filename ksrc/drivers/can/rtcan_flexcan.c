@@ -19,7 +19,6 @@
  * GNU General Public License for more details.
  */
 
-#include <linux/can/platform/flexcan.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/if_arp.h>
@@ -37,6 +36,11 @@
 #include <linux/platform_device.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 #include <linux/pinctrl/consumer.h>
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
+#include <linux/can/platform/flexcan.h>
+#else
+#include <linux/regulator/consumer.h>
 #endif
 #include <asm/unaligned.h>
 
@@ -222,10 +226,16 @@ struct flexcan_priv {
 	u32 reg_esr;
 	u32 reg_ctrl_default;
 
-	struct clk *clk;
-	struct flexcan_platform_data *pdata;
 	struct can_bittime bit_time;
 	const struct flexcan_devtype_data *devtype_data;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
+	struct flexcan_platform_data *pdata;
+	struct clk *clk;
+#else
+	struct regulator *reg_xceiver;
+	struct clk *clk_ipg;
+	struct clk *clk_per;
+#endif
 };
 
 static struct flexcan_devtype_data fsl_p1010_devtype_data = {
@@ -251,7 +261,18 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 };
 
 /* Compatibility functions to support old kernel versions */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,11,0)
+static inline void flexcan_clk_enable(struct flexcan_priv *priv)
+{
+	clk_prepare_enable(priv->clk_ipg);
+	clk_prepare_enable(priv->clk_per);
+}
+static inline void flexcan_clk_disable(struct flexcan_priv *priv)
+{
+	clk_disable_unprepare(priv->clk_ipg);
+	clk_disable_unprepare(priv->clk_per);
+}
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0)
 static inline void flexcan_clk_enable(struct flexcan_priv *priv)
 {
 	clk_prepare_enable(priv->clk);
@@ -297,13 +318,28 @@ static inline void flexcan_write(u32 val, void __iomem *addr)
 #endif
 
 /*
- * Swtich transceiver on or off
+ * Switch transceiver on or off
  */
-static void flexcan_transceiver_switch(const struct flexcan_priv *priv, int on)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
+static int flexcan_transceiver_switch(const struct flexcan_priv *priv, int on)
 {
 	if (priv->pdata && priv->pdata->transceiver_switch)
 		priv->pdata->transceiver_switch(on);
+
+	return 0;
 }
+#else
+static int flexcan_transceiver_switch(const struct flexcan_priv *priv, int on)
+{
+	if (priv->reg_xceiver == NULL)
+		return 0;
+
+	if (on)
+		return regulator_enable(priv->reg_xceiver);
+
+	return regulator_disable(priv->reg_xceiver);
+}
+#endif
 
 static inline void flexcan_chip_enable(struct flexcan_priv *priv)
 {
@@ -1013,6 +1049,16 @@ static struct platform_device_id flexcan_id_table[] = {
 	{ /* sentinel */ },
 };
 
+static void put_clocks(struct flexcan_priv *priv)
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
+	clk_put(priv->clk);
+#else
+	clk_put(priv->clk_per);
+	clk_put(priv->clk_ipg);
+#endif
+}
+
 static int flexcan_probe(struct platform_device *pdev)
 {
 #ifdef CONFIG_OF
@@ -1022,10 +1068,6 @@ static int flexcan_probe(struct platform_device *pdev)
 	struct rtcan_device *dev;
 	struct flexcan_priv *priv;
 	struct resource *mem;
-	struct clk *clk = NULL;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
-	struct pinctrl *pinctrl;
-#endif
 	void __iomem *base;
 	resource_size_t mem_size;
 	int err, irq;
@@ -1033,9 +1075,12 @@ static int flexcan_probe(struct platform_device *pdev)
 
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
-	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
-	if (IS_ERR(pinctrl))
-		return PTR_ERR(pinctrl);
+	{
+		struct pinctrl *pinctrl;
+		pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+		if (IS_ERR(pinctrl))
+			return PTR_ERR(pinctrl);
+	}
 #endif
 
 #ifdef CONFIG_OF
@@ -1053,22 +1098,41 @@ static int flexcan_probe(struct platform_device *pdev)
 	if (!devtype_data && pdev->id_entry->driver_data) {
 		devtype_data = (struct flexcan_devtype_data *)
 			pdev->id_entry->driver_data;
-	} else {
-		if (!devtype_data){
-			err = -ENODEV;
-			goto out_error;
-		}
-	}
+	} else if (!devtype_data)
+		return -ENODEV;
 
+	dev = rtcan_dev_alloc(sizeof(struct flexcan_priv), 0);
+	if (dev == NULL)
+		return -ENOMEM;
+
+	priv = rtcan_priv(dev);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
 	if (!clock_freq) {
-		clk = clk_get(&pdev->dev, NULL);
-		if (IS_ERR(clk)) {
+		priv->clk = clk_get(&pdev->dev, NULL);
+		if (IS_ERR(priv->clk)) {
 			dev_err(&pdev->dev, "no clock defined\n");
-			err = PTR_ERR(clk);
-			goto out_error;
+			return PTR_ERR(priv->clk);
 		}
-		clock_freq = clk_get_rate(clk);
+		clock_freq = clk_get_rate(priv->clk);
 	}
+#else
+	if (!clock_freq) {
+		priv->clk_ipg = devm_clk_get(&pdev->dev, "ipg");
+		if (IS_ERR(priv->clk_ipg)) {
+			dev_err(&pdev->dev, "no ipg clock defined\n");
+			return PTR_ERR(priv->clk_ipg);
+		}
+
+		priv->clk_per = devm_clk_get(&pdev->dev, "per");
+		if (IS_ERR(priv->clk_per)) {
+			clk_put(priv->clk_ipg);
+			dev_err(&pdev->dev, "no per clock defined\n");
+			return PTR_ERR(priv->clk_per);
+		}
+		clock_freq = clk_get_rate(priv->clk_per);
+	}
+#endif
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	irq = platform_get_irq(pdev, 0);
@@ -1089,20 +1153,17 @@ static int flexcan_probe(struct platform_device *pdev)
 		goto out_map;
 	}
 
-	dev = rtcan_dev_alloc(sizeof(struct flexcan_priv), 0);
-	if (!dev) {
-		err = -ENOMEM;
-		goto out_alloc;
-	}
-
-	priv = rtcan_priv(dev);
-
 	priv->base = base;
 	priv->irq = irq;
 	priv->dev = dev;
-	priv->clk = clk;
-	priv->pdata = pdev->dev.platform_data;
 	priv->devtype_data = devtype_data;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
+	priv->pdata = pdev->dev.platform_data;
+#else
+	priv->reg_xceiver = devm_regulator_get(&pdev->dev, "xceiver");
+	if (IS_ERR(priv->reg_xceiver))
+		priv->reg_xceiver = NULL;
+#endif
 
 	dev_set_drvdata(&pdev->dev, dev);
 
@@ -1133,15 +1194,13 @@ static int flexcan_probe(struct platform_device *pdev)
 	return 0;
 
 out_register:
-	rtcan_dev_free(dev);
-out_alloc:
 	iounmap(base);
 out_map:
 	release_mem_region(mem->start, mem_size);
 out_get:
-	if (clk)
-		clk_put(clk);
-out_error:
+	put_clocks(priv);
+	rtcan_dev_free(dev);
+
 	return err;
 }
 
@@ -1158,9 +1217,7 @@ static int flexcan_remove(struct platform_device *pdev)
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	release_mem_region(mem->start, resource_size(mem));
 
-	if (priv->clk)
-		clk_put(priv->clk);
-
+	put_clocks(priv);
 	rtcan_dev_free(dev);
 
 	return 0;
