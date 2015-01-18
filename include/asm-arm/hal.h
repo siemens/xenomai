@@ -334,6 +334,7 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 	_fpexc;							\
     })
 
+#define rthal_fpu_enabled_p() !!(rthal_vfp_fmrx(FPEXC) & FPEXC_EN)
 
 #else /* !CONFIG_VFP */
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv)

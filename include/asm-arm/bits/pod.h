@@ -49,6 +49,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 #ifdef CONFIG_XENO_HW_FPU
 #ifdef CONFIG_VFP
 	rootcb->fpup = rthal_get_fpu_owner();
+	rootcb->root_fpu_en = rthal_fpu_enabled_p();
 #else /* !CONFIG_VFP */
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -144,33 +145,11 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 		/* No exception should be pending, since it should have caused
 		   a trap earlier.
 		*/
-	} else if (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task)) {
-		unsigned fpexc = rthal_enable_fpu();
-		unsigned cpu;
-#ifndef CONFIG_SMP
-		if (likely(!(fpexc & RTHAL_VFP_ANY_EXC)
-			   && !(rthal_vfp_fmrx(FPSCR) & FPSCR_IXE)))
-			return;
-		/*
-		   If current process has pending exceptions it is
-		   illegal to restore the FPEXC register with them, we must
-		   save the fpu state and disable them, to get linux
-		   fpu fault handler take care of them correctly.
-		*/
-#endif
-		/*
-		   On SMP systems, if we are restoring the root
-		   thread, running the task holding the FPU context at
-		   the time when we switched to real-time domain,
-		   forcibly save the FPU context. It seems to fix SMP
-		   systems for still unknown reasons.
-		*/
-		rthal_save_fpu(tcb->fpup, fpexc);
-
-		cpu = rthal_processor_id();
-		vfp_current_hw_state[cpu] = NULL;
-		rthal_disable_fpu();
+		return;
 	}
+
+	if (tcb->root_fpu_en)
+		rthal_enable_fpu();
 #else /* !CONFIG_VFP */
 	if (!tcb->user_task)
 		rthal_enable_fpu();
@@ -218,7 +197,9 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	if (likely(!tcb->is_root)) {
 		rthal_enable_fpu();
 		rthal_restore_fpu(tcb->fpup);
-	} else {
+		return;
+	}
+
 	/* We are restoring the Linux current thread which does not own the FPU
 	   context, so the FPU must be disabled, so that a fault will occur if
 	   the newly switched thread uses the FPU, to allow the kernel handler
@@ -229,10 +210,9 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   task, into the FPU area of the last non RT task which used the FPU
 	   before the preemption by Xenomai.
 	*/
-		unsigned cpu = rthal_processor_id();
-		vfp_current_hw_state[cpu] = NULL;
-		rthal_disable_fpu();
-	}
+	unsigned cpu = rthal_processor_id();
+	vfp_current_hw_state[cpu] = NULL;
+	rthal_disable_fpu();
 #else /* !CONFIG_VFP */
 	if (tcb->fpup) {
 		rthal_restore_fpu(tcb->fpup);
