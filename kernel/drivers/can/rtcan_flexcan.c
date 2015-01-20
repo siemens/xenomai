@@ -19,7 +19,6 @@
  * GNU General Public License for more details.
  */
 
-#include <linux/can/platform/flexcan.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/if_arp.h>
@@ -33,6 +32,7 @@
 #include <linux/of.h>
 #include <linux/platform_device.h>
 #include <linux/pinctrl/consumer.h>
+#include <linux/regulator/consumer.h>
 
 #include <rtdm/driver.h>
 
@@ -194,8 +194,9 @@ struct flexcan_priv {
 	u32 reg_esr;
 	u32 reg_ctrl_default;
 
-	struct clk *clk;
-	struct flexcan_platform_data *pdata;
+	struct regulator *reg_xceiver;
+	struct clk *clk_ipg;
+	struct clk *clk_per;
 	struct can_bittime bit_time;
 };
 
@@ -212,16 +213,6 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 	.brp_max = 256,
 	.brp_inc = 1,
 };
-
-/* Compatibility functions to support old kernel versions */
-static inline void flexcan_clk_enable(struct flexcan_priv *priv)
-{
-	clk_prepare_enable(priv->clk);
-}
-static inline void flexcan_clk_disable(struct flexcan_priv *priv)
-{
-	clk_disable_unprepare(priv->clk);
-}
 
 /*
  * Abstract off the read/write for arm versus ppc.
@@ -248,13 +239,29 @@ static inline void flexcan_write(u32 val, void __iomem *addr)
 }
 #endif
 
-/*
- * Swtich transceiver on or off
- */
-static void flexcan_transceiver_switch(const struct flexcan_priv *priv, int on)
+static inline void flexcan_clk_enable(struct flexcan_priv *priv)
 {
-	if (priv->pdata && priv->pdata->transceiver_switch)
-		priv->pdata->transceiver_switch(on);
+	clk_prepare_enable(priv->clk_ipg);
+	clk_prepare_enable(priv->clk_per);
+}
+static inline void flexcan_clk_disable(struct flexcan_priv *priv)
+{
+	clk_disable_unprepare(priv->clk_ipg);
+	clk_disable_unprepare(priv->clk_per);
+}
+
+/*
+ * Switch transceiver on or off
+ */
+static int flexcan_transceiver_switch(const struct flexcan_priv *priv, int on)
+{
+	if (priv->reg_xceiver == NULL)
+		return 0;
+
+	if (on)
+		return regulator_enable(priv->reg_xceiver);
+
+	return regulator_disable(priv->reg_xceiver);
 }
 
 static inline void flexcan_chip_enable(struct flexcan_priv *priv)
@@ -948,20 +955,22 @@ static void unregister_flexcandev(struct rtcan_device *dev)
 	rtcan_dev_unregister(dev);
 }
 
+static void put_clocks(struct flexcan_priv *priv)
+{
+	clk_put(priv->clk_per);
+	clk_put(priv->clk_ipg);
+}
+
 static int flexcan_probe(struct platform_device *pdev)
 {
-	struct rtcan_device *dev;
 	struct flexcan_priv *priv;
-	struct resource *mem;
-	struct clk *clk = NULL;
-	struct pinctrl *pinctrl;
-	void __iomem *base;
+	struct rtcan_device *dev;
 	resource_size_t mem_size;
-	int err, irq;
+	struct pinctrl *pinctrl;
+	struct resource *mem;
+	void __iomem *base;
 	u32 clock_freq = 0;
-
-	if (!realtime_core_enabled())
-		return -ENODEV;
+	int err, irq;
 
 	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
 	if (IS_ERR(pinctrl))
@@ -970,14 +979,27 @@ static int flexcan_probe(struct platform_device *pdev)
 	if (pdev->dev.of_node)
 		of_property_read_u32(pdev->dev.of_node,
 						"clock-frequency", &clock_freq);
+
+	dev = rtcan_dev_alloc(sizeof(struct flexcan_priv), 0);
+	if (dev == NULL)
+		return -ENOMEM;
+
+	priv = rtcan_priv(dev);
+
 	if (!clock_freq) {
-		clk = clk_get(&pdev->dev, NULL);
-		if (IS_ERR(clk)) {
-			dev_err(&pdev->dev, "no clock defined\n");
-			err = PTR_ERR(clk);
-			goto out_clock;
+		priv->clk_ipg = devm_clk_get(&pdev->dev, "ipg");
+		if (IS_ERR(priv->clk_ipg)) {
+			dev_err(&pdev->dev, "no ipg clock defined\n");
+			return PTR_ERR(priv->clk_ipg);
 		}
-		clock_freq = clk_get_rate(clk);
+
+		priv->clk_per = devm_clk_get(&pdev->dev, "per");
+		if (IS_ERR(priv->clk_per)) {
+			clk_put(priv->clk_ipg);
+			dev_err(&pdev->dev, "no per clock defined\n");
+			return PTR_ERR(priv->clk_per);
+		}
+		clock_freq = clk_get_rate(priv->clk_per);
 	}
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -999,19 +1021,12 @@ static int flexcan_probe(struct platform_device *pdev)
 		goto out_map;
 	}
 
-	dev = rtcan_dev_alloc(sizeof(struct flexcan_priv), 0);
-	if (!dev) {
-		err = -ENOMEM;
-		goto out_alloc;
-	}
-
-	priv = rtcan_priv(dev);
-
 	priv->base = base;
 	priv->irq = irq;
 	priv->dev = dev;
-	priv->clk = clk;
-	priv->pdata = pdev->dev.platform_data;
+	priv->reg_xceiver = devm_regulator_get(&pdev->dev, "xceiver");
+	if (IS_ERR(priv->reg_xceiver))
+		priv->reg_xceiver = NULL;
 
 	dev_set_drvdata(&pdev->dev, dev);
 
@@ -1042,15 +1057,13 @@ static int flexcan_probe(struct platform_device *pdev)
 	return 0;
 
 out_register:
-	rtcan_dev_free(dev);
-out_alloc:
 	iounmap(base);
 out_map:
 	release_mem_region(mem->start, mem_size);
 out_get:
-	if (clk)
-		clk_put(clk);
-out_clock:
+	put_clocks(priv);
+	rtcan_dev_free(dev);
+
 	return err;
 }
 
@@ -1066,9 +1079,7 @@ static int flexcan_remove(struct platform_device *pdev)
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	release_mem_region(mem->start, resource_size(mem));
-
-	if (priv->clk)
-		clk_put(priv->clk);
+	put_clocks(priv);
 
 	rtcan_dev_free(dev);
 
