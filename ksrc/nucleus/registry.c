@@ -674,6 +674,7 @@ int xnregistry_enter(const char *key, void *objaddr,
 	}
 
 	object = link2xnobj(holder);
+	memset(&object->vfile_u, '\0', sizeof(object->vfile_u));
 	xnsynch_init(&object->safesynch, XNSYNCH_FIFO, NULL);
 	object->objaddr = objaddr;
 	object->cstamp = ++registry_obj_stamp;
