@@ -270,6 +270,25 @@ if test x$async_cancel = xy; then
 	AC_DEFINE(CONFIG_XENO_ASYNC_CANCEL,1,[config])
 fi
 
+dnl Work-around for broken PI with condvars on Mercury (default: off)
+
+unset workaround_condvar_pi
+AC_MSG_CHECKING(whether to enable the workaround for broken PI with condvars)
+AC_ARG_ENABLE(condvar-workaround,
+	AS_HELP_STRING([--enable-condvar-workaround], [Enable workaround for broken PI with condvars in glibc]),
+	[case "$enableval" in
+	y | yes) workaround_condvar_pi=y ;;
+	*) unset workaround_condvar_pi ;;
+	esac])
+AC_MSG_RESULT(${workaround_condvar_pi:-no})
+if test x$workaround_condvar_pi = xy; then
+   if test x$rtcore_type = xmercury; then
+	AC_DEFINE(CONFIG_XENO_WORKAROUND_CONDVAR_PI,1,[config])
+   else
+        AC_MSG_WARN([PI workaround for condvars useless over Cobalt - ignoring])
+   fi
+fi
+
 dnl Enable shared multi-processing (default: off)
 
 use_pshared=

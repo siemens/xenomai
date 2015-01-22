@@ -561,6 +561,9 @@ static inline int threadobj_init_corespec(struct threadobj *thobj)
 		ret = __bt(-pthread_cond_init(&thobj->core.grant_sync, &cattr));
 	pthread_condattr_destroy(&cattr);
 
+#ifdef CONFIG_XENO_WORKAROUND_CONDVAR_PI
+	thobj->core.policy_unboosted = -1;
+#endif
 	return ret;
 }
 
@@ -838,6 +841,114 @@ int threadobj_stat(struct threadobj *thobj,
 	return 0;
 }
 
+#ifdef CONFIG_XENO_WORKAROUND_CONDVAR_PI
+
+/*
+ * This workaround does NOT deal with concurrent updates of the caller
+ * priority by other threads while the former is boosted. If your code
+ * depends so much on strict PI to fix up CPU starvation, but you
+ * insist on using a broken glibc that does not implement PI properly
+ * nevertheless, then you have to refrain from issuing
+ * pthread_setschedparam() for threads which might be currently
+ * boosted.
+ */
+static void __threadobj_boost(void)
+{
+	struct threadobj *current = threadobj_current();
+	struct sched_param param = {
+		.sched_priority = threadobj_irq_prio, /* Highest one. */
+	};
+	int ret;
+
+	if (current == NULL)	/* IRQ or invalid context */
+		return;
+
+	if (current->schedlock_depth > 0) {
+		current->core.policy_unboosted = SCHED_FIFO;
+		current->core.schedparam_unboosted.sched_priority = threadobj_lock_prio;
+	} else {
+		current->core.policy_unboosted = current->policy;
+		current->core.schedparam_unboosted = current->schedparam;
+	}
+	smp_mb();
+
+	ret = pthread_setschedparam(current->ptid, SCHED_FIFO, &param);
+	if (ret) {
+		current->core.policy_unboosted = -1;
+		warning("thread boost failed, %s", symerror(-ret));
+	}
+}
+
+static void __threadobj_unboost(void)
+
+{
+	struct threadobj *current = threadobj_current();
+	struct sched_param param;
+	int ret;
+
+	if (current == NULL) 	/* IRQ or invalid context */
+		return;
+
+	param.sched_priority = current->core.schedparam_unboosted.sched_priority;
+	smp_mb();
+
+	ret = pthread_setschedparam(current->ptid,
+				    current->core.policy_unboosted, &param);
+	if (ret)
+		warning("thread unboost failed, %s", symerror(-ret));
+
+	current->core.policy_unboosted = -1;
+}
+
+int threadobj_cond_timedwait(pthread_cond_t *cond,
+			     pthread_mutex_t *lock,
+			     const struct timespec *timeout)
+{
+	int ret;
+
+	__threadobj_boost();
+	ret = pthread_cond_timedwait(cond, lock, timeout);
+	__threadobj_unboost();
+
+	return ret;
+}
+
+int threadobj_cond_wait(pthread_cond_t *cond,
+			pthread_mutex_t *lock)
+{
+	int ret;
+
+	__threadobj_boost();
+	ret = pthread_cond_wait(cond, lock);
+	__threadobj_unboost();
+
+	return ret;
+}
+
+int threadobj_cond_signal(pthread_cond_t *cond)
+{
+	int ret;
+
+	__threadobj_boost();
+	ret = pthread_cond_signal(cond);
+	__threadobj_unboost();
+
+	return ret;
+}
+
+int threadobj_cond_broadcast(pthread_cond_t *cond)
+{
+	int ret;
+
+	__threadobj_boost();
+	ret = pthread_cond_broadcast(cond);
+	__threadobj_unboost();
+
+	return ret;
+}
+
+#endif /* !CONFIG_XENO_WORKAROUND_CONDVAR_PI */
+
 #endif /* CONFIG_XENO_MERCURY */
 
 static int request_setschedparam(struct threadobj *thobj, int policy,
@@ -1042,7 +1153,7 @@ static int wait_on_barrier(struct threadobj *thobj, int mask)
 		oldstate = thobj->cancel_state;
 		push_cleanup_lock(&thobj->lock);
 		__threadobj_tag_unlocked(thobj);
-		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
+		threadobj_cond_wait(&thobj->barrier, &thobj->lock);
 		__threadobj_tag_locked(thobj);
 		pop_cleanup_lock(&thobj->lock);
 		thobj->cancel_state = oldstate;
@@ -1062,7 +1173,7 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 		return 0;
 
 	thobj->status |= __THREAD_S_STARTED;
-	__RT(pthread_cond_signal(&thobj->barrier));
+	threadobj_cond_signal(&thobj->barrier);
 
 	if (current && thobj->global_priority <= current->global_priority)
 		return 0;
@@ -1128,7 +1239,7 @@ void threadobj_notify_entry(void) /* current->lock free. */
 	threadobj_lock(current);
 	current->status |= __THREAD_S_ACTIVE;
 	current->run_state = __THREAD_S_RUNNING;
-	__RT(pthread_cond_signal(&current->barrier));
+	threadobj_cond_signal(&current->barrier);
 	threadobj_unlock(current);
 }
 
@@ -1183,7 +1294,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 
 	threadobj_lock(thobj);
 	thobj->status &= ~__THREAD_S_WARMUP;
-	__RT(pthread_cond_signal(&thobj->barrier));
+	threadobj_cond_signal(&thobj->barrier);
 	threadobj_unlock(thobj);
 
 #ifdef CONFIG_XENO_ASYNC_CANCEL
@@ -1247,7 +1358,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		oldstate = thobj->cancel_state;
 		push_cleanup_lock(&thobj->lock);
 		__threadobj_tag_unlocked(thobj);
-		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
+		threadobj_cond_wait(&thobj->barrier, &thobj->lock);
 		__threadobj_tag_locked(thobj);
 		pop_cleanup_lock(&thobj->lock);
 		thobj->cancel_state = oldstate;
@@ -1261,7 +1372,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 	 */
 	if ((thobj->status & __THREAD_S_STARTED) == 0) {
 		thobj->status |= __THREAD_S_ABORTED;
-		__RT(pthread_cond_signal(&thobj->barrier));
+		threadobj_cond_signal(&thobj->barrier);
 	}
 
 	threadobj_cancel_2_corespec(thobj);

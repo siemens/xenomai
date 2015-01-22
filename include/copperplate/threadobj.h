@@ -86,6 +86,10 @@ struct threadobj_corespec {
 	timer_t rr_timer;
 	/** Timeout reported by sysregd. */
 	struct timespec timeout;
+#ifdef CONFIG_XENO_WORKAROUND_CONDVAR_PI
+	int policy_unboosted;
+	struct sched_param_ex schedparam_unboosted;
+#endif
 };
 
 struct threadobj_stat {
@@ -511,5 +515,49 @@ static inline pid_t threadobj_get_pid(struct threadobj *thobj)
 {
 	return thobj->pid;
 }
+
+#ifdef CONFIG_XENO_WORKAROUND_CONDVAR_PI
+
+int threadobj_cond_timedwait(pthread_cond_t *cond,
+			     pthread_mutex_t *lock,
+			     const struct timespec *timeout);
+
+int threadobj_cond_wait(pthread_cond_t *cond,
+			pthread_mutex_t *lock);
+
+int threadobj_cond_signal(pthread_cond_t *cond);
+
+int threadobj_cond_broadcast(pthread_cond_t *cond);
+
+#else
+
+static inline
+int threadobj_cond_timedwait(pthread_cond_t *cond,
+			     pthread_mutex_t *lock,
+			     const struct timespec *timeout)
+{
+	return __RT(pthread_cond_timedwait(cond, lock, timeout));
+}
+
+static inline
+int threadobj_cond_wait(pthread_cond_t *cond,
+			pthread_mutex_t *lock)
+{
+	return __RT(pthread_cond_wait(cond, lock));
+}
+
+static inline
+int threadobj_cond_signal(pthread_cond_t *cond)
+{
+	return __RT(pthread_cond_signal(cond));
+}
+
+static inline
+int threadobj_cond_broadcast(pthread_cond_t *cond)
+{
+	return __RT(pthread_cond_broadcast(cond));
+}
+
+#endif /* !CONFIG_XENO_WORKAROUND_CONDVAR_PI */
 
 #endif /* _COPPERPLATE_THREADOBJ_H */

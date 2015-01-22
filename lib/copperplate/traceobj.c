@@ -274,7 +274,7 @@ void traceobj_unwind(struct traceobj *trobj)
 	write_lock_safe(&trobj->lock, state);
 
 	if (--trobj->nr_threads <= 0)
-		__RT(pthread_cond_signal(&trobj->join));
+		threadobj_cond_signal(&trobj->join);
 
 	write_unlock_safe(&trobj->lock, state);
 
@@ -301,7 +301,7 @@ void traceobj_join(struct traceobj *trobj)
 	read_lock(&trobj->lock);
 
 	while (trobj->nr_threads < 0 || trobj->nr_threads > 0)
-		__RT(pthread_cond_wait(&trobj->join, &trobj->lock));
+		threadobj_cond_wait(&trobj->join, &trobj->lock);
 
 	read_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);

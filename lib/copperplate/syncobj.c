@@ -144,10 +144,10 @@ int monitor_wait_grant(struct syncobj *sobj,
 		       const struct timespec *timeout)
 {
 	if (timeout)
-		return -pthread_cond_timedwait(&current->core.grant_sync,
-					       &sobj->core.lock, timeout);
+		return -threadobj_cond_timedwait(&current->core.grant_sync,
+						 &sobj->core.lock, timeout);
 
-	return -pthread_cond_wait(&current->core.grant_sync, &sobj->core.lock);
+	return -threadobj_cond_wait(&current->core.grant_sync, &sobj->core.lock);
 }
 
 static inline
@@ -156,23 +156,23 @@ int monitor_wait_drain(struct syncobj *sobj,
 		       const struct timespec *timeout)
 {
 	if (timeout)
-		return -pthread_cond_timedwait(&sobj->core.drain_sync,
-					       &sobj->core.lock,
-					       timeout);
+		return -threadobj_cond_timedwait(&sobj->core.drain_sync,
+						 &sobj->core.lock,
+						 timeout);
 
-	return -pthread_cond_wait(&sobj->core.drain_sync, &sobj->core.lock);
+	return -threadobj_cond_wait(&sobj->core.drain_sync, &sobj->core.lock);
 }
 
 static inline
 void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
 {
-	pthread_cond_signal(&thobj->core.grant_sync);
+	threadobj_cond_signal(&thobj->core.grant_sync);
 }
 
 static inline
 void monitor_drain_all(struct syncobj *sobj)
 {
-	pthread_cond_broadcast(&sobj->core.drain_sync);
+	threadobj_cond_broadcast(&sobj->core.drain_sync);
 }
 
 /*

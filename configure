@@ -851,6 +851,7 @@ enable_lores_clock
 enable_clock_monotonic_raw
 enable_assert
 enable_async_cancel
+enable_condvar_workaround
 enable_pshared
 enable_registry
 enable_smp
@@ -1522,6 +1523,8 @@ Optional Features:
                           Use CLOCK_MONOTONIC_RAW for timings
   --enable-assert         Enable runtime assertions
   --enable-async-cancel   Enable asynchronous cancellation
+  --enable-condvar-workaround
+                          Enable workaround for broken PI with condvars
   --enable-pshared        Enable shared multi-processing for capable skins
   --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
@@ -13058,6 +13061,31 @@ if test x$async_cancel = xy; then
 
 $as_echo "#define CONFIG_XENO_ASYNC_CANCEL 1" >>confdefs.h
 
+fi
+
+
+unset workaround_condvar_pi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable the workaround for broken PI with condvars" >&5
+$as_echo_n "checking whether to enable the workaround for broken PI with condvars... " >&6; }
+# Check whether --enable-condvar-workaround was given.
+if test "${enable_condvar_workaround+set}" = set; then :
+  enableval=$enable_condvar_workaround; case "$enableval" in
+	y | yes) workaround_condvar_pi=y ;;
+	*) unset workaround_condvar_pi ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${workaround_condvar_pi:-no}" >&5
+$as_echo "${workaround_condvar_pi:-no}" >&6; }
+if test x$workaround_condvar_pi = xy; then
+   if test x$rtcore_type = xmercury; then
+
+$as_echo "#define CONFIG_XENO_WORKAROUND_CONDVAR_PI 1" >>confdefs.h
+
+   else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: PI workaround for condvars useless over Cobalt - ignoring" >&5
+$as_echo "$as_me: WARNING: PI workaround for condvars useless over Cobalt - ignoring" >&2;}
+   fi
 fi
 
 
