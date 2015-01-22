@@ -1,0 +1,21 @@
+diff --git a/drivers/gpio/gpio-zynq.c b/drivers/gpio/gpio-zynq.c
+index 1f5fdfc..c4e682a 100644
+--- a/drivers/gpio/gpio-zynq.c
++++ b/drivers/gpio/gpio-zynq.c
+@@ -14,6 +14,7 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
++#include <linux/ipipe.h>
+ #include <linux/irq.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+@@ -446,7 +447,7 @@ static void zynq_gpio_irqhandler(unsigned int irq, struct irq_desc *desc)
+ 			chip->irq_ack(&gpio_irq_desc->irq_data);
+ 
+ 			/* call the pin specific handler */
+-			generic_handle_irq(gpio_irq);
++			ipipe_handle_demuxed_irq(gpio_irq);
+ 		}
+ 		/* shift to first virtual irq of next bank */
+ 		gpio_irq = gpio->irq_base + zynq_gpio_pin_table[bank_num] + 1;

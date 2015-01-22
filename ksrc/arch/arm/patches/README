@@ -95,6 +95,15 @@ From [5]:
 4- apply ipipe-core-3.5.7-zynq-post.patch
 5- you can resume to generic installation instructions.
 
+---- Zynq (v3.14.17)
+
+1- Checkout the "xilinx-zynq-v3.14.17" branch from the DENX Linux git
+   repository [2]
+2- apply zynq/ipipe-core-3.14.17-zynq-pre.patch
+3- apply ipipe-core-3.14.17-arm-*.patch
+4- apply zynq/ipipe-core-3.14.17-zynq-post.patch
+5- you can resume to generic installation instructions.
+
 -- External links
 
 [1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
