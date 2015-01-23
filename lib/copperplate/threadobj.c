@@ -1080,7 +1080,6 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 
 	thobj->status |= __THREAD_S_SAFE;
 	wait_on_barrier(thobj, __THREAD_S_ACTIVE);
-	thobj->status &= ~__THREAD_S_SAFE;
 
 	/*
 	 * If the started thread has exited before we woke up from the
@@ -1095,7 +1094,8 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 		destroy_thread(thobj);
 		threadobj_free(thobj);
 		ret = -EIDRM;
-	}
+	} else
+		thobj->status &= ~__THREAD_S_SAFE;
 
 	pthread_setcancelstate(oldstate, NULL);
 
