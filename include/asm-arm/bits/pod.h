@@ -194,6 +194,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
 #ifdef CONFIG_VFP
+	unsigned int cpu;
 	if (likely(!tcb->is_root)) {
 		rthal_enable_fpu();
 		rthal_restore_fpu(tcb->fpup);
@@ -210,7 +211,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   task, into the FPU area of the last non RT task which used the FPU
 	   before the preemption by Xenomai.
 	*/
-	unsigned cpu = rthal_processor_id();
+	cpu = rthal_processor_id();
 	vfp_current_hw_state[cpu] = NULL;
 	rthal_disable_fpu();
 #else /* !CONFIG_VFP */
