@@ -12,7 +12,7 @@ index f81e7b9..8af0949 100644
  
  comment "Processor and Board Settings"
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index 17b5e92..2a486ff 100644
+index 17b5e92..7e99af8 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
 @@ -28,7 +28,7 @@
@@ -32,7 +32,7 @@ index 17b5e92..2a486ff 100644
 -#define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    16
 -#define IPIPE_PATCH_NUMBER    1
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	2
  
  #ifdef CONFIG_SMP
  #error "I-pipe/blackfin: SMP not implemented"
@@ -4442,6 +4442,76 @@ index ec4e3bd..b32a421 100644
  	int cpu;
  	int vcpu_id;
  	int srcu_idx;
+diff --git a/include/linux/percpu.h b/include/linux/percpu.h
+index 8419053..e5d43ab 100644
+--- a/include/linux/percpu.h
++++ b/include/linux/percpu.h
+@@ -303,9 +303,9 @@ do {									\
+ #define _this_cpu_generic_to_op(pcp, val, op)				\
+ do {									\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	*raw_cpu_ptr(&(pcp)) op val;					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ } while (0)
+ 
+ #ifndef this_cpu_write
+@@ -388,10 +388,10 @@ do {									\
+ ({									\
+ 	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
+-	raw_cpu_add(pcp, val);					\
++	flags = hard_local_irq_save();					\
++	raw_cpu_add(pcp, val);						\
+ 	ret__ = raw_cpu_read(pcp);					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -418,10 +418,10 @@ do {									\
+ #define _this_cpu_generic_xchg(pcp, nval)				\
+ ({	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_read(pcp);					\
+ 	raw_cpu_write(pcp, nval);					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -446,11 +446,11 @@ do {									\
+ ({									\
+ 	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_read(pcp);					\
+ 	if (ret__ == (oval))						\
+ 		raw_cpu_write(pcp, nval);				\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -483,10 +483,10 @@ do {									\
+ ({									\
+ 	int ret__;							\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_generic_cmpxchg_double(pcp1, pcp2,		\
+ 			oval1, oval2, nval1, nval2);			\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index de83b4e..7fdf00b 100644
 --- a/include/linux/preempt.h
