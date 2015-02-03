@@ -341,7 +341,7 @@ index 10be1dd..cfad863 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..824fa82
+index 0000000..ac0d5fb
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,157 @@
@@ -386,7 +386,7 @@ index 0000000..824fa82
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	2
 +
 +struct ipipe_domain;
 +
@@ -8204,6 +8204,76 @@ index ec4e3bd..b32a421 100644
  	int cpu;
  	int vcpu_id;
  	int srcu_idx;
+diff --git a/include/linux/percpu.h b/include/linux/percpu.h
+index 8419053..e5d43ab 100644
+--- a/include/linux/percpu.h
++++ b/include/linux/percpu.h
+@@ -303,9 +303,9 @@ do {									\
+ #define _this_cpu_generic_to_op(pcp, val, op)				\
+ do {									\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	*raw_cpu_ptr(&(pcp)) op val;					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ } while (0)
+ 
+ #ifndef this_cpu_write
+@@ -388,10 +388,10 @@ do {									\
+ ({									\
+ 	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
+-	raw_cpu_add(pcp, val);					\
++	flags = hard_local_irq_save();					\
++	raw_cpu_add(pcp, val);						\
+ 	ret__ = raw_cpu_read(pcp);					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -418,10 +418,10 @@ do {									\
+ #define _this_cpu_generic_xchg(pcp, nval)				\
+ ({	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_read(pcp);					\
+ 	raw_cpu_write(pcp, nval);					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -446,11 +446,11 @@ do {									\
+ ({									\
+ 	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_read(pcp);					\
+ 	if (ret__ == (oval))						\
+ 		raw_cpu_write(pcp, nval);				\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -483,10 +483,10 @@ do {									\
+ ({									\
+ 	int ret__;							\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_generic_cmpxchg_double(pcp1, pcp2,		\
+ 			oval1, oval2, nval1, nval2);			\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index de83b4e..7fdf00b 100644
 --- a/include/linux/preempt.h
