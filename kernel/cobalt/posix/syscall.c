@@ -272,7 +272,6 @@ static COBALT_SYSCALL(mayday, oneway, int, (void))
 	 * did.
 	 */
 	return __xn_reg_rval(regs);
-
 }
 
 static void stringify_feature_set(unsigned long fset, char *buf, int size)
