@@ -72,51 +72,6 @@ index 290f02ee..dc51f52 100644
  source kernel/Kconfig.preempt
  
  config HZ_FIXED
-diff --git a/arch/arm/Kconfig.rej b/arch/arm/Kconfig.rej
-new file mode 100644
-index 0000000..0f0d7c1
---- /dev/null
-+++ b/arch/arm/Kconfig.rej
-@@ -0,0 +1,39 @@
-+--- arch/arm/Kconfig
-++++ arch/arm/Kconfig
-+@@ -25,14 +25,15 @@
-+ 	select GENERIC_STRNCPY_FROM_USER
-+ 	select GENERIC_STRNLEN_USER
-+ 	select HARDIRQS_SW_RESEND
-++	select HAVE_ARCH_AUDITSYSCALL if (AEABI && !OABI_COMPAT)
-+ 	select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL
-+ 	select HAVE_ARCH_KGDB
-+ 	select HAVE_ARCH_SECCOMP_FILTER if (AEABI && !OABI_COMPAT)
-+ 	select HAVE_ARCH_TRACEHOOK
-+ 	select HAVE_BPF_JIT
-++	select HAVE_CC_STACKPROTECTOR
-+ 	select HAVE_CONTEXT_TRACKING
-+ 	select HAVE_C_RECORDMCOUNT
-+-	select HAVE_CC_STACKPROTECTOR
-+ 	select HAVE_DEBUG_KMEMLEAK
-+ 	select HAVE_DMA_API_DEBUG
-+ 	select HAVE_DMA_ATTRS
-+@@ -502,8 +493,8 @@
-+ 	bool "IXP4xx-based"
-+ 	depends on MMU
-+ 	select ARCH_HAS_DMA_SET_COHERENT_MASK
-+-	select ARCH_SUPPORTS_BIG_ENDIAN
-+ 	select ARCH_REQUIRE_GPIOLIB
-++	select ARCH_SUPPORTS_BIG_ENDIAN
-+ 	select CLKSRC_MMIO
-+ 	select CPU_XSCALE
-+ 	select DMABOUNCE if PCI
-+@@ -714,8 +699,8 @@
-+ 
-+ config ARCH_S3C24XX
-+ 	bool "Samsung S3C24XX SoCs"
-+-	select ARCH_HAS_CPUFREQ
-+ 	select ARCH_REQUIRE_GPIOLIB
-++	select ATAGS
-+ 	select CLKDEV_LOOKUP
-+ 	select CLKSRC_SAMSUNG_PWM
-+ 	select GENERIC_CLOCKEVENTS
 diff --git a/arch/arm/boot/compressed/decompress.c b/arch/arm/boot/compressed/decompress.c
 index bd245d3..65f2238 100644
 --- a/arch/arm/boot/compressed/decompress.c
@@ -1680,7 +1635,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..0aca4cf
+index 0000000..4701f8d
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,272 @@
@@ -1728,7 +1683,7 @@ index 0000000..0aca4cf
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	3
 +
 +struct ipipe_domain;
 +
@@ -3196,7 +3151,7 @@ index 85598b5..e91850c 100644
    DEFINE(TI_VFPSTATE,		offsetof(struct thread_info, vfpstate));
  #ifdef CONFIG_SMP
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 52a949a..d7b848b 100644
+index 52a949a..bafe35e 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -3328,7 +3283,24 @@ index 52a949a..d7b848b 100644
  	mov	r2, r4
  	mov	r3, r5
  
-@@ -676,7 +728,22 @@ __pabt_usr:
+@@ -539,6 +591,7 @@ call_fpe:
+ 	adr	r6, .LCneon_arm_opcodes
+ 2:	ldr	r5, [r6], #4			@ mask value
+ 	ldr	r7, [r6], #4			@ opcode bits matching in mask
++	disable_irq_cond
+ 	cmp	r5, #0				@ end mask?
+ 	beq	1f
+ 	and	r8, r0, r5
+@@ -549,6 +602,8 @@ call_fpe:
+ 	strb	r7, [r10, #TI_USED_CP + 11]	@ mark CP#11 as used
+ 	b	do_vfp				@ let VFP handler handle this
+ 1:
++#else
++	disable_irq_cond
+ #endif
+ 	tst	r0, #0x08000000			@ only CDP/CPRT/LDC/STC have bit 27
+ 	tstne	r0, #0x04000000			@ bit 26 set on both ARM and Thumb-2
+@@ -676,7 +731,22 @@ __pabt_usr:
  ENTRY(ret_from_exception)
   UNWIND(.fnstart	)
   UNWIND(.cantunwind	)
@@ -3339,11 +3311,11 @@ index 52a949a..d7b848b 100644
 +	cmp     r0, #1
 + THUMB(	it ne)
 +	bne	__ipipe_ret_to_user_irqs_disabled  @ Fast exit path over non-root domains
- 	get_thread_info tsk
-+#else /* !CONFIG_IPIPE_LEGACY */
 +	get_thread_info tsk
++#else /* !CONFIG_IPIPE_LEGACY */
+ 	get_thread_info tsk
 +	ldr	r0, [tsk, #TI_IPIPE]
-+	tst	r0, _TIP_HEAD
++	tst	r0, #_TIP_HEAD
 + THUMB(	it eq)
 +	beq	__ipipe_ret_to_user_irqs_disabled  @ Fast exit path over non-root domains
 +#endif /* !CONFIG_IPIPE_LEGACY */
@@ -3351,7 +3323,7 @@ index 52a949a..d7b848b 100644
  	mov	why, #0
  	b	ret_to_user
   UNWIND(.fnend		)
-@@ -714,7 +781,11 @@ ENTRY(__switch_to)
+@@ -714,7 +784,11 @@ ENTRY(__switch_to)
  	add	r4, r2, #TI_CPU_SAVE
  	ldr	r0, =thread_notify_head
  	mov	r1, #THREAD_NOTIFY_SWITCH
@@ -3363,7 +3335,7 @@ index 52a949a..d7b848b 100644
  #if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP)
  	str	r7, [r8]
  #endif
-@@ -749,6 +820,50 @@ ENDPROC(__switch_to)
+@@ -749,6 +823,50 @@ ENDPROC(__switch_to)
  #endif
  	.endm
  
@@ -7038,74 +7010,6 @@ index bed081e..8a3e58c 100644
 +
 +	mxc_timer_init(base, res.start, irq);
  }
-diff --git a/arch/arm/mach-imx/time.c.rej b/arch/arm/mach-imx/time.c.rej
-new file mode 100644
-index 0000000..2f4c45d
---- /dev/null
-+++ b/arch/arm/mach-imx/time.c.rej
-@@ -0,0 +1,62 @@
-+--- arch/arm/mach-imx/time.c
-++++ arch/arm/mach-imx/time.c
-+@@ -27,6 +27,11 @@
-+ #include <linux/clk.h>
-+ #include <linux/err.h>
-+ #include <linux/sched_clock.h>
-++#include <linux/of.h>
-++#include <linux/of_address.h>
-++#include <linux/of_irq.h>
-++#include <linux/ipipe.h>
-++#include <linux/ipipe_tickdev.h>
-+ 
-+ #include <asm/mach/time.h>
-+ 
-+@@ -337,8 +368,47 @@
-+ 
-+ 	/* init and register the timer to the framework */
-+ 	mxc_clocksource_init(timer_clk);
-++
-++#ifdef CONFIG_IPIPE
-++	if (num_online_cpus() == 1) {
-++		tsc_info.freq = clk_get_rate(timer_clk);
-++
-++		if (timer_is_v1()) {
-++			tsc_info.u.counter_paddr = phys + MX1_2_TCN;
-++			tsc_info.counter_vaddr =(unsigned long)(timer_base + MX1_2_TCN);
-++		} else {
-++			tsc_info.u.counter_paddr = phys + V2_TCN;
-++			tsc_info.counter_vaddr = (unsigned long)(timer_base + V2_TCN);
-++		}
-++		__ipipe_tsc_register(&tsc_info);
-++	}
-++
-++	mxc_itimer.irq = irq;
-++	mxc_itimer.freq = clk_get_rate(timer_clk);
-++	mxc_itimer.min_delay_ticks = ipipe_timer_ns2ticks(&mxc_itimer, 2000);
-++
-++#endif /* CONFIG_IPIPE */
-+ 	mxc_clockevent_init(timer_clk);
-+ 
-+ 	/* Make irqs happen */
-+ 	setup_irq(irq, &mxc_timer_irq);
-++
-++}
-++
-++#ifdef CONFIG_OF
-++void __init mxc_timer_init_dt(struct device_node *np)
-++{
-++	struct resource res;
-++	void __iomem *base;
-++	int irq;
-++
-++	base = of_iomap(np, 0);
-++	WARN_ON(!base);
-++	irq = irq_of_parse_and_map(np, 0);
-++
-++	if (of_address_to_resource(np, 0, &res))
-++		res.start = 0;
-++
-++	mxc_timer_init(base, res.start, irq);
-+ }
-++#endif
 diff --git a/arch/arm/mach-imx/tzic.c b/arch/arm/mach-imx/tzic.c
 index 7828af4..254ee30 100644
 --- a/arch/arm/mach-imx/tzic.c
@@ -11079,7 +10983,7 @@ index 5163ec1..964e67a 100644
  	clocksource_register_hz(&clocksource_counter, arch_timer_rate);
  	cyclecounter.mult = clocksource_counter.mult;
 diff --git a/drivers/clocksource/arm_global_timer.c b/drivers/clocksource/arm_global_timer.c
-index 60e5a170..31f2541 100644
+index 60e5a170..2caa6d2 100644
 --- a/drivers/clocksource/arm_global_timer.c
 +++ b/drivers/clocksource/arm_global_timer.c
 @@ -24,6 +24,7 @@
@@ -11098,7 +11002,7 @@ index 60e5a170..31f2541 100644
  static unsigned long gt_clk_rate;
  static int gt_ppi;
  static struct clock_event_device __percpu *gt_evt;
-@@ -210,6 +212,16 @@ static u64 notrace gt_sched_clock_read(void)
+@@ -210,6 +212,20 @@ static u64 notrace gt_sched_clock_read(void)
  
  static void __init gt_clocksource_init(void)
  {
@@ -11107,15 +11011,19 @@ index 60e5a170..31f2541 100644
 +		.type = IPIPE_TSC_TYPE_FREERUNNING,
 +		.freq = gt_clk_rate,
 +		.counter_vaddr = (unsigned long)gt_base,
-+		.u.counter_paddr = gt_pbase,
-+		.u.mask = 0xffffffff,
++		.u = {
++			{
++				.counter_paddr = gt_pbase,
++				.mask = 0xffffffff,
++			}
++		},
 +	};
 +#endif
 +
  	writel(0, gt_base + GT_CONTROL);
  	writel(0, gt_base + GT_COUNTER0);
  	writel(0, gt_base + GT_COUNTER1);
-@@ -219,6 +231,9 @@ static void __init gt_clocksource_init(void)
+@@ -219,6 +235,9 @@ static void __init gt_clocksource_init(void)
  #ifdef CONFIG_CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
  	sched_clock_register(gt_sched_clock_read, 64, gt_clk_rate);
  #endif
@@ -11125,7 +11033,7 @@ index 60e5a170..31f2541 100644
  	clocksource_register_hz(&gt_clocksource, gt_clk_rate);
  }
  
-@@ -242,8 +257,9 @@ static struct notifier_block gt_cpu_nb = {
+@@ -242,8 +261,9 @@ static struct notifier_block gt_cpu_nb = {
  
  static void __init global_timer_of_register(struct device_node *np)
  {
@@ -11136,7 +11044,7 @@ index 60e5a170..31f2541 100644
  
  	/*
  	 * In A9 r2p0 the comparators for each processor with the global timer
-@@ -253,13 +269,15 @@ static void __init global_timer_of_register(struct device_node *np)
+@@ -253,13 +273,15 @@ static void __init global_timer_of_register(struct device_node *np)
  	if (read_cpuid_part_number() == ARM_CPU_PART_CORTEX_A9
  	    && (read_cpuid_id() & 0xf0000f) < 0x200000) {
  		pr_warn("global-timer: non support for this cpu version.\n");
@@ -11157,7 +11065,7 @@ index 60e5a170..31f2541 100644
  	}
  
  	gt_base = of_iomap(np, 0);
-@@ -268,6 +286,11 @@ static void __init global_timer_of_register(struct device_node *np)
+@@ -268,6 +290,11 @@ static void __init global_timer_of_register(struct device_node *np)
  		return;
  	}
  
@@ -11169,7 +11077,7 @@ index 60e5a170..31f2541 100644
  	gt_clk = of_clk_get(np, 0);
  	if (!IS_ERR(gt_clk)) {
  		err = clk_prepare_enable(gt_clk);
-@@ -280,30 +303,33 @@ static void __init global_timer_of_register(struct device_node *np)
+@@ -280,30 +307,33 @@ static void __init global_timer_of_register(struct device_node *np)
  	}
  
  	gt_clk_rate = clk_get_rate(gt_clk);
@@ -15134,6 +15042,76 @@ index ec4e3bd..b32a421 100644
  	int cpu;
  	int vcpu_id;
  	int srcu_idx;
+diff --git a/include/linux/percpu.h b/include/linux/percpu.h
+index 8419053..e5d43ab 100644
+--- a/include/linux/percpu.h
++++ b/include/linux/percpu.h
+@@ -303,9 +303,9 @@ do {									\
+ #define _this_cpu_generic_to_op(pcp, val, op)				\
+ do {									\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	*raw_cpu_ptr(&(pcp)) op val;					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ } while (0)
+ 
+ #ifndef this_cpu_write
+@@ -388,10 +388,10 @@ do {									\
+ ({									\
+ 	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
+-	raw_cpu_add(pcp, val);					\
++	flags = hard_local_irq_save();					\
++	raw_cpu_add(pcp, val);						\
+ 	ret__ = raw_cpu_read(pcp);					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -418,10 +418,10 @@ do {									\
+ #define _this_cpu_generic_xchg(pcp, nval)				\
+ ({	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_read(pcp);					\
+ 	raw_cpu_write(pcp, nval);					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -446,11 +446,11 @@ do {									\
+ ({									\
+ 	typeof(pcp) ret__;						\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_read(pcp);					\
+ 	if (ret__ == (oval))						\
+ 		raw_cpu_write(pcp, nval);				\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
+@@ -483,10 +483,10 @@ do {									\
+ ({									\
+ 	int ret__;							\
+ 	unsigned long flags;						\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret__ = raw_cpu_generic_cmpxchg_double(pcp1, pcp2,		\
+ 			oval1, oval2, nval1, nval2);			\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 	ret__;								\
+ })
+ 
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index de83b4e..7fdf00b 100644
 --- a/include/linux/preempt.h
