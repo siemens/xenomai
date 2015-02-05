@@ -22,12 +22,11 @@
 #ifndef _COBALT_POWERPC_ASM_CALIBRATION_H
 #define _COBALT_POWERPC_ASM_CALIBRATION_H
 
-static inline unsigned long xnarch_get_sched_latency(void)
+static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 #define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
-#else
-#if defined(CONFIG_PPC_PASEMI)
+#elif defined(CONFIG_PPC_PASEMI)
 #define __sched_latency 1000
 #elif defined(CONFIG_WALNUT)
 #define __sched_latency 11000
@@ -99,10 +98,9 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 4000
 #endif
 #endif
-
-#endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
-
-	return __sched_latency;
+	p->user = xnclock_ns_to_ticks(&nkclock, __sched_latency);
+	p->kernel = xnclock_ns_to_ticks(&nkclock, CONFIG_XENO_OPT_TIMING_KSCHEDLAT);
+	p->irq = xnclock_ns_to_ticks(&nkclock, CONFIG_XENO_OPT_TIMING_IRQLAT);
 }
 
 #undef __sched_latency

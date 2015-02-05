@@ -21,7 +21,12 @@
 
 #include <asm/processor.h>
 
-static inline unsigned long xnarch_get_sched_latency (void)
+static inline unsigned long __get_bogomips(void)
+{
+	return this_cpu_read(cpu_info.loops_per_jiffy)/(500000/HZ);
+}
+
+static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 {
 	unsigned long sched_latency;
 
@@ -48,19 +53,18 @@ static inline unsigned long xnarch_get_sched_latency (void)
 		sched_latency = 1000;
 #endif /* !SMP */
 	} else {
-#define __bogomips (this_cpu_read(cpu_info.loops_per_jiffy)/(500000/HZ))
-		sched_latency = (__bogomips < 250 ? 17000 :
-				 __bogomips < 2500 ? 4200 :
+		sched_latency = (__get_bogomips() < 250 ? 17000 :
+				 __get_bogomips() < 2500 ? 4200 :
 				 3500);
-#undef __bogomips
-
 #ifdef CONFIG_SMP
 		sched_latency += 1000;
 #endif /* CONFIG_SMP */
 	}
 #endif /* !CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
-	return sched_latency;
+	p->user = sched_latency;
+	p->kernel = CONFIG_XENO_OPT_TIMING_KSCHEDLAT;
+	p->irq = CONFIG_XENO_OPT_TIMING_IRQLAT;
 }
 
 #endif /* !_COBALT_X86_ASM_CALIBRATION_H */

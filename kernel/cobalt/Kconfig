@@ -173,19 +173,6 @@ config XENO_OPT_AUTOTUNE
 	adjusting the core timing services to the intrinsic latency of
 	the platform.
 
-config XENO_OPT_TIMING_SCHEDLAT
-	int "Scheduling latency (ns)"
-	default 0
-	help
-	Scheduling latency is the time between the termination of an
-	interrupt handler and the execution of the first instruction
-	of the real-time thread this handler resumes. A default value
-	of 0 (recommended) will cause a pre-calibrated value to be
-	used.
-
-	If the auto-tuner is enabled, this value will be used as the
-	factory default when running "autotune --reset".
-
 config XENO_OPT_SCALABLE_SCHED
 	bool "O(1) scheduler"
 	help
@@ -341,6 +328,53 @@ config XENO_OPT_DEBUG_TRACE_LOGSZ
        discarded.
 
        Writing to /proc/xenomai/debug/relax empties the trace log.
+
+endmenu
+
+menu "Latency settings"
+
+config XENO_OPT_TIMING_SCHEDLAT
+	int "User scheduling latency (ns)"
+	default 0
+	help
+	The user scheduling latency is the time between the
+	termination of an interrupt handler and the execution of the
+	first instruction of the real-time application thread this
+	handler resumes. A default value of 0 (recommended) will cause
+	a pre-calibrated value to be used.
+
+	If the auto-tuner is enabled, this value will be used as the
+	factory default when running "autotune --reset".
+
+config XENO_OPT_TIMING_KSCHEDLAT
+	int "Intra-kernel scheduling latency (ns)"
+	default 0
+	help
+	The intra-kernel scheduling latency is the time between the
+	termination of an interrupt handler and the execution of the
+	first instruction of the RTDM kernel thread this handler
+	resumes. A default value of 0 (recommended) will cause a
+	pre-calibrated value to be used.
+
+	Intra-kernel latency is usually significantly lower than user
+	scheduling latency on MMU-enabled platforms, due to CPU cache
+	latency.
+
+	If the auto-tuner is enabled, this value will be used as the
+	factory default when running "autotune --reset".
+
+config XENO_OPT_TIMING_IRQLAT
+	int "Interrupt latency (ns)"
+	default 0
+	help
+
+	The interrupt latency is the time between the occurrence of an
+	IRQ and the first instruction of the interrupt handler which
+	will service it. A default value of 0 (recommended) will cause
+	a pre-calibrated value to be used.
+
+	If the auto-tuner is enabled, this value will be used as the
+	factory default when running "autotune --reset".
 
 endmenu
 

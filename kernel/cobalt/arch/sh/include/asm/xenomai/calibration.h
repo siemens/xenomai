@@ -19,19 +19,18 @@
 #ifndef _COBALT_SH_ASM_CALIBRATION_H
 #define _COBALT_SH_ASM_CALIBRATION_H
 
-static inline unsigned long xnarch_get_sched_latency (void)
+static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 #define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
-#else
-#ifdef CONFIG_SH_ST_MB442
+#elif defined(CONFIG_SH_ST_MB442)
 #define __sched_latency  5000
 #else
 #define __sched_latency  7000
 #endif
-#endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
-
-	return __sched_latency;
+	p->user = __sched_latency;
+	p->kernel = CONFIG_XENO_OPT_TIMING_KSCHEDLAT;
+	p->irq = CONFIG_XENO_OPT_TIMING_IRQLAT;
 }
 
 #undef __sched_latency

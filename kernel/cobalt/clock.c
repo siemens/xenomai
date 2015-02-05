@@ -786,12 +786,14 @@ static int set_core_clock_gravity(struct xnclock *clock,
 
 static void reset_core_clock_gravity(struct xnclock *clock)
 {
-	xnticks_t schedlat = xnarch_get_sched_latency();
 	struct xnclock_gravity gravity;
 
-	gravity.user = xnclock_ns_to_ticks(&nkclock, schedlat) + nktimerlat;
-	gravity.kernel = gravity.user;
-	gravity.irq = nktimerlat;
+	xnarch_get_latencies(&gravity);
+	gravity.user += nktimerlat;
+	if (gravity.kernel == 0)
+		gravity.kernel = gravity.user;
+	if (gravity.irq == 0)
+		gravity.irq = nktimerlat;
 	set_core_clock_gravity(clock, &gravity);
 }
 

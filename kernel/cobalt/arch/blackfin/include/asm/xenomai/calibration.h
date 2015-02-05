@@ -19,13 +19,11 @@
 #ifndef _COBALT_BLACKFIN_ASM_CALIBRATION_H
 #define _COBALT_BLACKFIN_ASM_CALIBRATION_H
 
-static inline unsigned long xnarch_get_sched_latency (void)
-
+static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 #define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
-#else
-#ifdef CONFIG_BF533
+#elif defined(CONFIG_BF533)
 #define __sched_latency 5000
 #elif defined(CONFIG_BF537)
 #define __sched_latency 4800
@@ -48,9 +46,9 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #else
 #error "unsupported Blackfin processor"
 #endif
-#endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
-
-    return __sched_latency;
+	p->user = __sched_latency;
+	p->kernel = CONFIG_XENO_OPT_TIMING_KSCHEDLAT;
+	p->irq = CONFIG_XENO_OPT_TIMING_IRQLAT;
 }
 
 #undef __sched_latency

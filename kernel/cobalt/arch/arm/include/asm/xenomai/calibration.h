@@ -22,30 +22,34 @@
 #ifndef _COBALT_ARM_ASM_CALIBRATION_H
 #define _COBALT_ARM_ASM_CALIBRATION_H
 
-extern unsigned omap_rev(void);
+unsigned int omap_rev(void);
 #define cpu_is_omap44xx() ((omap_rev() & 0xff) == 0x44)
 
-static inline unsigned long xnarch_get_sched_latency (void)
+static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 {
+	unsigned int ulat;
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
-	return CONFIG_XENO_OPT_TIMING_SCHEDLAT;
-#else
-#if defined(CONFIG_ARCH_AT91RM9200)
-	return 8500;
+	ulat = CONFIG_XENO_OPT_TIMING_SCHEDLAT;
+#elif defined(CONFIG_ARCH_AT91RM9200)
+	ulat = 8500;
 #elif defined(CONFIG_ARCH_AT91SAM9263)
-	return 11000;
+	ulat = 11000;
+#elif defined(CONFIG_SOC_IMX6Q)
+	ulat = 6000;
 #elif defined(CONFIG_ARCH_MX51)
-	return 5000;
+	ulat = 5000;
 #elif defined(CONFIG_ARCH_MX53)
-	return 5000;
+	ulat = 5000;
 #elif defined(CONFIG_ARCH_MX6)
-	return 2000;
+	ulat = 2000;
 #elif defined(CONFIG_ARCH_OMAP)
-	return cpu_is_omap44xx() ? 2500 : 5000;
+	ulat = cpu_is_omap44xx() ? 2500 : 5000;
 #else
-	return 9500;	/* XXX sane ? */
+	ulat = 9500;	/* XXX sane? */
 #endif
-#endif
+	p->user = xnclock_ns_to_ticks(&nkclock, ulat);
+	p->kernel = xnclock_ns_to_ticks(&nkclock, CONFIG_XENO_OPT_TIMING_KSCHEDLAT);
+	p->irq = xnclock_ns_to_ticks(&nkclock, CONFIG_XENO_OPT_TIMING_IRQLAT);
 }
 
 #endif /* !_COBALT_ARM_ASM_CALIBRATION_H */
