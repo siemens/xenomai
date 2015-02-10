@@ -22,9 +22,34 @@
 
 #ifndef RTDM_NO_DEFAULT_USER_API
 
+#define rt_dev_call(__call, __args...)	\
+({					\
+	int __ret;			\
+	__ret = __RT(__call(__args));	\
+	__ret < 0 ? -errno : __ret;	\
+})
+
+#define rt_dev_open(__args...)		rt_dev_call(open, __args)
+#define rt_dev_ioctl(__args...)		rt_dev_call(ioctl, __args)
+
+static inline int rt_dev_socket(int domain, int type, int protocol)
+{
+	return rt_dev_call(socket, domain, type, protocol);
+}
+
+static inline ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags)
+{
+	return rt_dev_call(recvmsg, fd, msg, flags);
+}
+
 static inline ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags)
 {
-	return __RT(recvfrom(fd, buf, len, flags, NULL, NULL));
+	return rt_dev_call(recvfrom, fd, buf, len, flags, NULL, NULL);
+}
+
+static inline ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags)
+{
+	return rt_dev_call(sendmsg, fd, msg, flags);
 }
 
 static inline ssize_t rt_dev_sendto(int fd, const void *buf, size_t len,
@@ -44,31 +69,33 @@ static inline ssize_t rt_dev_sendto(int fd, const void *buf, size_t len,
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
 
-	return __RT(sendmsg(fd, &msg, flags));
+	return rt_dev_call(sendmsg, fd, &msg, flags);
 }
 
 static inline ssize_t rt_dev_send(int fd, const void *buf, size_t len,
 				  int flags)
 {
-	return __RT(sendto(fd, buf, len, flags, NULL, 0));
+	return rt_dev_call(sendto, fd, buf, len, flags, NULL, 0);
 }
 
 static inline int rt_dev_getsockopt(int fd, int level, int optname,
 				    void *optval, socklen_t *optlen)
 {
-	struct _rtdm_getsockopt_args args =
-		{ level, optname, optval, optlen };
+	struct _rtdm_getsockopt_args args = {
+		level, optname, optval, optlen
+	};
 
-	return __RT(ioctl(fd, _RTIOC_GETSOCKOPT, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_GETSOCKOPT, &args);
 }
 
 static inline int rt_dev_setsockopt(int fd, int level, int optname,
 				    const void *optval, socklen_t optlen)
 {
-	struct _rtdm_setsockopt_args args =
-		{ level, optname, (void *)optval, optlen };
+	struct _rtdm_setsockopt_args args = {
+		level, optname, (void *)optval, optlen
+	};
 
-	return __RT(ioctl(fd, _RTIOC_SETSOCKOPT, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_SETSOCKOPT, &args);
 }
 
 static inline int rt_dev_bind(int fd, const struct sockaddr *my_addr,
@@ -76,7 +103,7 @@ static inline int rt_dev_bind(int fd, const struct sockaddr *my_addr,
 {
 	struct _rtdm_setsockaddr_args args = { my_addr, addrlen };
 
-	return __RT(ioctl(fd, _RTIOC_BIND, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_BIND, &args);
 }
 
 static inline int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
@@ -84,12 +111,12 @@ static inline int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
 {
 	struct _rtdm_setsockaddr_args args = { serv_addr, addrlen };
 
-	return __RT(ioctl(fd, _RTIOC_CONNECT, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_CONNECT, &args);
 }
 
 static inline int rt_dev_listen(int fd, int backlog)
 {
-	return __RT(ioctl(fd, _RTIOC_LISTEN, backlog));
+	return rt_dev_call(ioctl, fd, _RTIOC_LISTEN, backlog);
 }
 
 static inline int rt_dev_accept(int fd, struct sockaddr *addr,
@@ -97,7 +124,7 @@ static inline int rt_dev_accept(int fd, struct sockaddr *addr,
 {
 	struct _rtdm_getsockaddr_args args = { addr, addrlen };
 
-	return __RT(ioctl(fd, _RTIOC_ACCEPT, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_ACCEPT, &args);
 }
 
 static inline int rt_dev_getsockname(int fd, struct sockaddr *name,
@@ -105,7 +132,7 @@ static inline int rt_dev_getsockname(int fd, struct sockaddr *name,
 {
 	struct _rtdm_getsockaddr_args args = { name, namelen };
 
-	return __RT(ioctl(fd, _RTIOC_GETSOCKNAME, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_GETSOCKNAME, &args);
 }
 
 static inline int rt_dev_getpeername(int fd, struct sockaddr *name,
@@ -113,14 +140,29 @@ static inline int rt_dev_getpeername(int fd, struct sockaddr *name,
 {
 	struct _rtdm_getsockaddr_args args = { name, namelen };
 
-	return __RT(ioctl(fd, _RTIOC_GETPEERNAME, &args));
+	return rt_dev_call(ioctl, fd, _RTIOC_GETPEERNAME, &args);
 }
 
 static inline int rt_dev_shutdown(int fd, int how)
 {
-	return __RT(ioctl(fd, _RTIOC_SHUTDOWN, how));
+	return rt_dev_call(ioctl, fd, _RTIOC_SHUTDOWN, how);
 }
 
-#endif /* RTDM_NO_DEFAULT_USER_API */
+static inline int rt_dev_close(int fd)
+{
+	return rt_dev_call(close, fd);
+}
+
+static inline ssize_t rt_dev_write(int fd, const void *buf, size_t len)
+{
+	return rt_dev_call(write, fd, buf, len);
+}
+
+static inline ssize_t rt_dev_read(int fd, void *buf, size_t len)
+{
+	return rt_dev_call(read, fd, buf, len);
+}
+
+#endif /* !RTDM_NO_DEFAULT_USER_API */
 
 #endif /* _XENOMAI_TRANK_RTDM_RTDM_H */
