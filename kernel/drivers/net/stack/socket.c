@@ -252,7 +252,7 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
 		    break;
 		}
 
-		strncpy(cur_ifr->ifr_name, rtdev->name,
+		strlcpy(cur_ifr->ifr_name, rtdev->name,
 			IFNAMSIZ);
 		sin = (struct sockaddr_in *)&cur_ifr->ifr_addr;
 		sin->sin_family      = AF_INET;
@@ -265,6 +265,13 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
 
 	ifc->ifc_len = size;
 	return 0;
+    }
+    if (request == SIOCGIFNAME) {
+        rtdev = rtdev_get_by_index(ifr->ifr_ifindex);
+        if (rtdev == NULL)
+            return -ENODEV;
+        strlcpy(ifr->ifr_name, rtdev->name, IFNAMSIZ);
+        return 0;
     }
 
     rtdev = rtdev_get_by_name(ifr->ifr_name);
