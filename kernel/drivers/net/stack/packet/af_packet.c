@@ -456,6 +456,7 @@ rt_packet_sendmsg(struct rtdm_fd *fd, const struct msghdr *msg, int msg_flags)
     }
 
  out:
+    rtdev_dereference(rtdev);
     return ret;
 
  err:
