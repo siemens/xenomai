@@ -77,6 +77,7 @@ static const struct e1000_info *e1000_info_tbl[] = {
 	[board_ich10lan]	= &e1000_ich10_info,
 	[board_pchlan]		= &e1000_pch_info,
 	[board_pch2lan]		= &e1000_pch2_info,
+	[board_pch_lpt]		= &e1000_pch_lpt_info,
 };
 
 struct e1000_reg_info {
@@ -1970,8 +1971,8 @@ static void e1000_setup_rctl(struct e1000_adapter *adapter)
 	struct e1000_hw *hw = &adapter->hw;
 	u32 rctl, rfctl;
 
-	/* Workaround Si errata on 82579 - configure jumbo frame flow */
-	if (hw->mac.type == e1000_pch2lan) {
+	/* Workaround Si errata on PCHx - configure jumbo frame flow */
+	if (hw->mac.type >= e1000_pch2lan) {
 		s32 ret_val;
 
 		if (adapter->netdev->mtu > ETH_DATA_LEN)
@@ -2366,6 +2367,7 @@ void e1000e_reset(struct e1000_adapter *adapter)
 		fc->refresh_time = 0x1000;
 		break;
 	case e1000_pch2lan:
+	case e1000_pch_lpt:
 		fc->high_water = 0x05C20;
 		fc->low_water = 0x05048;
 		fc->pause_time = 0x0650;
@@ -4338,6 +4340,11 @@ static DEFINE_PCI_DEVICE_TABLE(e1000_pci_tbl) = {
 
 	{ PCI_VDEVICE(INTEL, E1000_DEV_ID_PCH2_LV_LM), board_pch2lan },
 	{ PCI_VDEVICE(INTEL, E1000_DEV_ID_PCH2_LV_V), board_pch2lan },
+
+	{ PCI_VDEVICE(INTEL, E1000_DEV_ID_PCH_LPT_I217_LM), board_pch_lpt },
+	{ PCI_VDEVICE(INTEL, E1000_DEV_ID_PCH_LPT_I217_V), board_pch_lpt },
+	{ PCI_VDEVICE(INTEL, E1000_DEV_ID_PCH_LPTLP_I218_LM), board_pch_lpt },
+	{ PCI_VDEVICE(INTEL, E1000_DEV_ID_PCH_LPTLP_I218_V), board_pch_lpt },
 
 	{ }	/* terminate list */
 };

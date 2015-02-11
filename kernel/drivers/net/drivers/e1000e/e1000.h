@@ -202,6 +202,7 @@ enum e1000_boards {
 	board_ich10lan,
 	board_pchlan,
 	board_pch2lan,
+	board_pch_lpt,
 };
 
 struct e1000_ps_page {
@@ -527,6 +528,7 @@ extern const struct e1000_info e1000_ich9_info;
 extern const struct e1000_info e1000_ich10_info;
 extern const struct e1000_info e1000_pch_info;
 extern const struct e1000_info e1000_pch2_info;
+extern const struct e1000_info e1000_pch_lpt_info;
 extern const struct e1000_info e1000_es2_info;
 
 extern s32 e1000_read_pba_string_generic(struct e1000_hw *hw, u8 *pba_num,
@@ -677,9 +679,19 @@ static inline s32 e1e_rphy(struct e1000_hw *hw, u32 offset, u16 *data)
 	return hw->phy.ops.read_reg(hw, offset, data);
 }
 
+static inline s32 e1e_rphy_locked(struct e1000_hw *hw, u32 offset, u16 *data)
+{
+	return hw->phy.ops.read_reg_locked(hw, offset, data);
+}
+
 static inline s32 e1e_wphy(struct e1000_hw *hw, u32 offset, u16 data)
 {
 	return hw->phy.ops.write_reg(hw, offset, data);
+}
+
+static inline s32 e1e_wphy_locked(struct e1000_hw *hw, u32 offset, u16 data)
+{
+	return hw->phy.ops.write_reg_locked(hw, offset, data);
 }
 
 static inline s32 e1000_get_cable_length(struct e1000_hw *hw)
