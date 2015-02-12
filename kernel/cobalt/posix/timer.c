@@ -439,7 +439,7 @@ fail:
 	return -EINVAL;
 }
 
-int cobalt_timer_delete(timer_t timerid)
+COBALT_SYSCALL(timer_delete, current, int, (timer_t timerid))
 {
 	return timer_delete(timerid);
 }
