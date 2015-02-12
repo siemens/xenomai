@@ -348,14 +348,14 @@ s32 e1000e_write_phy_reg_m88(struct e1000_hw *hw, u32 offset, u16 data)
 }
 
 /**
- *  e1000_set_page_igp - Set page as on IGP-like PHY(s)
- *  @hw: pointer to the HW structure
- *  @page: page to set (shifted left when necessary)
+ *  @brief Set page as on IGP-like PHY(s)
+ *  @param hw pointer to the HW structure
+ *  @param page page to set (shifted left when necessary)
  *
  *  Sets PHY page required for PHY register access.  Assumes semaphore is
  *  already acquired.  Note, this function sets phy.addr to 1 so the caller
  *  must set it appropriately (if necessary) after this function returns.
- **/
+ */
 s32 e1000_set_page_igp(struct e1000_hw *hw, u16 page)
 {
 	e_dbg("Setting page 0x%x\n", page);
@@ -2405,10 +2405,10 @@ out:
 }
 
 /**
- *  e1000_get_phy_addr_for_bm_page - Retrieve PHY page address
- *  @page: page to access
+ *  @brief Retrieve PHY page address
+ *  @param page page to access
  *
- *  Returns the phy address for the page requested.
+ *  @return PHY address for the page requested.
  **/
 static u32 e1000_get_phy_addr_for_bm_page(u32 page, u32 reg)
 {
@@ -3096,9 +3096,10 @@ s32 e1000_write_phy_reg_page_hv(struct e1000_hw *hw, u32 offset, u16 data)
 }
 
 /**
- *  e1000_get_phy_addr_for_hv_page - Get PHY address based on page
- *  @page: page to be accessed
- **/
+ * @brief Get PHY address based on page
+ * @param page page to be accessed
+ * @return PHY address
+ */
 static u32 e1000_get_phy_addr_for_hv_page(u32 page)
 {
 	u32 phy_addr = 2;

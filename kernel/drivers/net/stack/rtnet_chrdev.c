@@ -39,13 +39,6 @@
 static DEFINE_SPINLOCK(ioctl_handler_lock);
 static LIST_HEAD(ioctl_handlers);
 
-/**
- * rtnet_ioctl -
- * @inode:
- * @file:
- * @request:
- * @arg:
- */
 static long rtnet_ioctl(struct file *file,
 			unsigned int request, unsigned long arg)
 {

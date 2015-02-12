@@ -39,7 +39,7 @@ typedef struct RT_SEM RT_SEM;
 
 /**
  * @brief Semaphore status descriptor
- * @anchor RT_QUEUE_INFO
+ * @anchor RT_SEM_INFO
  *
  * This structure reports various static and runtime information about
  * a semaphore, returned by a call to rt_sem_inquire().

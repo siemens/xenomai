@@ -390,12 +390,13 @@
 	})
 
 /**
- * struct macb_dma_desc - Hardware DMA descriptor
- * @addr: DMA address of data buffer
- * @ctrl: Control and status bits
+ * @brief Hardware DMA descriptor
+ * @anchor macb_dma_desc
  */
 struct macb_dma_desc {
+	/** DMA address of data buffer */
 	u32	addr;
+	/** Control and status bits */
 	u32	ctrl;
 };
 
@@ -460,12 +461,13 @@ struct macb_dma_desc {
 #define MACB_TX_USED_SIZE			1
 
 /**
- * struct macb_tx_skb - data about an skb which is being transmitted
- * @skb: skb currently being transmitted
- * @mapping: DMA address of the skb's data buffer
+ * @brief Data about an skb which is being transmitted
+ * @anchor macb_tx_skb
  */
 struct macb_tx_skb {
+	/** skb currently being transmitted */
 	struct rtskb		*skb;
+	/** DMA address of the skb's data buffer */
 	dma_addr_t		mapping;
 };
 
