@@ -39,7 +39,7 @@ static inline void __xn_error_return(struct pt_regs *regs, int v)
 	__xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_status_return(struct pt_regs *regs, int v)
+static inline void __xn_status_return(struct pt_regs *regs, long v)
 {
 	__xn_reg_rval(regs) = v;
 }

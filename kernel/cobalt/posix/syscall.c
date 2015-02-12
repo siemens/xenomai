@@ -710,12 +710,13 @@ static const int cobalt_sysmodes[] = {
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	struct cobalt_process *process;
-	int switched, ret, sigs;
+	int switched, sigs;
 	struct xnthread *thread;
 	cobalt_syshand handler;
 	struct task_struct *p;
 	unsigned int nr, code;
 	int sysflags;
+	long ret;
 
 	if (!__xn_syscall_p(regs))
 		goto linux_syscall;
@@ -890,11 +891,12 @@ bad_syscall:
 
 static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
-	int sysflags, switched, ret, sigs;
+	int sysflags, switched, sigs;
 	struct xnthread *thread;
 	cobalt_syshand handler;
 	struct task_struct *p;
 	unsigned int nr, code;
+	long ret;
 
 	/*
 	 * Catch cancellation requests pending for user shadows
