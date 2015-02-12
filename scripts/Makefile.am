@@ -25,6 +25,7 @@ EXTRA_DIST =				\
 	histo.gp			\
 	prepare-kernel.sh		\
 	wrap-link.sh			\
+	xeno-multiuser			\
 	xeno-config-cobalt.in		\
 	xeno-config-mercury.in		\
 	xeno.in

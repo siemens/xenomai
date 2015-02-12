@@ -97,7 +97,7 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_HOST_STRING,"$host",[Host system alias])
 XENO_HOST_STRING="$host"
 AC_DEFINE_UNQUOTED(CONFIG_XENO_COMPILER,"`$CC -v 2>&1 | tail -n 1`",[Compiler])
 
-AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2 tar-ustar])
+AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2 tar-ustar subdir-objects])
 AM_MAINTAINER_MODE
 AM_PROG_AS
 AM_PROG_LEX
