@@ -121,7 +121,7 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
 	return sched_class;
 }
 
-COBALT_SYSCALL(sched_minprio, current, int, (int policy))
+COBALT_SYSCALL(sched_minprio, current, (int policy))
 {
 	int ret;
 
@@ -149,7 +149,7 @@ COBALT_SYSCALL(sched_minprio, current, int, (int policy))
 	return ret;
 }
 
-COBALT_SYSCALL(sched_maxprio, current, int, (int policy))
+COBALT_SYSCALL(sched_maxprio, current, (int policy))
 {
 	int ret;
 
@@ -183,7 +183,7 @@ COBALT_SYSCALL(sched_maxprio, current, int, (int policy))
 	return ret;
 }
 
-COBALT_SYSCALL(sched_yield, primary, int, (void))
+COBALT_SYSCALL(sched_yield, primary, (void))
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
 	int ret = 0;
@@ -632,9 +632,9 @@ int __cobalt_sched_setconfig_np(int cpu, int policy,
 }
 
 COBALT_SYSCALL(sched_setconfig_np, conforming,
-	       int, (int cpu, int policy,
-		     union sched_config __user *u_config,
-		     size_t len))
+	       (int cpu, int policy,
+		union sched_config __user *u_config,
+		size_t len))
 {
 	return __cobalt_sched_setconfig_np(cpu, policy, u_config, len,
 					   sched_fetch_config, sched_ack_config);
@@ -673,9 +673,9 @@ ssize_t __cobalt_sched_getconfig_np(int cpu, int policy,
 }
 
 COBALT_SYSCALL(sched_getconfig_np, conforming,
-	       ssize_t, (int cpu, int policy,
-			 union sched_config __user *u_config,
-			 size_t len))
+	       (int cpu, int policy,
+		union sched_config __user *u_config,
+		size_t len))
 {
 	return __cobalt_sched_getconfig_np(cpu, policy, u_config, len,
 					   sched_fetch_config, sched_put_config);
@@ -701,8 +701,7 @@ int __cobalt_sched_weightprio(int policy,
 }
 
 COBALT_SYSCALL(sched_weightprio, current,
-	       int, (int policy,
-		     const struct sched_param_ex __user *u_param))
+	       (int policy, const struct sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
 

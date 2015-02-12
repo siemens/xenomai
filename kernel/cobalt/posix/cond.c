@@ -271,8 +271,8 @@ unlock_and_return:
 }
 
 COBALT_SYSCALL(cond_init, current,
-	       int, (struct cobalt_cond_shadow __user *u_cnd,
-		     const struct cobalt_condattr __user *u_attr))
+	       (struct cobalt_cond_shadow __user *u_cnd,
+		const struct cobalt_condattr __user *u_attr))
 {
 	struct cobalt_cond_shadow cnd;
 	struct cobalt_condattr attr;
@@ -294,7 +294,7 @@ COBALT_SYSCALL(cond_init, current,
 }
 
 COBALT_SYSCALL(cond_destroy, current,
-	       int, (struct cobalt_cond_shadow __user *u_cnd))
+	       (struct cobalt_cond_shadow __user *u_cnd))
 {
 	struct cobalt_cond_shadow cnd;
 	int err;
@@ -390,19 +390,19 @@ int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 
 /* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
 COBALT_SYSCALL(cond_wait_prologue, nonrestartable,
-	       int, (struct cobalt_cond_shadow __user *u_cnd,
-		     struct cobalt_mutex_shadow __user *u_mx,
-		     int *u_err,
-		     unsigned int timed,
-		     struct timespec __user *u_ts))
+	       (struct cobalt_cond_shadow __user *u_cnd,
+		struct cobalt_mutex_shadow __user *u_mx,
+		int *u_err,
+		unsigned int timed,
+		struct timespec __user *u_ts))
 {
 	return __cobalt_cond_wait_prologue(u_cnd, u_mx, u_err, u_ts,
 					   timed ? cond_fetch_timeout : NULL);
 }
 
 COBALT_SYSCALL(cond_wait_epilogue, primary,
-	       int, (struct cobalt_cond_shadow __user *u_cnd,
-		     struct cobalt_mutex_shadow __user *u_mx))
+	       (struct cobalt_cond_shadow __user *u_cnd,
+		struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct xnthread *cur = xnthread_current();
 	struct cobalt_cond *cond;

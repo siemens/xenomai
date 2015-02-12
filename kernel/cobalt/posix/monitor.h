@@ -43,26 +43,26 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 			  int __user *u_ret);
 
 COBALT_SYSCALL_DECL(monitor_init,
-		    int, (struct cobalt_monitor_shadow __user *u_monsh,
-			  clockid_t clk_id,
-			  int flags));
+		    (struct cobalt_monitor_shadow __user *u_monsh,
+		     clockid_t clk_id,
+		     int flags));
 
 COBALT_SYSCALL_DECL(monitor_enter,
-		    int, (struct cobalt_monitor_shadow __user *u_monsh));
+		    (struct cobalt_monitor_shadow __user *u_monsh));
 
 COBALT_SYSCALL_DECL(monitor_sync,
-		    int, (struct cobalt_monitor_shadow __user *u_monsh));
+		    (struct cobalt_monitor_shadow __user *u_monsh));
 
 COBALT_SYSCALL_DECL(monitor_exit,
-		    int, (struct cobalt_monitor_shadow __user *u_monsh));
+		    (struct cobalt_monitor_shadow __user *u_monsh));
 
 COBALT_SYSCALL_DECL(monitor_wait,
-		    int, (struct cobalt_monitor_shadow __user *u_monsh,
-			  int event, const struct timespec __user *u_ts,
-			  int __user *u_ret));
+		    (struct cobalt_monitor_shadow __user *u_monsh,
+		     int event, const struct timespec __user *u_ts,
+		     int __user *u_ret));
 
 COBALT_SYSCALL_DECL(monitor_destroy,
-		    int, (struct cobalt_monitor_shadow __user *u_monsh));
+		    (struct cobalt_monitor_shadow __user *u_monsh));
 
 void cobalt_monitorq_cleanup(struct cobalt_kqueues *q);
 

@@ -49,8 +49,8 @@
  * thread object.
  */
 COBALT_SYSCALL(monitor_init, current,
-	       int, (struct cobalt_monitor_shadow __user *u_mon,
-		     clockid_t clk_id, int flags))
+	       (struct cobalt_monitor_shadow __user *u_mon,
+		clockid_t clk_id, int flags))
 {
 	struct cobalt_monitor_shadow shadow;
 	struct cobalt_monitor_state *state;
@@ -148,7 +148,7 @@ static int monitor_enter(xnhandle_t handle, struct xnthread *curr)
 }
 
 COBALT_SYSCALL(monitor_enter, primary,
-	       int, (struct cobalt_monitor_shadow __user *u_mon))
+	       (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct xnthread *curr = xnthread_current();
 	xnhandle_t handle;
@@ -300,9 +300,9 @@ out:
 }
 
 COBALT_SYSCALL(monitor_wait, nonrestartable,
-	       int, (struct cobalt_monitor_shadow __user *u_mon,
-		     int event, const struct timespec __user *u_ts,
-		     int __user *u_ret))
+	       (struct cobalt_monitor_shadow __user *u_mon,
+	       int event, const struct timespec __user *u_ts,
+	       int __user *u_ret))
 {
 	struct timespec ts, *tsp = NULL;
 	int ret;
@@ -318,7 +318,7 @@ COBALT_SYSCALL(monitor_wait, nonrestartable,
 }
 
 COBALT_SYSCALL(monitor_sync, nonrestartable,
-	       int, (struct cobalt_monitor_shadow __user *u_mon))
+	       (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct cobalt_monitor *mon;
 	struct xnthread *curr;
@@ -347,7 +347,7 @@ COBALT_SYSCALL(monitor_sync, nonrestartable,
 }
 
 COBALT_SYSCALL(monitor_exit, primary,
-	       int, (struct cobalt_monitor_shadow __user *u_mon))
+	       (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct cobalt_monitor *mon;
 	struct xnthread *curr;
@@ -397,7 +397,7 @@ static void monitor_destroy(struct cobalt_monitor *mon,
 }
 
 COBALT_SYSCALL(monitor_destroy, primary,
-	       int, (struct cobalt_monitor_shadow __user *u_mon))
+	       (struct cobalt_monitor_shadow __user *u_mon))
 {
 	struct cobalt_monitor_state *state;
 	struct cobalt_monitor *mon;

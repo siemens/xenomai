@@ -61,26 +61,25 @@ cobalt_sched_policy_param(union xnsched_policy_param *param,
 			  int u_policy, const struct sched_param_ex *param_ex,
 			  xnticks_t *tslice_r);
 
-COBALT_SYSCALL_DECL(sched_yield, int, (void));
+COBALT_SYSCALL_DECL(sched_yield, (void));
 
 COBALT_SYSCALL_DECL(sched_weightprio,
-		    int, (int policy,
-			  const struct sched_param_ex __user *u_param));
+		    (int policy, const struct sched_param_ex __user *u_param));
 
-COBALT_SYSCALL_DECL(sched_minprio, int, (int policy));
+COBALT_SYSCALL_DECL(sched_minprio, (int policy));
 
-COBALT_SYSCALL_DECL(sched_maxprio, int, (int policy));
+COBALT_SYSCALL_DECL(sched_maxprio, (int policy));
 
 COBALT_SYSCALL_DECL(sched_setconfig_np,
-		    int, (int cpu,
-			  int policy,
-			  union sched_config __user *u_config,
-			  size_t len));
+		    (int cpu,
+		     int policy,
+		     union sched_config __user *u_config,
+		     size_t len));
 
 COBALT_SYSCALL_DECL(sched_getconfig_np,
-		    ssize_t, (int cpu, int policy,
-			      union sched_config __user *u_config,
-			      size_t len));
+		    (int cpu, int policy,
+		     union sched_config __user *u_config,
+		     size_t len));
 
 void cobalt_sched_cleanup(struct cobalt_kqueues *q);
 

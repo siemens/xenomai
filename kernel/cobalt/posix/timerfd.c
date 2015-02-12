@@ -164,8 +164,7 @@ static void timerfd_handler(struct xntimer *xntimer)
 		xnthread_unblock(tfd->target);
 }
 
-COBALT_SYSCALL(timerfd_create, lostage,
-	       int, (int clockid, int flags))
+COBALT_SYSCALL(timerfd_create, lostage, (int clockid, int flags))
 {
 	struct cobalt_tfd *tfd;
 	struct xnthread *curr;
@@ -278,9 +277,9 @@ out:
 }
 
 COBALT_SYSCALL(timerfd_settime, primary,
-	       int, (int fd, int flags,
-		     const struct itimerspec __user *new_value,
-		     struct itimerspec __user *old_value))
+	       (int fd, int flags,
+		const struct itimerspec __user *new_value,
+		struct itimerspec __user *old_value))
 {
 	struct itimerspec ovalue, value;
 	int ret;
@@ -322,7 +321,7 @@ int __cobalt_timerfd_gettime(int fd, struct itimerspec *value)
 }
 
 COBALT_SYSCALL(timerfd_gettime, current,
-	       int, (int fd, struct itimerspec __user *curr_value))
+	       (int fd, struct itimerspec __user *curr_value))
 {
 	struct itimerspec value;
 	int ret;

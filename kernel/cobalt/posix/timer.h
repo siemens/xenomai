@@ -69,20 +69,20 @@ int __cobalt_timer_settime(timer_t timerid, int flags,
 int __cobalt_timer_gettime(timer_t timerid, struct itimerspec *value);
 
 COBALT_SYSCALL_DECL(timer_create,
-		    int, (clockid_t clock,
-			  const struct sigevent __user *u_sev,
-			  timer_t __user *u_tm));
+		    (clockid_t clock,
+		     const struct sigevent __user *u_sev,
+		     timer_t __user *u_tm));
 
-COBALT_SYSCALL_DECL(timer_delete, int, (timer_t tm));
+COBALT_SYSCALL_DECL(timer_delete, (timer_t tm));
 
 COBALT_SYSCALL_DECL(timer_settime,
-		    int, (timer_t tm, int flags,
-			  const struct itimerspec __user *u_newval,
-			  struct itimerspec __user *u_oldval));
+		    (timer_t tm, int flags,
+		     const struct itimerspec __user *u_newval,
+		     struct itimerspec __user *u_oldval));
 
 COBALT_SYSCALL_DECL(timer_gettime,
-		    int, (timer_t tm, struct itimerspec __user *u_val));
+		    (timer_t tm, struct itimerspec __user *u_val));
 
-COBALT_SYSCALL_DECL(timer_getoverrun, int, (timer_t tm));
+COBALT_SYSCALL_DECL(timer_getoverrun, (timer_t tm));
 
 #endif /* !_COBALT_POSIX_TIMER_H */

@@ -142,9 +142,9 @@ struct cobalt_thread *cobalt_thread_find_local(pid_t pid);
 struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 
 COBALT_SYSCALL_DECL(thread_create,
-		    int, (unsigned long pth, int policy,
-			  struct sched_param_ex __user *u_param,
-			  int xid, __u32 __user *u_winoff));
+		    (unsigned long pth, int policy,
+		     struct sched_param_ex __user *u_param,
+		     int xid, __u32 __user *u_winoff));
 
 struct cobalt_thread *
 cobalt_thread_shadow(struct task_struct *p,
@@ -152,34 +152,31 @@ cobalt_thread_shadow(struct task_struct *p,
 		     __u32 __user *u_winoff);
 
 COBALT_SYSCALL_DECL(thread_setmode,
-		    int, (int clrmask, int setmask, int __user *u_mode_r));
+		    (int clrmask, int setmask, int __user *u_mode_r));
 
 COBALT_SYSCALL_DECL(thread_setname,
-		    int, (unsigned long pth, const char __user *u_name));
+		    (unsigned long pth, const char __user *u_name));
 
-COBALT_SYSCALL_DECL(thread_kill,
-		    int, (unsigned long pth, int sig));
+COBALT_SYSCALL_DECL(thread_kill, (unsigned long pth, int sig));
 
-COBALT_SYSCALL_DECL(thread_join, int, (unsigned long pth));
+COBALT_SYSCALL_DECL(thread_join, (unsigned long pth));
 
-COBALT_SYSCALL_DECL(thread_getpid,
-		    pid_t, (unsigned long pth));
+COBALT_SYSCALL_DECL(thread_getpid, (unsigned long pth));
 
 COBALT_SYSCALL_DECL(thread_getstat,
-		    int, (pid_t pid,
-			  struct cobalt_threadstat __user *u_stat));
+		    (pid_t pid, struct cobalt_threadstat __user *u_stat));
 
 COBALT_SYSCALL_DECL(thread_setschedparam_ex,
-		    int, (unsigned long pth,
-			  int policy,
-			  const struct sched_param_ex __user *u_param,
-			  __u32 __user *u_winoff,
-			  int __user *u_promoted));
+		    (unsigned long pth,
+		     int policy,
+		     const struct sched_param_ex __user *u_param,
+		     __u32 __user *u_winoff,
+		     int __user *u_promoted));
 
 COBALT_SYSCALL_DECL(thread_getschedparam_ex,
-		    int, (unsigned long pth,
-			  int __user *u_policy,
-			  struct sched_param_ex __user *u_param));
+		    (unsigned long pth,
+		     int __user *u_policy,
+		     struct sched_param_ex __user *u_param));
 
 void cobalt_thread_map(struct xnthread *curr);
 

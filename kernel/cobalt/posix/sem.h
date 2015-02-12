@@ -79,47 +79,47 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sem,
 		  int flags, unsigned value);
 
 COBALT_SYSCALL_DECL(sem_init,
-		    int, (struct cobalt_sem_shadow __user *u_sem,
-			  int flags, unsigned value));
+		    (struct cobalt_sem_shadow __user *u_sem,
+		     int flags, unsigned value));
 
 COBALT_SYSCALL_DECL(sem_post,
-		    int, (struct cobalt_sem_shadow __user *u_sem));
+		    (struct cobalt_sem_shadow __user *u_sem));
 
 COBALT_SYSCALL_DECL(sem_wait,
-		    int, (struct cobalt_sem_shadow __user *u_sem));
+		    (struct cobalt_sem_shadow __user *u_sem));
 
 COBALT_SYSCALL_DECL(sem_timedwait,
-		    int, (struct cobalt_sem_shadow __user *u_sem,
-			  struct timespec __user *u_ts));
+		    (struct cobalt_sem_shadow __user *u_sem,
+		     struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(sem_trywait,
-		    int, (struct cobalt_sem_shadow __user *u_sem));
+		    (struct cobalt_sem_shadow __user *u_sem));
 
-COBALT_SYSCALL_DECL(sem_getvalue, int,
+COBALT_SYSCALL_DECL(sem_getvalue,
 		    (struct cobalt_sem_shadow __user *u_sem,
 		     int __user *u_sval));
 
 COBALT_SYSCALL_DECL(sem_destroy,
-		    int, (struct cobalt_sem_shadow __user *u_sem));
+		    (struct cobalt_sem_shadow __user *u_sem));
 
 COBALT_SYSCALL_DECL(sem_open,
-		    int, (struct cobalt_sem_shadow __user *__user *u_addrp,
-			  const char __user *u_name,
-			  int oflags, mode_t mode, unsigned int value));
+		    (struct cobalt_sem_shadow __user *__user *u_addrp,
+		     const char __user *u_name,
+		     int oflags, mode_t mode, unsigned int value));
 
 COBALT_SYSCALL_DECL(sem_close,
-		    int, (struct cobalt_sem_shadow __user *usm));
+		    (struct cobalt_sem_shadow __user *usm));
 
-COBALT_SYSCALL_DECL(sem_unlink, int, (const char __user *u_name));
+COBALT_SYSCALL_DECL(sem_unlink, (const char __user *u_name));
 
 COBALT_SYSCALL_DECL(sem_broadcast_np,
-		    int, (struct cobalt_sem_shadow __user *u_sem));
+		    (struct cobalt_sem_shadow __user *u_sem));
 
 COBALT_SYSCALL_DECL(sem_inquire,
-		    int, (struct cobalt_sem_shadow __user *u_sem,
-			  struct cobalt_sem_info __user *u_info,
-			  pid_t __user *u_waitlist,
-			  size_t waitsz));
+		    (struct cobalt_sem_shadow __user *u_sem,
+		     struct cobalt_sem_info __user *u_info,
+		     pid_t __user *u_waitlist,
+		     size_t waitsz));
 
 void cobalt_semq_cleanup(struct cobalt_kqueues *q);
 

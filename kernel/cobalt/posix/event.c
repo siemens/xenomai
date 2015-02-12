@@ -47,8 +47,8 @@ struct event_wait_context {
 };
 
 COBALT_SYSCALL(event_init, current,
-	       int, (struct cobalt_event_shadow __user *u_event,
-		     unsigned int value, int flags))
+	       (struct cobalt_event_shadow __user *u_event,
+		unsigned int value, int flags))
 {
 	struct cobalt_event_shadow shadow;
 	struct cobalt_event_state *state;
@@ -191,10 +191,10 @@ out:
 }
 
 COBALT_SYSCALL(event_wait, primary,
-	       int, (struct cobalt_event_shadow __user *u_event,
-		     unsigned int bits,
-		     unsigned int __user *u_bits_r,
-		     int mode, const struct timespec __user *u_ts))
+	       (struct cobalt_event_shadow __user *u_event,
+		unsigned int bits,
+		unsigned int __user *u_bits_r,
+		int mode, const struct timespec __user *u_ts))
 {
 	struct timespec ts, *tsp = NULL;
 	int ret;
@@ -210,7 +210,7 @@ COBALT_SYSCALL(event_wait, primary,
 }
 
 COBALT_SYSCALL(event_sync, current,
-	       int, (struct cobalt_event_shadow __user *u_event))
+	       (struct cobalt_event_shadow __user *u_event))
 {
 	unsigned int bits, waitval, testval;
 	struct xnthread_wait_context *wc;
@@ -280,7 +280,7 @@ static void event_destroy(struct cobalt_event *event,
 }
 
 COBALT_SYSCALL(event_destroy, current,
-	       int, (struct cobalt_event_shadow __user *u_event))
+	       (struct cobalt_event_shadow __user *u_event))
 {
 	struct cobalt_event *event;
 	xnhandle_t handle;
@@ -309,10 +309,10 @@ out:
 }
 
 COBALT_SYSCALL(event_inquire, current,
-	       int, (struct cobalt_event_shadow __user *u_event,
-		     struct cobalt_event_info __user *u_info,
-		     pid_t __user *u_waitlist,
-		     size_t waitsz))
+	       (struct cobalt_event_shadow __user *u_event,
+		struct cobalt_event_info __user *u_info,
+		pid_t __user *u_waitlist,
+		size_t waitsz))
 {
 	int nrpend = 0, nrwait = 0, nrpids, ret = 0;
 	unsigned long pstamp, nstamp = 0;

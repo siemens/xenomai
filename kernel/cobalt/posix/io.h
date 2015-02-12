@@ -28,41 +28,41 @@ int __cobalt_first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds);
 int __cobalt_select_bind_all(struct xnselector *selector,
 			     fd_set *fds[XNSELECT_MAX_TYPES], int nfds);
 
-COBALT_SYSCALL_DECL(open, int,
+COBALT_SYSCALL_DECL(open,
 		    (const char __user *u_path, int oflag));
 
-COBALT_SYSCALL_DECL(socket, int,
+COBALT_SYSCALL_DECL(socket,
 		    (int protocol_family,
 		     int socket_type, int protocol));
 
-COBALT_SYSCALL_DECL(close, int, (int fd));
+COBALT_SYSCALL_DECL(close, (int fd));
 
-COBALT_SYSCALL_DECL(fcntl, int, (int fd, int cmd, int arg));
+COBALT_SYSCALL_DECL(fcntl, (int fd, int cmd, int arg));
 
-COBALT_SYSCALL_DECL(ioctl, int,
+COBALT_SYSCALL_DECL(ioctl,
 		    (int fd, unsigned int request, void __user *arg));
 
-COBALT_SYSCALL_DECL(read, ssize_t,
+COBALT_SYSCALL_DECL(read,
 		    (int fd, void __user *buf, size_t size));
 
-COBALT_SYSCALL_DECL(write, ssize_t,
+COBALT_SYSCALL_DECL(write,
 		    (int fd, const void __user *buf, size_t size));
 
-COBALT_SYSCALL_DECL(recvmsg, ssize_t,
+COBALT_SYSCALL_DECL(recvmsg,
 		    (int fd, struct msghdr __user *umsg, int flags));
 
-COBALT_SYSCALL_DECL(sendmsg, ssize_t,
+COBALT_SYSCALL_DECL(sendmsg,
 		    (int fd, struct msghdr __user *umsg, int flags));
 
-COBALT_SYSCALL_DECL(mmap, int,
+COBALT_SYSCALL_DECL(mmap,
 		    (int fd, struct _rtdm_mmap_request __user *u_rma,
 		     void __user * __user *u_addrp));
 
 COBALT_SYSCALL_DECL(select,
-		    int, (int nfds,
-			  fd_set __user *u_rfds,
-			  fd_set __user *u_wfds,
-			  fd_set __user *u_xfds,
-			  struct timeval __user *u_tv));
+		    (int nfds,
+		     fd_set __user *u_rfds,
+		     fd_set __user *u_wfds,
+		     fd_set __user *u_xfds,
+		     struct timeval __user *u_tv));
 
 #endif /* !_COBALT_POSIX_IO_H */

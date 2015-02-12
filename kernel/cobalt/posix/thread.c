@@ -495,11 +495,11 @@ int __cobalt_thread_setschedparam_ex(unsigned long pth,
  * extended cobalt_thread_setschedparam_ex syscall.
  */
 COBALT_SYSCALL(thread_setschedparam_ex, conforming,
-	       int, (unsigned long pth,
-		     int policy,
-		     const struct sched_param_ex __user *u_param,
-		     __u32 __user *u_winoff,
-		     int __user *u_promoted))
+	       (unsigned long pth,
+		int policy,
+		const struct sched_param_ex __user *u_param,
+		__u32 __user *u_winoff,
+		int __user *u_promoted))
 {
 	struct sched_param_ex param_ex;
 
@@ -542,9 +542,9 @@ int __cobalt_thread_getschedparam_ex(unsigned long pth,
  * the extended cobalt_thread_getschedparam_ex syscall.
  */
 COBALT_SYSCALL(thread_getschedparam_ex, current,
-	       int, (unsigned long pth,
-		     int __user *u_policy,
-		     struct sched_param_ex __user *u_param))
+	       (unsigned long pth,
+		int __user *u_policy,
+		struct sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
 	int policy;
@@ -605,10 +605,10 @@ fail:
 }
 
 COBALT_SYSCALL(thread_create, init,
-	       int, (unsigned long pth, int policy,
-		     struct sched_param_ex __user *u_param,
-		     int xid,
-		     __u32 __user *u_winoff))
+	       (unsigned long pth, int policy,
+		struct sched_param_ex __user *u_param,
+		int xid,
+		__u32 __user *u_winoff))
 {
 	struct sched_param_ex param_ex;
 	int ret;
@@ -658,7 +658,7 @@ fail:
 }
 
 COBALT_SYSCALL(thread_setmode, primary,
-	       int, (int clrmask, int setmask, int __user *u_mode_r))
+	       (int clrmask, int setmask, int __user *u_mode_r))
 {
 	int ret, old;
 
@@ -675,7 +675,7 @@ COBALT_SYSCALL(thread_setmode, primary,
 }
 
 COBALT_SYSCALL(thread_setname, current,
-	       int, (unsigned long pth, const char __user *u_name))
+	       (unsigned long pth, const char __user *u_name))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -715,7 +715,7 @@ COBALT_SYSCALL(thread_setname, current,
 }
 
 COBALT_SYSCALL(thread_kill, conforming,
-	       int, (unsigned long pth, int sig))
+	       (unsigned long pth, int sig))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -739,7 +739,7 @@ COBALT_SYSCALL(thread_kill, conforming,
 	return ret;
 }
 
-COBALT_SYSCALL(thread_join, primary, int, (unsigned long pth))
+COBALT_SYSCALL(thread_join, primary, (unsigned long pth))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -761,7 +761,7 @@ COBALT_SYSCALL(thread_join, primary, int, (unsigned long pth))
 	return xnthread_join(&thread->threadbase, false);
 }
 
-COBALT_SYSCALL(thread_getpid, current, pid_t, (unsigned long pth))
+COBALT_SYSCALL(thread_getpid, current, (unsigned long pth))
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -786,8 +786,7 @@ COBALT_SYSCALL(thread_getpid, current, pid_t, (unsigned long pth))
 }
 
 COBALT_SYSCALL(thread_getstat, current,
-	       int, (pid_t pid,
-		     struct cobalt_threadstat __user *u_stat))
+	       (pid_t pid, struct cobalt_threadstat __user *u_stat))
 {
 	struct cobalt_threadstat stat;
 	struct cobalt_thread *p;

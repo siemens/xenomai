@@ -44,27 +44,27 @@ int __cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 				     const struct timespec *ts);
 
 COBALT_SYSCALL_DECL(mutex_check_init,
-		    int, (struct cobalt_mutex_shadow __user *u_mx));
+		    (struct cobalt_mutex_shadow __user *u_mx));
 
 COBALT_SYSCALL_DECL(mutex_init,
-		    int, (struct cobalt_mutex_shadow __user *u_mx,
-			  const struct cobalt_mutexattr __user *u_attr));
+		    (struct cobalt_mutex_shadow __user *u_mx,
+		     const struct cobalt_mutexattr __user *u_attr));
 
 COBALT_SYSCALL_DECL(mutex_destroy,
-		    int, (struct cobalt_mutex_shadow __user *u_mx));
+		    (struct cobalt_mutex_shadow __user *u_mx));
 
 COBALT_SYSCALL_DECL(mutex_trylock,
-		    int, (struct cobalt_mutex_shadow __user *u_mx));
+		    (struct cobalt_mutex_shadow __user *u_mx));
 
 COBALT_SYSCALL_DECL(mutex_lock,
-		    int, (struct cobalt_mutex_shadow __user *u_mx));
+		    (struct cobalt_mutex_shadow __user *u_mx));
 
 COBALT_SYSCALL_DECL(mutex_timedlock,
-		    int, (struct cobalt_mutex_shadow __user *u_mx,
-			  const struct timespec __user *u_ts));
+		    (struct cobalt_mutex_shadow __user *u_mx,
+		     const struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(mutex_unlock,
-		    int, (struct cobalt_mutex_shadow __user *u_mx));
+		    (struct cobalt_mutex_shadow __user *u_mx));
 
 int cobalt_mutex_release(struct xnthread *cur,
 			 struct cobalt_mutex *mutex);

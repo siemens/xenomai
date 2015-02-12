@@ -228,7 +228,7 @@ out:
 }
 
 COBALT_SYSCALL(mutex_check_init, current,
-	       int, (struct cobalt_mutex_shadow __user *u_mx))
+	       (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct cobalt_mutex *mutex;
 	xnhandle_t handle;
@@ -250,8 +250,8 @@ COBALT_SYSCALL(mutex_check_init, current,
 }
 
 COBALT_SYSCALL(mutex_init, current,
-	       int, (struct cobalt_mutex_shadow __user *u_mx,
-		     const struct cobalt_mutexattr __user *u_attr))
+	       (struct cobalt_mutex_shadow __user *u_mx,
+		const struct cobalt_mutexattr __user *u_attr))
 {
 	struct cobalt_mutex_state *state;
 	struct cobalt_mutexattr attr;
@@ -287,7 +287,7 @@ COBALT_SYSCALL(mutex_init, current,
 }
 
 COBALT_SYSCALL(mutex_destroy, current,
-	       int, (struct cobalt_mutex_shadow __user *u_mx))
+	       (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct cobalt_mutex *mutex;
 	struct cobalt_mutex_shadow mx;
@@ -329,7 +329,7 @@ COBALT_SYSCALL(mutex_destroy, current,
 }
 
 COBALT_SYSCALL(mutex_trylock, primary,
-	       int, (struct cobalt_mutex_shadow __user *u_mx))
+	       (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct xnthread *curr = xnthread_current();
 	struct cobalt_mutex *mutex;
@@ -370,7 +370,7 @@ COBALT_SYSCALL(mutex_trylock, primary,
 }
 
 COBALT_SYSCALL(mutex_lock, primary,
-	       int, (struct cobalt_mutex_shadow __user *u_mx))
+	       (struct cobalt_mutex_shadow __user *u_mx))
 {
 	return __cobalt_mutex_timedlock_break(u_mx, NULL, NULL);
 }
@@ -383,14 +383,14 @@ static inline int mutex_fetch_timeout(struct timespec *ts,
 }
 
 COBALT_SYSCALL(mutex_timedlock, primary,
-	       int, (struct cobalt_mutex_shadow __user *u_mx,
-		     const struct timespec __user *u_ts))
+	       (struct cobalt_mutex_shadow __user *u_mx,
+		const struct timespec __user *u_ts))
 {
 	return __cobalt_mutex_timedlock_break(u_mx, u_ts, mutex_fetch_timeout);
 }
 
 COBALT_SYSCALL(mutex_unlock, nonrestartable,
-	       int, (struct cobalt_mutex_shadow __user *u_mx))
+	       (struct cobalt_mutex_shadow __user *u_mx))
 {
 	struct cobalt_mutex *mutex;
 	struct xnthread *curr;

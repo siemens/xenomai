@@ -49,22 +49,22 @@ int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 				int (*fetch_timeout)(struct timespec *ts,
 						     const void __user *u_ts));
 COBALT_SYSCALL_DECL(cond_init,
-		    int, (struct cobalt_cond_shadow __user *u_cnd,
-			  const struct cobalt_condattr __user *u_attr));
+		    (struct cobalt_cond_shadow __user *u_cnd,
+		     const struct cobalt_condattr __user *u_attr));
 
 COBALT_SYSCALL_DECL(cond_destroy,
-		    int, (struct cobalt_cond_shadow __user *u_cnd));
+		    (struct cobalt_cond_shadow __user *u_cnd));
 
 COBALT_SYSCALL_DECL(cond_wait_prologue,
-		    int, (struct cobalt_cond_shadow __user *u_cnd,
-			  struct cobalt_mutex_shadow __user *u_mx,
-			  int *u_err,
-			  unsigned int timed,
-			  struct timespec __user *u_ts));
+		    (struct cobalt_cond_shadow __user *u_cnd,
+		     struct cobalt_mutex_shadow __user *u_mx,
+		     int *u_err,
+		     unsigned int timed,
+		     struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(cond_wait_epilogue,
-		    int, (struct cobalt_cond_shadow __user *u_cnd,
-			  struct cobalt_mutex_shadow __user *u_mx));
+		    (struct cobalt_cond_shadow __user *u_cnd,
+		     struct cobalt_mutex_shadow __user *u_mx));
 
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
 

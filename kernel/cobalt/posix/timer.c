@@ -439,7 +439,7 @@ fail:
 	return -EINVAL;
 }
 
-COBALT_SYSCALL(timer_delete, current, int, (timer_t timerid))
+COBALT_SYSCALL(timer_delete, current, (timer_t timerid))
 {
 	return timer_delete(timerid);
 }
@@ -464,9 +464,9 @@ int __cobalt_timer_create(clockid_t clock,
 }
 
 COBALT_SYSCALL(timer_create, current,
-	       int, (clockid_t clock,
-		     const struct sigevent __user *u_sev,
-		     timer_t __user *u_tm))
+	       (clockid_t clock,
+		const struct sigevent __user *u_sev,
+		timer_t __user *u_tm))
 {
 	struct sigevent sev, *evp = NULL;
 
@@ -480,9 +480,9 @@ COBALT_SYSCALL(timer_create, current,
 }
 
 COBALT_SYSCALL(timer_settime, primary,
-	       int, (timer_t tm, int flags,
-		     const struct itimerspec __user *u_newval,
-		     struct itimerspec __user *u_oldval))
+	       (timer_t tm, int flags,
+		const struct itimerspec __user *u_newval,
+		struct itimerspec __user *u_oldval))
 {
 	struct itimerspec newv, oldv, *oldvp = &oldv;
 	int ret;
@@ -506,7 +506,7 @@ COBALT_SYSCALL(timer_settime, primary,
 }
 
 COBALT_SYSCALL(timer_gettime, current,
-	       int, (timer_t tm, struct itimerspec __user *u_val))
+	       (timer_t tm, struct itimerspec __user *u_val))
 {
 	struct itimerspec val;
 	int ret;
@@ -518,8 +518,7 @@ COBALT_SYSCALL(timer_gettime, current,
 	return __xn_safe_copy_to_user(u_val, &val, sizeof(val));
 }
 
-COBALT_SYSCALL(timer_getoverrun, current,
-	       int, (timer_t timerid))
+COBALT_SYSCALL(timer_getoverrun, current, (timer_t timerid))
 {
 	struct cobalt_timer *timer;
 	struct cobalt_process *cc;

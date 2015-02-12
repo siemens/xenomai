@@ -73,9 +73,9 @@
 /* Shorthand for oneway trap - does not return to call site. */
 #define __xn_exec_oneway    __xn_exec_norestart
 
-typedef int (*cobalt_syshand)(unsigned long arg1, unsigned long arg2,
-			      unsigned long arg3, unsigned long arg4,
-			      unsigned long arg5);
+typedef long (*cobalt_syshand)(unsigned long arg1, unsigned long arg2,
+			       unsigned long arg3, unsigned long arg4,
+			       unsigned long arg5);
 
 static void prepare_for_signal(struct task_struct *p,
 			       struct xnthread *thread,
@@ -100,7 +100,7 @@ static void prepare_for_signal(struct task_struct *p,
 	xnthread_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
 }
 
-static COBALT_SYSCALL(migrate, current, int, (int domain))
+static COBALT_SYSCALL(migrate, current, (int domain))
 {
 	struct xnthread *thread = xnthread_current();
 
@@ -131,8 +131,8 @@ static COBALT_SYSCALL(migrate, current, int, (int domain))
 }
 
 static COBALT_SYSCALL(trace, current,
-		      int, (int op, unsigned long a1,
-			    unsigned long a2, unsigned long a3))
+		      (int op, unsigned long a1,
+		       unsigned long a2, unsigned long a3))
 {
 	int ret = -EINVAL;
 
@@ -174,15 +174,15 @@ static COBALT_SYSCALL(trace, current,
 }
 
 static COBALT_SYSCALL(archcall, current,
-		      int, (unsigned long a1, unsigned long a2,
-			    unsigned long a3, unsigned long a4,
-			    unsigned long a5))
+		      (unsigned long a1, unsigned long a2,
+		       unsigned long a3, unsigned long a4,
+		       unsigned long a5))
 {
 	return xnarch_local_syscall(a1, a2, a3, a4, a5);
 }
 
 static COBALT_SYSCALL(get_current, current,
-		      int, (xnhandle_t __user *u_handle))
+		      (xnhandle_t __user *u_handle))
 {
 	struct xnthread *cur = xnthread_current();
 
@@ -194,8 +194,7 @@ static COBALT_SYSCALL(get_current, current,
 }
 
 static COBALT_SYSCALL(backtrace, current,
-		      int, (int nr, unsigned long __user *u_backtrace,
-			    int reason))
+		      (int nr, unsigned long __user *u_backtrace, int reason))
 {
 	unsigned long backtrace[SIGSHADOW_BACKTRACE_DEPTH];
 	int ret;
@@ -227,7 +226,7 @@ static COBALT_SYSCALL(backtrace, current,
 }
 
 static COBALT_SYSCALL(serialdbg, current,
-		      int, (const char __user *u_msg, int len))
+		      (const char __user *u_msg, int len))
 {
 	char buf[128];
 	int n;
@@ -246,7 +245,7 @@ static COBALT_SYSCALL(serialdbg, current,
 	return 0;
 }
 
-static COBALT_SYSCALL(mayday, oneway, int, (void))
+static COBALT_SYSCALL(mayday, oneway, (void))
 {
 	struct pt_regs *regs = task_pt_regs(current);
 	struct xnthread *cur;
@@ -295,7 +294,7 @@ static void stringify_feature_set(unsigned long fset, char *buf, int size)
 }
 
 static COBALT_SYSCALL(bind, lostage,
-		      int, (struct cobalt_bindreq __user *u_breq))
+		      (struct cobalt_bindreq __user *u_breq))
 {
 	unsigned long featreq, featmis;
 	struct cobalt_bindreq breq;
@@ -348,13 +347,13 @@ static COBALT_SYSCALL(bind, lostage,
 	return cobalt_bind_core();
 }
 
-static COBALT_SYSCALL(extend, lostage, int, (unsigned int magic))
+static COBALT_SYSCALL(extend, lostage, (unsigned int magic))
 {
 	return cobalt_bind_personality(magic);
 }
 
 static COBALT_SYSCALL(sysconf, current,
-		      int, (int option, void __user *u_buf, size_t u_bufsz))
+		      (int option, void __user *u_buf, size_t u_bufsz))
 {
 	int ret, val = 0;
 
@@ -411,7 +410,7 @@ static COBALT_SYSCALL(sysconf, current,
 }
 
 static COBALT_SYSCALL(sysctl, probing,
-		      int, (int option, void __user *u_buf, size_t u_bufsz))
+		      (int option, void __user *u_buf, size_t u_bufsz))
 {
 	return -EINVAL;
 }

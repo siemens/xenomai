@@ -763,7 +763,7 @@ int __cobalt_mq_notify(mqd_t fd, const struct sigevent *evp)
 }
 
 COBALT_SYSCALL(mq_notify, primary,
-	       int, (mqd_t fd, const struct sigevent *__user evp))
+	       (mqd_t fd, const struct sigevent *__user evp))
 {
 	struct sigevent sev;
 
@@ -807,8 +807,8 @@ int __cobalt_mq_open(const char __user *u_name, int oflags,
 }
 
 COBALT_SYSCALL(mq_open, lostage,
-	       int, (const char __user *u_name, int oflags,
-		     mode_t mode, struct mq_attr __user *u_attr))
+	       (const char __user *u_name, int oflags,
+		mode_t mode, struct mq_attr __user *u_attr))
 {
 	struct mq_attr _attr, *attr = &_attr;
 
@@ -821,15 +821,14 @@ COBALT_SYSCALL(mq_open, lostage,
 	return __cobalt_mq_open(u_name, oflags, mode, attr);
 }
 
-COBALT_SYSCALL(mq_close, lostage, int, (mqd_t uqd))
+COBALT_SYSCALL(mq_close, lostage, (mqd_t uqd))
 {
 	trace_cobalt_mq_close(uqd);
 
 	return mq_close(uqd);
 }
 
-COBALT_SYSCALL(mq_unlink, lostage,
-	       int, (const char __user *u_name))
+COBALT_SYSCALL(mq_unlink, lostage, (const char __user *u_name))
 {
 	char name[COBALT_MAXNAME];
 	unsigned len;
@@ -865,7 +864,7 @@ int __cobalt_mq_getattr(mqd_t uqd, struct mq_attr *attr)
 }
 
 COBALT_SYSCALL(mq_getattr, current,
-	       int, (mqd_t uqd, struct mq_attr __user *u_attr))
+	       (mqd_t uqd, struct mq_attr __user *u_attr))
 {
 	struct mq_attr attr;
 	int ret;
@@ -929,8 +928,8 @@ out:
 }
 
 COBALT_SYSCALL(mq_timedsend, primary,
-	       int, (mqd_t uqd, const void __user *u_buf, size_t len,
-		     unsigned int prio, const struct timespec __user *u_ts))
+	       (mqd_t uqd, const void __user *u_buf, size_t len,
+		unsigned int prio, const struct timespec __user *u_ts))
 {
 	return __cobalt_mq_timedsend(uqd, u_buf, len, prio,
 				     u_ts, u_ts ? mq_fetch_timeout : NULL);
@@ -988,10 +987,10 @@ fail:
 }
 
 COBALT_SYSCALL(mq_timedreceive, primary,
-	       int, (mqd_t uqd, void __user *u_buf,
-		     ssize_t __user *u_len,
-		     unsigned int __user *u_prio,
-		     const struct timespec __user *u_ts))
+	       (mqd_t uqd, void __user *u_buf,
+		ssize_t __user *u_len,
+		unsigned int __user *u_prio,
+		const struct timespec __user *u_ts))
 {
 	ssize_t len;
 	int ret;

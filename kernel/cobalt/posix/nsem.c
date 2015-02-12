@@ -217,9 +217,9 @@ __cobalt_sem_open(struct cobalt_sem_shadow __user *usm,
 }
 
 COBALT_SYSCALL(sem_open, lostage,
-	       int, (struct cobalt_sem_shadow __user *__user *u_addrp,
-		     const char __user *u_name,
-		     int oflags, mode_t mode, unsigned int value))
+	       (struct cobalt_sem_shadow __user *__user *u_addrp,
+		const char __user *u_name,
+		int oflags, mode_t mode, unsigned int value))
 {
 	struct cobalt_sem_shadow __user *usm;
 
@@ -234,7 +234,7 @@ COBALT_SYSCALL(sem_open, lostage,
 }
 
 COBALT_SYSCALL(sem_close, lostage,
-	       int, (struct cobalt_sem_shadow __user *usm))
+	       (struct cobalt_sem_shadow __user *usm))
 {
 	struct cobalt_process *cc;
 	xnhandle_t handle;
@@ -267,7 +267,7 @@ static inline int sem_unlink(const char *name)
 }
 
 COBALT_SYSCALL(sem_unlink, lostage,
-	       int, (const char __user *u_name))
+	       (const char __user *u_name))
 {
 	struct filename *filename;
 	int ret;

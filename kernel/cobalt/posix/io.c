@@ -27,7 +27,7 @@
 #include "io.h"
 
 COBALT_SYSCALL(open, lostage,
-	       int, (const char __user *u_path, int oflag))
+	       (const char __user *u_path, int oflag))
 {
 	struct filename *filename;
 	int ufd;
@@ -43,43 +43,41 @@ COBALT_SYSCALL(open, lostage,
 }
 
 COBALT_SYSCALL(socket, lostage,
-	       int, (int protocol_family,
-		     int socket_type, int protocol))
+	       (int protocol_family, int socket_type, int protocol))
 {
 	return __rtdm_dev_socket(protocol_family, socket_type, protocol);
 }
 
-COBALT_SYSCALL(close, lostage, int, (int fd))
+COBALT_SYSCALL(close, lostage, (int fd))
 {
 	return rtdm_fd_close(fd, 0);
 }
 
-COBALT_SYSCALL(fcntl, current,
-	int, (int fd, int cmd, int arg))
+COBALT_SYSCALL(fcntl, current, (int fd, int cmd, int arg))
 {
 	return rtdm_fd_fcntl(fd, cmd, arg);
 }
 
 COBALT_SYSCALL(ioctl, probing,
-	       int, (int fd, unsigned int request, void __user *arg))
+	       (int fd, unsigned int request, void __user *arg))
 {
 	return rtdm_fd_ioctl(fd, request, arg);
 }
 
 COBALT_SYSCALL(read, probing,
-	       ssize_t, (int fd, void __user *buf, size_t size))
+	       (int fd, void __user *buf, size_t size))
 {
 	return rtdm_fd_read(fd, buf, size);
 }
 
 COBALT_SYSCALL(write, probing,
-	       ssize_t, (int fd, const void __user *buf, size_t size))
+	       (int fd, const void __user *buf, size_t size))
 {
 	return rtdm_fd_write(fd, buf, size);
 }
 
 COBALT_SYSCALL(recvmsg, probing,
-	       ssize_t, (int fd, struct msghdr __user *umsg, int flags))
+	       (int fd, struct msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
 	ssize_t ret;
@@ -96,7 +94,7 @@ COBALT_SYSCALL(recvmsg, probing,
 }
 
 COBALT_SYSCALL(sendmsg, probing,
-	       ssize_t, (int fd, struct msghdr __user *umsg, int flags))
+	       (int fd, struct msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
 	int ret;
@@ -107,8 +105,8 @@ COBALT_SYSCALL(sendmsg, probing,
 }
 
 COBALT_SYSCALL(mmap, lostage,
-	       int, (int fd, struct _rtdm_mmap_request __user *u_rma,
-		     void __user **u_addrp))
+	       (int fd, struct _rtdm_mmap_request __user *u_rma,
+	        void __user **u_addrp))
 {
 	struct _rtdm_mmap_request rma;
 	void *u_addr = NULL;
@@ -173,11 +171,11 @@ int __cobalt_select_bind_all(struct xnselector *selector,
 
 /* int select(int, fd_set *, fd_set *, fd_set *, struct timeval *) */
 COBALT_SYSCALL(select, nonrestartable,
-	       int, (int nfds,
-		     fd_set __user *u_rfds,
-		     fd_set __user *u_wfds,
-		     fd_set __user *u_xfds,
-		     struct timeval __user *u_tv))
+	       (int nfds,
+		fd_set __user *u_rfds,
+		fd_set __user *u_wfds,
+		fd_set __user *u_xfds,
+		struct timeval __user *u_tv))
 {
 	fd_set __user *ufd_sets[XNSELECT_MAX_TYPES] = {
 		[XNSELECT_READ] = u_rfds,

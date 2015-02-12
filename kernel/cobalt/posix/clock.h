@@ -98,21 +98,18 @@ int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 			     struct timespec *rmt);
 
 COBALT_SYSCALL_DECL(clock_getres,
-		    int, (clockid_t clock_id,
-			  struct timespec __user *u_ts));
+		    (clockid_t clock_id, struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(clock_gettime,
-		    int, (clockid_t clock_id,
-			  struct timespec __user *u_ts));
+		    (clockid_t clock_id, struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(clock_settime,
-		    int, (clockid_t clock_id,
-			  const struct timespec __user *u_ts));
+		    (clockid_t clock_id, const struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(clock_nanosleep,
-		    int, (clockid_t clock_id, int flags,
-			  const struct timespec __user *u_rqt,
-			  struct timespec __user *u_rmt));
+		    (clockid_t clock_id, int flags,
+		     const struct timespec __user *u_rqt,
+		     struct timespec __user *u_rmt));
 
 int cobalt_clock_register(struct xnclock *clock,
 			  clockid_t *clk_id);

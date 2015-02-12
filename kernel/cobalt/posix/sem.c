@@ -409,8 +409,8 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 }
 
 COBALT_SYSCALL(sem_init, current,
-	       int, (struct cobalt_sem_shadow __user *u_sem,
-		     int flags, unsigned int value))
+	       (struct cobalt_sem_shadow __user *u_sem,
+		int flags, unsigned int value))
 {
 	struct cobalt_sem_shadow sm;
 	struct cobalt_sem *sem;
@@ -430,7 +430,7 @@ COBALT_SYSCALL(sem_init, current,
 }
 
 COBALT_SYSCALL(sem_post, current,
-	       int, (struct cobalt_sem_shadow __user *u_sem))
+	       (struct cobalt_sem_shadow __user *u_sem))
 {
 	xnhandle_t handle;
 
@@ -441,7 +441,7 @@ COBALT_SYSCALL(sem_post, current,
 }
 
 COBALT_SYSCALL(sem_wait, primary,
-	       int, (struct cobalt_sem_shadow __user *u_sem))
+	       (struct cobalt_sem_shadow __user *u_sem))
 {
 	xnhandle_t handle;
 
@@ -452,14 +452,14 @@ COBALT_SYSCALL(sem_wait, primary,
 }
 
 COBALT_SYSCALL(sem_timedwait, primary,
-	       int, (struct cobalt_sem_shadow __user *u_sem,
-		     struct timespec __user *u_ts))
+	       (struct cobalt_sem_shadow __user *u_sem,
+		struct timespec __user *u_ts))
 {
 	return __cobalt_sem_timedwait(u_sem, u_ts, sem_fetch_timeout);
 }
 
 COBALT_SYSCALL(sem_trywait, primary,
-	       int, (struct cobalt_sem_shadow __user *u_sem))
+	       (struct cobalt_sem_shadow __user *u_sem))
 {
 	xnhandle_t handle;
 
@@ -470,8 +470,8 @@ COBALT_SYSCALL(sem_trywait, primary,
 }
 
 COBALT_SYSCALL(sem_getvalue, current,
-	       int, (struct cobalt_sem_shadow __user *u_sem,
-		     int __user *u_sval))
+	       (struct cobalt_sem_shadow __user *u_sem,
+		int __user *u_sval))
 {
 	int ret, sval = -1;
 	xnhandle_t handle;
@@ -487,7 +487,7 @@ COBALT_SYSCALL(sem_getvalue, current,
 }
 
 COBALT_SYSCALL(sem_destroy, current,
-	       int, (struct cobalt_sem_shadow __user *u_sem))
+	       (struct cobalt_sem_shadow __user *u_sem))
 {
 	struct cobalt_sem_shadow sm;
 	int err;
@@ -505,7 +505,7 @@ COBALT_SYSCALL(sem_destroy, current,
 }
 
 COBALT_SYSCALL(sem_broadcast_np, current,
-	       int, (struct cobalt_sem_shadow __user *u_sem))
+	       (struct cobalt_sem_shadow __user *u_sem))
 {
 	struct cobalt_sem *sm;
 	xnhandle_t handle;
@@ -524,10 +524,10 @@ COBALT_SYSCALL(sem_broadcast_np, current,
 }
 
 COBALT_SYSCALL(sem_inquire, current,
-	       int, (struct cobalt_sem_shadow __user *u_sem,
-		     struct cobalt_sem_info __user *u_info,
-		     pid_t __user *u_waitlist,
-		     size_t waitsz))
+	       (struct cobalt_sem_shadow __user *u_sem,
+		struct cobalt_sem_info __user *u_info,
+		pid_t __user *u_waitlist,
+		size_t waitsz))
 {
 	int val = 0, nrwait = 0, nrpids, ret = 0;
 	unsigned long pstamp, nstamp = 0;

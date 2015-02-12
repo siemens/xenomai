@@ -130,7 +130,7 @@ int __cobalt_clock_getres(clockid_t clock_id, struct timespec *ts)
 }
 
 COBALT_SYSCALL(clock_getres, current,
-	       int, (clockid_t clock_id, struct timespec __user *u_ts))
+	       (clockid_t clock_id, struct timespec __user *u_ts))
 {
 	struct timespec ts;
 	int ret;
@@ -177,7 +177,7 @@ int __cobalt_clock_gettime(clockid_t clock_id, struct timespec *ts)
 }
 
 COBALT_SYSCALL(clock_gettime, current,
-	       int, (clockid_t clock_id, struct timespec __user *u_ts))
+	       (clockid_t clock_id, struct timespec __user *u_ts))
 {
 	struct timespec ts;
 	int ret;
@@ -222,8 +222,7 @@ int __cobalt_clock_settime(clockid_t clock_id, const struct timespec *ts)
 }
 
 COBALT_SYSCALL(clock_settime, current,
-	       int, (clockid_t clock_id,
-		     const struct timespec __user *u_ts))
+	       (clockid_t clock_id, const struct timespec __user *u_ts))
 {
 	struct timespec ts;
 
@@ -282,9 +281,9 @@ int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 }
 
 COBALT_SYSCALL(clock_nanosleep, nonrestartable,
-	       int, (clockid_t clock_id, int flags,
-		     const struct timespec __user *u_rqt,
-		     struct timespec __user *u_rmt))
+	       (clockid_t clock_id, int flags,
+		const struct timespec __user *u_rqt,
+		struct timespec __user *u_rmt))
 {
 	struct timespec rqt, rmt, *rmtp = NULL;
 	int ret;

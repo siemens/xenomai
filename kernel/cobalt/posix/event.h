@@ -42,28 +42,28 @@ int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 			int mode, const struct timespec *ts);
 
 COBALT_SYSCALL_DECL(event_init,
-		    int, (struct cobalt_event_shadow __user *u_evtsh,
-			  unsigned int value,
-			  int flags));
+		    (struct cobalt_event_shadow __user *u_evtsh,
+		     unsigned int value,
+		     int flags));
 
 COBALT_SYSCALL_DECL(event_wait,
-		    int, (struct cobalt_event_shadow __user *u_evtsh,
-			  unsigned int bits,
-			  unsigned int __user *u_bits_r,
-			  int mode,
-			  const struct timespec __user *u_ts));
+		    (struct cobalt_event_shadow __user *u_evtsh,
+		     unsigned int bits,
+		     unsigned int __user *u_bits_r,
+		     int mode,
+		     const struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(event_sync,
-		    int, (struct cobalt_event_shadow __user *u_evtsh));
+		    (struct cobalt_event_shadow __user *u_evtsh));
 
 COBALT_SYSCALL_DECL(event_destroy,
-		    int, (struct cobalt_event_shadow __user *u_evtsh));
+		    (struct cobalt_event_shadow __user *u_evtsh));
 
 COBALT_SYSCALL_DECL(event_inquire,
-		    int, (struct cobalt_event_shadow __user *u_event,
-			  struct cobalt_event_info __user *u_info,
-			  pid_t __user *u_waitlist,
-			  size_t waitsz));
+		    (struct cobalt_event_shadow __user *u_event,
+		     struct cobalt_event_info __user *u_info,
+		     pid_t __user *u_waitlist,
+		     size_t waitsz));
 
 void cobalt_eventq_cleanup(struct cobalt_kqueues *q);
 

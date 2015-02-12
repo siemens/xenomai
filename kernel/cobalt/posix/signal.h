@@ -93,26 +93,24 @@ int __cobalt_kill(struct cobalt_thread *thread,
 		  int sig, int group);
 
 COBALT_SYSCALL_DECL(sigwait,
-		    int, (const sigset_t __user *u_set,
-			  int __user *u_sig));
+		    (const sigset_t __user *u_set, int __user *u_sig));
 
 COBALT_SYSCALL_DECL(sigtimedwait,
-		    int, (const sigset_t __user *u_set,
-			  struct siginfo __user *u_si,
-			  const struct timespec __user *u_timeout));
+		    (const sigset_t __user *u_set,
+		     struct siginfo __user *u_si,
+		     const struct timespec __user *u_timeout));
 
 COBALT_SYSCALL_DECL(sigwaitinfo,
-		    int, (const sigset_t __user *u_set,
-			  struct siginfo __user *u_si));
+		    (const sigset_t __user *u_set,
+		     struct siginfo __user *u_si));
 
 COBALT_SYSCALL_DECL(sigpending,
-		    int, (old_sigset_t __user *u_set));
+		    (old_sigset_t __user *u_set));
 
-COBALT_SYSCALL_DECL(kill, int, (pid_t pid, int sig));
+COBALT_SYSCALL_DECL(kill, (pid_t pid, int sig));
 
 COBALT_SYSCALL_DECL(sigqueue,
-		    int, (pid_t pid, int sig,
-			  const union sigval __user *u_value));
+		    (pid_t pid, int sig, const union sigval __user *u_value));
 
 int cobalt_signal_pkg_init(void);
 

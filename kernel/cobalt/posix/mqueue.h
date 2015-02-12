@@ -50,30 +50,26 @@ int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 int __cobalt_mq_notify(mqd_t fd, const struct sigevent *evp);
 
 COBALT_SYSCALL_DECL(mq_open,
-		    int, (const char __user *u_name, int oflags,
-			  mode_t mode, struct mq_attr __user *u_attr));
+		    (const char __user *u_name, int oflags,
+		     mode_t mode, struct mq_attr __user *u_attr));
 
-COBALT_SYSCALL_DECL(mq_close, int, (mqd_t uqd));
+COBALT_SYSCALL_DECL(mq_close, (mqd_t uqd));
 
-COBALT_SYSCALL_DECL(mq_unlink,
-		    int, (const char __user *u_name));
+COBALT_SYSCALL_DECL(mq_unlink, (const char __user *u_name));
 
-COBALT_SYSCALL_DECL(mq_getattr, 
-		    int, (mqd_t uqd, struct mq_attr __user *u_attr));
+COBALT_SYSCALL_DECL(mq_getattr, (mqd_t uqd, struct mq_attr __user *u_attr));
 
 COBALT_SYSCALL_DECL(mq_timedsend,
-		    int, (mqd_t uqd, const void __user *u_buf, size_t len,
-			  unsigned int prio,
-			  const struct timespec __user *u_ts));
+		    (mqd_t uqd, const void __user *u_buf, size_t len,
+		     unsigned int prio, const struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(mq_timedreceive,
-		    int, (mqd_t uqd, void __user *u_buf,
-			 ssize_t __user *u_len,
-			 unsigned int __user *u_prio,
-			 const struct timespec __user *u_ts));
+		    (mqd_t uqd, void __user *u_buf, ssize_t __user *u_len,
+		     unsigned int __user *u_prio,
+		     const struct timespec __user *u_ts));
 
 COBALT_SYSCALL_DECL(mq_notify,
-		    int, (mqd_t fd, const struct sigevent *__user evp));
+		    (mqd_t fd, const struct sigevent *__user evp));
 
 int cobalt_mq_pkg_init(void);
 
