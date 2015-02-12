@@ -204,11 +204,12 @@ void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
 		test_thread_flag(TIF_IA32)) {
 		regs->ip = tcb->mayday.ip;
 		regs->ax = tcb->mayday.ax;
+		regs->sp = tcb->mayday.sp;
 	} else
 		regs->ax = tcb->mayday.ip;
 #else
 	regs->ip = tcb->mayday.ip;
 	regs->ax = tcb->mayday.ax;
-#endif
 	regs->sp = tcb->mayday.sp;
+#endif
 }
