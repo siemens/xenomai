@@ -52,11 +52,6 @@
 #define __xn_reg_pc(__regs)	((__regs)->ARM_ip)
 #define __xn_reg_sp(__regs)	((__regs)->ARM_sp)
 
-static inline void __xn_success_return(struct pt_regs *regs, int v)
-{
-	__xn_reg_rval(regs) = v;
-}
-
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
 	__xn_reg_rval(regs) = v;

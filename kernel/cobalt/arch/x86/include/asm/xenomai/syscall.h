@@ -49,11 +49,6 @@
 #define __xn_syscall(regs)    (__xn_reg_sys(regs) & ~__COBALT_SYSCALL_BIT)
 #endif
 
-static inline void __xn_success_return(struct pt_regs *regs, int v)
-{
-	__xn_reg_rval(regs) = v;
-}
-
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
 	__xn_reg_rval(regs) = v;

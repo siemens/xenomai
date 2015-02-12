@@ -34,11 +34,6 @@
 #define __xn_reg_arg4(__regs)	((__regs)->r3)
 #define __xn_reg_arg5(__regs)	((__regs)->r4)
 
-static inline void __xn_success_return(struct pt_regs *regs, int v)
-{
-	__xn_reg_rval(regs) = v;
-}
-
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
 	__xn_reg_rval(regs) = v;
