@@ -191,7 +191,6 @@ void *xnarch_get_mayday_page(void)
 void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
 			  unsigned long tramp)
 {
-	tcb->mayday.sp = regs->sp;
 	tcb->mayday.ip = regs->ip;
 	tcb->mayday.ax = regs->ax;
 	regs->ip = tramp;
@@ -204,12 +203,10 @@ void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
 		test_thread_flag(TIF_IA32)) {
 		regs->ip = tcb->mayday.ip;
 		regs->ax = tcb->mayday.ax;
-		regs->sp = tcb->mayday.sp;
 	} else
 		regs->ax = tcb->mayday.ip;
 #else
 	regs->ip = tcb->mayday.ip;
 	regs->ax = tcb->mayday.ax;
-	regs->sp = tcb->mayday.sp;
 #endif
 }

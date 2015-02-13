@@ -39,7 +39,6 @@ struct xnarchtcb {
 	struct {
 		unsigned long ip;
 		unsigned long ax;
-		unsigned long sp;
 	} mayday;
 };
 
