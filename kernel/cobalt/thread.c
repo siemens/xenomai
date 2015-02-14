@@ -1480,8 +1480,7 @@ void xnthread_cancel(struct xnthread *thread)
 	if (xnthread_test_state(thread, XNDORMANT)) {
 		xnthread_set_info(thread, XNKICKED);
 		xnthread_resume(thread, XNDORMANT);
-		xnsched_run();
-		goto unlock_and_exit;
+		goto out;
 	}
 
 check_self_cancel:
@@ -1496,10 +1495,19 @@ check_self_cancel:
 	}
 
 	__xnthread_demote(thread);
-	xnsched_run();
 
-unlock_and_exit:
+	/*
+	 * A userland thread undergoing the weak scheduling policy is
+	 * unlikely to issue Cobalt syscalls frequently, which may
+	 * defer cancellation significantly: send it a regular
+	 * termination signal too.
+	 */
+	if (xnthread_test_state(thread, XNWEAK|XNUSER) == (XNWEAK|XNUSER))
+		xnthread_signal(thread, SIGTERM, 0);
+out:
 	xnlock_put_irqrestore(&nklock, s);
+
+	xnsched_run();
 }
 EXPORT_SYMBOL_GPL(xnthread_cancel);
 
