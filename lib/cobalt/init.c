@@ -66,6 +66,11 @@ static void low_init(void)
 	struct cobalt_featinfo *f;
 	int ret;
 
+	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
+		report_error("mlockall: %s", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
 	old_sigill_handler = signal(SIGILL, sigill_handler);
 	if (old_sigill_handler == SIG_ERR) {
 		report_error("signal(SIGILL): %s", strerror(errno));
@@ -209,11 +214,6 @@ static __libcobalt_ctor void __init_cobalt(void)
 	p = getenv("XENO_NOSHADOW");
 	if (p && *p)
 		return;
-
-	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-		report_error("mlockall: %s", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
 
 	ret = __STD(pthread_getschedparam(ptid, &policy, &parm));
 	if (ret) {
