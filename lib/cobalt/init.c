@@ -45,6 +45,8 @@
 
 __weak int __cobalt_defer_init = 0;
 
+__weak int __cobalt_no_shadow = 0;
+
 __weak int __cobalt_main_prio = -1;
 
 struct sigaction __cobalt_orig_sigdebug;
@@ -210,6 +212,9 @@ static __libcobalt_ctor void __init_cobalt(void)
 		return;
 
 	__libcobalt_init();
+
+	if (__cobalt_no_shadow)
+		return;
 
 	p = getenv("XENO_NOSHADOW");
 	if (p && *p)

@@ -141,6 +141,8 @@ void __libcobalt_init(void);
 
 extern int __cobalt_defer_init;
 
+extern int __cobalt_no_shadow;
+
 extern int __cobalt_main_prio;
 
 extern int __cobalt_print_bufsz;
