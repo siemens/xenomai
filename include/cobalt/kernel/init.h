@@ -19,11 +19,36 @@
 #ifndef _COBALT_KERNEL_INIT_H
 #define _COBALT_KERNEL_INIT_H
 
-extern int __xnsys_disabled;
+#include <linux/atomic.h>
+#include <linux/notifier.h>
+#include <cobalt/uapi/corectl.h>
+
+extern atomic_t cobalt_runstate;
+
+static inline enum cobalt_run_states realtime_core_state(void)
+{
+	return atomic_read(&cobalt_runstate);
+}
 
 static inline int realtime_core_enabled(void)
 {
-	return !__xnsys_disabled;
+	return atomic_read(&cobalt_runstate) != COBALT_STATE_DISABLED;
 }
+
+static inline int realtime_core_running(void)
+{
+	return atomic_read(&cobalt_runstate) == COBALT_STATE_RUNNING;
+}
+
+static inline void set_realtime_core_state(enum cobalt_run_states state)
+{
+	atomic_set(&cobalt_runstate, state);
+}
+
+void cobalt_add_notifier_chain(struct notifier_block *nb);
+
+void cobalt_remove_notifier_chain(struct notifier_block *nb);
+
+void cobalt_call_notifier_chain(enum cobalt_run_states newstate);
 
 #endif /* !_COBALT_KERNEL_INIT_H_ */

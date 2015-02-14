@@ -107,15 +107,15 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2posix_2timerfd_8h_sour
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;                             <span class="keyword">struct</span> itimerspec *value);</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;COBALT_SYSCALL_DECL(timerfd_create,</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> clockid, <span class="keywordtype">int</span> flags));</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                    (<span class="keywordtype">int</span> clockid, <span class="keywordtype">int</span> flags));</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;COBALT_SYSCALL_DECL(timerfd_settime,</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> flags,</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> itimerspec __user *new_value,</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;                          <span class="keyword">struct</span> itimerspec __user *old_value));</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;                    (<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> flags,</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                     <span class="keyword">const</span> <span class="keyword">struct</span> itimerspec __user *new_value,</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;                     <span class="keyword">struct</span> itimerspec __user *old_value));</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;COBALT_SYSCALL_DECL(timerfd_gettime,</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> itimerspec __user *curr_value));</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;                    (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> itimerspec __user *curr_value));</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* TIMERFD_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->

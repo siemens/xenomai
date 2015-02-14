@@ -31,6 +31,7 @@
 #include <linux/module.h>
 #include <linux/cdev.h>
 #include <linux/wait.h>
+#include <linux/notifier.h>
 #include <xenomai/version.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/sched.h>
@@ -223,6 +224,18 @@ struct rtdm_profile_info {
 	struct module *owner;
 };
 
+struct rtdm_driver;
+
+/**
+ * @brief RTDM state management handlers
+ */
+struct rtdm_sm_ops {
+	/** Handler called upon transition to COBALT_STATE_WARMUP */ 
+	int (*start)(struct rtdm_driver *drv);
+	/** Handler called upon transition to COBALT_STATE_TEARDOWN */ 
+	int (*stop)(struct rtdm_driver *drv);
+};
+
 /**
  * @brief RTDM driver
  *
@@ -249,6 +262,8 @@ struct rtdm_driver {
 	int socket_type;
 	/** I/O operation handlers */
 	struct rtdm_fd_ops ops;
+	/** State management handlers */
+	struct rtdm_sm_ops smops;
 	/**
 	 * Count of devices this driver manages. This value is used to
 	 * allocate a chrdev region for named devices.
@@ -263,6 +278,7 @@ struct rtdm_driver {
 			} named;
 		};
 		atomic_t refcount;
+		struct notifier_block nb_statechange;
 	};
 };
 

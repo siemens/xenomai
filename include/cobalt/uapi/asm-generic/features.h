@@ -49,6 +49,7 @@ struct cobalt_featinfo {
 #define __xn_feat_nosmp       0x40000000
 #define __xn_feat_fastsynch   0x20000000
 #define __xn_feat_nofastsynch 0x10000000
+#define __xn_feat_control     0x08000000
 
 #ifdef CONFIG_SMP
 #define __xn_feat_smp_mask __xn_feat_smp
@@ -62,8 +63,10 @@ struct cobalt_featinfo {
 #define __xn_feat_generic_mask \
 	(__xn_feat_smp_mask | __xn_feat_fastsynch_mask)
 
-/* List of features both sides have to agree on:
-   If userland supports it, the kernel has to provide it, too. */
+/*
+ * List of features both sides have to agree on: If userland supports
+ * it, the kernel has to provide it, too.
+ */
 #define __xn_feat_generic_man_mask \
 	(__xn_feat_fastsynch | __xn_feat_nofastsynch | __xn_feat_nosmp)
 
@@ -79,6 +82,8 @@ const char *get_generic_feature_label(unsigned int feature)
 		return "fastsynch";
 	case __xn_feat_nofastsynch:
 		return "nofastsynch";
+	case __xn_feat_control:
+		return "control";
 	default:
 		return 0;
 	}

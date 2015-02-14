@@ -185,11 +185,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Cancel a thread. </p>
-<p>Request cancellation of a thread. This service forces <em>thread</em> to exit from any blocking call. <em>thread</em> will terminate as soon as it reaches a cancellation point. Cancellation points are defined for the following situations:</p>
+<p>Request cancellation of a thread. This service forces <em>thread</em> to exit from any blocking call, then to switch to secondary mode. <em>thread</em> will terminate as soon as it reaches a cancellation point. Cancellation points are defined for the following situations:</p>
 <ul>
 <li><em>thread</em> self-cancels by a call to <a class="el" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732" title="Cancel a thread. ">xnthread_cancel()</a>.</li>
 <li><em>thread</em> invokes a Linux syscall (user-space shadow only).</li>
 <li><em>thread</em> receives a Linux signal (user-space shadow only).</li>
+<li><em>thread</em> unblocks from a Xenomai syscall (user-space shadow only).</li>
+<li><em>thread</em> attempts to block on a Xenomai syscall (user-space shadow only).</li>
 <li><em>thread</em> explicitly calls <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753" title="Introduce a thread cancellation point. ">xnthread_test_cancel()</a>.</li>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -198,9 +200,10 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a> </dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a></dd></dl>
+<dl class="section note"><dt>Note</dt><dd>In addition to the common actions taken upon cancellation, a thread which belongs to the SCHED_WEAK class is sent a regular SIGTERM signal. </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">XNCANCELD</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a">xnsched_run()</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, and <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">XNCANCELD</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a">xnsched_run()</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">XNUSER</a>, and <a class="el" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__task.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
 
@@ -590,7 +593,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__cobalt__core__thread__states.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga9394cc02e730535e3dd8b0aabb08ea86">XNHELD</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, and <a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield()</a>, <a class="el" href="group__cobalt__core__synch.html#ga51febbfe4ff33ef18778fe9ecf62c43a">xnsynch_flush()</a>, <a class="el" href="group__cobalt__core__synch.html#ga54162964059c62d7a7b45ef22911662f">xnsynch_wakeup_one_sleeper()</a>, <a class="el" href="group__cobalt__core__synch.html#ga8096364cd5d717dae816c74dcc05a8ac">xnsynch_wakeup_this_sleeper()</a>, <a class="el" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel()</a>, <a class="el" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map()</a>, <a class="el" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032">xnthread_start()</a>, and <a class="el" href="group__cobalt__core__thread.html#ga8fe02cbf0d0cebc0ca9d9522bc58e65a">xnthread_unblock()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__core__synch.html#ga51febbfe4ff33ef18778fe9ecf62c43a">xnsynch_flush()</a>, <a class="el" href="group__cobalt__core__synch.html#ga54162964059c62d7a7b45ef22911662f">xnsynch_wakeup_one_sleeper()</a>, <a class="el" href="group__cobalt__core__synch.html#ga8096364cd5d717dae816c74dcc05a8ac">xnsynch_wakeup_this_sleeper()</a>, <a class="el" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel()</a>, <a class="el" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map()</a>, <a class="el" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032">xnthread_start()</a>, and <a class="el" href="group__cobalt__core__thread.html#ga8fe02cbf0d0cebc0ca9d9522bc58e65a">xnthread_unblock()</a>.</p>
 
 </div>
 </div>

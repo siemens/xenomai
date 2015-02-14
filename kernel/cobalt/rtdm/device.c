@@ -24,7 +24,9 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 #include <linux/device.h>
+#include <linux/notifier.h>
 #include "rtdm/internal.h"
+#include <cobalt/kernel/init.h>
 #include <trace/events/cobalt-rtdm.h>
 
 /**
@@ -225,6 +227,40 @@ static struct device_attribute rtdm_attrs[] = {
 
 #endif /* !ATTRIBUTE_GROUPS */
 
+static int state_change_notifier(struct notifier_block *nb,
+				 unsigned long action, void *data)
+{
+	struct rtdm_driver *drv;
+	int ret;
+
+	drv = container_of(nb, struct rtdm_driver, nb_statechange);
+
+	switch (action) {
+	case COBALT_STATE_WARMUP:
+		if (drv->smops.start == NULL)
+			return NOTIFY_DONE;
+		ret = drv->smops.start(drv);
+		if (ret)
+			printk(XENO_WARN
+			       "failed starting driver %s (%d)\n",
+			       drv->profile_info.name, ret);
+		break;
+	case COBALT_STATE_TEARDOWN:
+		if (drv->smops.stop == NULL)
+			return NOTIFY_DONE;
+		ret = drv->smops.stop(drv);
+		if (ret)
+			printk(XENO_WARN
+			       "failed stopping driver %s (%d)\n",
+			       drv->profile_info.name, ret);
+		break;
+	default:
+		return NOTIFY_DONE;
+	}
+
+	return NOTIFY_OK;
+}
+
 static int register_driver(struct rtdm_driver *drv)
 {
 	dev_t rdev;
@@ -268,6 +304,9 @@ static int register_driver(struct rtdm_driver *drv)
 	drv->named.major = MAJOR(rdev);
 	atomic_set(&drv->refcount, 1);
 done:
+	drv->nb_statechange.notifier_call = state_change_notifier;
+	drv->nb_statechange.priority = 0;
+	cobalt_add_notifier_chain(&drv->nb_statechange);
 	drv->profile_info.magic = RTDM_CLASS_MAGIC;
 
 	return 0;
@@ -285,6 +324,8 @@ static void unregister_driver(struct rtdm_driver *drv)
 	if (!atomic_dec_and_test(&drv->refcount))
 		return;
 
+	cobalt_remove_notifier_chain(&drv->nb_statechange);
+	
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		cdev_del(&drv->named.cdev);
 		unregister_chrdev_region(MKDEV(drv->named.major, 0),

@@ -167,6 +167,9 @@ struct xnsched_class {
 /* Placeholder for current thread priority */
 #define XNSCHED_RUNPRIO   0x80000000
 
+#define xnsched_for_each_thread(__thread)	\
+	list_for_each_entry(__thread, &nkthreadq, glink)
+
 #ifdef CONFIG_SMP
 static inline int xnsched_cpu(struct xnsched *sched)
 {

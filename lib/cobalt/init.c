@@ -47,6 +47,8 @@ __weak int __cobalt_defer_init = 0;
 
 __weak int __cobalt_no_shadow = 0;
 
+__weak int __cobalt_control_bind = 0;
+
 __weak int __cobalt_main_prio = -1;
 
 struct sigaction __cobalt_orig_sigdebug;
@@ -81,6 +83,8 @@ static void low_init(void)
 
 	f = &breq.feat_ret;
 	breq.feat_req = XENOMAI_FEAT_DEP;
+	if (__cobalt_control_bind)
+		breq.feat_req |= __xn_feat_control;
 	breq.abi_rev = XENOMAI_ABI_REV;
 	ret = XENOMAI_SYSBIND(&breq);
 

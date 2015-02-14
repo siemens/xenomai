@@ -1,6 +1,7 @@
 var driver_8h =
 [
     [ "rtdm_dev_context", "structrtdm__dev__context.html", "structrtdm__dev__context" ],
+    [ "rtdm_sm_ops", "structrtdm__sm__ops.html", "structrtdm__sm__ops" ],
     [ "rtdm_driver", "structrtdm__driver.html", "structrtdm__driver" ],
     [ "rtdm_device", "structrtdm__device.html", "structrtdm__device" ],
     [ "cobalt_atomic_enter", "group__rtdm__sync__biglock.html#ga632e377a9ec9f08e191dcd86f567925b", null ],

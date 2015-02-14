@@ -1,5 +1,6 @@
 <map id="rtdm_device" name="rtdm_device">
 <area shape="rect" id="node2" href="$structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="5,5,100,32"/>
-<area shape="rect" id="node3" href="$structrtdm__driver.html" title="RTDM driver. " alt="" coords="99,95,185,121"/>
-<area shape="rect" id="node4" href="$structatomic__t.html" title="Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. " alt="" coords="127,5,199,32"/>
+<area shape="rect" id="node3" href="$structrtdm__driver.html" title="RTDM driver. " alt="" coords="128,95,215,121"/>
+<area shape="rect" id="node4" href="$structatomic__t.html" title="Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. " alt="" coords="266,5,338,32"/>
+<area shape="rect" id="node5" href="$structrtdm__sm__ops.html" title="RTDM state management handlers. " alt="" coords="125,5,226,32"/>
 </map>

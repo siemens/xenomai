@@ -32,6 +32,7 @@ var annotated =
     [ "rtdm_device_info", "structrtdm__device__info.html", "structrtdm__device__info" ],
     [ "rtdm_driver", "structrtdm__driver.html", "structrtdm__driver" ],
     [ "rtdm_fd_ops", "structrtdm__fd__ops.html", "structrtdm__fd__ops" ],
+    [ "rtdm_sm_ops", "structrtdm__sm__ops.html", "structrtdm__sm__ops" ],
     [ "rtipc_port_label", "structrtipc__port__label.html", "structrtipc__port__label" ],
     [ "rtser_config", "structrtser__config.html", "structrtser__config" ],
     [ "rtser_event", "structrtser__event.html", "structrtser__event" ],

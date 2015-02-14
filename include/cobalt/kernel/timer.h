@@ -495,9 +495,9 @@ static inline void xntimer_set_sched(struct xntimer *timer,
 char *xntimer_format_time(xnticks_t ns,
 			  char *buf, size_t bufsz);
 
-int xntimer_grab_hardware(int cpu);
+int xntimer_grab_hardware(void);
 
-void xntimer_release_hardware(int cpu);
+void xntimer_release_hardware(void);
 
 /** @} */
 

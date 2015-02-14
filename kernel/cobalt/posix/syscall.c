@@ -20,9 +20,10 @@
 #include <linux/err.h>
 #include <linux/ipipe.h>
 #include <linux/kconfig.h>
-#include <cobalt/uapi/sysconf.h>
+#include <cobalt/uapi/corectl.h>
 #include <cobalt/kernel/tree.h>
 #include <cobalt/kernel/vdso.h>
+#include <cobalt/kernel/init.h>
 #include <xenomai/version.h>
 #include <asm-generic/xenomai/mayday.h>
 #include "internal.h"
@@ -306,6 +307,9 @@ static COBALT_SYSCALL(bind, lostage,
 
 	f = &breq.feat_ret;
 	featreq = breq.feat_req;
+	if (!realtime_core_running() && (featreq & __xn_feat_control) == 0)
+		return -EPERM;
+
 	featmis = (~XENOMAI_FEAT_DEP & (featreq & XENOMAI_FEAT_MAN));
 	abirev = breq.abi_rev;
 
@@ -352,8 +356,7 @@ static COBALT_SYSCALL(extend, lostage, (unsigned int magic))
 	return cobalt_bind_personality(magic);
 }
 
-static COBALT_SYSCALL(sysconf, current,
-		      (int option, void __user *u_buf, size_t u_bufsz))
+static int get_conf_option(int option, void __user *u_buf, size_t u_bufsz)
 {
 	int ret, val = 0;
 
@@ -361,58 +364,149 @@ static COBALT_SYSCALL(sysconf, current,
 		return -EINVAL;
 
 	switch (option) {
-	case _SC_COBALT_VERSION:
+	case _CC_COBALT_GET_VERSION:
 		val = XENO_VERSION_CODE;
 		break;
-	case _SC_COBALT_NR_PIPES:
-#if IS_ENABLED(CONFIG_XENO_OPT_PIPE)
+	case _CC_COBALT_GET_NR_PIPES:
+#ifdef CONFIG_XENO_OPT_PIPE
 		val = CONFIG_XENO_OPT_PIPE_NRDEV;
 #endif
 		break;
-	case _SC_COBALT_NR_TIMERS:
+	case _CC_COBALT_GET_NR_TIMERS:
 		val = CONFIG_XENO_OPT_NRTIMERS;
 		break;
-	case _SC_COBALT_POLICIES:
-		val = _SC_COBALT_SCHED_FIFO|_SC_COBALT_SCHED_RR;
+	case _CC_COBALT_GET_POLICIES:
+		val = _CC_COBALT_SCHED_FIFO|_CC_COBALT_SCHED_RR;
 		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_WEAK))
-			val |= _SC_COBALT_SCHED_WEAK;
+			val |= _CC_COBALT_SCHED_WEAK;
 		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_SPORADIC))
-			val |= _SC_COBALT_SCHED_SPORADIC;
+			val |= _CC_COBALT_SCHED_SPORADIC;
 		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_QUOTA))
-			val |= _SC_COBALT_SCHED_QUOTA;
+			val |= _CC_COBALT_SCHED_QUOTA;
 		if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_TP))
-			val |= _SC_COBALT_SCHED_TP;
+			val |= _CC_COBALT_SCHED_TP;
 		break;
-	case _SC_COBALT_DEBUG:
+	case _CC_COBALT_GET_DEBUG:
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_COBALT))
-			val |= _SC_COBALT_DEBUG_ASSERT;
+			val |= _CC_COBALT_DEBUG_ASSERT;
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_CONTEXT))
-			val |= _SC_COBALT_DEBUG_CONTEXT;
+			val |= _CC_COBALT_DEBUG_CONTEXT;
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_LOCKING))
-			val |= _SC_COBALT_DEBUG_LOCKING;
+			val |= _CC_COBALT_DEBUG_LOCKING;
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER))
-			val |= _SC_COBALT_DEBUG_USER;
+			val |= _CC_COBALT_DEBUG_USER;
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_TRACE_RELAX))
-			val |= _SC_COBALT_DEBUG_RELAX;
+			val |= _CC_COBALT_DEBUG_RELAX;
 		break;
-	case _SC_COBALT_WATCHDOG:
-#if IS_ENABLED(CONFIG_XENO_OPT_WATCHDOG)
+	case _CC_COBALT_GET_WATCHDOG:
+#ifdef CONFIG_XENO_OPT_WATCHDOG
 		val = CONFIG_XENO_OPT_WATCHDOG_TIMEOUT;
 #endif
+		break;
+	case _CC_COBALT_GET_CORE_STATUS:
+		val = realtime_core_state();
 		break;
 	default:
 		return -EINVAL;
 	}
 
-	ret = __xn_safe_copy_from_user(u_buf, &val, sizeof(val));
+	ret = __xn_safe_copy_to_user(u_buf, &val, sizeof(val));
 
 	return ret ? -EFAULT : 0;
 }
 
-static COBALT_SYSCALL(sysctl, probing,
-		      (int option, void __user *u_buf, size_t u_bufsz))
+static int stop_services(const void __user *u_buf, size_t u_bufsz)
 {
-	return -EINVAL;
+	const int final_grace_period = 3; /* seconds */
+	enum cobalt_run_states state;
+	int ret, timeout;
+
+	/*
+	 * XXX: we don't have any syscall for unbinding a thread from
+	 * the Cobalt core, so we deny real-time threads from stopping
+	 * Cobalt services. i.e. _CC_COBALT_STOP_CORE must be issued
+	 * from a plain regular linux thread.
+	 */
+	if (xnthread_current())
+		return -EPERM;
+
+	if (u_bufsz != sizeof(int))
+		return -EINVAL;
+
+	ret = __xn_safe_copy_from_user(&timeout, u_buf, sizeof(timeout));
+	if (ret)
+		return ret;
+
+	state = atomic_cmpxchg(&cobalt_runstate,
+			       COBALT_STATE_RUNNING,
+			       COBALT_STATE_TEARDOWN);
+	switch (state) {
+	case COBALT_STATE_STOPPED:
+		break;
+	case COBALT_STATE_RUNNING:
+		/* Kill user threads. */
+		ret = xnthread_killall(timeout, XNUSER);
+		if (ret) {
+			set_realtime_core_state(state);
+			return ret;
+		}
+		cobalt_call_notifier_chain(COBALT_STATE_TEARDOWN);
+		/* Kill lingering RTDM tasks. */
+		ret = xnthread_killall(final_grace_period, 0);
+		if (ret == -EAGAIN)
+			printk(XENO_WARN "some RTDM tasks won't stop");
+		xntimer_release_hardware();
+		set_realtime_core_state(COBALT_STATE_STOPPED);
+		printk(XENO_INFO "services stopped\n");
+		break;
+	default:
+		ret = -EINPROGRESS;
+	}
+
+	return ret;
+}
+
+static int start_services(void)
+{
+	enum cobalt_run_states state;
+	int ret = 0;
+
+	state = atomic_cmpxchg(&cobalt_runstate,
+			       COBALT_STATE_STOPPED,
+			       COBALT_STATE_WARMUP);
+	switch (state) {
+	case COBALT_STATE_RUNNING:
+		break;
+	case COBALT_STATE_STOPPED:
+		xntimer_grab_hardware();
+		cobalt_call_notifier_chain(COBALT_STATE_WARMUP);
+		set_realtime_core_state(COBALT_STATE_RUNNING);
+		printk(XENO_INFO "services started\n");
+		break;
+	default:
+		ret = -EINPROGRESS;
+	}
+
+	return ret;
+}
+
+static COBALT_SYSCALL(corectl, probing,
+		      (int request, void __user *u_buf, size_t u_bufsz))
+{
+	int ret;
+	
+	switch (request) {
+	case _CC_COBALT_STOP_CORE:
+		ret = stop_services(u_buf, u_bufsz);
+		break;
+	case _CC_COBALT_START_CORE:
+		ret = start_services();
+		break;
+	default:
+		ret = get_conf_option(request, u_buf, u_bufsz);
+	}
+	
+	return ret;
 }
 
 static int cobalt_ni(void)
@@ -598,8 +692,7 @@ static const cobalt_syshand cobalt_syscalls[] = {
 	__COBALT_CALL_ENTRY(mayday),
 	__COBALT_CALL_ENTRY(backtrace),
 	__COBALT_CALL_ENTRY(serialdbg),
-	__COBALT_CALL_ENTRY(sysconf),
-	__COBALT_CALL_ENTRY(sysctl),
+	__COBALT_CALL_ENTRY(corectl),
 	__COBALT_CALL_ENTRY(fcntl)
 	/* NO COMMA AT END */
 #ifdef CONFIG_XENO_ARCH_SYS3264
@@ -702,20 +795,34 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(mayday, oneway),
 	__COBALT_MODE(backtrace, current),
 	__COBALT_MODE(serialdbg, current),
-	__COBALT_MODE(sysconf, current),
-	__COBALT_MODE(sysctl, probing),
+	__COBALT_MODE(corectl, probing),
 	__COBALT_MODE(fcntl, current),
 };
+
+static inline int allowed_syscall(struct cobalt_process *process,
+				  struct xnthread *thread,
+				  int sysflags, int nr)
+{
+	if (nr == sc_cobalt_bind)
+		return 1;
+	
+	if (process == NULL)
+		return 0;
+
+	if (thread == NULL && (sysflags & __xn_exec_shadow) != 0)
+		return 0;
+
+	return cap_raised(current_cap(), CAP_SYS_NICE);
+}
 
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	struct cobalt_process *process;
-	int switched, sigs;
+	int switched, sigs, sysflags;
 	struct xnthread *thread;
 	cobalt_syshand handler;
 	struct task_struct *p;
 	unsigned int nr, code;
-	int sysflags;
 	long ret;
 
 	if (!__xn_syscall_p(regs))
@@ -743,10 +850,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 * Executing Cobalt services requires CAP_SYS_NICE, except for
 	 * sc_cobalt_bind which does its own checks.
 	 */
-	if (unlikely((process == NULL && nr != sc_cobalt_bind) ||
-		     (thread == NULL && (sysflags & __xn_exec_shadow) != 0) ||
-		     (!cap_raised(current_cap(), CAP_SYS_NICE) &&
-		      nr != sc_cobalt_bind))) {
+	if (unlikely(!allowed_syscall(process, thread, sysflags, nr))) {
 		if (XENO_DEBUG(COBALT))
 			printk(XENO_WARN
 			       "syscall <%d> denied to %s[%d]\n",

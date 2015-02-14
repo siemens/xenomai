@@ -136,12 +136,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ga1f8c47fc1d2fa949791500f9435fc96a"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode</a> (enum clock_event_mode mode, struct clock_event_device *cdev)</td></tr>
 <tr class="memdesc:ga1f8c47fc1d2fa949791500f9435fc96a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tick mode switch emulation callback.  <a href="#ga1f8c47fc1d2fa949791500f9435fc96a">More...</a><br /></td></tr>
 <tr class="separator:ga1f8c47fc1d2fa949791500f9435fc96a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad0b7fde08d0fee28103cd4163c2b2f76"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76">xntimer_grab_hardware</a> (int cpu)</td></tr>
-<tr class="memdesc:gad0b7fde08d0fee28103cd4163c2b2f76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grab the hardware timer.  <a href="#gad0b7fde08d0fee28103cd4163c2b2f76">More...</a><br /></td></tr>
-<tr class="separator:gad0b7fde08d0fee28103cd4163c2b2f76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabdff54d0fa60013e63dffdd6c7334a03"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gabdff54d0fa60013e63dffdd6c7334a03">xntimer_release_hardware</a> (int cpu)</td></tr>
-<tr class="memdesc:gabdff54d0fa60013e63dffdd6c7334a03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release the hardware timer.  <a href="#gabdff54d0fa60013e63dffdd6c7334a03">More...</a><br /></td></tr>
-<tr class="separator:gabdff54d0fa60013e63dffdd6c7334a03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae32695b66e4f3f05b2db32f335f88c9d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gae32695b66e4f3f05b2db32f335f88c9d">xntimer_grab_hardware</a> (void)</td></tr>
+<tr class="memdesc:gae32695b66e4f3f05b2db32f335f88c9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grab the hardware timer on all real-time CPUs.  <a href="#gae32695b66e4f3f05b2db32f335f88c9d">More...</a><br /></td></tr>
+<tr class="separator:gae32695b66e4f3f05b2db32f335f88c9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9ce3fc9fcfba5f93722b6ce2024e09cf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga9ce3fc9fcfba5f93722b6ce2024e09cf">xntimer_release_hardware</a> (void)</td></tr>
+<tr class="memdesc:ga9ce3fc9fcfba5f93722b6ce2024e09cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release hardware timers.  <a href="#ga9ce3fc9fcfba5f93722b6ce2024e09cf">More...</a><br /></td></tr>
+<tr class="separator:ga9ce3fc9fcfba5f93722b6ce2024e09cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>The Xenomai timer facility depends on a clock source (xnclock) for scheduling the next activation times. </p>
@@ -233,8 +233,6 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">xnsched::htimer</a>, and <a class="el" href="group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b">xntimer_start()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76">xntimer_grab_hardware()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="ga1f8c47fc1d2fa949791500f9435fc96a"></a>
@@ -292,8 +290,6 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>GENERIC_CLOCKEVENTS is required from the host kernel. </dd></dl>
 
 <p>References <a class="el" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">xnsched::htimer</a>, <a class="el" href="group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b">xntimer_start()</a>, and <a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop()</a>.</p>
-
-<p>Referenced by <a class="el" href="group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76">xntimer_grab_hardware()</a>.</p>
 
 </div>
 </div>
@@ -421,37 +417,31 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gad0b7fde08d0fee28103cd4163c2b2f76"></a>
+<a class="anchor" id="gae32695b66e4f3f05b2db32f335f88c9d"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">int xntimer_grab_hardware </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>cpu</em></td><td>)</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Grab the hardware timer. </p>
-<p><a class="el" href="group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76" title="Grab the hardware timer. ">xntimer_grab_hardware()</a> grabs and tunes the hardware timer in oneshot mode in order to clock the master time base. GENERIC_CLOCKEVENTS is required from the host kernel.</p>
-<p>Host tick emulation is performed for sharing the clockchip hardware between Linux and Xenomai, when the former provides support for oneshot timing (i.e. high resolution timers and no-HZ scheduler ticking).</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">cpu</td><td>The CPU number to grab the timer from.</td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Grab the hardware timer on all real-time CPUs. </p>
+<p><a class="el" href="group__cobalt__core__timer.html#gae32695b66e4f3f05b2db32f335f88c9d" title="Grab the hardware timer on all real-time CPUs. ">xntimer_grab_hardware()</a> grabs and tunes the hardware timer for all real-time CPUs.</p>
+<p>Host tick emulation is performed for sharing the clock chip between Linux and Xenomai.</p>
 <dl class="section return"><dt>Returns</dt><dd>a positive value is returned on success, representing the duration of a Linux periodic tick expressed as a count of nanoseconds; zero should be returned when the Linux kernel does not undergo periodic timing on the given CPU (e.g. oneshot mode). Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__cobalt__core__timer.html#gabdff54d0fa60013e63dffdd6c7334a03" title="Release the hardware timer. ">xntimer_release_hardware()</a> must be issued before <a class="el" href="group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76" title="Grab the hardware timer. ">xntimer_grab_hardware()</a> is called again.</li>
+<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__cobalt__core__timer.html#ga9ce3fc9fcfba5f93722b6ce2024e09cf" title="Release hardware timers. ">xntimer_release_hardware()</a> must be issued before <a class="el" href="group__cobalt__core__timer.html#gae32695b66e4f3f05b2db32f335f88c9d" title="Grab the hardware timer on all real-time CPUs. ">xntimer_grab_hardware()</a> is called again.</li>
 <li>-ENODEV is returned if the hardware timer cannot be used. This situation may occur after the kernel disabled the timer due to invalid calibration results; in such a case, such hardware is unusable for any timing duties.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__timer.html#ga40dc6da3c5f849e4d6629f9d804fa7d7">program_htick_shot()</a>, and <a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode()</a>.</p>
+<p>References <a class="el" href="structxnsched.html#a311abccab49fc3209aff4895a2de4f45">xnsched::cpu</a>, <a class="el" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">xnsched::htimer</a>, <a class="el" href="group__cobalt__core__irq.html#ga2bcb3882ee1fc8f5580db7f66b2730b9">xnintr_init()</a>, <a class="el" href="group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b">xntimer_start()</a>, and <a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop()</a>.</p>
 
 </div>
 </div>
@@ -558,29 +548,25 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gabdff54d0fa60013e63dffdd6c7334a03"></a>
+<a class="anchor" id="ga9ce3fc9fcfba5f93722b6ce2024e09cf"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void xntimer_release_hardware </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>cpu</em></td><td>)</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Release the hardware timer. </p>
-<p>Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="group__cobalt__core__timer.html#gad0b7fde08d0fee28103cd4163c2b2f76" title="Grab the hardware timer. ">xntimer_grab_hardware()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel is reset.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">cpu</td><td>The CPU number the timer was grabbed from.</td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Release hardware timers. </p>
+<p>Releases hardware timers previously grabbed by a call to <a class="el" href="group__cobalt__core__timer.html#gae32695b66e4f3f05b2db32f335f88c9d" title="Grab the hardware timer on all real-time CPUs. ">xntimer_grab_hardware()</a>.</p>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
+
+<p>References <a class="el" href="structxnsched.html#a311abccab49fc3209aff4895a2de4f45">xnsched::cpu</a>, and <a class="el" href="group__cobalt__core__irq.html#ga2f4d355b8f1e30ac47eb6cdf5b15052a">xnintr_destroy()</a>.</p>
 
 </div>
 </div>
@@ -635,7 +621,7 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>0 is returned upon success, or -ETIMEDOUT if an absolute date in the past has been given. In such an event, the timer is nevertheless armed for the next shot in the timeline if <em>interval</em> is different from XN_INFINITE.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted, atomic-entry</a> </dd></dl>
 
-<p>Referenced by <a class="el" href="group__cobalt__core__timer.html#ga40dc6da3c5f849e4d6629f9d804fa7d7">program_htick_shot()</a>, <a class="el" href="group__rtdm__timer.html#ga429ca4935762583edb6e1ebc955fe958">rtdm_timer_start()</a>, <a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode()</a>, <a class="el" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic()</a>, <a class="el" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice()</a>, and <a class="el" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__core__timer.html#ga40dc6da3c5f849e4d6629f9d804fa7d7">program_htick_shot()</a>, <a class="el" href="group__rtdm__timer.html#ga429ca4935762583edb6e1ebc955fe958">rtdm_timer_start()</a>, <a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode()</a>, <a class="el" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic()</a>, <a class="el" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice()</a>, <a class="el" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend()</a>, and <a class="el" href="group__cobalt__core__timer.html#gae32695b66e4f3f05b2db32f335f88c9d">xntimer_grab_hardware()</a>.</p>
 
 </div>
 </div>
@@ -671,7 +657,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted, atomic-entry</a> </dd></dl>
 
-<p>Referenced by <a class="el" href="group__cobalt__core__timer.html#gabcea9e49706bb130bb63ada53ec4bd87">__xntimer_migrate()</a>, <a class="el" href="group__rtdm__timer.html#ga7f2accf693db9ed5a537b86a58bccd94">rtdm_timer_stop()</a>, <a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode()</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, <a class="el" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic()</a>, <a class="el" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice()</a>, and <a class="el" href="group__cobalt__core__timer.html#gad3df99cd50604063f66cf58c88074161">xntimer_destroy()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__core__timer.html#gabcea9e49706bb130bb63ada53ec4bd87">__xntimer_migrate()</a>, <a class="el" href="group__rtdm__timer.html#ga7f2accf693db9ed5a537b86a58bccd94">rtdm_timer_stop()</a>, <a class="el" href="group__cobalt__core__timer.html#ga1f8c47fc1d2fa949791500f9435fc96a">switch_htick_mode()</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, <a class="el" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic()</a>, <a class="el" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice()</a>, <a class="el" href="group__cobalt__core__timer.html#gad3df99cd50604063f66cf58c88074161">xntimer_destroy()</a>, and <a class="el" href="group__cobalt__core__timer.html#gae32695b66e4f3f05b2db32f335f88c9d">xntimer_grab_hardware()</a>.</p>
 
 </div>
 </div>

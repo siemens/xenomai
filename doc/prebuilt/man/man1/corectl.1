@@ -1,0 +1,212 @@
+'\" t
+.\"     Title: autotune
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2015/02/14
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 3.0-rc3
+.\"  Language: English
+.\"
+.TH "AUTOTUNE" "1" "2015/02/14" "Xenomai 3\&.0\-rc3" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+corectl \- Cobalt core control interface
+.SH "SYNOPSIS"
+.sp
+\fBcorectl\fR [ options ]
+.SH "DESCRIPTION"
+.sp
+\fBcorectl\fR is a utility to
+.SH "OPTIONS"
+.sp
+\fBcorectl\fR accepts the following options:
+.PP
+\fB\-\-stop [<grace\-seconds>]\fR
+.RS 4
+Stop the real\-time services\&. The following actions are taken in sequence:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+termination of all Xenomai threads running in user\-space, waiting for them to exit for at most
+grace\-seconds
+if specified, or indefinitely otherwise\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+active RTDM drivers are notified of the transition to the stopped state\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+termination of lingering RTDM threads (i\&.e\&. running in kernel space), waiting for them to exit for at most 3 seconds\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+deactivation of the real\-time timing services, control of the hardware timer on all real\-time CPUs is fully released to the host kernel\&.
+.RE
+.RE
+.sp
+Once stopped, the Cobalt core rejects all connection requests from regular applications\&.
+.PP
+\fB\-\-start\fR
+.RS 4
+Start the real\-time services\&. The following actions are taken in sequence:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+activation of the real\-time timing services, the Cobalt core takes full control over the hardware timer on all real\-time CPUs\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+loaded RTDM drivers are notified of the transition to the running state\&.
+.RE
+.RE
+.sp
+Once started, the Cobalt core accepts all connection requests from regular applications anew\&.
+.PP
+\fB\-\-status\fR
+.RS 4
+Display the current Cobalt core status\&. The following statuses can be returned:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdisabled\fR
+denotes a fully inoperative core\&. This state cannot be reached using the
+\fBcorectl\fR
+command, but only by passing the
+xenomai\&.state=disabled
+option on the kernel command line\&. A disabled core cannot be started dynamically using
+\fBcorectl\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIstopped\fR
+means that no further connection request will be accepted from applications, the real\-time services are currently unavailable\&. The Cobalt core can be stopped at boot time by passing the
+xenomai\&.state=stopped
+option on the kernel command line\&. A stopped core can be started dynamically using
+\fBcorectl \-\-start\fR, switching it to the
+\fIrunning\fR
+state\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIrunning\fR
+denotes an active state of the real\-time core, application requests are processed normally\&. This is the default state entered at boot time, which corresponds to passing the
+xenomai\&.state=enabled
+option on the kernel command line\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIteardown\fR
+denotes a real\-time system in the process of stopping all services\&. This transient status should not be seen unless some threads are unexpectedly lingering despite a termination request was issued\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIwarmup\fR
+denotes a real\-time system in the process of starting all services\&. This transient status should not be seen unless an RTDM driver gets stuck while switching to active mode\&.
+.RE
+.RE
+.PP
+\fB\-\-help\fR
+.RS 4
+Display a short help\&.
+.RE
+.sp
+If no option is passed, \-\-status is assumed by default\&.
+.SH "VERSIONS"
+.sp
+\fBcorectl\fR appeared in Xenomai 3\&.0 for the \fICobalt\fR real\-time core\&.
+.SH "AUTHOR"
+.sp
+\fBcorectl\fR was written by Philippe Gerum <rpm@xenomai\&.org>\&.

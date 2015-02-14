@@ -504,6 +504,8 @@ int xnthread_set_schedparam(struct xnthread *thread,
 			    struct xnsched_class *sched_class,
 			    const union xnsched_policy_param *sched_param);
 
+int xnthread_killall(int grace, int mask);
+
 extern struct xnthread_personality xenomai_personality;
 
 /** @} */

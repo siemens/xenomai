@@ -18,6 +18,7 @@
  */
 #include <linux/module.h>
 #include <linux/signal.h>
+#include <linux/wait.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/timer.h>

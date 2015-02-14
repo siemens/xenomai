@@ -144,35 +144,30 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2arch_2x86_2include_2as
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">#define __xn_syscall(regs)    (__xn_reg_sys(regs) &amp; ~__COBALT_SYSCALL_BIT)</span></div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xn_success_return(<span class="keyword">struct</span> pt_regs *regs, <span class="keywordtype">int</span> v)</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xn_error_return(<span class="keyword">struct</span> pt_regs *regs, <span class="keywordtype">int</span> v)</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;{</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        __xn_reg_rval(regs) = v;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;}</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xn_error_return(<span class="keyword">struct</span> pt_regs *regs, <span class="keywordtype">int</span> v)</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xn_status_return(<span class="keyword">struct</span> pt_regs *regs, <span class="keywordtype">long</span> v)</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;{</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        __xn_reg_rval(regs) = v;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;}</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xn_status_return(<span class="keyword">struct</span> pt_regs *regs, <span class="keywordtype">int</span> v)</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __xn_interrupted_p(<span class="keyword">struct</span> pt_regs *regs)</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;{</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        __xn_reg_rval(regs) = v;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keywordflow">return</span> __xn_reg_rval(regs) == -EINTR;</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;}</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __xn_interrupted_p(<span class="keyword">struct</span> pt_regs *regs)</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;{</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keywordflow">return</span> __xn_reg_rval(regs) == -EINTR;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;}</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keywordtype">int</span> xnarch_local_syscall(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a1, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a2,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a3, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a4,</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a5)</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;{</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordflow">return</span> -ENOSYS;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;}</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_X86_ASM_SYSCALL_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keywordtype">int</span> xnarch_local_syscall(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a1, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a2,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a3, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a4,</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> a5)</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;{</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keywordflow">return</span> -ENOSYS;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_X86_ASM_SYSCALL_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

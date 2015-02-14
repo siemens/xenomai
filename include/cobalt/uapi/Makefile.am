@@ -2,6 +2,7 @@ includesubdir = $(includedir)/cobalt/uapi
 
 includesub_HEADERS =	\
 	cond.h		\
+	corectl.h	\
 	event.h		\
 	monitor.h	\
 	mutex.h		\
@@ -9,7 +10,6 @@ includesub_HEADERS =	\
 	sem.h		\
 	signal.h	\
 	syscall.h	\
-	sysconf.h	\
 	thread.h	\
 	time.h
 

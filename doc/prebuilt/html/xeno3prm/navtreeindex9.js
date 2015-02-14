@@ -1,5 +1,10 @@
 var NAVTREEINDEX9 =
 {
+"structxnsched.html":[2,1,0,10,1],
+"structxnsched.html#a0890af51db917d0e6c02d1ff487daad5":[2,1,0,10,1,7],
+"structxnsched.html#a311abccab49fc3209aff4895a2de4f45":[2,1,0,10,1,0],
+"structxnsched.html#a3df5743f578ae3f242a1274518c2dfca":[2,1,0,10,1,5],
+"structxnsched.html#a46c9f9fdd5a35a375d6924133bde38af":[2,1,0,10,1,6],
 "structxnsched.html#ac9262f830ab6073df75a6f22e905556d":[2,1,0,10,1,3],
 "structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48":[2,1,0,10,1,8],
 "structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236":[2,1,0,10,1,2],
@@ -46,7 +51,6 @@ var NAVTREEINDEX9 =
 "sys_2select_8h_source.html":[4,0,0,2,2,3],
 "sys_8c.html":[4,0,2,1,9],
 "syscall32-table_8h_source.html":[4,0,1,0,0,5,0,0,0,8],
-"sysconf_8h_source.html":[4,0,0,2,3,10],
 "syslog_8h_source.html":[4,0,0,2,13],
 "sysregfs_8h_source.html":[4,0,2,3,0,0],
 "taskInfo_8h_source.html":[4,0,0,9,9],

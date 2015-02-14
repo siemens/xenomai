@@ -660,19 +660,14 @@ static void switch_htick_mode(enum clock_event_mode mode,
 }
 
 /**
- * @fn int xntimer_grab_hardware(int cpu)
- * @brief Grab the hardware timer.
+ * @fn int xntimer_grab_hardware(void)
+ * @brief Grab the hardware timer on all real-time CPUs.
  *
- * xntimer_grab_hardware() grabs and tunes the hardware timer in oneshot
- * mode in order to clock the master time base. GENERIC_CLOCKEVENTS is
- * required from the host kernel.
+ * xntimer_grab_hardware() grabs and tunes the hardware timer for all
+ * real-time CPUs.
  *
- * Host tick emulation is performed for sharing the clockchip hardware
- * between Linux and Xenomai, when the former provides support for
- * oneshot timing (i.e. high resolution timers and no-HZ scheduler
- * ticking).
- *
- * @param cpu The CPU number to grab the timer from.
+ * Host tick emulation is performed for sharing the clock chip between
+ * Linux and Xenomai.
  *
  * @return a positive value is returned on success, representing the
  * duration of a Linux periodic tick expressed as a count of
@@ -691,7 +686,7 @@ static void switch_htick_mode(enum clock_event_mode mode,
  *
  * @coretags{secondary-only}
  */
-int xntimer_grab_hardware(int cpu)
+static int grab_hardware_timer(int cpu)
 {
 	int tickval, ret;
 
@@ -699,9 +694,11 @@ int xntimer_grab_hardware(int cpu)
 				switch_htick_mode, program_htick_shot, cpu);
 	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
-		/* oneshot tick emulation callback won't be used, ask
+		/*
+		 * Oneshot tick emulation callback won't be used, ask
 		 * the caller to start an internal timer for emulating
-		 * a periodic tick. */
+		 * a periodic tick.
+		 */
 		tickval = 1000000000UL / HZ;
 		break;
 
@@ -725,22 +722,121 @@ int xntimer_grab_hardware(int cpu)
 	return tickval;
 }
 
+int xntimer_grab_hardware(void)
+{
+	struct xnsched *sched;
+	int ret, cpu, _cpu;
+	spl_t s;
+
+#ifdef CONFIG_XENO_OPT_STATS
+	/*
+	 * Only for statistical purpose, the timer interrupt is
+	 * attached by xntimer_grab_hardware().
+	 */
+	xnintr_init(&nktimer, "[timer]",
+		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
+#endif /* CONFIG_XENO_OPT_STATS */
+
+	nkclock.wallclock_offset =
+		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
+
+	ret = xntimer_setup_ipi();
+	if (ret)
+		return ret;
+
+	for_each_realtime_cpu(cpu) {
+		ret = grab_hardware_timer(cpu);
+		if (ret < 0)
+			goto fail;
+
+		xnlock_get_irqsave(&nklock, s);
+
+		/*
+		 * If the current tick device for the target CPU is
+		 * periodic, we won't be called back for host tick
+		 * emulation. Therefore, we need to start a periodic
+		 * nucleus timer which will emulate the ticking for
+		 * that CPU, since we are going to hijack the hw clock
+		 * chip for managing our own system timer.
+		 *
+		 * CAUTION:
+		 *
+		 * - nucleus timers may be started only _after_ the hw
+		 * timer has been set up for the target CPU through a
+		 * call to xntimer_grab_hardware().
+		 *
+		 * - we don't compensate for the elapsed portion of
+		 * the current host tick, since we cannot get this
+		 * information easily for all CPUs except the current
+		 * one, and also because of the declining relevance of
+		 * the jiffies clocksource anyway.
+		 *
+		 * - we must not hold the nklock across calls to
+		 * xntimer_grab_hardware().
+		 */
+
+		sched = xnsched_struct(cpu);
+		/* Set up timer with host tick period if valid. */
+		if (ret > 1)
+			xntimer_start(&sched->htimer, ret, ret, XN_RELATIVE);
+		else if (ret == 1)
+			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
+
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
+		xnsched_reset_watchdog(sched);
+#endif
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return 0;
+fail:
+	for_each_realtime_cpu(_cpu) {
+		if (_cpu == cpu)
+			break;
+		xnlock_get_irqsave(&nklock, s);
+		sched = xnsched_struct(cpu);
+		xntimer_stop(&sched->htimer);
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		xntimer_stop(&sched->wdtimer);
+#endif
+		xnlock_put_irqrestore(&nklock, s);
+		ipipe_timer_stop(_cpu);
+	}
+
+	xntimer_release_ipi();
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xntimer_grab_hardware);
+
 /**
- * @fn void xntimer_release_hardware(int cpu)
- * @brief Release the hardware timer.
+ * @fn void xntimer_release_hardware(void)
+ * @brief Release hardware timers.
  *
- * Releases the hardware timer, thus reverting the effect of a
- * previous call to xntimer_grab_hardware(). In case the timer
- * hardware is shared with Linux, a periodic setup suitable for the
- * Linux kernel is reset.
- *
- * @param cpu The CPU number the timer was grabbed from.
+ * Releases hardware timers previously grabbed by a call to
+ * xntimer_grab_hardware().
  *
  * @coretags{secondary-only}
  */
-void xntimer_release_hardware(int cpu)
+void xntimer_release_hardware(void)
 {
-	ipipe_timer_stop(cpu);
+	int cpu;
+
+	/*
+	 * We must not hold the nklock while stopping the hardware
+	 * timer, since this could cause deadlock situations to arise
+	 * on SMP systems.
+	 */
+	for_each_realtime_cpu(cpu)
+		ipipe_timer_stop(cpu);
+
+	xntimer_release_ipi();
+
+#ifdef CONFIG_XENO_OPT_STATS
+	xnintr_destroy(&nktimer);
+#endif /* CONFIG_XENO_OPT_STATS */
 }
+EXPORT_SYMBOL_GPL(xntimer_release_hardware);
 
 /** @} */

@@ -173,47 +173,47 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2posix_2sem_8h_source.h
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                  <span class="keywordtype">int</span> flags, <span class="keywordtype">unsigned</span> value);</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga532509bd8a6499f8193253192fb83a3d">sem_init</a>,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                          <span class="keywordtype">int</span> flags, <span class="keywordtype">unsigned</span> value));</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                     <span class="keywordtype">int</span> flags, <span class="keywordtype">unsigned</span> value));</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga015dce85cab8477c679cc47968958247">sem_post</a>,</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#gaad70020dca2241a2b78e272ca033271b">sem_wait</a>,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a>,</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                          <span class="keyword">struct</span> timespec __user *u_ts));</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                     <span class="keyword">struct</span> timespec __user *u_ts));</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait</a>,</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;COBALT_SYSCALL_DECL(sem_getvalue, <span class="keywordtype">int</span>,</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;COBALT_SYSCALL_DECL(sem_getvalue,</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                     <span class="keywordtype">int</span> __user *u_sval));</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga6bc9a7dd941a9b5e319715b767af5682">sem_destroy</a>,</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;COBALT_SYSCALL_DECL(sem_open,</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *__user *u_addrp,</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *u_name,</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                          <span class="keywordtype">int</span> oflags, mode_t mode, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value));</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *__user *u_addrp,</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                     <span class="keyword">const</span> <span class="keywordtype">char</span> __user *u_name,</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                     <span class="keywordtype">int</span> oflags, mode_t mode, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value));</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga4e398fea1080fd7919e5c72ee94e2fc5">sem_close</a>,</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *usm));</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *usm));</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga776256d1a473906f8b7490689bfcb75c">sem_unlink</a>, <span class="keywordtype">int</span>, (<span class="keyword">const</span> <span class="keywordtype">char</span> __user *u_name));</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sem.html#ga776256d1a473906f8b7490689bfcb75c">sem_unlink</a>, (<span class="keyword">const</span> <span class="keywordtype">char</span> __user *u_name));</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;COBALT_SYSCALL_DECL(sem_broadcast_np,</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem));</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;COBALT_SYSCALL_DECL(sem_inquire,</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                          <span class="keyword">struct</span> cobalt_sem_info __user *u_info,</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                          pid_t __user *u_waitlist,</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                          <span class="keywordtype">size_t</span> waitsz));</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                    (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                     <span class="keyword">struct</span> cobalt_sem_info __user *u_info,</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                     pid_t __user *u_waitlist,</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                     <span class="keywordtype">size_t</span> waitsz));</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="keywordtype">void</span> cobalt_semq_cleanup(<span class="keyword">struct</span> cobalt_kqueues *q);</div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;</div>

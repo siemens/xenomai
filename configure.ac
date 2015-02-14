@@ -956,6 +956,7 @@ AC_CONFIG_FILES([ \
 	utils/analogy/Makefile \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
+	utils/corectl/Makefile \
 	utils/autotune/Makefile \
 	utils/net/rtnet \
 	utils/net/rtnet.conf \

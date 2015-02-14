@@ -1,5 +1,6 @@
 var NAVTREEINDEX7 =
 {
+"kernel_2cobalt_2arch_2sh_2include_2asm_2xenomai_2uapi_2arith_8h_source.html":[4,0,1,0,0,4,0,0,0,0,0],
 "kernel_2cobalt_2arch_2sh_2include_2asm_2xenomai_2uapi_2features_8h_source.html":[4,0,1,0,0,4,0,0,0,0,1],
 "kernel_2cobalt_2arch_2sh_2include_2asm_2xenomai_2uapi_2syscall_8h_source.html":[4,0,1,0,0,4,0,0,0,0,3],
 "kernel_2cobalt_2arch_2sh_2include_2asm_2xenomai_2wrappers_8h_source.html":[4,0,1,0,0,4,0,0,0,8],
@@ -248,6 +249,5 @@ var NAVTREEINDEX7 =
 "semobj_8h_source.html":[4,0,0,3,9],
 "sh_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,4,0,0,0,3],
 "sh_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,4,0,0,0,0,2],
-"shared-list_8h_source.html":[4,0,0,1,11],
-"smi_8h_source.html":[4,0,1,0,0,5,0,0,0,6]
+"shared-list_8h_source.html":[4,0,0,1,11]
 };

@@ -109,13 +109,12 @@
 #define sc_cobalt_migrate			86
 #define sc_cobalt_archcall			87
 #define sc_cobalt_trace				88
-#define sc_cobalt_sysctl			89
+#define sc_cobalt_corectl			89
 #define sc_cobalt_get_current			90
 #define sc_cobalt_mayday			91
 #define sc_cobalt_backtrace			92
 #define sc_cobalt_serialdbg			93
 #define sc_cobalt_extend			94
-#define sc_cobalt_sysconf			95
 
 #define __NR_COBALT_SYSCALLS			128 /* Power of 2 */
 

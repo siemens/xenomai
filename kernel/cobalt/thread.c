@@ -47,9 +47,9 @@
  * @{
  */
 
-static unsigned int idtags;
-
 static DECLARE_WAIT_QUEUE_HEAD(nkjoinq);
+
+static unsigned int idtags;
 
 static void timeout_handler(struct xntimer *timer)
 {
@@ -499,6 +499,8 @@ void __xnthread_cleanup(struct xnthread *curr)
 void __xnthread_discard(struct xnthread *thread)
 {
 	spl_t s;
+
+	secondary_mode_only();
 
 	xntimer_destroy(&thread->rtimer);
 	xntimer_destroy(&thread->ptimer);
@@ -1443,18 +1445,25 @@ EXPORT_SYMBOL_GPL(xnthread_set_slice);
  * @brief Cancel a thread.
  *
  * Request cancellation of a thread. This service forces @a thread to
- * exit from any blocking call. @a thread will terminate as soon as it
- * reaches a cancellation point. Cancellation points are defined for
- * the following situations:
+ * exit from any blocking call, then to switch to secondary mode.
+ * @a thread will terminate as soon as it reaches a cancellation
+ * point. Cancellation points are defined for the following
+ * situations:
  *
  * - @a thread self-cancels by a call to xnthread_cancel().
  * - @a thread invokes a Linux syscall (user-space shadow only).
  * - @a thread receives a Linux signal (user-space shadow only).
+ * - @a thread unblocks from a Xenomai syscall (user-space shadow only).
+ * - @a thread attempts to block on a Xenomai syscall (user-space shadow only).
  * - @a thread explicitly calls xnthread_test_cancel().
  *
  * @param thread The descriptor address of the thread to terminate.
  *
  * @coretags{task-unrestricted, might-switch}
+ *
+ * @note In addition to the common actions taken upon cancellation, a
+ * thread which belongs to the SCHED_WEAK class is sent a regular
+ * SIGTERM signal.
  */
 void xnthread_cancel(struct xnthread *thread)
 {
@@ -2448,6 +2457,67 @@ void xnthread_call_mayday(struct xnthread *thread, int reason)
 }
 EXPORT_SYMBOL_GPL(xnthread_call_mayday);
 
+int xnthread_killall(int grace, int mask)
+{
+	struct xnthread *t, *curr = xnthread_current();
+	int nrkilled = 0, nrthreads, count;
+	long ret;
+	spl_t s;
+
+	secondary_mode_only();
+
+	/*
+	 * We may hold the core lock across calls to xnthread_cancel()
+	 * provided that we won't self-cancel.
+	 */
+	xnlock_get_irqsave(&nklock, s);
+
+	nrthreads = nknrthreads;
+	
+	xnsched_for_each_thread(t) {
+		if (xnthread_test_state(t, XNROOT) ||
+		    xnthread_test_state(t, mask) != mask ||
+		    t == curr)
+			continue;
+
+		if (XENO_DEBUG(COBALT))
+			printk(XENO_INFO "terminating %s[%d]\n",
+			       t->name, xnthread_host_pid(t));
+		nrkilled++;
+		xnthread_cancel(t);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	/*
+	 * Cancel then join all existing user threads during the grace
+	 * period. It is the caller's responsibility to prevent more
+	 * user threads to bind to the system if required, we won't
+	 * make any provision for this here.
+	 */
+	count = nrthreads - nrkilled;
+	if (XENO_DEBUG(COBALT))
+		printk(XENO_INFO "waiting for %d threads to exit\n",
+		       nrkilled);
+
+	if (grace > 0) {
+		ret = wait_event_interruptible_timeout(nkjoinq,
+						       nknrthreads == count,
+						       grace * HZ);
+		if (ret == 0)
+			return -EAGAIN;
+	} else
+		ret = wait_event_interruptible(nkjoinq,
+					       nknrthreads == count);
+
+	if (XENO_DEBUG(COBALT))
+		printk(XENO_INFO "joined %d threads\n",
+		       count + nrkilled - nknrthreads);
+
+	return ret < 0 ? EINTR : 0;
+}
+EXPORT_SYMBOL_GPL(xnthread_killall);
+		     
 /* Xenomai's generic personality. */
 struct xnthread_personality xenomai_personality = {
 	.name = "core",

@@ -1,0 +1,106 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for corectl
+//
+// Copyright (C) 2015 Philippe Gerum <rpm@xenomai.org>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+AUTOTUNE(1)
+==========
+:doctype: manpage
+:revdate: 2015/02/14
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+----
+corectl - Cobalt core control interface
+
+SYNOPSIS
+---------
+*corectl* [ options ]
+
+DESCRIPTION
+------------
+*corectl* is a utility to 
+
+OPTIONS
+--------
+*corectl* accepts the following options:
+
+*--stop [<grace-seconds>]*:: Stop the real-time services. The
+following actions are taken in sequence:
+
+- termination of all Xenomai threads running in user-space, waiting
+for them to exit for at most +grace-seconds+ if specified, or
+indefinitely otherwise.
+
+- active RTDM drivers are notified of the transition to the stopped
+state.
+
+- termination of lingering RTDM threads (i.e. running in kernel
+space), waiting for them to exit for at most 3 seconds.
+
+- deactivation of the real-time timing services, control of the
+hardware timer on all real-time CPUs is fully released to the host
+kernel.
+
+Once stopped, the Cobalt core rejects all connection requests from
+regular applications.
+
+*--start*:: Start the real-time services. The following actions are
+taken in sequence:
+
+- activation of the real-time timing services, the Cobalt core takes
+full control over the hardware timer on all real-time CPUs.
+
+- loaded RTDM drivers are notified of the transition to the running
+state.
+
+Once started, the Cobalt core accepts all connection requests from
+regular applications anew.
+
+*--status*:: Display the current Cobalt core status. The following
+statuses can be returned:
+
+- _disabled_ denotes a fully inoperative core. This state cannot be
+reached using the *corectl* command, but only by passing the
++xenomai.state=disabled+ option on the kernel command line. A disabled
+core cannot be started dynamically using *corectl*.
+
+- _stopped_ means that no further connection request will be accepted
+from applications, the real-time services are currently
+unavailable. The Cobalt core can be stopped at boot time by passing
+the +xenomai.state=stopped+ option on the kernel command line. A
+stopped core can be started dynamically using *corectl --start*,
+switching it to the _running_ state.
+
+- _running_ denotes an active state of the real-time core, application
+requests are processed normally. This is the default state entered at
+boot time, which corresponds to passing the +xenomai.state=enabled+
+option on the kernel command line.
+
+- _teardown_ denotes a real-time system in the process of stopping all
+services. This transient status should not be seen unless some threads
+are unexpectedly lingering despite a termination request was issued.
+
+- _warmup_ denotes a real-time system in the process of starting all
+services. This transient status should not be seen unless an RTDM
+driver gets stuck while switching to active mode.
+
+*--help*::
+Display a short help.
+
+If no option is passed, +--status+ is assumed by default.
+
+VERSIONS
+--------
+*corectl* appeared in Xenomai 3.0 for the _Cobalt_ real-time core.
+
+AUTHOR
+-------
+*corectl* was written by Philippe Gerum <rpm@xenomai.org>.

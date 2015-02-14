@@ -30,7 +30,7 @@
 #include <boilerplate/list.h>
 #include <cobalt/uapi/kernel/synch.h>
 #include <cobalt/uapi/kernel/vdso.h>
-#include <cobalt/uapi/sysconf.h>
+#include <cobalt/uapi/corectl.h>
 #include <cobalt/uapi/mutex.h>
 #include <cobalt/uapi/event.h>
 #include <cobalt/uapi/monitor.h>
@@ -58,7 +58,7 @@ extern "C" {
 
 int cobalt_extend(unsigned int magic);
 
-int cobalt_sysconf(int option, void *buf, size_t bufsz);
+int cobalt_corectl(int request, void *buf, size_t bufsz);
 
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat *stat);
@@ -142,6 +142,8 @@ void __libcobalt_init(void);
 extern int __cobalt_defer_init;
 
 extern int __cobalt_no_shadow;
+
+extern int __cobalt_control_bind;
 
 extern int __cobalt_main_prio;
 

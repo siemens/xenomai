@@ -8,6 +8,7 @@ HTML_DOCS = 					\
 	html/asciidoc-icons/callouts		\
 	html/man1/autotune			\
 	html/man1/clocktest			\
+	html/man1/corectl			\
 	html/man1/dohell			\
 	html/man1/latency			\
 	html/man1/rtcanconfig			\
@@ -36,6 +37,7 @@ TXT_DOCS =				\
 MAN1_DOCS = 			\
 	man1/autotune.1		\
 	man1/clocktest.1 	\
+	man1/corectl.1	 	\
 	man1/cyclictest.1 	\
 	man1/dohell.1		\
 	man1/latency.1 		\

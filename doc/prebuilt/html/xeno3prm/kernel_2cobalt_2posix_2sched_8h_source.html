@@ -156,35 +156,34 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2posix_2sched_8h_source
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                          <span class="keywordtype">int</span> u_policy, <span class="keyword">const</span> <span class="keyword">struct</span> sched_param_ex *param_ex,</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                          xnticks_t *tslice_r);</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a>, <span class="keywordtype">int</span>, (<span class="keywordtype">void</span>));</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a>, (<span class="keywordtype">void</span>));</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;COBALT_SYSCALL_DECL(sched_weightprio,</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> policy,</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> sched_param_ex __user *u_param));</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;COBALT_SYSCALL_DECL(sched_minprio, <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> policy));</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;COBALT_SYSCALL_DECL(sched_maxprio, <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> policy));</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sched.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a>,</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keywordtype">int</span> cpu,</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                          <span class="keywordtype">int</span> policy,</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                          <span class="keyword">union</span> sched_config __user *u_config,</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                          <span class="keywordtype">size_t</span> len));</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sched.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a>,</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                    ssize_t, (<span class="keywordtype">int</span> cpu, <span class="keywordtype">int</span> policy,</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                              <span class="keyword">union</span> sched_config __user *u_config,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                              <span class="keywordtype">size_t</span> len));</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keywordtype">void</span> cobalt_sched_cleanup(<span class="keyword">struct</span> cobalt_kqueues *q);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keywordtype">void</span> cobalt_sched_pkg_init(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keywordtype">void</span> cobalt_sched_pkg_cleanup(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_SCHED_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__cobalt__api__sched_html_ga357cd4b34c13011749dfffb42b489f09"><div class="ttname"><a href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a></div><div class="ttdeci">int sched_yield(void)</div><div class="ttdoc">Yield the processor. </div><div class="ttdef"><b>Definition:</b> sched.c:186</div></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                    (<span class="keywordtype">int</span> policy, <span class="keyword">const</span> <span class="keyword">struct</span> sched_param_ex __user *u_param));</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;COBALT_SYSCALL_DECL(sched_minprio, (<span class="keywordtype">int</span> policy));</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;COBALT_SYSCALL_DECL(sched_maxprio, (<span class="keywordtype">int</span> policy));</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sched.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a>,</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                    (<span class="keywordtype">int</span> cpu,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                     <span class="keywordtype">int</span> policy,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                     <span class="keyword">union</span> sched_config __user *u_config,</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                     <span class="keywordtype">size_t</span> len));</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;COBALT_SYSCALL_DECL(<a class="code" href="group__cobalt__api__sched.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a>,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                    (<span class="keywordtype">int</span> cpu, <span class="keywordtype">int</span> policy,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                     <span class="keyword">union</span> sched_config __user *u_config,</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                     <span class="keywordtype">size_t</span> len));</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">void</span> cobalt_sched_cleanup(<span class="keyword">struct</span> cobalt_kqueues *q);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">void</span> cobalt_sched_pkg_init(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keywordtype">void</span> cobalt_sched_pkg_cleanup(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_SCHED_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__cobalt__api__sched_html_ga357cd4b34c13011749dfffb42b489f09"><div class="ttname"><a href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a></div><div class="ttdeci">int sched_yield(void)</div><div class="ttdoc">Yield the processor. </div><div class="ttdef"><b>Definition:</b> thread.c:772</div></div>
 <div class="ttc" id="group__cobalt__api__sched_html_ga216b2f848839dd4a19909e73007ca190"><div class="ttname"><a href="group__cobalt__api__sched.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a></div><div class="ttdeci">ssize_t sched_getconfig_np(int cpu, int policy, union sched_config *config, size_t *len_r)</div><div class="ttdoc">Retrieve CPU-specific scheduler settings for a policy. </div><div class="ttdef"><b>Definition:</b> thread.c:1075</div></div>
 <div class="ttc" id="group__cobalt__api__sched_html_ga0b8b3902421f04d35369423ebc059d74"><div class="ttname"><a href="group__cobalt__api__sched.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a></div><div class="ttdeci">int sched_setconfig_np(int cpu, int policy, const union sched_config *config, size_t len)</div><div class="ttdoc">Set CPU-specific scheduler settings for a policy. </div><div class="ttdef"><b>Definition:</b> thread.c:1020</div></div>
 </div><!-- fragment --></div><!-- contents -->

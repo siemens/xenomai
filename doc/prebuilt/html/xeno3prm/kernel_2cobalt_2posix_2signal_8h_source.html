@@ -188,32 +188,30 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2posix_2signal_8h_sourc
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                  <span class="keywordtype">int</span> sig, <span class="keywordtype">int</span> group);</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;COBALT_SYSCALL_DECL(sigwait,</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">const</span> sigset_t __user *u_set,</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                          <span class="keywordtype">int</span> __user *u_sig));</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;COBALT_SYSCALL_DECL(sigtimedwait,</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">const</span> sigset_t __user *u_set,</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                          <span class="keyword">struct</span> siginfo __user *u_si,</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> timespec __user *u_timeout));</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;COBALT_SYSCALL_DECL(sigwaitinfo,</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                    <span class="keywordtype">int</span>, (<span class="keyword">const</span> sigset_t __user *u_set,</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                          <span class="keyword">struct</span> siginfo __user *u_si));</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;COBALT_SYSCALL_DECL(sigpending,</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                    <span class="keywordtype">int</span>, (old_sigset_t __user *u_set));</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;COBALT_SYSCALL_DECL(kill, <span class="keywordtype">int</span>, (pid_t pid, <span class="keywordtype">int</span> sig));</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;COBALT_SYSCALL_DECL(sigqueue,</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                    <span class="keywordtype">int</span>, (pid_t pid, <span class="keywordtype">int</span> sig,</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                          <span class="keyword">const</span> <span class="keyword">union</span> sigval __user *u_value));</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                    (<span class="keyword">const</span> sigset_t __user *u_set, <span class="keywordtype">int</span> __user *u_sig));</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;COBALT_SYSCALL_DECL(sigtimedwait,</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                    (<span class="keyword">const</span> sigset_t __user *u_set,</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                     <span class="keyword">struct</span> siginfo __user *u_si,</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                     <span class="keyword">const</span> <span class="keyword">struct</span> timespec __user *u_timeout));</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;COBALT_SYSCALL_DECL(sigwaitinfo,</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                    (<span class="keyword">const</span> sigset_t __user *u_set,</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                     <span class="keyword">struct</span> siginfo __user *u_si));</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;COBALT_SYSCALL_DECL(sigpending,</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                    (old_sigset_t __user *u_set));</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;COBALT_SYSCALL_DECL(kill, (pid_t pid, <span class="keywordtype">int</span> sig));</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;COBALT_SYSCALL_DECL(sigqueue,</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                    (pid_t pid, <span class="keywordtype">int</span> sig, <span class="keyword">const</span> <span class="keyword">union</span> sigval __user *u_value));</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keywordtype">int</span> cobalt_signal_pkg_init(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="keywordtype">int</span> cobalt_signal_pkg_init(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="keywordtype">void</span> cobalt_signal_pkg_cleanup(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="keywordtype">void</span> cobalt_signal_pkg_cleanup(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_SIGNAL_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_SIGNAL_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

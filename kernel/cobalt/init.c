@@ -61,15 +61,16 @@ module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 static unsigned long sysheap_size_arg;
 module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 
+static BLOCKING_NOTIFIER_HEAD(state_notifier_list);
+
 struct xnarch_machdata xnarch_machdata;
 EXPORT_SYMBOL_GPL(xnarch_machdata);
 
 struct xnarch_percpu_machdata xnarch_percpu_machdata;
 EXPORT_PER_CPU_SYMBOL_GPL(xnarch_percpu_machdata);
 
-int __xnsys_disabled;
-module_param_named(disable, __xnsys_disabled, int, 0444);
-EXPORT_SYMBOL_GPL(__xnsys_disabled);
+atomic_t cobalt_runstate = ATOMIC_INIT(COBALT_STATE_WARMUP);
+EXPORT_SYMBOL_GPL(cobalt_runstate);
 
 struct cobalt_ppd __xnsys_global_ppd = {
 	.exe_path = "vmlinux",
@@ -94,24 +95,29 @@ EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 #define boot_evt_trace_notice ""
 #endif
 
-static void disable_timesource(void)
+#define boot_state_notice						\
+	({								\
+		realtime_core_state() == COBALT_STATE_STOPPED ?		\
+			"[STOPPED]" : "";				\
+	})
+
+void cobalt_add_notifier_chain(struct notifier_block *nb)
 {
-	int cpu;
-
-	/*
-	 * We must not hold the nklock while stopping the hardware
-	 * timer, since this could cause deadlock situations to arise
-	 * on SMP systems.
-	 */
-	for_each_realtime_cpu(cpu)
-		xntimer_release_hardware(cpu);
-
-	xntimer_release_ipi();
-
-#ifdef CONFIG_XENO_OPT_STATS
-	xnintr_destroy(&nktimer);
-#endif /* CONFIG_XENO_OPT_STATS */
+	blocking_notifier_chain_register(&state_notifier_list, nb);
 }
+EXPORT_SYMBOL_GPL(cobalt_add_notifier_chain);
+
+void cobalt_remove_notifier_chain(struct notifier_block *nb)
+{
+	blocking_notifier_chain_unregister(&state_notifier_list, nb);
+}
+EXPORT_SYMBOL_GPL(cobalt_remove_notifier_chain);
+
+void cobalt_call_notifier_chain(enum cobalt_run_states newstate)
+{
+	blocking_notifier_call_chain(&state_notifier_list, newstate, NULL);
+}
+EXPORT_SYMBOL_GPL(cobalt_call_notifier_chain);
 
 static void sys_shutdown(void)
 {
@@ -122,7 +128,7 @@ static void sys_shutdown(void)
 	int cpu;
 	spl_t s;
 
-	disable_timesource();
+	xntimer_release_hardware();
 #ifdef CONFIG_SMP
 	ipipe_free_irq(&xnsched_realtime_domain, IPIPE_RESCHEDULE_IPI);
 #endif
@@ -240,92 +246,32 @@ static __init void mach_cleanup(void)
 	xnclock_cleanup();
 }
 
-static __init int enable_timesource(void)
+static struct {
+	const char *label;
+	enum cobalt_run_states state;
+} init_states[] __initdata = {
+	{ "disabled", COBALT_STATE_DISABLED },
+	{ "stopped", COBALT_STATE_STOPPED },
+	{ "enabled", COBALT_STATE_WARMUP },
+};
+	
+static int __init setup_init_state(char *s)
 {
-	struct xnsched *sched;
-	int ret, cpu, _cpu;
-	spl_t s;
+	static char warn_bad_state[] __initdata =
+		XENO_WARN "invalid init state '%s'\n";
+	int n;
 
-#ifdef CONFIG_XENO_OPT_STATS
-	/*
-	 * Only for statistical purpose, the timer interrupt is
-	 * attached by xntimer_grab_hardware().
-	 */
-	xnintr_init(&nktimer, "[timer]",
-		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
-#endif /* CONFIG_XENO_OPT_STATS */
+	for (n = 0; n < ARRAY_SIZE(init_states); n++)
+		if (strcmp(init_states[n].label, s) == 0) {
+			set_realtime_core_state(init_states[n].state);
+			return 1;
+		}
 
-	nkclock.wallclock_offset =
-		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
-
-	ret = xntimer_setup_ipi();
-	if (ret)
-		return ret;
-
-	for_each_realtime_cpu(cpu) {
-		ret = xntimer_grab_hardware(cpu);
-		if (ret < 0)
-			goto fail;
-
-		xnlock_get_irqsave(&nklock, s);
-
-		/*
-		 * If the current tick device for the target CPU is
-		 * periodic, we won't be called back for host tick
-		 * emulation. Therefore, we need to start a periodic
-		 * nucleus timer which will emulate the ticking for
-		 * that CPU, since we are going to hijack the hw clock
-		 * chip for managing our own system timer.
-		 *
-		 * CAUTION:
-		 *
-		 * - nucleus timers may be started only _after_ the hw
-		 * timer has been set up for the target CPU through a
-		 * call to xntimer_grab_hardware().
-		 *
-		 * - we don't compensate for the elapsed portion of
-		 * the current host tick, since we cannot get this
-		 * information easily for all CPUs except the current
-		 * one, and also because of the declining relevance of
-		 * the jiffies clocksource anyway.
-		 *
-		 * - we must not hold the nklock across calls to
-		 * xntimer_grab_hardware().
-		 */
-
-		sched = xnsched_struct(cpu);
-		/* Set up timer with host tick period if valid. */
-		if (ret > 1)
-			xntimer_start(&sched->htimer, ret, ret, XN_RELATIVE);
-		else if (ret == 1)
-			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
-
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
-		xnsched_reset_watchdog(sched);
-#endif
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
+	printk(warn_bad_state, s);
+	
 	return 0;
-fail:
-	for_each_realtime_cpu(_cpu) {
-		if (_cpu == cpu)
-			break;
-		xnlock_get_irqsave(&nklock, s);
-		sched = xnsched_struct(cpu);
-		xntimer_stop(&sched->htimer);
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-		xntimer_stop(&sched->wdtimer);
-#endif
-		xnlock_put_irqrestore(&nklock, s);
-		xntimer_release_hardware(_cpu);
-	}
-
-	xntimer_release_ipi();
-
-	return ret;
 }
+__setup("xenomai.state=", setup_init_state);
 
 static __init int sys_init(void)
 {
@@ -360,18 +306,27 @@ static __init int sys_init(void)
 	nkpanic = __xnsys_fatal;
 	smp_wmb();
 
-	ret = enable_timesource();
-	if (ret)
-		sys_shutdown();
+	/*
+	 * If starting in stopped mode, do all initializations, but do
+	 * not enable the core timer.
+	 */
+	if (realtime_core_state() == COBALT_STATE_WARMUP) {
+		ret = xntimer_grab_hardware();
+		if (ret) {
+			sys_shutdown();
+			return ret;
+		}
+		set_realtime_core_state(COBALT_STATE_RUNNING);
+	}
 
-	return ret;
+	return 0;
 }
 
 static int __init xenomai_init(void)
 {
 	int ret, __maybe_unused cpu;
 
-	if (__xnsys_disabled) {
+	if (!realtime_core_enabled()) {
 		printk(XENO_WARN "disabled on kernel command line\n");
 		return 0;
 	}
@@ -384,7 +339,7 @@ static int __init xenomai_init(void)
 	}
 	if (cpumask_empty(&xnsched_realtime_cpus)) {
 		printk(XENO_WARN "disabled via empty real-time CPU mask\n");
-		__xnsys_disabled = 1;
+		set_realtime_core_state(COBALT_STATE_DISABLED);
 		return 0;
 	}
 	nkaffinity = xnsched_realtime_cpus;
@@ -424,12 +379,13 @@ static int __init xenomai_init(void)
 
 	rtdm_fd_init();
 
-	printk(XENO_INFO "Cobalt v%s (%s) %s%s%s\n",
+	printk(XENO_INFO "Cobalt v%s (%s) %s%s%s%s\n",
 	       XENO_VERSION_STRING,
 	       XENO_VERSION_NAME,
 	       boot_debug_notice,
 	       boot_lat_trace_notice,
-	       boot_evt_trace_notice);
+	       boot_evt_trace_notice,
+	       boot_state_notice);
 
 	return 0;
 
@@ -446,7 +402,7 @@ cleanup_mach:
 cleanup_proc:
 	xnprocfs_cleanup_tree();
 fail:
-	__xnsys_disabled = 1;
+	set_realtime_core_state(COBALT_STATE_DISABLED);
 	printk(XENO_ERR "init failed, code %d\n", ret);
 
 	return ret;

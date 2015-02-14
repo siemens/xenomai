@@ -6,5 +6,6 @@ var structrtdm__driver =
     [ "ops", "structrtdm__driver.html#a3a51aafbc9328808721c7f3784a84eb2", null ],
     [ "profile_info", "structrtdm__driver.html#af770015d22a50ce86d5ab57bb563d9cc", null ],
     [ "protocol_family", "structrtdm__driver.html#ae850e1c068bd25f3eedccd58ee59a708", null ],
+    [ "smops", "structrtdm__driver.html#acf6d2fa54cbd2147ce84f477f22525ac", null ],
     [ "socket_type", "structrtdm__driver.html#a65bd52e34ba90bb7961c12962d62aea1", null ]
 ];
