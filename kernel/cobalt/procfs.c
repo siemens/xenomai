@@ -147,8 +147,8 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	for_each_realtime_cpu(cpu)
 		xnvfile_printf(it, "        CPU%d", cpu);
 
-	for (trap = 0; xnarch_machdesc.fault_labels[trap]; trap++) {
-		if (*xnarch_machdesc.fault_labels[trap] == '\0')
+	for (trap = 0; cobalt_machine.fault_labels[trap]; trap++) {
+		if (*cobalt_machine.fault_labels[trap] == '\0')
 			continue;
 
 		xnvfile_printf(it, "\n%3d: ", trap);
@@ -158,7 +158,7 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 				       per_cpu(xnarch_percpu_machdata, cpu).faults[trap]);
 
 		xnvfile_printf(it, "    (%s)",
-			       xnarch_machdesc.fault_labels[trap]);
+			       cobalt_machine.fault_labels[trap]);
 	}
 
 	xnvfile_putc(it, '\n');

@@ -182,8 +182,8 @@ static int __init mach_setup(void)
 	xnarch_machdata.timer_freq = timerfreq_arg;
 	xnarch_machdata.clock_freq = clockfreq_arg;
 
-	if (xnarch_machdesc.init) {
-		ret = xnarch_machdesc.init();
+	if (cobalt_machine.init) {
+		ret = cobalt_machine.init();
 		if (ret)
 			return ret;
 	}
@@ -230,8 +230,8 @@ fail_escalate:
 fail_apc:
 	ipipe_unregister_head(&xnsched_realtime_domain);
 
-	if (xnarch_machdesc.cleanup)
-		xnarch_machdesc.cleanup();
+	if (cobalt_machine.cleanup)
+		cobalt_machine.cleanup();
 
 	return ret;
 }

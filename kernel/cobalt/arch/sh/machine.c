@@ -49,7 +49,7 @@ static const char *const fault_labels[] = {
 	[5] = NULL
 };
 
-struct xnarch_machdesc xnarch_machdesc = {
+struct cobalt_machine cobalt_machine = {
 	.name = "sh",
 	.init = NULL,
 	.cleanup = NULL,

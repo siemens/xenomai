@@ -1574,8 +1574,8 @@ static int mmap_kmem_helper(struct vm_area_struct *vma, void *va)
 		}
 	}
 
-	if (xnarch_machdesc.prefault)
-		xnarch_machdesc.prefault(vma);
+	if (cobalt_machine.prefault)
+		cobalt_machine.prefault(vma);
 #endif
 
 	return ret;

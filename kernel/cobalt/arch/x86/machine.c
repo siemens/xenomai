@@ -181,7 +181,7 @@ static const char *const fault_labels[] = {
     [20] = NULL,
 };
 
-struct xnarch_machdesc xnarch_machdesc = {
+struct cobalt_machine cobalt_machine = {
 	.name = "x86",
 	.init = mach_x86_init,
 	.cleanup = mach_x86_cleanup,

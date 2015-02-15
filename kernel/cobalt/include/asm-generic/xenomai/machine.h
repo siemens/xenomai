@@ -26,7 +26,7 @@
 
 struct vm_area_struct;
 
-struct xnarch_machdesc {
+struct cobalt_machine {
 	const char *name;
 	int (*init)(void);
 	void (*cleanup)(void);
@@ -35,7 +35,7 @@ struct xnarch_machdesc {
 	const char *const *fault_labels;
 };
 
-extern struct xnarch_machdesc xnarch_machdesc;
+extern struct cobalt_machine cobalt_machine;
 
 struct xnarch_percpu_machdata {
 	unsigned long apc_pending;
@@ -66,7 +66,7 @@ extern struct xnarch_machdata xnarch_machdata;
 
 static inline unsigned long xnarch_timer_calibrate(void)
 {
-	return xnarch_machdesc.calibrate();
+	return cobalt_machine.calibrate();
 }
 
 #ifndef xnarch_cache_aliasing
