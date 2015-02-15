@@ -1190,7 +1190,7 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	process = cobalt_search_process(mm);
 	old = cobalt_set_process(process);
 	sys_ppd = cobalt_ppd_get(0);
-	if (sys_ppd != &__xnsys_global_ppd) {
+	if (sys_ppd != &cobalt_kernel_ppd) {
 		/*
 		 * Detect a userland shadow running exec(), i.e. still
 		 * attached to the current linux task (no prior

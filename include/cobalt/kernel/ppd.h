@@ -38,6 +38,6 @@ struct cobalt_ppd {
 	struct rb_root fds;
 };
 
-extern struct cobalt_ppd __xnsys_global_ppd;
+extern struct cobalt_ppd cobalt_kernel_ppd;
 
 #endif /* _COBALT_KERNEL_PPD_H */

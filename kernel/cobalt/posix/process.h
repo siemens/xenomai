@@ -105,7 +105,7 @@ static inline struct cobalt_ppd *cobalt_ppd_get(int global)
 	struct cobalt_process *process;
 
 	if (global || (process = cobalt_current_process()) == NULL)
-		return &__xnsys_global_ppd;
+		return &cobalt_kernel_ppd;
 
 	return &process->sys_ppd;
 }

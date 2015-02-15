@@ -185,7 +185,7 @@ static inline struct rtdm_fd *rtdm_private_to_fd(void *dev_private)
  */
 static inline bool rtdm_fd_is_user(struct rtdm_fd *fd)
 {
-	return rtdm_fd_owner(fd) != &__xnsys_global_ppd;
+	return rtdm_fd_owner(fd) != &cobalt_kernel_ppd;
 }
 
 /**

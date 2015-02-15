@@ -124,7 +124,7 @@ static inline void set_compat_bit(struct rtdm_fd *fd)
 {
 	struct pt_regs *regs;
 
-	if (cobalt_ppd_get(0) == &__xnsys_global_ppd)
+	if (cobalt_ppd_get(0) == &cobalt_kernel_ppd)
 		fd->compat = 0;
 	else {
 		regs = task_pt_regs(current);

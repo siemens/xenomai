@@ -64,7 +64,7 @@ static struct cobalt_umm *umm_from_fd(struct rtdm_fd *fd)
 	if (rtdm_fd_minor(fd) == UMM_PRIVATE)
 		return &process->sys_ppd.umm;
 
-	return &__xnsys_global_ppd.umm;
+	return &cobalt_kernel_ppd.umm;
 }
 
 static int umm_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
@@ -262,14 +262,14 @@ int cobalt_memdev_init(void)
 {
 	int ret;
 
-	ret = cobalt_umm_init(&__xnsys_global_ppd.umm,
+	ret = cobalt_umm_init(&cobalt_kernel_ppd.umm,
 			      CONFIG_XENO_OPT_SHARED_HEAPSZ * 1024, NULL);
 	if (ret)
 		return ret;
 
-	cobalt_umm_set_name(&__xnsys_global_ppd.umm, "shared heap");
+	cobalt_umm_set_name(&cobalt_kernel_ppd.umm, "shared heap");
 
-	nkvdso = cobalt_umm_alloc(&__xnsys_global_ppd.umm, sizeof(*nkvdso));
+	nkvdso = cobalt_umm_alloc(&cobalt_kernel_ppd.umm, sizeof(*nkvdso));
 	if (nkvdso == NULL) {
 		ret = -ENOMEM;
 		goto fail_vdso;
@@ -296,9 +296,9 @@ fail_sysmem:
 fail_shared:
 	rtdm_dev_unregister(umm_devices + UMM_PRIVATE);
 fail_private:
-	cobalt_umm_free(&__xnsys_global_ppd.umm, nkvdso);
+	cobalt_umm_free(&cobalt_kernel_ppd.umm, nkvdso);
 fail_vdso:
-	cobalt_umm_destroy(&__xnsys_global_ppd.umm);
+	cobalt_umm_destroy(&cobalt_kernel_ppd.umm);
 
 	return ret;
 }
@@ -308,8 +308,8 @@ void cobalt_memdev_cleanup(void)
 	rtdm_dev_unregister(&sysmem_device);
 	rtdm_dev_unregister(umm_devices + UMM_SHARED);
 	rtdm_dev_unregister(umm_devices + UMM_PRIVATE);
-	cobalt_umm_free(&__xnsys_global_ppd.umm, nkvdso);
-	cobalt_umm_destroy(&__xnsys_global_ppd.umm);
+	cobalt_umm_free(&cobalt_kernel_ppd.umm, nkvdso);
+	cobalt_umm_destroy(&cobalt_kernel_ppd.umm);
 }
 
 int cobalt_umm_init(struct cobalt_umm *umm, u32 size,

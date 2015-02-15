@@ -72,10 +72,10 @@ EXPORT_PER_CPU_SYMBOL_GPL(xnarch_percpu_machdata);
 atomic_t cobalt_runstate = ATOMIC_INIT(COBALT_STATE_WARMUP);
 EXPORT_SYMBOL_GPL(cobalt_runstate);
 
-struct cobalt_ppd __xnsys_global_ppd = {
+struct cobalt_ppd cobalt_kernel_ppd = {
 	.exe_path = "vmlinux",
 };
-EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
+EXPORT_SYMBOL_GPL(cobalt_kernel_ppd);
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 #define boot_debug_notice "[DEBUG]"

@@ -267,7 +267,7 @@ static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)
 {
 	struct cobalt_mqd *mqd;
 
-	if (cobalt_ppd_get(0) == &__xnsys_global_ppd)
+	if (cobalt_ppd_get(0) == &cobalt_kernel_ppd)
 		return -EPERM;
 
 	mqd = kmalloc(sizeof(*mqd), GFP_KERNEL);
