@@ -37,8 +37,8 @@
  * http://docs.FreeBSD.org/44doc/papers/kernmalloc.pdf.
  *@{
  */
-struct xnheap kheap;		/* System heap */
-EXPORT_SYMBOL_GPL(kheap);
+struct xnheap cobalt_heap;		/* System heap */
+EXPORT_SYMBOL_GPL(cobalt_heap);
 
 static LIST_HEAD(heapq);	/* Heap list for v-file dump */
 

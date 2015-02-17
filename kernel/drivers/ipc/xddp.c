@@ -704,7 +704,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 
 		sk->bufpool = &sk->privpool;
 	} else
-		sk->bufpool = &kheap;
+		sk->bufpool = &cobalt_heap;
 
 	if (sk->reqbufsz > 0) {
 		sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);

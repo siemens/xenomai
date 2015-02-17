@@ -271,7 +271,7 @@ static void *xnpipe_default_alloc_ibuf(size_t size, void *xstate)
 	if (likely(buf != NULL))
 		return buf;
 
-	if (size > xnheap_get_size(&kheap))
+	if (size > xnheap_get_size(&cobalt_heap))
 		/* Request will never succeed. */
 		return (struct xnpipe_mh *)-1;
 

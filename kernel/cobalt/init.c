@@ -151,9 +151,9 @@ static void sys_shutdown(void)
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnregistry_cleanup();
-	membase = xnheap_get_membase(&kheap);
-	memsize = xnheap_get_size(&kheap);
-	xnheap_destroy(&kheap);
+	membase = xnheap_get_membase(&cobalt_heap);
+	memsize = xnheap_get_size(&cobalt_heap);
+	xnheap_destroy(&cobalt_heap);
 	free_pages_exact(membase, memsize);
 }
 
@@ -284,10 +284,10 @@ static __init int sys_init(void)
 
 	heapaddr = alloc_pages_exact(sysheap_size_arg * 1024, GFP_KERNEL);
 	if (heapaddr == NULL ||
-	    xnheap_init(&kheap, heapaddr, sysheap_size_arg * 1024)) {
+	    xnheap_init(&cobalt_heap, heapaddr, sysheap_size_arg * 1024)) {
 		return -ENOMEM;
 	}
-	xnheap_set_name(&kheap, "system heap");
+	xnheap_set_name(&cobalt_heap, "system heap");
 
 	for_each_online_cpu(cpu) {
 		sched = &per_cpu(nksched, cpu);

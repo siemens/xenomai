@@ -90,10 +90,10 @@ struct xnheap {
 	u32 used;
 };
 
-extern struct xnheap kheap;
+extern struct xnheap cobalt_heap;
 
-#define xnmalloc(size)     xnheap_alloc(&kheap, size)
-#define xnfree(ptr)        xnheap_free(&kheap, ptr)
+#define xnmalloc(size)     xnheap_alloc(&cobalt_heap, size)
+#define xnfree(ptr)        xnheap_free(&cobalt_heap, ptr)
 
 static inline u32 xnheap_get_size(const struct xnheap *heap)
 {

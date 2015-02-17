@@ -167,7 +167,7 @@ static int iddp_socket(struct rtdm_fd *fd)
 	sk->magic = IDDP_SOCKET_MAGIC;
 	sk->name = nullsa;	/* Unbound */
 	sk->peer = nullsa;
-	sk->bufpool = &kheap;
+	sk->bufpool = &cobalt_heap;
 	sk->poolwaitq = &poolwaitq;
 	sk->poolsz = 0;
 	sk->status = 0;
@@ -205,7 +205,7 @@ static void iddp_close(struct rtdm_fd *fd)
 	if (sk->handle)
 		xnregistry_remove(sk->handle);
 
-	if (sk->bufpool != &kheap) {
+	if (sk->bufpool != &cobalt_heap) {
 		poolmem = xnheap_get_membase(&sk->privpool);
 		poolsz = xnheap_get_size(&sk->privpool);
 		xnheap_destroy(&sk->privpool);
@@ -217,7 +217,7 @@ static void iddp_close(struct rtdm_fd *fd)
 	while (!list_empty(&sk->inq)) {
 		mbuf = list_entry(sk->inq.next, struct iddp_message, next);
 		list_del(&mbuf->next);
-		xnheap_free(&kheap, mbuf);
+		xnheap_free(&cobalt_heap, mbuf);
 	}
 
 	kfree(sk);

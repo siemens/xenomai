@@ -180,10 +180,10 @@ static int do_sysmem_ioctls(struct rtdm_fd *fd,
 
 	switch (request) {
 	case MEMDEV_RTIOC_STAT:
-		xnlock_get_irqsave(&kheap.lock, s);
-		stat.size = xnheap_get_size(&kheap);
-		stat.free = xnheap_get_free(&kheap);
-		xnlock_put_irqrestore(&kheap.lock, s);
+		xnlock_get_irqsave(&cobalt_heap.lock, s);
+		stat.size = xnheap_get_size(&cobalt_heap);
+		stat.free = xnheap_get_free(&cobalt_heap);
+		xnlock_put_irqrestore(&cobalt_heap.lock, s);
 		ret = rtdm_safe_copy_to_user(fd, arg, &stat, sizeof(stat));
 		break;
 	default:
