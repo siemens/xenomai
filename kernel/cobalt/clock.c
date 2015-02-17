@@ -443,7 +443,7 @@ static void cleanup_timerlist_proc(struct xnclock *clock)
 
 void init_timerlist_root(void)
 {
-	xnvfile_init_dir("timer", &timerlist_vfroot, &nkvfroot);
+	xnvfile_init_dir("timer", &timerlist_vfroot, &cobalt_vfroot);
 }
 
 void cleanup_timerlist_root(void)
@@ -567,7 +567,7 @@ static void cleanup_clock_proc(struct xnclock *clock)
 
 void xnclock_init_proc(void)
 {
-	xnvfile_init_dir("clock", &clock_vfroot, &nkvfroot);
+	xnvfile_init_dir("clock", &clock_vfroot, &cobalt_vfroot);
 	init_timerlist_root();
 }
 

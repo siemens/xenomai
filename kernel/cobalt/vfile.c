@@ -79,14 +79,14 @@
  *@{*/
 
 /**
- * @var struct xnvfile_directory nkvfroot
+ * @var struct xnvfile_directory cobalt_vfroot
  * @brief Xenomai vfile root directory
  *
  * This vdir maps the /proc/xenomai directory. It can be used to
  * create a hierarchy of Xenomai-related vfiles under this root.
  */
-struct xnvfile_directory nkvfroot;
-EXPORT_SYMBOL_GPL(nkvfroot);
+struct xnvfile_directory cobalt_vfroot;
+EXPORT_SYMBOL_GPL(cobalt_vfroot);
 
 static struct xnvfile_directory sysroot;
 
@@ -384,7 +384,7 @@ static struct file_operations vfile_snapshot_fops = {
  * @param parent A pointer to a virtual directory descriptor; the
  * vfile entry will be created into this directory. If NULL, the /proc
  * root directory will be used. /proc/xenomai is mapped on the
- * globally available @a nkvfroot vdir.
+ * globally available @a cobalt_vfroot vdir.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -623,7 +623,7 @@ static struct file_operations vfile_regular_fops = {
  * @param parent A pointer to a virtual directory descriptor; the
  * vfile entry will be created into this directory. If NULL, the /proc
  * root directory will be used. /proc/xenomai is mapped on the
- * globally available @a nkvfroot vdir.
+ * globally available @a cobalt_vfroot vdir.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -667,7 +667,7 @@ EXPORT_SYMBOL_GPL(xnvfile_init_regular);
  * @param parent A pointer to a virtual directory descriptor standing
  * for the parent directory of the new vdir.  If NULL, the /proc root
  * directory will be used. /proc/xenomai is mapped on the globally
- * available @a nkvfroot vdir.
+ * available @a cobalt_vfroot vdir.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -714,7 +714,7 @@ EXPORT_SYMBOL_GPL(xnvfile_init_dir);
  * @param parent A pointer to a virtual directory descriptor standing
  * for the parent directory of the new vlink. If NULL, the /proc root
  * directory will be used. /proc/xenomai is mapped on the globally
- * available @a nkvfroot vdir.
+ * available @a cobalt_vfroot vdir.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -957,7 +957,7 @@ struct xnvfile_nklock_class xnvfile_nucleus_lock = {
 
 int __init xnvfile_init_root(void)
 {
-	struct xnvfile_directory *vdir = &nkvfroot;
+	struct xnvfile_directory *vdir = &cobalt_vfroot;
 	struct proc_dir_entry *pde;
 
 	pde = proc_mkdir("xenomai", NULL);
@@ -973,7 +973,7 @@ int __init xnvfile_init_root(void)
 
 void xnvfile_destroy_root(void)
 {
-	nkvfroot.entry.pde = NULL;
+	cobalt_vfroot.entry.pde = NULL;
 	remove_proc_entry("xenomai", NULL);
 }
 

@@ -247,12 +247,12 @@ int __init xnprocfs_init_tree(void)
 	xnclock_init_proc();
 	xnheap_init_proc();
 	xnintr_init_proc();
-	xnvfile_init_regular("latency", &latency_vfile, &nkvfroot);
-	xnvfile_init_regular("version", &version_vfile, &nkvfroot);
-	xnvfile_init_regular("faults", &faults_vfile, &nkvfroot);
-	xnvfile_init_regular("apc", &apc_vfile, &nkvfroot);
+	xnvfile_init_regular("latency", &latency_vfile, &cobalt_vfroot);
+	xnvfile_init_regular("version", &version_vfile, &cobalt_vfroot);
+	xnvfile_init_regular("faults", &faults_vfile, &cobalt_vfroot);
+	xnvfile_init_regular("apc", &apc_vfile, &cobalt_vfroot);
 #ifdef CONFIG_XENO_OPT_DEBUG
-	xnvfile_init_dir("debug", &debug_vfroot, &nkvfroot);
+	xnvfile_init_dir("debug", &debug_vfroot, &cobalt_vfroot);
 #if XENO_DEBUG(LOCKING)
 	xnvfile_init_regular("lock", &lock_vfile, &debug_vfroot);
 #endif

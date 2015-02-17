@@ -1155,7 +1155,7 @@ static struct xnvfile_regular irq_vfile = {
 
 void xnintr_init_proc(void)
 {
-	xnvfile_init_regular("irq", &irq_vfile, &nkvfroot);
+	xnvfile_init_regular("irq", &irq_vfile, &cobalt_vfroot);
 }
 
 void xnintr_cleanup_proc(void)

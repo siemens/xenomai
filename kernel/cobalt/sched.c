@@ -1346,7 +1346,7 @@ int xnsched_init_proc(void)
 	struct xnsched_class *p;
 	int ret;
 
-	ret = xnvfile_init_dir("sched", &sched_vfroot, &nkvfroot);
+	ret = xnvfile_init_dir("sched", &sched_vfroot, &cobalt_vfroot);
 	if (ret)
 		return ret;
 
@@ -1372,7 +1372,7 @@ int xnsched_init_proc(void)
 #endif /* CONFIG_XENO_OPT_STATS */
 
 #ifdef CONFIG_SMP
-	xnvfile_init_regular("affinity", &affinity_vfile, &nkvfroot);
+	xnvfile_init_regular("affinity", &affinity_vfile, &cobalt_vfroot);
 #endif /* CONFIG_SMP */
 
 	return 0;

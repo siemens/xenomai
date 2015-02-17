@@ -584,7 +584,7 @@ static inline void xnvfile_touch(struct xnvfile_snapshot *vfile)
 
 extern struct xnvfile_nklock_class xnvfile_nucleus_lock;
 
-extern struct xnvfile_directory nkvfroot;
+extern struct xnvfile_directory cobalt_vfroot;
 
 int xnvfile_init_root(void);
 

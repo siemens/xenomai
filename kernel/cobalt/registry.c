@@ -114,7 +114,7 @@ int xnregistry_init(void)
 		return -ENOMEM;
 
 #ifdef CONFIG_XENO_OPT_VFILE
-	ret = xnvfile_init_dir("registry", &registry_vfroot, &nkvfroot);
+	ret = xnvfile_init_dir("registry", &registry_vfroot, &cobalt_vfroot);
 	if (ret)
 		return ret;
 

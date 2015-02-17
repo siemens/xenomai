@@ -127,7 +127,7 @@ static struct xnvfile_snapshot_ops vfile_ops = {
 
 void xnheap_init_proc(void)
 {
-	xnvfile_init_snapshot("heap", &vfile, &nkvfroot);
+	xnvfile_init_snapshot("heap", &vfile, &cobalt_vfroot);
 }
 
 void xnheap_cleanup_proc(void)
