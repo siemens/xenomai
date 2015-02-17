@@ -20,6 +20,7 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/of.h>
+#include <linux/slab.h>
 #include <linux/of_platform.h>
 #include <linux/io.h>
 
