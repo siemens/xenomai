@@ -808,7 +808,7 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 	 * affinity mask accordingly.
 	 */
 	xnlock_get_irqsave(&nklock, s);
-	cpus_and(thread->affinity, p->cpus_allowed, nkaffinity);
+	cpus_and(thread->affinity, p->cpus_allowed, cobalt_cpu_affinity);
 	xnthread_run_handler_stack(thread, move_thread, d->dest_cpu);
 	xnlock_put_irqrestore(&nklock, s);
 

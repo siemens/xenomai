@@ -38,8 +38,8 @@
 DEFINE_PER_CPU(struct xnsched, nksched);
 EXPORT_PER_CPU_SYMBOL_GPL(nksched);
 
-cpumask_t nkaffinity = CPU_MASK_ALL;
-EXPORT_SYMBOL_GPL(nkaffinity);
+cpumask_t cobalt_cpu_affinity = CPU_MASK_ALL;
+EXPORT_SYMBOL_GPL(cobalt_cpu_affinity);
 
 LIST_HEAD(nkthreadq);
 
@@ -1281,7 +1281,7 @@ static int affinity_vfile_show(struct xnvfile_regular_iterator *it,
 	int cpu;
 
 	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
-		if (cpu_isset(cpu, nkaffinity))
+		if (cpu_isset(cpu, cobalt_cpu_affinity))
 			val |= (1UL << cpu);
 
 	xnvfile_printf(it, "%08lx\n", val);
@@ -1324,7 +1324,7 @@ static ssize_t affinity_vfile_store(struct xnvfile_input *input)
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
-	nkaffinity = affinity;
+	cobalt_cpu_affinity = affinity;
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;

@@ -117,7 +117,7 @@ struct xnsched {
 
 DECLARE_PER_CPU(struct xnsched, nksched);
 
-extern cpumask_t nkaffinity;
+extern cpumask_t cobalt_cpu_affinity;
 
 extern struct list_head nkthreadq;
 

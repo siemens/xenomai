@@ -342,7 +342,7 @@ static int __init xenomai_init(void)
 		set_realtime_core_state(COBALT_STATE_DISABLED);
 		return 0;
 	}
-	nkaffinity = xnsched_realtime_cpus;
+	cobalt_cpu_affinity = xnsched_realtime_cpus;
 #endif /* CONFIG_SMP */
 
 	xnsched_register_classes();

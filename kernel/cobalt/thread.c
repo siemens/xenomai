@@ -168,7 +168,7 @@ int __xnthread_init(struct xnthread *thread,
 			 sizeof(thread->name), "@%p", thread);
 
 	thread->personality = attr->personality;
-	cpus_and(thread->affinity, attr->affinity, nkaffinity);
+	cpus_and(thread->affinity, attr->affinity, cobalt_cpu_affinity);
 	thread->sched = sched;
 	thread->state = flags;
 	thread->info = 0;
@@ -559,7 +559,7 @@ void __xnthread_discard(struct xnthread *thread)
  *
  * - affinity: The processor affinity of this thread. Passing
  * CPU_MASK_ALL means "any cpu" from the allowed core affinity mask
- * (nkaffinity). Passing an empty set is invalid.
+ * (cobalt_cpu_affinity). Passing an empty set is invalid.
  *
  * @param sched_class The initial scheduling class the new thread
  * should be assigned to.
@@ -594,7 +594,7 @@ int xnthread_init(struct xnthread *thread,
 	 * affinity mask, and therefore also part of the supported
 	 * CPUs. This CPU may change in pin_to_initial_cpu().
 	 */
-	cpus_and(affinity, attr->affinity, nkaffinity);
+	cpus_and(affinity, attr->affinity, cobalt_cpu_affinity);
 	if (cpus_empty(affinity))
 		return -EINVAL;
 
