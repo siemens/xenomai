@@ -37,13 +37,13 @@ struct cobalt_machine {
 
 extern struct cobalt_machine cobalt_machine;
 
-struct xnarch_percpu_machdata {
+struct cobalt_machine_cpudata {
 	unsigned long apc_pending;
 	unsigned long apc_shots[BITS_PER_LONG];
 	unsigned int faults[IPIPE_NR_FAULTS];
 };
 
-DECLARE_PER_CPU(struct xnarch_percpu_machdata, xnarch_percpu_machdata);
+DECLARE_PER_CPU(struct cobalt_machine_cpudata, cobalt_machine_cpudata);
 
 struct cobalt_pipeline {
 	struct ipipe_domain domain;

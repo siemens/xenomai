@@ -66,8 +66,8 @@ static BLOCKING_NOTIFIER_HEAD(state_notifier_list);
 struct cobalt_pipeline cobalt_pipeline;
 EXPORT_SYMBOL_GPL(cobalt_pipeline);
 
-struct xnarch_percpu_machdata xnarch_percpu_machdata;
-EXPORT_PER_CPU_SYMBOL_GPL(xnarch_percpu_machdata);
+struct cobalt_machine_cpudata cobalt_machine_cpudata;
+EXPORT_PER_CPU_SYMBOL_GPL(cobalt_machine_cpudata);
 
 atomic_t cobalt_runstate = ATOMIC_INIT(COBALT_STATE_WARMUP);
 EXPORT_SYMBOL_GPL(cobalt_runstate);

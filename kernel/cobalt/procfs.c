@@ -155,7 +155,7 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		for_each_realtime_cpu(cpu)
 			xnvfile_printf(it, "%12u",
-				       per_cpu(xnarch_percpu_machdata, cpu).faults[trap]);
+				       per_cpu(cobalt_machine_cpudata, cpu).faults[trap]);
 
 		xnvfile_printf(it, "    (%s)",
 			       cobalt_machine.fault_labels[trap]);
@@ -193,7 +193,7 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		for_each_realtime_cpu(cpu)
 			xnvfile_printf(it, "%12lu",
-				       per_cpu(xnarch_percpu_machdata, cpu).apc_shots[apc]);
+				       per_cpu(cobalt_machine_cpudata, cpu).apc_shots[apc]);
 
 		if (cobalt_pipeline.apc_table[apc].name)
 			xnvfile_printf(it, "    (%s)",

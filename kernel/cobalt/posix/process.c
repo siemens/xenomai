@@ -775,7 +775,7 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	 * No migration is possible on behalf of the head domain, so
 	 * the following access is safe.
 	 */
-	__this_cpu_ptr(&xnarch_percpu_machdata)->faults[data->exception]++;
+	__this_cpu_ptr(&cobalt_machine_cpudata)->faults[data->exception]++;
 
 	if (handle_exception(data))
 		return KEVENT_STOP;
