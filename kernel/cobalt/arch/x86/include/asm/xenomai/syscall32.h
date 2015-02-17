@@ -62,12 +62,12 @@
 	__COBALT_CALL32x_ENTRY(__name, __syshand32emu__(__name))
 
 /* x32 thunk implementation. */
-#define COBALT_SYSCALL32x(__name, __mode, __type, __args)	\
-	__typeof__(__type) cobalt32x_ ## __name __args
+#define COBALT_SYSCALL32x(__name, __mode, __args)	\
+	long cobalt32x_ ## __name __args
 
 /* x32 thunk declaration. */
-#define COBALT_SYSCALL32x_DECL(__name, __type, __args)	\
-	__typeof__(__type) cobalt32x_ ## __name __args
+#define COBALT_SYSCALL32x_DECL(__name, __args)	\
+	long cobalt32x_ ## __name __args
 
 #else /* !CONFIG_X86_X32 */
 
@@ -87,7 +87,7 @@
 
 #define __COBALT_CALL32x_THUNK(__name)
 
-#define COBALT_SYSCALL32x_DECL(__name, __type, __args)
+#define COBALT_SYSCALL32x_DECL(__name, __args)
 
 #endif /* !CONFIG_X86_X32 */
 
@@ -127,12 +127,12 @@
 	__COBALT_CALL32emu_ENTRY(__name, __syshand32emu__(__name))
 
 /* ia32 thunk implementation. */
-#define COBALT_SYSCALL32emu(__name, __mode, __type, __args)	\
-	__typeof__(__type) cobalt32emu_ ## __name __args
+#define COBALT_SYSCALL32emu(__name, __mode, __args)	\
+	long cobalt32emu_ ## __name __args
 
 /* ia32 thunk declaration. */
-#define COBALT_SYSCALL32emu_DECL(__name, __type, __args)	\
-	__typeof__(__type) cobalt32emu_ ## __name __args
+#define COBALT_SYSCALL32emu_DECL(__name, __args)	\
+	long cobalt32emu_ ## __name __args
 
 #else /* !CONFIG_IA32_EMULATION */
 
@@ -150,7 +150,7 @@
 
 #define __COBALT_CALL32emu_THUNK(__name)
 
-#define COBALT_SYSCALL32emu_DECL(__name, __type, __args)
+#define COBALT_SYSCALL32emu_DECL(__name, __args)
 
 #endif /* !CONFIG_IA32_EMULATION */
 

@@ -37,11 +37,11 @@
 #include "../debug.h"
 
 COBALT_SYSCALL32emu(thread_create, init,
-		    int, (compat_ulong_t pth,
-			  int policy,
-			  const struct compat_sched_param_ex __user *u_param_ex,
-			  int xid,
-			  __u32 __user *u_winoff))
+		    (compat_ulong_t pth,
+		     int policy,
+		     const struct compat_sched_param_ex __user *u_param_ex,
+		     int xid,
+		     __u32 __user *u_winoff))
 {
 	struct sched_param_ex param_ex;
 	int ret;
@@ -54,11 +54,11 @@ COBALT_SYSCALL32emu(thread_create, init,
 }
 
 COBALT_SYSCALL32emu(thread_setschedparam_ex, conforming,
-		    int, (compat_ulong_t pth,
-			  int policy,
-			  const struct compat_sched_param_ex __user *u_param_ex,
-			  __u32 __user *u_winoff,
-			  int __user *u_promoted))
+		    (compat_ulong_t pth,
+		     int policy,
+		     const struct compat_sched_param_ex __user *u_param_ex,
+		     __u32 __user *u_winoff,
+		     int __user *u_promoted))
 {
 	struct sched_param_ex param_ex;
 	int ret;
@@ -72,9 +72,9 @@ COBALT_SYSCALL32emu(thread_setschedparam_ex, conforming,
 }
 
 COBALT_SYSCALL32emu(thread_getschedparam_ex, current,
-		    int, (compat_ulong_t pth,
-			  int __user *u_policy,
-			  struct compat_sched_param_ex __user *u_param))
+		    (compat_ulong_t pth,
+		     int __user *u_policy,
+		     struct compat_sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
 	int policy;
@@ -94,9 +94,9 @@ static inline int sys32_fetch_timeout(struct timespec *ts,
 }
 
 COBALT_SYSCALL32emu(sem_open, lostage,
-		    int, (compat_uptr_t __user *u_addrp,
-			  const char __user *u_name,
-			  int oflags, mode_t mode, unsigned int value))
+		    (compat_uptr_t __user *u_addrp,
+		     const char __user *u_name,
+		     int oflags, mode_t mode, unsigned int value))
 {
 	struct cobalt_sem_shadow __user *usm;
 	compat_uptr_t cusm;
@@ -112,15 +112,15 @@ COBALT_SYSCALL32emu(sem_open, lostage,
 }
 
 COBALT_SYSCALL32emu(sem_timedwait, primary,
-		    int, (struct cobalt_sem_shadow __user *u_sem,
-			  struct compat_timespec __user *u_ts))
+		    (struct cobalt_sem_shadow __user *u_sem,
+		     struct compat_timespec __user *u_ts))
 {
 	return __cobalt_sem_timedwait(u_sem, u_ts, sys32_fetch_timeout);
 }
 
 COBALT_SYSCALL32emu(clock_getres, current,
-		    int, (clockid_t clock_id,
-			  struct compat_timespec __user *u_ts))
+		    (clockid_t clock_id,
+		     struct compat_timespec __user *u_ts))
 {
 	struct timespec ts;
 	int ret;
@@ -133,8 +133,8 @@ COBALT_SYSCALL32emu(clock_getres, current,
 }
 
 COBALT_SYSCALL32emu(clock_gettime, current,
-		    int, (clockid_t clock_id,
-			  struct compat_timespec __user *u_ts))
+		    (clockid_t clock_id,
+		     struct compat_timespec __user *u_ts))
 {
 	struct timespec ts;
 	int ret;
@@ -147,8 +147,8 @@ COBALT_SYSCALL32emu(clock_gettime, current,
 }
 
 COBALT_SYSCALL32emu(clock_settime, current,
-		    int, (clockid_t clock_id,
-			  const struct compat_timespec __user *u_ts))
+		    (clockid_t clock_id,
+		     const struct compat_timespec __user *u_ts))
 {
 	struct timespec ts;
 	int ret;
@@ -161,9 +161,9 @@ COBALT_SYSCALL32emu(clock_settime, current,
 }
 
 COBALT_SYSCALL32emu(clock_nanosleep, nonrestartable,
-		    int, (clockid_t clock_id, int flags,
-			  const struct compat_timespec __user *u_rqt,
-			  struct compat_timespec __user *u_rmt))
+		    (clockid_t clock_id, int flags,
+		     const struct compat_timespec __user *u_rqt,
+		     struct compat_timespec __user *u_rmt))
 {
 	struct timespec rqt, rmt, *rmtp = NULL;
 	int ret;
@@ -183,26 +183,26 @@ COBALT_SYSCALL32emu(clock_nanosleep, nonrestartable,
 }
 
 COBALT_SYSCALL32emu(mutex_timedlock, primary,
-		    int, (struct cobalt_mutex_shadow __user *u_mx,
-			  const struct compat_timespec __user *u_ts))
+		    (struct cobalt_mutex_shadow __user *u_mx,
+		     const struct compat_timespec __user *u_ts))
 {
 	return __cobalt_mutex_timedlock_break(u_mx, u_ts, sys32_fetch_timeout);
 }
 
 COBALT_SYSCALL32emu(cond_wait_prologue, nonrestartable,
-		    int, (struct cobalt_cond_shadow __user *u_cnd,
-			  struct cobalt_mutex_shadow __user *u_mx,
-			  int *u_err,
-			  unsigned int timed,
-			  struct compat_timespec __user *u_ts))
+		    (struct cobalt_cond_shadow __user *u_cnd,
+		     struct cobalt_mutex_shadow __user *u_mx,
+		     int *u_err,
+		     unsigned int timed,
+		     struct compat_timespec __user *u_ts))
 {
 	return __cobalt_cond_wait_prologue(u_cnd, u_mx, u_err, u_ts,
 					   timed ? sys32_fetch_timeout : NULL);
 }
 
 COBALT_SYSCALL32emu(mq_open, lostage,
-		    int, (const char __user *u_name, int oflags,
-			  mode_t mode, struct compat_mq_attr __user *u_attr))
+		    (const char __user *u_name, int oflags,
+		     mode_t mode, struct compat_mq_attr __user *u_attr))
 {
 	struct mq_attr _attr, *attr = &_attr;
 	int ret;
@@ -218,7 +218,7 @@ COBALT_SYSCALL32emu(mq_open, lostage,
 }
 
 COBALT_SYSCALL32emu(mq_getattr, current,
-		    int, (mqd_t uqd, struct compat_mq_attr __user *u_attr))
+		    (mqd_t uqd, struct compat_mq_attr __user *u_attr))
 {
 	struct mq_attr attr;
 	int ret;
@@ -231,19 +231,19 @@ COBALT_SYSCALL32emu(mq_getattr, current,
 }
 
 COBALT_SYSCALL32emu(mq_timedsend, primary,
-		    int, (mqd_t uqd, const void __user *u_buf, size_t len,
-			  unsigned int prio,
-			  const struct compat_timespec __user *u_ts))
+		    (mqd_t uqd, const void __user *u_buf, size_t len,
+		     unsigned int prio,
+		     const struct compat_timespec __user *u_ts))
 {
 	return __cobalt_mq_timedsend(uqd, u_buf, len, prio,
 				     u_ts, u_ts ? sys32_fetch_timeout : NULL);
 }
 
 COBALT_SYSCALL32emu(mq_timedreceive, primary,
-		    int, (mqd_t uqd, void __user *u_buf,
-			  compat_ssize_t __user *u_len,
-			  unsigned int __user *u_prio,
-			  const struct compat_timespec __user *u_ts))
+		    (mqd_t uqd, void __user *u_buf,
+		     compat_ssize_t __user *u_len,
+		     unsigned int __user *u_prio,
+		     const struct compat_timespec __user *u_ts))
 {
 	compat_ssize_t clen;
 	ssize_t len;
@@ -270,7 +270,7 @@ static inline int mq_fetch_timeout(struct timespec *ts,
 }
 
 COBALT_SYSCALL32emu(mq_notify, primary,
-		    int, (mqd_t fd, const struct compat_sigevent *__user u_cev))
+		    (mqd_t fd, const struct compat_sigevent *__user u_cev))
 {
 	struct sigevent sev;
 	int ret;
@@ -285,8 +285,8 @@ COBALT_SYSCALL32emu(mq_notify, primary,
 }
 
 COBALT_SYSCALL32emu(sched_weightprio, current,
-		    int, (int policy,
-			  const struct compat_sched_param_ex __user *u_param))
+		    (int policy,
+		     const struct compat_sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
 	int ret;
@@ -409,27 +409,27 @@ static ssize_t sys32_put_config(int policy,
 }
 
 COBALT_SYSCALL32emu(sched_setconfig_np, conforming,
-		    int, (int cpu, int policy,
-			  union compat_sched_config __user *u_config,
-			  size_t len))
+		    (int cpu, int policy,
+		     union compat_sched_config __user *u_config,
+		     size_t len))
 {
 	return __cobalt_sched_setconfig_np(cpu, policy, u_config, len,
 					   sys32_fetch_config, sys32_ack_config);
 }
 
 COBALT_SYSCALL32emu(sched_getconfig_np, conformin,
-		    ssize_t, (int cpu, int policy,
-			      union compat_sched_config __user *u_config,
-			      size_t len))
+		    (int cpu, int policy,
+		     union compat_sched_config __user *u_config,
+		     size_t len))
 {
 	return __cobalt_sched_getconfig_np(cpu, policy, u_config, len,
 					   sys32_fetch_config, sys32_put_config);
 }
 
 COBALT_SYSCALL32emu(timer_create, current,
-		    int, (clockid_t clock,
-			  const struct compat_sigevent __user *u_sev,
-			  timer_t __user *u_tm))
+		    (clockid_t clock,
+		     const struct compat_sigevent __user *u_sev,
+		     timer_t __user *u_tm))
 {
 	struct sigevent sev, *evp = NULL;
 	int ret;
@@ -445,9 +445,9 @@ COBALT_SYSCALL32emu(timer_create, current,
 }
 
 COBALT_SYSCALL32emu(timer_settime, primary,
-		    int, (timer_t tm, int flags,
-			  const struct compat_itimerspec __user *u_newval,
-			  struct compat_itimerspec __user *u_oldval))
+		    (timer_t tm, int flags,
+		     const struct compat_itimerspec __user *u_newval,
+		     struct compat_itimerspec __user *u_oldval))
 {
 	struct itimerspec newv, oldv, *oldvp = &oldv;
 	int ret;
@@ -473,7 +473,7 @@ COBALT_SYSCALL32emu(timer_settime, primary,
 }
 
 COBALT_SYSCALL32emu(timer_gettime, current,
-		    int, (timer_t tm, struct compat_itimerspec __user *u_val))
+		    (timer_t tm, struct compat_itimerspec __user *u_val))
 {
 	struct itimerspec val;
 	int ret;
@@ -484,9 +484,9 @@ COBALT_SYSCALL32emu(timer_gettime, current,
 }
 
 COBALT_SYSCALL32emu(timerfd_settime, primary,
-		    int, (int fd, int flags,
-			  const struct compat_itimerspec __user *new_value,
-			  struct compat_itimerspec __user *old_value))
+		    (int fd, int flags,
+		     const struct compat_itimerspec __user *new_value,
+		     struct compat_itimerspec __user *old_value))
 {
 	struct itimerspec ovalue, value;
 	int ret;
@@ -510,7 +510,7 @@ COBALT_SYSCALL32emu(timerfd_settime, primary,
 }
 
 COBALT_SYSCALL32emu(timerfd_gettime, current,
-		    int, (int fd, struct compat_itimerspec __user *curr_value))
+		    (int fd, struct compat_itimerspec __user *curr_value))
 {
 	struct itimerspec value;
 	int ret;
@@ -521,8 +521,8 @@ COBALT_SYSCALL32emu(timerfd_gettime, current,
 }
 
 COBALT_SYSCALL32emu(sigwait, primary,
-		    int, (const compat_sigset_t __user *u_set,
-			  int __user *u_sig))
+		    (const compat_sigset_t __user *u_set,
+		     int __user *u_sig))
 {
 	sigset_t set;
 	int ret, sig;
@@ -539,9 +539,9 @@ COBALT_SYSCALL32emu(sigwait, primary,
 }
 
 COBALT_SYSCALL32emu(sigtimedwait, nonrestartable,
-		    int, (const compat_sigset_t __user *u_set,
-			  struct compat_siginfo __user *u_si,
-			  const struct compat_timespec __user *u_timeout))
+		    (const compat_sigset_t __user *u_set,
+		     struct compat_siginfo __user *u_si,
+		     const struct compat_timespec __user *u_timeout))
 {
 	struct timespec timeout;
 	sigset_t set;
@@ -559,8 +559,8 @@ COBALT_SYSCALL32emu(sigtimedwait, nonrestartable,
 }
 
 COBALT_SYSCALL32emu(sigwaitinfo, nonrestartable,
-		    int, (const compat_sigset_t __user *u_set,
-			  struct compat_siginfo __user *u_si))
+		    (const compat_sigset_t __user *u_set,
+		     struct compat_siginfo __user *u_si))
 {
 	sigset_t set;
 	int ret;
@@ -572,7 +572,7 @@ COBALT_SYSCALL32emu(sigwaitinfo, nonrestartable,
 	return __cobalt_sigwaitinfo(&set, u_si, sys32_put_siginfo);
 }
 
-COBALT_SYSCALL32emu(sigpending, primary, int, (compat_old_sigset_t __user *u_set))
+COBALT_SYSCALL32emu(sigpending, primary, (compat_old_sigset_t __user *u_set))
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
 
@@ -580,8 +580,8 @@ COBALT_SYSCALL32emu(sigpending, primary, int, (compat_old_sigset_t __user *u_set
 }
 
 COBALT_SYSCALL32emu(sigqueue, conforming,
-		    int, (pid_t pid, int sig,
-			  const union compat_sigval __user *u_value))
+		    (pid_t pid, int sig,
+		     const union compat_sigval __user *u_value))
 {
 	union sigval val;
 	int ret;
@@ -592,9 +592,9 @@ COBALT_SYSCALL32emu(sigqueue, conforming,
 }
 
 COBALT_SYSCALL32emu(monitor_wait, nonrestartable,
-		    int, (struct cobalt_monitor_shadow __user *u_mon,
-			  int event, const struct compat_timespec __user *u_ts,
-			  int __user *u_ret))
+		    (struct cobalt_monitor_shadow __user *u_mon,
+		     int event, const struct compat_timespec __user *u_ts,
+		     int __user *u_ret))
 {
 	struct timespec ts, *tsp = NULL;
 	int ret;
@@ -610,10 +610,10 @@ COBALT_SYSCALL32emu(monitor_wait, nonrestartable,
 }
 
 COBALT_SYSCALL32emu(event_wait, primary,
-		    int, (struct cobalt_event_shadow __user *u_event,
-			  unsigned int bits,
-			  unsigned int __user *u_bits_r,
-			  int mode, const struct compat_timespec __user *u_ts))
+		    (struct cobalt_event_shadow __user *u_event,
+		     unsigned int bits,
+		     unsigned int __user *u_bits_r,
+		     int mode, const struct compat_timespec __user *u_ts))
 {
 	struct timespec ts, *tsp = NULL;
 	int ret;
@@ -629,11 +629,11 @@ COBALT_SYSCALL32emu(event_wait, primary,
 }
 
 COBALT_SYSCALL32emu(select, nonrestartable,
-		    int, (int nfds,
-			  compat_fd_set __user *u_rfds,
-			  compat_fd_set __user *u_wfds,
-			  compat_fd_set __user *u_xfds,
-			  struct compat_timeval __user *u_tv))
+		    (int nfds,
+		     compat_fd_set __user *u_rfds,
+		     compat_fd_set __user *u_wfds,
+		     compat_fd_set __user *u_xfds,
+		     struct compat_timeval __user *u_tv))
 {
 	compat_fd_set __user *ufd_sets[XNSELECT_MAX_TYPES] = {
 		[XNSELECT_READ] = u_rfds,
@@ -726,8 +726,8 @@ COBALT_SYSCALL32emu(select, nonrestartable,
 }
 
 COBALT_SYSCALL32emu(recvmsg, probing,
-		    ssize_t, (int fd, struct compat_msghdr __user *umsg,
-			      int flags))
+		    (int fd, struct compat_msghdr __user *umsg,
+		     int flags))
 {
 	struct msghdr m;
 	ssize_t ret;
@@ -744,8 +744,7 @@ COBALT_SYSCALL32emu(recvmsg, probing,
 }
 
 COBALT_SYSCALL32emu(sendmsg, probing,
-		    ssize_t, (int fd, struct compat_msghdr __user *umsg,
-			      int flags))
+		    (int fd, struct compat_msghdr __user *umsg, int flags))
 {
 	struct msghdr m;
 	int ret;
@@ -756,8 +755,8 @@ COBALT_SYSCALL32emu(sendmsg, probing,
 }
 
 COBALT_SYSCALL32emu(mmap, lostage,
-		    int, (int fd, struct compat_rtdm_mmap_request __user *u_crma,
-			  compat_uptr_t __user *u_caddrp))
+		    (int fd, struct compat_rtdm_mmap_request __user *u_crma,
+		     compat_uptr_t __user *u_caddrp))
 {
 	struct _rtdm_mmap_request rma;
 	compat_uptr_t u_caddr;
@@ -782,8 +781,8 @@ COBALT_SYSCALL32emu(mmap, lostage,
 }
 
 COBALT_SYSCALL32emu(backtrace, current,
-		    int, (int nr, compat_ulong_t __user *u_backtrace,
-			  int reason))
+		    (int nr, compat_ulong_t __user *u_backtrace,
+		     int reason))
 {
 	compat_ulong_t cbacktrace[SIGSHADOW_BACKTRACE_DEPTH];
 	unsigned long backtrace[SIGSHADOW_BACKTRACE_DEPTH];
@@ -811,10 +810,10 @@ COBALT_SYSCALL32emu(backtrace, current,
 #ifdef COBALT_SYSCALL32x
 
 COBALT_SYSCALL32x(mq_timedreceive, primary,
-		  int, (mqd_t uqd, void __user *u_buf,
-			compat_ssize_t __user *u_len,
-			unsigned int __user *u_prio,
-			const struct timespec __user *u_ts))
+		  (mqd_t uqd, void __user *u_buf,
+		   compat_ssize_t __user *u_len,
+		   unsigned int __user *u_prio,
+		   const struct timespec __user *u_ts))
 {
 	compat_ssize_t clen;
 	ssize_t len;
