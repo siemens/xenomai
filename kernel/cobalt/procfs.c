@@ -219,7 +219,7 @@ void xnprocfs_cleanup_tree(void)
 #if XENO_DEBUG(LOCKING)
 	xnvfile_destroy_regular(&lock_vfile);
 #endif
-	xnvfile_destroy_dir(&debug_vfroot);
+	xnvfile_destroy_dir(&cobalt_debug_vfroot);
 #endif /* XENO_DEBUG(COBALT) */
 	xnvfile_destroy_regular(&apc_vfile);
 	xnvfile_destroy_regular(&faults_vfile);
@@ -252,9 +252,9 @@ int __init xnprocfs_init_tree(void)
 	xnvfile_init_regular("faults", &faults_vfile, &cobalt_vfroot);
 	xnvfile_init_regular("apc", &apc_vfile, &cobalt_vfroot);
 #ifdef CONFIG_XENO_OPT_DEBUG
-	xnvfile_init_dir("debug", &debug_vfroot, &cobalt_vfroot);
+	xnvfile_init_dir("debug", &cobalt_debug_vfroot, &cobalt_vfroot);
 #if XENO_DEBUG(LOCKING)
-	xnvfile_init_regular("lock", &lock_vfile, &debug_vfroot);
+	xnvfile_init_regular("lock", &lock_vfile, &cobalt_debug_vfroot);
 #endif
 #endif /* XENO_DEBUG(COBALT) */
 

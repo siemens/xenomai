@@ -37,8 +37,8 @@
  * @defgroup cobalt_core_debug Debugging services
  * @{
  */
-struct xnvfile_directory debug_vfroot;
-EXPORT_SYMBOL_GPL(debug_vfroot);
+struct xnvfile_directory cobalt_debug_vfroot;
+EXPORT_SYMBOL_GPL(cobalt_debug_vfroot);
 
 #ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
 
@@ -498,7 +498,7 @@ static inline int init_trace_relax(void)
 
 	xnheap_set_name(&memory_pool, "debug log");
 
-	ret = xnvfile_init_regular("relax", &relax_vfile, &debug_vfroot);
+	ret = xnvfile_init_regular("relax", &relax_vfile, &cobalt_debug_vfroot);
 	if (ret) {
 		xnheap_destroy(&memory_pool);
 		vfree(p);

@@ -32,7 +32,7 @@ void xndebug_cleanup(void);
 
 void xndebug_shadow_init(struct xnthread *thread);
 
-extern struct xnvfile_directory debug_vfroot;
+extern struct xnvfile_directory cobalt_debug_vfroot;
 
 #else  /* !XENO_OPT_DEBUG */
 
