@@ -43,7 +43,7 @@ EXPORT_SYMBOL_GPL(nkaffinity);
 
 LIST_HEAD(nkthreadq);
 
-int nknrthreads;
+int cobalt_nrthreads;
 
 #ifdef CONFIG_XENO_OPT_VFILE
 struct xnvfile_rev_tag nkthreadlist_tag;
@@ -209,7 +209,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 
 	xnthread_init_root_tcb(&sched->rootcb);
 	list_add_tail(&sched->rootcb.glink, &nkthreadq);
-	nknrthreads++;
+	cobalt_nrthreads++;
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_init(&sched->wdtimer, &nkclock, watchdog_handler,
@@ -943,7 +943,7 @@ static int vfile_schedlist_rewind(struct xnvfile_snapshot_iterator *it)
 	priv->curr = list_first_entry(&nkthreadq, struct xnthread, glink);
 	priv->start_time = xnclock_read_monotonic(&nkclock);
 
-	return nknrthreads;
+	return cobalt_nrthreads;
 }
 
 static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
@@ -1103,7 +1103,7 @@ static int vfile_schedstat_rewind(struct xnvfile_snapshot_iterator *it)
 	priv->irq = 0;
 	irqnr = xnintr_query_init(&priv->intr_it) * NR_CPUS;
 
-	return irqnr + nknrthreads;
+	return irqnr + cobalt_nrthreads;
 }
 
 static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,

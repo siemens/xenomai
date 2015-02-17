@@ -436,7 +436,7 @@ static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off
 	struct xnsched *sched = thread->sched;
 
 	list_del(&thread->glink);
-	nknrthreads--;
+	cobalt_nrthreads--;
 	xnvfile_touch_tag(&nkthreadlist_tag);
 
 	if (xnthread_test_state(thread, XNREADY)) {
@@ -507,7 +507,7 @@ void __xnthread_discard(struct xnthread *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 	list_del(&thread->glink);
-	nknrthreads--;
+	cobalt_nrthreads--;
 	xnvfile_touch_tag(&nkthreadlist_tag);
 	xnthread_deregister(thread);
 	xnlock_put_irqrestore(&nklock, s);
@@ -608,7 +608,7 @@ int xnthread_init(struct xnthread *thread,
 
 	xnlock_get_irqsave(&nklock, s);
 	list_add_tail(&thread->glink, &nkthreadq);
-	nknrthreads++;
+	cobalt_nrthreads++;
 	xnvfile_touch_tag(&nkthreadlist_tag);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2472,7 +2472,7 @@ int xnthread_killall(int grace, int mask)
 	 */
 	xnlock_get_irqsave(&nklock, s);
 
-	nrthreads = nknrthreads;
+	nrthreads = cobalt_nrthreads;
 	
 	xnsched_for_each_thread(t) {
 		if (xnthread_test_state(t, XNROOT) ||
@@ -2502,17 +2502,17 @@ int xnthread_killall(int grace, int mask)
 
 	if (grace > 0) {
 		ret = wait_event_interruptible_timeout(nkjoinq,
-						       nknrthreads == count,
+						       cobalt_nrthreads == count,
 						       grace * HZ);
 		if (ret == 0)
 			return -EAGAIN;
 	} else
 		ret = wait_event_interruptible(nkjoinq,
-					       nknrthreads == count);
+					       cobalt_nrthreads == count);
 
 	if (XENO_DEBUG(COBALT))
 		printk(XENO_INFO "joined %d threads\n",
-		       count + nrkilled - nknrthreads);
+		       count + nrkilled - cobalt_nrthreads);
 
 	return ret < 0 ? EINTR : 0;
 }

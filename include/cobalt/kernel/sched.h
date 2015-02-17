@@ -121,7 +121,7 @@ extern cpumask_t nkaffinity;
 
 extern struct list_head nkthreadq;
 
-extern int nknrthreads;
+extern int cobalt_nrthreads;
 
 #ifdef CONFIG_XENO_OPT_VFILE
 extern struct xnvfile_rev_tag nkthreadlist_tag;
