@@ -2,7 +2,6 @@ obj-$(CONFIG_XENOMAI) += xenomai.o rtdm/ posix/
 
 xenomai-y :=	apc.o		\
 		arith.o 	\
-		assert.o 	\
 		bufd.o		\
 		clock.o		\
 		heap.o		\

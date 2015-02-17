@@ -128,7 +128,7 @@ static inline void set_compat_bit(struct rtdm_fd *fd)
 		fd->compat = 0;
 	else {
 		regs = task_pt_regs(current);
-		XENO_BUGON(COBALT, !__xn_syscall_p(regs));
+		XENO_BUG_ON(COBALT, !__xn_syscall_p(regs));
 		fd->compat = __COBALT_CALL_COMPAT(__xn_reg_sys(regs));
 	}
 }
@@ -352,7 +352,7 @@ void rtdm_fd_unlock(struct rtdm_fd *fd)
 
 	xnlock_get_irqsave(&fdtree_lock, s);
 	/* Warn if fd was unreferenced. */
-	XENO_ASSERT(COBALT, fd->refs > 0);
+	XENO_WARN_ON(COBALT, fd->refs <= 0);
 	__put_fd(fd, s);
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_unlock);
@@ -733,7 +733,7 @@ void rtdm_fd_init(void)
 static inline void warn_user(const char *name)
 {
 #ifdef CONFIG_XENO_OPT_DEBUG_USER
-	printk(XENO_WARN "%s[%d] called regular %s() with RTDM file/socket\n",
+	printk(XENO_WARNING "%s[%d] called regular %s() with RTDM file/socket\n",
 	       current->comm, current->pid, name + 5);
 #endif
 }

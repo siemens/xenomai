@@ -599,7 +599,7 @@ int device_service_routine(...)
  */
 void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
-	XENO_ASSERT(COBALT, !xnsched_unblockable_p()); /* only warn here */
+	XENO_WARN_ON(COBALT, xnsched_unblockable_p()); /* only warn here */
 
 	*timeout_seq = xnclock_read_monotonic(&nkclock) + timeout;
 }

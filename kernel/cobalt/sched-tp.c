@@ -147,7 +147,7 @@ static void xnsched_tp_trackprio(struct xnthread *thread,
 	 */
 	if (p) {
 		/* We should never cross partition boundaries. */
-		XENO_WARNON(COBALT,
+		XENO_WARN_ON(COBALT,
 			   thread->base_class == &xnsched_class_tp &&
 			   thread->tps - thread->sched->tp.partitions != p->tp.ptid);
 		thread->cprio = p->tp.prio;
@@ -243,7 +243,7 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 	union xnsched_policy_param param;
 	struct xnthread *thread, *tmp;
 
-	XENO_BUGON(COBALT, gps != NULL &&
+	XENO_BUG_ON(COBALT, gps != NULL &&
 		   (gps->pwin_nr <= 0 || gps->pwins[0].w_offset != 0));
 
 	xnsched_tp_stop_schedule(sched);

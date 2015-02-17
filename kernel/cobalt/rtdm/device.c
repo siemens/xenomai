@@ -241,7 +241,7 @@ static int state_change_notifier(struct notifier_block *nb,
 			return NOTIFY_DONE;
 		ret = drv->smops.start(drv);
 		if (ret)
-			printk(XENO_WARN
+			printk(XENO_WARNING
 			       "failed starting driver %s (%d)\n",
 			       drv->profile_info.name, ret);
 		break;
@@ -250,7 +250,7 @@ static int state_change_notifier(struct notifier_block *nb,
 			return NOTIFY_DONE;
 		ret = drv->smops.stop(drv);
 		if (ret)
-			printk(XENO_WARN
+			printk(XENO_WARNING
 			       "failed stopping driver %s (%d)\n",
 			       drv->profile_info.name, ret);
 		break;
@@ -291,7 +291,7 @@ static int register_driver(struct rtdm_driver *drv)
 	ret = alloc_chrdev_region(&rdev, 0, drv->device_count,
 				  drv->profile_info.name);
 	if (ret) {
-		printk(XENO_WARN "cannot allocate chrdev region %s[0..%d]\n",
+		printk(XENO_WARNING "cannot allocate chrdev region %s[0..%d]\n",
 		       drv->profile_info.name, drv->device_count - 1);
 		return ret;
 	}
@@ -319,7 +319,7 @@ fail_cdev:
 
 static void unregister_driver(struct rtdm_driver *drv)
 {
-	XENO_BUGON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
+	XENO_BUG_ON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
 
 	if (!atomic_dec_and_test(&drv->refcount))
 		return;

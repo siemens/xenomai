@@ -194,7 +194,7 @@ static void remove_process(struct cobalt_process *process)
 		__clear_bit(personality->xid, &process->permap);
 		personality->ops.detach_process(priv);
 		atomic_dec(&personality->refcnt);
-		XENO_ASSERT(COBALT, atomic_read(&personality->refcnt) >= 0);
+		XENO_WARN_ON(COBALT, atomic_read(&personality->refcnt) < 0);
 		if (personality->module)
 			module_put(personality->module);
 	}
@@ -721,7 +721,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 #if XENO_DEBUG(COBALT) || XENO_DEBUG(USER)
 	if (!user_mode(d->regs)) {
 		xntrace_panic_freeze();
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "switching %s to secondary mode after exception #%u in "
 		       "kernel-space at 0x%lx (pid %d)\n", thread->name,
 		       xnarch_fault_trap(d),
@@ -729,7 +729,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 		       xnthread_host_pid(thread));
 		xntrace_panic_dump();
 	} else if (xnarch_fault_notify(d)) /* Don't report debug traps */
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "switching %s to secondary mode after exception #%u from "
 		       "user-space at 0x%lx (pid %d)\n", thread->name,
 		       xnarch_fault_trap(d),
@@ -756,7 +756,7 @@ static int handle_mayday_event(struct pt_regs *regs)
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct cobalt_ppd *sys_ppd;
 
-	XENO_BUGON(COBALT, !xnthread_test_state(thread, XNUSER));
+	XENO_BUG_ON(COBALT, !xnthread_test_state(thread, XNUSER));
 
 	/* We enter the mayday handler with hw IRQs off. */
 	sys_ppd = cobalt_ppd_get(0);
@@ -825,7 +825,7 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 	 * mode then switches back to it, in SMP configurations.
 	 */
 	if (cpus_empty(thread->affinity))
-		printk(XENO_WARN "thread %s[%d] changed CPU affinity inconsistently\n",
+		printk(XENO_WARNING "thread %s[%d] changed CPU affinity inconsistently\n",
 		       thread->name, xnthread_host_pid(thread));
 	else {
 		xnlock_get_irqsave(&nklock, s);
@@ -863,7 +863,7 @@ static inline void check_affinity(struct task_struct *p) /* nklocked, IRQs off *
 	 * hopeless, whine and kill that thread asap.
 	 */
 	if (!xnsched_supported_cpu(cpu)) {
-		printk(XENO_WARN "thread %s[%d] switched to non-rt CPU%d, aborted.\n",
+		printk(XENO_WARNING "thread %s[%d] switched to non-rt CPU%d, aborted.\n",
 		       thread->name, xnthread_host_pid(thread), cpu);
 		/*
 		 * Can't call xnthread_cancel() from a migration
@@ -983,7 +983,7 @@ static inline void lock_timers(void)
 
 static inline void unlock_timers(void)
 {
-	XENO_BUGON(COBALT, atomic_read(&nkclklk) == 0);
+	XENO_BUG_ON(COBALT, atomic_read(&nkclklk) == 0);
 	smp_mb__before_atomic();
 	atomic_dec(&nkclklk);
 	smp_mb__after_atomic();
@@ -1001,7 +1001,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	secondary_mode_only();
 
 	thread = xnthread_current();
-	XENO_BUGON(COBALT, thread == NULL);
+	XENO_BUG_ON(COBALT, thread == NULL);
 	trace_cobalt_shadow_unmap(thread);
 
 	if (xnthread_test_state(thread, XNDEBUG))
@@ -1089,31 +1089,25 @@ static int handle_schedule_event(struct task_struct *next_task)
 	}
 
 no_ptrace:
-	if (XENO_DEBUG(COBALT)) {
-		if (!xnthread_test_state(next, XNRELAX)) {
-			xntrace_panic_freeze();
-			show_stack(xnthread_host_task(next), NULL);
-			xnsys_fatal
-				("hardened thread %s[%d] running in Linux domain?! "
-				 "(status=0x%x, sig=%d, prev=%s[%d])",
-				 next->name, next_task->pid, xnthread_get_state(next),
-				 signal_pending(next_task), prev_task->comm, prev_task->pid);
-		} else if (!(next_task->ptrace & PT_PTRACED) &&
-			   /*
-			    * Allow ptraced threads to run shortly in order to
-			    * properly recover from a stopped state.
-			    */
+	/*
+	 * Do basic sanity checks on the incoming thread state.
+	 * NOTE: we allow ptraced threads to run shortly in order to
+	 * properly recover from a stopped state.
+	 */
+	if (!XENO_WARN(COBALT, !xnthread_test_state(next, XNRELAX),
+		       "hardened thread %s[%d] running in Linux domain?! "
+		       "(status=0x%x, sig=%d, prev=%s[%d])",
+		       next->name, next_task->pid, xnthread_get_state(next),
+		       signal_pending(next_task), prev_task->comm, prev_task->pid))
+		XENO_WARN(COBALT,
+			  !(next_task->ptrace & PT_PTRACED) &&
 			   !xnthread_test_state(next, XNDORMANT)
-			   && xnthread_test_state(next, XNPEND)) {
-			xntrace_panic_freeze();
-			show_stack(xnthread_host_task(next), NULL);
-			xnsys_fatal
-				("blocked thread %s[%d] rescheduled?! "
-				 "(status=0x%x, sig=%d, prev=%s[%d])",
-				 next->name, next_task->pid, xnthread_get_state(next),
-				 signal_pending(next_task), prev_task->comm, prev_task->pid);
-		}
-	}
+			  && xnthread_test_state(next, XNPEND),
+			  "blocked thread %s[%d] rescheduled?! "
+			  "(status=0x%x, sig=%d, prev=%s[%d])",
+			  next->name, next_task->pid, xnthread_get_state(next),
+			  signal_pending(next_task), prev_task->comm,
+			  prev_task->pid);
 out:
 	return KEVENT_PROPAGATE;
 }
@@ -1279,7 +1273,7 @@ static int attach_process(struct cobalt_process *process)
 
 	p->mayday_tramp = map_mayday_page();
 	if (p->mayday_tramp == 0) {
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "%s[%d] cannot map MAYDAY page\n",
 		       current->comm, current->pid);
 		ret = -ENOMEM;
@@ -1288,7 +1282,7 @@ static int attach_process(struct cobalt_process *process)
 
 	exe_path = get_exe_path(current);
 	if (IS_ERR(exe_path)) {
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "%s[%d] can't find exe path\n",
 		       current->comm, current->pid);
 		exe_path = NULL; /* Not lethal, but weird. */

@@ -551,7 +551,7 @@ static inline void rtdm_lock_init(rtdm_lock_t *lock)
  */
 static inline void rtdm_lock_get(rtdm_lock_t *lock)
 {
-	XENO_BUGON(COBALT, !spltest());
+	XENO_BUG_ON(COBALT, !spltest());
 	spin_lock(lock);
 	__xnsched_lock();
 }

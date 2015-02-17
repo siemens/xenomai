@@ -348,7 +348,7 @@ splitpage:
 		 * size, building a free list of free blocks.
 		 */
 		for (block = headpage, eblock =
-		     headpage + XNHEAP_PAGESZ - bsize; block < eblock;
+			     headpage + XNHEAP_PAGESZ - bsize; block < eblock;
 		     block += bsize)
 			*((caddr_t *)block) = block + bsize;
 
@@ -450,8 +450,8 @@ void *xnheap_alloc(struct xnheap *heap, u32 size)
 		} else {
 			if (bsize <= XNHEAP_PAGESZ)
 				--heap->buckets[ilog].fcount;
-			XENO_BUGON(COBALT, (caddr_t)block < heap->membase ||
-				   (caddr_t)block >= heap->memlim);
+			XENO_BUG_ON(COBALT, (caddr_t)block < heap->membase ||
+				    (caddr_t)block >= heap->memlim);
 			pagenum = ((caddr_t)block - heap->membase) / XNHEAP_PAGESZ;
 			++heap->pagemap[pagenum].bcount;
 		}
@@ -522,7 +522,7 @@ void xnheap_free(struct xnheap *heap, void *block)
 	free_page_list:
 		/* Link all freed pages in a single sub-list. */
 		for (freepage = (caddr_t) block,
-		     tailpage = (caddr_t) block + bsize - XNHEAP_PAGESZ;
+			     tailpage = (caddr_t) block + bsize - XNHEAP_PAGESZ;
 		     freepage < tailpage; freepage += XNHEAP_PAGESZ)
 			*((caddr_t *) freepage) = freepage + XNHEAP_PAGESZ;
 
@@ -538,7 +538,7 @@ void xnheap_free(struct xnheap *heap, void *block)
 		for (nextpage = heap->freelist, lastpage = NULL;
 		     nextpage != NULL && nextpage < (caddr_t) block;
 		     lastpage = nextpage, nextpage = *((caddr_t *)nextpage))
-		  ;	/* Loop */
+			;	/* Loop */
 
 		*((caddr_t *)tailpage) = nextpage;
 
@@ -586,7 +586,7 @@ void xnheap_free(struct xnheap *heap, void *block)
 		nextpage = freepage + XNHEAP_PAGESZ;
 		nblocks = XNHEAP_PAGESZ >> log2size;
 		heap->buckets[ilog].fcount -= (nblocks - 1);
-		XENO_BUGON(COBALT, heap->buckets[ilog].fcount < 0);
+		XENO_BUG_ON(COBALT, heap->buckets[ilog].fcount < 0);
 
 		/*
 		 * Still easy case: all free blocks are laid on a

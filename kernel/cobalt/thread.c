@@ -106,7 +106,7 @@ static int kthread_trampoline(void *arg)
 
 	ret = xnthread_map(thread, ka->done);
 	if (ret) {
-		printk(XENO_WARN "failed to create kernel shadow %s\n",
+		printk(XENO_WARNING "failed to create kernel shadow %s\n",
 		       thread->name);
 		return ret;
 	}
@@ -440,7 +440,7 @@ static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off
 	xnvfile_touch_tag(&nkthreadlist_tag);
 
 	if (xnthread_test_state(thread, XNREADY)) {
-		XENO_BUGON(COBALT, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
+		XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
 		xnsched_dequeue(thread);
 		xnthread_clear_state(thread, XNREADY);
 	}
@@ -839,9 +839,9 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	spl_t s;
 
 	/* No, you certainly do not want to suspend the root thread. */
-	XENO_BUGON(COBALT, xnthread_test_state(thread, XNROOT));
+	XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNROOT));
 	/* No built-in support for conjunctive wait. */
-	XENO_BUGON(COBALT, wchan && thread->wchan);
+	XENO_BUG_ON(COBALT, wchan && thread->wchan);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1470,7 +1470,7 @@ void xnthread_cancel(struct xnthread *thread)
 	spl_t s;
 
 	/* Right, so you want to kill the kernel?! */
-	XENO_BUGON(COBALT, xnthread_test_state(thread, XNROOT));
+	XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNROOT));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1557,7 +1557,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 	spl_t s;
 	int ret;
 
-	XENO_BUGON(COBALT, xnthread_test_state(thread, XNROOT));
+	XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNROOT));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -2010,9 +2010,13 @@ void xnthread_relax(int notify, int reason)
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	splnone();
 
-	if (XENO_DEBUG(COBALT) && !ipipe_root_p)
-		xnsys_fatal("xnthread_relax() failed for thread %s[%d]",
-			    thread->name, xnthread_host_pid(thread));
+	/*
+	 * Basic sanity check after an expected transition to secondary
+	 * mode.
+	 */
+	XENO_WARN(COBALT, !ipipe_root_p,
+		  "xnthread_relax() failed for thread %s[%d]",
+		  thread->name, xnthread_host_pid(thread));
 
 	__ipipe_reenter_root();
 
@@ -2060,7 +2064,7 @@ static inline void do_kthread_signal(struct task_struct *p,
 				     struct xnthread *thread,
 				     struct lostage_signal *rq)
 {
-	printk(XENO_WARN
+	printk(XENO_WARNING
 	       "kernel shadow %s received unhandled signal %d (action=0x%x)\n",
 	       thread->name, rq->signo, rq->sigval);
 }
@@ -2450,7 +2454,7 @@ void xnthread_call_mayday(struct xnthread *thread, int reason)
 	struct task_struct *p = xnthread_host_task(thread);
 
 	/* Mayday traps are available to userland threads only. */
-	XENO_BUGON(COBALT, !xnthread_test_state(thread, XNUSER));
+	XENO_BUG_ON(COBALT, !xnthread_test_state(thread, XNUSER));
 	xnthread_set_info(thread, XNKICKED);
 	xnthread_signal(thread, SIGDEBUG, reason);
 	ipipe_raise_mayday(p);

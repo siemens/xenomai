@@ -74,7 +74,7 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	mutex = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
 		xnlock_put_irqrestore(&nklock, s);
-		printk(XENO_WARN "mutex_destroy: invalid mutex %x\n",
+		printk(XENO_WARNING "mutex_destroy: invalid mutex %x\n",
 			mutex ? mutex->magic : ~0);
 		return;
 	}
@@ -204,7 +204,7 @@ redo:
 	case PTHREAD_MUTEX_NORMAL:
 		/* Attempting to relock a normal mutex, deadlock. */
 #if XENO_DEBUG(USER)
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "thread %s deadlocks on non-recursive mutex\n",
 		       curr->name);
 #endif

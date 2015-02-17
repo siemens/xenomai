@@ -47,7 +47,7 @@ static int cobalt_signal_deliver(struct cobalt_thread *thread,
 	int sig, ret;
 
 	sig = sigp->si.si_signo;
-	XENO_BUGON(COBALT, sig < 1 || sig > _NSIG);
+	XENO_BUG_ON(COBALT, sig < 1 || sig > _NSIG);
 
 	/*
 	 * Attempt to deliver the signal immediately to the initial
@@ -152,7 +152,7 @@ struct cobalt_sigpending *cobalt_signal_alloc(void)
 
 	if (list_empty(&sigpending_pool)) {
 		if (printk_ratelimit())
-			printk(XENO_WARN "signal bucket pool underflows\n");
+			printk(XENO_WARNING "signal bucket pool underflows\n");
 		return NULL;
 	}
 
@@ -216,7 +216,7 @@ static int signal_wait(sigset_t *set, xnticks_t timeout,
 	spl_t s;
 
 	curr = cobalt_current_thread();
-	XENO_BUGON(COBALT, curr == NULL);
+	XENO_BUG_ON(COBALT, curr == NULL);
 
 	if (u_si && !access_wok(u_si, sizeof(*u_si)))
 		return -EFAULT;

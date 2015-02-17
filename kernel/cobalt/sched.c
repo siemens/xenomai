@@ -63,7 +63,7 @@ static void xnsched_register_class(struct xnsched_class *sched_class)
 	 * Classes shall be registered by increasing priority order,
 	 * idle first and up.
 	 */
-	XENO_BUGON(COBALT, sched_class->next &&
+	XENO_BUG_ON(COBALT, sched_class->next &&
 		   sched_class->next->weight > sched_class->weight);
 
 	printk(XENO_INFO "scheduling class %s registered.\n", sched_class->name);
@@ -120,11 +120,11 @@ static void watchdog_handler(struct xntimer *timer)
 	trace_cobalt_watchdog_signal(curr);
 
 	if (xnthread_test_state(curr, XNUSER)) {
-		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
+		printk(XENO_WARNING "watchdog triggered on CPU #%d -- runaway thread "
 		       "'%s' signaled\n", xnsched_cpu(sched), curr->name);
 		xnthread_call_mayday(curr, SIGDEBUG_WATCHDOG);
 	} else {
-		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
+		printk(XENO_WARNING "watchdog triggered on CPU #%d -- runaway thread "
 		       "'%s' canceled\n", xnsched_cpu(sched), curr->name);
 		/*
 		 * On behalf on an IRQ handler, xnthread_cancel()
@@ -515,7 +515,7 @@ void xnsched_initq(struct xnsched_mlq *q)
 
 static inline int get_qindex(struct xnsched_mlq *q, int prio)
 {
-	XENO_BUGON(COBALT, prio < 0 || prio >= XNSCHED_MLQ_LEVELS);
+	XENO_BUG_ON(COBALT, prio < 0 || prio >= XNSCHED_MLQ_LEVELS);
 	/*
 	 * BIG FAT WARNING: We need to rescale the priority level to a
 	 * 0-based range. We use find_first_bit() to scan the bitmap
@@ -583,7 +583,7 @@ struct xnthread *xnsched_getq(struct xnsched_mlq *q)
 
 	idx = xnsched_weightq(q);
 	head = q->heads + idx;
-	XENO_BUGON(COBALT, list_empty(head));
+	XENO_BUG_ON(COBALT, list_empty(head));
 	thread = list_first_entry(head, struct xnthread, rlink);
 	del_q(q, &thread->rlink, idx);
 
@@ -624,7 +624,7 @@ struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 	 */
 	idx = xnsched_weightq(q);
 	head = q->heads + idx;
-	XENO_BUGON(COBALT, list_empty(head));
+	XENO_BUG_ON(COBALT, list_empty(head));
 
 	/*
 	 * The active class (i.e. ->sched_class) is the one currently
@@ -891,7 +891,7 @@ out:
 shadow_epilogue:
 	__ipipe_complete_domain_migration();
 
-	XENO_BUGON(COBALT, xnthread_current() == NULL);
+	XENO_BUG_ON(COBALT, xnthread_current() == NULL);
 
 	/*
 	 * Interrupts must be disabled here (has to be done on entry
@@ -900,7 +900,7 @@ shadow_epilogue:
 	 * handler that hit before we call xnsched_run in
 	 * xnthread_suspend() when relaxing a thread.
 	 */
-	XENO_BUGON(COBALT, !hard_irqs_disabled());
+	XENO_BUG_ON(COBALT, !hard_irqs_disabled());
 
 	return 1;
 }

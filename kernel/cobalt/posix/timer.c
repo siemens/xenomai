@@ -381,7 +381,7 @@ int __cobalt_timer_settime(timer_t timerid, int flags,
 	spl_t s;
 
 	cc = cobalt_current_process();
-	XENO_BUGON(COBALT, cc == NULL);
+	XENO_BUG_ON(COBALT, cc == NULL);
 
 	xnlock_get_irqsave(&nklock, s);
 

@@ -152,7 +152,7 @@ static void quota_refill_handler(struct xntimer *timer)
 	struct xnsched *sched;
 
 	qs = container_of(timer, struct xnsched_quota, refill_timer);
-	XENO_BUGON(COBALT, list_empty(&qs->groups));
+	XENO_BUG_ON(COBALT, list_empty(&qs->groups));
 	sched = container_of(qs, struct xnsched, quota);
 
 	list_for_each_entry(tg, &qs->groups, next) {
@@ -276,9 +276,9 @@ static void xnsched_quota_trackprio(struct xnthread *thread,
 {
 	if (p) {
 		/* We should not cross groups during PIP boost. */
-		XENO_WARNON(COBALT,
-			   thread->base_class == &xnsched_class_quota &&
-			   thread->quota->tgid != p->quota.tgid);
+		XENO_WARN_ON(COBALT,
+			     thread->base_class == &xnsched_class_quota &&
+			     thread->quota->tgid != p->quota.tgid);
 		thread->cprio = p->quota.prio;
 	} else
 		thread->cprio = thread->bprio;
@@ -322,7 +322,7 @@ static int xnsched_quota_declare(struct xnthread *thread,
 static void xnsched_quota_forget(struct xnthread *thread)
 {
 	thread->quota->nr_threads--;
-	XENO_BUGON(COBALT, thread->quota->nr_threads < 0);
+	XENO_BUG_ON(COBALT, thread->quota->nr_threads < 0);
 	list_del(&thread->quota_next);
 	thread->quota = NULL;
 }
@@ -454,7 +454,7 @@ pick:
 		list_add_tail(&next->quota_expired, &tg->expired);
 		goto pick;
 	}
- out:
+out:
 	tg->nr_active--;
 
 	return next;

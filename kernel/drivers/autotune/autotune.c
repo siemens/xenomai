@@ -568,7 +568,7 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 
 		if (state->min_lat < 0) {
 			if (tuner->get_gravity(tuner) == 0) {
-				printk(XENO_WARN
+				printk(XENO_WARNING
 				       "autotune(%s) failed with early shot (%Ld ns)\n",
 				       tuner->name,
 				       xnclock_ticks_to_ns(&nkclock, state->min_lat));

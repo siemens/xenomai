@@ -75,7 +75,7 @@ void mach_x86_smi_disable(void)
 	mask_bits(smi_masked_bits, smi_en_addr);
 
 	if (inl(smi_en_addr) & smi_masked_bits)
-		printk(XENO_WARN "SMI workaround failed!\n");
+		printk(XENO_WARNING "SMI workaround failed!\n");
 	else
 		printk(XENO_INFO "SMI workaround enabled\n");
 
@@ -122,7 +122,7 @@ void mach_x86_smi_init(void)
 	}
 
 	if (smi_state == 0) {
-		printk(XENO_WARN "SMI-enabled chipset found, but SMI workaround disabled\n"
+		printk(XENO_WARNING "SMI-enabled chipset found, but SMI workaround disabled\n"
 		       "          (see xenomai.smi parameter). You might encounter\n"
 		       "          high latencies!\n");
 		pci_dev_put(dev);

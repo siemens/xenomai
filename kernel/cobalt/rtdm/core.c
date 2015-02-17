@@ -106,7 +106,7 @@ open_devnode(struct rtdm_device *dev, const char *path, int oflag)
 
 #ifdef CONFIG_XENO_OPT_DEBUG_USER
 	if (strncmp(path, "/dev/rtdm/", 10))
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "%s[%d] opens obsolete device path: %s\n",
 		       current->comm, current->pid, path);
 #endif

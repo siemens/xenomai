@@ -258,7 +258,7 @@ static struct {
 static int __init setup_init_state(char *s)
 {
 	static char warn_bad_state[] __initdata =
-		XENO_WARN "invalid init state '%s'\n";
+		XENO_WARNING "invalid init state '%s'\n";
 	int n;
 
 	for (n = 0; n < ARRAY_SIZE(init_states); n++)
@@ -303,9 +303,6 @@ static __init int sys_init(void)
 
 	xnregistry_init();
 
-	nkpanic = __xnsys_fatal;
-	smp_wmb();
-
 	/*
 	 * If starting in stopped mode, do all initializations, but do
 	 * not enable the core timer.
@@ -327,7 +324,7 @@ static int __init xenomai_init(void)
 	int ret, __maybe_unused cpu;
 
 	if (!realtime_core_enabled()) {
-		printk(XENO_WARN "disabled on kernel command line\n");
+		printk(XENO_WARNING "disabled on kernel command line\n");
 		return 0;
 	}
 
@@ -338,7 +335,7 @@ static int __init xenomai_init(void)
 			cpu_set(cpu, xnsched_realtime_cpus);
 	}
 	if (cpumask_empty(&xnsched_realtime_cpus)) {
-		printk(XENO_WARN "disabled via empty real-time CPU mask\n");
+		printk(XENO_WARNING "disabled via empty real-time CPU mask\n");
 		set_realtime_core_state(COBALT_STATE_DISABLED);
 		return 0;
 	}

@@ -648,7 +648,7 @@ void xnclock_deregister(struct xnclock *clock)
 
 	for_each_online_cpu(cpu) {
 		tmd = xnclock_percpu_timerdata(clock, cpu);
-		XENO_BUGON(COBALT, !xntimerq_empty(&tmd->q));
+		XENO_BUG_ON(COBALT, !xntimerq_empty(&tmd->q));
 		xntimerq_destroy(&tmd->q);
 	}
 

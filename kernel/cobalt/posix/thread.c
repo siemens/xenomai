@@ -129,7 +129,7 @@ static inline void thread_unhash(const struct cobalt_local_hkey *hkey)
 		gslot = *gtail;
 	}
 	/* gslot must be found here. */
-	XENO_BUGON(COBALT, !(gslot && gtail));
+	XENO_BUG_ON(COBALT, !(gslot && gtail));
 	*gtail = gslot->next;
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -204,7 +204,7 @@ void cobalt_thread_map(struct xnthread *curr)
 
 	thread = container_of(curr, struct cobalt_thread, threadbase);
 	thread->process = cobalt_current_process();
-	XENO_BUGON(COBALT, thread->process == NULL);
+	XENO_BUG_ON(COBALT, thread->process == NULL);
 }
 
 struct xnthread_personality *cobalt_thread_exit(struct xnthread *curr)

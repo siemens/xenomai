@@ -253,7 +253,7 @@ static COBALT_SYSCALL(mayday, oneway, (void))
 
 	cur = xnthread_current();
 	if (cur == NULL) {
-		printk(XENO_WARN
+		printk(XENO_WARNING
 		       "MAYDAY received from invalid context %s[%d]\n",
 		       current->comm, current->pid);
 		return -EPERM;
@@ -454,7 +454,7 @@ static int stop_services(const void __user *u_buf, size_t u_bufsz)
 		/* Kill lingering RTDM tasks. */
 		ret = xnthread_killall(final_grace_period, 0);
 		if (ret == -EAGAIN)
-			printk(XENO_WARN "some RTDM tasks won't stop");
+			printk(XENO_WARNING "some RTDM tasks won't stop");
 		xntimer_release_hardware();
 		set_realtime_core_state(COBALT_STATE_STOPPED);
 		printk(XENO_INFO "services stopped\n");
@@ -852,7 +852,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 */
 	if (unlikely(!allowed_syscall(process, thread, sysflags, nr))) {
 		if (XENO_DEBUG(COBALT))
-			printk(XENO_WARN
+			printk(XENO_WARNING
 			       "syscall <%d> denied to %s[%d]\n",
 			       nr, current->comm, current->pid);
 		__xn_error_return(regs, -EPERM);
@@ -986,7 +986,7 @@ linux_syscall:
 	return KEVENT_PROPAGATE;
 
 bad_syscall:
-	printk(XENO_WARN "bad syscall <%#lx>\n", __xn_syscall(regs));
+	printk(XENO_WARNING "bad syscall <%#lx>\n", __xn_syscall(regs));
 
 	__xn_error_return(regs, -ENOSYS);
 
@@ -1110,7 +1110,7 @@ int ipipe_fastcall_hook(struct pt_regs *regs)
 	int ret;
 
 	ret = handle_head_syscall(&xnsched_realtime_domain, regs);
-	XENO_BUGON(COBALT, ret == KEVENT_PROPAGATE);
+	XENO_BUG_ON(COBALT, ret == KEVENT_PROPAGATE);
 
 	return ret;
 }

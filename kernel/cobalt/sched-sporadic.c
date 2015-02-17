@@ -34,7 +34,7 @@ static inline void sporadic_note_late_drop(struct xnsched *sched)
 	 * hundred times in a row. This normally reveals a time budget
 	 * which is too tight.
 	 */
-	XENO_BUGON(COBALT, ++sched->pss.drop_retries > 100);
+	XENO_BUG_ON(COBALT, ++sched->pss.drop_retries > 100);
 }
 
 static inline void sporadic_note_valid_drop(struct xnsched *sched)
@@ -42,7 +42,7 @@ static inline void sporadic_note_valid_drop(struct xnsched *sched)
 	sched->pss.drop_retries = 0;
 }
 
-#else /* !XENO_BUGON(COBALT) */
+#else /* !XENO_DEBUG(COBALT) */
 
 static inline void sporadic_note_late_drop(struct xnsched *sched)
 {
@@ -52,7 +52,7 @@ static inline void sporadic_note_valid_drop(struct xnsched *sched)
 {
 }
 
-#endif /* !XENO_BUGON(COBALT) */
+#endif /* !XENO_DEBUG(COBALT) */
 
 static inline xnticks_t sporadic_diff_time(xnticks_t start, xnticks_t end)
 {
@@ -125,7 +125,7 @@ static void sporadic_replenish_handler(struct xntimer *timer)
 
 	pss = container_of(timer, struct xnsched_sporadic_data, repl_timer);
 	thread = pss->thread;
-	XENO_BUGON(COBALT, pss->repl_pending <= 0);
+	XENO_BUG_ON(COBALT, pss->repl_pending <= 0);
 
 retry:
 	now = xnclock_read_monotonic(&nkclock);

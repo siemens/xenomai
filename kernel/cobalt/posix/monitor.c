@@ -101,7 +101,7 @@ COBALT_SYSCALL(monitor_init, current,
 
 	state->flags = 0;
 	stateoff = cobalt_umm_offset(umm, state);
-	XENO_BUGON(COBALT, stateoff != (__u32)stateoff);
+	XENO_BUG_ON(COBALT, stateoff != (__u32)stateoff);
 	shadow.flags = flags;
 	shadow.handle = mon->handle;
 	shadow.state_offset = (__u32)stateoff;
