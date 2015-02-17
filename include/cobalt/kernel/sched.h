@@ -210,7 +210,7 @@ static inline void xnsched_set_self_resched(struct xnsched *sched)
 	sched->status |= XNRESCHED;
 }
 
-#define xnsched_realtime_domain  xnarch_machdata.domain
+#define xnsched_realtime_domain  cobalt_pipeline.domain
 
 /* Set resched flag for the given scheduler. */
 #ifdef CONFIG_SMP
@@ -228,7 +228,7 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 	}
 }
 
-#define xnsched_realtime_cpus    xnarch_machdata.supported_cpus
+#define xnsched_realtime_cpus    cobalt_pipeline.supported_cpus
 
 static inline int xnsched_supported_cpu(int cpu)
 {

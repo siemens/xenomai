@@ -111,7 +111,7 @@ EXPORT_SYMBOL_GPL(strncpy_from_user_nocheck);
 
 static unsigned long mach_x86_calibrate(void)
 {
-	unsigned long delay = (xnarch_machdata.timer_freq + HZ / 2) / HZ;
+	unsigned long delay = (cobalt_pipeline.timer_freq + HZ / 2) / HZ;
 	unsigned long long t0, t1, dt;
 	unsigned long flags;
 	int i;

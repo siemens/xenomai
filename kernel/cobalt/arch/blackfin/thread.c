@@ -95,7 +95,7 @@ int xnarch_escalate(void)
 	}
 
 	if (ipipe_root_p) {
-		ipipe_raise_irq(xnarch_machdata.escalate_virq);
+		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
 		__ipipe_unlock_root();
 		return 1;
 	}

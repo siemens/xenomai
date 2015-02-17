@@ -332,7 +332,7 @@ static COBALT_SYSCALL(bind, lostage,
 	f->feat_abirev = XENOMAI_ABI_REV;
 	collect_arch_features(f);
 
-	f->clock_freq = xnarch_machdata.clock_freq;
+	f->clock_freq = cobalt_pipeline.clock_freq;
 	f->vdso_offset = cobalt_umm_offset(&cobalt_ppd_get(1)->umm, nkvdso);
 
 	if (__xn_safe_copy_to_user(u_breq, &breq, sizeof(breq)))

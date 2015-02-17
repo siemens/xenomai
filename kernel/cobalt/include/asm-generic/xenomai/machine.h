@@ -45,7 +45,7 @@ struct xnarch_percpu_machdata {
 
 DECLARE_PER_CPU(struct xnarch_percpu_machdata, xnarch_percpu_machdata);
 
-struct xnarch_machdata {
+struct cobalt_pipeline {
 	struct ipipe_domain domain;
 	unsigned long timer_freq;
 	unsigned long clock_freq;
@@ -62,7 +62,7 @@ struct xnarch_machdata {
 #endif
 };
 
-extern struct xnarch_machdata xnarch_machdata;
+extern struct cobalt_pipeline cobalt_pipeline;
 
 static inline unsigned long xnarch_timer_calibrate(void)
 {

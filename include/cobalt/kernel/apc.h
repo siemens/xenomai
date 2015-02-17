@@ -38,7 +38,7 @@ static inline void __xnapc_schedule(int apc)
 	unsigned long *p = &__this_cpu_ptr(&xnarch_percpu_machdata)->apc_pending;
 
 	if (!__test_and_set_bit(apc, p))
-		ipipe_post_irq_root(xnarch_machdata.apc_virq);
+		ipipe_post_irq_root(cobalt_pipeline.apc_virq);
 }
 
 /**

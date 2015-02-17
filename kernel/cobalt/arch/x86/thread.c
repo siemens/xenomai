@@ -423,7 +423,7 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 int xnarch_escalate(void)
 {
 	if (ipipe_root_p) {
-		ipipe_raise_irq(xnarch_machdata.escalate_virq);
+		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
 		return 1;
 	}
 

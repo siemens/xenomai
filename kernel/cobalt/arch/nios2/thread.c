@@ -59,7 +59,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 int xnarch_escalate(void)
 {
 	if (ipipe_root_p) {
-		ipipe_raise_irq(xnarch_machdata.escalate_virq);
+		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
 		return 1;
 	}
 

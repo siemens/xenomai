@@ -63,8 +63,8 @@ module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 
 static BLOCKING_NOTIFIER_HEAD(state_notifier_list);
 
-struct xnarch_machdata xnarch_machdata;
-EXPORT_SYMBOL_GPL(xnarch_machdata);
+struct cobalt_pipeline cobalt_pipeline;
+EXPORT_SYMBOL_GPL(cobalt_pipeline);
 
 struct xnarch_percpu_machdata xnarch_percpu_machdata;
 EXPORT_PER_CPU_SYMBOL_GPL(xnarch_percpu_machdata);
@@ -179,8 +179,8 @@ static int __init mach_setup(void)
 		return -ENODEV;
 	}
 
-	xnarch_machdata.timer_freq = timerfreq_arg;
-	xnarch_machdata.clock_freq = clockfreq_arg;
+	cobalt_pipeline.timer_freq = timerfreq_arg;
+	cobalt_pipeline.clock_freq = clockfreq_arg;
 
 	if (cobalt_machine.init) {
 		ret = cobalt_machine.init();
@@ -195,10 +195,10 @@ static int __init mach_setup(void)
 	if (virq == 0)
 		goto fail_apc;
 
-	xnarch_machdata.apc_virq = virq;
+	cobalt_pipeline.apc_virq = virq;
 
 	ipipe_request_irq(ipipe_root_domain,
-			  xnarch_machdata.apc_virq,
+			  cobalt_pipeline.apc_virq,
 			  apc_dispatch,
 			  NULL, NULL);
 
@@ -206,14 +206,14 @@ static int __init mach_setup(void)
 	if (virq == 0)
 		goto fail_escalate;
 
-	xnarch_machdata.escalate_virq = virq;
+	cobalt_pipeline.escalate_virq = virq;
 
 	ipipe_request_irq(&xnsched_realtime_domain,
-			  xnarch_machdata.escalate_virq,
+			  cobalt_pipeline.escalate_virq,
 			  (ipipe_irq_handler_t)__xnsched_run_handler,
 			  NULL, NULL);
 
-	ret = xnclock_init(xnarch_machdata.clock_freq);
+	ret = xnclock_init(cobalt_pipeline.clock_freq);
 	if (ret)
 		goto fail_clock;
 
@@ -221,12 +221,12 @@ static int __init mach_setup(void)
 
 fail_clock:
 	ipipe_free_irq(&xnsched_realtime_domain,
-		       xnarch_machdata.escalate_virq);
-	ipipe_free_virq(xnarch_machdata.escalate_virq);
+		       cobalt_pipeline.escalate_virq);
+	ipipe_free_virq(cobalt_pipeline.escalate_virq);
 fail_escalate:
 	ipipe_free_irq(ipipe_root_domain,
-		       xnarch_machdata.apc_virq);
-	ipipe_free_virq(xnarch_machdata.apc_virq);
+		       cobalt_pipeline.apc_virq);
+	ipipe_free_virq(cobalt_pipeline.apc_virq);
 fail_apc:
 	ipipe_unregister_head(&xnsched_realtime_domain);
 
@@ -240,8 +240,8 @@ static __init void mach_cleanup(void)
 {
 	ipipe_unregister_head(&xnsched_realtime_domain);
 	ipipe_free_irq(&xnsched_realtime_domain,
-		       xnarch_machdata.escalate_virq);
-	ipipe_free_virq(xnarch_machdata.escalate_virq);
+		       cobalt_pipeline.escalate_virq);
+	ipipe_free_virq(cobalt_pipeline.escalate_virq);
 	ipipe_timers_release();
 	xnclock_cleanup();
 }

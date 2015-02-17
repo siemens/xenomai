@@ -186,7 +186,7 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 		xnvfile_printf(it, "         CPU%d", cpu);
 
 	for (apc = 0; apc < BITS_PER_LONG; apc++) {
-		if (!test_bit(apc, &xnarch_machdata.apc_map))
+		if (!test_bit(apc, &cobalt_pipeline.apc_map))
 			continue; /* Not hooked. */
 
 		xnvfile_printf(it, "\n%3d: ", apc);
@@ -195,9 +195,9 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 			xnvfile_printf(it, "%12lu",
 				       per_cpu(xnarch_percpu_machdata, cpu).apc_shots[apc]);
 
-		if (xnarch_machdata.apc_table[apc].name)
+		if (cobalt_pipeline.apc_table[apc].name)
 			xnvfile_printf(it, "    (%s)",
-				       xnarch_machdata.apc_table[apc].name);
+				       cobalt_pipeline.apc_table[apc].name);
 	}
 
 	xnvfile_putc(it, '\n');

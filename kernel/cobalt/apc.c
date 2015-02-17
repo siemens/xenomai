@@ -62,8 +62,8 @@ void apc_dispatch(unsigned int virq, void *arg)
 	while (*p) {
 		apc = ffnz(*p);
 		clear_bit(apc, p);
-		handler = xnarch_machdata.apc_table[apc].handler;
-		cookie = xnarch_machdata.apc_table[apc].cookie;
+		handler = cobalt_pipeline.apc_table[apc].handler;
+		cookie = cobalt_pipeline.apc_table[apc].cookie;
 		__this_cpu_ptr(&xnarch_percpu_machdata)->apc_shots[apc]++;
 		spin_unlock(&apc_lock);
 		handler(cookie);
@@ -120,16 +120,16 @@ int xnapc_alloc(const char *name,
 
 	spin_lock_irqsave(&apc_lock, flags);
 
-	if (xnarch_machdata.apc_map == ~0) {
+	if (cobalt_pipeline.apc_map == ~0) {
 		apc = -EBUSY;
 		goto out;
 	}
 
-	apc = ffz(xnarch_machdata.apc_map);
-	__set_bit(apc, &xnarch_machdata.apc_map);
-	xnarch_machdata.apc_table[apc].handler = handler;
-	xnarch_machdata.apc_table[apc].cookie = cookie;
-	xnarch_machdata.apc_table[apc].name = name;
+	apc = ffz(cobalt_pipeline.apc_map);
+	__set_bit(apc, &cobalt_pipeline.apc_map);
+	cobalt_pipeline.apc_table[apc].handler = handler;
+	cobalt_pipeline.apc_table[apc].cookie = cookie;
+	cobalt_pipeline.apc_table[apc].name = name;
 out:
 	spin_unlock_irqrestore(&apc_lock, flags);
 
@@ -152,7 +152,7 @@ EXPORT_SYMBOL_GPL(xnapc_alloc);
 void xnapc_free(int apc)
 {
 	BUG_ON(apc < 0 || apc >= BITS_PER_LONG);
-	clear_bit(apc, &xnarch_machdata.apc_map);
+	clear_bit(apc, &cobalt_pipeline.apc_map);
 	smp_mb__after_atomic();
 }
 EXPORT_SYMBOL_GPL(xnapc_free);
