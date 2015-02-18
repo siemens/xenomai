@@ -23,6 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/version.h>
+#include <linux/ctype.h>
 #include <linux/pci.h>
 #include <linux/pci_ids.h>
 #include <linux/reboot.h>
@@ -38,8 +39,6 @@
 #define SMI_CTRL_ADDR	0x30
 
 static int smi_state;
-module_param_named(smi, smi_state, int, 0400);
-MODULE_PARM_DESC(smi, "SMI workaround: -1=disable, 0=detect only, 1=enable");
 
 static unsigned int smi_masked_bits = 1; /* Global disable bit */
 module_param_named(smi_mask, smi_masked_bits, int, 0400);
@@ -134,3 +133,35 @@ void mach_x86_smi_init(void)
 
 	pci_dev_put(dev);
 }
+
+static const char *smi_state_labels[] = {
+	"disabled",
+	"detect",
+	"enabled",
+};
+	
+static int setup_smi_state(char *s)
+{
+	static char warn_bad_state[] =
+		XENO_WARNING "invalid SMI state '%s'\n";
+	char *p;
+	int n;
+
+	/* Backward compat with legacy state specifiers. */
+	n = simple_strtol(s, &p, 10);
+	if (*p == '\0') {
+		smi_state = n;
+		return 1;
+	}
+
+	for (n = 0; n < ARRAY_SIZE(smi_state_labels); n++)
+		if (strcmp(smi_state_labels[n], s) == 0) {
+			smi_state = n - 1;
+			return 1;
+		}
+
+	printk(warn_bad_state, s);
+	
+	return 0;
+}
+__setup("xenomai.smi=", setup_smi_state);
