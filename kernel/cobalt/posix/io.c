@@ -82,7 +82,7 @@ COBALT_SYSCALL(recvmsg, probing,
 	struct msghdr m;
 	ssize_t ret;
 
-	ret = __xn_safe_copy_from_user(&m, umsg, sizeof(m));
+	ret = cobalt_copy_from_user(&m, umsg, sizeof(m));
 	if (ret)
 		return ret;
 
@@ -90,7 +90,7 @@ COBALT_SYSCALL(recvmsg, probing,
 	if (ret < 0)
 		return ret;
 
-	return __xn_safe_copy_to_user(umsg, &m, sizeof(*umsg)) ?: ret;
+	return cobalt_copy_to_user(umsg, &m, sizeof(*umsg)) ?: ret;
 }
 
 COBALT_SYSCALL(sendmsg, probing,
@@ -99,7 +99,7 @@ COBALT_SYSCALL(sendmsg, probing,
 	struct msghdr m;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&m, umsg, sizeof(m));
+	ret = cobalt_copy_from_user(&m, umsg, sizeof(m));
 
 	return ret ?: rtdm_fd_sendmsg(fd, &m, flags);
 }
@@ -112,7 +112,7 @@ COBALT_SYSCALL(mmap, lostage,
 	void *u_addr = NULL;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&rma, u_rma, sizeof(rma));
+	ret = cobalt_copy_from_user(&rma, u_rma, sizeof(rma));
 	if (ret)
 		return ret;
 
@@ -120,7 +120,7 @@ COBALT_SYSCALL(mmap, lostage,
 	if (ret)
 		return ret;
 
-	return __xn_safe_copy_to_user(u_addrp, &u_addr, sizeof(u_addr));
+	return cobalt_copy_to_user(u_addrp, &u_addr, sizeof(u_addr));
 }
 
 int __cobalt_first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
@@ -198,7 +198,7 @@ COBALT_SYSCALL(select, nonrestartable,
 
 	if (u_tv) {
 		if (!access_wok(u_tv, sizeof(tv))
-		    || __xn_copy_from_user(&tv, u_tv, sizeof(tv)))
+		    || cobalt_copy_from_user(&tv, u_tv, sizeof(tv)))
 			return -EFAULT;
 
 		if (tv.tv_usec > 1000000)
@@ -216,9 +216,9 @@ COBALT_SYSCALL(select, nonrestartable,
 			out_fds[i] = & out_fds_storage[i];
 			if (!access_wok((void __user *) ufd_sets[i],
 					sizeof(fd_set))
-			    || __xn_copy_from_user(in_fds[i],
-						   (void __user *) ufd_sets[i],
-						   fds_size))
+			    || cobalt_copy_from_user(in_fds[i],
+						     (void __user *) ufd_sets[i],
+						     fds_size))
 				return -EFAULT;
 		}
 
@@ -260,15 +260,15 @@ COBALT_SYSCALL(select, nonrestartable,
 		else
 			tv.tv_sec = tv.tv_usec = 0;
 
-		if (__xn_copy_to_user(u_tv, &tv, sizeof(tv)))
+		if (cobalt_copy_to_user(u_tv, &tv, sizeof(tv)))
 			return -EFAULT;
 	}
 
 	if (err >= 0)
 		for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 			if (ufd_sets[i]
-			    && __xn_copy_to_user((void __user *) ufd_sets[i],
-						 out_fds[i], sizeof(fd_set)))
+			    && cobalt_copy_to_user((void __user *) ufd_sets[i],
+						   out_fds[i], sizeof(fd_set)))
 				return -EFAULT;
 	return err;
 }

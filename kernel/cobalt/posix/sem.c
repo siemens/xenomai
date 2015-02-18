@@ -270,7 +270,7 @@ static inline int sem_fetch_timeout(struct timespec *ts,
 				    const void __user *u_ts)
 {
 	return u_ts == NULL ? -EFAULT :
-		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+		cobalt_copy_from_user(ts, u_ts, sizeof(*ts));
 }
 
 int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
@@ -415,7 +415,7 @@ COBALT_SYSCALL(sem_init, current,
 	struct cobalt_sem_shadow sm;
 	struct cobalt_sem *sem;
 
-	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
+	if (cobalt_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
 
 	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|\
@@ -426,7 +426,7 @@ COBALT_SYSCALL(sem_init, current,
 	if (IS_ERR(sem))
 		return PTR_ERR(sem);
 
-	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
+	return cobalt_copy_to_user(u_sem, &sm, sizeof(*u_sem));
 }
 
 COBALT_SYSCALL(sem_post, current,
@@ -483,7 +483,7 @@ COBALT_SYSCALL(sem_getvalue, current,
 	if (ret)
 		return ret;
 
-	return __xn_safe_copy_to_user(u_sval, &sval, sizeof(sval));
+	return cobalt_copy_to_user(u_sval, &sval, sizeof(sval));
 }
 
 COBALT_SYSCALL(sem_destroy, current,
@@ -492,7 +492,7 @@ COBALT_SYSCALL(sem_destroy, current,
 	struct cobalt_sem_shadow sm;
 	int err;
 
-	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
+	if (cobalt_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
 
 	trace_cobalt_psem_destroy(sm.handle);
@@ -501,7 +501,7 @@ COBALT_SYSCALL(sem_destroy, current,
 	if (err < 0)
 		return err;
 
-	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem)) ?: err;
+	return cobalt_copy_to_user(u_sem, &sm, sizeof(*u_sem)) ?: err;
 }
 
 COBALT_SYSCALL(sem_broadcast_np, current,
@@ -596,9 +596,9 @@ COBALT_SYSCALL(sem_inquire, current,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = __xn_safe_copy_to_user(u_info, &info, sizeof(info));
+	ret = cobalt_copy_to_user(u_info, &info, sizeof(info));
 	if (ret == 0 && nrwait > 0)
-		ret = __xn_safe_copy_to_user(u_waitlist, t, nrwait * sizeof(pid_t));
+		ret = cobalt_copy_to_user(u_waitlist, t, nrwait * sizeof(pid_t));
 
 	if (t && t != fbuf)
 		xnfree(t);

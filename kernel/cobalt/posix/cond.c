@@ -278,10 +278,10 @@ COBALT_SYSCALL(cond_init, current,
 	struct cobalt_condattr attr;
 	int err;
 
-	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
+	if (cobalt_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
 		return -EFAULT;
 
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+	if (cobalt_copy_from_user(&attr, u_attr, sizeof(attr)))
 		return -EFAULT;
 
 	trace_cobalt_cond_init(u_cnd, &attr);
@@ -290,7 +290,7 @@ COBALT_SYSCALL(cond_init, current,
 	if (err < 0)
 		return err;
 
-	return __xn_safe_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
+	return cobalt_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
 }
 
 COBALT_SYSCALL(cond_destroy, current,
@@ -299,7 +299,7 @@ COBALT_SYSCALL(cond_destroy, current,
 	struct cobalt_cond_shadow cnd;
 	int err;
 
-	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
+	if (cobalt_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
 		return -EFAULT;
 
 	trace_cobalt_cond_destroy(u_cnd);
@@ -308,7 +308,7 @@ COBALT_SYSCALL(cond_destroy, current,
 	if (err < 0)
 		return err;
 
-	return __xn_safe_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
+	return cobalt_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
 }
 
 struct us_cond_data {
@@ -319,7 +319,7 @@ static inline int cond_fetch_timeout(struct timespec *ts,
 				     const void __user *u_ts)
 {
 	return u_ts == NULL ? -EFAULT :
-		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+		cobalt_copy_from_user(ts, u_ts, sizeof(*ts));
 }
 
 int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,

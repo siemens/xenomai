@@ -1233,8 +1233,7 @@ static inline int rtdm_safe_copy_from_user(struct rtdm_fd *fd,
 					   void *dst, const void __user *src,
 					   size_t size)
 {
-	return (!access_rok(src, size) ||
-		__xn_copy_from_user(dst, src, size)) ? -EFAULT : 0;
+	return cobalt_copy_from_user(dst, src, size);
 }
 
 static inline int rtdm_copy_to_user(struct rtdm_fd *fd,
@@ -1248,17 +1247,14 @@ static inline int rtdm_safe_copy_to_user(struct rtdm_fd *fd,
 					 void __user *dst, const void *src,
 					 size_t size)
 {
-	return (!access_wok(dst, size) ||
-		__xn_copy_to_user(dst, src, size)) ? -EFAULT : 0;
+	return cobalt_copy_to_user(dst, src, size);
 }
 
 static inline int rtdm_strncpy_from_user(struct rtdm_fd *fd,
 					 char *dst,
 					 const char __user *src, size_t count)
 {
-	if (unlikely(!access_rok(src, 1)))
-		return -EFAULT;
-	return __xn_strncpy_from_user(dst, src, count);
+	return cobalt_strncpy_from_user(dst, src, count);
 }
 
 static inline int rtdm_rt_capable(struct rtdm_fd *fd)

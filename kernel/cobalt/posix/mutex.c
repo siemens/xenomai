@@ -259,10 +259,10 @@ COBALT_SYSCALL(mutex_init, current,
 	struct cobalt_mutex *mutex;
 	int err;
 
-	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
+	if (cobalt_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+	if (cobalt_copy_from_user(&attr, u_attr, sizeof(attr)))
 		return -EFAULT;
 
 	mutex = xnmalloc(sizeof(*mutex));
@@ -283,7 +283,7 @@ COBALT_SYSCALL(mutex_init, current,
 		return err;
 	}
 
-	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
+	return cobalt_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
 
 COBALT_SYSCALL(mutex_destroy, current,
@@ -294,7 +294,7 @@ COBALT_SYSCALL(mutex_destroy, current,
 	spl_t s;
 	int err;
 
-	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
+	if (cobalt_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -325,7 +325,7 @@ COBALT_SYSCALL(mutex_destroy, current,
 	xnlock_put_irqrestore(&nklock, s);
 	cobalt_mutex_destroy_inner(mx.handle, mutex->owningq);
 
-	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
+	return cobalt_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
 
 COBALT_SYSCALL(mutex_trylock, primary,
@@ -379,7 +379,7 @@ static inline int mutex_fetch_timeout(struct timespec *ts,
 				      const void __user *u_ts)
 {
 	return u_ts == NULL ? -EFAULT :
-		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+		cobalt_copy_from_user(ts, u_ts, sizeof(*ts));
 }
 
 COBALT_SYSCALL(mutex_timedlock, primary,

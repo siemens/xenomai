@@ -117,7 +117,7 @@ int sys32_get_param_ex(int policy,
 {
 	struct compat_sched_param_ex cpex;
 
-	if (u_cp == NULL || __xn_safe_copy_from_user(&cpex, u_cp, sizeof(cpex)))
+	if (u_cp == NULL || cobalt_copy_from_user(&cpex, u_cp, sizeof(cpex)))
 		return -EFAULT;
 
 	p->sched_priority = cpex.sched_priority;
@@ -179,7 +179,7 @@ int sys32_put_param_ex(int policy,
 		break;
 	}
 
-	return __xn_safe_copy_to_user(u_cp, &cpex, sizeof(cpex));
+	return cobalt_copy_to_user(u_cp, &cpex, sizeof(cpex));
 }
 EXPORT_SYMBOL_GPL(sys32_put_param_ex);
 
@@ -189,7 +189,7 @@ int sys32_get_mqattr(struct mq_attr *ap,
 	struct compat_mq_attr cattr;
 
 	if (u_cap == NULL ||
-	    __xn_safe_copy_from_user(&cattr, u_cap, sizeof(cattr)))
+	    cobalt_copy_from_user(&cattr, u_cap, sizeof(cattr)))
 		return -EFAULT;
 
 	ap->mq_flags = cattr.mq_flags;
@@ -212,7 +212,7 @@ int sys32_put_mqattr(struct compat_mq_attr __user *u_cap,
 	cattr.mq_curmsgs = ap->mq_curmsgs;
 
 	return u_cap == NULL ? -EFAULT :
-		__xn_safe_copy_to_user(u_cap, &cattr, sizeof(cattr));
+		cobalt_copy_to_user(u_cap, &cattr, sizeof(cattr));
 }
 EXPORT_SYMBOL_GPL(sys32_put_mqattr);
 
@@ -226,7 +226,7 @@ int sys32_get_sigevent(struct sigevent *ev,
 	if (u_cev == NULL)
 		return -EFAULT;
 
-	ret = __xn_safe_copy_from_user(&cev, u_cev, sizeof(cev));
+	ret = cobalt_copy_from_user(&cev, u_cev, sizeof(cev));
 	if (ret)
 		return ret;
 
@@ -256,7 +256,7 @@ int sys32_get_sigset(sigset_t *set, const compat_sigset_t *u_cset)
 	if (u_cset == NULL)
 		return -EFAULT;
 
-	ret = __xn_safe_copy_from_user(&cset, u_cset, sizeof(cset));
+	ret = cobalt_copy_from_user(&cset, u_cset, sizeof(cset));
 	if (ret)
 		return ret;
 
@@ -275,7 +275,7 @@ int sys32_put_sigset(compat_sigset_t *u_cset, const sigset_t *set)
 
 	sigset_to_compat(&cset, set);
 
-	return __xn_safe_copy_to_user(u_cset, &cset, sizeof(cset));
+	return cobalt_copy_to_user(u_cset, &cset, sizeof(cset));
 }
 EXPORT_SYMBOL_GPL(sys32_put_sigset);
 
@@ -287,7 +287,7 @@ int sys32_get_sigval(union sigval *val, const union compat_sigval *u_cval)
 	if (u_cval == NULL)
 		return -EFAULT;
 
-	ret = __xn_safe_copy_from_user(&cval, u_cval, sizeof(cval));
+	ret = cobalt_copy_from_user(&cval, u_cval, sizeof(cval));
 	if (ret)
 		return ret;
 
@@ -391,7 +391,7 @@ int sys32_get_iovec(struct iovec *iov,
 	int ret, n;
 	
 	for (n = 0, p = u_ciov; n < ciovlen; n++, p++) {
-		ret = __xn_safe_copy_from_user(&ciov, p, sizeof(ciov));
+		ret = cobalt_copy_from_user(&ciov, p, sizeof(ciov));
 		if (ret)
 			return ret;
 		iov[n].iov_base = compat_ptr(ciov.iov_base);
@@ -413,7 +413,7 @@ int sys32_put_iovec(struct compat_iovec __user *u_ciov,
 	for (n = 0, p = u_ciov; n < iovlen; n++, p++) {
 		ciov.iov_base = ptr_to_compat(iov[n].iov_base);
 		ciov.iov_len = iov[n].iov_len;
-		ret = __xn_safe_copy_to_user(p, &ciov, sizeof(*p));
+		ret = cobalt_copy_to_user(p, &ciov, sizeof(*p));
 		if (ret)
 			return ret;
 	}

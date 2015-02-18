@@ -767,7 +767,7 @@ COBALT_SYSCALL(mq_notify, primary,
 {
 	struct sigevent sev;
 
-	if (evp && __xn_safe_copy_from_user(&sev, evp, sizeof(sev)))
+	if (evp && cobalt_copy_from_user(&sev, evp, sizeof(sev)))
 		return -EFAULT;
 
 	return __cobalt_mq_notify(fd, evp ? &sev : NULL);
@@ -781,7 +781,7 @@ int __cobalt_mq_open(const char __user *u_name, int oflags,
 	mqd_t uqd;
 	int ret;
 
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
+	len = cobalt_strncpy_from_user(name, u_name, sizeof(name));
 	if (len < 0)
 		return -EFAULT;
 
@@ -813,7 +813,7 @@ COBALT_SYSCALL(mq_open, lostage,
 	struct mq_attr _attr, *attr = &_attr;
 
 	if ((oflags & O_CREAT) && u_attr) {
-		if (__xn_safe_copy_from_user(&_attr, u_attr, sizeof(_attr)))
+		if (cobalt_copy_from_user(&_attr, u_attr, sizeof(_attr)))
 			return -EFAULT;
 	} else
 		attr = NULL;
@@ -833,7 +833,7 @@ COBALT_SYSCALL(mq_unlink, lostage, (const char __user *u_name))
 	char name[COBALT_MAXNAME];
 	unsigned len;
 
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
+	len = cobalt_strncpy_from_user(name, u_name, sizeof(name));
 	if (len < 0)
 		return -EFAULT;
 	if (len >= sizeof(name))
@@ -873,14 +873,14 @@ COBALT_SYSCALL(mq_getattr, current,
 	if (ret)
 		return ret;
 
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
+	return cobalt_copy_to_user(u_attr, &attr, sizeof(attr));
 }
 
 static inline int mq_fetch_timeout(struct timespec *ts,
 				   const void __user *u_ts)
 {
 	return u_ts == NULL ? -EFAULT :
-		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+		cobalt_copy_from_user(ts, u_ts, sizeof(*ts));
 }
 
 int __cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
@@ -913,7 +913,7 @@ int __cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 		goto out;
 	}
 
-	ret = __xn_safe_copy_from_user(msg->data, u_buf, len);
+	ret = cobalt_copy_from_user(msg->data, u_buf, len);
 	if (ret) {
 		mq_finish_rcv(mqd, msg);
 		goto out;
@@ -962,7 +962,7 @@ int __cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 		goto fail;
 	}
 
-	ret = __xn_safe_copy_to_user(u_buf, msg->data, msg->len);
+	ret = cobalt_copy_to_user(u_buf, msg->data, msg->len);
 	if (ret) {
 		mq_finish_rcv(mqd, msg);
 		goto fail;
@@ -995,14 +995,14 @@ COBALT_SYSCALL(mq_timedreceive, primary,
 	ssize_t len;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&len, u_len, sizeof(len));
+	ret = cobalt_copy_from_user(&len, u_len, sizeof(len));
 	if (ret)
 		return ret;
 
 	ret = __cobalt_mq_timedreceive(uqd, u_buf, &len, u_prio,
 				       u_ts, u_ts ? mq_fetch_timeout : NULL);
 
-	return ret ?: __xn_safe_copy_to_user(u_len, &len, sizeof(*u_len));
+	return ret ?: cobalt_copy_to_user(u_len, &len, sizeof(*u_len));
 }
 
 int cobalt_mq_pkg_init(void)

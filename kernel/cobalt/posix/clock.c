@@ -139,7 +139,7 @@ COBALT_SYSCALL(clock_getres, current,
 	if (ret)
 		return ret;
 
-	if (u_ts && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
+	if (u_ts && cobalt_copy_to_user(u_ts, &ts, sizeof(ts)))
 		return -EFAULT;
 
 	trace_cobalt_clock_getres(clock_id, &ts);
@@ -186,7 +186,7 @@ COBALT_SYSCALL(clock_gettime, current,
 	if (ret)
 		return ret;
 
-	if (__xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
+	if (cobalt_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
 		return -EFAULT;
 
 	trace_cobalt_clock_gettime(clock_id, &ts);
@@ -226,7 +226,7 @@ COBALT_SYSCALL(clock_settime, current,
 {
 	struct timespec ts;
 
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
+	if (cobalt_copy_from_user(&ts, u_ts, sizeof(ts)))
 		return -EFAULT;
 
 	return __cobalt_clock_settime(clock_id, &ts);
@@ -291,12 +291,12 @@ COBALT_SYSCALL(clock_nanosleep, nonrestartable,
 	if (u_rmt)
 		rmtp = &rmt;
 
-	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
+	if (cobalt_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
 		return -EFAULT;
 
 	ret = __cobalt_clock_nanosleep(clock_id, flags, &rqt, rmtp);
 	if (ret == -EINTR && flags == 0 && rmtp) {
-		if (__xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
+		if (cobalt_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
 			return -EFAULT;
 	}
 

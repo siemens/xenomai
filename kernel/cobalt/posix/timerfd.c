@@ -94,11 +94,9 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 
 	if (err == 0) {
 		if (aligned)
-			err = __xn_put_user(ticks, u_ticks);
+			err = __xn_put_user(ticks, u_ticks) ? -EFAULT : 0;
 		else
-			err = __xn_copy_to_user(buf, &ticks, sizeof(ticks));
-		if (err)
-			err = -EFAULT;
+			err = cobalt_copy_to_user(buf, &ticks, sizeof(ticks));
 	}
 
 	return err ?: sizeof(ticks);
@@ -284,7 +282,7 @@ COBALT_SYSCALL(timerfd_settime, primary,
 	struct itimerspec ovalue, value;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&value, new_value, sizeof(value));
+	ret = cobalt_copy_from_user(&value, new_value, sizeof(value));
 	if (ret)
 		return ret;
 
@@ -293,7 +291,7 @@ COBALT_SYSCALL(timerfd_settime, primary,
 		return ret;
 
 	if (old_value) {
-		ret = __xn_safe_copy_to_user(old_value, &ovalue, sizeof(ovalue));
+		ret = cobalt_copy_to_user(old_value, &ovalue, sizeof(ovalue));
 		value.it_value.tv_sec = 0;
 		value.it_value.tv_nsec = 0;
 		__cobalt_timerfd_settime(fd, flags, &value, NULL);
@@ -328,5 +326,5 @@ COBALT_SYSCALL(timerfd_gettime, current,
 
 	ret = __cobalt_timerfd_gettime(fd, &value);
 
-	return ret ?: __xn_safe_copy_to_user(curr_value, &value, sizeof(value));
+	return ret ?: cobalt_copy_to_user(curr_value, &value, sizeof(value));
 }

@@ -110,7 +110,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 			return ERR_PTR(rc);
 		}
 
-		if (__xn_safe_copy_to_user(ushadow, &shadow, sizeof(shadow))) {
+		if (cobalt_copy_to_user(ushadow, &shadow, sizeof(shadow))) {
 			__cobalt_sem_destroy(shadow.handle);
 			return ERR_PTR(-EFAULT);
 		}

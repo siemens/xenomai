@@ -249,7 +249,7 @@ COBALT_SYSCALL32emu(mq_timedreceive, primary,
 	ssize_t len;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&clen, u_len, sizeof(*u_len));
+	ret = cobalt_copy_from_user(&clen, u_len, sizeof(*u_len));
 	if (ret)
 		return ret;
 
@@ -258,14 +258,14 @@ COBALT_SYSCALL32emu(mq_timedreceive, primary,
 				       u_ts, u_ts ? sys32_fetch_timeout : NULL);
 	clen = len;
 
-	return ret ?: __xn_safe_copy_to_user(u_len, &clen, sizeof(*u_len));
+	return ret ?: cobalt_copy_to_user(u_len, &clen, sizeof(*u_len));
 }
 
 static inline int mq_fetch_timeout(struct timespec *ts,
 				   const void __user *u_ts)
 {
 	return u_ts == NULL ? -EFAULT :
-		__xn_safe_copy_from_user(ts, u_ts, sizeof(*ts));
+		cobalt_copy_from_user(ts, u_ts, sizeof(*ts));
 
 }
 
@@ -315,7 +315,7 @@ sys32_fetch_config(int policy, const void __user *u_config, size_t *len)
 	if (cbuf == NULL)
 		return ERR_PTR(-ENOMEM);
 
-	ret = __xn_safe_copy_from_user(cbuf, u_config, *len);
+	ret = cobalt_copy_from_user(cbuf, u_config, *len);
 	if (ret) {
 		buf = ERR_PTR(ret);
 		goto out;
@@ -365,7 +365,7 @@ static int sys32_ack_config(int policy, const union sched_config *config,
 		return 0;
 
 	return u_config == NULL ? -EFAULT :
-		__xn_safe_copy_to_user(&u_p->quota.info, &config->quota.info,
+		cobalt_copy_to_user(&u_p->quota.info, &config->quota.info,
 				       sizeof(u_p->quota.info));
 }
 
@@ -382,7 +382,7 @@ static ssize_t sys32_put_config(int policy,
 	if (policy == SCHED_QUOTA) {
 		if (u_len < sizeof(u_p->quota))
 			return -EINVAL;
-		return __xn_safe_copy_to_user(&u_p->quota.info, &config->quota.info,
+		return cobalt_copy_to_user(&u_p->quota.info, &config->quota.info,
 					      sizeof(u_p->quota.info)) ?:
 			sizeof(u_p->quota.info);
 	}
@@ -535,7 +535,7 @@ COBALT_SYSCALL32emu(sigwait, primary,
 	if (sig < 0)
 		return sig;
 
-	return __xn_safe_copy_to_user(u_sig, &sig, sizeof(*u_sig));
+	return cobalt_copy_to_user(u_sig, &sig, sizeof(*u_sig));
 }
 
 COBALT_SYSCALL32emu(sigtimedwait, nonrestartable,
@@ -777,7 +777,7 @@ COBALT_SYSCALL32emu(mmap, lostage,
 
 	u_caddr = ptr_to_compat(u_addr);
 
-	return __xn_safe_copy_to_user(u_caddrp, &u_caddr, sizeof(u_caddr));
+	return cobalt_copy_to_user(u_caddrp, &u_caddr, sizeof(u_caddr));
 }
 
 COBALT_SYSCALL32emu(backtrace, current,
@@ -794,7 +794,7 @@ COBALT_SYSCALL32emu(backtrace, current,
 	if (nr > SIGSHADOW_BACKTRACE_DEPTH)
 		nr = SIGSHADOW_BACKTRACE_DEPTH;
 
-	ret = __xn_safe_copy_from_user(cbacktrace, u_backtrace,
+	ret = cobalt_copy_from_user(cbacktrace, u_backtrace,
 				       nr * sizeof(compat_ulong_t));
 	if (ret)
 		return ret;
@@ -819,7 +819,7 @@ COBALT_SYSCALL32x(mq_timedreceive, primary,
 	ssize_t len;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&clen, u_len, sizeof(*u_len));
+	ret = cobalt_copy_from_user(&clen, u_len, sizeof(*u_len));
 	if (ret)
 		return ret;
 
@@ -828,7 +828,7 @@ COBALT_SYSCALL32x(mq_timedreceive, primary,
 				       u_ts, u_ts ? mq_fetch_timeout : NULL);
 	clen = len;
 
-	return ret ?: __xn_safe_copy_to_user(u_len, &clen, sizeof(*u_len));
+	return ret ?: cobalt_copy_to_user(u_len, &clen, sizeof(*u_len));
 }
 
 #endif /* COBALT_SYSCALL32x */

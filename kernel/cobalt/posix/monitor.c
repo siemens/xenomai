@@ -106,7 +106,7 @@ COBALT_SYSCALL(monitor_init, current,
 	shadow.handle = mon->handle;
 	shadow.state_offset = (__u32)stateoff;
 
-	return __xn_safe_copy_to_user(u_mon, &shadow, sizeof(*u_mon));
+	return cobalt_copy_to_user(u_mon, &shadow, sizeof(*u_mon));
 }
 
 /* nklock held, irqs off */
@@ -309,7 +309,7 @@ COBALT_SYSCALL(monitor_wait, nonrestartable,
 
 	if (u_ts) {
 		tsp = &ts;
-		ret = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts));
+		ret = cobalt_copy_from_user(&ts, u_ts, sizeof(ts));
 		if (ret)
 			return ret;
 	}

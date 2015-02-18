@@ -328,7 +328,7 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 	 */
 	if (current->mm == bufd->b_mm) {
 		preemptible_only();
-		if (__xn_safe_copy_from_user(to, (void __user *)from, len))
+		if (cobalt_copy_from_user(to, (void __user *)from, len))
 			return -EFAULT;
 		goto advance_offset;
 	}
@@ -433,7 +433,7 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 	 */
 	if (current->mm == bufd->b_mm) {
 		preemptible_only();
-		if (__xn_safe_copy_to_user((void __user *)to, from, len))
+		if (cobalt_copy_to_user((void __user *)to, from, len))
 			return -EFAULT;
 		goto advance_offset;
 	}
@@ -546,7 +546,7 @@ ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd)
 	 */
 	to = (void __user *)bufd->b_ptr;
 	from = bufd->b_carry;
-	ret = __xn_safe_copy_to_user(to, from, len);
+	ret = cobalt_copy_to_user(to, from, len);
 
 	if (bufd->b_len > sizeof(bufd->b_buf))
 		xnfree(bufd->b_carry);

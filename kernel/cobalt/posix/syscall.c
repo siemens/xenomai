@@ -190,7 +190,7 @@ static COBALT_SYSCALL(get_current, current,
 	if (cur == NULL)
 		return -EPERM;
 
-	return __xn_safe_copy_to_user(u_handle, &cur->handle,
+	return cobalt_copy_to_user(u_handle, &cur->handle,
 				      sizeof(*u_handle));
 }
 
@@ -217,7 +217,7 @@ static COBALT_SYSCALL(backtrace, current,
 	 * Fetch the backtrace array, filled with PC values as seen
 	 * from the relaxing thread in user-space. This can't fail
 	 */
-	ret = __xn_safe_copy_from_user(backtrace, u_backtrace, nr * sizeof(long));
+	ret = cobalt_copy_from_user(backtrace, u_backtrace, nr * sizeof(long));
 	if (ret)
 		return ret;
 
@@ -236,7 +236,7 @@ static COBALT_SYSCALL(serialdbg, current,
 		n = len;
 		if (n > sizeof(buf))
 			n = sizeof(buf);
-		if (__xn_safe_copy_from_user(buf, u_msg, n))
+		if (cobalt_copy_from_user(buf, u_msg, n))
 			return -EFAULT;
 		__ipipe_serial_debug("%.*s", n, buf);
 		u_msg += n;
@@ -302,7 +302,7 @@ static COBALT_SYSCALL(bind, lostage,
 	struct cobalt_featinfo *f;
 	int abirev;
 
-	if (__xn_safe_copy_from_user(&breq, u_breq, sizeof(breq)))
+	if (cobalt_copy_from_user(&breq, u_breq, sizeof(breq)))
 		return -EFAULT;
 
 	f = &breq.feat_ret;
@@ -335,7 +335,7 @@ static COBALT_SYSCALL(bind, lostage,
 	f->clock_freq = cobalt_pipeline.clock_freq;
 	f->vdso_offset = cobalt_umm_offset(&cobalt_ppd_get(1)->umm, nkvdso);
 
-	if (__xn_safe_copy_to_user(u_breq, &breq, sizeof(breq)))
+	if (cobalt_copy_to_user(u_breq, &breq, sizeof(breq)))
 		return -EFAULT;
 
 	/*
@@ -410,7 +410,7 @@ static int get_conf_option(int option, void __user *u_buf, size_t u_bufsz)
 		return -EINVAL;
 	}
 
-	ret = __xn_safe_copy_to_user(u_buf, &val, sizeof(val));
+	ret = cobalt_copy_to_user(u_buf, &val, sizeof(val));
 
 	return ret ? -EFAULT : 0;
 }
@@ -433,7 +433,7 @@ static int stop_services(const void __user *u_buf, size_t u_bufsz)
 	if (u_bufsz != sizeof(int))
 		return -EINVAL;
 
-	ret = __xn_safe_copy_from_user(&timeout, u_buf, sizeof(timeout));
+	ret = cobalt_copy_from_user(&timeout, u_buf, sizeof(timeout));
 	if (ret)
 		return ret;
 

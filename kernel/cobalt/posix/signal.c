@@ -381,17 +381,14 @@ COBALT_SYSCALL(sigwait, primary,
 	sigset_t set;
 	int sig;
 
-	if (__xn_safe_copy_from_user(&set, u_set, sizeof(set)))
+	if (cobalt_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
 	sig = signal_wait(&set, XN_INFINITE, NULL, NULL);
 	if (sig < 0)
 		return sig;
 
-	if (__xn_safe_copy_to_user(u_sig, &sig, sizeof(*u_sig)))
-		return -EFAULT;
-
-	return 0;
+	return cobalt_copy_to_user(u_sig, &sig, sizeof(*u_sig));
 }
 
 int __cobalt_sigtimedwait(sigset_t *set,
@@ -421,10 +418,10 @@ COBALT_SYSCALL(sigtimedwait, nonrestartable,
 	struct timespec timeout;
 	sigset_t set;
 
-	if (__xn_safe_copy_from_user(&set, u_set, sizeof(set)))
+	if (cobalt_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
-	if (__xn_safe_copy_from_user(&timeout, u_timeout, sizeof(timeout)))
+	if (cobalt_copy_from_user(&timeout, u_timeout, sizeof(timeout)))
 		return -EFAULT;
 
 	return __cobalt_sigtimedwait(&set, &timeout, u_si, signal_put_siginfo);
@@ -444,7 +441,7 @@ COBALT_SYSCALL(sigwaitinfo, nonrestartable,
 {
 	sigset_t set;
 
-	if (__xn_safe_copy_from_user(&set, u_set, sizeof(set)))
+	if (cobalt_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
 	return __cobalt_sigwaitinfo(&set, u_si, signal_put_siginfo);
@@ -454,7 +451,7 @@ COBALT_SYSCALL(sigpending, primary, (old_sigset_t __user *u_set))
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
 
-	return __xn_safe_copy_to_user(u_set, &curr->sigpending, sizeof(*u_set));
+	return cobalt_copy_to_user(u_set, &curr->sigpending, sizeof(*u_set));
 }
 
 int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked, IRQs off */
@@ -587,7 +584,7 @@ COBALT_SYSCALL(sigqueue, conforming,
 	union sigval val;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&val, u_value, sizeof(val));
+	ret = cobalt_copy_from_user(&val, u_value, sizeof(val));
 
 	return ret ?: __cobalt_sigqueue(pid, sig, &val);
 }

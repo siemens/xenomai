@@ -455,7 +455,7 @@ int __cobalt_timer_create(clockid_t clock,
 	if (ret)
 		return ret;
 
-	if (__xn_safe_copy_to_user(u_tm, &timerid, sizeof(timerid))) {
+	if (cobalt_copy_to_user(u_tm, &timerid, sizeof(timerid))) {
 		timer_delete(timerid);
 		return -EFAULT;
 	}
@@ -472,7 +472,7 @@ COBALT_SYSCALL(timer_create, current,
 
 	if (u_sev) {
 		evp = &sev;
-		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
+		if (cobalt_copy_from_user(&sev, u_sev, sizeof(sev)))
 			return -EFAULT;
 	}
 
@@ -490,14 +490,14 @@ COBALT_SYSCALL(timer_settime, primary,
 	if (u_oldval == NULL)
 		oldvp = NULL;
 
-	if (__xn_safe_copy_from_user(&newv, u_newval, sizeof(newv)))
+	if (cobalt_copy_from_user(&newv, u_newval, sizeof(newv)))
 		return -EFAULT;
 
 	ret = __cobalt_timer_settime(tm, flags, &newv, oldvp);
 	if (ret)
 		return ret;
 
-	if (oldvp && __xn_safe_copy_to_user(u_oldval, oldvp, sizeof(oldv))) {
+	if (oldvp && cobalt_copy_to_user(u_oldval, oldvp, sizeof(oldv))) {
 		__cobalt_timer_settime(tm, flags, oldvp, NULL);
 		return -EFAULT;
 	}
@@ -515,7 +515,7 @@ COBALT_SYSCALL(timer_gettime, current,
 	if (ret)
 		return ret;
 
-	return __xn_safe_copy_to_user(u_val, &val, sizeof(val));
+	return cobalt_copy_to_user(u_val, &val, sizeof(val));
 }
 
 COBALT_SYSCALL(timer_getoverrun, current, (timer_t timerid))

@@ -483,7 +483,7 @@ int __cobalt_thread_setschedparam_ex(unsigned long pth,
 		ret = -EPERM;
 
 	if (ret == 0 &&
-	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
+	    cobalt_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
 		ret = -EFAULT;
 
 	return ret;
@@ -503,7 +503,7 @@ COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 {
 	struct sched_param_ex param_ex;
 
-	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
+	if (cobalt_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
 
 	return __cobalt_thread_setschedparam_ex(pth, policy, &param_ex,
@@ -530,7 +530,7 @@ int __cobalt_thread_getschedparam_ex(unsigned long pth,
 
 	trace_cobalt_pthread_getschedparam(pth, policy, param_ex);
 
-	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
+	if (cobalt_copy_to_user(u_policy, &policy, sizeof(int)))
 		return -EFAULT;
 
 	return policy;
@@ -553,7 +553,7 @@ COBALT_SYSCALL(thread_getschedparam_ex, current,
 	if (policy < 0)
 		return policy;
 
-	return __xn_safe_copy_to_user(u_param, &param_ex, sizeof(param_ex));
+	return cobalt_copy_to_user(u_param, &param_ex, sizeof(param_ex));
 }
 
 int __cobalt_thread_create(unsigned long pth, int policy,
@@ -613,7 +613,7 @@ COBALT_SYSCALL(thread_create, init,
 	struct sched_param_ex param_ex;
 	int ret;
 
-	ret = __xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex));
+	ret = cobalt_copy_from_user(&param_ex, u_param, sizeof(param_ex));
 	if (ret)
 		return ret;
 
@@ -668,7 +668,7 @@ COBALT_SYSCALL(thread_setmode, primary,
 	if (ret)
 		return ret;
 
-	if (u_mode_r && __xn_safe_copy_to_user(u_mode_r, &old, sizeof(old)))
+	if (u_mode_r && cobalt_copy_to_user(u_mode_r, &old, sizeof(old)))
 		return -EFAULT;
 
 	return 0;
@@ -683,8 +683,8 @@ COBALT_SYSCALL(thread_setname, current,
 	struct task_struct *p;
 	spl_t s;
 
-	if (__xn_safe_strncpy_from_user(name, u_name,
-					sizeof(name) - 1) < 0)
+	if (cobalt_strncpy_from_user(name, u_name,
+				     sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -830,7 +830,7 @@ COBALT_SYSCALL(thread_getstat, current,
 	strcpy(stat.personality, thread->personality->name);
 	xnlock_put_irqrestore(&nklock, s);
 
-	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
+	return cobalt_copy_to_user(u_stat, &stat, sizeof(stat));
 }
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION

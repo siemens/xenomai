@@ -102,7 +102,7 @@ COBALT_SYSCALL(event_init, current,
 	shadow.handle = event->handle;
 	shadow.state_offset = (__u32)stateoff;
 
-	return __xn_safe_copy_to_user(u_event, &shadow, sizeof(*u_event));
+	return cobalt_copy_to_user(u_event, &shadow, sizeof(*u_event));
 }
 
 int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
@@ -184,7 +184,7 @@ out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (ret == 0 &&
-	    __xn_safe_copy_to_user(u_bits_r, &rbits, sizeof(rbits)))
+	    cobalt_copy_to_user(u_bits_r, &rbits, sizeof(rbits)))
 		return -EFAULT;
 
 	return ret;
@@ -201,7 +201,7 @@ COBALT_SYSCALL(event_wait, primary,
 
 	if (u_ts) {
 		tsp = &ts;
-		ret = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts));
+		ret = cobalt_copy_from_user(&ts, u_ts, sizeof(ts));
 		if (ret)
 			return ret;
 	}
@@ -384,9 +384,9 @@ COBALT_SYSCALL(event_inquire, current,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = __xn_safe_copy_to_user(u_info, &info, sizeof(info));
+	ret = cobalt_copy_to_user(u_info, &info, sizeof(info));
 	if (ret == 0 && nrwait > 0)
-		ret = __xn_safe_copy_to_user(u_waitlist, t, nrwait * sizeof(pid_t));
+		ret = cobalt_copy_to_user(u_waitlist, t, nrwait * sizeof(pid_t));
 
 	if (t && t != fbuf)
 		xnfree(t);

@@ -545,7 +545,7 @@ sched_fetch_config(int policy, const void __user *u_config, size_t *len)
 	if (buf == NULL)
 		return ERR_PTR(-ENOMEM);
 
-	ret = __xn_safe_copy_from_user(buf, u_config, *len);
+	ret = cobalt_copy_from_user(buf, u_config, *len);
 	if (ret) {
 		xnfree(buf);
 		return ERR_PTR(ret);
@@ -563,7 +563,7 @@ static int sched_ack_config(int policy, const union sched_config *config,
 		return 0;
 
 	return u_p == NULL ? -EFAULT :
-		__xn_safe_copy_to_user(&u_p->quota.info, &config->quota.info,
+		cobalt_copy_to_user(&u_p->quota.info, &config->quota.info,
 				       sizeof(u_p->quota.info));
 }
 
@@ -579,12 +579,12 @@ static ssize_t sched_put_config(int policy,
 	if (policy == SCHED_QUOTA) {
 		if (u_len < sizeof(config->quota))
 			return -EINVAL;
-		return __xn_safe_copy_to_user(&u_p->quota.info, &config->quota.info,
+		return cobalt_copy_to_user(&u_p->quota.info, &config->quota.info,
 					      sizeof(u_p->quota.info)) ?:
 			sizeof(u_p->quota.info);
 	}
 
-	return __xn_safe_copy_to_user(u_config, config, len) ?: len;
+	return cobalt_copy_to_user(u_config, config, len) ?: len;
 }
 
 int __cobalt_sched_setconfig_np(int cpu, int policy,
@@ -705,7 +705,7 @@ COBALT_SYSCALL(sched_weightprio, current,
 {
 	struct sched_param_ex param_ex;
 
-	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
+	if (cobalt_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
 
 	return __cobalt_sched_weightprio(policy, &param_ex);

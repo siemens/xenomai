@@ -49,5 +49,5 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 		break;
 	}
 
-	return __xn_safe_copy_to_user((void *)a2, &info, sizeof(info));
+	return cobalt_copy_to_user((void *)a2, &info, sizeof(info));
 }
