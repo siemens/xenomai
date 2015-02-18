@@ -137,6 +137,18 @@ running the auto-tuner after each boot e.g:
 # echo "1728u 907k" > /proc/xenomai/clock/coreclck
 ------------------------------------------------------
 
+Alternatively, the gravity values can be statically defined in the
+kernel configuration of the target kernel:
+
+- CONFIG_XENO_OPT_TIMING_SCHEDLAT should be assigned the user gravity
+  value.
+
+- CONFIG_XENO_OPT_TIMING_KSCHEDLAT should be assigned the kernel
+  gravity value.
+
+- CONFIG_XENO_OPT_TIMING_IRQLAT should be assigned the IRQ gravity
+  value.
+
 AUTHOR
 -------
 *autotune* was written by Philippe Gerum <rpm@xenomai.org>.
