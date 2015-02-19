@@ -149,9 +149,8 @@ static int create_directory_recursive(const char *dir) /* absolute path */
 	}
 
 	free(s);
-	chdir(rootdir);		/* Back to rootdir */
 
-	return 0;
+	return chdir(rootdir) ? -errno : 0; /* Back to rootdir */
 }
 
 static void create_rootdir(void)
@@ -259,7 +258,7 @@ fail_nopath:
 
 static void unmount(const char *path)
 {
-	int flags;
+	int flags, ret;
 	char *cmd;
 
 	/*
@@ -271,7 +270,8 @@ static void unmount(const char *path)
 		fcntl(2, F_SETFD, flags | FD_CLOEXEC);
 
 	if (asprintf(&cmd, "/usr/bin/fusermount -uzq %s", path) > 0) {
-		system(cmd);
+		ret = system(cmd);
+		(void)ret;
 		free(cmd);
 	}
 }
