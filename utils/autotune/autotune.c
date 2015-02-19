@@ -296,8 +296,11 @@ int main(int argc, char *const argv[])
 		}
 	}
 
-	if (background)
-		daemon(0, 0);
+	if (background) {
+		ret = daemon(0, 0);
+		if (ret)
+			error(1, errno, "cannot daemonize");
+	}
 
 	fd = open("/dev/rtdm/autotune", O_RDONLY);
 	if (fd < 0)
