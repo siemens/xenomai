@@ -668,6 +668,24 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
    AC_MSG_ERROR([compiler does not support atomic builtins])
 fi
 
+unset want_fortify
+AC_MSG_CHECKING(for fortify support)
+AC_ARG_ENABLE([fortify],
+	      AC_HELP_STRING([--enable-fortify],
+			     [Enable _FORTIFY_SOURCE]),
+	      [case "$enableval" in
+	      y | yes) want_fortify=yes;;
+	      *) want_fortify=no;;
+	      esac])
+AC_MSG_RESULT(${want_fortify:-autodetect})
+if test x"$want_fortify" != xno; then
+   AC_CHECK_FUNC(__vfprintf_chk,
+	      [AC_DEFINE(CONFIG_XENO_FORTIFY, 1,[config])],
+	      [if test x"$want_fortify" = "xyes"; then
+	      AC_MSG_ERROR([Fortify support enabled but not available in *libc])
+	       fi])
+fi
+
 dnl Exported CFLAGS and LDFLAGS, shared with internal flags
 XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
 XENO_USER_APP_LDFLAGS=
@@ -680,6 +698,9 @@ fi
 dnl Internal CFLAGS and LDFLAGS, may be enhanced per-arch below
 XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -pipe -fstrict-aliasing \
 -Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+if test x$want_fortify != xno -a x$debug_mode != xfull; then
+   XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D_FORTIFY_SOURCE=1"
+fi
 XENO_USER_LDADD="$XENO_USER_APP_LDFLAGS"
 
 dnl Add any flags forced on the command line, but only
@@ -840,25 +861,6 @@ fi
 
 XENO_AUTOINIT_LDFLAGS="-Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
 AC_SUBST(XENO_AUTOINIT_LDFLAGS)
-
-unset want_fortify
-AC_MSG_CHECKING(for fortify support)
-AC_ARG_ENABLE([fortify],
-	      AC_HELP_STRING([--enable-fortify],
-			     [Enable support for applications compiled
-			     with _FORTIFY_SOURCE]),
-	      [case "$enableval" in
-	      y | yes) want_fortify=yes;;
-	      *) want_fortify=no;;
-	      esac])
-AC_MSG_RESULT(${want_fortify:-autodetect})
-if test x"$want_fortify" != xno; then
-   AC_CHECK_FUNC(__vfprintf_chk,
-	      [AC_DEFINE(CONFIG_XENO_FORTIFY, 1,[config])],
-	      [if test x"$want_fortify" = "xyes"; then
-	      AC_MSG_ERROR([Fortify support enabled but not available in *libc])
-	       fi])
-fi
 
 dnl
 dnl Build the Makefiles
