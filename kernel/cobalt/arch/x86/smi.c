@@ -39,6 +39,8 @@
 #define SMI_CTRL_ADDR	0x30
 
 static int smi_state;
+static char smi_state_arg[16] = "detect";
+module_param_string(smi, smi_state_arg, sizeof(smi_state_arg), 0444);
 
 static unsigned int smi_masked_bits = 1; /* Global disable bit */
 module_param_named(smi_mask, smi_masked_bits, int, 0400);
@@ -102,9 +104,41 @@ static unsigned short get_smi_en_addr(struct pci_dev *dev)
 	return SMI_CTRL_ADDR + (((byte1 << 1) | (byte0 >> 7)) << 7);	// bits 7-15
 }
 
+
+static const char *smi_state_labels[] = {
+	"disabled",
+	"detect",
+	"enabled",
+};
+	
+static void setup_smi_state(void)
+{
+	static char warn_bad_state[] =
+		XENO_WARNING "invalid SMI state '%s'\n";
+	char *p;
+	int n;
+
+	/* Backward compat with legacy state specifiers. */
+	n = simple_strtol(smi_state_arg, &p, 10);
+	if (*p == '\0') {
+		smi_state = n;
+		return;
+	}
+
+	for (n = 0; n < ARRAY_SIZE(smi_state_labels); n++)
+		if (strcmp(smi_state_labels[n], smi_state_arg) == 0) {
+			smi_state = n - 1;
+			return;
+		}
+
+	printk(warn_bad_state, smi_state_arg);
+}
+
 void mach_x86_smi_init(void)
 {
 	struct pci_dev *dev = NULL;
+
+	setup_smi_state();
 
 	if (smi_state < 0)
 		return;
@@ -133,35 +167,3 @@ void mach_x86_smi_init(void)
 
 	pci_dev_put(dev);
 }
-
-static const char *smi_state_labels[] = {
-	"disabled",
-	"detect",
-	"enabled",
-};
-	
-static int setup_smi_state(char *s)
-{
-	static char warn_bad_state[] =
-		XENO_WARNING "invalid SMI state '%s'\n";
-	char *p;
-	int n;
-
-	/* Backward compat with legacy state specifiers. */
-	n = simple_strtol(s, &p, 10);
-	if (*p == '\0') {
-		smi_state = n;
-		return 1;
-	}
-
-	for (n = 0; n < ARRAY_SIZE(smi_state_labels); n++)
-		if (strcmp(smi_state_labels[n], s) == 0) {
-			smi_state = n - 1;
-			return 1;
-		}
-
-	printk(warn_bad_state, s);
-	
-	return 0;
-}
-__setup("xenomai.smi=", setup_smi_state);

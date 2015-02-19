@@ -61,6 +61,9 @@ module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 static unsigned long sysheap_size_arg;
 module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 
+static char init_state_arg[16] = "enabled";
+module_param_string(state, init_state_arg, sizeof(init_state_arg), 0444);
+
 static BLOCKING_NOTIFIER_HEAD(state_notifier_list);
 
 struct cobalt_pipeline cobalt_pipeline;
@@ -255,23 +258,20 @@ static struct {
 	{ "enabled", COBALT_STATE_WARMUP },
 };
 	
-static int __init setup_init_state(char *s)
+static void __init setup_init_state(void)
 {
 	static char warn_bad_state[] __initdata =
 		XENO_WARNING "invalid init state '%s'\n";
 	int n;
 
 	for (n = 0; n < ARRAY_SIZE(init_states); n++)
-		if (strcmp(init_states[n].label, s) == 0) {
+		if (strcmp(init_states[n].label, init_state_arg) == 0) {
 			set_realtime_core_state(init_states[n].state);
-			return 1;
+			return;
 		}
 
-	printk(warn_bad_state, s);
-	
-	return 0;
+	printk(warn_bad_state, init_state_arg);
 }
-__setup("xenomai.state=", setup_init_state);
 
 static __init int sys_init(void)
 {
@@ -322,6 +322,8 @@ static __init int sys_init(void)
 static int __init xenomai_init(void)
 {
 	int ret, __maybe_unused cpu;
+
+	setup_init_state();
 
 	if (!realtime_core_enabled()) {
 		printk(XENO_WARNING "disabled on kernel command line\n");
