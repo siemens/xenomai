@@ -851,7 +851,11 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 * sc_cobalt_bind which does its own checks.
 	 */
 	if (unlikely(!allowed_syscall(process, thread, sysflags, nr))) {
-		if (XENO_DEBUG(COBALT))
+		/*
+		 * Exclude get_current from reporting, it is used to probe the
+		 * execution context.
+		 */
+		if (XENO_DEBUG(COBALT) && nr != sc_cobalt_get_current)
 			printk(XENO_WARNING
 			       "syscall <%d> denied to %s[%d]\n",
 			       nr, current->comm, current->pid);
