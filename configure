@@ -14256,19 +14256,17 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${want_fortify:-autodetect}" >&5
 $as_echo "${want_fortify:-autodetect}" >&6; }
-if test x"$want_fortify" != xno; then
-   ac_fn_c_check_func "$LINENO" "__vfprintf_chk" "ac_cv_func___vfprintf_chk"
+ac_fn_c_check_func "$LINENO" "__vfprintf_chk" "ac_cv_func___vfprintf_chk"
 if test "x$ac_cv_func___vfprintf_chk" = xyes; then :
 
 $as_echo "#define CONFIG_XENO_FORTIFY 1" >>confdefs.h
 
 else
   if test x"$want_fortify" = "xyes"; then
-	      as_fn_error $? "Fortify support enabled but not available in *libc" "$LINENO" 5
-	       fi
+      as_fn_error $? "Fortify support enabled but not available in *libc" "$LINENO" 5
+      fi
 fi
 
-fi
 
 XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
 XENO_USER_APP_LDFLAGS=

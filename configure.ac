@@ -678,13 +678,11 @@ AC_ARG_ENABLE([fortify],
 	      *) want_fortify=no;;
 	      esac])
 AC_MSG_RESULT(${want_fortify:-autodetect})
-if test x"$want_fortify" != xno; then
-   AC_CHECK_FUNC(__vfprintf_chk,
-	      [AC_DEFINE(CONFIG_XENO_FORTIFY, 1,[config])],
-	      [if test x"$want_fortify" = "xyes"; then
-	      AC_MSG_ERROR([Fortify support enabled but not available in *libc])
-	       fi])
-fi
+AC_CHECK_FUNC(__vfprintf_chk,
+      [AC_DEFINE(CONFIG_XENO_FORTIFY, 1,[config])],
+      [if test x"$want_fortify" = "xyes"; then
+      AC_MSG_ERROR([Fortify support enabled but not available in *libc])
+      fi])
 
 dnl Exported CFLAGS and LDFLAGS, shared with internal flags
 XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
