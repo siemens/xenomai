@@ -280,7 +280,7 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 	err = __real_pthread_kill(rt_thread, SIGUSR1);
 	check_no_error("pthread_kill", err);
 
-	__real_clock_nanosleep(CLOCK_MONOTONIC, 0, &delay, NULL);
+	__STD(nanosleep(&delay, NULL));
 
 	err = pthread_mutex_unlock(&prio_invert);
 	check_no_error("pthread_mutex_unlock", err);
