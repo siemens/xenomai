@@ -376,11 +376,13 @@ patch_kernelversion_specific="y"
 
 case $linux_VERSION.$linux_PATCHLEVEL in
 
-    #
-    #  Linux 3.x section
-    #
+    2.*)
 
-    3.*)
+    echo "$me: Unsupported kernel version $linux_VERSION.$linux_PATCHLEVEL.x" >&2
+    exit 2
+    ;;
+
+    *)
 
     patch_architecture_specific="y"
 
@@ -418,16 +420,6 @@ test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
 	p="obj-\$(CONFIG_XENOMAI)		+= xenomai/"
 	( echo ; echo $p ) | patch_append kernel/Makefile
     fi
-    ;;
-
-    #
-    #  Paranoid section
-    #
-
-    *)
-
-    echo "$me: Unsupported kernel version $linux_VERSION.$linux_PATCHLEVEL.x" >&2
-    exit 2
     ;;
 
 esac
