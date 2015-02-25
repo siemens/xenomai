@@ -326,6 +326,7 @@ static void xnintr_vec_handler(unsigned int irq, void *cookie)
 		 * while running the interrupt service routine.
 		 */
 		ret = intr->isr(intr);
+		XENO_WARN_ON_ONCE(USER, (ret & XN_IRQ_STATMASK) == 0);
 		s |= ret;
 		if (ret & XN_IRQ_HANDLED) {
 			inc_irqstats(intr, sched, start);
@@ -398,6 +399,7 @@ static void xnintr_edge_vec_handler(unsigned int irq, void *cookie)
 		 * while running the interrupt service routine.
 		 */
 		ret = intr->isr(intr);
+		XENO_WARN_ON_ONCE(USER, (ret & XN_IRQ_STATMASK) == 0);
 		s |= ret;
 
 		if (ret & XN_IRQ_HANDLED) {
@@ -609,6 +611,7 @@ static void xnintr_irq_handler(unsigned int irq, void *cookie)
 	}
 
 	s = intr->isr(intr);
+	XENO_WARN_ON_ONCE(USER, (s & XN_IRQ_STATMASK) == 0);
 	if (unlikely(s & XN_IRQ_NONE)) {
 		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
