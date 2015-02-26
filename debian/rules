@@ -61,9 +61,6 @@ install: build
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
-	# xeno-config should be only in libxenomai-dev
-	rm -f $(CURDIR)/debian/xenomai-runtime/usr/bin/xeno-config
-	rm -f $(CURDIR)/debian/xenomai-runtime/usr/share/man/man1/xeno-config.1
 	for f in $(CURDIR)/kernel/cobalt/udev/*.rules ; do \
 	    cat $$f >> $(CURDIR)/debian/libxenomai1/etc/udev/xenomai.rules ; \
 	done
