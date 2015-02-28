@@ -58,13 +58,13 @@ void apc_dispatch(unsigned int virq, void *arg)
 	spin_lock(&apc_lock);
 
 	/* This is atomic linux context (non-threaded IRQ). */
-	p = &__this_cpu_ptr(&cobalt_machine_cpudata)->apc_pending;
+	p = &raw_cpu_ptr(&cobalt_machine_cpudata)->apc_pending;
 	while (*p) {
 		apc = ffnz(*p);
 		clear_bit(apc, p);
 		handler = cobalt_pipeline.apc_table[apc].handler;
 		cookie = cobalt_pipeline.apc_table[apc].cookie;
-		__this_cpu_ptr(&cobalt_machine_cpudata)->apc_shots[apc]++;
+		raw_cpu_ptr(&cobalt_machine_cpudata)->apc_shots[apc]++;
 		spin_unlock(&apc_lock);
 		handler(cookie);
 		spin_lock(&apc_lock);

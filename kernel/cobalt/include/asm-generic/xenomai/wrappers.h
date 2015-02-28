@@ -34,6 +34,9 @@
  * - keep the conditional structure flat, no nesting (e.g. do not nest
  *   the pre-3.11 conditions into the pre-3.14 ones).
  * - group all wrappers which share the same condition.
+ * - identify the first kernel release for which the wrapper should
+ *   be defined, instead of testing the existence of a preprocessor
+ *   symbol, so that obsolete wrappers can be spotted.
  */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
@@ -46,6 +49,10 @@
 #define get_current_uuid() current_uid()
 #else /* >= 3.14 */
 #define get_current_uuid() from_kuid_munged(current_user_ns(), current_uid())
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,15,0)
+#define raw_cpu_ptr(v)	__this_cpu_ptr(v)
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)

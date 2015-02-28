@@ -118,7 +118,7 @@ static void inc_irqstats(struct xnintr *intr, struct xnsched *sched, xnticks_t s
 {
 	struct xnirqstat *statp;
 
-	statp = __this_cpu_ptr(intr->stats);
+	statp = raw_cpu_ptr(intr->stats);
 	xnstat_counter_inc(&statp->hits);
 	xnstat_exectime_lazy_switch(sched, &statp->account, start);
 }
@@ -127,7 +127,7 @@ static inline void switch_irqstats(struct xnintr *intr, struct xnsched *sched)
 {
 	struct xnirqstat *statp;
 
-	statp = __this_cpu_ptr(intr->stats);
+	statp = raw_cpu_ptr(intr->stats);
 	xnstat_exectime_switch(sched, &statp->account);
 }
 

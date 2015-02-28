@@ -37,7 +37,7 @@ typedef struct xnstat_exectime {
 
 } xnstat_exectime_t;
 
-#define xnstat_percpu_data					__this_cpu_ptr(nktimer.stats)
+#define xnstat_percpu_data	raw_cpu_ptr(nktimer.stats)
 
 /* Return current date which can be passed to other xnstat services for
    immediate or lazy accounting. */

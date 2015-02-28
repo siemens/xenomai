@@ -35,7 +35,7 @@ void xnapc_free(int apc);
 
 static inline void __xnapc_schedule(int apc)
 {
-	unsigned long *p = &__this_cpu_ptr(&cobalt_machine_cpudata)->apc_pending;
+	unsigned long *p = &raw_cpu_ptr(&cobalt_machine_cpudata)->apc_pending;
 
 	if (!__test_and_set_bit(apc, p))
 		ipipe_post_irq_root(cobalt_pipeline.apc_virq);

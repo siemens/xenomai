@@ -190,7 +190,7 @@ static inline struct xnsched *xnsched_struct(int cpu)
 static inline struct xnsched *xnsched_current(void)
 {
 	/* IRQs off */
-	return __this_cpu_ptr(&nksched);
+	return raw_cpu_ptr(&nksched);
 }
 
 static inline struct xnthread *xnsched_current_thread(void)

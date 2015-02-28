@@ -185,7 +185,7 @@ xnclock_percpu_timerdata(struct xnclock *clock, int cpu)
 static inline struct xntimerdata *
 xnclock_this_timerdata(struct xnclock *clock)
 {
-	return __this_cpu_ptr(clock->timerdata);
+	return raw_cpu_ptr(clock->timerdata);
 }
 
 struct xntimer {
