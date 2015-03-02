@@ -638,6 +638,7 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
 XENO_BUILD_ARGS
+XENO_BUILD_COMPILER
 XENO_DEMO_DIR
 XENO_TEST_DIR
 XENO_FUSE_CFLAGS
@@ -5494,9 +5495,10 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 XENO_HOST_STRING="$host"
+XENO_BUILD_COMPILER="`$CC -v 2>&1 | tail -n 1`"
 
 cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_COMPILER "`$CC -v 2>&1 | tail -n 1`"
+#define CONFIG_XENO_COMPILER "$XENO_BUILD_COMPILER"
 _ACEOF
 
 
@@ -14509,6 +14511,7 @@ if test x$rtcore_type = xcobalt; then
 fi
 
 XENO_AUTOINIT_LDFLAGS="-Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
+
 
 
 
