@@ -9,6 +9,16 @@ AC_PREREQ(2.62)
 # defined for each architecture in the asm/features.h file.
 AC_INIT([Xenomai],m4_normalize(m4_include([config/version-label])),xenomai@xenomai.org)
 
+AC_CONFIG_HEADERS(include/xeno_config.h)
+AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_MACRO_DIR([config])
+AC_CONFIG_SRCDIR(lib/cobalt/thread.c)
+AC_PREFIX_DEFAULT(/usr/xenomai)
+# We want $prefix to be set for the configure script
+if test x$prefix = xNONE; then
+   prefix=$ac_default_prefix
+fi
+
 version_code=`cat $srcdir/config/version-code`
 CONFIG_XENO_VERSION_MAJOR=`expr $version_code : '\([[0-9]]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $version_code : '[[0-9]]*\.\([[0-9]]*\)'`
@@ -54,11 +64,6 @@ if eval test $includedir = /usr/include; then
   AC_MSG_ERROR([Using /usr/include as includedir is not supported. Please change your --prefix or specify another --includedir])
 fi
 
-AC_CONFIG_HEADERS(include/xeno_config.h)
-AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_MACRO_DIR([config])
-AC_CONFIG_SRCDIR(lib/cobalt/thread.c)
-AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_PROG_INSTALL
