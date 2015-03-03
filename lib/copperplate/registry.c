@@ -644,8 +644,8 @@ static int spawn_daemon(const char *sessdir)
 	pid = vfork();
 	switch (pid) {
 	case 0:
-		execlp(exec_path, "sysregd", "--daemon",
-		       "--root", sessdir, NULL);
+		execl(exec_path, "sysregd", "--daemon",
+		      "--root", sessdir, NULL);
 		_exit(1);
 	case -1:
 		sa.sa_handler = SIG_DFL;
