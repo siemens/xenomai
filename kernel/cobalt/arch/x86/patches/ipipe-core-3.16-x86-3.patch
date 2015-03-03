@@ -437,7 +437,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..7145c10
+index 0000000..68af8b7
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,118 @@
@@ -467,7 +467,7 @@ index 0000000..7145c10
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	2
++#define IPIPE_CORE_RELEASE	3
 +
 +struct ipipe_domain;
 +struct pt_regs;
@@ -2498,7 +2498,7 @@ index 1abcb50..dc6d438 100644
  	/*
  	 * When in-kernel, we also print out the stack and code at the
 diff --git a/arch/x86/kernel/entry_32.S b/arch/x86/kernel/entry_32.S
-index 0d0c9d4..6e6b88a 100644
+index 0d0c9d4..e834437 100644
 --- a/arch/x86/kernel/entry_32.S
 +++ b/arch/x86/kernel/entry_32.S
 @@ -45,6 +45,7 @@
@@ -2616,7 +2616,7 @@ index 0d0c9d4..6e6b88a 100644
  	LOCKDEP_SYS_EXIT
  	DISABLE_INTERRUPTS(CLBR_ANY)
  	TRACE_IRQS_OFF
-@@ -443,6 +503,23 @@ sysenter_exit:
+@@ -443,6 +503,24 @@ sysenter_exit:
  	PTGS_TO_GS
  	ENABLE_INTERRUPTS_SYSEXIT
  
@@ -2634,13 +2634,14 @@ index 0d0c9d4..6e6b88a 100644
 +	jmp sysenter_exit
 +sysenter_exit_root:
 +	call __ipipe_root_sync
++	movl PT_EAX(%esp),%eax
 +	jmp sysenter_exit_check
 +#endif
 +
  #ifdef CONFIG_AUDITSYSCALL
  sysenter_audit:
  	testl $(_TIF_WORK_SYSCALL_ENTRY & ~_TIF_SYSCALL_AUDIT),TI_flags(%ebp)
-@@ -495,6 +572,25 @@ ENTRY(system_call)
+@@ -495,6 +573,25 @@ ENTRY(system_call)
  	pushl_cfi %eax			# save orig_eax
  	SAVE_ALL
  	GET_THREAD_INFO(%ebp)
@@ -2666,7 +2667,7 @@ index 0d0c9d4..6e6b88a 100644
  					# system call tracing in operation / emulation
  	testl $_TIF_WORK_SYSCALL_ENTRY,TI_flags(%ebp)
  	jnz syscall_trace_entry
-@@ -596,6 +692,7 @@ work_pending:
+@@ -596,6 +693,7 @@ work_pending:
  	testb $_TIF_NEED_RESCHED, %cl
  	jz work_notifysig
  work_resched:
@@ -2674,7 +2675,7 @@ index 0d0c9d4..6e6b88a 100644
  	call schedule
  	LOCKDEP_SYS_EXIT
  	DISABLE_INTERRUPTS(CLBR_ANY)	# make sure we don't miss an interrupt
-@@ -611,6 +708,7 @@ work_resched:
+@@ -611,6 +709,7 @@ work_resched:
  
  work_notifysig:				# deal with pending signals and
  					# notify-resume requests
@@ -2682,7 +2683,7 @@ index 0d0c9d4..6e6b88a 100644
  #ifdef CONFIG_VM86
  	testl $X86_EFLAGS_VM, PT_EFLAGS(%esp)
  	movl %esp, %eax
-@@ -759,6 +857,58 @@ END(irq_entries_start)
+@@ -759,6 +858,58 @@ END(irq_entries_start)
  END(interrupt)
  .previous
  
@@ -2741,7 +2742,7 @@ index 0d0c9d4..6e6b88a 100644
  /*
   * the CPU automatically disables interrupts when executing an IRQ vector,
   * so IRQ-flags tracing has to follow that:
-@@ -788,6 +938,7 @@ ENTRY(name)				\
+@@ -788,6 +939,7 @@ ENTRY(name)				\
  	CFI_ENDPROC;			\
  ENDPROC(name)
  
@@ -2749,7 +2750,7 @@ index 0d0c9d4..6e6b88a 100644
  
  #ifdef CONFIG_TRACING
  #define TRACE_BUILD_INTERRUPT(name, nr)		\
-@@ -1275,9 +1426,15 @@ error_code:
+@@ -1275,9 +1427,15 @@ error_code:
  	movl $(__USER_DS), %ecx
  	movl %ecx, %ds
  	movl %ecx, %es
@@ -2765,7 +2766,7 @@ index 0d0c9d4..6e6b88a 100644
  	jmp ret_from_exception
  	CFI_ENDPROC
  END(page_fault)
-@@ -1317,7 +1474,9 @@ ENTRY(debug)
+@@ -1317,7 +1475,9 @@ ENTRY(debug)
  debug_stack_correct:
  	pushl_cfi $-1			# mark this as an int
  	SAVE_ALL
@@ -2775,7 +2776,7 @@ index 0d0c9d4..6e6b88a 100644
  	xorl %edx,%edx			# error code 0
  	movl %esp,%eax			# pt_regs pointer
  	call do_debug
-@@ -1413,7 +1572,9 @@ ENTRY(int3)
+@@ -1413,7 +1573,9 @@ ENTRY(int3)
  	ASM_CLAC
  	pushl_cfi $-1			# mark this as an int
  	SAVE_ALL
@@ -15306,10 +15307,35 @@ index f802c2d..b320432 100644
  #ifdef finish_arch_post_lock_switch
  	finish_arch_post_lock_switch();
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index c43d557..a9bb4c2 100644
+index c43d557..54e21a6 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
-@@ -252,6 +252,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
+@@ -71,7 +71,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 	struct mm_struct *mm = vma->vm_mm;
+ 	pte_t *pte, oldpte;
+ 	spinlock_t *ptl;
+-	unsigned long pages = 0;
++	unsigned long pages = 0, flags;
+ 
+ 	pte = lock_pte_protection(vma, pmd, addr, prot_numa, &ptl);
+ 	if (!pte)
+@@ -85,6 +85,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 			bool updated = false;
+ 
+ 			if (!prot_numa) {
++				flags = hard_local_irq_save();
+ 				ptent = ptep_modify_prot_start(mm, addr, pte);
+ 				if (pte_numa(ptent))
+ 					ptent = pte_mknonnuma(ptent);
+@@ -96,6 +97,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 				if (dirty_accountable && pte_dirty(ptent))
+ 					ptent = pte_mkwrite(ptent);
+ 				ptep_modify_prot_commit(mm, addr, pte, ptent);
++				hard_local_irq_restore(flags);
+ 				updated = true;
+ 			} else {
+ 				struct page *page;
+@@ -252,6 +254,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
  		pages = hugetlb_change_protection(vma, start, end, newprot);
  	else
  		pages = change_protection_range(vma, start, end, newprot, dirty_accountable, prot_numa);
