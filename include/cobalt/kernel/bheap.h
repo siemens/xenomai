@@ -80,6 +80,13 @@ static inline bheaph_t *__internal_bheap_gethead(bheap_t *heap)
 	return heap->elems[1];
 }
 
+#define bheap_second(heap)				\
+	({						\
+		bheap_t *_bheap = &(heap)->bheap;	\
+		BHEAP_CHECK(_bheap);			\
+		__internal_bheap_second(_bheap);	\
+	})
+
 #define bheap_next(heap, holder)			\
 	({						\
 		bheap_t *_bheap = &(heap)->bheap;	\
@@ -114,6 +121,19 @@ static inline bheaph_t *bheaph_child(bheap_t *heap, bheaph_t *holder, int side)
 	return likely(pos < heap->last) ? heap->elems[pos] : NULL;
 }
 
+static inline bheaph_t *__internal_bheap_second(bheap_t *heap)
+{
+	bheaph_t *left, *right, *first = __internal_bheap_gethead(heap);
+ 
+	left = bheaph_child(heap, first, 0);
+	right = bheaph_child(heap, first, 1);
+ 
+	if (!left || !right)
+		return left ?: right;
+ 
+	return bheaph_lt(left, right) ? left : right;
+}
+ 
 #define bheap_init(heap, sz) __internal_bheap_init(&(heap)->bheap, sz)
 
 static inline void __internal_bheap_init(bheap_t *heap, unsigned sz)

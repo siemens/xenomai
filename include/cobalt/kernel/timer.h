@@ -86,6 +86,12 @@ struct xntlholder {
 		h;							\
 	})
 
+#define xntlist_second(q)						\
+	({								\
+		struct xntlholder *_h = xntlist_head(q);		\
+		_h == NULL ? NULL : xntlist_next(q, _h);		\
+	})
+
 #define xntlist_next(q, h)						\
 	({								\
 		struct xntlholder *_h = list_is_last(&h->link, q) ? NULL : \
@@ -138,11 +144,17 @@ typedef DECLARE_BHEAP_CONTAINER(xntimerq_t, CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
 #define xntimerq_destroy(q)       bheap_destroy(q)
 #define xntimerq_empty(q)         bheap_empty(q)
 #define xntimerq_head(q)          bheap_gethead(q)
+#define xntimerq_second(q)        bheap_second(q)
 #define xntimerq_insert(q, h)     bheap_insert((q),(h))
 #define xntimerq_remove(q, h)     bheap_delete((q),(h))
 
 typedef struct {} xntimerq_it_t;
 
+/*
+ * BIG FAT WARNING: the iterator does NOT guarantee any particular
+ * order when returning elements (typically, items may be returned in
+ * random timestamp order).
+ */
 #define xntimerq_it_begin(q, i)   ((void) (i), bheap_gethead(q))
 #define xntimerq_it_next(q, i, h) ((void) (i), bheap_next((q),(h)))
 
@@ -160,7 +172,8 @@ typedef struct list_head xntimerq_t;
 #define xntimerq_destroy(q)     do { } while (0)
 #define xntimerq_empty(q)       xntlist_empty(q)
 #define xntimerq_head(q)        xntlist_head(q)
-#define xntimerq_insert(q,h)    xntlist_insert((q),(h))
+#define xntimerq_second(q)      xntlist_second(q)
+#define xntimerq_insert(q, h)   xntlist_insert((q),(h))
 #define xntimerq_remove(q, h)   xntlist_remove((q),(h))
 
 typedef struct { } xntimerq_it_t;

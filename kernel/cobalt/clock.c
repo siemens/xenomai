@@ -126,7 +126,6 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	struct xntimerdata *tmd;
 	struct xntimer *timer;
 	xnsticks_t delay;
-	xntimerq_it_t it;
 	xntimerh_t *h;
 
 	/*
@@ -138,7 +137,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 		return;
 
 	tmd = xnclock_this_timerdata(&nkclock);
-	h = xntimerq_it_begin(&tmd->q, &it);
+	h = xntimerq_head(&tmd->q);
 	if (h == NULL)
 		return;
 
@@ -167,7 +166,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	if (unlikely(timer == &sched->htimer)) {
 		if (xnsched_resched_p(sched) ||
 		    !xnthread_test_state(sched->curr, XNROOT)) {
-			h = xntimerq_it_next(&tmd->q, &it, h);
+			h = xntimerq_second(&tmd->q);
 			if (h) {
 				sched->lflags |= XNHDEFER;
 				timer = container_of(h, struct xntimer, aplink);

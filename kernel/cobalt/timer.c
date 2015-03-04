@@ -46,17 +46,16 @@
 int xntimer_heading_p(struct xntimer *timer)
 {
 	struct xnsched *sched = timer->sched;
-	xntimerq_it_t it;
 	xntimerq_t *q;
 	xntimerh_t *h;
 
 	q = xntimer_percpu_queue(timer);
-	h = xntimerq_it_begin(q, &it);
+	h = xntimerq_head(q);
 	if (h == &timer->aplink)
 		return 1;
 
 	if (sched->lflags & XNHDEFER) {
-		h = xntimerq_it_next(q, &it, h);
+		h = xntimerq_second(q);
 		if (h == &timer->aplink)
 			return 1;
 	}
