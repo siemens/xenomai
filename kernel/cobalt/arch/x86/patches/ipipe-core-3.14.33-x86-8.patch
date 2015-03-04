@@ -1,5 +1,5 @@
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 98aa930..91e382d 100644
+index 2f645c9..908b4f5 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -9,6 +9,7 @@ config 64BIT
@@ -50,7 +50,7 @@ index 98aa930..91e382d 100644
 +
  config X86_UP_APIC
  	bool "Local APIC support on uniprocessors"
- 	depends on X86_32 && !SMP && !X86_32_NON_STANDARD && !PCI_MSI
+ 	depends on X86_32 && !SMP && !X86_32_NON_STANDARD
 diff --git a/arch/x86/ia32/ia32entry.S b/arch/x86/ia32/ia32entry.S
 index 92a2e93..56aa429 100644
 --- a/arch/x86/ia32/ia32entry.S
@@ -202,7 +202,7 @@ index 4b528a9..0cf06c6 100644
  static inline void debug_stack_usage_inc(void)
  {
 diff --git a/arch/x86/include/asm/desc.h b/arch/x86/include/asm/desc.h
-index 50d033a..f87cb28 100644
+index a94b82e..e185603 100644
 --- a/arch/x86/include/asm/desc.h
 +++ b/arch/x86/include/asm/desc.h
 @@ -4,6 +4,7 @@
@@ -213,7 +213,7 @@ index 50d033a..f87cb28 100644
  
  #include <linux/smp.h>
  #include <linux/percpu.h>
-@@ -368,11 +369,16 @@ static inline void _set_gate(int gate, unsigned type, void *addr,
+@@ -376,11 +377,16 @@ static inline void _set_gate(int gate, unsigned type, void *addr,
   * Pentium F0 0F bugfix can have resulted in the mapped
   * IDT being write-protected.
   */
@@ -231,7 +231,7 @@ index 50d033a..f87cb28 100644
  		_trace_set_gate(n, GATE_INTERRUPT, (void *)trace_##addr,\
  				0, 0, __KERNEL_CS);			\
  	} while (0)
-@@ -384,6 +390,13 @@ extern unsigned long used_vectors[];
+@@ -392,6 +398,13 @@ extern unsigned long used_vectors[];
  static inline void alloc_system_vector(int vector)
  {
  	if (!test_bit(vector, used_vectors)) {
@@ -245,7 +245,7 @@ index 50d033a..f87cb28 100644
  		set_bit(vector, used_vectors);
  		if (first_system_vector > vector)
  			first_system_vector = vector;
-@@ -392,6 +405,12 @@ static inline void alloc_system_vector(int vector)
+@@ -400,6 +413,12 @@ static inline void alloc_system_vector(int vector)
  	}
  }
  
@@ -258,7 +258,7 @@ index 50d033a..f87cb28 100644
  #define alloc_intr_gate(n, addr)				\
  	do {							\
  		alloc_system_vector(n);				\
-@@ -437,7 +456,7 @@ static inline void set_system_intr_gate_ist(int n, void *addr, unsigned ist)
+@@ -445,7 +464,7 @@ static inline void set_system_intr_gate_ist(int n, void *addr, unsigned ist)
  	_set_gate(n, GATE_INTERRUPT, addr, 0x3, ist, __KERNEL_CS);
  }
  
@@ -442,7 +442,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..f6df562
+index 0000000..a244663
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,96 @@
@@ -472,7 +472,7 @@ index 0000000..f6df562
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	7
++#define IPIPE_CORE_RELEASE	8
 +
 +struct ipipe_domain;
 +
@@ -1664,7 +1664,7 @@ index 2c621a6..18b3219 100644
  
  static void flat_send_IPI_mask(const struct cpumask *cpumask, int vector)
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 6ad4658..c97b856 100644
+index 6ad4658..9233e45 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
 @@ -71,8 +71,8 @@
@@ -1809,7 +1809,7 @@ index 6ad4658..c97b856 100644
  
  	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
  }
-@@ -2139,7 +2180,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+@@ -2139,11 +2180,12 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
  
  	raw_spin_lock_irqsave(&ioapic_lock, flags);
  	if (irq < legacy_pic->nr_legacy_irqs) {
@@ -1818,7 +1818,12 @@ index 6ad4658..c97b856 100644
  		if (legacy_pic->irq_pending(irq))
  			was_pending = 1;
  	}
-@@ -2198,7 +2239,8 @@ asmlinkage void smp_irq_move_cleanup_interrupt(void)
+ 	__unmask_ioapic(data->chip_data);
++	ipipe_unlock_irq(irq);
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 
+ 	return was_pending;
+@@ -2198,7 +2240,8 @@ asmlinkage void smp_irq_move_cleanup_interrupt(void)
  	exit_idle();
  
  	me = smp_processor_id();
@@ -1828,7 +1833,7 @@ index 6ad4658..c97b856 100644
  		int irq;
  		unsigned int irr;
  		struct irq_desc *desc;
-@@ -2359,14 +2401,16 @@ int native_ioapic_set_affinity(struct irq_data *data,
+@@ -2359,14 +2402,16 @@ int native_ioapic_set_affinity(struct irq_data *data,
  
  static void ack_apic_edge(struct irq_data *data)
  {
@@ -1847,7 +1852,7 @@ index 6ad4658..c97b856 100644
  static bool io_apic_level_ack_pending(struct irq_cfg *cfg)
  {
  	struct irq_pin_list *entry;
-@@ -2394,7 +2438,7 @@ static inline bool ioapic_irqd_mask(struct irq_data *data, struct irq_cfg *cfg)
+@@ -2394,7 +2439,7 @@ static inline bool ioapic_irqd_mask(struct irq_data *data, struct irq_cfg *cfg)
  {
  	/* If we are moving the irq we need to mask it */
  	if (unlikely(irqd_is_setaffinity_pending(data))) {
@@ -1856,7 +1861,7 @@ index 6ad4658..c97b856 100644
  		return true;
  	}
  	return false;
-@@ -2432,7 +2476,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+@@ -2432,7 +2477,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
  		 */
  		if (!io_apic_level_ack_pending(cfg))
  			irq_move_masked_irq(data);
@@ -1865,7 +1870,7 @@ index 6ad4658..c97b856 100644
  	}
  }
  #else
-@@ -2446,12 +2490,46 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+@@ -2446,12 +2491,46 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
  }
  #endif
  
@@ -1913,7 +1918,7 @@ index 6ad4658..c97b856 100644
  
  	irq_complete_move(cfg);
  	masked = ioapic_irqd_mask(data, cfg);
-@@ -2511,8 +2589,50 @@ static void ack_apic_level(struct irq_data *data)
+@@ -2511,8 +2590,50 @@ static void ack_apic_level(struct irq_data *data)
  	}
  
  	ioapic_irqd_unmask(data, cfg, masked);
@@ -1964,7 +1969,7 @@ index 6ad4658..c97b856 100644
  static struct irq_chip ioapic_chip __read_mostly = {
  	.name			= "IO-APIC",
  	.irq_startup		= startup_ioapic_irq,
-@@ -2522,6 +2642,13 @@ static struct irq_chip ioapic_chip __read_mostly = {
+@@ -2522,6 +2643,13 @@ static struct irq_chip ioapic_chip __read_mostly = {
  	.irq_eoi		= ack_apic_level,
  	.irq_set_affinity	= native_ioapic_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -1978,7 +1983,7 @@ index 6ad4658..c97b856 100644
  };
  
  static inline void init_IO_APIC_traps(void)
-@@ -2563,23 +2690,29 @@ static inline void init_IO_APIC_traps(void)
+@@ -2563,23 +2691,29 @@ static inline void init_IO_APIC_traps(void)
  
  static void mask_lapic_irq(struct irq_data *data)
  {
@@ -2011,7 +2016,7 @@ index 6ad4658..c97b856 100644
  }
  
  static struct irq_chip lapic_chip __read_mostly = {
-@@ -2587,6 +2720,9 @@ static struct irq_chip lapic_chip __read_mostly = {
+@@ -2587,6 +2721,9 @@ static struct irq_chip lapic_chip __read_mostly = {
  	.irq_mask	= mask_lapic_irq,
  	.irq_unmask	= unmask_lapic_irq,
  	.irq_ack	= ack_lapic_irq,
@@ -2021,7 +2026,7 @@ index 6ad4658..c97b856 100644
  };
  
  static void lapic_register_intr(int irq)
-@@ -2687,7 +2823,7 @@ static inline void __init check_timer(void)
+@@ -2687,7 +2824,7 @@ static inline void __init check_timer(void)
  	/*
  	 * get/set the timer IRQ vector:
  	 */
@@ -2030,7 +2035,7 @@ index 6ad4658..c97b856 100644
  	assign_irq_vector(0, cfg, apic->target_cpus());
  
  	/*
-@@ -2744,7 +2880,7 @@ static inline void __init check_timer(void)
+@@ -2744,7 +2881,7 @@ static inline void __init check_timer(void)
  			int idx;
  			idx = find_irq_entry(apic1, pin1, mp_INT);
  			if (idx != -1 && irq_trigger(idx))
@@ -2039,7 +2044,7 @@ index 6ad4658..c97b856 100644
  		}
  		if (timer_irq_works()) {
  			if (disable_timer_pin_1 > 0)
-@@ -2777,7 +2913,7 @@ static inline void __init check_timer(void)
+@@ -2777,7 +2914,7 @@ static inline void __init check_timer(void)
  		 * Cleanup, just in case ...
  		 */
  		local_irq_disable();
@@ -2048,7 +2053,7 @@ index 6ad4658..c97b856 100644
  		clear_IO_APIC_pin(apic2, pin2);
  		apic_printk(APIC_QUIET, KERN_INFO "....... failed.\n");
  	}
-@@ -2786,6 +2922,10 @@ static inline void __init check_timer(void)
+@@ -2786,6 +2923,10 @@ static inline void __init check_timer(void)
  		    "...trying to set up timer as Virtual Wire IRQ...\n");
  
  	lapic_register_intr(0);
@@ -2059,7 +2064,7 @@ index 6ad4658..c97b856 100644
  	apic_write(APIC_LVT0, APIC_DM_FIXED | cfg->vector);	/* Fixed mode */
  	legacy_pic->unmask(0);
  
-@@ -2794,7 +2934,7 @@ static inline void __init check_timer(void)
+@@ -2794,7 +2935,7 @@ static inline void __init check_timer(void)
  		goto out;
  	}
  	local_irq_disable();
@@ -2068,7 +2073,7 @@ index 6ad4658..c97b856 100644
  	apic_write(APIC_LVT0, APIC_LVT_MASKED | APIC_DM_FIXED | cfg->vector);
  	apic_printk(APIC_QUIET, KERN_INFO "..... failed.\n");
  
-@@ -3102,6 +3242,9 @@ static struct irq_chip msi_chip = {
+@@ -3102,6 +3243,9 @@ static struct irq_chip msi_chip = {
  	.irq_ack		= ack_apic_edge,
  	.irq_set_affinity	= msi_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2078,7 +2083,7 @@ index 6ad4658..c97b856 100644
  };
  
  int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-@@ -3201,6 +3344,9 @@ static struct irq_chip dmar_msi_type = {
+@@ -3201,6 +3345,9 @@ static struct irq_chip dmar_msi_type = {
  	.irq_ack		= ack_apic_edge,
  	.irq_set_affinity	= dmar_msi_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2088,7 +2093,7 @@ index 6ad4658..c97b856 100644
  };
  
  int arch_setup_dmar_msi(unsigned int irq)
-@@ -3249,6 +3395,9 @@ static struct irq_chip hpet_msi_type = {
+@@ -3249,6 +3396,9 @@ static struct irq_chip hpet_msi_type = {
  	.irq_ack = ack_apic_edge,
  	.irq_set_affinity = hpet_msi_set_affinity,
  	.irq_retrigger = ioapic_retrigger_irq,
@@ -2098,7 +2103,7 @@ index 6ad4658..c97b856 100644
  };
  
  int default_setup_hpet_msi(unsigned int irq, unsigned int id)
-@@ -3310,6 +3459,9 @@ static struct irq_chip ht_irq_chip = {
+@@ -3310,6 +3460,9 @@ static struct irq_chip ht_irq_chip = {
  	.irq_ack		= ack_apic_edge,
  	.irq_set_affinity	= ht_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2108,7 +2113,7 @@ index 6ad4658..c97b856 100644
  };
  
  int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
-@@ -3597,6 +3749,18 @@ int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity)
+@@ -3597,6 +3750,18 @@ int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity)
  	return 0;
  }
  
@@ -2431,7 +2436,7 @@ index 66e274a..9ce7358 100644
  	/*
  	 * When in-kernel, we also print out the stack and code at the
 diff --git a/arch/x86/kernel/entry_32.S b/arch/x86/kernel/entry_32.S
-index c5a9cb9..1a8704f 100644
+index c5a9cb9..1c20915 100644
 --- a/arch/x86/kernel/entry_32.S
 +++ b/arch/x86/kernel/entry_32.S
 @@ -45,6 +45,7 @@
@@ -2571,7 +2576,7 @@ index c5a9cb9..1a8704f 100644
  	LOCKDEP_SYS_EXIT
  	DISABLE_INTERRUPTS(CLBR_ANY)
  	TRACE_IRQS_OFF
-@@ -451,6 +533,23 @@ sysenter_exit:
+@@ -451,6 +533,24 @@ sysenter_exit:
  	PTGS_TO_GS
  	ENABLE_INTERRUPTS_SYSEXIT
  
@@ -2589,13 +2594,14 @@ index c5a9cb9..1a8704f 100644
 +	jmp sysenter_exit
 +sysenter_exit_root:
 +	call __ipipe_root_sync
++	movl PT_EAX(%esp),%eax
 +	jmp sysenter_exit_check
 +#endif
 +
  #ifdef CONFIG_AUDITSYSCALL
  sysenter_audit:
  	testl $(_TIF_WORK_SYSCALL_ENTRY & ~_TIF_SYSCALL_AUDIT),TI_flags(%ebp)
-@@ -507,6 +606,25 @@ ENTRY(system_call)
+@@ -507,6 +607,25 @@ ENTRY(system_call)
  	pushl_cfi %eax			# save orig_eax
  	SAVE_ALL
  	GET_THREAD_INFO(%ebp)
@@ -2621,7 +2627,7 @@ index c5a9cb9..1a8704f 100644
  					# system call tracing in operation / emulation
  	testl $_TIF_WORK_SYSCALL_ENTRY,TI_flags(%ebp)
  	jnz syscall_trace_entry
-@@ -548,7 +666,7 @@ irq_return:
+@@ -548,7 +667,7 @@ irq_return:
  .section .fixup,"ax"
  ENTRY(iret_exc)
  	pushl $0			# no error code
@@ -2630,7 +2636,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  .previous
  	_ASM_EXTABLE(irq_return,iret_exc)
-@@ -608,6 +726,7 @@ work_pending:
+@@ -608,6 +727,7 @@ work_pending:
  	testb $_TIF_NEED_RESCHED, %cl
  	jz work_notifysig
  work_resched:
@@ -2638,7 +2644,7 @@ index c5a9cb9..1a8704f 100644
  	call schedule
  	LOCKDEP_SYS_EXIT
  	DISABLE_INTERRUPTS(CLBR_ANY)	# make sure we don't miss an interrupt
-@@ -623,6 +742,7 @@ work_resched:
+@@ -623,6 +743,7 @@ work_resched:
  
  work_notifysig:				# deal with pending signals and
  					# notify-resume requests
@@ -2646,7 +2652,7 @@ index c5a9cb9..1a8704f 100644
  #ifdef CONFIG_VM86
  	testl $X86_EFLAGS_VM, PT_EFLAGS(%esp)
  	movl %esp, %eax
-@@ -775,6 +895,58 @@ END(irq_entries_start)
+@@ -775,6 +896,58 @@ END(irq_entries_start)
  END(interrupt)
  .previous
  
@@ -2705,7 +2711,7 @@ index c5a9cb9..1a8704f 100644
  /*
   * the CPU automatically disables interrupts when executing an IRQ vector,
   * so IRQ-flags tracing has to follow that:
-@@ -808,6 +980,7 @@ ENTRY(name)				\
+@@ -808,6 +981,7 @@ ENTRY(name)				\
  	CFI_ENDPROC;			\
  ENDPROC(name)
  
@@ -2713,7 +2719,7 @@ index c5a9cb9..1a8704f 100644
  
  #ifdef CONFIG_TRACING
  #define TRACE_BUILD_INTERRUPT(name, nr)		\
-@@ -827,7 +1000,7 @@ ENTRY(coprocessor_error)
+@@ -827,7 +1001,7 @@ ENTRY(coprocessor_error)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2722,7 +2728,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(coprocessor_error)
-@@ -838,17 +1011,17 @@ ENTRY(simd_coprocessor_error)
+@@ -838,17 +1012,17 @@ ENTRY(simd_coprocessor_error)
  	pushl_cfi $0
  #ifdef CONFIG_X86_INVD_BUG
  	/* AMD 486 bug: invd from userspace calls exception 19 instead of #GP */
@@ -2743,7 +2749,7 @@ index c5a9cb9..1a8704f 100644
  #endif
  	jmp error_code
  	CFI_ENDPROC
-@@ -858,7 +1031,7 @@ ENTRY(device_not_available)
+@@ -858,7 +1032,7 @@ ENTRY(device_not_available)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $-1			# mark this as an int
@@ -2752,7 +2758,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(device_not_available)
-@@ -879,7 +1052,7 @@ ENTRY(overflow)
+@@ -879,7 +1053,7 @@ ENTRY(overflow)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2761,7 +2767,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(overflow)
-@@ -888,7 +1061,7 @@ ENTRY(bounds)
+@@ -888,7 +1062,7 @@ ENTRY(bounds)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2770,7 +2776,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(bounds)
-@@ -897,7 +1070,7 @@ ENTRY(invalid_op)
+@@ -897,7 +1071,7 @@ ENTRY(invalid_op)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2779,7 +2785,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(invalid_op)
-@@ -906,7 +1079,7 @@ ENTRY(coprocessor_segment_overrun)
+@@ -906,7 +1080,7 @@ ENTRY(coprocessor_segment_overrun)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2788,7 +2794,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(coprocessor_segment_overrun)
-@@ -914,7 +1087,7 @@ END(coprocessor_segment_overrun)
+@@ -914,7 +1088,7 @@ END(coprocessor_segment_overrun)
  ENTRY(invalid_TSS)
  	RING0_EC_FRAME
  	ASM_CLAC
@@ -2797,7 +2803,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(invalid_TSS)
-@@ -922,7 +1095,7 @@ END(invalid_TSS)
+@@ -922,7 +1096,7 @@ END(invalid_TSS)
  ENTRY(segment_not_present)
  	RING0_EC_FRAME
  	ASM_CLAC
@@ -2806,7 +2812,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(segment_not_present)
-@@ -930,7 +1103,7 @@ END(segment_not_present)
+@@ -930,7 +1104,7 @@ END(segment_not_present)
  ENTRY(stack_segment)
  	RING0_EC_FRAME
  	ASM_CLAC
@@ -2815,7 +2821,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(stack_segment)
-@@ -938,7 +1111,7 @@ END(stack_segment)
+@@ -938,7 +1112,7 @@ END(stack_segment)
  ENTRY(alignment_check)
  	RING0_EC_FRAME
  	ASM_CLAC
@@ -2824,7 +2830,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(alignment_check)
-@@ -947,7 +1120,7 @@ ENTRY(divide_error)
+@@ -947,7 +1121,7 @@ ENTRY(divide_error)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0			# no error code
@@ -2833,7 +2839,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(divide_error)
-@@ -957,7 +1130,7 @@ ENTRY(machine_check)
+@@ -957,7 +1131,7 @@ ENTRY(machine_check)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2842,7 +2848,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(machine_check)
-@@ -967,7 +1140,7 @@ ENTRY(spurious_interrupt_bug)
+@@ -967,7 +1141,7 @@ ENTRY(spurious_interrupt_bug)
  	RING0_INT_FRAME
  	ASM_CLAC
  	pushl_cfi $0
@@ -2851,7 +2857,7 @@ index c5a9cb9..1a8704f 100644
  	jmp error_code
  	CFI_ENDPROC
  END(spurious_interrupt_bug)
-@@ -1267,7 +1440,7 @@ END(trace_page_fault)
+@@ -1267,7 +1441,7 @@ END(trace_page_fault)
  ENTRY(page_fault)
  	RING0_EC_FRAME
  	ASM_CLAC
@@ -2860,7 +2866,7 @@ index c5a9cb9..1a8704f 100644
  	ALIGN
  error_code:
  	/* the function address is in %gs's slot on the stack */
-@@ -1304,9 +1477,11 @@ error_code:
+@@ -1304,9 +1478,11 @@ error_code:
  	movl $(__USER_DS), %ecx
  	movl %ecx, %ds
  	movl %ecx, %es
@@ -2873,7 +2879,7 @@ index c5a9cb9..1a8704f 100644
  	jmp ret_from_exception
  	CFI_ENDPROC
  END(page_fault)
-@@ -1346,6 +1521,7 @@ ENTRY(debug)
+@@ -1346,6 +1522,7 @@ ENTRY(debug)
  debug_stack_correct:
  	pushl_cfi $-1			# mark this as an int
  	SAVE_ALL
@@ -2881,7 +2887,7 @@ index c5a9cb9..1a8704f 100644
  	TRACE_IRQS_OFF
  	xorl %edx,%edx			# error code 0
  	movl %esp,%eax			# pt_regs pointer
-@@ -1442,6 +1618,7 @@ ENTRY(int3)
+@@ -1442,6 +1619,7 @@ ENTRY(int3)
  	ASM_CLAC
  	pushl_cfi $-1			# mark this as an int
  	SAVE_ALL
@@ -2889,7 +2895,7 @@ index c5a9cb9..1a8704f 100644
  	TRACE_IRQS_OFF
  	xorl %edx,%edx		# zero error code
  	movl %esp,%eax		# pt_regs pointer
-@@ -1452,7 +1629,7 @@ END(int3)
+@@ -1452,7 +1630,7 @@ END(int3)
  
  ENTRY(general_protection)
  	RING0_EC_FRAME
@@ -4647,7 +4653,7 @@ index 6828765..5f10db9 100644
  	while (!cpu_online(cpu)) {
  		cpu_relax();
 diff --git a/arch/x86/kernel/traps.c b/arch/x86/kernel/traps.c
-index f9d976e..19b33b5 100644
+index b1d9002..9cf6e8e 100644
 --- a/arch/x86/kernel/traps.c
 +++ b/arch/x86/kernel/traps.c
 @@ -102,7 +102,16 @@ static inline void conditional_cli(struct pt_regs *regs)
@@ -4714,7 +4720,7 @@ index f9d976e..19b33b5 100644
  	set_intr_gate(X86_TRAP_PF, page_fault);
  #endif
 diff --git a/arch/x86/kernel/tsc.c b/arch/x86/kernel/tsc.c
-index de02906..63c0889 100644
+index b20bced..b17a543 100644
 --- a/arch/x86/kernel/tsc.c
 +++ b/arch/x86/kernel/tsc.c
 @@ -652,15 +652,15 @@ unsigned long native_calibrate_tsc(void)
@@ -4871,10 +4877,10 @@ index 9643eda6..7fdc371 100644
  }
  
 diff --git a/arch/x86/kvm/vmx.c b/arch/x86/kvm/vmx.c
-index 0c90f4b..ab0f47b 100644
+index 80c22a3..c1157a4 100644
 --- a/arch/x86/kvm/vmx.c
 +++ b/arch/x86/kvm/vmx.c
-@@ -1758,9 +1758,11 @@ static void __vmx_load_host_state(struct vcpu_vmx *vmx)
+@@ -1759,9 +1759,11 @@ static void __vmx_load_host_state(struct vcpu_vmx *vmx)
  
  static void vmx_load_host_state(struct vcpu_vmx *vmx)
  {
@@ -4888,7 +4894,7 @@ index 0c90f4b..ab0f47b 100644
  }
  
  /*
-@@ -2060,6 +2062,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
+@@ -2061,6 +2063,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
  {
  	int save_nmsrs, index;
  
@@ -4896,7 +4902,7 @@ index 0c90f4b..ab0f47b 100644
  	save_nmsrs = 0;
  #ifdef CONFIG_X86_64
  	if (is_long_mode(&vmx->vcpu)) {
-@@ -2089,6 +2092,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
+@@ -2090,6 +2093,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
  		move_msr_up(vmx, index, save_nmsrs++);
  
  	vmx->save_nmsrs = save_nmsrs;
@@ -4904,7 +4910,7 @@ index 0c90f4b..ab0f47b 100644
  
  	if (cpu_has_vmx_msr_bitmap())
  		vmx_set_msr_bitmap(&vmx->vcpu);
-@@ -7058,8 +7062,10 @@ static void vmx_handle_external_intr(struct kvm_vcpu *vcpu)
+@@ -7064,8 +7068,10 @@ static void vmx_handle_external_intr(struct kvm_vcpu *vcpu)
  			[ss]"i"(__KERNEL_DS),
  			[cs]"i"(__KERNEL_CS)
  			);
@@ -4916,7 +4922,7 @@ index 0c90f4b..ab0f47b 100644
  }
  
  static void vmx_recover_nmi_blocking(struct vcpu_vmx *vmx)
-@@ -7430,7 +7436,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
+@@ -7442,7 +7448,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
  	vmx_vcpu_load(&vmx->vcpu, cpu);
  	vmx->vcpu.cpu = cpu;
  	err = vmx_vcpu_setup(vmx);
@@ -4926,7 +4932,7 @@ index 0c90f4b..ab0f47b 100644
  	put_cpu();
  	if (err)
  		goto free_vmcs;
-@@ -7453,6 +7461,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
+@@ -7465,6 +7473,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
  
  	vmx->nested.current_vmptr = -1ull;
  	vmx->nested.current_vmcs12 = NULL;
@@ -13813,7 +13819,7 @@ index 452d6f2..7f20d7c 100644
  }
  
 diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index 001fa5b..4dad5c7 100644
+index 8a160e8..8a62f8b 100644
 --- a/kernel/irq/internals.h
 +++ b/kernel/irq/internals.h
 @@ -53,6 +53,9 @@ enum {
@@ -13827,7 +13833,7 @@ index 001fa5b..4dad5c7 100644
  
  #include "debug.h"
 diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 8ab8e93..5261b2a 100644
+index 07d4551..dc0af3d 100644
 --- a/kernel/irq/irqdesc.c
 +++ b/kernel/irq/irqdesc.c
 @@ -91,6 +91,9 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
@@ -13840,7 +13846,7 @@ index 8ab8e93..5261b2a 100644
  }
  
  int nr_irqs = NR_IRQS;
-@@ -270,11 +273,13 @@ int __init early_irq_init(void)
+@@ -286,11 +289,13 @@ int __init early_irq_init(void)
  	return arch_early_irq_init();
  }
  
@@ -14680,7 +14686,7 @@ index 0de9d7f..7615cff 100644
  }
  
 diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
-index 6558b7a..f0ddb74 100644
+index 8c08a6f..a21ec0f 100644
 --- a/kernel/time/tick-sched.c
 +++ b/kernel/time/tick-sched.c
 @@ -148,7 +148,7 @@ static void tick_sched_handle(struct tick_sched *ts, struct pt_regs *regs)
@@ -15024,7 +15030,7 @@ index 2aefbee..c3ec43f 100644
  }
  EXPORT_SYMBOL(trace_hardirqs_off_caller);
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index a48abea..50cc0312 100644
+index a48abea..0e8ae4a 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -312,6 +312,7 @@ config MAGIC_SYSRQ
@@ -15053,6 +15059,15 @@ index a48abea..50cc0312 100644
  	---help---
  	  Say Y here if you want to check for overflows of kernel, IRQ
  	  and exception stacks (if your archicture uses them). This
+@@ -1088,7 +1091,7 @@ menu "RCU Debugging"
+ 
+ config PROVE_RCU
+ 	bool "RCU debugging: prove RCU correctness"
+-	depends on PROVE_LOCKING
++	depends on PROVE_LOCKING && !IPIPE
+ 	default n
+ 	help
+ 	 This feature enables lockdep extensions that check for correct
 diff --git a/lib/atomic64.c b/lib/atomic64.c
 index 08a4f06..15810f4 100644
 --- a/lib/atomic64.c
@@ -15244,7 +15259,7 @@ index 0862816..aacbf2df 100644
  	help
  	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
-index 48d7365..e23fa86 100644
+index 7f30bea..100a209 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -788,6 +788,34 @@ out:
@@ -15315,7 +15330,7 @@ index 48d7365..e23fa86 100644
  		ptep_set_wrprotect(src_mm, addr, src_pte);
  		pte = pte_wrprotect(pte);
  	}
-@@ -888,13 +931,27 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -888,13 +931,27 @@ static int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	int progress = 0;
  	int rss[NR_MM_COUNTERS];
  	swp_entry_t entry = (swp_entry_t){0};
@@ -15483,7 +15498,7 @@ index b1eb536..ca23f83 100644
 +}
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index b91ac80..47ee8c0 100644
+index 085bcd8..ef56280 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
 @@ -45,6 +45,10 @@
@@ -15497,7 +15512,7 @@ index b91ac80..47ee8c0 100644
  #ifndef arch_mmap_check
  #define arch_mmap_check(addr, len, flags)	(0)
  #endif
-@@ -2613,7 +2617,7 @@ static unsigned long do_brk(unsigned long addr, unsigned long len)
+@@ -2616,7 +2620,7 @@ static unsigned long do_brk(unsigned long addr, unsigned long len)
  
  	flags = VM_DATA_DEFAULT_FLAGS | VM_ACCOUNT | mm->def_flags;
  
@@ -15548,7 +15563,7 @@ index 769a67a..8c40894 100644
  
  	return pages;
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 0fdf968..4a96f40 100644
+index aa3891e..5c756384 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -191,6 +191,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
