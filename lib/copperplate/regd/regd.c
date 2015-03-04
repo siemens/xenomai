@@ -159,7 +159,7 @@ static void create_rootdir(void)
 
 	if (*rootdir != '/')
 		error(1, EINVAL, "absolute root directory path required");
-		
+
 	ret = create_directory_recursive(rootdir);
 	if (ret)
 		error(1, -ret, "create_directory_recursive(\"%s\")", rootdir);
@@ -387,9 +387,24 @@ static void create_system_fs(const char *arg0, const char *rootdir)
 		error(1, ENOMEM, "malloc");
 
 	ret = create_directory_recursive(mountpt);
-	if (ret)
+	if (ret) {
+		/*
+		 * Before giving up, try to cleanup a left over, in
+		 * case a former sysregd instance died ungracefully.
+		 * Receiving ENOTCONN when creating the /system root
+		 * is the sign that we may be attempting to walk a
+		 * stale tree.
+		 */
+		if (ret == -ENOTCONN) {
+			unmount(mountpt);
+			ret = create_directory_recursive(mountpt);
+			if (ret == 0)
+				goto bootstrap;
+		}
 		error(1, -ret, "create_directory_recursive(\"%s\")", mountpt);
+	}
 
+bootstrap:
 	atexit(delete_system_fs);
 
 	CPU_ZERO(&__node_info.cpu_affinity);
