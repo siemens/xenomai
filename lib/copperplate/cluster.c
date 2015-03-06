@@ -90,12 +90,15 @@
 
 #include <errno.h>
 #include <string.h>
+#include <memory.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/cluster.h"
 #include "copperplate/syncobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/debug.h"
 #include "internal.h"
+
+const static struct hash_operations hash_operations;
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -115,7 +118,8 @@ int cluster_init(struct cluster *c, const char *name)
 	 * clusters.
 	 */
 redo:
-	hobj = hash_search(&main_catalog, name, strlen(name));
+	hobj = hash_search(&main_catalog, name, strlen(name),
+			   &hash_operations);
 	if (hobj) {
 		d = container_of(hobj, struct dictionary, hobj);
 		goto out;
@@ -127,8 +131,9 @@ redo:
 		goto out;
 	}
 
-	hash_init(&d->table, hash_compare_strings);
-	ret = hash_enter(&main_catalog, name, strlen(name), &d->hobj);
+	hash_init(&d->table);
+	ret = hash_enter(&main_catalog, name, strlen(name), &d->hobj,
+			 &hash_operations);
 	if (ret == -EEXIST) {
 		/*
 		 * Someone seems to have slipped in, creating the
@@ -171,7 +176,7 @@ int cluster_addobj(struct cluster *c, const char *name,
 	 * fly.
 	 */
 	return hash_enter_probe(&c->d->table, name, strlen(name),
-				&cobj->hobj, cluster_probe);
+				&cobj->hobj, &hash_operations);
 }
 
 int cluster_addobj_dup(struct cluster *c, const char *name,
@@ -183,12 +188,12 @@ int cluster_addobj_dup(struct cluster *c, const char *name,
 	 * live objects.
 	 */
 	return hash_enter_probe_dup(&c->d->table, name, strlen(name),
-				    &cobj->hobj, cluster_probe);
+				    &cobj->hobj, &hash_operations);
 }
 
 int cluster_delobj(struct cluster *c, struct clusterobj *cobj)
 {
-	return __bt(hash_remove(&c->d->table, &cobj->hobj));
+	return __bt(hash_remove(&c->d->table, &cobj->hobj, &hash_operations));
 }
 
 struct clusterobj *cluster_findobj(struct cluster *c, const char *name)
@@ -200,7 +205,7 @@ struct clusterobj *cluster_findobj(struct cluster *c, const char *name)
 	 * discarding dead instances on the fly.
 	 */
 	hobj = hash_search_probe(&c->d->table, name, strlen(name),
-				 cluster_probe);
+				 &hash_operations);
 	if (hobj == NULL)
 		return NULL;
 
@@ -319,11 +324,28 @@ out:
 	return ret;
 }
 
+const static struct hash_operations hash_operations = {
+	.compare = memcmp,
+	.probe = cluster_probe,
+	.alloc = xnmalloc,
+	.free = xnfree,
+};
+
+const static struct pvhash_operations pvhash_operations = {
+	.compare = memcmp,
+};
+
+#else /* !CONFIG_XENO_PSHARED */
+
+const static struct hash_operations hash_operations = {
+	.compare = memcmp,
+};
+
 #endif /* !CONFIG_XENO_PSHARED */
 
 int pvcluster_init(struct pvcluster *c, const char *name)
 {
-	pvhash_init(&c->table, pvhash_compare_strings);
+	pvhash_init(&c->table);
 	return 0;
 }
 
@@ -335,25 +357,28 @@ void pvcluster_destroy(struct pvcluster *c)
 int pvcluster_addobj(struct pvcluster *c, const char *name,
 		     struct pvclusterobj *cobj)
 {
-	return pvhash_enter(&c->table, name, strlen(name), &cobj->hobj);
+	return pvhash_enter(&c->table, name, strlen(name), &cobj->hobj,
+			    &pvhash_operations);
 }
 
 int pvcluster_addobj_dup(struct pvcluster *c, const char *name,
 			 struct pvclusterobj *cobj)
 {
-	return pvhash_enter_dup(&c->table, name, strlen(name), &cobj->hobj);
+	return pvhash_enter_dup(&c->table, name, strlen(name), &cobj->hobj,
+				&pvhash_operations);
 }
 
 int pvcluster_delobj(struct pvcluster *c, struct pvclusterobj *cobj)
 {
-	return __bt(pvhash_remove(&c->table, &cobj->hobj));
+	return __bt(pvhash_remove(&c->table, &cobj->hobj, &pvhash_operations));
 }
 
 struct pvclusterobj *pvcluster_findobj(struct pvcluster *c, const char *name)
 {
 	struct pvhashobj *hobj;
 
-	hobj = pvhash_search(&c->table, name, strlen(name));
+	hobj = pvhash_search(&c->table, name, strlen(name),
+			     &pvhash_operations);
 	if (hobj == NULL)
 		return NULL;
 

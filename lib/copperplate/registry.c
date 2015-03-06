@@ -87,6 +87,10 @@ struct regfs_dir {
 	struct pvholder link;
 };
 
+const static struct pvhash_operations pvhash_operations = {
+	.compare = memcmp,
+};
+
 int registry_add_dir(const char *fmt, ...)
 {
 	struct regfs_data *p = regfs_get_context();
@@ -125,7 +129,8 @@ int registry_add_dir(const char *fmt, ...)
 		if (path == basename)
 			basename++;
 		*basename = '\0';
-		hobj = pvhash_search(&p->dirs, path, strlen(path));
+		hobj = pvhash_search(&p->dirs, path, strlen(path),
+				     &pvhash_operations);
 		if (hobj == NULL) {
 			ret = -ENOENT;
 			goto fail;
@@ -140,7 +145,8 @@ int registry_add_dir(const char *fmt, ...)
 	pvlist_init(&d->dir_list);
 	d->ndirs = d->nfiles = 0;
 	d->ctime = now;
-	ret = pvhash_enter(&p->dirs, d->path, strlen(d->path), &d->hobj);
+	ret = pvhash_enter(&p->dirs, d->path, strlen(d->path), &d->hobj,
+			   &pvhash_operations);
 	if (ret) {
 	fail:
 		pvfree(d->path);
@@ -206,17 +212,18 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	write_lock_safe(&p->lock, state);
 
 	ret = pvhash_enter(&p->files, fsobj->path, strlen(fsobj->path),
-			   &fsobj->hobj);
+			   &fsobj->hobj, &pvhash_operations);
 	if (ret)
 		goto fail;
 
 	*basename = '\0';
 	dir = basename == path ? "/" : path;
-	hobj = pvhash_search(&p->dirs, dir, strlen(dir));
+	hobj = pvhash_search(&p->dirs, dir, strlen(dir),
+			     &pvhash_operations);
 	if (hobj == NULL) {
 		ret = -ENOENT;
 	fail:
-		pvhash_remove(&p->files, &fsobj->hobj);
+		pvhash_remove(&p->files, &fsobj->hobj, &pvhash_operations);
 		pvfree(fsobj->path);
 		fsobj->path = NULL;
 		goto done;
@@ -246,7 +253,7 @@ void registry_destroy_file(struct fsobj *fsobj)
 	if (fsobj->path == NULL)
 		goto out;	/* Not registered. */
 
-	pvhash_remove(&p->files, &fsobj->hobj);
+	pvhash_remove(&p->files, &fsobj->hobj, &pvhash_operations);
 	/*
 	 * We are covered by a previous call to write_lock_safe(), so
 	 * we may nest pthread_mutex_lock() directly.
@@ -283,7 +290,8 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 
 	read_lock_nocancel(&p->lock);
 
-	hobj = pvhash_search(&p->dirs, path, strlen(path));
+	hobj = pvhash_search(&p->dirs, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj) {
 		d = container_of(hobj, struct regfs_dir, hobj);
 		sbuf->st_mode = S_IFDIR | 0755;
@@ -294,7 +302,8 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 		goto done;
 	}
 
-	hobj = pvhash_search(&p->files, path, strlen(path));
+	hobj = pvhash_search(&p->files, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj) {
 		fsobj = container_of(hobj, struct fsobj, hobj);
 		sbuf->st_mode = S_IFREG;
@@ -332,7 +341,8 @@ static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	read_lock_nocancel(&p->lock);
 
-	hobj = pvhash_search(&p->dirs, path, strlen(path));
+	hobj = pvhash_search(&p->dirs, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj == NULL) {
 		read_unlock(&p->lock);
 		return __bt(-ENOENT);
@@ -376,7 +386,8 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	push_cleanup_lock(&p->lock);
 	read_lock(&p->lock);
 
-	hobj = pvhash_search(&p->files, path, strlen(path));
+	hobj = pvhash_search(&p->files, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj == NULL) {
 		ret = -ENOENT;
 		goto done;
@@ -422,7 +433,8 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 	push_cleanup_lock(&p->lock);
 	read_lock(&p->lock);
 
-	hobj = pvhash_search(&p->files, path, strlen(path));
+	hobj = pvhash_search(&p->files, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj == NULL) {
 		ret = -ENOENT;
 		goto done;
@@ -456,7 +468,8 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 
 	read_lock_nocancel(&p->lock);
 
-	hobj = pvhash_search(&p->files, path, strlen(path));
+	hobj = pvhash_search(&p->files, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj == NULL) {
 		read_unlock(&p->lock);
 		return __bt(-EIO);
@@ -493,7 +506,8 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 
 	read_lock_nocancel(&p->lock);
 
-	hobj = pvhash_search(&p->files, path, strlen(path));
+	hobj = pvhash_search(&p->files, path, strlen(path),
+			     &pvhash_operations);
 	if (hobj == NULL) {
 		read_unlock(&p->lock);
 		return __bt(-EIO);
@@ -738,8 +752,8 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
 	if (ret)
 		return ret;
 
-	pvhash_init(&p->files, pvhash_compare_strings);
-	pvhash_init(&p->dirs, pvhash_compare_strings);
+	pvhash_init(&p->files);
+	pvhash_init(&p->dirs);
 
 	registry_add_dir("/");	/* Create the fs root. */
 

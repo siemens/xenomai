@@ -211,7 +211,7 @@ static int init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
 	if (ret)
 		return ret;
 
-	__hash_init(m_heap, &m_heap->catalog, hash_compare_strings);
+	__hash_init(m_heap, &m_heap->catalog);
 	m_heap->sysgroup.thread_count = 0;
 	__list_init(m_heap, &m_heap->sysgroup.thread_list);
 	m_heap->sysgroup.heap_count = 0;
