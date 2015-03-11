@@ -24,6 +24,7 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/ancillaries.h>
+#include <asm/xenomai/wrappers.h>
 
 /**
  * @addtogroup cobalt_core_timer
