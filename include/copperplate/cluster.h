@@ -57,6 +57,42 @@ struct pvsyncluster {
 	struct syncobj sobj;
 };
 
+static inline
+const void *clusterobj_key(const struct clusterobj *cobj)
+{
+	return __memptr(__main_heap, cobj->hobj.key);
+}
+
+static inline
+size_t clusterobj_keylen(const struct clusterobj *cobj)
+{
+	return cobj->hobj.len;
+}
+
+static inline
+pid_t clusterobj_cnode(const struct clusterobj *cobj)
+{
+	return cobj->cnode;
+}
+
+static inline
+const void *pvclusterobj_key(const struct pvclusterobj *cobj)
+{
+	return cobj->hobj.key;
+}
+
+static inline
+size_t pvclusterobj_keylen(const struct pvclusterobj *cobj)
+{
+	return cobj->hobj.len;
+}
+
+static inline
+pid_t pvclusterobj_cnode(const struct pvclusterobj *cobj)
+{
+	return -1;
+}
+
 #else /* !CONFIG_XENO_PSHARED */
 
 struct clusterobj {
@@ -75,6 +111,42 @@ struct syncluster {
 #define pvclusterobj  clusterobj
 #define pvcluster     cluster
 #define pvsyncluster  syncluster
+
+static inline
+const void *clusterobj_key(const struct pvclusterobj *cobj)
+{
+	return cobj->hobj.key;
+}
+
+static inline
+size_t clusterobj_keylen(const struct pvclusterobj *cobj)
+{
+	return cobj->hobj.len;
+}
+
+static inline
+pid_t clusterobj_cnode(const struct pvclusterobj *cobj)
+{
+	return -1;
+}
+
+static inline
+const void *pvclusterobj_key(const struct pvclusterobj *cobj)
+{
+	return clusterobj_key(cobj);
+}
+
+static inline
+size_t pvclusterobj_keylen(const struct pvclusterobj *cobj)
+{
+	return clusterobj_keylen(cobj);
+}
+
+static inline
+pid_t pvclusterobj_cnode(const struct pvclusterobj *cobj)
+{
+	return clusterobj_cnode(cobj);
+}
 
 #endif /* !CONFIG_XENO_PSHARED */
 
@@ -102,6 +174,10 @@ int pvcluster_delobj(struct pvcluster *c,
 struct pvclusterobj *pvcluster_findobj(struct pvcluster *c,
 				       const char *name);
 
+int pvcluster_walk(struct pvcluster *c,
+		   int (*walk)(struct pvcluster *c,
+			       struct pvclusterobj *cobj));
+  
 int pvsyncluster_init(struct pvsyncluster *sc, const char *name);
 
 void pvsyncluster_destroy(struct pvsyncluster *sc);
@@ -132,6 +208,10 @@ int cluster_delobj(struct cluster *c,
 
 struct clusterobj *cluster_findobj(struct cluster *c,
 				   const char *name);
+
+int cluster_walk(struct cluster *c,
+		 int (*walk)(struct cluster *c,
+			     struct clusterobj *cobj));
 
 int syncluster_init(struct syncluster *sc, const char *name);
 
@@ -175,6 +255,13 @@ static inline struct clusterobj *cluster_findobj(struct cluster *c,
 						 const char *name)
 {
 	return pvcluster_findobj(c, name);
+}
+
+static inline int cluster_walk(struct cluster *c,
+			       int (*walk)(struct cluster *c,
+					   struct clusterobj *cobj))
+{
+	return pvcluster_walk(c, walk);
 }
 
 static inline int syncluster_init(struct syncluster *sc,

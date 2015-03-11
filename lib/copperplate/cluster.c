@@ -100,13 +100,25 @@
 
 const static struct hash_operations hash_operations;
 
+struct cluster_walk_data {
+	struct cluster *c;
+	int (*walk)(struct cluster *c,
+		    struct clusterobj *cobj);
+};
+
+struct pvcluster_walk_data {
+	struct pvcluster *c;
+	int (*walk)(struct pvcluster *c,
+		    struct pvclusterobj *cobj);
+};
+
 #ifdef CONFIG_XENO_PSHARED
 
 int cluster_init(struct cluster *c, const char *name)
 {
 	struct dictionary *d;
 	struct hashobj *hobj;
-	int ret = 0;
+	int ret;
 
 	/*
 	 * NOTE: it does not make sense to destroy a shared cluster
@@ -122,6 +134,7 @@ redo:
 			   &hash_operations);
 	if (hobj) {
 		d = container_of(hobj, struct dictionary, hobj);
+		ret = 0;
 		goto out;
 	}
 
@@ -140,6 +153,7 @@ redo:
 		 * cluster right after we failed retrieving it: retry
 		 * the whole process.
 		 */
+		hash_destroy(&d->table);
 		xnfree(d);
 		goto redo;
 	}
@@ -210,6 +224,27 @@ struct clusterobj *cluster_findobj(struct cluster *c, const char *name)
 		return NULL;
 
 	return container_of(hobj, struct clusterobj, hobj);
+}
+
+static int __cluster_walk(struct hash_table *t, struct hashobj *hobj, void *arg)
+{
+	struct cluster_walk_data *wd = arg;
+	struct clusterobj *cobj;
+
+	cobj = container_of(hobj, struct clusterobj, hobj);
+
+	return wd->walk(wd->c, cobj);
+}
+  
+int cluster_walk(struct cluster *c,
+		 int (*walk)(struct cluster *c,
+			     struct clusterobj *cobj))
+{
+	struct cluster_walk_data wd = {
+		.c = c,
+		.walk = walk,
+	};
+	return hash_walk(&c->d->table, __cluster_walk, &wd);
 }
 
 int syncluster_init(struct syncluster *sc, const char *name)
@@ -383,6 +418,28 @@ struct pvclusterobj *pvcluster_findobj(struct pvcluster *c, const char *name)
 		return NULL;
 
 	return container_of(hobj, struct pvclusterobj, hobj);
+}
+
+static int __pvcluster_walk(struct pvhash_table *t, struct pvhashobj *hobj,
+			    void *arg)
+{
+	struct pvcluster_walk_data *wd = arg;
+	struct pvclusterobj *cobj;
+
+	cobj = container_of(hobj, struct pvclusterobj, hobj);
+
+	return wd->walk(wd->c, cobj);
+}
+  
+int pvcluster_walk(struct pvcluster *c,
+		   int (*walk)(struct pvcluster *c,
+			       struct pvclusterobj *cobj))
+{
+	struct pvcluster_walk_data wd = {
+		.c = c,
+		.walk = walk,
+	};
+	return pvhash_walk(&c->table, __pvcluster_walk, &wd);
 }
 
 int pvsyncluster_init(struct pvsyncluster *sc, const char *name)
