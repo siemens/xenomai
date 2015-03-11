@@ -959,6 +959,7 @@ AC_CONFIG_FILES([ \
 	testsuite/regression/Makefile \
 	testsuite/regression/posix/Makefile \
 	utils/Makefile \
+	utils/hdb/Makefile \
 	utils/can/Makefile \
 	utils/analogy/Makefile \
 	utils/ps/Makefile \
