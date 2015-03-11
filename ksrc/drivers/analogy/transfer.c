@@ -157,21 +157,13 @@ out_setup_tsf:
 
 /* --- IRQ handling section --- */
 
-int a4l_request_irq(a4l_dev_t * dev,
-		    unsigned int irq,
-		    a4l_irq_hdlr_t handler,
+int a4l_request_irq(a4l_dev_t *dev, unsigned int irq, a4l_irq_hdlr_t handler,
 		    unsigned long flags, void *cookie)
 {
 	int ret;
-	unsigned long __flags;
 
 	if (dev->transfer.irq_desc.irq != A4L_IRQ_UNUSED)
 		return -EBUSY;
-
-	/* A spinlock is used so as to prevent race conditions
-	   on the field "irq" of the IRQ descriptor
-	   (even if such a case is bound not to happen) */
-	a4l_lock_irqsave(&dev->lock, __flags);
 
 	ret = __a4l_request_irq(&dev->transfer.irq_desc,
 				irq, handler, flags, cookie);
@@ -181,12 +173,10 @@ int a4l_request_irq(a4l_dev_t * dev,
 		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 	}
 
-	a4l_unlock_irqrestore(&dev->lock, __flags);
-
 	return ret;
 }
 
-int a4l_free_irq(a4l_dev_t * dev, unsigned int irq)
+int a4l_free_irq(a4l_dev_t *dev, unsigned int irq)
 {
 
 	int ret = 0;
@@ -194,8 +184,6 @@ int a4l_free_irq(a4l_dev_t * dev, unsigned int irq)
 	if (dev->transfer.irq_desc.irq != irq)
 		return -EINVAL;
 
-	/* There is less need to use a spinlock
-	   than for a4l_request_irq() */
 	ret = __a4l_free_irq(&dev->transfer.irq_desc);
 
 	if (ret == 0)
