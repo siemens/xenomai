@@ -54,7 +54,8 @@ struct hash_operations {
 };
 
 typedef int (*hash_walk_op)(struct hash_table *t,
-			    struct hashobj *obj);
+			    struct hashobj *obj,
+			    void *arg);
 	
 #ifdef CONFIG_XENO_PSHARED
 
@@ -82,7 +83,8 @@ struct pvhash_operations {
 };
 
 typedef int (*pvhash_walk_op)(struct pvhash_table *t,
-			      struct pvhashobj *obj);
+			      struct pvhashobj *obj,
+			      void *arg);
 	
 #else /* !CONFIG_XENO_PSHARED */
 #define pvhashobj		hashobj
@@ -137,7 +139,7 @@ struct hashobj *hash_search(struct hash_table *t,
 			    const struct hash_operations *hops);
 
 int hash_walk(struct hash_table *t,
-	      hash_walk_op walk);
+	      hash_walk_op walk, void *arg);
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -203,7 +205,7 @@ struct pvhashobj *pvhash_search(struct pvhash_table *t,
 				const struct pvhash_operations *hops);
 
 int pvhash_walk(struct pvhash_table *t,
-		pvhash_walk_op walk);
+		pvhash_walk_op walk, void *arg);
 
 #else /* !CONFIG_XENO_PSHARED */
 #define pvhash_init		hash_init

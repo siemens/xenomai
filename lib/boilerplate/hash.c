@@ -212,7 +212,7 @@ out:
 	return obj;
 }
 
-int hash_walk(struct hash_table *t, hash_walk_op walk)
+int hash_walk(struct hash_table *t, hash_walk_op walk, void *arg)
 {
 	struct hash_bucket *bucket;
 	struct hashobj *obj, *tmp;
@@ -226,7 +226,7 @@ int hash_walk(struct hash_table *t, hash_walk_op walk)
 			continue;
 		list_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
 			read_unlock(&t->lock);
-			ret = walk(t, obj);
+			ret = walk(t, obj, arg);
 			if (ret)
 				return __bt(ret);
 			read_lock_nocancel(&t->lock);
@@ -266,8 +266,10 @@ static inline int store_key(struct hashobj *obj,
 static inline void drop_key(struct hashobj *obj,
 			    const struct hash_operations *hops)
 {
-	if (obj->key != __moff(obj->static_key))
-		hops->free((void *)__mptr(obj->key));
+	const void *key = __mptr(obj->key);
+
+	if (key != obj->static_key)
+		hops->free((void *)key);
 }
 
 int __hash_enter_probe(struct hash_table *t,
@@ -461,7 +463,7 @@ out:
 	return obj;
 }
 
-int pvhash_walk(struct pvhash_table *t,	pvhash_walk_op walk)
+int pvhash_walk(struct pvhash_table *t,	pvhash_walk_op walk, void *arg)
 {
 	struct pvhash_bucket *bucket;
 	struct pvhashobj *obj, *tmp;
@@ -475,7 +477,7 @@ int pvhash_walk(struct pvhash_table *t,	pvhash_walk_op walk)
 			continue;
 		pvlist_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
 			read_unlock(&t->lock);
-			ret = walk(t, obj);
+			ret = walk(t, obj, arg);
 			if (ret)
 				return __bt(ret);
 			read_lock_nocancel(&t->lock);
