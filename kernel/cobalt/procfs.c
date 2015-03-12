@@ -180,10 +180,10 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 	/* We assume the entire output fits in a single page. */
 
-	xnvfile_puts(it, "APC ");
+	xnvfile_puts(it, "APC  ");
 
 	for_each_realtime_cpu(cpu)
-		xnvfile_printf(it, "         CPU%d", cpu);
+		xnvfile_printf(it, "        CPU%d", cpu);
 
 	for (apc = 0; apc < BITS_PER_LONG; apc++) {
 		if (!test_bit(apc, &cobalt_pipeline.apc_map))
