@@ -179,7 +179,7 @@ static void usage(void)
 
 	print_version();
         fprintf(stderr, "usage: program <options>, where options may be:\n");
-       fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
+	fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
         fprintf(stderr, "--no-mlock                       do not lock memory at init (Mercury only)\n");
         fprintf(stderr, "--registry-root=<path>           root path of registry\n");
         fprintf(stderr, "--no-registry                    suppress object registration\n");
@@ -190,7 +190,10 @@ static void usage(void)
         fprintf(stderr, "--silent                         tame down verbosity\n");
         fprintf(stderr, "--version                        get version information\n");
         fprintf(stderr, "--dump-config                    dump configuration settings\n");
-	
+
+	if (pvlist_empty(&skins))
+		return;
+
 	pvlist_for_each_entry(skin, &skins, __reserved.next) {
 		if (skin->help)
 			skin->help();
@@ -301,28 +304,35 @@ static struct option *build_option_array(int *base_opt_startp)
 	int nopts;
 
 	nopts = sizeof(base_options) / sizeof(base_options[0]);
-	pvlist_for_each_entry(skin, &skins, __reserved.next) {
-		p = skin->options;
-		if (p) {
-			while (p->name) {
-				nopts++;
-				p++;
+
+	if (!pvlist_empty(&skins)) {
+		pvlist_for_each_entry(skin, &skins, __reserved.next) {
+			p = skin->options;
+			if (p) {
+				while (p->name) {
+					nopts++;
+					p++;
+				}
 			}
 		}
 	}
+
 	options = malloc(sizeof(*options) * nopts);
 	if (options == NULL)
 		return NULL;
 
 	q = options;
-	pvlist_for_each_entry(skin, &skins, __reserved.next) {
-		p = skin->options;
-		if (p) {
-			skin->__reserved.opt_start = q - options;
-			while (p->name)
-				memcpy(q++, p++, sizeof(*q));
+
+	if (!pvlist_empty(&skins)) {
+		pvlist_for_each_entry(skin, &skins, __reserved.next) {
+			p = skin->options;
+			if (p) {
+				skin->__reserved.opt_start = q - options;
+				while (p->name)
+					memcpy(q++, p++, sizeof(*q));
+			}
+			skin->__reserved.opt_end = q - options;
 		}
-		skin->__reserved.opt_end = q - options;
 	}
 
 	*base_opt_startp = q - options;
@@ -534,12 +544,6 @@ void copperplate_init(int *argcp, char *const **argvp)
 	/* No ifs, no buts: we must be called over the main thread. */
 	assert(getpid() == __node_id);
 
-	if (pvlist_empty(&skins)) {
-		warning("no skin detected in program");
-		ret = -EINVAL;
-		goto fail;
-	}
-
 	/* Define default CPU affinity, i.e. no particular affinity. */
 	CPU_ZERO(&__node_info.cpu_affinity);
 
@@ -623,26 +627,28 @@ void copperplate_init(int *argcp, char *const **argvp)
 	 * skin handlers for parsing their own options, which in turn
 	 * may create system objects on the fly.
 	 */
-	ret = parse_skin_options(argcp, largc, uargv, options);
-	if (ret)
-		goto fail;
+	if (!pvlist_empty(&skins)) {
+		ret = parse_skin_options(argcp, largc, uargv, options);
+		if (ret)
+			goto fail;
+
+		CANCEL_DEFER(svc);
+
+		pvlist_for_each_entry(skin, &skins, __reserved.next) {
+			ret = skin->init();
+			if (ret)
+				break;
+		}
+
+		CANCEL_RESTORE(svc);
+
+		if (ret) {
+			warning("skin %s won't initialize", skin->name);
+			goto fail;
+		}
+	}
 
 	free(options);
-
-	CANCEL_DEFER(svc);
-
-	pvlist_for_each_entry(skin, &skins, __reserved.next) {
-		ret = skin->init();
-		if (ret)
-			break;
-	}
-
-	CANCEL_RESTORE(svc);
-
-	if (ret) {
-		warning("skin %s won't initialize", skin->name);
-		goto fail;
-	}
 
 #ifdef CONFIG_XENO_DEBUG
 	if (__node_info.silent_mode == 0) {
