@@ -490,7 +490,7 @@ int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 		goto out;
 
 	info->count = sval < 0 ? 0 : sval;
-	info->nwaiters = -sval;
+	info->nwaiters = sval < 0 ? -sval : 0;
 	strcpy(info->name, scb->name); /* <= racy. */
 out:
 	CANCEL_RESTORE(svc);
