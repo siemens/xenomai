@@ -241,6 +241,37 @@ static int sem_trywait(xnhandle_t handle)
 	return err;
 }
 
+static int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcast)
+{
+	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
+		return -EINVAL;
+
+#if XENO_DEBUG(USER)
+	if (ownq && ownq != sem_kqueue(sem))
+		return -EPERM;
+#endif
+
+	if (atomic_read(&sem->state->value) == SEM_VALUE_MAX)
+		return -EINVAL;
+
+	if (!bcast) {
+		if (atomic_inc_return(&sem->state->value) <= 0) {
+			if (xnsynch_wakeup_one_sleeper(&sem->synchbase))
+				xnsched_run();
+		} else if (sem->flags & SEM_PULSE)
+			atomic_set(&sem->state->value, 0);
+	} else {
+		if (atomic_read(&sem->state->value) < 0) {
+			atomic_set(&sem->state->value, 0);
+			if (xnsynch_flush(&sem->synchbase, 0) ==
+				XNSYNCH_RESCHED)
+				xnsched_run();
+		}
+	}
+
+	return 0;
+}
+
 static int sem_wait(xnhandle_t handle)
 {
 	struct cobalt_sem *sem;
@@ -256,10 +287,12 @@ static int sem_wait(xnhandle_t handle)
 
 	ret = 0;
 	info = xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
-	if (info & XNRMID)
+	if (info & XNRMID) {
 		ret = -EINVAL;
- 	else if (info & XNBREAK)
+	} else if (info & XNBREAK) {
+		sem_post_inner(sem, sem->owningq, 0);
 		ret = -EINTR;
+	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -333,37 +366,6 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
-}
-
-int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcast)
-{
-	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
-		return -EINVAL;
-
-#if XENO_DEBUG(USER)
-	if (ownq && ownq != sem_kqueue(sem))
-		return -EPERM;
-#endif
-
-	if (atomic_read(&sem->state->value) == SEM_VALUE_MAX)
-		return -EINVAL;
-
-	if (!bcast) {
-		if (atomic_inc_return(&sem->state->value) <= 0) {
-			if (xnsynch_wakeup_one_sleeper(&sem->synchbase))
-				xnsched_run();
-		} else if (sem->flags & SEM_PULSE)
-			atomic_set(&sem->state->value, 0);
-	} else {
-		if (atomic_read(&sem->state->value) < 0) {
-			atomic_set(&sem->state->value, 0);
-			if (xnsynch_flush(&sem->synchbase, 0) ==
-				XNSYNCH_RESCHED)
-				xnsched_run();
-		}
-	}
-
-	return 0;
 }
 
 static int sem_post(xnhandle_t handle)
