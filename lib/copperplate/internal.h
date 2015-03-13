@@ -32,13 +32,16 @@
 
 #ifdef CONFIG_XENO_REGISTRY
 #define DEFAULT_REGISTRY_ROOT		CONFIG_XENO_REGISTRY_ROOT
-#define DEFAULT_REGISTRY_SESSION	"anon"
+#else
+#define DEFAULT_REGISTRY_ROOT		NULL
 #endif
+#define DEFAULT_REGISTRY_SESSION	"anon"
 
 struct coppernode {
 	unsigned int mem_pool;
-	const char *session_label;
 	const char *registry_root;
+	const char *session_label;
+	const char *session_root;
 	cpu_set_t cpu_affinity;
 	int no_mlock;
 	int no_registry;

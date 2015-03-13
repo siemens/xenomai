@@ -26,6 +26,7 @@
 #include <memory.h>
 #include <malloc.h>
 #include <assert.h>
+#include <pwd.h>
 #include <signal.h>
 #include <errno.h>
 #include <getopt.h>
@@ -45,10 +46,9 @@ struct coppernode __node_info = {
 	.no_sanity = !CONFIG_XENO_SANITY,
 	.reset_session = 0,
 	.silent_mode = 0,
-#ifdef CONFIG_XENO_REGISTRY
-	.session_label = NULL,
 	.registry_root = DEFAULT_REGISTRY_ROOT,
-#endif
+	.session_label = NULL,
+	.session_root = NULL,
 };
 
 pid_t __node_id;
@@ -517,6 +517,29 @@ fail:
 	early_panic("initialization failed, %s", symerror(ret));
 }
 
+static int get_session_root(void)
+{
+	struct passwd *pw;
+	char *sessdir;
+	int ret;
+
+	if (__node_info.session_label) {
+		pw = getpwuid(geteuid());
+		if (pw == NULL)
+			return -errno;
+		ret = asprintf(&sessdir, "%s/%s/%s", __node_info.registry_root,
+			       pw->pw_name, __node_info.session_label);
+	} else {
+		__node_info.session_label = DEFAULT_REGISTRY_SESSION;
+		ret = asprintf(&sessdir, "%s/%s", __node_info.registry_root,
+			       DEFAULT_REGISTRY_SESSION);
+	}
+
+	__node_info.session_root = sessdir;
+
+	return ret < 0 ? -ENOMEM : 0;
+}
+
 /* The application-level copperplate init call. */
 
 void copperplate_init(int *argcp, char *const **argvp)
@@ -586,6 +609,14 @@ void copperplate_init(int *argcp, char *const **argvp)
 		warning("failed to initialize main private heap");
 		goto fail;
 	}
+
+	/*
+	 * We need the session label to be known before we create the
+	 * shared heap, which is named after the former.
+	 */
+	ret = get_session_root();
+	if (ret)
+		goto fail;
 
 	ret = heapobj_pkg_init_shared();
 	if (ret) {
