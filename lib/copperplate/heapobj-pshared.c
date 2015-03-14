@@ -582,7 +582,7 @@ out:
 	return ret;
 }
 
-static int create_main_heap(void)
+static int create_main_heap(pid_t *cnode_r)
 {
 	const char *session = __node_info.session_label;
 	size_t size = __node_info.mem_pool;
@@ -601,6 +601,7 @@ static int create_main_heap(void)
 	 */
 	assert(HOBJ_PAGE_SIZE > sizeof(struct shared_extent));
 
+	*cnode_r = -1;
 	size += internal_overhead(size);
 	size = __align_to(size, HOBJ_PAGE_SIZE);
 	if (size > HOBJ_MAXEXTSZ)
@@ -614,9 +615,6 @@ static int create_main_heap(void)
 	/*
 	 * Bind to (and optionally create) the main session's heap:
 	 *
-	 * If --reset-session was given, drop any previous heap for
-	 * the same session name.
-	 *
 	 * If the heap already exists, check whether the leading
 	 * process who created it is still alive, in which case we'll
 	 * bind to it, unless the requested size differs.
@@ -626,9 +624,6 @@ static int create_main_heap(void)
 	 */
 	snprintf(hobj->name, sizeof(hobj->name), "%s.main-heap", session);
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
-
-	if (__node_info.reset_session)
-		shm_unlink(hobj->fsname);
 
 	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
 	if (fd < 0)
@@ -642,24 +637,28 @@ static int create_main_heap(void)
 	if (ret)
 		goto errno_fail;
 
-	if (sbuf.st_size > 0) {
-		m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
-		if (m_heap == MAP_FAILED)
-			goto errno_fail;
-		if (m_heap->cpid && kill(m_heap->cpid, 0) == 0) {
-			if (m_heap->maplen == len) {
-				hobj->pool = &m_heap->base;
-				__main_heap = m_heap;
-				__main_sysgroup = &m_heap->sysgroup;
-				goto done;
-			}
-			munmap(m_heap, len);
-			__STD(close(fd));
-			return __bt(-EEXIST);
+	if (sbuf.st_size == 0)
+		goto init;
+
+	m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
+	if (m_heap == MAP_FAILED)
+		goto errno_fail;
+
+	if (m_heap->cpid && kill(m_heap->cpid, 0) == 0) {
+		if (m_heap->maplen == len) {
+			hobj->pool = &m_heap->base;
+			__main_heap = m_heap;
+			__main_sysgroup = &m_heap->sysgroup;
+			goto done;
 		}
+		*cnode_r = m_heap->cpid;
 		munmap(m_heap, len);
+		__STD(close(fd));
+		return __bt(-EEXIST);
 	}
 
+	munmap(m_heap, len);
+init:
 	ret = ftruncate(fd, 0);  /* Clear all previous contents if any. */
 	if (ret)
 		goto unlink_fail;
@@ -943,19 +942,13 @@ char *xnstrdup(const char *ptr)
 
 int heapobj_pkg_init_shared(void)
 {
+	pid_t cnode;
 	int ret;
 
-	ret = create_main_heap();
-	if (ret == -EEXIST) {
-		if (__node_info.reset_session)
-			/* Init failed despite override. */
-			warning("active session %s is conflicting\n",
-				__node_info.session_label);
-		else
-			warning("non-matching session %s already exists,\n"
-				"pass --reset to override.",
-				__node_info.session_label);
-	}
+	ret = create_main_heap(&cnode);
+	if (ret == -EEXIST)
+		warning("session %s is still active (pid %d)\n",
+			__node_info.session_label, cnode);
 
 	return __bt(ret);
 }

@@ -46,7 +46,6 @@ struct coppernode {
 	int no_mlock;
 	int no_registry;
 	int no_sanity;
-	int reset_session;
 	int silent_mode;
 };
 

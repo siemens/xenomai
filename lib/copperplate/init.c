@@ -44,7 +44,6 @@ struct coppernode __node_info = {
 	.no_mlock = 0,
 	.no_registry = 0,
 	.no_sanity = !CONFIG_XENO_SANITY,
-	.reset_session = 0,
 	.silent_mode = 0,
 	.registry_root = DEFAULT_REGISTRY_ROOT,
 	.session_label = NULL,
@@ -103,49 +102,42 @@ static const struct option base_options[] = {
 		.val = 0
 	},
 	{
-#define reset_session_opt	6
-		.name = "reset-session",
-		.has_arg = 0,
-		.flag = &__node_info.reset_session,
-		.val = 1
-	},
-	{
-#define affinity_opt	7
+#define affinity_opt	6
 		.name = "cpu-affinity",
 		.has_arg = 1,
 		.flag = NULL,
 		.val = 0
 	},
 	{
-#define silent_opt	8
+#define silent_opt	7
 		.name = "silent",
 		.has_arg = 0,
 		.flag = &__node_info.silent_mode,
 		.val = 1
 	},
 	{
-#define version_opt	9
+#define version_opt	8
 		.name = "version",
 		.has_arg = 0,
 		.flag = NULL,
 		.val = 0
 	},
 	{
-#define dumpconfig_opt	10
+#define dumpconfig_opt	9
 		.name = "dump-config",
 		.has_arg = 0,
 		.flag = NULL,
 		.val = 0
 	},
 	{
-#define no_sanity_opt	11
+#define no_sanity_opt	10
 		.name = "no-sanity",
 		.has_arg = 0,
 		.flag = &__node_info.no_sanity,
 		.val = 1
 	},
 	{
-#define sanity_opt	12
+#define sanity_opt	11
 		.name = "sanity",
 		.has_arg = 0,
 		.flag = &__node_info.no_sanity,
@@ -184,7 +176,6 @@ static void usage(void)
         fprintf(stderr, "--registry-root=<path>           root path of registry\n");
         fprintf(stderr, "--no-registry                    suppress object registration\n");
         fprintf(stderr, "--session=<label>                label of shared multi-processing session\n");
-        fprintf(stderr, "--reset                          remove any older session\n");
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>    set CPU affinity of threads\n");
         fprintf(stderr, "--[no-]sanity                    disable/enable sanity checks\n");
         fprintf(stderr, "--silent                         tame down verbosity\n");
@@ -397,7 +388,6 @@ static int parse_base_options(int *argcp, char *const **argvp,
 		case no_mlock_opt:
 		case no_sanity_opt:
 		case no_registry_opt:
-		case reset_session_opt:
 		case sanity_opt:
 		case silent_opt:
 			break;
