@@ -139,20 +139,18 @@ redo:
 	}
 
 	d = xnmalloc(sizeof(*d));
-	if (d == NULL) {
-		ret = -ENOMEM;
-		goto out;
-	}
+	if (d == NULL)
+		return __bt(-ENOMEM);
 
 	hash_init(&d->table);
 	ret = hash_enter(&main_catalog, name, strlen(name), &d->hobj,
 			 &hash_operations);
+	/*
+	 * If someone managed to slip in, creating the cluster between
+	 * the table look up and indexing the new cluster, retry the
+	 * whole process.
+	 */
 	if (ret == -EEXIST) {
-		/*
-		 * Someone seems to have slipped in, creating the
-		 * cluster right after we failed retrieving it: retry
-		 * the whole process.
-		 */
 		hash_destroy(&d->table);
 		xnfree(d);
 		goto redo;
@@ -249,17 +247,40 @@ int cluster_walk(struct cluster *c,
 
 int syncluster_init(struct syncluster *sc, const char *name)
 {
+	struct syndictionary *d;
+	struct hashobj *hobj;
 	int ret;
 
-	ret = __bt(cluster_init(&sc->c, name));
-	if (ret)
-		return ret;
+redo:
+	hobj = hash_search(&main_catalog, name, strlen(name),
+			   &hash_operations);
+	if (hobj) {
+		d = container_of(hobj, struct syndictionary, hobj);
+		ret = 0;
+		goto out;
+	}
 
-	sc->sobj = xnmalloc(sizeof(*sc->sobj));
-	if (sc->sobj == NULL)
+	d = xnmalloc(sizeof(*d));
+	if (d == NULL)
 		return -ENOMEM;
 
-	return syncobj_init(sc->sobj, CLOCK_COPPERPLATE,
+	hash_init(&d->table);
+
+	ret = hash_enter(&main_catalog, name, strlen(name), &d->hobj,
+			 &hash_operations);
+	/*
+	 * Same as cluster_init(), redo if someone slipped in,
+	 * creating the cluster.
+	 */
+	if (ret == -EEXIST) {
+		hash_destroy(&d->table);
+		xnfree(d);
+		goto redo;
+	}
+out:
+	sc->d = d;
+
+	return syncobj_init(&d->sobj, CLOCK_COPPERPLATE,
 			    SYNCOBJ_FIFO, fnref_null);
 }
 
@@ -271,26 +292,29 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(sc->sobj, &syns))
+	if (syncobj_lock(&sc->d->sobj, &syns))
 		return __bt(-EINVAL);
 
-	ret = cluster_addobj(&sc->c, name, cobj);
+	cobj->cnode = __node_id;
+
+	ret = hash_enter_probe(&sc->d->table, name, strlen(name),
+			       &cobj->hobj, &hash_operations);
 	if (ret)
 		goto out;
 
-	if (!syncobj_grant_wait_p(sc->sobj))
+	if (!syncobj_grant_wait_p(&sc->d->sobj))
 		goto out;
 	/*
 	 * Wake up all threads waiting for this key to appear in the
 	 * dictionary.
 	 */
-	syncobj_for_each_grant_waiter_safe(sc->sobj, thobj, tmp) {
+	syncobj_for_each_grant_waiter_safe(&sc->d->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		if (*wait->name == *name && strcmp(wait->name, name) == 0)
-			syncobj_grant_to(sc->sobj, thobj);
+			syncobj_grant_to(&sc->d->sobj, thobj);
 	}
 out:
-	syncobj_unlock(sc->sobj, &syns);
+	syncobj_unlock(&sc->d->sobj, &syns);
 
 	return ret;
 }
@@ -301,12 +325,12 @@ int syncluster_delobj(struct syncluster *sc,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(sc->sobj, &syns))
+	if (syncobj_lock(&sc->d->sobj, &syns))
 		return __bt(-EINVAL);
 
-	ret = __bt(cluster_delobj(&sc->c, cobj));
+	ret = __bt(hash_remove(&sc->d->table, &cobj->hobj, &hash_operations));
 
-	syncobj_unlock(sc->sobj, &syns);
+	syncobj_unlock(&sc->d->sobj, &syns);
 
 	return ret;
 }
@@ -317,17 +341,18 @@ int syncluster_findobj(struct syncluster *sc,
 		       struct clusterobj **cobjp)
 {
 	struct syncluster_wait_struct *wait = NULL;
-	struct clusterobj *cobj;
 	struct syncstate syns;
+	struct hashobj *hobj;
 	int ret = 0;
 
-	if (syncobj_lock(sc->sobj, &syns))
+	if (syncobj_lock(&sc->d->sobj, &syns))
 		return -EINVAL;
 
 	for (;;) {
-		cobj = cluster_findobj(&sc->c, name);
-		if (cobj) {
-			*cobjp = cobj;
+		hobj = hash_search_probe(&sc->d->table, name, strlen(name),
+					 &hash_operations);
+		if (hobj) {
+			*cobjp = container_of(hobj, struct clusterobj, hobj);
 			break;
 		}
 		if (timeout &&
@@ -343,7 +368,7 @@ int syncluster_findobj(struct syncluster *sc,
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
 			wait->name = name;
 		}
-		ret = syncobj_wait_grant(sc->sobj, timeout, &syns);
+		ret = syncobj_wait_grant(&sc->d->sobj, timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -351,7 +376,7 @@ int syncluster_findobj(struct syncluster *sc,
 		}
 	}
 
-	syncobj_unlock(sc->sobj, &syns);
+	syncobj_unlock(&sc->d->sobj, &syns);
 out:
 	if (wait)
 		threadobj_finish_wait();

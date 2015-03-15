@@ -39,9 +39,14 @@ struct cluster {
 	struct dictionary *d;
 };
 
+struct syndictionary {
+	struct hash_table table;
+	struct syncobj sobj;
+	struct hashobj hobj;
+};
+
 struct syncluster {
-	struct cluster c;
-	struct syncobj *sobj;
+	struct syndictionary *d;
 };
 
 struct pvclusterobj {
