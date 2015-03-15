@@ -177,7 +177,7 @@ static int cluster_probe(struct hashobj *hobj)
 	 * Over Cobalt, the main thread is always shadowed, therefore
 	 * we may use Cobalt's kill() service to probe for it.
 	 */
-	return __RT(kill(cobj->cnode, 0));
+	return __RT(kill(cobj->cnode, 0)) == 0;
 }
 
 int cluster_addobj(struct cluster *c, const char *name,
