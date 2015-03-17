@@ -125,6 +125,54 @@ CROSS_COMPILE variable on make command line. See sections
 <<cobalt-core-x86,"Building a _Cobalt/x86_ kernel">>,
 for examples.
 
+[[cobalt-kernel-parameters]]
+_Cobalt_ kernel parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Cobalt kernel accepts the following set of parameters, which
+should be passed on the kernel command line by the boot loader.
+
+[options="header",grid="cols",frame="topbot",cols="2,3,1"]
+|============================================================================
+^|NAME              ^|DESCRIPTION                    ^|DEFAULT
+
+|xenomai.allowed_group=<gid> | Enable non-root access to Xenomai
+services from user-space.  <gid> is the ID of the Linux user group
+whose members should be allowed such access by the Cobalt core. | None
+
+|xenomai.sysheap_size=<kbytes> | Set the size of the memory heap used
+internally by the Cobalt core to allocate runtime objects.  This value
+is expressed in kilo-bytes. | 256
+		
+|xenomai.state=<state> | Set the initial state of the Cobalt core at
+boot up, which may be _enabled_, _stopped_ or _disabled_. See the
+documentation about the
+link:../documentation/xenomai-3/html/man1/corectl/index.html[corectl(1)]
+utility for a description of these states. | enabled
+
+|xenomai.clockfreq=<hz-freq> | Override the real-time clock frequency
+used in measuring time intervals with the given value. The most
+accurate value is normally determined by the Cobalt core automatically
+when initializing. It is strongly recommended *not* to use this option
+unless you really know what you are doing. This value is expressed in
+HZ. | 0 (=calibrated)
+
+|xenomai.timerfreq=<hz-freq> | Override the real-time timer frequency
+used in programming timer shots with the given value. The most
+accurate value is normally determined by the Cobalt core automatically
+when initializing. It is strongly recommended *not* to use this option
+unless you really know what you are doing. This value is expressed in
+HZ. | 0 (=calibrated)
+
+|xenomai.smi=<state> | *x86-specific*: Set the state of the SMI
+workaround. The possible values are _disabled_, _detect_ and
+_enabled_. See the discussion about link:dealing-with-x86-SMI[SMIs]
+for a description of these states.| detect
+
+|xenomai.smi_mask=<source-mask> | *x86-specific*: Set of bits to mask
+in the SMI control register. | 1 (=global disable)
+
+|============================================================================
 
 [[cobalt-build-examples]]
 Examples of building the _Cobalt_ kernel
@@ -297,6 +345,11 @@ Generic requirements (both cores)
 - GCC should have a (sane/working) support for TLS preferably,
 although this is not mandatory if building with `--disable-tls`.
 
+- If you plan to enable the user-space registry support
+  (i.e. +--enable-registry+), then CONFIG_FUSE_FS must be enabled in
+  the target kernel running the real-time applications. In addition,
+  the FUSE development libraries must be available from the toolchain.
+
 _Cobalt_-specific requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -409,7 +462,8 @@ Generic configuration options (both cores)
 	supported by http://fuse.sourceforge.net/[FUSE], which must be
 	available on the target system. Building the Xenomai libraries
 	with the registry support requires the FUSE development
-	libraries to be installed on the build system.
+	libraries to available from the toolchain. In addition,
+	CONFIG_FUSE_FS must be enabled in the target kernel.
 
 [normal]
 	When this option is enabled, the system creates a file
@@ -546,8 +600,9 @@ client applications are running over a SMP-capable kernel.
 
 *--enable-fortify*::
 
-	Enables support for applications compiled in
-	`_FORTIFY_SOURCE` mode.
+	Enables `_FORTIFY_SOURCE` when building the Xenomai code
+	unless --enable-debug=full is also given on the command line,
+	in which case --enable-fortify is silently ignored.
 
 *--disable-valgrind-client*::
 
@@ -596,6 +651,17 @@ _Cobalt_-specific configuration options
 |--enable-arm-quirks   |Enable quirks for specific ARM
 		        SOCs Currently sa1100 and
 		        xscale3 are supported.	              |disabled
+|============================================================================
+
+_Mercury_-specific configuration options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[options="header",grid="cols",frame="topbot",cols="m,2*d"]
+|============================================================================
+^|NAME              ^|DESCRIPTION                    ^|DEFAULT
+|--enable-condvar-workaround | Enable workaround for broken priority
+        inheritance with condition variables in glibc. This option
+	adds some overhead to RTOS API emulators.     |disabled
 |============================================================================
 
 footnoteref:[disable,Each option enabled by default can be forcibly
@@ -842,6 +908,19 @@ system. Try:
 ------------------------------------------------------------------------------
 $ xeno-test --help
 ------------------------------------------------------------------------------
+
+Calibrating the _Cobalt_ core timer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The accuracy of the Cobalt timing services depends on proper
+calibration of its core timer. Sound factory-default calibration
+values are defined for each platform Xenomai supports, but it is
+recommended to calibrate the core timer specifically for the target
+system.
+
+See the documentation about the
+link:../documentation/xenomai-3/html/man1/autotune/index.html[autotune(1)]
+utility.
 
 Building and running Xenomai 3 applications
 -------------------------------------------

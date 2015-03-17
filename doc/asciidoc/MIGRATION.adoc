@@ -64,7 +64,7 @@ System parameters renamed::
 
 * xeno_hal.supported_cpus -> xenomai.supported_cpus
 * xeno_hal.clockfreq -> xenomai.clockfreq
-* xeno_hal.disable -> xenomai.disable
+* xeno_hal.disable -> xenomai.state=disabled
 * xeno_hal.timerfreq -> xenomai.timerfreq
 * xeno_hal.cpufreq -> xenomai.cpufreq
 * xeno_nucleus.watchdog_timeout -> xenomai.watchdog_timeout
@@ -75,9 +75,9 @@ System parameters renamed::
 
 Obsolete parameters dropped::
 
-xeno_rtdm.tick_arg
-rtdm.devname_hashtab_size
-rtdm.protocol_hashtab_size
+* xeno_rtdm.tick_arg
+* rtdm.devname_hashtab_size
+* rtdm.protocol_hashtab_size
 
 .Rationale
 **********************************************************************
