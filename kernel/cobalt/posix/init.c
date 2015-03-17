@@ -30,6 +30,8 @@
 #include "monitor.h"
 #include "event.h"
 
+LIST_HEAD(cobalt_thread_list);
+
 struct cobalt_kqueues cobalt_global_kqueues;
 
 void cobalt_cleanup(void)
@@ -49,7 +51,6 @@ int __init cobalt_init(void)
 {
 	int ret;
 
-	INIT_LIST_HEAD(&cobalt_global_kqueues.threadq);
 	cobalt_time_slice = CONFIG_XENO_OPT_RR_QUANTUM * 1000;
 
 	ret = cobalt_process_init();

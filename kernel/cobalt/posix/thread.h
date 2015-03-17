@@ -91,14 +91,11 @@ struct cobalt_thread {
 	struct xnthread threadbase;
 	struct cobalt_extref extref;
 	struct cobalt_process *process;
-
-	/** cobalt_threadq */
-	struct list_head link;
-	struct list_head *container;
+	struct list_head next;	/* in cobalt_thread_list */
 
 	/** Signal management. */
 	sigset_t sigpending;
-	struct list_head sigqueues[_NSIG]; /* cobalt_sigpending */
+	struct list_head sigqueues[_NSIG]; /* in cobalt_sigpending */
 	struct xnsynch sigwait;
 	struct list_head signext;
 

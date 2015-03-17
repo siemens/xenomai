@@ -1323,7 +1323,6 @@ static void *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&process->kqueues.condq);
 	INIT_LIST_HEAD(&process->kqueues.mutexq);
 	INIT_LIST_HEAD(&process->kqueues.semq);
-	INIT_LIST_HEAD(&process->kqueues.threadq);
 	INIT_LIST_HEAD(&process->kqueues.monitorq);
 	INIT_LIST_HEAD(&process->kqueues.eventq);
 	INIT_LIST_HEAD(&process->kqueues.schedq);

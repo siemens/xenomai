@@ -38,7 +38,6 @@ struct cobalt_kqueues {
 	struct list_head condq;
 	struct list_head mutexq;
 	struct list_head semq;
-	struct list_head threadq;
 	struct list_head monitorq;
 	struct list_head eventq;
 	struct list_head schedq;
@@ -56,6 +55,8 @@ struct cobalt_process {
 	struct cobalt_timer *timers[CONFIG_XENO_OPT_NRTIMERS];
 	void *priv[NR_PERSONALITIES];
 };
+
+extern struct list_head cobalt_thread_list;
 
 extern struct cobalt_kqueues cobalt_global_kqueues;
 

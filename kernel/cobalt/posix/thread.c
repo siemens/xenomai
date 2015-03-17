@@ -220,7 +220,7 @@ struct xnthread_personality *cobalt_thread_exit(struct xnthread *curr)
 	thread_unhash(&thread->hkey);
 	xnlock_get_irqsave(&nklock, s);
 	cobalt_mark_deleted(thread);
-	list_del(&thread->link);
+	list_del(&thread->next);
 	xnlock_put_irqrestore(&nklock, s);
 	cobalt_signal_flush(thread);
 	xnsynch_destroy(&thread->monitor_synch);
@@ -404,8 +404,7 @@ static int pthread_create(struct cobalt_thread **thread_p,
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-	thread->container = &cobalt_kqueues(0)->threadq;
-	list_add_tail(&thread->link, thread->container);
+	list_add_tail(&thread->next, &cobalt_thread_list);
 	xnlock_put_irqrestore(&nklock, s);
 
 	thread->hkey.u_pth = 0;
@@ -424,7 +423,7 @@ static void pthread_discard(struct cobalt_thread *thread)
 	xnsynch_destroy(&thread->sigwait);
 
 	xnlock_get_irqsave(&nklock, s);
-	list_del(&thread->link);
+	list_del(&thread->next);
 	xnlock_put_irqrestore(&nklock, s);
 	__xnthread_discard(&thread->threadbase);
 	xnfree(thread);
