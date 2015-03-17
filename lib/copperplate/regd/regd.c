@@ -269,11 +269,22 @@ static void unmount(const char *path)
 	if (flags >= 0)
 		fcntl(2, F_SETFD, flags | FD_CLOEXEC);
 
-	if (asprintf(&cmd, "/usr/bin/fusermount -uzq %s", path) > 0) {
-		ret = system(cmd);
-		(void)ret;
-		free(cmd);
-	}
+	ret = asprintf(&cmd, "/usr/bin/fusermount -uzq %s", path);
+	if (ret < 0)
+		return;
+
+	ret = system(cmd);
+	free(cmd);
+	if (ret != -1 && WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
+		return;
+
+	ret = asprintf(&cmd, "/usr/bin/umount -l %s", path);
+	if (ret < 0)
+		return;
+
+	ret = system(cmd);
+	free(cmd);
+	(void)ret;
 }
 
 static void unregister_client(int s)
