@@ -71,8 +71,4 @@ COBALT_SYSCALL_DECL(mq_timedreceive,
 COBALT_SYSCALL_DECL(mq_notify,
 		    (mqd_t fd, const struct sigevent *__user evp));
 
-int cobalt_mq_pkg_init(void);
-
-void cobalt_mq_pkg_cleanup(void);
-
 #endif /* !_COBALT_POSIX_MQUEUE_H */

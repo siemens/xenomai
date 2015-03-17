@@ -568,7 +568,7 @@ int cobalt_timer_deliver(timer_t timerid) /* nklocked, IRQs off. */
 	return timer->overruns;
 }
 
-void cobalt_timers_cleanup(struct cobalt_process *p)
+void cobalt_timer_reclaim(struct cobalt_process *p)
 {
 	struct cobalt_timer *timer;
 	unsigned id;

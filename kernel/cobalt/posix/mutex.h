@@ -23,6 +23,8 @@
 #include <cobalt/uapi/mutex.h>
 #include <xenomai/posix/syscall.h>
 
+struct cobalt_process;
+
 struct cobalt_mutex {
 	unsigned int magic;
 	struct xnsynch synchbase;
@@ -30,7 +32,7 @@ struct cobalt_mutex {
 	struct list_head link;
 	struct list_head conds;
 	struct cobalt_mutexattr attr;
-	struct cobalt_kqueues *owningq;
+	struct cobalt_resources *scope;
 	xnhandle_t handle;
 };
 
@@ -69,10 +71,6 @@ COBALT_SYSCALL_DECL(mutex_unlock,
 int cobalt_mutex_release(struct xnthread *cur,
 			 struct cobalt_mutex *mutex);
 
-void cobalt_mutexq_cleanup(struct cobalt_kqueues *q);
-
-void cobalt_mutex_pkg_init(void);
-
-void cobalt_mutex_pkg_cleanup(void);
+void cobalt_mutex_reclaim(struct cobalt_process *process);
 
 #endif /* !_COBALT_POSIX_MUTEX_H */

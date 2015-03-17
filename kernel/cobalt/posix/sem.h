@@ -33,7 +33,7 @@ struct cobalt_sem {
 	struct list_head link;
 	struct cobalt_sem_state *state;
 	int flags;
-	struct cobalt_kqueues *owningq;
+	struct cobalt_resources *scope;
 	xnhandle_t handle;
 	unsigned int refs;
 };
@@ -72,7 +72,7 @@ int __cobalt_sem_destroy(xnhandle_t handle);
 
 void __cobalt_sem_unlink(xnhandle_t handle);
 
-void cobalt_sem_usems_cleanup(struct cobalt_process *cc);
+void cobalt_nsem_reclaim(struct cobalt_process *process);
 
 struct cobalt_sem *
 __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sem,
@@ -121,10 +121,6 @@ COBALT_SYSCALL_DECL(sem_inquire,
 		     pid_t __user *u_waitlist,
 		     size_t waitsz));
 
-void cobalt_semq_cleanup(struct cobalt_kqueues *q);
-
-void cobalt_sem_pkg_init(void);
-
-void cobalt_sem_pkg_cleanup(void);
+void cobalt_sem_reclaim(struct cobalt_process *process);
 
 #endif /* !_COBALT_POSIX_SEM_H */

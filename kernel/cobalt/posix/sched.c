@@ -395,7 +395,7 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
 			return -ENOMEM;
 		tg = &group->quota;
 		group->pshared = p->add.pshared != 0;
-		group->kq = cobalt_kqueues(group->pshared);
+		group->scope = cobalt_current_resources(group->pshared);
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		ret = xnsched_quota_create_group(tg, sched, &quota_sum);
@@ -404,7 +404,7 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
 			xnfree(group);
 			return ret;
 		}
-		list_add(&group->next, &group->kq->schedq);
+		list_add(&group->next, &group->scope->schedq);
 		xnlock_put_irqrestore(&nklock, s);
 		break;
 	case sched_quota_remove:
@@ -415,7 +415,7 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
 		if (tg == NULL)
 			goto bad_tgid;
 		group = container_of(tg, struct cobalt_sched_group, quota);
-		if (group->kq != cobalt_kqueues(group->pshared))
+		if (group->scope != cobalt_current_resources(group->pshared))
 			goto bad_tgid;
 		ret = xnsched_quota_destroy_group(tg,
 						  p->op == sched_quota_force_remove,
@@ -435,7 +435,7 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
 		if (tg == NULL)
 			goto bad_tgid;
 		group = container_of(tg, struct cobalt_sched_group, quota);
-		if (group->kq != cobalt_kqueues(group->pshared))
+		if (group->scope != cobalt_current_resources(group->pshared))
 			goto bad_tgid;
 		xnsched_quota_set_limit(tg, p->set.quota, p->set.quota_peak,
 					&quota_sum);
@@ -485,7 +485,7 @@ ssize_t get_quota_config(int cpu, void __user *u_config, size_t len,
 		goto bad_tgid;
 
 	group = container_of(tg, struct cobalt_sched_group, quota);
-	if (group->kq != cobalt_kqueues(group->pshared))
+	if (group->scope != cobalt_current_resources(group->pshared))
 		goto bad_tgid;
 
 	config->quota.info.tgid = tg->tgid;
@@ -711,8 +711,9 @@ COBALT_SYSCALL(sched_weightprio, current,
 	return __cobalt_sched_weightprio(policy, &param_ex);
 }
 
-void cobalt_sched_cleanup(struct cobalt_kqueues *q)
+void cobalt_sched_reclaim(struct cobalt_process *process)
 {
+	struct cobalt_resources *p = &process->resources;
 	struct cobalt_sched_group *group;
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 	int quota_sum;
@@ -721,11 +722,8 @@ void cobalt_sched_cleanup(struct cobalt_kqueues *q)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (;;) {
-		if (list_empty(&q->schedq))
-			break;
-
-		group = list_get_entry(&q->schedq, struct cobalt_sched_group, next);
+	while (!list_empty(&p->schedq)) {
+		group = list_get_entry(&p->schedq, struct cobalt_sched_group, next);
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 		xnsched_quota_destroy_group(&group->quota, 1, &quota_sum);
 #endif
@@ -735,14 +733,4 @@ void cobalt_sched_cleanup(struct cobalt_kqueues *q)
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
-}
-
-void cobalt_sched_pkg_init(void)
-{
-	INIT_LIST_HEAD(&cobalt_global_kqueues.schedq);
-}
-
-void cobalt_sched_pkg_cleanup(void)
-{
-	cobalt_sched_cleanup(&cobalt_global_kqueues);
 }

@@ -1320,12 +1320,12 @@ static void *cobalt_process_attach(void)
 		return ERR_PTR(ret);
 	}
 
-	INIT_LIST_HEAD(&process->kqueues.condq);
-	INIT_LIST_HEAD(&process->kqueues.mutexq);
-	INIT_LIST_HEAD(&process->kqueues.semq);
-	INIT_LIST_HEAD(&process->kqueues.monitorq);
-	INIT_LIST_HEAD(&process->kqueues.eventq);
-	INIT_LIST_HEAD(&process->kqueues.schedq);
+	INIT_LIST_HEAD(&process->resources.condq);
+	INIT_LIST_HEAD(&process->resources.mutexq);
+	INIT_LIST_HEAD(&process->resources.semq);
+	INIT_LIST_HEAD(&process->resources.monitorq);
+	INIT_LIST_HEAD(&process->resources.eventq);
+	INIT_LIST_HEAD(&process->resources.schedq);
 	INIT_LIST_HEAD(&process->sigwaiters);
 	xntree_init(&process->usems);
 	bitmap_fill(process->timers_map, CONFIG_XENO_OPT_NRTIMERS);
@@ -1355,14 +1355,14 @@ static void cobalt_process_detach(void *arg)
 {
 	struct cobalt_process *process = arg;
 
-	cobalt_sem_usems_cleanup(process);
-	cobalt_timers_cleanup(process);
-	cobalt_monitorq_cleanup(&process->kqueues);
-	cobalt_semq_cleanup(&process->kqueues);
-	cobalt_mutexq_cleanup(&process->kqueues);
-	cobalt_condq_cleanup(&process->kqueues);
-	cobalt_eventq_cleanup(&process->kqueues);
-	cobalt_sched_cleanup(&process->kqueues);
+	cobalt_nsem_reclaim(process);
+	cobalt_timer_reclaim(process);
+	cobalt_cond_reclaim(process);
+	cobalt_mutex_reclaim(process);
+	cobalt_sem_reclaim(process);
+	cobalt_monitor_reclaim(process);
+	cobalt_event_reclaim(process);
+	cobalt_sched_reclaim(process);
 	detach_process(process);
 	/*
 	 * The cobalt_process descriptor release may be deferred until
@@ -1408,11 +1408,17 @@ int cobalt_process_init(void)
 	if (ret)
 		goto fail_register;
 
+	ret = cobalt_signal_init();
+	if (ret)
+		goto fail_siginit;
+
 	init_hostrt();
 	ipipe_set_hooks(ipipe_root_domain, IPIPE_SYSCALL|IPIPE_KEVENT);
 	ipipe_set_hooks(&xnsched_realtime_domain, IPIPE_SYSCALL|IPIPE_TRAP);
 
 	return 0;
+fail_siginit:
+	cobalt_unregister_personality(0);
 fail_register:
 	cobalt_memdev_cleanup();
 fail_memdev:
@@ -1424,23 +1430,6 @@ fail_debug:
 	kfree(process_hash);
 
 	return ret;
-}
-
-void cobalt_process_cleanup(void)
-{
-	cobalt_unregister_personality(cobalt_personality.xid);
-	cobalt_memdev_cleanup();
-	xnsynch_destroy(&yield_sync);
-	ipipe_set_hooks(&xnsched_realtime_domain, 0);
-	ipipe_set_hooks(ipipe_root_domain, 0);
-
-	xnarch_cleanup_mayday();
-	xndebug_cleanup();
-
-	if (process_hash) {
-		kfree(process_hash);
-		process_hash = NULL;
-	}
 }
 
 struct xnthread_personality cobalt_personality = {

@@ -23,14 +23,15 @@
 #include <cobalt/uapi/monitor.h>
 #include <xenomai/posix/syscall.h>
 
-struct cobalt_kqueues;
+struct cobalt_resources;
+struct cobalt_process;
 
 struct cobalt_monitor {
 	unsigned int magic;
 	struct xnsynch gate;
 	struct xnsynch drain;
 	struct cobalt_monitor_state *state;
-	struct cobalt_kqueues *owningq;
+	struct cobalt_resources *scope;
 	struct list_head link;
 	struct list_head waiters;
 	int flags;
@@ -64,10 +65,6 @@ COBALT_SYSCALL_DECL(monitor_wait,
 COBALT_SYSCALL_DECL(monitor_destroy,
 		    (struct cobalt_monitor_shadow __user *u_monsh));
 
-void cobalt_monitorq_cleanup(struct cobalt_kqueues *q);
-
-void cobalt_monitor_pkg_init(void);
-
-void cobalt_monitor_pkg_cleanup(void);
+void cobalt_monitor_reclaim(struct cobalt_process *process);
 
 #endif /* !_COBALT_POSIX_MONITOR_H */

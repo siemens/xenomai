@@ -589,7 +589,7 @@ COBALT_SYSCALL(sigqueue, conforming,
 	return ret ?: __cobalt_sigqueue(pid, sig, &val);
 }
 
-int cobalt_signal_pkg_init(void)
+__init int cobalt_signal_init(void)
 {
 	struct cobalt_sigpending *sigp;
 
@@ -602,9 +602,4 @@ int cobalt_signal_pkg_init(void)
 		list_add_tail(&sigp->next, &sigpending_pool);
 
 	return 0;
-}
-
-void cobalt_signal_pkg_cleanup(void)
-{
-	free_pages_exact(sigpending_mem, __SIGPOOL_SIZE);
 }

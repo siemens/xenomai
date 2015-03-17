@@ -26,8 +26,9 @@
 #include <cobalt/uapi/cond.h>
 #include <xenomai/posix/syscall.h>
 
-struct cobalt_kqueues;
+struct cobalt_resources;
 struct cobalt_mutex;
+struct cobalt_process;
 
 struct cobalt_cond {
 	unsigned int magic;
@@ -38,7 +39,7 @@ struct cobalt_cond {
 	struct cobalt_cond_state *state;
 	struct cobalt_condattr attr;
 	struct cobalt_mutex *mutex;
-	struct cobalt_kqueues *owningq;
+	struct cobalt_resources *scope;
 	xnhandle_t handle;
 };
 
@@ -68,10 +69,6 @@ COBALT_SYSCALL_DECL(cond_wait_epilogue,
 
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
 
-void cobalt_condq_cleanup(struct cobalt_kqueues *q);
-
-void cobalt_cond_pkg_init(void);
-
-void cobalt_cond_pkg_cleanup(void);
+void cobalt_cond_reclaim(struct cobalt_process *process);
 
 #endif /* !_COBALT_POSIX_COND_H */

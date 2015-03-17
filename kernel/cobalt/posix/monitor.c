@@ -54,8 +54,8 @@ COBALT_SYSCALL(monitor_init, current,
 {
 	struct cobalt_monitor_shadow shadow;
 	struct cobalt_monitor_state *state;
+	struct cobalt_resources *rs;
 	struct cobalt_monitor *mon;
-	struct cobalt_kqueues *kq;
 	int pshared, tmode, ret;
 	struct cobalt_umm *umm;
 	unsigned long stateoff;
@@ -90,11 +90,11 @@ COBALT_SYSCALL(monitor_init, current,
 	mon->flags = flags;
 	mon->tmode = tmode;
 	INIT_LIST_HEAD(&mon->waiters);
-	kq = cobalt_kqueues(pshared);
-	mon->owningq = kq;
+	rs = cobalt_current_resources(pshared);
+	mon->scope = rs;
 
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&mon->link, &kq->monitorq);
+	list_add_tail(&mon->link, &rs->monitorq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	mon->magic = COBALT_MONITOR_MAGIC;
@@ -376,8 +376,7 @@ COBALT_SYSCALL(monitor_exit, primary,
 	return ret;
 }
 
-static void monitor_destroy(struct cobalt_monitor *mon,
-			    struct cobalt_kqueues *q)
+static void monitor_destroy(struct cobalt_monitor *mon)
 {
 	struct cobalt_umm *umm;
 	int pshared;
@@ -437,7 +436,7 @@ COBALT_SYSCALL(monitor_destroy, primary,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	monitor_destroy(mon, mon->owningq);
+	monitor_destroy(mon);
 
 	xnsched_run();
 
@@ -448,32 +447,23 @@ COBALT_SYSCALL(monitor_destroy, primary,
 	return ret;
 }
 
-void cobalt_monitorq_cleanup(struct cobalt_kqueues *q)
+void cobalt_monitor_reclaim(struct cobalt_process *process)
 {
+	struct cobalt_resources *p = &process->resources;
 	struct cobalt_monitor *mon, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (list_empty(&q->monitorq))
+	if (list_empty(&p->monitorq))
 		goto out;
 
-	list_for_each_entry_safe(mon, tmp, &q->monitorq, link) {
+	list_for_each_entry_safe(mon, tmp, &p->monitorq, link) {
 		mon->magic = 0;
 		xnlock_put_irqrestore(&nklock, s);
-		monitor_destroy(mon, q);
+		monitor_destroy(mon);
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
-}
-
-void cobalt_monitor_pkg_init(void)
-{
-	INIT_LIST_HEAD(&cobalt_global_kqueues.monitorq);
-}
-
-void cobalt_monitor_pkg_cleanup(void)
-{
-	cobalt_monitorq_cleanup(&cobalt_global_kqueues);
 }

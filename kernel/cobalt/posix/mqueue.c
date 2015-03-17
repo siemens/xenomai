@@ -83,7 +83,7 @@ static struct mq_attr default_attr = {
       .mq_msgsize = 8192,
 };
 
-static struct list_head cobalt_mqq;
+static LIST_HEAD(cobalt_mqq);
 
 static inline struct cobalt_msg *mq_msg_alloc(struct cobalt_mq *mq)
 {
@@ -1003,30 +1003,4 @@ COBALT_SYSCALL(mq_timedreceive, primary,
 				       u_ts, u_ts ? mq_fetch_timeout : NULL);
 
 	return ret ?: cobalt_copy_to_user(u_len, &len, sizeof(*u_len));
-}
-
-int cobalt_mq_pkg_init(void)
-{
-	INIT_LIST_HEAD(&cobalt_mqq);
-
-	return 0;
-}
-
-void cobalt_mq_pkg_cleanup(void)
-{
-	struct cobalt_mq *mq, *tmp;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (list_empty(&cobalt_mqq))
-		goto out;
-
-	list_for_each_entry_safe(mq, tmp, &cobalt_mqq, link) {
-		xnlock_put_irqrestore(&nklock, s);
-		mq_destroy(mq);
-		xnlock_get_irqsave(&nklock, s);
-	}
-out:
-	xnlock_put_irqrestore(&nklock, s);
 }

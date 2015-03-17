@@ -47,14 +47,14 @@
 
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
+static inline struct cobalt_resources *cobalt_current_resources(int pshared)
 {
 	struct cobalt_process *process;
 
 	if (pshared || (process = cobalt_current_process()) == NULL)
-		return &cobalt_global_kqueues;
+		return &cobalt_global_resources;
 
-	return &process->kqueues;
+	return &process->resources;
 }
 
 static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
@@ -64,7 +64,5 @@ static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
 }
 
 int cobalt_init(void);
-
-void cobalt_cleanup(void);
 
 #endif /* !_COBALT_POSIX_INTERNAL_H */

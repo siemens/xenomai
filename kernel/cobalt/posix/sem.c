@@ -24,10 +24,10 @@
 #include "sem.h"
 #include <trace/events/cobalt-posix.h>
 
-static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
+static inline struct cobalt_resources *sem_kqueue(struct cobalt_sem *sem)
 {
 	int pshared = !!(sem->flags & SEM_PSHARED);
-	return cobalt_kqueues(pshared);
+	return cobalt_current_resources(pshared);
 }
 
 int __cobalt_sem_destroy(xnhandle_t handle)
@@ -73,7 +73,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 {
 	struct cobalt_sem_state *state;
 	struct cobalt_sem *sem, *osem;
-	struct cobalt_kqueues *kq;
+	struct cobalt_resources *rs;
 	struct cobalt_ppd *sys_ppd;
 	int ret, sflags;
 	spl_t s;
@@ -98,8 +98,8 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	kq = cobalt_kqueues(!!(flags & SEM_PSHARED));
-	if (list_empty(&kq->semq))
+	rs = cobalt_current_resources(!!(flags & SEM_PSHARED));
+	if (list_empty(&rs->semq))
 		goto do_init;
 
 	if (sm->magic != COBALT_SEM_MAGIC &&
@@ -136,7 +136,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 		goto err_lock_put;
 
 	sem->magic = COBALT_SEM_MAGIC;
-	list_add_tail(&sem->link, &kq->semq);
+	list_add_tail(&sem->link, &rs->semq);
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 	xnsynch_init(&sem->synchbase, sflags, NULL);
 
@@ -144,7 +144,7 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	atomic_set(&state->value, value);
 	state->flags = flags;
 	sem->flags = flags;
-	sem->owningq = kq;
+	sem->scope = rs;
 	sem->refs = name ? 2 : 1;
 
 	sm->magic = name ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
@@ -187,7 +187,7 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 		goto error;
 	}
 
-	if (sem_kqueue(sem) != sem->owningq) {
+	if (sem_kqueue(sem) != sem->scope) {
 		ret = -EPERM;
 		goto error;
 	}
@@ -219,7 +219,7 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 		return -EINVAL;
 
 #if XENO_DEBUG(USER)
-	if (sem->owningq != sem_kqueue(sem))
+	if (sem->scope != sem_kqueue(sem))
 		return -EPERM;
 #endif
 
@@ -241,7 +241,8 @@ static int sem_trywait(xnhandle_t handle)
 	return err;
 }
 
-static int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcast)
+static int sem_post_inner(struct cobalt_sem *sem,
+			  struct cobalt_resources *ownq, int bcast)
 {
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
@@ -290,7 +291,7 @@ static int sem_wait(xnhandle_t handle)
 	if (info & XNRMID) {
 		ret = -EINVAL;
 	} else if (info & XNBREAK) {
-		sem_post_inner(sem, sem->owningq, 0);
+		sem_post_inner(sem, sem->scope, 0);
 		ret = -EINTR;
 	}
 out:
@@ -376,7 +377,7 @@ static int sem_post(xnhandle_t handle)
 
 	xnlock_get_irqsave(&nklock, s);
 	sm = xnregistry_lookup(handle, NULL);
-	ret = sem_post_inner(sm, sm->owningq, 0);
+	ret = sem_post_inner(sm, sm->scope, 0);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -396,7 +397,7 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 		return -EINVAL;
 	}
 
-	if (sem->owningq != sem_kqueue(sem)) {
+	if (sem->scope != sem_kqueue(sem)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EPERM;
 	}
@@ -519,7 +520,7 @@ COBALT_SYSCALL(sem_broadcast_np, current,
 
 	xnlock_get_irqsave(&nklock, s);
 	sm = xnregistry_lookup(handle, NULL);
-	err = sem_post_inner(sm, sm->owningq, 1);
+	err = sem_post_inner(sm, sm->scope, 1);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -608,17 +609,18 @@ COBALT_SYSCALL(sem_inquire, current,
 	return ret ?: nrwait;
 }
 
-void cobalt_semq_cleanup(struct cobalt_kqueues *q)
+void cobalt_sem_reclaim(struct cobalt_process *process)
 {
+	struct cobalt_resources *p = &process->resources;
 	struct cobalt_sem *sem, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (list_empty(&q->semq))
+	if (list_empty(&p->semq))
 		goto out;
 
-	list_for_each_entry_safe(sem, tmp, &q->semq, link) {
+	list_for_each_entry_safe(sem, tmp, &p->semq, link) {
 		xnlock_put_irqrestore(&nklock, s);
 		if (sem->flags & SEM_NAMED)
 			__cobalt_sem_unlink(sem->handle);
@@ -627,15 +629,4 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
-}
-
-
-void cobalt_sem_pkg_init(void)
-{
-	INIT_LIST_HEAD(&cobalt_global_kqueues.semq);
-}
-
-void cobalt_sem_pkg_cleanup(void)
-{
-	cobalt_semq_cleanup(&cobalt_global_kqueues);
 }

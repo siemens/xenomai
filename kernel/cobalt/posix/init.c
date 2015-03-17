@@ -32,39 +32,18 @@
 
 LIST_HEAD(cobalt_thread_list);
 
-struct cobalt_kqueues cobalt_global_kqueues;
+struct cobalt_resources cobalt_global_resources = {
+	.condq = LIST_HEAD_INIT(cobalt_global_resources.condq),
+	.mutexq = LIST_HEAD_INIT(cobalt_global_resources.mutexq),
+	.semq = LIST_HEAD_INIT(cobalt_global_resources.semq),
+	.monitorq = LIST_HEAD_INIT(cobalt_global_resources.monitorq),
+	.eventq = LIST_HEAD_INIT(cobalt_global_resources.eventq),
+	.schedq = LIST_HEAD_INIT(cobalt_global_resources.schedq),
+};
 
-void cobalt_cleanup(void)
+__init int cobalt_init(void)
 {
-	cobalt_process_cleanup();
-	cobalt_monitor_pkg_cleanup();
-	cobalt_event_pkg_cleanup();
-	cobalt_signal_pkg_cleanup();
-	cobalt_mq_pkg_cleanup();
-	cobalt_sem_pkg_cleanup();
-	cobalt_cond_pkg_cleanup();
-	cobalt_mutex_pkg_cleanup();
-	cobalt_sched_pkg_cleanup();
-}
-
-int __init cobalt_init(void)
-{
-	int ret;
-
 	cobalt_time_slice = CONFIG_XENO_OPT_RR_QUANTUM * 1000;
 
-	ret = cobalt_process_init();
-	if (ret)
-		return ret;
-
-	cobalt_sched_pkg_init();
-	cobalt_mutex_pkg_init();
-	cobalt_sem_pkg_init();
-	cobalt_cond_pkg_init();
-	cobalt_signal_pkg_init();
-	cobalt_mq_pkg_init();
-	cobalt_event_pkg_init();
-	cobalt_monitor_pkg_init();
-
-	return 0;
+	return cobalt_process_init();
 }

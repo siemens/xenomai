@@ -52,9 +52,9 @@ COBALT_SYSCALL(event_init, current,
 {
 	struct cobalt_event_shadow shadow;
 	struct cobalt_event_state *state;
+	struct cobalt_resources *rs;
 	int pshared, synflags, ret;
 	struct cobalt_event *event;
-	struct cobalt_kqueues *kq;
 	struct cobalt_umm *umm;
 	unsigned long stateoff;
 	spl_t s;
@@ -84,11 +84,11 @@ COBALT_SYSCALL(event_init, current,
 	event->flags = flags;
 	synflags = (flags & COBALT_EVENT_PRIO) ? XNSYNCH_PRIO : XNSYNCH_FIFO;
 	xnsynch_init(&event->synch, synflags, NULL);
-	kq = cobalt_kqueues(pshared);
-	event->owningq = kq;
+	rs = cobalt_current_resources(pshared);
+	event->scope = rs;
 
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&event->link, &kq->eventq);
+	list_add_tail(&event->link, &rs->eventq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	event->magic = COBALT_EVENT_MAGIC;
@@ -260,7 +260,6 @@ out:
 }
 
 static void event_destroy(struct cobalt_event *event,
-			  struct cobalt_kqueues *q,
 			  spl_t s) /* atomic-entry */
 {
 	struct cobalt_umm *umm;
@@ -299,7 +298,7 @@ COBALT_SYSCALL(event_destroy, current,
 		goto out;
 	}
 
-	event_destroy(event, event->owningq, s);
+	event_destroy(event, s);
 
 	xnsched_run();
 out:
@@ -394,27 +393,19 @@ COBALT_SYSCALL(event_inquire, current,
 	return ret ?: nrwait;
 }
 
-void cobalt_eventq_cleanup(struct cobalt_kqueues *q)
+void cobalt_event_reclaim(struct cobalt_process *process)
 {
+	struct cobalt_resources *p = &process->resources;
 	struct cobalt_event *event, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!list_empty(&q->eventq)) {
-		list_for_each_entry_safe(event, tmp, &q->eventq, link)
-			event_destroy(event, q, s);
-	}
+	if (list_empty(&p->eventq))
+		goto out;
 
+	list_for_each_entry_safe(event, tmp, &p->eventq, link)
+		event_destroy(event, s);
+out:
 	xnlock_put_irqrestore(&nklock, s);
-}
-
-void cobalt_event_pkg_init(void)
-{
-	INIT_LIST_HEAD(&cobalt_global_kqueues.eventq);
-}
-
-void cobalt_event_pkg_cleanup(void)
-{
-	cobalt_eventq_cleanup(&cobalt_global_kqueues);
 }

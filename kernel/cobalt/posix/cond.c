@@ -24,7 +24,7 @@
 #include <trace/events/cobalt-posix.h>
 
 static inline void
-cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
+cond_destroy_internal(xnhandle_t handle)
 {
 	struct cobalt_cond *cond;
 	spl_t s;
@@ -38,9 +38,8 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
 	xnregistry_remove(handle);
 	list_del(&cond->link);
 	/*
-	 * synchbase wait queue may not be empty only when this
-	 * function is called from cobalt_cond_pkg_cleanup, in which
-	 * case we don't have to reschedule.
+	 * At this point, synchbase wait queue is empty, so we don't
+	 * have to reschedule.
 	 */
 	xnsynch_destroy(&cond->synchbase);
 	cobalt_mark_deleted(cond);
@@ -76,7 +75,7 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 
 	xnlock_get_irqsave(&nklock, s);
 
-	condq = &cobalt_kqueues(attr->pshared)->condq;
+	condq = &cobalt_current_resources(attr->pshared)->condq;
 
 	/*
 	 * We allow reinitializing a shared condvar. Rationale: since
@@ -96,7 +95,7 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 		goto fail_register;
 	}
 	xnlock_put_irqrestore(&nklock, s);
-	cond_destroy_internal(cnd->handle, cobalt_kqueues(1));
+	cond_destroy_internal(cnd->handle);
 	xnlock_get_irqsave(&nklock, s);
 do_init:
 	ret = xnregistry_enter_anon(cond, &cond->handle);
@@ -109,7 +108,7 @@ do_init:
 	xnsynch_init(&cond->synchbase, synch_flags, NULL);
 	cond->attr = *attr;
 	cond->mutex = NULL;
-	cond->owningq = cobalt_kqueues(attr->pshared);
+	cond->scope = cobalt_current_resources(attr->pshared);
 	list_add_tail(&cond->link, condq);
 
 	cnd->handle = cond->handle;
@@ -147,7 +146,7 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 		return -EINVAL;
 	}
 
-	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
+	if (cond->scope != cobalt_current_resources(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EPERM;
 	}
@@ -161,7 +160,7 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 	pshared = cond->attr.pshared;
 	xnlock_put_irqrestore(&nklock, s);
 
-	cond_destroy_internal(cnd->handle, cobalt_kqueues(pshared));
+	cond_destroy_internal(cnd->handle);
 
 	return 0;
 }
@@ -184,7 +183,7 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 	}
 
 #if XENO_DEBUG(USER)
-	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
+	if (cond->scope != cobalt_current_resources(cond->attr.pshared)) {
 		err = -EPERM;
 		goto unlock_and_return;
 	}
@@ -453,31 +452,22 @@ int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 	return need_resched;
 }
 
-void cobalt_condq_cleanup(struct cobalt_kqueues *q)
+void cobalt_cond_reclaim(struct cobalt_process *process)
 {
+	struct cobalt_resources *p = &process->resources;
 	struct cobalt_cond *cond, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (list_empty(&q->condq))
+	if (list_empty(&p->condq))
 		goto out;
 
-	list_for_each_entry_safe(cond, tmp, &q->condq, link) {
+	list_for_each_entry_safe(cond, tmp, &p->condq, link) {
 		xnlock_put_irqrestore(&nklock, s);
-		cond_destroy_internal(cond->handle, q);
+		cond_destroy_internal(cond->handle);
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
-}
-
-void cobalt_cond_pkg_init(void)
-{
-	INIT_LIST_HEAD(&cobalt_global_kqueues.condq);
-}
-
-void cobalt_cond_pkg_cleanup(void)
-{
-	cobalt_condq_cleanup(&cobalt_global_kqueues);
 }

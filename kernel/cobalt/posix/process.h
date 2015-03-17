@@ -34,7 +34,7 @@ struct mm_struct;
 struct xnthread_personality;
 struct cobalt_timer;
 
-struct cobalt_kqueues {
+struct cobalt_resources {
 	struct list_head condq;
 	struct list_head mutexq;
 	struct list_head semq;
@@ -48,9 +48,9 @@ struct cobalt_process {
 	struct hlist_node hlink;
 	struct cobalt_ppd sys_ppd;
 	unsigned long permap;
-	struct cobalt_kqueues kqueues;
 	struct rb_root usems;
 	struct list_head sigwaiters;
+	struct cobalt_resources resources;
 	DECLARE_BITMAP(timers_map, CONFIG_XENO_OPT_NRTIMERS);
 	struct cobalt_timer *timers[CONFIG_XENO_OPT_NRTIMERS];
 	void *priv[NR_PERSONALITIES];
@@ -58,7 +58,7 @@ struct cobalt_process {
 
 extern struct list_head cobalt_thread_list;
 
-extern struct cobalt_kqueues cobalt_global_kqueues;
+extern struct cobalt_resources cobalt_global_resources;
 
 int cobalt_register_personality(struct xnthread_personality *personality);
 
@@ -81,8 +81,6 @@ void *cobalt_get_context(int xid);
 int cobalt_yield(xnticks_t min, xnticks_t max);
 
 int cobalt_process_init(void);
-
-void cobalt_process_cleanup(void);
 
 static inline struct cobalt_process *cobalt_current_process(void)
 {

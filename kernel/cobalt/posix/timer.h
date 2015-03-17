@@ -25,9 +25,6 @@
 #include <xenomai/posix/signal.h>
 #include <xenomai/posix/syscall.h>
 
-struct cobalt_thread;
-struct cobalt_kqueues;
-
 struct cobalt_timer {
 	struct xntimer timerbase;
 	timer_t id;
@@ -40,7 +37,7 @@ struct cobalt_timer {
 
 int cobalt_timer_deliver(timer_t timerid);
 
-void cobalt_timers_cleanup(struct cobalt_process *p);
+void cobalt_timer_reclaim(struct cobalt_process *p);
 
 static inline timer_t cobalt_timer_id(const struct cobalt_timer *timer)
 {

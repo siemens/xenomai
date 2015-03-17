@@ -112,8 +112,6 @@ COBALT_SYSCALL_DECL(kill, (pid_t pid, int sig));
 COBALT_SYSCALL_DECL(sigqueue,
 		    (pid_t pid, int sig, const union sigval __user *u_value));
 
-int cobalt_signal_pkg_init(void);
-
-void cobalt_signal_pkg_cleanup(void);
+int cobalt_signal_init(void);
 
 #endif /* !_COBALT_POSIX_SIGNAL_H */

@@ -22,13 +22,14 @@
 #include <cobalt/kernel/sched.h>
 #include <xenomai/posix/syscall.h>
 
-struct cobalt_kqueues;
+struct cobalt_resources;
+struct cobalt_process;
 
 struct cobalt_sched_group {
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 	struct xnsched_quota_group quota;
 #endif
-	struct cobalt_kqueues *kq;
+	struct cobalt_resources *scope;
 	int pshared;
 	struct list_head next;
 };
@@ -81,10 +82,6 @@ COBALT_SYSCALL_DECL(sched_getconfig_np,
 		     union sched_config __user *u_config,
 		     size_t len));
 
-void cobalt_sched_cleanup(struct cobalt_kqueues *q);
-
-void cobalt_sched_pkg_init(void);
-
-void cobalt_sched_pkg_cleanup(void);
+void cobalt_sched_reclaim(struct cobalt_process *process);
 
 #endif /* !_COBALT_POSIX_SCHED_H */

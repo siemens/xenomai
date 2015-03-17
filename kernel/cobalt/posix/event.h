@@ -23,14 +23,15 @@
 #include <cobalt/uapi/event.h>
 #include <xenomai/posix/syscall.h>
 
-struct cobalt_kqueues;
+struct cobalt_resources;
+struct cobalt_process;
 
 struct cobalt_event {
 	unsigned int magic;
 	unsigned int value;
 	struct xnsynch synch;
 	struct cobalt_event_state *state;
-	struct cobalt_kqueues *owningq;
+	struct cobalt_resources *scope;
 	struct list_head link;
 	int flags;
 	xnhandle_t handle;
@@ -65,10 +66,6 @@ COBALT_SYSCALL_DECL(event_inquire,
 		     pid_t __user *u_waitlist,
 		     size_t waitsz));
 
-void cobalt_eventq_cleanup(struct cobalt_kqueues *q);
-
-void cobalt_event_pkg_init(void);
-
-void cobalt_event_pkg_cleanup(void);
+void cobalt_event_reclaim(struct cobalt_process *process);
 
 #endif /* !_COBALT_POSIX_EVENT_H */
