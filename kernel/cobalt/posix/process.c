@@ -85,6 +85,17 @@ struct xnthread_personality *cobalt_personalities[NR_PERSONALITIES];
 
 static struct xnsynch yield_sync;
 
+LIST_HEAD(cobalt_thread_list);
+
+struct cobalt_resources cobalt_global_resources = {
+	.condq = LIST_HEAD_INIT(cobalt_global_resources.condq),
+	.mutexq = LIST_HEAD_INIT(cobalt_global_resources.mutexq),
+	.semq = LIST_HEAD_INIT(cobalt_global_resources.semq),
+	.monitorq = LIST_HEAD_INIT(cobalt_global_resources.monitorq),
+	.eventq = LIST_HEAD_INIT(cobalt_global_resources.eventq),
+	.schedq = LIST_HEAD_INIT(cobalt_global_resources.schedq),
+};
+
 static unsigned __attribute__((pure)) process_hash_crunch(struct mm_struct *mm)
 {
 	unsigned long hash = ((unsigned long)mm - PAGE_OFFSET) / sizeof(*mm);
@@ -1371,7 +1382,20 @@ static void cobalt_process_detach(void *arg)
 	 */
 }
 
-int cobalt_process_init(void)
+struct xnthread_personality cobalt_personality = {
+	.name = "cobalt",
+	.magic = 0,
+	.ops = {
+		.attach_process = cobalt_process_attach,
+		.detach_process = cobalt_process_detach,
+		.map_thread = cobalt_thread_map,
+		.exit_thread = cobalt_thread_exit,
+		.finalize_thread = cobalt_thread_finalize,
+	},
+};
+EXPORT_SYMBOL_GPL(cobalt_personality);
+
+__init int cobalt_init(void)
 {
 	unsigned int i, size;
 	int ret;
@@ -1431,16 +1455,3 @@ fail_debug:
 
 	return ret;
 }
-
-struct xnthread_personality cobalt_personality = {
-	.name = "cobalt",
-	.magic = 0,
-	.ops = {
-		.attach_process = cobalt_process_attach,
-		.detach_process = cobalt_process_detach,
-		.map_thread = cobalt_thread_map,
-		.exit_thread = cobalt_thread_exit,
-		.finalize_thread = cobalt_thread_finalize,
-	},
-};
-EXPORT_SYMBOL_GPL(cobalt_personality);

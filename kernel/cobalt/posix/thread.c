@@ -32,7 +32,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/cobalt-posix.h>
 
-xnticks_t cobalt_time_slice;
+xnticks_t cobalt_time_slice = CONFIG_XENO_OPT_RR_QUANTUM * 1000;
 
 #define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
 

@@ -4,7 +4,6 @@ xenomai-y :=		\
 	clock.o		\
 	cond.o		\
 	event.o		\
-	init.o		\
 	io.o		\
 	memory.o	\
 	monitor.o	\
