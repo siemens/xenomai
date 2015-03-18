@@ -23,32 +23,6 @@
 #include "clock.h"
 #include <trace/events/cobalt-posix.h>
 
-static inline void
-cond_destroy_internal(xnhandle_t handle)
-{
-	struct cobalt_cond *cond;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	cond = xnregistry_lookup(handle, NULL);
-	if (!cobalt_obj_active(cond, COBALT_COND_MAGIC, typeof(*cond))) {
-		xnlock_put_irqrestore(&nklock, s);
-		return;
-	}
-	xnregistry_remove(handle);
-	list_del(&cond->link);
-	/*
-	 * At this point, synchbase wait queue is empty, so we don't
-	 * have to reschedule.
-	 */
-	xnsynch_destroy(&cond->synchbase);
-	cobalt_mark_deleted(cond);
-	xnlock_put_irqrestore(&nklock, s);
-	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm,
-			cond->state);
-	xnfree(cond);
-}
-
 static inline int
 pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *attr)
 {
@@ -76,42 +50,27 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *
 	xnlock_get_irqsave(&nklock, s);
 
 	condq = &cobalt_current_resources(attr->pshared)->condq;
-
-	/*
-	 * We allow reinitializing a shared condvar. Rationale: since
-	 * a condvar is inherently anonymous, if the process creating
-	 * such condvar exits, we may assume that other processes
-	 * sharing that condvar won't be able to keep on running.
-	 */
-	if (cnd->magic != COBALT_COND_MAGIC || list_empty(condq))
-		goto do_init;
-
-	old_cond = xnregistry_lookup(cnd->handle, NULL);
-	if (!cobalt_obj_active(old_cond, COBALT_COND_MAGIC, typeof(*old_cond)))
-		goto do_init;
-
-	if (attr->pshared == 0) {
-		ret = -EBUSY;
-		goto fail_register;
+	if (cnd->magic == COBALT_COND_MAGIC && !list_empty(condq)) {
+		old_cond = xnregistry_lookup(cnd->handle, NULL);
+		if (cobalt_obj_active(old_cond, COBALT_COND_MAGIC,
+				      typeof(*old_cond))) {
+			ret = -EBUSY;
+			goto fail_register;
+		}
 	}
-	xnlock_put_irqrestore(&nklock, s);
-	cond_destroy_internal(cnd->handle);
-	xnlock_get_irqsave(&nklock, s);
-do_init:
-	ret = xnregistry_enter_anon(cond, &cond->handle);
+
+	ret = xnregistry_enter_anon(cond, &cond->resnode.handle);
 	if (ret < 0)
 		goto fail_register;
-
 	if (attr->pshared)
-		cond->handle |= XNSYNCH_PSHARED;
+		cond->resnode.handle |= XNSYNCH_PSHARED;
 	cond->magic = COBALT_COND_MAGIC;
 	xnsynch_init(&cond->synchbase, synch_flags, NULL);
 	cond->attr = *attr;
 	cond->mutex = NULL;
-	cond->scope = cobalt_current_resources(attr->pshared);
-	list_add_tail(&cond->link, condq);
+	cobalt_add_resource(&cond->resnode, cond, attr->pshared);
 
-	cnd->handle = cond->handle;
+	cnd->handle = cond->resnode.handle;
 	cnd->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
 	cnd->magic = COBALT_COND_MAGIC;
 
@@ -130,7 +89,6 @@ fail_umm:
 static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 {
 	struct cobalt_cond *cond;
-	int pshared;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -146,7 +104,8 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 		return -EINVAL;
 	}
 
-	if (cond->scope != cobalt_current_resources(cond->attr.pshared)) {
+	if (cond->resnode.scope !=
+	    cobalt_current_resources(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EPERM;
 	}
@@ -156,11 +115,7 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 		return -EBUSY;
 	}
 
-	cobalt_mark_deleted(cnd);
-	pshared = cond->attr.pshared;
-	xnlock_put_irqrestore(&nklock, s);
-
-	cond_destroy_internal(cnd->handle);
+	cobalt_cond_reclaim(&cond->resnode, s); /* drops lock */
 
 	return 0;
 }
@@ -183,7 +138,8 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 	}
 
 #if XENO_DEBUG(USER)
-	if (cond->scope != cobalt_current_resources(cond->attr.pshared)) {
+	if (cond->resnode.scope !=
+	    cobalt_current_resources(cond->attr.pshared)) {
 		err = -EPERM;
 		goto unlock_and_return;
 	}
@@ -452,22 +408,18 @@ int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 	return need_resched;
 }
 
-void cobalt_cond_reclaim(struct cobalt_process *process)
+void cobalt_cond_reclaim(struct cobalt_resnode *node, spl_t s)
 {
-	struct cobalt_resources *p = &process->resources;
-	struct cobalt_cond *cond, *tmp;
-	spl_t s;
+	struct cobalt_cond *cond;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (list_empty(&p->condq))
-		goto out;
-
-	list_for_each_entry_safe(cond, tmp, &p->condq, link) {
-		xnlock_put_irqrestore(&nklock, s);
-		cond_destroy_internal(cond->handle);
-		xnlock_get_irqsave(&nklock, s);
-	}
-out:
+	cond = container_of(node, struct cobalt_cond, resnode);
+	xnregistry_remove(node->handle);
+	cobalt_del_resource(node);
+	xnsynch_destroy(&cond->synchbase);
+	cobalt_mark_deleted(cond);
 	xnlock_put_irqrestore(&nklock, s);
+
+	cobalt_umm_free(&cobalt_ppd_get(cond->attr.pshared)->umm,
+			cond->state);
+	xnfree(cond);
 }

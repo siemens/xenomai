@@ -25,22 +25,18 @@
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
 #include <xenomai/posix/syscall.h>
+#include <xenomai/posix/process.h>
 
-struct cobalt_resources;
 struct cobalt_mutex;
-struct cobalt_process;
 
 struct cobalt_cond {
 	unsigned int magic;
 	struct xnsynch synchbase;
-	/** cobalt_condq */
-	struct list_head link;
 	struct list_head mutex_link;
 	struct cobalt_cond_state *state;
 	struct cobalt_condattr attr;
 	struct cobalt_mutex *mutex;
-	struct cobalt_resources *scope;
-	xnhandle_t handle;
+	struct cobalt_resnode resnode;
 };
 
 int __cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
@@ -69,6 +65,7 @@ COBALT_SYSCALL_DECL(cond_wait_epilogue,
 
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
 
-void cobalt_cond_reclaim(struct cobalt_process *process);
+void cobalt_cond_reclaim(struct cobalt_resnode *node,
+			 spl_t s);
 
 #endif /* !_COBALT_POSIX_COND_H */

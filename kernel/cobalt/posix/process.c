@@ -1404,9 +1404,9 @@ static void cobalt_process_detach(void *arg)
 {
 	struct cobalt_process *process = arg;
 
+	cobalt_reclaim_resource(process, cobalt_cond_reclaim, cond);
 	cobalt_nsem_reclaim(process);
  	cobalt_timer_reclaim(process);
-	cobalt_cond_reclaim(process);
 	cobalt_mutex_reclaim(process);
  	cobalt_sem_reclaim(process);
  	cobalt_monitor_reclaim(process);
