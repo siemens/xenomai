@@ -40,17 +40,17 @@ int __cobalt_sem_destroy(xnhandle_t handle)
 	sem = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(sem, COBALT_SEM_MAGIC, typeof(*sem))) {
 		ret = -EINVAL;
-		goto unlock_error;
+		goto fail;
 	}
+
 	if (--sem->refs) {
 		ret = -EBUSY;
-	  unlock_error:
-		xnlock_put_irqrestore(&nklock, s);
-		return ret;
+		goto fail;
 	}
 
 	cobalt_mark_deleted(sem);
-	list_del(&sem->link);
+	xnregistry_remove(sem->resnode.handle);
+	cobalt_del_resource(&sem->resnode);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED) {
 		xnsched_run();
 		ret = 1;
@@ -58,11 +58,17 @@ int __cobalt_sem_destroy(xnhandle_t handle)
 
 	xnlock_put_irqrestore(&nklock, s);
 
+	if (sem->pathname)
+		putname(sem->pathname);
+
 	cobalt_umm_free(&cobalt_ppd_get(!!(sem->flags & SEM_PSHARED))->umm,
 			sem->state);
-	xnregistry_remove(sem->handle);
 
 	xnfree(sem);
+
+	return ret;
+fail:
+	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
@@ -73,9 +79,9 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 {
 	struct cobalt_sem_state *state;
 	struct cobalt_sem *sem, *osem;
-	struct cobalt_resources *rs;
 	struct cobalt_ppd *sys_ppd;
-	int ret, sflags;
+	int ret, sflags, pshared;
+	struct list_head *semq;
 	spl_t s;
 
 	if ((flags & SEM_PULSE) != 0 && value > 0) {
@@ -89,7 +95,8 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 		goto out;
 	}
 
-	sys_ppd = cobalt_ppd_get(!!(flags & SEM_PSHARED));
+	pshared = !!(flags & SEM_PSHARED);
+	sys_ppd = cobalt_ppd_get(pshared);
 	state = cobalt_umm_alloc(&sys_ppd->umm, sizeof(*state));
 	if (state == NULL) {
 		ret = -EAGAIN;
@@ -98,45 +105,28 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	rs = cobalt_current_resources(!!(flags & SEM_PSHARED));
-	if (list_empty(&rs->semq))
-		goto do_init;
-
-	if (sm->magic != COBALT_SEM_MAGIC &&
-	    sm->magic != COBALT_NAMED_SEM_MAGIC)
-		goto do_init;
-
-	/*
-	 * Make sure we are not reinitializing a valid semaphore. As a
-	 * special exception, we allow reinitializing a shared
-	 * anonymous semaphore. Rationale: if the process creating
-	 * such semaphore exits, we may assume that other processes
-	 * sharing that semaphore won't be able to keep on running.
-	 */
-	osem = xnregistry_lookup(sm->handle, NULL);
-	if (!cobalt_obj_active(osem, COBALT_SEM_MAGIC, typeof(*osem)))
-		goto do_init;
-
-	if ((flags & SEM_PSHARED) == 0 || sm->magic != COBALT_SEM_MAGIC) {
-		ret = -EBUSY;
-		goto err_lock_put;
+	semq = &cobalt_current_resources(pshared)->semq;
+	if (!list_empty(semq) &&
+	    (sm->magic == COBALT_SEM_MAGIC ||
+	     sm->magic == COBALT_NAMED_SEM_MAGIC)) {
+		osem = xnregistry_lookup(sm->handle, NULL);
+		if (cobalt_obj_active(osem, COBALT_SEM_MAGIC, typeof(*osem))) {
+			ret = -EBUSY;
+			goto err_lock_put;
+		}
 	}
 
-	xnlock_put_irqrestore(&nklock, s);
-	__cobalt_sem_destroy(sm->handle);
-	xnlock_get_irqsave(&nklock, s);
-  do_init:
 	if (value > (unsigned)SEM_VALUE_MAX) {
 		ret = -EINVAL;
 		goto err_lock_put;
 	}
 
-	ret = xnregistry_enter(name ?: "", sem, &sem->handle, NULL);
+	ret = xnregistry_enter(name ?: "", sem, &sem->resnode.handle, NULL);
 	if (ret < 0)
 		goto err_lock_put;
 
 	sem->magic = COBALT_SEM_MAGIC;
-	list_add_tail(&sem->link, &rs->semq);
+	cobalt_add_resource(&sem->resnode, sem, pshared);
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 	xnsynch_init(&sem->synchbase, sflags, NULL);
 
@@ -144,17 +134,18 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	atomic_set(&state->value, value);
 	state->flags = flags;
 	sem->flags = flags;
-	sem->scope = rs;
 	sem->refs = name ? 2 : 1;
+	sem->pathname = NULL;
 
 	sm->magic = name ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
-	sm->handle = sem->handle;
+	sm->handle = sem->resnode.handle;
 	sm->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
 	if (flags & SEM_PSHARED)
 		sm->state_offset = -sm->state_offset;
 	xnlock_put_irqrestore(&nklock, s);
 
-	trace_cobalt_psem_init(name ?: "anon", sem->handle, flags, value);
+	trace_cobalt_psem_init(name ?: "anon",
+			       sem->resnode.handle, flags, value);
 
 	return sem;
 
@@ -187,7 +178,7 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 		goto error;
 	}
 
-	if (sem_kqueue(sem) != sem->scope) {
+	if (sem_kqueue(sem) != sem->resnode.scope) {
 		ret = -EPERM;
 		goto error;
 	}
@@ -202,7 +193,7 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 	cobalt_mark_deleted(sm);
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = __cobalt_sem_destroy(sem->handle);
+	ret = __cobalt_sem_destroy(sem->resnode.handle);
 
 	return warn ? ret : 0;
 
@@ -219,7 +210,7 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 		return -EINVAL;
 
 #if XENO_DEBUG(USER)
-	if (sem->scope != sem_kqueue(sem))
+	if (sem->resnode.scope != sem_kqueue(sem))
 		return -EPERM;
 #endif
 
@@ -241,14 +232,13 @@ static int sem_trywait(xnhandle_t handle)
 	return err;
 }
 
-static int sem_post_inner(struct cobalt_sem *sem,
-			  struct cobalt_resources *ownq, int bcast)
+static int sem_post_inner(struct cobalt_sem *sem, int bcast)
 {
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
 #if XENO_DEBUG(USER)
-	if (ownq && ownq != sem_kqueue(sem))
+	if (sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
 		return -EPERM;
 #endif
 
@@ -291,7 +281,7 @@ static int sem_wait(xnhandle_t handle)
 	if (info & XNRMID) {
 		ret = -EINVAL;
 	} else if (info & XNBREAK) {
-		sem_post_inner(sem, sem->scope, 0);
+		sem_post_inner(sem, 0);
 		ret = -EINTR;
 	}
 out:
@@ -371,13 +361,13 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 
 static int sem_post(xnhandle_t handle)
 {
-	struct cobalt_sem *sm;
+	struct cobalt_sem *sem;
 	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	sm = xnregistry_lookup(handle, NULL);
-	ret = sem_post_inner(sm, sm->scope, 0);
+	sem = xnregistry_lookup(handle, NULL);
+	ret = sem_post_inner(sem, 0);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -397,7 +387,7 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 		return -EINVAL;
 	}
 
-	if (sem->scope != sem_kqueue(sem)) {
+	if (sem->resnode.scope != sem_kqueue(sem)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EPERM;
 	}
@@ -510,7 +500,7 @@ COBALT_SYSCALL(sem_destroy, current,
 COBALT_SYSCALL(sem_broadcast_np, current,
 	       (struct cobalt_sem_shadow __user *u_sem))
 {
-	struct cobalt_sem *sm;
+	struct cobalt_sem *sem;
 	xnhandle_t handle;
 	spl_t s;
 	int err;
@@ -519,8 +509,8 @@ COBALT_SYSCALL(sem_broadcast_np, current,
 	trace_cobalt_psem_broadcast(u_sem->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	sm = xnregistry_lookup(handle, NULL);
-	err = sem_post_inner(sm, sm->scope, 1);
+	sem = xnregistry_lookup(handle, NULL);
+	err = sem_post_inner(sem, 1);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -609,24 +599,17 @@ COBALT_SYSCALL(sem_inquire, current,
 	return ret ?: nrwait;
 }
 
-void cobalt_sem_reclaim(struct cobalt_process *process)
+void cobalt_sem_reclaim(struct cobalt_resnode *node, spl_t s)
 {
-	struct cobalt_resources *p = &process->resources;
-	struct cobalt_sem *sem, *tmp;
-	spl_t s;
+	struct cobalt_sem *sem;
+	xnhandle_t handle;
+	int named, ret;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (list_empty(&p->semq))
-		goto out;
-
-	list_for_each_entry_safe(sem, tmp, &p->semq, link) {
-		xnlock_put_irqrestore(&nklock, s);
-		if (sem->flags & SEM_NAMED)
-			__cobalt_sem_unlink(sem->handle);
-		__cobalt_sem_destroy(sem->handle);
-		xnlock_get_irqsave(&nklock, s);
-	}
-out:
+	sem = container_of(node, struct cobalt_sem, resnode);
+	named = (sem->flags & SEM_NAMED) != 0;
+	handle = node->handle;
 	xnlock_put_irqrestore(&nklock, s);
+	ret = __cobalt_sem_destroy(handle);
+	if (named && ret == -EBUSY)
+		xnregistry_unlink(xnregistry_key(handle));
 }

@@ -23,19 +23,19 @@
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/registry.h>
 #include <xenomai/posix/syscall.h>
+#include <xenomai/posix/process.h>
 
 struct cobalt_process;
+struct filename;
 
 struct cobalt_sem {
 	unsigned int magic;
 	struct xnsynch synchbase;
-	/** semq */
-	struct list_head link;
 	struct cobalt_sem_state *state;
 	int flags;
-	struct cobalt_resources *scope;
-	xnhandle_t handle;
 	unsigned int refs;
+	struct filename *pathname;
+	struct cobalt_resnode resnode;
 };
 
 /* Copied from Linuxthreads semaphore.h. */
@@ -69,8 +69,6 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 						const void __user *u_ts));
 
 int __cobalt_sem_destroy(xnhandle_t handle);
-
-void __cobalt_sem_unlink(xnhandle_t handle);
 
 void cobalt_nsem_reclaim(struct cobalt_process *process);
 
@@ -121,6 +119,7 @@ COBALT_SYSCALL_DECL(sem_inquire,
 		     pid_t __user *u_waitlist,
 		     size_t waitsz));
 
-void cobalt_sem_reclaim(struct cobalt_process *process);
+void cobalt_sem_reclaim(struct cobalt_resnode *node,
+			spl_t s);
 
 #endif /* !_COBALT_POSIX_SEM_H */

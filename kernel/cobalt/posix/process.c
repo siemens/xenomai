@@ -1404,14 +1404,14 @@ static void cobalt_process_detach(void *arg)
 {
 	struct cobalt_process *process = arg;
 
+	cobalt_nsem_reclaim(process);
+ 	cobalt_timer_reclaim(process);
+ 	cobalt_sched_reclaim(process);
 	cobalt_reclaim_resource(process, cobalt_cond_reclaim, cond);
 	cobalt_reclaim_resource(process, cobalt_mutex_reclaim, mutex);
 	cobalt_reclaim_resource(process, cobalt_event_reclaim, event);
 	cobalt_reclaim_resource(process, cobalt_monitor_reclaim, monitor);
-	cobalt_nsem_reclaim(process);
- 	cobalt_timer_reclaim(process);
- 	cobalt_sem_reclaim(process);
- 	cobalt_sched_reclaim(process);
+	cobalt_reclaim_resource(process, cobalt_sem_reclaim, sem);
  	detach_process(process);
 	/*
 	 * The cobalt_process descriptor release may be deferred until

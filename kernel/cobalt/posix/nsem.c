@@ -28,15 +28,14 @@
 
 DEFINE_PRIVATE_XNLOCK(named_sem_lock);
 
-struct named_sem {
+struct cobalt_named_sem {
 	struct cobalt_sem *sem;
 	struct cobalt_sem_shadow __user *usem;
 	unsigned int refs;
 	struct xnid id;
-	struct filename *filename;
 };
 
-static struct named_sem *
+static struct cobalt_named_sem *
 sem_search(struct cobalt_process *process, xnhandle_t handle)
 {
 	struct xnid *i;
@@ -45,7 +44,7 @@ sem_search(struct cobalt_process *process, xnhandle_t handle)
 	if (i == NULL)
 		return NULL;
 
-	return container_of(i, struct named_sem, id);
+	return container_of(i, struct cobalt_named_sem, id);
 }
 
 static struct cobalt_sem_shadow __user *
@@ -56,7 +55,7 @@ sem_open(struct cobalt_process *process,
 {
 	const char *name = filename->name;
 	struct cobalt_sem_shadow shadow;
-	struct named_sem *u, *v;
+	struct cobalt_named_sem *u, *v;
 	struct cobalt_sem *sem;
 	xnhandle_t handle;
 	spl_t s;
@@ -117,6 +116,7 @@ sem_open(struct cobalt_process *process,
 			__cobalt_sem_destroy(shadow.handle);
 			return ERR_PTR(-EFAULT);
 		}
+		sem->pathname = filename;
 		handle = shadow.handle;
 		break;
 
@@ -131,7 +131,6 @@ sem_open(struct cobalt_process *process,
 	u->sem = sem;
 	u->usem = ushadow;
 	u->refs = 1;
-	u->filename = filename;
 
 	xnlock_get_irqsave(&named_sem_lock, s);
 	v = sem_search(process, handle);
@@ -141,7 +140,6 @@ sem_open(struct cobalt_process *process,
 		xnlock_get_irqsave(&nklock, s);
 		--sem->refs;
 		xnlock_put_irqrestore(&nklock, s);
-
 		putname(filename);
 		xnfree(u);
 		u = v;
@@ -157,7 +155,7 @@ sem_open(struct cobalt_process *process,
 
 static int sem_close(struct cobalt_process *process, xnhandle_t handle)
 {
-	struct named_sem *u;
+	struct cobalt_named_sem *u;
 	spl_t s;
 	int err;
 
@@ -178,19 +176,12 @@ static int sem_close(struct cobalt_process *process, xnhandle_t handle)
 
 	__cobalt_sem_destroy(handle);
 
-	putname(u->filename);
 	xnfree(u);
 	return 1;
 
   err_unlock:
 	xnlock_put_irqrestore(&named_sem_lock, s);
 	return err;
-}
-
-void __cobalt_sem_unlink(xnhandle_t handle)
-{
-	if (__cobalt_sem_destroy(handle) == -EBUSY)
-		xnregistry_unlink(xnregistry_key(handle));
 }
 
 struct cobalt_sem_shadow __user *
@@ -264,7 +255,8 @@ static inline int sem_unlink(const char *name)
 	if (ret == -EWOULDBLOCK)
 		return -ENOENT;
 
-	__cobalt_sem_unlink(handle);
+	if (__cobalt_sem_destroy(handle) == -EBUSY)
+		xnregistry_unlink(xnregistry_key(handle));
 
 	return 0;
 }
@@ -289,9 +281,9 @@ COBALT_SYSCALL(sem_unlink, lostage,
 static void reclaim_named_sem(void *arg, struct xnid *i)
 {
 	struct cobalt_process *process = arg;
-	struct named_sem *u;
+	struct cobalt_named_sem *u;
 
-	u = container_of(i, struct named_sem, id);
+	u = container_of(i, struct cobalt_named_sem, id);
 	u->refs = 1;
 	sem_close(process, xnid_key(i));
 }
