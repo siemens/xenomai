@@ -1406,11 +1406,11 @@ static void cobalt_process_detach(void *arg)
 
 	cobalt_reclaim_resource(process, cobalt_cond_reclaim, cond);
 	cobalt_reclaim_resource(process, cobalt_mutex_reclaim, mutex);
+	cobalt_reclaim_resource(process, cobalt_event_reclaim, event);
 	cobalt_nsem_reclaim(process);
  	cobalt_timer_reclaim(process);
  	cobalt_sem_reclaim(process);
  	cobalt_monitor_reclaim(process);
-	cobalt_event_reclaim(process);
  	cobalt_sched_reclaim(process);
  	detach_process(process);
 	/*

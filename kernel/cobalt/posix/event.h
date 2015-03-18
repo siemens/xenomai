@@ -22,6 +22,7 @@
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/event.h>
 #include <xenomai/posix/syscall.h>
+#include <xenomai/posix/process.h>
 
 struct cobalt_resources;
 struct cobalt_process;
@@ -29,12 +30,10 @@ struct cobalt_process;
 struct cobalt_event {
 	unsigned int magic;
 	unsigned int value;
+	int flags;
 	struct xnsynch synch;
 	struct cobalt_event_state *state;
-	struct cobalt_resources *scope;
-	struct list_head link;
-	int flags;
-	xnhandle_t handle;
+	struct cobalt_resnode resnode;
 };
 
 int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
@@ -66,6 +65,7 @@ COBALT_SYSCALL_DECL(event_inquire,
 		     pid_t __user *u_waitlist,
 		     size_t waitsz));
 
-void cobalt_event_reclaim(struct cobalt_process *process);
+void cobalt_event_reclaim(struct cobalt_resnode *node,
+			  spl_t s);
 
 #endif /* !_COBALT_POSIX_EVENT_H */

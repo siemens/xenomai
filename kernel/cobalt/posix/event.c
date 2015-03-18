@@ -52,7 +52,6 @@ COBALT_SYSCALL(event_init, current,
 {
 	struct cobalt_event_shadow shadow;
 	struct cobalt_event_state *state;
-	struct cobalt_resources *rs;
 	int pshared, synflags, ret;
 	struct cobalt_event *event;
 	struct cobalt_umm *umm;
@@ -73,7 +72,7 @@ COBALT_SYSCALL(event_init, current,
 		return -EAGAIN;
 	}
 
-	ret = xnregistry_enter_anon(event, &event->handle);
+	ret = xnregistry_enter_anon(event, &event->resnode.handle);
 	if (ret) {
 		cobalt_umm_free(umm, state);
 		xnfree(event);
@@ -84,22 +83,19 @@ COBALT_SYSCALL(event_init, current,
 	event->flags = flags;
 	synflags = (flags & COBALT_EVENT_PRIO) ? XNSYNCH_PRIO : XNSYNCH_FIFO;
 	xnsynch_init(&event->synch, synflags, NULL);
-	rs = cobalt_current_resources(pshared);
-	event->scope = rs;
-
-	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&event->link, &rs->eventq);
-	xnlock_put_irqrestore(&nklock, s);
-
-	event->magic = COBALT_EVENT_MAGIC;
-
 	state->value = value;
 	state->flags = 0;
 	state->nwaiters = 0;
 	stateoff = cobalt_umm_offset(umm, state);
 	XENO_BUG_ON(COBALT, stateoff != (__u32)stateoff);
+
+	xnlock_get_irqsave(&nklock, s);
+	cobalt_add_resource(&event->resnode, event, pshared);
+	event->magic = COBALT_EVENT_MAGIC;
+	xnlock_put_irqrestore(&nklock, s);
+
 	shadow.flags = flags;
-	shadow.handle = event->handle;
+	shadow.handle = event->resnode.handle;
 	shadow.state_offset = (__u32)stateoff;
 
 	return cobalt_copy_to_user(u_event, &shadow, sizeof(*u_event));
@@ -259,31 +255,11 @@ out:
 	return ret;
 }
 
-static void event_destroy(struct cobalt_event *event,
-			  spl_t s) /* atomic-entry */
-{
-	struct cobalt_umm *umm;
-	int pshared;
-
-	list_del(&event->link);
-	xnsynch_destroy(&event->synch);
-	xnregistry_remove(event->handle);
-	event->magic = 0;
-	pshared = (event->flags & COBALT_EVENT_SHARED) != 0;
-	xnlock_put_irqrestore(&nklock, s);
-
-	umm = &cobalt_ppd_get(pshared)->umm;
-	cobalt_umm_free(umm, event->state);
-	xnfree(event);
-	xnlock_get_irqsave(&nklock, s);
-}
-
 COBALT_SYSCALL(event_destroy, current,
 	       (struct cobalt_event_shadow __user *u_event))
 {
 	struct cobalt_event *event;
 	xnhandle_t handle;
-	int ret = 0;
 	spl_t s;
 
 	trace_cobalt_event_destroy(u_event);
@@ -294,17 +270,13 @@ COBALT_SYSCALL(event_destroy, current,
 
 	event = xnregistry_lookup(handle, NULL);
 	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
-		ret = -EINVAL;
-		goto out;
+		xnlock_put_irqrestore(&nklock, s);
+		return -EINVAL;
 	}
 
-	event_destroy(event, s);
-
-	xnsched_run();
-out:
-	xnlock_put_irqrestore(&nklock, s);
+	cobalt_event_reclaim(&event->resnode, s); /* drops lock */
 	
-	return ret;
+	return 0;
 }
 
 COBALT_SYSCALL(event_inquire, current,
@@ -393,19 +365,20 @@ COBALT_SYSCALL(event_inquire, current,
 	return ret ?: nrwait;
 }
 
-void cobalt_event_reclaim(struct cobalt_process *process)
+void cobalt_event_reclaim(struct cobalt_resnode *node, spl_t s)
 {
-	struct cobalt_resources *p = &process->resources;
-	struct cobalt_event *event, *tmp;
-	spl_t s;
+	struct cobalt_event *event;
+	struct cobalt_umm *umm;
+	int pshared;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (list_empty(&p->eventq))
-		goto out;
-
-	list_for_each_entry_safe(event, tmp, &p->eventq, link)
-		event_destroy(event, s);
-out:
+	event = container_of(node, struct cobalt_event, resnode);
+	xnregistry_remove(node->handle);
+	cobalt_del_resource(node);
+	xnsynch_destroy(&event->synch);
+	pshared = (event->flags & COBALT_EVENT_SHARED) != 0;
 	xnlock_put_irqrestore(&nklock, s);
+
+	umm = &cobalt_ppd_get(pshared)->umm;
+	cobalt_umm_free(umm, event->state);
+	xnfree(event);
 }
