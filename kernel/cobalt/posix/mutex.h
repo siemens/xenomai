@@ -22,6 +22,7 @@
 #include "thread.h"
 #include <cobalt/uapi/mutex.h>
 #include <xenomai/posix/syscall.h>
+#include <xenomai/posix/process.h>
 
 struct cobalt_process;
 
@@ -29,11 +30,9 @@ struct cobalt_mutex {
 	unsigned int magic;
 	struct xnsynch synchbase;
 	/** cobalt_mutexq */
-	struct list_head link;
 	struct list_head conds;
 	struct cobalt_mutexattr attr;
-	struct cobalt_resources *scope;
-	xnhandle_t handle;
+	struct cobalt_resnode resnode;
 };
 
 int __cobalt_mutex_timedlock_break(struct cobalt_mutex_shadow __user *u_mx,
@@ -71,6 +70,7 @@ COBALT_SYSCALL_DECL(mutex_unlock,
 int cobalt_mutex_release(struct xnthread *cur,
 			 struct cobalt_mutex *mutex);
 
-void cobalt_mutex_reclaim(struct cobalt_process *process);
+void cobalt_mutex_reclaim(struct cobalt_resnode *node,
+			  spl_t s);
 
 #endif /* !_COBALT_POSIX_MUTEX_H */

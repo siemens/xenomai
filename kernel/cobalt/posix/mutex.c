@@ -28,21 +28,18 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 				   const struct cobalt_mutexattr *attr)
 {
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
-	struct cobalt_resources *rs;
 	struct cobalt_ppd *sys_ppd;
 	spl_t s;
 	int err;
 
-	rs = cobalt_current_resources(attr->pshared);
-	sys_ppd = cobalt_ppd_get(attr->pshared);
-	err = xnregistry_enter_anon(mutex, &shadow->handle);
+	err = xnregistry_enter_anon(mutex, &mutex->resnode.handle);
 	if (err < 0)
 		return err;
 
-	mutex->handle = shadow->handle;
+	sys_ppd = cobalt_ppd_get(attr->pshared);
+	shadow->handle = mutex->resnode.handle;
 	shadow->magic = COBALT_MUTEX_MAGIC;
 	shadow->lockcnt = 0;
-
 	shadow->attr = *attr;
 	shadow->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
 
@@ -54,43 +51,13 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	state->flags = (attr->type == PTHREAD_MUTEX_ERRORCHECK
 			? COBALT_MUTEX_ERRORCHECK : 0);
 	mutex->attr = *attr;
-	mutex->scope = rs;
 	INIT_LIST_HEAD(&mutex->conds);
 
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&mutex->link, &rs->mutexq);
+	cobalt_add_resource(&mutex->resnode, mutex, attr->pshared);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
-}
-
-static void
-cobalt_mutex_destroy_inner(xnhandle_t handle)
-{
-	struct cobalt_mutex *mutex;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_lookup(handle, NULL);
-	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
-		xnlock_put_irqrestore(&nklock, s);
-		printk(XENO_WARNING "%s: invalid mutex %x\n",
-		       __func__, mutex ? mutex->magic : ~0);
-		return;
-	}
-	xnregistry_remove(handle);
-	list_del(&mutex->link);
-	/*
-	 * At this point, synchbase wait queue must be empty, so we
-	 * don't need to reschedule.
-	 */
-	xnsynch_destroy(&mutex->synchbase);
-	cobalt_mark_deleted(mutex);
-	xnlock_put_irqrestore(&nklock, s);
-
-	cobalt_umm_free(&cobalt_ppd_get(mutex->attr.pshared)->umm,
-			mutex->synchbase.fastlock);
-	xnfree(mutex);
 }
 
 /* must be called with nklock locked, interrupts off. */
@@ -129,7 +96,8 @@ int cobalt_mutex_release(struct xnthread *cur,
 		 return -EINVAL;
 
 #if XENO_DEBUG(USER)
-	if (mutex->scope != cobalt_current_resources(mutex->attr.pshared))
+	if (mutex->resnode.scope !=
+	    cobalt_current_resources(mutex->attr.pshared))
 		return -EPERM;
 #endif
 	state = container_of(mutex->synchbase.fastlock, struct cobalt_mutex_state, owner);
@@ -175,7 +143,8 @@ redo:
 		goto out;
 	}
 #if XENO_DEBUG(USER)
-	if (mutex->scope != cobalt_current_resources(mutex->attr.pshared)) {
+	if (mutex->resnode.scope !=
+	    cobalt_current_resources(mutex->attr.pshared)) {
 		ret = -EPERM;
 		goto out;
 	}
@@ -288,43 +257,42 @@ COBALT_SYSCALL(mutex_init, current,
 COBALT_SYSCALL(mutex_destroy, current,
 	       (struct cobalt_mutex_shadow __user *u_mx))
 {
-	struct cobalt_mutex *mutex;
 	struct cobalt_mutex_shadow mx;
+	struct cobalt_mutex *mutex;
 	spl_t s;
-	int err;
+	int ret;
 
 	if (cobalt_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	mutex = xnregistry_lookup(mx.handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
-		err = -EINVAL;
-		goto err_unlock;
+		ret = -EINVAL;
+		goto fail;
 	}
-	if (cobalt_current_resources(mutex->attr.pshared) != mutex->scope) {
-		err = -EPERM;
-		goto err_unlock;
+	if (cobalt_current_resources(mutex->attr.pshared) !=
+	    mutex->resnode.scope) {
+		ret = -EPERM;
+		goto fail;
 	}
-
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
-					XN_NO_HANDLE) != 0) {
-		err = -EBUSY;
-		goto err_unlock;
+					XN_NO_HANDLE) != 0 ||
+	    !list_empty(&mutex->conds)) {
+		ret = -EBUSY;
+		goto fail;
 	}
 
-	if (!list_empty(&mutex->conds)) {
-		err = -EBUSY;
-	  err_unlock:
-		xnlock_put_irqrestore(&nklock, s);
-		return err;
-	}
+	cobalt_mutex_reclaim(&mutex->resnode, s); /* drops lock */
 
 	cobalt_mark_deleted(&mx);
-	xnlock_put_irqrestore(&nklock, s);
-	cobalt_mutex_destroy_inner(mx.handle);
 
 	return cobalt_copy_to_user(u_mx, &mx, sizeof(*u_mx));
+fail:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 COBALT_SYSCALL(mutex_trylock, primary,
@@ -416,22 +384,20 @@ COBALT_SYSCALL(mutex_unlock, nonrestartable,
 	return err;
 }
 
-void cobalt_mutex_reclaim(struct cobalt_process *process)
+void cobalt_mutex_reclaim(struct cobalt_resnode *node, spl_t s)
 {
-	struct cobalt_resources *p = &process->resources;
-	struct cobalt_mutex *mutex, *tmp;
-	spl_t s;
+	struct cobalt_mutex *mutex;
+	int pshared;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (list_empty(&p->mutexq))
-		goto out;
-
-	list_for_each_entry_safe(mutex, tmp, &p->mutexq, link) {
-		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mutex_destroy_inner(mutex->handle);
-		xnlock_get_irqsave(&nklock, s);
-	}
-out:
+	mutex = container_of(node, struct cobalt_mutex, resnode);
+	pshared = mutex->attr.pshared;
+	xnregistry_remove(node->handle);
+	cobalt_del_resource(node);
+	xnsynch_destroy(&mutex->synchbase);
+	cobalt_mark_deleted(mutex);
 	xnlock_put_irqrestore(&nklock, s);
+
+	cobalt_umm_free(&cobalt_ppd_get(pshared)->umm,
+			mutex->synchbase.fastlock);
+	xnfree(mutex);
 }
