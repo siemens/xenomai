@@ -54,7 +54,6 @@ COBALT_SYSCALL(monitor_init, current,
 {
 	struct cobalt_monitor_shadow shadow;
 	struct cobalt_monitor_state *state;
-	struct cobalt_resources *rs;
 	struct cobalt_monitor *mon;
 	int pshared, tmode, ret;
 	struct cobalt_umm *umm;
@@ -77,7 +76,7 @@ COBALT_SYSCALL(monitor_init, current,
 		return -EAGAIN;
 	}
 
-	ret = xnregistry_enter_anon(mon, &mon->handle);
+	ret = xnregistry_enter_anon(mon, &mon->resnode.handle);
 	if (ret) {
 		cobalt_umm_free(umm, state);
 		xnfree(mon);
@@ -90,20 +89,17 @@ COBALT_SYSCALL(monitor_init, current,
 	mon->flags = flags;
 	mon->tmode = tmode;
 	INIT_LIST_HEAD(&mon->waiters);
-	rs = cobalt_current_resources(pshared);
-	mon->scope = rs;
 
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&mon->link, &rs->monitorq);
-	xnlock_put_irqrestore(&nklock, s);
-
+	cobalt_add_resource(&mon->resnode, monitor, pshared);
 	mon->magic = COBALT_MONITOR_MAGIC;
+	xnlock_put_irqrestore(&nklock, s);
 
 	state->flags = 0;
 	stateoff = cobalt_umm_offset(umm, state);
 	XENO_BUG_ON(COBALT, stateoff != (__u32)stateoff);
 	shadow.flags = flags;
-	shadow.handle = mon->handle;
+	shadow.handle = mon->resnode.handle;
 	shadow.state_offset = (__u32)stateoff;
 
 	return cobalt_copy_to_user(u_mon, &shadow, sizeof(*u_mon));
@@ -376,25 +372,6 @@ COBALT_SYSCALL(monitor_exit, primary,
 	return ret;
 }
 
-static void monitor_destroy(struct cobalt_monitor *mon)
-{
-	struct cobalt_umm *umm;
-	int pshared;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	list_del(&mon->link);
-	xnsynch_destroy(&mon->gate);
-	xnsynch_destroy(&mon->drain);
-	xnregistry_remove(mon->handle);
-	xnlock_put_irqrestore(&nklock, s);
-
-	pshared = (mon->flags & COBALT_MONITOR_SHARED) != 0;
-	umm = &cobalt_ppd_get(pshared)->umm;
-	cobalt_umm_free(umm, mon->state);
-	xnfree(mon);
-}
-
 COBALT_SYSCALL(monitor_destroy, primary,
 	       (struct cobalt_monitor_shadow __user *u_mon))
 {
@@ -432,11 +409,7 @@ COBALT_SYSCALL(monitor_destroy, primary,
 		goto fail;
 	}
 
-	mon->magic = 0;	/* Hide it from userland before deletion. */
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	monitor_destroy(mon);
+	cobalt_monitor_reclaim(&mon->resnode, s); /* drops lock */
 
 	xnsched_run();
 
@@ -447,23 +420,22 @@ COBALT_SYSCALL(monitor_destroy, primary,
 	return ret;
 }
 
-void cobalt_monitor_reclaim(struct cobalt_process *process)
+void cobalt_monitor_reclaim(struct cobalt_resnode *node, spl_t s)
 {
-	struct cobalt_resources *p = &process->resources;
-	struct cobalt_monitor *mon, *tmp;
-	spl_t s;
+	struct cobalt_monitor *mon;
+	struct cobalt_umm *umm;
+	int pshared;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (list_empty(&p->monitorq))
-		goto out;
-
-	list_for_each_entry_safe(mon, tmp, &p->monitorq, link) {
-		mon->magic = 0;
-		xnlock_put_irqrestore(&nklock, s);
-		monitor_destroy(mon);
-		xnlock_get_irqsave(&nklock, s);
-	}
-out:
+	mon = container_of(node, struct cobalt_monitor, resnode);
+	pshared = (mon->flags & COBALT_MONITOR_SHARED) != 0;
+	xnsynch_destroy(&mon->gate);
+	xnsynch_destroy(&mon->drain);
+	xnregistry_remove(node->handle);
+	cobalt_del_resource(node);
+	cobalt_mark_deleted(mon);
 	xnlock_put_irqrestore(&nklock, s);
+
+	umm = &cobalt_ppd_get(pshared)->umm;
+	cobalt_umm_free(umm, mon->state);
+	xnfree(mon);
 }

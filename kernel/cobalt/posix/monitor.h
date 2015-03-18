@@ -22,6 +22,7 @@
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/monitor.h>
 #include <xenomai/posix/syscall.h>
+#include <xenomai/posix/process.h>
 
 struct cobalt_resources;
 struct cobalt_process;
@@ -31,12 +32,10 @@ struct cobalt_monitor {
 	struct xnsynch gate;
 	struct xnsynch drain;
 	struct cobalt_monitor_state *state;
-	struct cobalt_resources *scope;
-	struct list_head link;
 	struct list_head waiters;
 	int flags;
 	xntmode_t tmode;
-	xnhandle_t handle;
+	struct cobalt_resnode resnode;
 };
 
 int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
@@ -65,6 +64,7 @@ COBALT_SYSCALL_DECL(monitor_wait,
 COBALT_SYSCALL_DECL(monitor_destroy,
 		    (struct cobalt_monitor_shadow __user *u_monsh));
 
-void cobalt_monitor_reclaim(struct cobalt_process *process);
+void cobalt_monitor_reclaim(struct cobalt_resnode *node,
+			    spl_t s);
 
 #endif /* !_COBALT_POSIX_MONITOR_H */
