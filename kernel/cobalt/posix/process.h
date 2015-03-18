@@ -56,9 +56,12 @@ struct cobalt_process {
 	void *priv[NR_PERSONALITIES];
 };
 
-extern struct list_head cobalt_thread_list;
-
-extern struct cobalt_resources cobalt_global_resources;
+struct cobalt_resnode {
+	struct cobalt_resources *scope;
+	struct cobalt_process *owner;
+	struct list_head next;
+	xnhandle_t handle;
+};
 
 int cobalt_register_personality(struct xnthread_personality *personality);
 
@@ -81,6 +84,10 @@ void *cobalt_get_context(int xid);
 int cobalt_yield(xnticks_t min, xnticks_t max);
 
 int cobalt_process_init(void);
+
+extern struct list_head cobalt_thread_list;
+
+extern struct cobalt_resources cobalt_global_resources;
 
 static inline struct cobalt_process *cobalt_current_process(void)
 {
@@ -107,6 +114,36 @@ static inline struct cobalt_ppd *cobalt_ppd_get(int global)
 		return &cobalt_kernel_ppd;
 
 	return &process->sys_ppd;
+}
+
+static inline struct cobalt_resources *cobalt_current_resources(int pshared)
+{
+	struct cobalt_process *process;
+
+	if (pshared || (process = cobalt_current_process()) == NULL)
+		return &cobalt_global_resources;
+
+	return &process->resources;
+}
+
+static inline
+void __cobalt_add_resource(struct cobalt_resnode *node, int pshared)
+{
+	node->owner = cobalt_current_process();
+	node->scope = cobalt_current_resources(pshared);
+}
+
+#define cobalt_add_resource(__node, __type, __pshared)			\
+	do {								\
+		__cobalt_add_resource(__node, __pshared);		\
+		list_add_tail(&(__node)->next,				\
+			      &((__node)->scope)->__type ## q);		\
+	} while (0)
+
+static inline
+void cobalt_del_resource(struct cobalt_resnode *node)
+{
+	list_del(&node->next);
 }
 
 extern struct xnthread_personality *cobalt_personalities[];

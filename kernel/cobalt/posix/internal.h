@@ -47,16 +47,6 @@
 
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-static inline struct cobalt_resources *cobalt_current_resources(int pshared)
-{
-	struct cobalt_process *process;
-
-	if (pshared || (process = cobalt_current_process()) == NULL)
-		return &cobalt_global_resources;
-
-	return &process->resources;
-}
-
 static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
 {
 	xnhandle_t handle;

@@ -1362,19 +1362,57 @@ static void detach_process(struct cobalt_process *process)
 	cobalt_umm_destroy(&p->umm);
 }
 
+static void __reclaim_resource(struct cobalt_process *process,
+			       void (*reclaim)(struct cobalt_resnode *node, spl_t s),
+			       struct list_head *local,
+			       struct list_head *global)
+{
+	struct cobalt_resnode *node, *tmp;
+	spl_t s;
+	
+	xnlock_get_irqsave(&nklock, s);
+
+	if (list_empty(global))
+		goto flush_local;
+
+	list_for_each_entry_safe(node, tmp, global, next) {
+		if (node->owner == process) {
+			reclaim(node, s); /* drops lock */
+			xnlock_get_irqsave(&nklock, s);
+		}
+	}
+		
+flush_local:
+	if (list_empty(local))
+		goto out;
+
+	list_for_each_entry_safe(node, tmp, local, next) {
+		reclaim(node, s); /* drops lock */
+		xnlock_get_irqsave(&nklock, s);
+	}
+out:
+	xnsched_run();
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+#define cobalt_reclaim_resource(__process, __reclaim, __type)		\
+	__reclaim_resource(__process, __reclaim,			\
+			   &(__process)->resources.__type ## q,		\
+			   &cobalt_global_resources.__type ## q)
+
 static void cobalt_process_detach(void *arg)
 {
 	struct cobalt_process *process = arg;
 
 	cobalt_nsem_reclaim(process);
-	cobalt_timer_reclaim(process);
+ 	cobalt_timer_reclaim(process);
 	cobalt_cond_reclaim(process);
 	cobalt_mutex_reclaim(process);
-	cobalt_sem_reclaim(process);
-	cobalt_monitor_reclaim(process);
+ 	cobalt_sem_reclaim(process);
+ 	cobalt_monitor_reclaim(process);
 	cobalt_event_reclaim(process);
-	cobalt_sched_reclaim(process);
-	detach_process(process);
+ 	cobalt_sched_reclaim(process);
+ 	detach_process(process);
 	/*
 	 * The cobalt_process descriptor release may be deferred until
 	 * the last mapping on the private heap is gone. However, this
