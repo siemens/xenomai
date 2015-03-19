@@ -31,6 +31,10 @@
 #define T_CPU(cpu) (1 << (24 + (cpu & 7)))
 #define T_CPUMASK  0xff000000
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 __attribute__((__deprecated__))
 static inline int rt_task_notify(RT_TASK *task, rt_sigset_t sigs)
 {
@@ -47,5 +51,8 @@ COMPAT_DECL(int, rt_task_spawn(RT_TASK *task, const char *name,
 
 COMPAT_DECL(int, rt_task_set_periodic(RT_TASK *task,
 				      RTIME idate, RTIME period));
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _XENOMAI_TRANK_NATIVE_TASK_H */

@@ -24,6 +24,10 @@
 
 #define TM_ONESHOT  0
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 __attribute__((__deprecated__))
 static inline int rt_timer_set_mode(RTIME nstick)
 {
@@ -35,5 +39,9 @@ static inline int rt_timer_set_mode(RTIME nstick)
 #endif
 	return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _XENOMAI_TRANK_NATIVE_TIMER_H */

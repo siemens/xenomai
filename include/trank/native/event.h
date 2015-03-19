@@ -20,6 +20,10 @@
 
 #include <alchemy/event.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 COMPAT_DECL(int, rt_event_create(RT_EVENT *event, const char *name,
 				 unsigned long ivalue, int mode));
 
@@ -69,5 +73,9 @@ int rt_event_wait(RT_EVENT *event,
 }
 
 #endif /* __XENO_COMPAT__ */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _XENOMAI_TRANK_NATIVE_EVENT_H */

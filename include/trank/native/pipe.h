@@ -21,8 +21,15 @@
 #include <alchemy/pipe.h>
 #include <trank/trank.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 COMPAT_DECL(int, rt_pipe_create(RT_PIPE *pipe,
 				const char *name,
 				int minor, size_t poolsize));
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _XENOMAI_TRANK_NATIVE_PIPE_H */

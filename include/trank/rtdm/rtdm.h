@@ -20,6 +20,10 @@
 
 #include_next <rtdm/rtdm.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef RTDM_NO_DEFAULT_USER_API
 
 #define rt_dev_call(__call, __args...)	\
@@ -164,5 +168,9 @@ static inline ssize_t rt_dev_read(int fd, void *buf, size_t len)
 }
 
 #endif /* !RTDM_NO_DEFAULT_USER_API */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _XENOMAI_TRANK_RTDM_RTDM_H */
