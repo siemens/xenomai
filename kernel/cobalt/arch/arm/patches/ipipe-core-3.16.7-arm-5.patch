@@ -137,7 +137,7 @@ index 36e53ef..3651693 100644
  {
  	const unsigned char *p = s;
 diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
-index adb5ed9..c494f35 100644
+index c04db0a..25ed8ed 100644
 --- a/arch/arm/boot/dts/Makefile
 +++ b/arch/arm/boot/dts/Makefile
 @@ -1,3 +1,9 @@
@@ -1170,7 +1170,7 @@ index 5638099..821ded0 100644
  	return (res & mask) != 0;
  }
 diff --git a/arch/arm/include/asm/cacheflush.h b/arch/arm/include/asm/cacheflush.h
-index fd43f7f..45a2d27 100644
+index 79ecb4f..f05e926 100644
 --- a/arch/arm/include/asm/cacheflush.h
 +++ b/arch/arm/include/asm/cacheflush.h
 @@ -11,11 +11,13 @@
@@ -1635,7 +1635,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..4701f8d
+index 0000000..5c7e9bd
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,272 @@
@@ -1683,7 +1683,7 @@ index 0000000..4701f8d
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	5
 +
 +struct ipipe_domain;
 +
@@ -3097,10 +3097,10 @@ index 41f99c5..a1a116f 100644
  
  #define arch_mmap_check(addr, len, flags) \
 diff --git a/arch/arm/include/uapi/asm/unistd.h b/arch/arm/include/uapi/asm/unistd.h
-index ba94446..89629e4 100644
+index acd5b66..5562ca7 100644
 --- a/arch/arm/include/uapi/asm/unistd.h
 +++ b/arch/arm/include/uapi/asm/unistd.h
-@@ -426,6 +426,12 @@
+@@ -421,6 +421,12 @@
  #define __ARM_NR_set_tls		(__ARM_NR_BASE+5)
  
  /*
@@ -3110,9 +3110,9 @@ index ba94446..89629e4 100644
 +#define __ARM_NR_ipipe			(__ARM_NR_BASE+66)
 +
 +/*
-  * *NOTE*: This is a ghost syscall private to the kernel.  Only the
-  * __kuser_cmpxchg code in entry-armv.S should be aware of its
-  * existence.  Don't ever use this from user code.
+  * The following syscalls are obsolete and no longer available for EABI.
+  */
+ #if !defined(__KERNEL__)
 diff --git a/arch/arm/kernel/Makefile b/arch/arm/kernel/Makefile
 index 38ddd9f..ac4e2f8 100644
 --- a/arch/arm/kernel/Makefile
@@ -3151,7 +3151,7 @@ index 85598b5..e91850c 100644
    DEFINE(TI_VFPSTATE,		offsetof(struct thread_info, vfpstate));
  #ifdef CONFIG_SMP
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 52a949a..bafe35e 100644
+index 52a949a..99fe2d9 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -3283,24 +3283,7 @@ index 52a949a..bafe35e 100644
  	mov	r2, r4
  	mov	r3, r5
  
-@@ -539,6 +591,7 @@ call_fpe:
- 	adr	r6, .LCneon_arm_opcodes
- 2:	ldr	r5, [r6], #4			@ mask value
- 	ldr	r7, [r6], #4			@ opcode bits matching in mask
-+	disable_irq_cond
- 	cmp	r5, #0				@ end mask?
- 	beq	1f
- 	and	r8, r0, r5
-@@ -549,6 +602,8 @@ call_fpe:
- 	strb	r7, [r10, #TI_USED_CP + 11]	@ mark CP#11 as used
- 	b	do_vfp				@ let VFP handler handle this
- 1:
-+#else
-+	disable_irq_cond
- #endif
- 	tst	r0, #0x08000000			@ only CDP/CPRT/LDC/STC have bit 27
- 	tstne	r0, #0x04000000			@ bit 26 set on both ARM and Thumb-2
-@@ -676,7 +731,22 @@ __pabt_usr:
+@@ -676,7 +728,24 @@ __pabt_usr:
  ENTRY(ret_from_exception)
   UNWIND(.fnstart	)
   UNWIND(.cantunwind	)
@@ -3311,19 +3294,21 @@ index 52a949a..bafe35e 100644
 +	cmp     r0, #1
 + THUMB(	it ne)
 +	bne	__ipipe_ret_to_user_irqs_disabled  @ Fast exit path over non-root domains
-+	get_thread_info tsk
-+#else /* !CONFIG_IPIPE_LEGACY */
  	get_thread_info tsk
++#else /* !CONFIG_IPIPE_LEGACY */
++	get_thread_info tsk
 +	ldr	r0, [tsk, #TI_IPIPE]
 +	tst	r0, #_TIP_HEAD
 + THUMB(	it eq)
 +	beq	__ipipe_ret_to_user_irqs_disabled  @ Fast exit path over non-root domains
 +#endif /* !CONFIG_IPIPE_LEGACY */
-+#endif /* CONFIG_IPIPE */
++#else /* !CONFIG_IPIPE */
++	get_thread_info tsk
++#endif /* !CONFIG_IPIPE */
  	mov	why, #0
  	b	ret_to_user
   UNWIND(.fnend		)
-@@ -714,7 +784,11 @@ ENTRY(__switch_to)
+@@ -714,7 +783,11 @@ ENTRY(__switch_to)
  	add	r4, r2, #TI_CPU_SAVE
  	ldr	r0, =thread_notify_head
  	mov	r1, #THREAD_NOTIFY_SWITCH
@@ -3335,7 +3320,7 @@ index 52a949a..bafe35e 100644
  #if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP)
  	str	r7, [r8]
  #endif
-@@ -749,6 +823,50 @@ ENDPROC(__switch_to)
+@@ -749,6 +822,50 @@ ENDPROC(__switch_to)
  #endif
  	.endm
  
@@ -3569,7 +3554,7 @@ index 7139d4a..64af45c 100644
 +
 +#endif
 diff --git a/arch/arm/kernel/entry-header.S b/arch/arm/kernel/entry-header.S
-index 5d702f8..0ee8a10 100644
+index 0325dbf..8234371 100644
 --- a/arch/arm/kernel/entry-header.S
 +++ b/arch/arm/kernel/entry-header.S
 @@ -23,7 +23,7 @@
@@ -3604,9 +3589,9 @@ index 5d702f8..0ee8a10 100644
 +	bl	ipipe_trace_asm
 +#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
  	msr	spsr_cxsf, \rpsr
- #if defined(CONFIG_CPU_V6)
- 	ldr	r0, [sp]
-@@ -221,6 +232,22 @@
+ #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_32v6K)
+ 	@ We must avoid clrex due to Cortex-A15 erratum #830321
+@@ -217,6 +228,22 @@
  	.endm
  
  	.macro	restore_user_regs, fast = 0, offset = 0
@@ -3629,7 +3614,7 @@ index 5d702f8..0ee8a10 100644
  	ldr	r1, [sp, #\offset + S_PSR]	@ get calling cpsr
  	ldr	lr, [sp, #\offset + S_PC]!	@ get pc
  	msr	spsr_cxsf, r1			@ save in spsr_svc
-@@ -250,6 +277,9 @@
+@@ -245,6 +272,9 @@
  	.macro	svc_exit, rpsr, irq = 0
  	.if	\irq != 0
  	@ IRQs already off
@@ -3639,7 +3624,7 @@ index 5d702f8..0ee8a10 100644
  #ifdef CONFIG_TRACE_IRQFLAGS
  	@ The parent context IRQs must have been enabled to get here in
  	@ the first place, so there's no point checking the PSR I bit.
-@@ -265,6 +295,14 @@
+@@ -260,6 +290,14 @@
  	blne	trace_hardirqs_off
  #endif
  	.endif
@@ -3653,8 +3638,8 @@ index 5d702f8..0ee8a10 100644
 +#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
  	ldr	lr, [sp, #S_SP]			@ top of the stack
  	ldrd	r0, r1, [sp, #S_LR]		@ calling lr and pc
- 	clrex					@ clear the exclusive monitor
-@@ -288,6 +326,22 @@
+ 
+@@ -286,6 +324,22 @@
  	.endm
  #else	/* ifdef CONFIG_CPU_V7M */
  	.macro	restore_user_regs, fast = 0, offset = 0
@@ -3674,10 +3659,10 @@ index 5d702f8..0ee8a10 100644
 +	mov	r0, r4
 +	.endif
 +#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
- 	clrex					@ clear the exclusive monitor
  	mov	r2, sp
  	load_user_sp_lr r2, r3, \offset + S_SP	@ calling sp, lr
-@@ -342,6 +396,13 @@
+ 	ldr	r1, [sp, #\offset + S_PSR]	@ get calling cpsr
+@@ -343,6 +397,13 @@
  #endif
  	.endm
  
@@ -4798,7 +4783,7 @@ index 4238bcb..884ac8a 100644
  	fr.sp = regs->ARM_sp;
  	fr.lr = regs->ARM_lr;
 diff --git a/arch/arm/kernel/process.c b/arch/arm/kernel/process.c
-index 81ef686..93cbc93 100644
+index a35f6eb..59afd81 100644
 --- a/arch/arm/kernel/process.c
 +++ b/arch/arm/kernel/process.c
 @@ -127,22 +127,51 @@ EXPORT_SYMBOL(pm_power_off);
@@ -5272,7 +5257,7 @@ index 2835d35..7ad6425 100644
  		local_flush_tlb_all();
  	}
 diff --git a/arch/arm/kernel/traps.c b/arch/arm/kernel/traps.c
-index abd2fc0..5f7b550 100644
+index da11b28..13a4419 100644
 --- a/arch/arm/kernel/traps.c
 +++ b/arch/arm/kernel/traps.c
 @@ -25,6 +25,7 @@
@@ -5310,7 +5295,7 @@ index abd2fc0..5f7b550 100644
  }
  
  static int bad_syscall(int n, struct pt_regs *regs)
-@@ -852,10 +866,21 @@ void __init trap_init(void)
+@@ -837,10 +851,21 @@ void __init trap_init(void)
  #ifdef CONFIG_KUSER_HELPERS
  static void __init kuser_init(void *vectors)
  {
@@ -6042,10 +6027,10 @@ index 07d0bf2..7e157b4 100644
  {
  	unsigned int v;
 diff --git a/arch/arm/mach-at91/clock.c b/arch/arm/mach-at91/clock.c
-index 034529d..f621f8e 100644
+index d66f102..55decd0 100644
 --- a/arch/arm/mach-at91/clock.c
 +++ b/arch/arm/mach-at91/clock.c
-@@ -971,6 +971,8 @@ late_initcall(at91_clock_reset);
+@@ -972,6 +972,8 @@ late_initcall(at91_clock_reset);
  
  void at91sam9_idle(void)
  {
@@ -8777,10 +8762,10 @@ index 91da64d..69dab53 100644
  obj-$(CONFIG_CACHE_TAUROS2)	+= cache-tauros2.o
 +obj-$(CONFIG_ARM_FCSE)		+= fcse.o
 diff --git a/arch/arm/mm/alignment.c b/arch/arm/mm/alignment.c
-index b8cb1a2..a4ecbdd 100644
+index 33ca980..70a0be8 100644
 --- a/arch/arm/mm/alignment.c
 +++ b/arch/arm/mm/alignment.c
-@@ -473,7 +473,7 @@ do_alignment_ldrstr(unsigned long addr, unsigned long instr, struct pt_regs *reg
+@@ -474,7 +474,7 @@ do_alignment_ldrstr(unsigned long addr, unsigned long instr, struct pt_regs *reg
   *
   * B = rn pointer before instruction, A = rn pointer after instruction
   *              ------ increasing address ----->
@@ -8789,7 +8774,7 @@ index b8cb1a2..a4ecbdd 100644
   * PU = 01             B                    A
   * PU = 11        B                    A
   * PU = 00        A                    B
-@@ -758,7 +758,10 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
+@@ -759,7 +759,10 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
  	int thumb2_32b = 0;
  
  	if (interrupts_enabled(regs))
@@ -8801,7 +8786,7 @@ index b8cb1a2..a4ecbdd 100644
  
  	instrptr = instruction_pointer(regs);
  
-@@ -916,7 +919,7 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
+@@ -919,7 +922,7 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
  			task_pid_nr(current), instrptr,
  			isize << 1,
  			isize == 2 ? tinstr : instr,
@@ -8810,7 +8795,7 @@ index b8cb1a2..a4ecbdd 100644
  
  	if (ai_usermode & UM_FIXUP)
  		goto fixup;
-@@ -943,7 +946,7 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
+@@ -946,7 +949,7 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
  		 * entry-common.S) and disable the alignment trap only if
  		 * there is no work pending for this thread.
  		 */
@@ -10582,10 +10567,18 @@ index cf5aae5..160b5a0 100644
  	u32			pm_save[4];
  #endif
 diff --git a/arch/arm/vfp/entry.S b/arch/arm/vfp/entry.S
-index fe6ca57..8175336 100644
+index fe6ca57..7ed7f8f 100644
 --- a/arch/arm/vfp/entry.S
 +++ b/arch/arm/vfp/entry.S
-@@ -33,6 +33,7 @@ ENTRY(do_vfp)
+@@ -26,6 +26,7 @@
+ @
+ ENTRY(do_vfp)
+ 	inc_preempt_count r10, r4
++	disable_irq_cond
+  	ldr	r4, .LCvfp
+ 	ldr	r11, [r10, #TI_CPU]	@ CPU number
+ 	add	r10, r10, #TI_VFPSTATE	@ r10 = workspace
+@@ -33,6 +34,7 @@ ENTRY(do_vfp)
  ENDPROC(do_vfp)
  
  ENTRY(vfp_null_entry)
@@ -10593,7 +10586,7 @@ index fe6ca57..8175336 100644
  	dec_preempt_count_ti r10, r4
  	mov	pc, lr
  ENDPROC(vfp_null_entry)
-@@ -46,6 +47,7 @@ ENDPROC(vfp_null_entry)
+@@ -46,6 +48,7 @@ ENDPROC(vfp_null_entry)
  
  	__INIT
  ENTRY(vfp_testing_entry)
@@ -10602,65 +10595,10 @@ index fe6ca57..8175336 100644
  	ldr	r0, VFP_arch_address
  	str	r0, [r0]		@ set to non-zero value
 diff --git a/arch/arm/vfp/vfphw.S b/arch/arm/vfp/vfphw.S
-index be807625..8a8d85c 100644
+index be807625..bc60e99 100644
 --- a/arch/arm/vfp/vfphw.S
 +++ b/arch/arm/vfp/vfphw.S
-@@ -23,7 +23,7 @@
- #include <asm/asm-offsets.h>
- 
- 	.macro	DBGSTR, str
--#ifdef DEBUG
-+#if defined(DEBUG)
- 	stmfd	sp!, {r0-r3, ip, lr}
- 	ldr	r0, =1f
- 	bl	printk
-@@ -37,7 +37,7 @@
- 	.endm
- 
- 	.macro  DBGSTR1, str, arg
--#ifdef DEBUG
-+#if defined(DEBUG)
- 	stmfd	sp!, {r0-r3, ip, lr}
- 	mov	r1, \arg
- 	ldr	r0, =1f
-@@ -52,7 +52,7 @@
- 	.endm
- 
- 	.macro  DBGSTR3, str, arg1, arg2, arg3
--#ifdef DEBUG
-+#if defined(DEBUG)
- 	stmfd	sp!, {r0-r3, ip, lr}
- 	mov	r3, \arg3
- 	mov	r2, \arg2
-@@ -106,6 +106,11 @@ ENTRY(vfp_support_entry)
- 	@ thread wants ownership of the VFP hardware, save the old
- 	@ state if there was a previous (valid) owner.
- 
-+	enable_irq
-+#ifdef CONFIG_IPIPE
-+	disable_irq
-+	ldr	r4, [r3, r11, lsl #2]	@ reload vfp_current_hw_state pointer
-+#endif
- 	VFPFMXR	FPEXC, r5		@ enable VFP, disable any pending
- 					@ exceptions, so we can get at the
- 					@ rest of it
-@@ -143,6 +148,15 @@ vfp_reload_hw:
- 	beq	vfp_hw_state_valid
- 
- vfp_reload_hw:
-+	enable_irq
-+#ifdef CONFIG_IPIPE
-+	disable_irq
-+	mrc     p15, 0, ip, c0, c0, 5  @ reload current CPU number
-+	and	r11, ip, #255
-+	ldr	r4, vfp_cpu_logical_map_address
-+	ldr	r11, [r4, r11, lsl #2]
-+#endif
-+
- 	@ We're loading this threads state into the VFP hardware. Update
- 	@ the CPU number which contains the most up to date VFP context.
- 	str	r11, [r10, #VFP_CPU]
-@@ -177,6 +191,7 @@ vfp_hw_state_valid:
+@@ -177,6 +177,7 @@ vfp_hw_state_valid:
  					@ out before setting an FPEXC that
  					@ stops us reading stuff
  	VFPFMXR	FPEXC, r1		@ Restore FPEXC last
@@ -10668,7 +10606,7 @@ index be807625..8a8d85c 100644
  	sub	r2, r2, #4		@ Retry current instruction - if Thumb
  	str	r2, [sp, #S_PC]		@ mode it's two 16-bit instructions,
  					@ else it's one 32-bit instruction, so
-@@ -200,6 +215,7 @@ look_for_VFP_exceptions:
+@@ -200,6 +201,7 @@ look_for_VFP_exceptions:
  	@ Fall into hand on to next handler - appropriate coproc instr
  	@ not recognised by VFP
  
@@ -10676,17 +10614,6 @@ index be807625..8a8d85c 100644
  	DBGSTR	"not VFP"
  	dec_preempt_count_ti r10, r4
  	mov	pc, lr
-@@ -240,6 +256,10 @@ ENDPROC(vfp_save_state)
- 	.align
- vfp_current_hw_state_address:
- 	.word	vfp_current_hw_state
-+#if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
-+vfp_cpu_logical_map_address:
-+	.word	__cpu_logical_map
-+#endif
- 
- 	.macro	tbl_branch, base, tmp, shift
- #ifdef CONFIG_THUMB2_KERNEL
 diff --git a/arch/arm/vfp/vfpmodule.c b/arch/arm/vfp/vfpmodule.c
 index 2f37e1d..7663e75 100644
 --- a/arch/arm/vfp/vfpmodule.c
@@ -12747,7 +12674,7 @@ index a16b497..fa578e8 100644
  
  /*
 diff --git a/include/linux/ftrace.h b/include/linux/ftrace.h
-index 404a686..605479f 100644
+index 721de25..c4a10c8 100644
 --- a/include/linux/ftrace.h
 +++ b/include/linux/ftrace.h
 @@ -101,6 +101,7 @@ enum {
@@ -12757,7 +12684,7 @@ index 404a686..605479f 100644
 +	FTRACE_OPS_FL_IPIPE_EXCLUSIVE		= 1 << 9,
  };
  
- /*
+ #ifdef CONFIG_DYNAMIC_FTRACE
 diff --git a/include/linux/hardirq.h b/include/linux/hardirq.h
 index cba442e..b513a46 100644
 --- a/include/linux/hardirq.h
@@ -15204,7 +15131,7 @@ index 5b9b84b..6c8bb4d 100644
  static inline void __raw_read_lock(rwlock_t *lock)
  {
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0376b05..82b6b3e 100644
+index c5cc872..6cdf1f7 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -26,6 +26,7 @@ struct sched_param {
@@ -15614,7 +15541,7 @@ index 36fb3b5..3b5e2dc6 100644
   * and other sensitive information are never written to disk.
   */
 diff --git a/init/Kconfig b/init/Kconfig
-index 9d76b99..0393673 100644
+index 35685a4..b533ab1 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -69,6 +69,7 @@ config COMPILE_TEST
@@ -15845,7 +15772,7 @@ index e5c4668..5e6e8bd 100644
  	if (unlikely(in_atomic()))
  		printk(KERN_INFO "note: %s[%d] exited with preempt_count %d\n",
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 6a13c46..7959178 100644
+index b41958b..46d23fe 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -317,6 +317,8 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
@@ -20824,7 +20751,7 @@ index 4b082b5..67447fc 100644
   * The __lock_function inlines are taken from
   * include/linux/spinlock_api_smp.h
 diff --git a/kernel/module.c b/kernel/module.c
-index 81e727c..49ef05f 100644
+index 673aeb0..a607c5d 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
 @@ -879,7 +879,7 @@ static inline void print_unload_info(struct seq_file *m, struct module *mod)
@@ -20964,7 +20891,7 @@ index fcc2611..92c110f 100644
  	if (pm_wakeup_pending()) {
  		error = -EAGAIN;
 diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index 13e839d..4b678cd 100644
+index 971285d..39e1ddb 100644
 --- a/kernel/printk/printk.c
 +++ b/kernel/printk/printk.c
 @@ -1756,6 +1756,43 @@ asmlinkage int printk_emit(int facility, int level,
@@ -21081,7 +21008,7 @@ index 13e839d..4b678cd 100644
  
  #else /* CONFIG_PRINTK */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index bc1638b..c44802b 100644
+index 0acf96b..1e5c105 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1586,7 +1586,9 @@ void scheduler_ipi(void)
@@ -21249,7 +21176,7 @@ index bc1638b..c44802b 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -4622,10 +4649,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+@@ -4623,10 +4650,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
  	do_set_cpus_allowed(p, new_mask);
  
  	/* Can the task run on the task's current CPU? If so, we're done */
@@ -21264,7 +21191,7 @@ index bc1638b..c44802b 100644
  	if (p->on_rq) {
  		struct migration_arg arg = { p, dest_cpu };
  		/* Need help from migration thread: drop lock and wait. */
-@@ -8094,3 +8124,42 @@ void dump_cpu_task(int cpu)
+@@ -8095,3 +8125,42 @@ void dump_cpu_task(int cpu)
  	pr_info("Task dump for CPU %d:\n", cpu);
  	sched_show_task(cpu_curr(cpu));
  }
@@ -21591,7 +21518,7 @@ index d440935..7958b28 100644
  	help
  	  This option will modify all the calls to function tracing
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index ac9d1da..d0b0bce 100644
+index ca167e6..ca49007 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -32,6 +32,7 @@
@@ -21602,7 +21529,7 @@ index ac9d1da..d0b0bce 100644
  
  #include <trace/events/sched.h>
  
-@@ -244,8 +245,17 @@ static inline void update_function_graph_func(void) { }
+@@ -252,8 +253,17 @@ static inline void update_function_graph_func(void) { }
  
  static void update_ftrace_function(void)
  {
@@ -21620,7 +21547,7 @@ index ac9d1da..d0b0bce 100644
  	/*
  	 * If we are at the end of the list and this ops is
  	 * recursion safe and not dynamic and the arch supports passing ops,
-@@ -2025,6 +2035,9 @@ void __weak arch_ftrace_update_code(int command)
+@@ -2069,6 +2079,9 @@ void __weak arch_ftrace_update_code(int command)
  
  static void ftrace_run_update_code(int command)
  {
@@ -21630,7 +21557,7 @@ index ac9d1da..d0b0bce 100644
  	int ret;
  
  	ret = ftrace_arch_code_modify_prepare();
-@@ -2043,7 +2056,13 @@ static void ftrace_run_update_code(int command)
+@@ -2087,7 +2100,13 @@ static void ftrace_run_update_code(int command)
  	 * is safe. The stop_machine() is the safest, but also
  	 * produces the most overhead.
  	 */
@@ -21644,7 +21571,7 @@ index ac9d1da..d0b0bce 100644
  
  	function_trace_stop--;
  
-@@ -4196,10 +4215,10 @@ static int ftrace_process_locs(struct module *mod,
+@@ -4240,10 +4259,10 @@ static int ftrace_process_locs(struct module *mod,
  	 * reason to cause large interrupt latencies while we do it.
  	 */
  	if (!mod)
@@ -21657,7 +21584,7 @@ index ac9d1da..d0b0bce 100644
  	ret = 0;
   out:
  	mutex_unlock(&ftrace_lock);
-@@ -4298,9 +4317,11 @@ void __init ftrace_init(void)
+@@ -4342,9 +4361,11 @@ void __init ftrace_init(void)
  	unsigned long count, flags;
  	int ret;
  
@@ -21672,10 +21599,10 @@ index ac9d1da..d0b0bce 100644
  		goto failed;
  
 diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
-index ff70271..c7ded52 100644
+index 5186298..bc3c286 100644
 --- a/kernel/trace/ring_buffer.c
 +++ b/kernel/trace/ring_buffer.c
-@@ -2640,7 +2640,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
+@@ -2654,7 +2654,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
  
  static __always_inline int trace_recursive_lock(void)
  {
@@ -21685,7 +21612,7 @@ index ff70271..c7ded52 100644
  	int bit;
  
  	if (in_interrupt()) {
-@@ -2653,22 +2654,35 @@ static __always_inline int trace_recursive_lock(void)
+@@ -2667,22 +2668,35 @@ static __always_inline int trace_recursive_lock(void)
  	} else
  		bit = 3;
  
@@ -22063,10 +21990,10 @@ index 3e9977a..be95cbe 100644
  	help
  	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
-index 8b44f76..a2880d1 100644
+index 533023d..5b2c5d4 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
-@@ -794,6 +794,34 @@ out:
+@@ -793,6 +793,34 @@ out:
  	return pfn_to_page(pfn);
  }
  
@@ -22101,7 +22028,7 @@ index 8b44f76..a2880d1 100644
  /*
   * copy one vm_area from one task to the other. Assumes the page tables
   * already present in the new task to be cleared in the whole range
-@@ -802,8 +830,8 @@ out:
+@@ -801,8 +829,8 @@ out:
  
  static inline unsigned long
  copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
@@ -22112,7 +22039,7 @@ index 8b44f76..a2880d1 100644
  {
  	unsigned long vm_flags = vma->vm_flags;
  	pte_t pte = *src_pte;
-@@ -857,6 +885,21 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -856,6 +884,21 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	 * in the parent and the child
  	 */
  	if (is_cow_mapping(vm_flags)) {
@@ -22134,7 +22061,7 @@ index 8b44f76..a2880d1 100644
  		ptep_set_wrprotect(src_mm, addr, src_pte);
  		pte = pte_wrprotect(pte);
  	}
-@@ -894,13 +937,27 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -893,13 +936,27 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	int progress = 0;
  	int rss[NR_MM_COUNTERS];
  	swp_entry_t entry = (swp_entry_t){0};
@@ -22164,7 +22091,7 @@ index 8b44f76..a2880d1 100644
  	src_pte = pte_offset_map(src_pmd, addr);
  	src_ptl = pte_lockptr(src_mm, src_pmd);
  	spin_lock_nested(src_ptl, SINGLE_DEPTH_NESTING);
-@@ -923,8 +980,25 @@ again:
+@@ -922,8 +979,25 @@ again:
  			progress++;
  			continue;
  		}
@@ -22191,7 +22118,7 @@ index 8b44f76..a2880d1 100644
  		if (entry.val)
  			break;
  		progress += 8;
-@@ -1959,34 +2033,6 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
+@@ -1958,34 +2032,6 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
  	return same;
  }
  
@@ -22226,7 +22153,7 @@ index 8b44f76..a2880d1 100644
  /*
   * Notify the address space that the page is about to become writable so that
   * it can prohibit this or wait for the page to get into an appropriate state.
-@@ -3804,6 +3850,41 @@ void copy_user_huge_page(struct page *dst, struct page *src,
+@@ -3803,6 +3849,41 @@ void copy_user_huge_page(struct page *dst, struct page *src,
  }
  #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
  
@@ -22350,10 +22277,35 @@ index f802c2d..b320432 100644
  #ifdef finish_arch_post_lock_switch
  	finish_arch_post_lock_switch();
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index c43d557..a9bb4c2 100644
+index c43d557..54e21a6 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
-@@ -252,6 +252,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
+@@ -71,7 +71,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 	struct mm_struct *mm = vma->vm_mm;
+ 	pte_t *pte, oldpte;
+ 	spinlock_t *ptl;
+-	unsigned long pages = 0;
++	unsigned long pages = 0, flags;
+ 
+ 	pte = lock_pte_protection(vma, pmd, addr, prot_numa, &ptl);
+ 	if (!pte)
+@@ -85,6 +85,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 			bool updated = false;
+ 
+ 			if (!prot_numa) {
++				flags = hard_local_irq_save();
+ 				ptent = ptep_modify_prot_start(mm, addr, pte);
+ 				if (pte_numa(ptent))
+ 					ptent = pte_mknonnuma(ptent);
+@@ -96,6 +97,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 				if (dirty_accountable && pte_dirty(ptent))
+ 					ptent = pte_mkwrite(ptent);
+ 				ptep_modify_prot_commit(mm, addr, pte, ptent);
++				hard_local_irq_restore(flags);
+ 				updated = true;
+ 			} else {
+ 				struct page *page;
+@@ -252,6 +254,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
  		pages = hugetlb_change_protection(vma, start, end, newprot);
  	else
  		pages = change_protection_range(vma, start, end, newprot, dirty_accountable, prot_numa);

@@ -3096,7 +3096,7 @@ index ded0417..6ce9baa 100644
    DEFINE(TI_VFPSTATE,		offsetof(struct thread_info, vfpstate));
  #ifdef CONFIG_SMP
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 1879e8d..a608340 100644
+index 1879e8d..f6ef839 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -3244,8 +3244,8 @@ index 1879e8d..a608340 100644
 +	get_thread_info tsk
 +	ldr	r0, [tsk, #TI_IPIPE]
 +	tst	r0, #_TIP_HEAD
-+ THUMB(	it eq)
-+	beq	__ipipe_ret_to_user_irqs_disabled  @ Fast exit path over non-root domains
++ THUMB(	it ne)
++	bne	__ipipe_ret_to_user_irqs_disabled  @ Fast exit path over non-root domains
 +#endif /* !CONFIG_IPIPE_LEGACY */
 +#else /* !CONFIG_IPIPE */
 +	get_thread_info tsk
@@ -3626,7 +3626,7 @@ index 88c6bab..cf2772a 100644
   * have in theory up to 7 arguments to a function - r0 to r6.
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..0d3412d
+index 0000000..8a6c9bc
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
 @@ -0,0 +1,575 @@
@@ -3841,7 +3841,7 @@ index 0000000..0d3412d
 +#ifdef CONFIG_SMP_ON_UP
 +struct static_key __ipipe_smp_key = STATIC_KEY_INIT_TRUE;
 +
-+unsigned __ipipe_processor_id(void)
++unsigned notrace __ipipe_processor_id(void)
 +{
 +	return raw_smp_processor_id();
 +}
@@ -4792,7 +4792,7 @@ index 0dd3b79..b56a680 100644
  	return 0;
  }
 diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
-index 1e8b030..c755375 100644
+index aab70f6..465dcb8 100644
 --- a/arch/arm/kernel/setup.c
 +++ b/arch/arm/kernel/setup.c
 @@ -465,16 +465,27 @@ void notrace cpu_init(void)
@@ -4853,7 +4853,7 @@ index 04d6388..f0616de 100644
  	} while (thread_flags & _TIF_WORK_MASK);
  	return 0;
 diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
-index b7b4c86..64f2adf 100644
+index 8cd3724..f1265b0 100644
 --- a/arch/arm/kernel/smp.c
 +++ b/arch/arm/kernel/smp.c
 @@ -69,8 +69,24 @@ enum ipi_msg_type {
@@ -4900,7 +4900,7 @@ index b7b4c86..64f2adf 100644
  
  	/*
  	 * All kernel threads share the same mm context; grab a
-@@ -500,6 +523,93 @@ u64 smp_irq_stat_cpu(unsigned int cpu)
+@@ -509,6 +532,93 @@ u64 smp_irq_stat_cpu(unsigned int cpu)
  }
  
  #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
@@ -4994,7 +4994,7 @@ index b7b4c86..64f2adf 100644
  void tick_broadcast(const struct cpumask *mask)
  {
  	smp_cross_call(mask, IPI_TIMER);
-@@ -565,9 +675,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
+@@ -574,9 +684,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
  
  #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
  	case IPI_TIMER:
@@ -5007,7 +5007,7 @@ index b7b4c86..64f2adf 100644
  		break;
  #endif
  
-@@ -576,35 +686,35 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
+@@ -585,35 +695,35 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
  		break;
  
  	case IPI_CALL_FUNC:
@@ -6677,7 +6677,7 @@ index 19fca1f..f8d6d6c 100644
  }
  CLK_OF_DECLARE(imx53_ccm, "fsl,imx53-ccm", mx53_clocks_init);
 diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
-index 4d677f4..824107c 100644
+index 01a5765..d5f077a 100644
 --- a/arch/arm/mach-imx/clk-imx6q.c
 +++ b/arch/arm/mach-imx/clk-imx6q.c
 @@ -144,7 +144,7 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
@@ -7658,7 +7658,7 @@ index 1f3770a..1119417 100644
  		return;
  
 diff --git a/arch/arm/mach-omap2/pm44xx.c b/arch/arm/mach-omap2/pm44xx.c
-index eefb30c..a9086b9 100644
+index 2b9cff9..d60cf7c 100644
 --- a/arch/arm/mach-omap2/pm44xx.c
 +++ b/arch/arm/mach-omap2/pm44xx.c
 @@ -133,7 +133,13 @@ static int __init pwrdms_setup(struct powerdomain *pwrdm, void *unused)
@@ -7694,7 +7694,7 @@ index b4c4ab9..795b538 100644
  	if (chip->irq_ack)
  		chip->irq_ack(&desc->irq_data);
 diff --git a/arch/arm/mach-omap2/timer.c b/arch/arm/mach-omap2/timer.c
-index 74044aa..fee9afd 100644
+index 73d80b8..8d11381 100644
 --- a/arch/arm/mach-omap2/timer.c
 +++ b/arch/arm/mach-omap2/timer.c
 @@ -42,6 +42,9 @@
@@ -9057,7 +9057,7 @@ index 7abde2c..4fd2924 100644
  	/*
  	 * Check if l2x0 controller is already enabled.
 diff --git a/arch/arm/mm/context.c b/arch/arm/mm/context.c
-index 6eb97b3..75499f0 100644
+index 4370933..031b986 100644
 --- a/arch/arm/mm/context.c
 +++ b/arch/arm/mm/context.c
 @@ -42,7 +42,7 @@
@@ -9069,7 +9069,7 @@ index 6eb97b3..75499f0 100644
  static atomic64_t asid_generation = ATOMIC64_INIT(ASID_FIRST_VERSION);
  static DECLARE_BITMAP(asid_map, NUM_USER_ASIDS);
  
-@@ -217,15 +217,18 @@ static u64 new_context(struct mm_struct *mm, unsigned int cpu)
+@@ -213,15 +213,18 @@ static u64 new_context(struct mm_struct *mm, unsigned int cpu)
  	return asid;
  }
  
@@ -9090,7 +9090,7 @@ index 6eb97b3..75499f0 100644
  	/*
  	 * We cannot update the pgd and the ASID atomicly with classic
  	 * MMU, so switch exclusively to global mappings to avoid
-@@ -238,7 +241,11 @@ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
+@@ -234,7 +237,11 @@ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
  	    && atomic64_xchg(&per_cpu(active_asids, cpu), asid))
  		goto switch_mm_fastpath;
  
@@ -9102,7 +9102,7 @@ index 6eb97b3..75499f0 100644
  	/* Check that our ASID belongs to the current generation. */
  	asid = atomic64_read(&mm->context.id);
  	if ((asid ^ atomic64_read(&asid_generation)) >> ASID_BITS) {
-@@ -253,8 +260,17 @@ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
+@@ -249,8 +256,17 @@ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
  
  	atomic64_set(&per_cpu(active_asids, cpu), asid);
  	cpumask_set_cpu(cpu, mm_cpumask(mm));
@@ -20646,7 +20646,7 @@ index 452d6f2..7f20d7c 100644
  }
  
 diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index 001fa5b..4dad5c7 100644
+index 8a160e8..8a62f8b 100644
 --- a/kernel/irq/internals.h
 +++ b/kernel/irq/internals.h
 @@ -53,6 +53,9 @@ enum {
@@ -20660,7 +20660,7 @@ index 001fa5b..4dad5c7 100644
  
  #include "debug.h"
 diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 8ab8e93..5261b2a 100644
+index 07d4551..dc0af3d 100644
 --- a/kernel/irq/irqdesc.c
 +++ b/kernel/irq/irqdesc.c
 @@ -91,6 +91,9 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
@@ -20673,7 +20673,7 @@ index 8ab8e93..5261b2a 100644
  }
  
  int nr_irqs = NR_IRQS;
-@@ -270,11 +273,13 @@ int __init early_irq_init(void)
+@@ -286,11 +289,13 @@ int __init early_irq_init(void)
  	return arch_early_irq_init();
  }
  
@@ -21513,7 +21513,7 @@ index 0de9d7f..7615cff 100644
  }
  
 diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
-index 6558b7a..f0ddb74 100644
+index 8c08a6f..a21ec0f 100644
 --- a/kernel/time/tick-sched.c
 +++ b/kernel/time/tick-sched.c
 @@ -148,7 +148,7 @@ static void tick_sched_handle(struct tick_sched *ts, struct pt_regs *regs)
@@ -21857,7 +21857,7 @@ index 2aefbee..c3ec43f 100644
  }
  EXPORT_SYMBOL(trace_hardirqs_off_caller);
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index a48abea..50cc0312 100644
+index a48abea..0e8ae4a 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -312,6 +312,7 @@ config MAGIC_SYSRQ
@@ -21886,6 +21886,15 @@ index a48abea..50cc0312 100644
  	---help---
  	  Say Y here if you want to check for overflows of kernel, IRQ
  	  and exception stacks (if your archicture uses them). This
+@@ -1088,7 +1091,7 @@ menu "RCU Debugging"
+ 
+ config PROVE_RCU
+ 	bool "RCU debugging: prove RCU correctness"
+-	depends on PROVE_LOCKING
++	depends on PROVE_LOCKING && !IPIPE
+ 	default n
+ 	help
+ 	 This feature enables lockdep extensions that check for correct
 diff --git a/lib/atomic64.c b/lib/atomic64.c
 index 08a4f06..15810f4 100644
 --- a/lib/atomic64.c
@@ -22077,7 +22086,7 @@ index 0862816..aacbf2df 100644
  	help
  	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
-index 48d7365..e23fa86 100644
+index 7f30bea..100a209 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -788,6 +788,34 @@ out:
@@ -22148,7 +22157,7 @@ index 48d7365..e23fa86 100644
  		ptep_set_wrprotect(src_mm, addr, src_pte);
  		pte = pte_wrprotect(pte);
  	}
-@@ -888,13 +931,27 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -888,13 +931,27 @@ static int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	int progress = 0;
  	int rss[NR_MM_COUNTERS];
  	swp_entry_t entry = (swp_entry_t){0};
@@ -22316,7 +22325,7 @@ index b1eb536..ca23f83 100644
 +}
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index b91ac80..47ee8c0 100644
+index 085bcd8..ef56280 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
 @@ -45,6 +45,10 @@
@@ -22330,7 +22339,7 @@ index b91ac80..47ee8c0 100644
  #ifndef arch_mmap_check
  #define arch_mmap_check(addr, len, flags)	(0)
  #endif
-@@ -2613,7 +2617,7 @@ static unsigned long do_brk(unsigned long addr, unsigned long len)
+@@ -2616,7 +2620,7 @@ static unsigned long do_brk(unsigned long addr, unsigned long len)
  
  	flags = VM_DATA_DEFAULT_FLAGS | VM_ACCOUNT | mm->def_flags;
  
@@ -22381,7 +22390,7 @@ index 769a67a..8c40894 100644
  
  	return pages;
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 0fdf968..4a96f40 100644
+index aa3891e..5c756384 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -191,6 +191,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
