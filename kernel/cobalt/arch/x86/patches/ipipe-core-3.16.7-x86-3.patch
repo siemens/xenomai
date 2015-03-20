@@ -1,5 +1,5 @@
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index d24887b..ac506bb 100644
+index 27adfd9..40a67c4 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -9,6 +9,7 @@ config 64BIT
@@ -4220,7 +4220,7 @@ index be8e1bd..0249ce4 100644
  
  /*
 diff --git a/arch/x86/kernel/smpboot.c b/arch/x86/kernel/smpboot.c
-index 5492798..7a685e0 100644
+index 215815b..b0cfd08 100644
 --- a/arch/x86/kernel/smpboot.c
 +++ b/arch/x86/kernel/smpboot.c
 @@ -890,7 +890,7 @@ static int do_boot_cpu(int apicid, int cpu, struct task_struct *idle)
@@ -4581,7 +4581,7 @@ index e8edcf5..0a93042 100644
  	tsk->thread.screen_bitmap = info->screen_bitmap;
  	if (info->flags & VM86_SCREEN_BITMAP)
 diff --git a/arch/x86/kernel/vsyscall_64.c b/arch/x86/kernel/vsyscall_64.c
-index ea5b570..e1f1fe2 100644
+index e1e1e80..a70b1a7 100644
 --- a/arch/x86/kernel/vsyscall_64.c
 +++ b/arch/x86/kernel/vsyscall_64.c
 @@ -32,6 +32,7 @@
@@ -4658,10 +4658,10 @@ index b5e994a..743ceae 100644
  }
  
 diff --git a/arch/x86/kvm/vmx.c b/arch/x86/kvm/vmx.c
-index 801332e..8f9018f 100644
+index 6c437ed..767d308 100644
 --- a/arch/x86/kvm/vmx.c
 +++ b/arch/x86/kvm/vmx.c
-@@ -1781,9 +1781,11 @@ static void __vmx_load_host_state(struct vcpu_vmx *vmx)
+@@ -1782,9 +1782,11 @@ static void __vmx_load_host_state(struct vcpu_vmx *vmx)
  
  static void vmx_load_host_state(struct vcpu_vmx *vmx)
  {
@@ -4675,7 +4675,7 @@ index 801332e..8f9018f 100644
  }
  
  /*
-@@ -2083,6 +2085,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
+@@ -2084,6 +2086,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
  {
  	int save_nmsrs, index;
  
@@ -4683,7 +4683,7 @@ index 801332e..8f9018f 100644
  	save_nmsrs = 0;
  #ifdef CONFIG_X86_64
  	if (is_long_mode(&vmx->vcpu)) {
-@@ -2112,6 +2115,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
+@@ -2113,6 +2116,7 @@ static void setup_msrs(struct vcpu_vmx *vmx)
  		move_msr_up(vmx, index, save_nmsrs++);
  
  	vmx->save_nmsrs = save_nmsrs;
@@ -4691,7 +4691,7 @@ index 801332e..8f9018f 100644
  
  	if (cpu_has_vmx_msr_bitmap())
  		vmx_set_msr_bitmap(&vmx->vcpu);
-@@ -7192,8 +7196,10 @@ static void vmx_handle_external_intr(struct kvm_vcpu *vcpu)
+@@ -7198,8 +7202,10 @@ static void vmx_handle_external_intr(struct kvm_vcpu *vcpu)
  			[ss]"i"(__KERNEL_DS),
  			[cs]"i"(__KERNEL_CS)
  			);
@@ -4703,7 +4703,7 @@ index 801332e..8f9018f 100644
  }
  
  static bool vmx_mpx_supported(void)
-@@ -7567,7 +7573,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
+@@ -7579,7 +7585,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
  	vmx_vcpu_load(&vmx->vcpu, cpu);
  	vmx->vcpu.cpu = cpu;
  	err = vmx_vcpu_setup(vmx);
@@ -4713,7 +4713,7 @@ index 801332e..8f9018f 100644
  	put_cpu();
  	if (err)
  		goto free_vmcs;
-@@ -7590,6 +7598,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
+@@ -7602,6 +7610,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
  
  	vmx->nested.current_vmptr = -1ull;
  	vmx->nested.current_vmcs12 = NULL;
@@ -5704,7 +5704,7 @@ index a16b497..fa578e8 100644
  
  /*
 diff --git a/include/linux/ftrace.h b/include/linux/ftrace.h
-index 404a686..605479f 100644
+index 721de25..c4a10c8 100644
 --- a/include/linux/ftrace.h
 +++ b/include/linux/ftrace.h
 @@ -101,6 +101,7 @@ enum {
@@ -5714,7 +5714,7 @@ index 404a686..605479f 100644
 +	FTRACE_OPS_FL_IPIPE_EXCLUSIVE		= 1 << 9,
  };
  
- /*
+ #ifdef CONFIG_DYNAMIC_FTRACE
 diff --git a/include/linux/hardirq.h b/include/linux/hardirq.h
 index cba442e..b513a46 100644
 --- a/include/linux/hardirq.h
@@ -8161,7 +8161,7 @@ index 5b9b84b..6c8bb4d 100644
  static inline void __raw_read_lock(rwlock_t *lock)
  {
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0376b05..82b6b3e 100644
+index c5cc872..6cdf1f7 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -26,6 +26,7 @@ struct sched_param {
@@ -8571,7 +8571,7 @@ index 36fb3b5..3b5e2dc6 100644
   * and other sensitive information are never written to disk.
   */
 diff --git a/init/Kconfig b/init/Kconfig
-index 9d76b99..0393673 100644
+index 35685a4..b533ab1 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -69,6 +69,7 @@ config COMPILE_TEST
@@ -8802,7 +8802,7 @@ index e5c4668..5e6e8bd 100644
  	if (unlikely(in_atomic()))
  		printk(KERN_INFO "note: %s[%d] exited with preempt_count %d\n",
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 6a13c46..7959178 100644
+index b41958b..46d23fe 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -317,6 +317,8 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
@@ -13781,7 +13781,7 @@ index 4b082b5..67447fc 100644
   * The __lock_function inlines are taken from
   * include/linux/spinlock_api_smp.h
 diff --git a/kernel/module.c b/kernel/module.c
-index 81e727c..49ef05f 100644
+index 673aeb0..a607c5d 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
 @@ -879,7 +879,7 @@ static inline void print_unload_info(struct seq_file *m, struct module *mod)
@@ -13921,7 +13921,7 @@ index fcc2611..92c110f 100644
  	if (pm_wakeup_pending()) {
  		error = -EAGAIN;
 diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index 13e839d..4b678cd 100644
+index 971285d..39e1ddb 100644
 --- a/kernel/printk/printk.c
 +++ b/kernel/printk/printk.c
 @@ -1756,6 +1756,43 @@ asmlinkage int printk_emit(int facility, int level,
@@ -14038,7 +14038,7 @@ index 13e839d..4b678cd 100644
  
  #else /* CONFIG_PRINTK */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index bc1638b..c44802b 100644
+index 0acf96b..1e5c105 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1586,7 +1586,9 @@ void scheduler_ipi(void)
@@ -14206,7 +14206,7 @@ index bc1638b..c44802b 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -4622,10 +4649,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+@@ -4623,10 +4650,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
  	do_set_cpus_allowed(p, new_mask);
  
  	/* Can the task run on the task's current CPU? If so, we're done */
@@ -14221,7 +14221,7 @@ index bc1638b..c44802b 100644
  	if (p->on_rq) {
  		struct migration_arg arg = { p, dest_cpu };
  		/* Need help from migration thread: drop lock and wait. */
-@@ -8094,3 +8124,42 @@ void dump_cpu_task(int cpu)
+@@ -8095,3 +8125,42 @@ void dump_cpu_task(int cpu)
  	pr_info("Task dump for CPU %d:\n", cpu);
  	sched_show_task(cpu_curr(cpu));
  }
@@ -14548,7 +14548,7 @@ index d440935..7958b28 100644
  	help
  	  This option will modify all the calls to function tracing
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index ac9d1da..d0b0bce 100644
+index ca167e6..ca49007 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -32,6 +32,7 @@
@@ -14559,7 +14559,7 @@ index ac9d1da..d0b0bce 100644
  
  #include <trace/events/sched.h>
  
-@@ -244,8 +245,17 @@ static inline void update_function_graph_func(void) { }
+@@ -252,8 +253,17 @@ static inline void update_function_graph_func(void) { }
  
  static void update_ftrace_function(void)
  {
@@ -14577,7 +14577,7 @@ index ac9d1da..d0b0bce 100644
  	/*
  	 * If we are at the end of the list and this ops is
  	 * recursion safe and not dynamic and the arch supports passing ops,
-@@ -2025,6 +2035,9 @@ void __weak arch_ftrace_update_code(int command)
+@@ -2069,6 +2079,9 @@ void __weak arch_ftrace_update_code(int command)
  
  static void ftrace_run_update_code(int command)
  {
@@ -14587,7 +14587,7 @@ index ac9d1da..d0b0bce 100644
  	int ret;
  
  	ret = ftrace_arch_code_modify_prepare();
-@@ -2043,7 +2056,13 @@ static void ftrace_run_update_code(int command)
+@@ -2087,7 +2100,13 @@ static void ftrace_run_update_code(int command)
  	 * is safe. The stop_machine() is the safest, but also
  	 * produces the most overhead.
  	 */
@@ -14601,7 +14601,7 @@ index ac9d1da..d0b0bce 100644
  
  	function_trace_stop--;
  
-@@ -4196,10 +4215,10 @@ static int ftrace_process_locs(struct module *mod,
+@@ -4240,10 +4259,10 @@ static int ftrace_process_locs(struct module *mod,
  	 * reason to cause large interrupt latencies while we do it.
  	 */
  	if (!mod)
@@ -14614,7 +14614,7 @@ index ac9d1da..d0b0bce 100644
  	ret = 0;
   out:
  	mutex_unlock(&ftrace_lock);
-@@ -4298,9 +4317,11 @@ void __init ftrace_init(void)
+@@ -4342,9 +4361,11 @@ void __init ftrace_init(void)
  	unsigned long count, flags;
  	int ret;
  
@@ -14629,10 +14629,10 @@ index ac9d1da..d0b0bce 100644
  		goto failed;
  
 diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
-index ff70271..c7ded52 100644
+index 5186298..bc3c286 100644
 --- a/kernel/trace/ring_buffer.c
 +++ b/kernel/trace/ring_buffer.c
-@@ -2640,7 +2640,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
+@@ -2654,7 +2654,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
  
  static __always_inline int trace_recursive_lock(void)
  {
@@ -14642,7 +14642,7 @@ index ff70271..c7ded52 100644
  	int bit;
  
  	if (in_interrupt()) {
-@@ -2653,22 +2654,35 @@ static __always_inline int trace_recursive_lock(void)
+@@ -2667,22 +2668,35 @@ static __always_inline int trace_recursive_lock(void)
  	} else
  		bit = 3;
  
@@ -15020,10 +15020,10 @@ index 3e9977a..be95cbe 100644
  	help
  	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
-index 8b44f76..a2880d1 100644
+index 533023d..5b2c5d4 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
-@@ -794,6 +794,34 @@ out:
+@@ -793,6 +793,34 @@ out:
  	return pfn_to_page(pfn);
  }
  
@@ -15058,7 +15058,7 @@ index 8b44f76..a2880d1 100644
  /*
   * copy one vm_area from one task to the other. Assumes the page tables
   * already present in the new task to be cleared in the whole range
-@@ -802,8 +830,8 @@ out:
+@@ -801,8 +829,8 @@ out:
  
  static inline unsigned long
  copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
@@ -15069,7 +15069,7 @@ index 8b44f76..a2880d1 100644
  {
  	unsigned long vm_flags = vma->vm_flags;
  	pte_t pte = *src_pte;
-@@ -857,6 +885,21 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -856,6 +884,21 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	 * in the parent and the child
  	 */
  	if (is_cow_mapping(vm_flags)) {
@@ -15091,7 +15091,7 @@ index 8b44f76..a2880d1 100644
  		ptep_set_wrprotect(src_mm, addr, src_pte);
  		pte = pte_wrprotect(pte);
  	}
-@@ -894,13 +937,27 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -893,13 +936,27 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	int progress = 0;
  	int rss[NR_MM_COUNTERS];
  	swp_entry_t entry = (swp_entry_t){0};
@@ -15121,7 +15121,7 @@ index 8b44f76..a2880d1 100644
  	src_pte = pte_offset_map(src_pmd, addr);
  	src_ptl = pte_lockptr(src_mm, src_pmd);
  	spin_lock_nested(src_ptl, SINGLE_DEPTH_NESTING);
-@@ -923,8 +980,25 @@ again:
+@@ -922,8 +979,25 @@ again:
  			progress++;
  			continue;
  		}
@@ -15148,7 +15148,7 @@ index 8b44f76..a2880d1 100644
  		if (entry.val)
  			break;
  		progress += 8;
-@@ -1959,34 +2033,6 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
+@@ -1958,34 +2032,6 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
  	return same;
  }
  
@@ -15183,7 +15183,7 @@ index 8b44f76..a2880d1 100644
  /*
   * Notify the address space that the page is about to become writable so that
   * it can prohibit this or wait for the page to get into an appropriate state.
-@@ -3804,6 +3850,41 @@ void copy_user_huge_page(struct page *dst, struct page *src,
+@@ -3803,6 +3849,41 @@ void copy_user_huge_page(struct page *dst, struct page *src,
  }
  #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
  
