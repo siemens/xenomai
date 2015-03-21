@@ -28,7 +28,7 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 				   const struct cobalt_mutexattr *attr)
 {
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
-	struct cobalt_ppd *sys_ppd;
+	struct cobalt_umm *umm;
 	spl_t s;
 	int err;
 
@@ -36,12 +36,12 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	if (err < 0)
 		return err;
 
-	sys_ppd = cobalt_ppd_get(attr->pshared);
+	umm = &cobalt_ppd_get(attr->pshared)->umm;
 	shadow->handle = mutex->resnode.handle;
 	shadow->magic = COBALT_MUTEX_MAGIC;
 	shadow->lockcnt = 0;
 	shadow->attr = *attr;
-	shadow->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
+	shadow->state_offset = cobalt_umm_offset(umm, state);
 
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
@@ -386,10 +386,12 @@ COBALT_SYSCALL(mutex_unlock, nonrestartable,
 
 void cobalt_mutex_reclaim(struct cobalt_resnode *node, spl_t s)
 {
+	struct cobalt_mutex_state *state;
 	struct cobalt_mutex *mutex;
 	int pshared;
 
 	mutex = container_of(node, struct cobalt_mutex, resnode);
+	state = container_of(mutex->synchbase.fastlock, struct cobalt_mutex_state, owner);
 	pshared = mutex->attr.pshared;
 	xnregistry_remove(node->handle);
 	cobalt_del_resource(node);
@@ -397,7 +399,6 @@ void cobalt_mutex_reclaim(struct cobalt_resnode *node, spl_t s)
 	cobalt_mark_deleted(mutex);
 	xnlock_put_irqrestore(&nklock, s);
 
-	cobalt_umm_free(&cobalt_ppd_get(pshared)->umm,
-			mutex->synchbase.fastlock);
+	cobalt_umm_free(&cobalt_ppd_get(pshared)->umm, state);
 	xnfree(mutex);
 }
