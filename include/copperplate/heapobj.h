@@ -272,8 +272,8 @@ static inline void sysgroup_unlock(void)
 #define sysgroup_count(__group)	\
 	(__main_sysgroup->__group ## _count)
 
-#define for_each_sysgroup(__obj, __group)	\
-	list_for_each_entry(__obj, &(__main_sysgroup->__group ## _list), next)
+#define for_each_sysgroup(__obj, __tmp, __group)	\
+	list_for_each_entry_safe(__obj, __tmp, &(__main_sysgroup->__group ## _list), next)
 
 int heapobj_pkg_init_shared(void);
 

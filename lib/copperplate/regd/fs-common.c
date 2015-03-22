@@ -70,9 +70,9 @@ static char *format_time(ticks_t value, char *buf, size_t bufsz)
 int open_threads(struct fsobj *fsobj, void *priv)
 {
 	struct thread_data *thread_data, *p;
+	struct sysgroup_memspec *obj, *tmp;
 	char sbuf[64], pbuf[16], tbuf[64];
 	struct threadobj_stat statbuf;
-	struct sysgroup_memspec *obj;
 	struct fsobstack *o = priv;
 	struct threadobj *thobj;
 	const char *sched_class;
@@ -105,13 +105,15 @@ int open_threads(struct fsobj *fsobj, void *priv)
 
 	sysgroup_lock();
 
-	for_each_sysgroup(obj, thread) {
+	for_each_sysgroup(obj, tmp, thread) {
 		if (p - thread_data >= count)
 			break;
 		thobj = container_of(obj, struct threadobj, memspec);
 		ret = threadobj_lock(thobj);
-		if (ret)
+		if (ret) {
+			sysgroup_remove(thread, obj);
 			continue;
+		}
 		namecpy(p->name, thobj->name);
 		p->name[sizeof(p->name) - 1] = '\0';
 		p->pid = thobj->pid;
@@ -198,8 +200,8 @@ struct heap_data {
 
 int open_heaps(struct fsobj *fsobj, void *priv)
 {
+	struct sysgroup_memspec *obj, *tmp;
 	struct heap_data *heap_data, *p;
-	struct sysgroup_memspec *obj;
 	struct fsobstack *o = priv;
 	struct shared_heap *heap;
 	int ret, count, len = 0;
@@ -230,7 +232,7 @@ int open_heaps(struct fsobj *fsobj, void *priv)
 	 * the group lock, so there is no point in acquiring each heap
 	 * lock individually for reading the slot.
 	 */
-	for_each_sysgroup(obj, heap) {
+	for_each_sysgroup(obj, tmp, heap) {
 		if (p - heap_data >= count)
 			break;
 		heap = container_of(obj, struct shared_heap, memspec);
