@@ -494,7 +494,7 @@ int main(int argc, char *const *argv)
 {
 	struct sigaction sa __attribute__((unused));
 	int c, ret, sig, cpu = -1;
-	char task_name[16];
+	char task_name[32];
 	cpu_set_t cpus;
 	sigset_t mask;
 
