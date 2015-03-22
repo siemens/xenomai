@@ -310,6 +310,8 @@ int heapobj_bind_session(const char *session);
 
 void heapobj_unbind_session(void);
 
+int heapobj_unlink_session(const char *session);
+
 void *xnmalloc(size_t size);
 
 void xnfree(void *ptr);
@@ -423,6 +425,11 @@ static inline size_t heapobj_inquire(struct heapobj *hobj)
 static inline int heapobj_bind_session(const char *session)
 {
 	return -ENOSYS;
+}
+
+static inline int heapobj_unlink_session(const char *session)
+{
+	return 0;
 }
 
 static inline void heapobj_unbind_session(void) { }

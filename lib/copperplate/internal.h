@@ -35,7 +35,6 @@
 #else
 #define DEFAULT_REGISTRY_ROOT		NULL
 #endif
-#define DEFAULT_REGISTRY_SESSION	"anon"
 
 struct coppernode {
 	unsigned int mem_pool;
@@ -113,7 +112,7 @@ int copperplate_renice_local_thread(pthread_t ptid, int policy,
 				    const struct sched_param_ex *param_ex);
 
 void copperplate_bootstrap_minimal(const char *arg0,
-				   char *mountpt, int shared_registry);
+				   char *mountpt, int regflags);
 
 #ifdef __cplusplus
 }

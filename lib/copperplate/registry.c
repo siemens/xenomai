@@ -60,7 +60,7 @@ static pthread_t regfs_thid;
 struct regfs_data {
 	const char *arg0;
 	char *mountpt;
-	int shared;
+	int flags;
 	sem_t sync;
 	int status;
 	pthread_mutex_t lock;
@@ -594,8 +594,9 @@ static void *registry_thread(void *arg)
 	av[2] = "-f";
 	av[3] = p->mountpt;
 	av[4] = "-o";
-	av[5] = p->shared ? "default_permissions,allow_other"
-			  : "default_permissions";
+	av[5] = p->flags & REGISTRY_SHARED ?
+		"default_permissions,allow_other"
+		: "default_permissions";
 	av[6] = NULL;
 
 	/*
@@ -624,14 +625,14 @@ static void sigchld_handler(int sig)
 		regd_pid = 0;
 }
 
-static int spawn_daemon(const char *sessdir)
+static int spawn_daemon(const char *sessdir, int flags)
 {
 	struct sigaction sa;
-	char *exec_path;
+	char *path, *av[6];
 	pid_t pid;
 	int ret;
 
-	ret = asprintf(&exec_path, "%s/sbin/sysregd", CONFIG_XENO_PREFIX);
+	ret = asprintf(&path, "%s/sbin/sysregd", CONFIG_XENO_PREFIX);
 	if (ret < 0)
 		return -ENOMEM;
 
@@ -654,11 +655,20 @@ static int spawn_daemon(const char *sessdir)
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGCHLD, &sa, NULL);
 
+	av[0] = "sysregd";
+	av[1] = "--daemon";
+	av[2] = "--root";
+	av[3] = (char *)sessdir;
+	if (flags & REGISTRY_ANON) {
+		av[4] = "--anon";
+		av[5] = NULL;
+	} else
+		av[4] = NULL;
+
 	pid = vfork();
 	switch (pid) {
 	case 0:
-		execl(exec_path, "sysregd", "--daemon",
-		      "--root", sessdir, NULL);
+		execv(path, av);
 		_exit(1);
 	case -1:
 		sa.sa_handler = SIG_DFL;
@@ -680,12 +690,12 @@ static int spawn_daemon(const char *sessdir)
 		break;
 	}
 
-	free(exec_path);
+	free(path);
 
 	return ret;
 }
 
-static int connect_regd(const char *sessdir, char **mountpt)
+static int connect_regd(const char *sessdir, char **mountpt, int flags)
 {
 	struct sockaddr_un sun;
 	int s, ret, retries;
@@ -717,7 +727,7 @@ static int connect_regd(const char *sessdir, char **mountpt)
 				return 0;
 		}
 		close(s);
-		ret = spawn_daemon(sessdir);
+		ret = spawn_daemon(sessdir, flags);
 		if (ret)
 			break;
 		ret = -EAGAIN;
@@ -735,7 +745,7 @@ static void pkg_cleanup(void)
 	registry_pkg_destroy();
 }
 
-int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
+int __registry_pkg_init(const char *arg0, char *mountpt, int flags)
 {
 	struct regfs_data *p = regfs_get_context();
 	pthread_mutexattr_t mattr;
@@ -767,7 +777,7 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
 	pthread_attr_setscope(&thattr, PTHREAD_SCOPE_PROCESS);
 	p->arg0 = arg0;
 	p->mountpt = mountpt;
-	p->shared = shared_registry;
+	p->flags = flags;
 	p->status = -EINVAL;
 	__STD(sem_init(&p->sync, 0, 0));
 
@@ -799,16 +809,16 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
 	return p->status;
 }
 
-int registry_pkg_init(const char *arg0)
+int registry_pkg_init(const char *arg0, int flags)
 {
 	char *mountpt;
 	int ret;
 
-	ret = connect_regd(__node_info.session_root, &mountpt);
+	ret = connect_regd(__node_info.session_root, &mountpt, flags);
 	if (ret)
 		return ret;
 
-	return __bt(__registry_pkg_init(arg0, mountpt, 0));
+	return __bt(__registry_pkg_init(arg0, mountpt, flags));
 }
 
 void registry_pkg_destroy(void)

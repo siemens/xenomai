@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include <unistd.h>
 #include "boilerplate/list.h"
 #include "boilerplate/hash.h"
@@ -622,7 +623,7 @@ static int create_main_heap(pid_t *cnode_r)
 	 * Otherwise, create the heap for the new emerging session and
 	 * bind to it.
 	 */
-	snprintf(hobj->name, sizeof(hobj->name), "%s.main-heap", session);
+	snprintf(hobj->name, sizeof(hobj->name), "%s.heap", session);
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 
 	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
@@ -708,13 +709,13 @@ static int bind_main_heap(const char *session)
 {
 	struct heapobj *hobj = &main_pool;
 	struct session_heap *m_heap;
+	int ret, fd, cpid;
 	struct stat sbuf;
 	memoff_t len;
-	int ret, fd;
 
 	/* No error tracking, this is for internal users. */
 
-	snprintf(hobj->name, sizeof(hobj->name), "%s.main-heap", session);
+	snprintf(hobj->name, sizeof(hobj->name), "%s.heap", session);
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 
 	fd = shm_open(hobj->fsname, O_RDWR, 0400);
@@ -739,9 +740,10 @@ static int bind_main_heap(const char *session)
 	if (m_heap == MAP_FAILED)
 		goto errno_fail;
 
+	cpid = m_heap->cpid;
 	__STD(close(fd));
 
-	if (m_heap->cpid == 0 || kill(m_heap->cpid, 0)) {
+	if (cpid == 0 || kill(cpid, 0)) {
 		munmap(m_heap, len);
 		return -ENOENT;
 	}
@@ -855,20 +857,23 @@ void heapobj_destroy(struct heapobj *hobj)
 	struct shared_heap *heap = hobj->pool;
 	int cpid;
 
-	__RT(pthread_mutex_destroy(&heap->lock));
-
 	if (hobj != &main_pool) {
+		__RT(pthread_mutex_destroy(&heap->lock));
 		sysgroup_remove(heap, &heap->memspec);
 		free_block(&main_heap.base, heap);
 		return;
 	}
 
-	__RT(pthread_mutex_destroy(&main_heap.sysgroup.lock));
 	cpid = main_heap.cpid;
+	if (cpid != get_thread_pid() && kill(cpid, 0) == 0) {
+		munmap(&main_heap, main_heap.maplen);
+		return;
+	}
+	
+	__RT(pthread_mutex_destroy(&heap->lock));
+	__RT(pthread_mutex_destroy(&main_heap.sysgroup.lock));
 	munmap(&main_heap, main_heap.maplen);
-
-	if (cpid == get_thread_pid() || (cpid && kill(cpid, 0)))
-		shm_unlink(hobj->fsname);
+	shm_unlink(hobj->fsname);
 }
 
 int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
@@ -964,4 +969,18 @@ void heapobj_unbind_session(void)
 	size_t len = main_heap.maplen;
 
 	munmap(&main_heap, len);
+}
+
+int heapobj_unlink_session(const char *session)
+{
+	char *path;
+	int ret;
+
+	ret = asprintf(&path, "/xeno:%s.heap", session);
+	if (ret < 0)
+		return -ENOMEM;
+	ret = shm_unlink(path) ? -errno : 0;
+	free(path);
+
+	return ret;
 }

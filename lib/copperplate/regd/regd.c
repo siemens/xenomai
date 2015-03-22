@@ -42,7 +42,7 @@
 #define note(fmt, args...)					\
 	do {							\
   		if (!daemonize)					\
-			printf("regd: " fmt "\n", ##args);	\
+			printf("sysregd: " fmt "\n", ##args);	\
 	} while (0)
 
 static char *rootdir;
@@ -57,6 +57,8 @@ static int linger;
 
 static int shared;
 
+static int anon;
+
 struct client {
 	char *mountpt;
 	int sockfd;
@@ -67,10 +69,11 @@ static DEFINE_PRIVATE_LIST(client_list);
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: regd [--root=<dir>]   set registry root directory\n");
-	fprintf(stderr, "            [--shared]       share registry between different users\n");
-	fprintf(stderr, "            [--daemonize]    run in the background\n");
-	fprintf(stderr, "            [--linger]       disable timed exit on idleness\n");
+	fprintf(stderr, "usage: sysregd --root=<dir>     set registry root directory\n");
+	fprintf(stderr, "               [--shared]       share registry between different users\n");
+	fprintf(stderr, "               [--anon]         mount registry for anonymous session\n");
+	fprintf(stderr, "               [--daemonize]    run in the background\n");
+	fprintf(stderr, "               [--linger]       disable timed exit on idleness\n");
 }
 
 static const struct option options[] = {
@@ -105,6 +108,13 @@ static const struct option options[] = {
 		.name = "shared",
 		.has_arg = 0,
 		.flag = &shared,
+		.val = 1,
+	},
+	{
+#define anon_opt	5
+		.name = "anon",
+		.has_arg = 0,
+		.flag = &anon,
 		.val = 1,
 	},
 	{
@@ -306,6 +316,7 @@ static void unregister_client(int s)
 
 static void delete_system_fs(void)
 {
+	note("unmounting %s", sysroot);
 	unmount(sysroot);
 	rmdir(sysroot);
 	rmdir(rootdir);
@@ -313,16 +324,16 @@ static void delete_system_fs(void)
 
 static void handle_requests(void)
 {
+	int ret, s, tmfd = -1;
 	struct itimerspec its;
 	fd_set refset, set;
-	int ret, s, tmfd = -1;
 	uint64_t exp;
 	char c;
 
 	FD_ZERO(&refset);
 	FD_SET(sockfd, &refset);
 
-	if (!linger) {
+	if (!(linger || anon)) {
 		tmfd = __STD(timerfd_create(CLOCK_MONOTONIC, 0));
 		if (tmfd < 0)
 			error(1, errno, "handle_requests/timerfd_create");
@@ -350,10 +361,10 @@ static void handle_requests(void)
 				continue;
 			}
 			FD_SET(s, &refset);
-			if (!linger)
+			if (tmfd != -1)
 				__STD(timerfd_settime(tmfd, 0, &its, NULL));
 		}
-		if (!linger && FD_ISSET(tmfd, &set)) {
+		if (tmfd != -1 && FD_ISSET(tmfd, &set)) {
 			ret = __STD(read(tmfd, &exp, sizeof(exp)));
 			(void)ret;
 			if (pvlist_empty(&client_list)) {
@@ -369,6 +380,15 @@ static void handle_requests(void)
 				unregister_client(s);
 				__STD(close(s));
 				FD_CLR(s, &refset);
+				if (anon && pvlist_empty(&client_list)) {
+					delete_system_fs();
+					if (daemonize) {
+						note("unlinking session %s",
+						     __node_info.session_label);
+						heapobj_unlink_session(__node_info.session_label);
+					}
+					exit(0);
+				}
 			}
 		}
 	}
@@ -380,7 +400,7 @@ static void cleanup_handler(int sig)
 	_exit(1);
 }
 
-static void create_system_fs(const char *arg0, const char *rootdir)
+static void create_system_fs(const char *arg0, const char *rootdir, int flags)
 {
 	struct sysreg_fsfile *f;
 	struct sysreg_fsdir *d;
@@ -422,7 +442,7 @@ bootstrap:
 	__node_info.session_label = session;
 	__node_info.registry_root = rootdir;
 	sysroot = mountpt;
-	copperplate_bootstrap_minimal(arg0, mountpt, shared);
+	copperplate_bootstrap_minimal(arg0, mountpt, flags);
 
 	note("mounted system fs at %s", mountpt);
 
@@ -446,8 +466,7 @@ bootstrap:
 
 int main(int argc, char *const *argv)
 {
-	struct passwd *pw = NULL;
-	int lindex, opt, ret;
+	int lindex, opt, ret, flags = 0;
 	struct sigaction sa;
 
 	for (;;) {
@@ -461,7 +480,12 @@ int main(int argc, char *const *argv)
 			return 0;
 		case daemonize_opt:
 		case linger_opt:
+			break;
 		case shared_opt:
+			flags |= REGISTRY_SHARED;
+			break;
+		case anon_opt:
+			flags |= REGISTRY_ANON;
 			break;
 		case root_opt:
 			rootdir = optarg;
@@ -472,17 +496,8 @@ int main(int argc, char *const *argv)
 		}
 	}
 
-	if (rootdir == NULL) {
-		pw = getpwuid(geteuid());
-		if (!pw)
-			return -errno;
-		ret = asprintf(&rootdir, "%s/%s/%s",
-			       DEFAULT_REGISTRY_ROOT,
-			       pw->pw_name,
-			       DEFAULT_REGISTRY_SESSION);
-		if (ret < 0)
-			return -ENOMEM;
-	}
+	if (rootdir == NULL)
+		error(1, EINVAL, "--root must be given");
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = SIG_IGN;
@@ -497,7 +512,7 @@ int main(int argc, char *const *argv)
 
 	create_rootdir();
 	bind_socket();
-	create_system_fs(argv[0], rootdir);
+	create_system_fs(argv[0], rootdir, flags);
 	handle_requests();
 
 	return 0;

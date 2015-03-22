@@ -29,6 +29,9 @@
 
 struct fsobj;
 
+#define REGISTRY_SHARED  1
+#define REGISTRY_ANON    2
+
 #ifdef CONFIG_XENO_REGISTRY
 
 struct registry_operations {
@@ -76,9 +79,12 @@ void registry_destroy_file(struct fsobj *fsobj);
 
 void registry_touch_file(struct fsobj *fsobj);
 
-int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry);
+int __registry_pkg_init(const char *arg0,
+			char *mountpt,
+			int flags);
 
-int registry_pkg_init(const char *arg0);
+int registry_pkg_init(const char *arg0,
+		      int flags);
 
 void registry_pkg_destroy(void);
 
@@ -126,13 +132,15 @@ void registry_touch_file(struct fsobj *fsobj)
 }
 
 static inline
-int __registry_pkg_init(const char *arg0, char *mountpt, int shared_registry)
+int __registry_pkg_init(const char *arg0,
+			char *mountpt, int flags)
 {
 	return 0;
 }
 
 static inline
-int registry_pkg_init(const char *arg0)
+int registry_pkg_init(const char *arg0,
+		      int flags)
 {
 	return 0;
 }

@@ -478,7 +478,7 @@ static int parse_skin_options(int *argcp, int largc, char **uargv,
  * __node_info.
  */
 void copperplate_bootstrap_minimal(const char *arg0, char *mountpt,
-				   int shared_registry)
+				   int regflags)
 {
 	int ret;
 
@@ -498,7 +498,7 @@ void copperplate_bootstrap_minimal(const char *arg0, char *mountpt,
 		goto fail;
 	}
 
-	ret = __registry_pkg_init(arg0, mountpt, shared_registry);
+	ret = __registry_pkg_init(arg0, mountpt, regflags);
 	if (ret)
 		goto fail;
 
@@ -507,34 +507,44 @@ fail:
 	early_panic("initialization failed, %s", symerror(ret));
 }
 
-static int get_session_root(void)
+static int get_session_root(int *regflags_r)
 {
+	char *sessdir, *session;
 	struct passwd *pw;
-	char *sessdir;
 	int ret;
 
-	if (__node_info.session_label) {
+	if (__node_info.session_label == NULL) {
+		ret = asprintf(&session, "anon@%d", __node_id);
+		if (ret < 0)
+			return -ENOMEM;
+		__node_info.session_label = session;
+		ret = asprintf(&sessdir, "%s/%s",
+			       __node_info.registry_root, session);
+		if (ret < 0)
+			return -ENOMEM;
+		*regflags_r |= REGISTRY_ANON;
+	} else {
 		pw = getpwuid(geteuid());
 		if (pw == NULL)
 			return -errno;
-		ret = asprintf(&sessdir, "%s/%s/%s", __node_info.registry_root,
+
+		ret = asprintf(&sessdir, "%s/%s/%s",
+			       __node_info.registry_root,
 			       pw->pw_name, __node_info.session_label);
-	} else {
-		__node_info.session_label = DEFAULT_REGISTRY_SESSION;
-		ret = asprintf(&sessdir, "%s/%s", __node_info.registry_root,
-			       DEFAULT_REGISTRY_SESSION);
+		if (ret < 0)
+			return -ENOMEM;
 	}
 
 	__node_info.session_root = sessdir;
 
-	return ret < 0 ? -ENOMEM : 0;
+	return 0;
 }
 
 /* The application-level copperplate init call. */
 
 void copperplate_init(int *argcp, char *const **argvp)
 {
-	int ret, largc, base_opt_start;
+	int ret, largc, base_opt_start, regflags = 0;
 	struct copperskin *skin;
 	struct option *options;
 	static int init_done;
@@ -604,7 +614,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	 * We need the session label to be known before we create the
 	 * shared heap, which is named after the former.
 	 */
-	ret = get_session_root();
+	ret = get_session_root(&regflags);
 	if (ret)
 		goto fail;
 
@@ -615,7 +625,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	}
 
 	if (__node_info.no_registry == 0) {
-		ret = registry_pkg_init(uargv[0]);
+		ret = registry_pkg_init(uargv[0], regflags);
 		if (ret)
 			goto fail;
 	}
