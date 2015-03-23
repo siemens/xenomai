@@ -714,19 +714,19 @@ static int connect_regd(const char *sessdir, char **mountpt, int flags)
 	sun.sun_path[0] = '\0';
 
 	for (retries = 0; retries < 3; retries++) {
-		s = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+		s = __STD(socket(AF_UNIX, SOCK_SEQPACKET, 0));
 		if (s < 0) {
 			ret = -errno;
 			free(*mountpt);
 			return ret;
 		}
-		ret = connect(s, (struct sockaddr *)&sun, addrlen);
+		ret = __STD(connect(s, (struct sockaddr *)&sun, addrlen));
 		if (ret == 0) {
-			ret = recv(s, *mountpt, PATH_MAX, 0);
+			ret = __STD(recv(s, *mountpt, PATH_MAX, 0));
 			if (ret > 0)
 				return 0;
 		}
-		close(s);
+		__STD(close(s));
 		ret = spawn_daemon(sessdir, flags);
 		if (ret)
 			break;
