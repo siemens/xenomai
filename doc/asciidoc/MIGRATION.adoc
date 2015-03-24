@@ -105,8 +105,8 @@ follows:
 
 ----------------------------------------------------------------------------    
 /mount-point              /* registry fs root, defaults to /var/run/xenomai */
- [/user]                  /* user name, missing if "anon" session */
-    /session              /* shared session name or "anon" */
+ /user                    /* user name */
+    /session              /* shared session name or anon@<pid> */
       /pid                /* application (main) pid */
         /skin             /* API name: alchemy/vxworks/psos/... */
           /family         /* object class (task, semaphore, ...) */
@@ -117,8 +117,7 @@ follows:
 Each leaf entry under a session hierarchy is normally viewable, for
 retrieving the information attached to the corresponding object, such
 as its state, and/or value. There can be multiple sessions hosted
-under a single registry mount point. Session-less application
-processes are grouped under the special "anon" hierarchy.
+under a single registry mount point.
     
 The /system hierarchy provides information about the current state of
 the Xenomai core, aggregating data from all processes which belong to

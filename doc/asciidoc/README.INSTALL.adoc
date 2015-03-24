@@ -350,6 +350,9 @@ although this is not mandatory if building with `--disable-tls`.
   the target kernel running the real-time applications. In addition,
   the FUSE development libraries must be available from the toolchain.
 
+- The autoconf (>= 2.62), automake and libtool packages must be
+  available on your build system.
+
 _Cobalt_-specific requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -374,10 +377,18 @@ _Mercury_-specific requirement
 Configuring
 ~~~~~~~~~~~
 
-A common autoconf script prepares for building the libraries and
-programs, for both the _Cobalt_ and _Mercury_ cores. The core-specific
-code which may be needed internally is automatically and transparently
-selected at compilation-time by the build process.
+First, the `configure` script and Makefiles must be generated in the
+Xenomai source tree. The recommended way is to run the automatic
+reconfiguration script shipped, from the top of the source tree:
+
+---------------------
+$ ./scripts/bootstrap
+---------------------
+
+When run, the generated `configure` script prepares for building the
+libraries and programs, for both the _Cobalt_ and _Mercury_ cores. The
+core-specific code which may be needed internally is automatically and
+transparently selected at compilation-time by the build process.
 
 The options listed below can be passed to this script.
 
@@ -466,21 +477,20 @@ Generic configuration options (both cores)
 	CONFIG_FUSE_FS must be enabled in the target kernel.
 
 [normal]
-	When this option is enabled, the system creates a file
-	hierachy under `/var/run/xenomai/[<user>/]<session>/<pid>`
-	(by default), where you can access the internal state of the
-	active real-time objects. The session label is obtained from
-	the --session runtime switch. If left out, it is "anon" and
-	the user name is not inserted as well. E.g. looking at the
-	properties of a VxWorks task could be done as follows:
+When this option is enabled, the system creates a file hierachy under
+`/var/run/xenomai/<user>/<session>/<pid>`, where you can access the
+internal state of the active real-time objects. The session label is
+obtained from the --session runtime switch. If no session name is
+specified, `anon@<pid>` will be used. E.g. looking at the properties
+of a VxWorks task could be done as follows:
 
 --------------------------------------------------------------------
-		$ cat /var/run/xenomai/anon.12656/vxworks/tasks/windTask 
-		name       = windTask
-		errno      = 0
-		status     = ready
-		priority   = 70
-		lock_depth = 0
+$ cat /var/run/xenomai/root/anon@12656/12656/vxworks/tasks/windTask 
+name       = windTask
+errno      = 0
+status     = ready
+priority   = 70
+lock_depth = 0
 --------------------------------------------------------------------
 
 [normal]
