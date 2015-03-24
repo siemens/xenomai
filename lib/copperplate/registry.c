@@ -680,7 +680,7 @@ static int spawn_daemon(const char *sessdir, int flags)
 		 * Make sure we sleep at least 200 ms regardless of
 		 * signal receipts.
 		 */
-		while (__STD(usleep(200000)) > 0) ;
+		while (usleep(200000) > 0) ;
 		regd_pid = pid;
 		barrier();
 		sa.sa_handler = sigchld_handler;
