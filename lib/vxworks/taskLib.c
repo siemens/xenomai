@@ -49,7 +49,8 @@ pthread_mutex_t wind_task_lock;
 
 int wind_time_slice = 0;
 
-static unsigned long anon_tids;
+static DEFINE_NAME_GENERATOR(task_namegen, "task",
+			     struct wind_task, name);
 
 static struct wind_task *find_wind_task(TASK_ID tid)
 {
@@ -349,10 +350,7 @@ static STATUS __taskInit(struct wind_task *task,
 	tcb->flags = flags;
 	tcb->entry = entry;
 
-	if (name == NULL || *name == '\0')
-		sprintf(task->name, "t%lu", ++anon_tids);
-	else
-		namecpy(task->name, name);
+	generate_name(task->name, name, &task_namegen);
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
