@@ -45,7 +45,8 @@ union psos_wait_union {
 
 struct cluster psos_task_table;
 
-static unsigned long anon_tids;
+static DEFINE_NAME_GENERATOR(task_namegen, "task",
+			     struct psos_task, name);
 
 static struct psos_task *find_psos_task(u_long tid, int *err_r)
 {
@@ -297,7 +298,7 @@ u_long t_create(const char *name, u_long prio,
 	}
 
 	if (name == NULL || *name == '\0')
-		sprintf(task->name, "t%lu", ++anon_tids);
+		generate_name(task->name, name, &task_namegen);
 	else {
 		name = __psos_maybe_short_name(short_name, name);
 		namecpy(task->name, name);
