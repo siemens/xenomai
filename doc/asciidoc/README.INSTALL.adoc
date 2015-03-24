@@ -350,8 +350,11 @@ although this is not mandatory if building with `--disable-tls`.
   the target kernel running the real-time applications. In addition,
   the FUSE development libraries must be available from the toolchain.
 
-- The autoconf (>= 2.62), automake and libtool packages must be
-  available on your build system.
+- If you plan to build from the sources available from the Xenomai GIT
+  tree (git.xenomai.org), the autoconf (>= 2.62), automake and libtool
+  packages must be available on your build system. This is not
+  required when building from a source tree extracted from a
+  http://download.gna.org/xenomai/[release tarball].
 
 _Cobalt_-specific requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -377,13 +380,20 @@ _Mercury_-specific requirement
 Configuring
 ~~~~~~~~~~~
 
-First, the `configure` script and Makefiles must be generated in the
-Xenomai source tree. The recommended way is to run the automatic
-reconfiguration script shipped, from the top of the source tree:
+If building the source obtained from the Xenomai GIT tree
+(git.xenomai.org), the `configure` script and Makefiles must be
+generated in the Xenomai source tree. The recommended way is to run
+the automatic reconfiguration script shipped, from the top of the
+source tree:
 
 ---------------------
 $ ./scripts/bootstrap
 ---------------------
+
+If building from a http://download.gna.org/xenomai[release tarball], a
+set of autoconf-generated file will be readily available from the
+extracted source tree, and therefore reconfiguring will not be
+required.
 
 When run, the generated `configure` script prepares for building the
 libraries and programs, for both the _Cobalt_ and _Mercury_ cores. The
