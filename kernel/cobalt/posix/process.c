@@ -1368,8 +1368,9 @@ static void __reclaim_resource(struct cobalt_process *process,
 			       struct list_head *global)
 {
 	struct cobalt_resnode *node, *tmp;
+	LIST_HEAD(stash);
 	spl_t s;
-	
+
 	xnlock_get_irqsave(&nklock, s);
 
 	if (list_empty(global))
@@ -1377,17 +1378,24 @@ static void __reclaim_resource(struct cobalt_process *process,
 
 	list_for_each_entry_safe(node, tmp, global, next) {
 		if (node->owner == process) {
-			reclaim(node, s); /* drops lock */
-			xnlock_get_irqsave(&nklock, s);
+			list_del(&node->next);
+			list_add(&node->next, &stash);
 		}
 	}
 		
+	list_for_each_entry_safe(node, tmp, &stash, next) {
+		reclaim(node, s);
+		xnlock_get_irqsave(&nklock, s);
+	}
+
+	XENO_BUG_ON(COBALT, !list_empty(&stash));
+
 flush_local:
 	if (list_empty(local))
 		goto out;
 
 	list_for_each_entry_safe(node, tmp, local, next) {
-		reclaim(node, s); /* drops lock */
+		reclaim(node, s);
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:
