@@ -707,6 +707,7 @@ static struct rtdm_driver udp_driver = {
                                         RTDM_SUBCLASS_RTNET,
                                         RTNET_RTDM_VER),
     .device_flags =     RTDM_PROTOCOL_DEVICE,
+    .device_count =	1,
     .context_size =     sizeof(struct rtsocket),
 
     .protocol_family =  PF_INET,
