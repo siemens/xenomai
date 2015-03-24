@@ -1,6 +1,7 @@
 menu "RTnet"
 
 config XENO_DRIVERS_NET
+       depends on m
        select NET
        tristate "RTnet, TCP/IP socket interface"
 
