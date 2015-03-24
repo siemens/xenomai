@@ -43,7 +43,7 @@ struct name_generator {
 	struct name_generator __name = {				\
 		.radix = __radix,					\
 		.length = sizeof ((__type *)0)->__member,		\
-		.serial = ATOMIC_INIT(1),				\
+		.serial = ATOMIC_INIT(0),				\
 	}
 
 #define ONE_BILLION  1000000000
