@@ -275,6 +275,34 @@ static void *waiter(void *cookie)
 	return cookie;
 }
 
+static void autoinit_simple_wait(void)
+{
+	unsigned long long start, diff;
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_t waiter_tid;
+
+	fprintf(stderr, "autoinit_simple_wait\n");
+
+	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("simple thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
+		 waiter, &mutex);
+	ms_sleep(11);
+	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
+	sched_yield();
+
+	start = timer_get_tsc();
+	dispatch("simple mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
+	if (diff < 10000000) {
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
+			diff / 1000, (unsigned) (diff % 1000));
+		exit(EXIT_FAILURE);
+	}
+
+	dispatch("simple mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("simple mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+}
+
 static void simple_wait(void)
 {
 	unsigned long long start, diff;
@@ -302,6 +330,38 @@ static void simple_wait(void)
 
 	dispatch("simple mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 	dispatch("simple mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+}
+
+static void autoinit_recursive_wait(void)
+{
+	unsigned long long start, diff;
+	pthread_mutex_t mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+	pthread_t waiter_tid;
+
+	fprintf(stderr, "autoinit_recursive_wait\n");
+
+	dispatch("rec mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("rec mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
+
+	dispatch("rec thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
+		 waiter, &mutex);
+
+	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+	ms_sleep(11);
+	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
+	sched_yield();
+
+	start = timer_get_tsc();
+	dispatch("rec mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
+
+	if (diff < 10000000) {
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
+			diff / 1000, (unsigned) (diff % 1000));
+		exit(EXIT_FAILURE);
+	}
+	dispatch("rec mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("rec mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
 static void recursive_wait(void)
@@ -336,6 +396,48 @@ static void recursive_wait(void)
 	}
 	dispatch("rec mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
 	dispatch("rec mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+}
+
+static void autoinit_errorcheck_wait(void)
+{
+	unsigned long long start, diff;
+	pthread_mutex_t mutex = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+	pthread_t waiter_tid;
+	int err;
+
+	fprintf(stderr, "autoinit_errorcheck_wait\n");
+
+	dispatch("errorcheck mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+
+	err = pthread_mutex_lock(&mutex);
+	if (err != EDEADLK) {
+		fprintf(stderr, "FAILURE: errorcheck mutex_lock 2: %s\n",
+			strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	dispatch("errorcheck thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
+		 waiter, &mutex);
+	ms_sleep(11);
+	dispatch("errorcheck mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
+	sched_yield();
+	err = pthread_mutex_unlock(&mutex);
+	if (err != EPERM) {
+		fprintf(stderr, "FAILURE: errorcheck mutex_unlock 2: %s\n",
+			strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	start = timer_get_tsc();
+	dispatch("errorcheck mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
+	diff = timer_tsc2ns(timer_get_tsc() - start);
+	if (diff < 10000000) {
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
+			diff / 1000, (unsigned) (diff % 1000));
+		exit(EXIT_FAILURE);
+	}
+	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
 static void errorcheck_wait(void)
@@ -788,8 +890,11 @@ int run_mutex_torture(struct smokey_test *t, int argc, char *const argv[])
 	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
 	/* Call test routines */
+	autoinit_simple_wait();
 	simple_wait();
+	autoinit_recursive_wait();
 	recursive_wait();
+	autoinit_errorcheck_wait();
 	errorcheck_wait();
 	timed_mutex();
 	mode_switch();
