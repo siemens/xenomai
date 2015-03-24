@@ -513,27 +513,23 @@ static int get_session_root(int *regflags_r)
 	struct passwd *pw;
 	int ret;
 
+	pw = getpwuid(geteuid());
+	if (pw == NULL)
+		return -errno;
+
 	if (__node_info.session_label == NULL) {
 		ret = asprintf(&session, "anon@%d", __node_id);
 		if (ret < 0)
 			return -ENOMEM;
 		__node_info.session_label = session;
-		ret = asprintf(&sessdir, "%s/%s",
-			       __node_info.registry_root, session);
-		if (ret < 0)
-			return -ENOMEM;
 		*regflags_r |= REGISTRY_ANON;
-	} else {
-		pw = getpwuid(geteuid());
-		if (pw == NULL)
-			return -errno;
-
-		ret = asprintf(&sessdir, "%s/%s/%s",
-			       __node_info.registry_root,
-			       pw->pw_name, __node_info.session_label);
-		if (ret < 0)
-			return -ENOMEM;
 	}
+
+	ret = asprintf(&sessdir, "%s/%s/%s",
+		       __node_info.registry_root,
+		       pw->pw_name, __node_info.session_label);
+	if (ret < 0)
+		return -ENOMEM;
 
 	__node_info.session_root = sessdir;
 
