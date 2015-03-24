@@ -16,8 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 #include <errno.h>
-#include <pthread.h>
+#include <string.h>
 #include <limits.h>
+#include <pthread.h>
 #include <asm/xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
@@ -170,6 +171,29 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 	return -err;
 }
 
+static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
+{
+	static pthread_mutex_t uninit_normal_mutex = PTHREAD_MUTEX_INITIALIZER;
+	static pthread_mutex_t uninit_recursive_mutex =
+		PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+	static pthread_mutex_t uninit_errorcheck_mutex =
+		PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+	pthread_mutexattr_t mattr;
+	int err;
+
+	if (memcmp(mutex, &uninit_normal_mutex, sizeof(*mutex))
+		&& memcmp(mutex, &uninit_recursive_mutex, sizeof(*mutex))
+		&& memcmp(mutex, &uninit_errorcheck_mutex, sizeof(*mutex)))
+		return EINVAL;
+
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex->__data.__kind);
+	err = __COBALT(pthread_mutex_init(mutex, &mattr));
+	pthread_mutexattr_destroy(&mattr);
+
+	return err;
+}
+
 /**
  * Lock a mutex.
  *
@@ -214,13 +238,14 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 		return EPERM;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
-		return EINVAL;
+		goto autoinit;
 
 	/*
 	 * We track resource ownership for non real-time shadows in
 	 * order to handle the auto-relax feature, so we must always
 	 * obtain them via a syscall.
 	 */
+  cont:
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
@@ -257,6 +282,12 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 		_mutex->lockcnt = 1;
 
 	return -ret;
+
+  autoinit:
+	ret = cobalt_mutex_autoinit(mutex);
+	if (ret)
+		return ret;
+	goto cont;
 }
 
 /**
@@ -302,9 +333,10 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 		return EPERM;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
-		return EINVAL;
+		goto autoinit;
 
 	/* See __cobalt_pthread_mutex_lock() */
+  cont:
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
@@ -341,6 +373,12 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 	if (ret == 0)
 		_mutex->lockcnt = 1;
 	return -ret;
+
+  autoinit:
+	ret = cobalt_mutex_autoinit(mutex);
+	if (ret)
+		return ret;
+	goto cont;
 }
 
 /**
@@ -379,8 +417,9 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 		return EPERM;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
-		return EINVAL;
+		goto autoinit;
 
+  cont:
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
@@ -416,6 +455,12 @@ do_syscall:
 		_mutex->lockcnt = 1;
 
 	return -err;
+
+  autoinit:
+	err = cobalt_mutex_autoinit(mutex);
+	if (err)
+		return err;
+	goto cont;
 }
 
 /**
@@ -452,8 +497,9 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	int err;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
-		return EINVAL;
+		goto autoinit;
 
+  cont:
 	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
@@ -482,6 +528,12 @@ do_syscall:
 	} while (err == -EINTR);
 
 	return -err;
+
+  autoinit:
+	err = cobalt_mutex_autoinit(mutex);
+	if (err)
+		return err;
+	goto cont;
 }
 
 /**

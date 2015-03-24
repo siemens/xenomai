@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 #include <errno.h>
+#include <string.h>
 #include <pthread.h>
 #include <asm/xenomai/syscall.h>
 #include "current.h"
@@ -189,6 +190,17 @@ static void __pthread_cond_cleanup(void *data)
 	c->mutex->lockcnt = c->count;
 }
 
+static int __attribute__((cold)) cobalt_cond_autoinit(pthread_cond_t *cond)
+{
+	static pthread_cond_t uninit_cond = PTHREAD_COND_INITIALIZER;
+
+	if (memcmp(cond, &uninit_cond, sizeof(*cond)))
+		return EINVAL;
+
+	return __COBALT(pthread_cond_init(cond, NULL));
+}
+
+
 /**
  * Wait on a condition variable.
  *
@@ -248,10 +260,13 @@ COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mute
 	int err, oldtype;
 	unsigned count;
 
-	if (_mx->magic != COBALT_MUTEX_MAGIC
-	    || _cnd->magic != COBALT_COND_MAGIC)
+	if (_mx->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
+	if (_cnd->magic != COBALT_COND_MAGIC)
+		goto autoinit;
+
+  cont:
 	if (_mx->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
 		xnhandle_t cur = cobalt_get_current();
 
@@ -283,6 +298,12 @@ COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mute
 	pthread_testcancel();
 
 	return -err ?: -c.err;
+
+  autoinit:
+	err = cobalt_cond_autoinit(cond);
+	if (err)
+		return err;
+	goto cont;
 }
 
 /**
@@ -333,10 +354,13 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 	int err, oldtype;
 	unsigned count;
 
-	if (_mx->magic != COBALT_MUTEX_MAGIC
-	    || _cnd->magic != COBALT_COND_MAGIC)
+	if (_mx->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
+	if (_cnd->magic != COBALT_COND_MAGIC)
+		goto autoinit;
+
+  cont:
 	if (_mx->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
 		xnhandle_t cur = cobalt_get_current();
 
@@ -367,6 +391,12 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 	pthread_testcancel();
 
 	return -err ?: -c.err;
+
+  autoinit:
+	err = cobalt_cond_autoinit(cond);
+	if (err)
+		return err;
+	goto cont;
 }
 
 /**
@@ -398,10 +428,12 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 	__u32 pending_signals;
 	xnhandle_t cur;
 	__u32 flags;
+	int err;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
-		return EINVAL;
+		goto autoinit;
 
+  cont:
 	mutex_state = get_mutex_state(_cnd);
 	if (mutex_state == NULL)
 		return 0;	/* Fast path, no waiter. */
@@ -422,6 +454,12 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 		cond_state->pending_signals = pending_signals + 1;
 
 	return 0;
+
+  autoinit:
+	err = cobalt_cond_autoinit(cond);
+	if (err)
+		return err;
+	goto cont;
 }
 
 /**
@@ -449,10 +487,12 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 	struct cobalt_cond_state *cond_state;
 	xnhandle_t cur;
 	__u32 flags;
+	int err;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
-		return EINVAL;
+		goto autoinit;
 
+  cont:
 	mutex_state = get_mutex_state(_cnd);
 	if (mutex_state == NULL)
 		return 0;
@@ -471,6 +511,12 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 	cond_state->pending_signals = ~0U;
 
 	return 0;
+
+  autoinit:
+	err = cobalt_cond_autoinit(cond);
+	if (err)
+		return err;
+	goto cont;
 }
 
 /**
