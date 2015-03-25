@@ -576,7 +576,7 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 int main(int argc, char *const *argv)
 {
 	struct sigaction sa __attribute__((unused));
-	int c, err, sig, cpu = -1;
+	int c, err, sig, cpu = 0;
 	cpu_set_t cpus;
 	sigset_t mask;
 
@@ -792,17 +792,13 @@ int main(int argc, char *const *argv)
 			return 0;
 		}
 
-		if (cpu >= 0) {
-			CPU_ZERO(&cpus);
-			CPU_SET(cpu, &cpus);
-			err = pthread_attr_setaffinity_np(&tattr, sizeof(cpus),
-							&cpus);
-			if (err) {
-				fprintf(stderr,
-					"latency: failed to set CPU affinity, code %d\n",
-					err);
+		CPU_ZERO(&cpus);
+		CPU_SET(cpu, &cpus);
+		err = pthread_attr_setaffinity_np(&tattr, sizeof(cpus), &cpus);
+		if (err) {
+			fprintf(stderr,
+				"latency: failed to set CPU affinity, code %d\n", err);
 				return 0;
-			}
 		}
 
 		err = pthread_create(&latency_task, &tattr, &latency, NULL);
