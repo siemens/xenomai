@@ -1,8 +1,7 @@
-/**
- * @file
+/*
  * Analogy for Linux, calibration program
  *
- * @note Copyright (C) 2014 Jorge A. Ramirez-Ortiz <jro@xenomai.org>
+ * Copyright (C) 2014 Jorge A. Ramirez-Ortiz <jro@xenomai.org>
  *
  * from original code from the Comedi project
  *

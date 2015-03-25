@@ -1,7 +1,6 @@
-/**
- * @file
- * @note Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
- * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
+/*
+ * Copyright (C) 2005, 2006 Jan Kiszka <jan.kiszka@web.de>
+ * Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by

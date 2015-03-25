@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Analogy for Linux, Operation system facilities
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
@@ -140,6 +139,5 @@ int a4l_wait_sync(struct a4l_sync * snc, int rt);
 int a4l_timedwait_sync(struct a4l_sync * snc,
 		       int rt, unsigned long long ns_timeout);
 void a4l_signal_sync(struct a4l_sync * snc);
-
 
 #endif /* !_COBALT_RTDM_ANALOGY_RTDM_HELPERS_H */

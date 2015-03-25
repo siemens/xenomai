@@ -1,9 +1,8 @@
-/**
- * @file
- * @note Copyright (C) 2006 Wolfgang Grandegger <wg@grandegger.com>
+/*
+ * Copyright (C) 2006 Wolfgang Grandegger <wg@grandegger.com>
  *
- * @note Copyright (C) 2005, 2006 Sebastian Smolorz
- *                         <Sebastian.Smolorz@stud.uni-hannover.de>
+ * Copyright (C) 2005, 2006 Sebastian Smolorz
+ *                    <Sebastian.Smolorz@stud.uni-hannover.de>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by

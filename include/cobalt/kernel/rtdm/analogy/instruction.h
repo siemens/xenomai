@@ -1,9 +1,8 @@
-/**
- * @file
+/*
  * Analogy for Linux, instruction related features
  *
- * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
- * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
+ * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by

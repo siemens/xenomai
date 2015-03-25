@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Analogy for Linux, transfer related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>

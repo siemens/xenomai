@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Analogy for Linux, device, subdevice, etc. related features
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
