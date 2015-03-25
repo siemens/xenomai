@@ -523,6 +523,9 @@ static int get_session_root(int *regflags_r)
 			return -ENOMEM;
 		__node_info.session_label = session;
 		*regflags_r |= REGISTRY_ANON;
+	} else if (strchr(__node_info.session_label, '/')) {
+		warning("session name may not contain slashes");
+		return -EINVAL;
 	}
 
 	ret = asprintf(&sessdir, "%s/%s/%s",
