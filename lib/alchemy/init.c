@@ -109,7 +109,7 @@ static int alchemy_init(void)
 	syncluster_init(&alchemy_heap_table, "alchemy.heap");
 	pvcluster_init(&alchemy_alarm_table, "alchemy.alarm");
 
-	ret = clockobj_init(&alchemy_clock, "alchemy", clock_resolution);
+	ret = clockobj_init(&alchemy_clock, clock_resolution);
 	if (ret) {
 		warning("%s: failed to initialize Alchemy clock (res=%u ns)",
 			__FUNCTION__, clock_resolution);

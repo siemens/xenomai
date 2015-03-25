@@ -58,7 +58,6 @@ struct clockobj {
 	unsigned int resolution;
 	unsigned int frequency;
 #endif
-	const char *name;	/* __ref FIXME */
 };
 
 #define zero_time	((struct timespec){ .tv_sec = 0, .tv_nsec = 0 })
@@ -99,7 +98,7 @@ int clockobj_set_resolution(struct clockobj *clkobj,
 			    unsigned int resolution_ns);
 
 int clockobj_init(struct clockobj *clkobj,
-		  const char *name, unsigned int resolution_ns);
+		  unsigned int resolution_ns);
 
 int clockobj_destroy(struct clockobj *clkobj);
 

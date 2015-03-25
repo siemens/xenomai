@@ -117,7 +117,7 @@ static int psos_init(void)
 	pvcluster_init(&psos_pt_table, "psos.pt");
 	pvcluster_init(&psos_rn_table, "psos.rn");
 
-	ret = clockobj_init(&psos_clock, "psos", clock_resolution);
+	ret = clockobj_init(&psos_clock, clock_resolution);
 	if (ret) {
 		warning("%s: failed to initialize pSOS clock (res=%u ns)",
 			__FUNCTION__, clock_resolution);

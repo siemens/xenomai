@@ -365,7 +365,7 @@ void clockobj_get_distance(struct clockobj *clkobj,
 }
 
 int clockobj_init(struct clockobj *clkobj,
-		  const char *name, unsigned int resolution_ns)
+		  unsigned int resolution_ns)
 {
 	pthread_mutexattr_t mattr;
 	struct timespec now;
@@ -395,7 +395,6 @@ int clockobj_init(struct clockobj *clkobj,
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
-	clkobj->name = name;
 
 	return 0;
 }

@@ -90,7 +90,7 @@ static int vxworks_init(void)
 
 	cluster_init(&wind_task_table, "vxworks.task");
 
-	ret = clockobj_init(&wind_clock, "vxworks", clock_resolution);
+	ret = clockobj_init(&wind_clock, clock_resolution);
 	if (ret) {
 		warning("%s: failed to initialize VxWorks clock (res=%u ns)",
 			__FUNCTION__, clock_resolution);
