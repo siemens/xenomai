@@ -44,7 +44,6 @@ module_param_string(smi, smi_state_arg, sizeof(smi_state_arg), 0444);
 
 static unsigned int smi_masked_bits = 1; /* Global disable bit */
 module_param_named(smi_mask, smi_masked_bits, int, 0400);
-MODULE_PARM_DESC(smi_mask, "Set of bits to mask in the SMI control register");
 
 static unsigned int smi_saved_bits;
 static unsigned short smi_en_addr;

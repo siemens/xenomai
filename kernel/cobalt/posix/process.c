@@ -73,7 +73,6 @@
 
 static int gid_arg = -1;
 module_param_named(allowed_group, gid_arg, int, 0644);
-MODULE_PARM_DESC(allowed_group, "GID of the group with access to Xenomai services");
 
 static DEFINE_MUTEX(personality_lock);
 
