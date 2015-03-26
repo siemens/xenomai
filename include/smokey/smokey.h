@@ -96,6 +96,7 @@ struct smokey_test {
 #define SMOKEY_ARG(__plugin, __arg)	   (smokey_lookup_arg(&(__plugin), # __arg))
 #define SMOKEY_ARG_ISSET(__plugin, __arg)  (SMOKEY_ARG(__plugin, __arg)->matched)
 #define SMOKEY_ARG_INT(__plugin, __arg)	   (SMOKEY_ARG(__plugin, __arg)->u.n_val)
+#define SMOKEY_ARG_BOOL(__plugin, __arg)   (!!SMOKEY_ARG_INT(__plugin, __arg))
 #define SMOKEY_ARG_STRING(__plugin, __arg) (SMOKEY_ARG(__plugin, __arg)->u.s_val)
 
 #ifdef __cplusplus

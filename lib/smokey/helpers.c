@@ -29,7 +29,7 @@ int smokey_int(const char *s, struct smokey_arg *arg)
 	char *name, *p;
 	int ret;
 
-	ret = sscanf(s, "%m[a-z]=%m[^\n]", &name, &p);
+	ret = sscanf(s, "%m[_a-z]=%m[^\n]", &name, &p);
 	if (ret != 2 || !(isdigit(*p) || *p == '-'))
 		return 0;
 
@@ -66,7 +66,7 @@ int smokey_string(const char *s, struct smokey_arg *arg)
 	char *name, *p;
 	int ret;
 
-	ret = sscanf(s, "%m[a-z]=%m[^\n]", &name, &p);
+	ret = sscanf(s, "%m[_a-z]=%m[^\n]", &name, &p);
 	if (ret != 2)
 		return 0;
 
