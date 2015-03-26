@@ -125,7 +125,7 @@ void smokey_note(const char *fmt, ...)
 	va_start(ap, fmt);
 
 	if (!smokey_quiet_mode)
-		vprintf(fmt, ap);
+		__RT(vfprintf(stdout, fmt, ap));
 
 	va_end(ap);
 }
