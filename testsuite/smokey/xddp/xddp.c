@@ -220,6 +220,14 @@ static int run_xddp(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct sched_param param = { .sched_priority = 42 };
 	pthread_attr_t rtattr, regattr;
+	int s;
+
+	s = socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
+	if (s < 0) {
+		if (errno == EAFNOSUPPORT)
+			return -ENOSYS;
+	} else
+		close(s);
 
 	sem_init(&semsync, 0, 0);
 

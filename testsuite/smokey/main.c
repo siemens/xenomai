@@ -30,6 +30,11 @@ int main(int argc, char *const argv[])
 	for_each_smokey_test(t) {
 		ret = t->run(t, argc, argv);
 		if (ret) {
+			if (ret == -ENOSYS) {
+				smokey_note("%s skipped (no kernel support)\n",
+					    t->name);
+				continue;
+			}
 			fails++;
 			if (smokey_keep_going)
 				continue;

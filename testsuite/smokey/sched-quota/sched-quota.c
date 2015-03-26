@@ -14,6 +14,7 @@
 #include <sched.h>
 #include <errno.h>
 #include <error.h>
+#include <sys/cobalt.h>
 #include <boilerplate/time.h>
 #include <boilerplate/ancillaries.h>
 #include <boilerplate/atomic.h>
@@ -277,11 +278,15 @@ static unsigned long long calibrate(void)
 static int run_sched_quota(struct smokey_test *t, int argc, char *const argv[])
 {
 	pthread_t me = pthread_self();
+	int ret, quota = 0, policies;
 	struct sched_param param;
-	int ret, quota = 0;
 	cpu_set_t affinity;
 	double effective;
 
+	ret = cobalt_corectl(_CC_COBALT_GET_POLICIES, &policies, sizeof(policies));
+	if (ret || (policies & _CC_COBALT_SCHED_QUOTA) == 0)
+		return -ENOSYS;
+	
 	CPU_ZERO(&affinity);
 	CPU_SET(0, &affinity);
 	ret = sched_setaffinity(0, sizeof(affinity), &affinity);

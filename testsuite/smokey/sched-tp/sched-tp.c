@@ -17,6 +17,7 @@
 #include <sched.h>
 #include <errno.h>
 #include <error.h>
+#include <sys/cobalt.h>
 #include <smokey/smokey.h>
 
 smokey_test_plugin(sched_tp,
@@ -103,9 +104,13 @@ static void __create_thread(pthread_t *tid, const char *name, int seq)
 static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 {
 	union sched_config *p;
+	int ret, n, policies;
 	size_t len;
-	int ret, n;
 
+	ret = cobalt_corectl(_CC_COBALT_GET_POLICIES, &policies, sizeof(policies));
+	if (ret || (policies & _CC_COBALT_SCHED_TP) == 0)
+		return -ENOSYS;
+	
 	/*
 	 * For a recurring global time frame of 400 ms, we define a TP
 	 * schedule as follows:

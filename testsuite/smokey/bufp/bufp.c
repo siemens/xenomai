@@ -137,6 +137,14 @@ static int run_bufp(struct smokey_test *t, int argc, char *const argv[])
 	struct sched_param svparam = {.sched_priority = 71 };
 	struct sched_param clparam = {.sched_priority = 70 };
 	pthread_attr_t svattr, clattr;
+	int s;
+
+	s = socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_BUFP);
+	if (s < 0) {
+		if (errno == EAFNOSUPPORT)
+			return -ENOSYS;
+	} else
+		close(s);
 
 	pthread_attr_init(&svattr);
 	pthread_attr_setdetachstate(&svattr, PTHREAD_CREATE_JOINABLE);

@@ -76,10 +76,13 @@ static const char *devname2 = "/dev/rtdm/rtdm1";
 static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 {
 	unsigned long long start;
-	int dev, dev2;
+	int dev, dev2, status;
+
+	status = system("modprobe xeno_rtdmtest");
+	if (status < 0 || WEXITSTATUS(status))
+		return -ENOSYS;
 
 	printf("Setup\n");
-	check("modprobe", system("modprobe xeno_rtdmtest"), 0);
 	dev = check_no_error("open", open(devname, O_RDWR));
 
 	printf("Exclusive open\n");
