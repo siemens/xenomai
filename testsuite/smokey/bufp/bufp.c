@@ -113,12 +113,9 @@ static void *client(void *arg)
 	FD_SET(s, &set);
 
 	while (--loops) {
-#if 0
 		ret = select(s + 1, NULL, &set, NULL, NULL);
 		if (ret != 1 || !FD_ISSET(s, &set))
 			fail("select");
-#endif
-
 		data++;
 		ret = sendto(s, &data, sizeof(data), MSG_DONTWAIT,
 			     (struct sockaddr *)&svsaddr, sizeof(svsaddr));
