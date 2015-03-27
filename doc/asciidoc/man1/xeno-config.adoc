@@ -78,7 +78,7 @@ current system, if cross-compiling.
 *--prefix*::
 Output the absolute path to the Xenomai installation directory.
 
-*--[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey}*::
+*--[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey, cobalt}*::
 Select the API/skin for which *xeno-config* should print the
 information required. The *skin=* prefix is optional and may be
 omitted, e.g. *--posix* is equivalent to *--skin=posix*, selecting the
@@ -87,6 +87,21 @@ POSIX API.
 [NOTE]
 *--native* and *--skin=native* are accepted for backward compatibility
 purpose. They are stricly equivalent as passing *--alchemy --compat*.
+Likewise, passing *--rtdm* or *--skin=rtdm* is stricly equivalent as
+passing *--posix*, enabling POSIX I/O routines to be wrapped to their
+respective Xenomai implementation.
+
+[CAUTION]
+Over Cobalt, only *xeno-config --posix --ldflags* (or *--rtdm* as an
+alias) returns the proper linker flags to cause POSIX routines invoked
+by the application to be wrapped to their respective Xenomai
+implementation. No other API will imply such wrapping. For this
+reason, *--cobalt --ldflags* should be used for linking exclusively
+against the Cobalt library (i.e. +libcobalt.so+) *without* symbol
+wrapping. Conversely, mentioning *--posix* along with other API
+switches with *--ldflags* will cause POSIX symbol wrapping to take
+place, e.g. use *--posix --alchemy --ldflags* for mixed API support
+with POSIX symbol wrapping.
 
 *--cflags*::
 Output the C compiler command-line options (_CFLAGS_) which are required
