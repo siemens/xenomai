@@ -392,7 +392,6 @@ if XENO_OPT_DEBUG
 
 config XENO_OPT_DEBUG_COBALT
 	bool "Cobalt runtime assertions"
-	select IPIPE_DEBUG_CONTEXT
 	help
 
 	This option activates various assertions inside the Cobalt
@@ -400,7 +399,6 @@ config XENO_OPT_DEBUG_COBALT
 
 config XENO_OPT_DEBUG_CONTEXT
        bool "Check for calling context"
-       select IPIPE_DEBUG_CONTEXT
        help
 
        This option enables checks for the calling context in the
