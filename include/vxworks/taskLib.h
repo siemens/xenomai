@@ -42,8 +42,7 @@
 
 typedef uintptr_t TASK_ID;
 
-typedef void (*FUNCPTR)(long, long, long, long, long,
-			long, long, long, long, long);
+typedef void (*FUNCPTR)(long arg, ...);
 
 typedef struct WIND_TCB {
 	void *opaque;
