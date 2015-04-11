@@ -104,6 +104,7 @@ XENO_BUILD_COMPILER="`$CC -v 2>&1 | tail -n 1`"
 AC_DEFINE_UNQUOTED(CONFIG_XENO_COMPILER,"$XENO_BUILD_COMPILER",[Compiler])
 
 AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2 tar-ustar subdir-objects])
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 AM_MAINTAINER_MODE
 AM_PROG_AS
 AM_PROG_LEX

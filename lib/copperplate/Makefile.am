@@ -30,7 +30,7 @@ libversion_la_SOURCES = version.c
 version.c: git-stamp.h
 
 git-stamp.h: git-stamp
-	@set -x; if test -r $(top_srcdir)/.git; then						\
+	@if test -r $(top_srcdir)/.git; then						\
 	  stamp=`git --git-dir=$(top_srcdir)/.git rev-list --abbrev-commit -1 HEAD`;	\
 	  if test \! -s $@ || grep -wvq $$stamp $@; then				\
 		date=`git --git-dir=$(top_srcdir)/.git log -1 $$stamp --pretty=format:%ci`;	\
