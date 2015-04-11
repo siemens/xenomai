@@ -93,10 +93,10 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err == 0) {
-		if (aligned)
-			err = __xn_put_user(ticks, u_ticks) ? -EFAULT : 0;
-		else
-			err = cobalt_copy_to_user(buf, &ticks, sizeof(ticks));
+		err = aligned ? __xn_put_user(ticks, u_ticks) :
+			__xn_copy_to_user(buf, &ticks, sizeof(ticks));
+		if (err)
+			err =-EFAULT;
 	}
 
 	return err ?: sizeof(ticks);
