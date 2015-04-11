@@ -41,7 +41,9 @@
  * UDD-compliant mini-drivers only have to provide the basic support
  * for dealing with the interrupt sources present in the device, so
  * that most part of the device requests can be handled from a Xenomai
- * application running in user-space.
+ * application running in user-space. Typically, a mini-driver would
+ * handle the interrupt top-half, and the user-space application would
+ * handle the bottom-half.
  *
  * This profile is reminiscent of the UIO framework available with the
  * Linux kernel, adapted to the dual kernel Cobalt environment.
@@ -95,7 +97,7 @@
 /**
  * Kernel logical memory region (e.g. kmalloc()). By default, the UDD
  * core maps such memory to a virtual user range by calling the
- * rtdm_mmap_kem() service. */
+ * rtdm_mmap_kmem() service. */
 #define UDD_MEM_LOGICAL  2
 /**
  * Virtual memory region with no direct physical mapping
@@ -120,13 +122,12 @@
  * application. To this end, a companion mapper device is created
  * automatically when registering the mini-driver.
  *
- * The mapper device creates special files in the RTDM namespace to
- * reach the individual regions, which the application can open, for
- * mapping the corresponding region to their address space via the
- * mmap(2) system call.
+ * The mapper device creates special files in the RTDM namespace for
+ * reaching the individual regions, which the application can open
+ * then map to its address space via the mmap(2) system call.
  *
  * For instance, declaring a region of physical memory at index #2 of
- * the memory region array as follows:
+ * the memory region array could be done as follows:
  *
  * @code
  * static struct udd_device udd;
@@ -144,9 +145,9 @@
  * }
  * @endcode
  *
- * will make such region accessible via the mapper device using the
- * following sequence of code, via the default ->mmap() handler from
- * the UDD core:
+ * This will make such region accessible via the mapper device using
+ * the following sequence of code, via the default ->mmap() handler
+ * from the UDD core:
  *
  * @code
  * int fd, fdm;
@@ -202,7 +203,7 @@ struct udd_device {
 	/**
 	 * Subclass code of the device managed by the mini-driver (see
 	 * RTDM_SUBCLASS_xxx definition in the @ref rtdm_profiles
-	 * "Device Profiles"). The main class code is forced to
+	 * "Device Profiles"). The main class code is pre-set to
 	 * RTDM_CLASS_UDD.
 	 */
 	int device_subclass;
