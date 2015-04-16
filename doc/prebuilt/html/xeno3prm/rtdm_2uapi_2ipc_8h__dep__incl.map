@@ -1,5 +1,5 @@
 <map id="include/rtdm/uapi/ipc.h" name="include/rtdm/uapi/ipc.h">
-<area shape="rect" id="node2" href="$cobalt_2kernel_2rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="5,80,147,121"/>
-<area shape="rect" id="node3" href="$rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="171,87,296,114"/>
+<area shape="rect" id="node2" href="$cobalt_2kernel_2rtdm_2ipc_8h_source.html" title="include/cobalt/kernel\l/rtdm/ipc.h" alt="" coords="5,80,147,121"/>
+<area shape="rect" id="node3" href="$rtdm_2ipc_8h_source.html" title="include/rtdm/ipc.h" alt="" coords="171,87,296,114"/>
 <area shape="rect" id="node4" href="$rtipc_8h_source.html" title="include/trank/rtdm\l/rtipc.h" alt="" coords="170,169,297,211"/>
 </map>

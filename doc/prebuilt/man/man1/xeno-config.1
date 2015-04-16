@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 2014/08/03
 .\"    Manual: Xenomai Manual
-.\"    Source: Xenomai 3.0-rc3
+.\"    Source: Xenomai 3.0-rc4
 .\"  Language: English
 .\"
-.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 3\&.0\-rc3" "Xenomai Manual"
+.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 3\&.0\-rc4" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -88,7 +88,7 @@ Output the target CPU architecture Xenomai was compiled for, e\&.g\&. arm, x86, 
 Output the absolute path to the Xenomai installation directory\&.
 .RE
 .PP
-\fB\-\-[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey}\fR
+\fB\-\-[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey, cobalt}\fR
 .RS 4
 Select the API/skin for which
 \fBxeno\-config\fR
@@ -112,7 +112,23 @@ is equivalent to
 .ps -1
 .br
 .sp
-\fB\-\-native\fR and \fB\-\-skin=native\fR are accepted for backward compatibility purpose\&. They are stricly equivalent as passing \fB\-\-alchemy \-\-compat\fR\&.
+\fB\-\-native\fR and \fB\-\-skin=native\fR are accepted for backward compatibility purpose\&. They are stricly equivalent as passing \fB\-\-alchemy \-\-compat\fR\&. Likewise, passing \fB\-\-rtdm\fR or \fB\-\-skin=rtdm\fR is stricly equivalent as passing \fB\-\-posix\fR, enabling POSIX I/O routines to be wrapped to their respective Xenomai implementation\&.
+.sp .5v
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBCaution\fR
+.ps -1
+.br
+.sp
+Over Cobalt, only \fBxeno\-config \-\-posix \-\-ldflags\fR (or \fB\-\-rtdm\fR as an alias) returns the proper linker flags to cause POSIX routines invoked by the application to be wrapped to their respective Xenomai implementation\&. No other API will imply such wrapping\&. For this reason, \fB\-\-cobalt \-\-ldflags\fR should be used for linking exclusively against the Cobalt library (i\&.e\&. libcobalt\&.so) \fBwithout\fR symbol wrapping\&. Conversely, mentioning \fB\-\-posix\fR along with other API switches with \fB\-\-ldflags\fR will cause POSIX symbol wrapping to take place, e\&.g\&. use \fB\-\-posix \-\-alchemy \-\-ldflags\fR for mixed API support with POSIX symbol wrapping\&.
 .sp .5v
 .RE
 .PP

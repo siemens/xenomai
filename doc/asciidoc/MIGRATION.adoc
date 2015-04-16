@@ -13,12 +13,23 @@ script will work for both the Cobalt and Mercury environments
 indifferently.
 
  * Each +--skin=<api>+ option specifier can be abbreviated as
- --<api>. For instance, +--psos+ is a shorthand for +--skin=psos+ on
+ +--<api>+. For instance, +--psos+ is a shorthand for +--skin=psos+ on
  the command line.
 
- * Specifying +--[skin=]cobalt+ or +--[skin=]posix+ on the command line
-  is strictly equivalent. However, this does not make sense with
-  _Mercury_ which does not define these switches.
+ * Over Cobalt, only *xeno-config --posix --ldflags* (or *--rtdm* as
+ an alias) returns the proper linker flags to cause POSIX routines
+ invoked by the application to be wrapped to their respective Xenomai
+ implementation. No other API will imply such wrapping. For this
+ reason, *--cobalt --ldflags* should be used for linking exclusively
+ against the Cobalt library (i.e. +libcobalt.so+) *without* symbol
+ wrapping. Conversely, mentioning *--posix* along with other API
+ switches with *--ldflags* will cause POSIX symbol wrapping to take
+ place, e.g. use *--posix --alchemy --ldflags* for mixed API support
+ with POSIX symbol wrapping.
+
+ * Over _Mercury_, +--posix+ and +--rtdm+ are ignored placeholders,
+   since the full POSIX API is available with the glibc and the
+   threading library.
 
  * +--[skin=]alchemy+ replaces the former +--skin=native+ switch.
 

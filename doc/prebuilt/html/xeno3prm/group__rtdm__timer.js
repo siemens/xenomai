@@ -1,6 +1,6 @@
 var group__rtdm__timer =
 [
-    [ "rtdm_timer_handler_t", "group__rtdm__timer.html#ga31b7b9a042260702a110bfe2c9bcac61", null ],
+    [ "rtdm_timer_handler_t", "group__rtdm__timer.html#ga020453d6d4860b4e6978e69435ffbdb9", null ],
     [ "rtdm_timer_mode", "group__rtdm__timer.html#gad0bffecd0182d68967ebb5b47df0bcd0", [
       [ "RTDM_TIMERMODE_RELATIVE", "group__rtdm__timer.html#ggad0bffecd0182d68967ebb5b47df0bcd0addd5d0b543bebdb1187330b7f52a94f8", null ],
       [ "RTDM_TIMERMODE_ABSOLUTE", "group__rtdm__timer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2", null ],

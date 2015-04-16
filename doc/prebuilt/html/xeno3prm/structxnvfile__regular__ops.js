@@ -1,9 +1,9 @@
 var structxnvfile__regular__ops =
 [
-    [ "begin", "structxnvfile__regular__ops.html#aaf7b735bddab35a238045e3d2b7e2484", null ],
-    [ "end", "structxnvfile__regular__ops.html#a29ba8b1f5ff72e70411c977397b91877", null ],
-    [ "next", "structxnvfile__regular__ops.html#aeb55d4c32cc11813068a0fc055996462", null ],
-    [ "rewind", "structxnvfile__regular__ops.html#a054ed8bb69da0a0c6e3c4f5d239b0dcf", null ],
-    [ "show", "structxnvfile__regular__ops.html#ac1d48ccaa785342eaa4c80360a560c70", null ],
-    [ "store", "structxnvfile__regular__ops.html#ad2b85a790c9a10c62a96f7bd5d3bde6f", null ]
+    [ "begin", "structxnvfile__regular__ops.html#aa38cc11ce487fb953b7132f451ead19d", null ],
+    [ "end", "structxnvfile__regular__ops.html#a7c1a13a4087586cbce3ea236ef28682e", null ],
+    [ "next", "structxnvfile__regular__ops.html#a68a079d41711ba0be6adb3e0e14d3a9a", null ],
+    [ "rewind", "structxnvfile__regular__ops.html#acaaff5be06437a0bb6f10c729460b867", null ],
+    [ "show", "structxnvfile__regular__ops.html#a9d7de5409ed1b0a4cdc6b26b2b4d76eb", null ],
+    [ "store", "structxnvfile__regular__ops.html#ac9b20dc8b361d70f479b9aa2b72b9583", null ]
 ];

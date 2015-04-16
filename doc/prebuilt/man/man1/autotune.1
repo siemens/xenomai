@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 2014/08/03
 .\"    Manual: Xenomai Manual
-.\"    Source: Xenomai 3.0-rc3
+.\"    Source: Xenomai 3.0-rc4
 .\"  Language: English
 .\"
-.TH "AUTOTUNE" "1" "2014/08/03" "Xenomai 3\&.0\-rc3" "Xenomai Manual"
+.TH "AUTOTUNE" "1" "2014/08/03" "Xenomai 3\&.0\-rc4" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -173,6 +173,41 @@ Once the gravity values are known for a particular hardware, one may write them 
 .if n \{\
 .RE
 .\}
+.sp
+Alternatively, the gravity values can be statically defined in the kernel configuration of the target kernel:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+CONFIG_XENO_OPT_TIMING_SCHEDLAT should be assigned the user gravity value\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+CONFIG_XENO_OPT_TIMING_KSCHEDLAT should be assigned the kernel gravity value\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+CONFIG_XENO_OPT_TIMING_IRQLAT should be assigned the IRQ gravity value\&.
+.RE
 .SH "AUTHOR"
 .sp
 \fBautotune\fR was written by Philippe Gerum <rpm@xenomai\&.org>\&.

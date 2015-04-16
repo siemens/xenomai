@@ -1,9 +1,0 @@
-<map id="include/cobalt/kernel/rtdm/analogy/buffer.h" name="include/cobalt/kernel/rtdm/analogy/buffer.h">
-<area shape="rect" id="node2" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="90,95,238,136"/>
-<area shape="rect" id="node8" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="263,95,423,136"/>
-<area shape="rect" id="node3" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="176,184,331,225"/>
-<area shape="rect" id="node4" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,281,155,322"/>
-<area shape="rect" id="node5" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,273,328,329"/>
-<area shape="rect" id="node6" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,273,501,329"/>
-<area shape="rect" id="node7" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,377,501,433"/>
-</map>

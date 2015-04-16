@@ -1,9 +1,9 @@
 <map id="include/cobalt/kernel/rtdm/fd.h" name="include/cobalt/kernel/rtdm/fd.h">
 <area shape="rect" id="node2" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="1068,95,1210,136"/>
-<area shape="rect" id="node43" href="$cobalt_2kernel_2rtdm_2rtdm_8h.html" title="include/cobalt/kernel\l/rtdm/rtdm.h" alt="" coords="1234,95,1375,136"/>
-<area shape="rect" id="node3" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="171,503,320,545"/>
-<area shape="rect" id="node11" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="228,191,386,233"/>
-<area shape="rect" id="node14" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="396,399,586,441"/>
+<area shape="rect" id="node43" href="$cobalt_2kernel_2rtdm_2rtdm_8h_source.html" title="include/cobalt/kernel\l/rtdm/rtdm.h" alt="" coords="1234,95,1375,136"/>
+<area shape="rect" id="node3" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/buffer.h" alt="" coords="171,503,320,545"/>
+<area shape="rect" id="node11" href="$context_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/context.h" alt="" coords="228,191,386,233"/>
+<area shape="rect" id="node14" href="$rtdm__helpers_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/rtdm_helpers.h" alt="" coords="396,399,586,441"/>
 <area shape="rect" id="node15" href="$cobalt_2kernel_2rtdm_2udd_8h.html" title="Copyright (C) 2014 Philippe Gerum rpm@xenomai.org " alt="" coords="462,191,603,233"/>
 <area shape="rect" id="node16" href="$kernel_2cobalt_2rtdm_2internal_8h_source.html" title="kernel/cobalt/rtdm\l/internal.h" alt="" coords="628,191,754,233"/>
 <area shape="rect" id="node17" href="$rtcan__internal_8h_source.html" title="kernel/drivers/can\l/rtcan_internal.h" alt="" coords="779,191,904,233"/>
@@ -17,8 +17,8 @@
 <area shape="rect" id="node30" href="$rtnet__internal_8h_source.html" title="kernel/drivers/net\l/stack/include/rtnet\l_internal.h" alt="" coords="1907,184,2040,240"/>
 <area shape="rect" id="node38" href="$rtnet__socket_8h_source.html" title="kernel/drivers/net\l/stack/include/rtnet\l_socket.h" alt="" coords="2262,184,2395,240"/>
 <area shape="rect" id="node4" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="305,600,453,641"/>
-<area shape="rect" id="node10" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="120,600,280,641"/>
-<area shape="rect" id="node5" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="302,689,456,731"/>
+<area shape="rect" id="node10" href="$transfer_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/transfer.h" alt="" coords="120,600,280,641"/>
+<area shape="rect" id="node5" href="$device_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/device.h" alt="" coords="302,689,456,731"/>
 <area shape="rect" id="node6" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="131,786,280,827"/>
 <area shape="rect" id="node7" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="304,779,454,835"/>
 <area shape="rect" id="node8" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="478,779,627,835"/>

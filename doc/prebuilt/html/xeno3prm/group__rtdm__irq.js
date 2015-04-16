@@ -6,7 +6,7 @@ var group__rtdm__irq =
     [ "RTDM_IRQ_NONE", "group__rtdm__irq.html#gad7b7593bdac7e1595635f2b372110d22", null ],
     [ "RTDM_IRQTYPE_EDGE", "group__rtdm__irq.html#gaf4e76db13d7f7aac4be2cae59e0097bc", null ],
     [ "RTDM_IRQTYPE_SHARED", "group__rtdm__irq.html#gab26458b2383dd59b4977cd77c948cdfc", null ],
-    [ "rtdm_irq_handler_t", "group__rtdm__irq.html#gadabd8f3473098ae9128ef449a83fe3c2", null ],
+    [ "rtdm_irq_handler_t", "group__rtdm__irq.html#gab511194f3edbabdb9f40dc90e5bde326", null ],
     [ "rtdm_irq_disable", "group__rtdm__irq.html#gab34c102e3e8af1f27786b2996247913d", null ],
     [ "rtdm_irq_enable", "group__rtdm__irq.html#ga231362e861125cfdcbe5b4137fc70680", null ],
     [ "rtdm_irq_free", "group__rtdm__irq.html#gaf246c0d9fa42a18afbeabd3e3c087c8e", null ],

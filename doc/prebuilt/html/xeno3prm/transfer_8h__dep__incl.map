@@ -1,7 +1,0 @@
-<map id="include/cobalt/kernel/rtdm/analogy/transfer.h" name="include/cobalt/kernel/rtdm/analogy/transfer.h">
-<area shape="rect" id="node2" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="176,95,331,136"/>
-<area shape="rect" id="node3" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,191,155,233"/>
-<area shape="rect" id="node4" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,184,328,240"/>
-<area shape="rect" id="node5" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,184,501,240"/>
-<area shape="rect" id="node6" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,288,501,344"/>
-</map>

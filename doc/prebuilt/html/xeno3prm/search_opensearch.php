@@ -1,5 +1,5 @@
 <script language="PHP">
-require "search-functions.php";
+require "search_functions.php";
 
 $mode = array_key_exists('v', $_GET)?$_GET['v']:"";
 $query = array_key_exists('query', $_GET)?$_GET['query']:"";
@@ -43,9 +43,9 @@ http://dev.squello.com/doc/html/favicon.ico</Image>
 <Url type="text/html" method="GET"
 template="$link/search.php?query={searchTerms}" />
 <Url type="application/x-suggestions+json" method="GET"
-template="$link/search-opensearch.php?v=json&amp;query={searchTerms}" />
+template="$link/search_opensearch.php?v=json&amp;query={searchTerms}" />
 <Url type="application/x-suggestions+xml" method="GET"
-template="$link/search-opensearch.php?v=xml&amp;query={searchTerms}" />
+template="$link/search_opensearch.php?v=xml&amp;query={searchTerms}" />
 </OpenSearchDescription>
 END_OPENSEARCH;
 }

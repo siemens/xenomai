@@ -871,7 +871,88 @@ CROSS_COMPILE variable on make command line. See sections
 for examples.</p></div>
 </div>
 <div class="sect2">
-<h3 id="cobalt-build-examples">3.3. Examples of building the <em>Cobalt</em> kernel</h3>
+<h3 id="cobalt-kernel-parameters">3.3. <em>Cobalt</em> kernel parameters</h3>
+<div class="paragraph"><p>The Cobalt kernel accepts the following set of parameters, which
+should be passed on the kernel command line by the boot loader.</p></div>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<col width="33%" />
+<col width="50%" />
+<col width="16%" />
+<thead>
+<tr>
+<th align="center" valign="top">NAME              </th>
+<th align="center" valign="top">DESCRIPTION                    </th>
+<th align="center" valign="top">DEFAULT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.allowed_group=&lt;gid&gt;</p></td>
+<td align="left" valign="top"><p class="table">Enable non-root access to Xenomai
+services from user-space.  &lt;gid&gt; is the ID of the Linux user group
+whose members should be allowed such access by the Cobalt core.</p></td>
+<td align="left" valign="top"><p class="table">None</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.sysheap_size=&lt;kbytes&gt;</p></td>
+<td align="left" valign="top"><p class="table">Set the size of the memory heap used
+internally by the Cobalt core to allocate runtime objects.  This value
+is expressed in kilo-bytes.</p></td>
+<td align="left" valign="top"><p class="table">256</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.state=&lt;state&gt;</p></td>
+<td align="left" valign="top"><p class="table">Set the initial state of the Cobalt core at
+boot up, which may be <em>enabled</em>, <em>stopped</em> or <em>disabled</em>. See the
+documentation about the
+<a href="../documentation/xenomai-3/html/man1/corectl/index.html">corectl(1)</a>
+utility for a description of these states.</p></td>
+<td align="left" valign="top"><p class="table">enabled</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.clockfreq=&lt;hz-freq&gt;</p></td>
+<td align="left" valign="top"><p class="table">Override the real-time clock frequency
+used in measuring time intervals with the given value. The most
+accurate value is normally determined by the Cobalt core automatically
+when initializing. It is strongly recommended <strong>not</strong> to use this option
+unless you really know what you are doing. This value is expressed in
+HZ.</p></td>
+<td align="left" valign="top"><p class="table">0 (=calibrated)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.timerfreq=&lt;hz-freq&gt;</p></td>
+<td align="left" valign="top"><p class="table">Override the real-time timer frequency
+used in programming timer shots with the given value. The most
+accurate value is normally determined by the Cobalt core automatically
+when initializing. It is strongly recommended <strong>not</strong> to use this option
+unless you really know what you are doing. This value is expressed in
+HZ.</p></td>
+<td align="left" valign="top"><p class="table">0 (=calibrated)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.smi=&lt;state&gt;</p></td>
+<td align="left" valign="top"><p class="table"><strong>x86-specific</strong>: Set the state of the SMI
+workaround. The possible values are <em>disabled</em>, <em>detect</em> and
+<em>enabled</em>. See the discussion about <a href="dealing-with-x86-SMI">SMIs</a>
+for a description of these states.</p></td>
+<td align="left" valign="top"><p class="table">detect</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">xenomai.smi_mask=&lt;source-mask&gt;</p></td>
+<td align="left" valign="top"><p class="table"><strong>x86-specific</strong>: Set of bits to mask
+in the SMI control register.</p></td>
+<td align="left" valign="top"><p class="table">1 (=global disable)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="cobalt-build-examples">3.4. Examples of building the <em>Cobalt</em> kernel</h3>
 <div class="paragraph"><p>The examples in following sections use the following conventions:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -892,7 +973,7 @@ path to the Xenomai sources
 </dd>
 </dl></div>
 <div class="sect3">
-<h4 id="cobalt-core-x86">3.3.1. Building a <em>Cobalt/x86</em> kernel (32/64bit)</h4>
+<h4 id="cobalt-core-x86">3.4.1. Building a <em>Cobalt/x86</em> kernel (32/64bit)</h4>
 <div class="paragraph"><p>Building <em>Xenomai/cobalt</em> for x86 is almost the same for 32bit and 64bit
 platforms. You should note, however, that it is not possible to run
 Xenomai libraries compiled for x86_32 on a kernel compiled for x86_64,
@@ -952,7 +1033,7 @@ have to install the proper cross-compilation toolchain for the target
 system first.</p></div>
 </div>
 <div class="sect3">
-<h4 id="cobalt-core-powerpc">3.3.2. Building a <em>Cobalt/powerpc</em> kernel (32/64bit)</h4>
+<h4 id="cobalt-core-powerpc">3.4.2. Building a <em>Cobalt/powerpc</em> kernel (32/64bit)</h4>
 <div class="paragraph"><p>A typical cross-compilation setup, in order to build Xenomai for a
 ppc-6xx architecture running a 3.10.32 kernel. We use the DENX ELDK
 cross-compiler:</p></div>
@@ -971,7 +1052,7 @@ $ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig</code></pr
 <div class="paragraph"><p>&#8230;manually install the kernel image and modules to the proper location</p></div>
 </div>
 <div class="sect3">
-<h4 id="cobalt-core-blackfin">3.3.3. Building a <em>Cobalt/blackfin</em> kernel</h4>
+<h4 id="cobalt-core-blackfin">3.4.3. Building a <em>Cobalt/blackfin</em> kernel</h4>
 <div class="paragraph"><p>The Blackfin is a MMU-less, DSP-type architecture running uClinux.</p></div>
 <div class="listingblock">
 <div class="content">
@@ -992,7 +1073,7 @@ $ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig</cod
 </div></div>
 </div>
 <div class="sect3">
-<h4 id="cobalt-core-arm">3.3.4. Building  <em>Cobalt/arm</em> kernel</h4>
+<h4 id="cobalt-core-arm">3.4.4. Building  <em>Cobalt/arm</em> kernel</h4>
 <div class="paragraph"><p>Using codesourcery toolchain named <code>arm-none-linux-gnueabi-gcc</code> and
 compiling for a CSB637 board (AT91RM9200 based), a typical compilation
 will look like:</p></div>
@@ -1047,6 +1128,23 @@ GCC should have a (sane/working) support for TLS preferably,
 although this is not mandatory if building with <code>--disable-tls</code>.
 </p>
 </li>
+<li>
+<p>
+If you plan to enable the user-space registry support
+  (i.e. <code>--enable-registry</code>), then CONFIG_FUSE_FS must be enabled in
+  the target kernel running the real-time applications. In addition,
+  the FUSE development libraries must be available from the toolchain.
+</p>
+</li>
+<li>
+<p>
+If you plan to build from the sources available from the Xenomai GIT
+  tree (git.xenomai.org), the autoconf (&gt;= 2.62), automake and libtool
+  packages must be available on your build system. This is not
+  required when building from a source tree extracted from a
+  <a href="http://download.gna.org/xenomai/">release tarball</a>.
+</p>
+</li>
 </ul></div>
 </div>
 <div class="sect3">
@@ -1089,10 +1187,23 @@ There is no particular requirement for Mercury setups, although
 </div>
 <div class="sect2">
 <h3 id="_configuring">5.2. Configuring</h3>
-<div class="paragraph"><p>A common autoconf script prepares for building the libraries and
-programs, for both the <em>Cobalt</em> and <em>Mercury</em> cores. The core-specific
-code which may be needed internally is automatically and transparently
-selected at compilation-time by the build process.</p></div>
+<div class="paragraph"><p>If building the source obtained from the Xenomai GIT tree
+(git.xenomai.org), the <code>configure</code> script and Makefiles must be
+generated in the Xenomai source tree. The recommended way is to run
+the automatic reconfiguration script shipped, from the top of the
+source tree:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ ./scripts/bootstrap</code></pre>
+</div></div>
+<div class="paragraph"><p>If building from a <a href="http://download.gna.org/xenomai">release tarball</a>, a
+set of autoconf-generated file will be readily available from the
+extracted source tree, and therefore reconfiguring will not be
+required.</p></div>
+<div class="paragraph"><p>When run, the generated <code>configure</code> script prepares for building the
+libraries and programs, for both the <em>Cobalt</em> and <em>Mercury</em> cores. The
+core-specific code which may be needed internally is automatically and
+transparently selected at compilation-time by the build process.</p></div>
 <div class="paragraph"><p>The options listed below can be passed to this script.</p></div>
 <div class="sect3">
 <h4 id="_generic_configuration_options_both_cores">5.2.1. Generic configuration options (both cores)</h4>
@@ -1230,26 +1341,26 @@ allows debugging memory-related issues with the help of
         supported by <a href="http://fuse.sourceforge.net/">FUSE</a>, which must be
         available on the target system. Building the Xenomai libraries
         with the registry support requires the FUSE development
-        libraries to be installed on the build system.
+        libraries to available from the toolchain. In addition,
+        CONFIG_FUSE_FS must be enabled in the target kernel.
 </p>
-<div class="paragraph"><p>When this option is enabled, the system creates a file
-hierachy under <code>/var/run/xenomai/[&lt;user&gt;/]&lt;session&gt;/&lt;pid&gt;</code>
-(by default), where you can access the internal state of the
-active real-time objects. The session label is obtained from
-the --session runtime switch. If left out, it is "anon" and
-the user name is not inserted as well. E.g. looking at the
-properties of a VxWorks task could be done as follows:</p></div>
 </td>
 </tr>
 </table></div>
+<div class="paragraph"><p>When this option is enabled, the system creates a file hierachy under
+<code>/var/run/xenomai/&lt;user&gt;/&lt;session&gt;/&lt;pid&gt;</code>, where you can access the
+internal state of the active real-time objects. The session label is
+obtained from the --session runtime switch. If no session name is
+specified, <code>anon@&lt;pid&gt;</code> will be used. E.g. looking at the properties
+of a VxWorks task could be done as follows:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>                $ cat /var/run/xenomai/anon.12656/vxworks/tasks/windTask
-                name       = windTask
-                errno      = 0
-                status     = ready
-                priority   = 70
-                lock_depth = 0</code></pre>
+<pre><code>$ cat /var/run/xenomai/root/anon@12656/12656/vxworks/tasks/windTask
+name       = windTask
+errno      = 0
+status     = ready
+priority   = 70
+lock_depth = 0</code></pre>
 </div></div>
 <div class="paragraph"><p>You may override the default root of the registry hierarchy
 either statically at build time by passing the desired root
@@ -1418,8 +1529,9 @@ client applications are running over a SMP-capable kernel.</td>
 </dt>
 <dd>
 <p>
-        Enables support for applications compiled in
-        <code>_FORTIFY_SOURCE</code> mode.
+        Enables <code>_FORTIFY_SOURCE</code> when building the Xenomai code
+        unless --enable-debug=full is also given on the command line,
+        in which case --enable-fortify is silently ignored.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1501,6 +1613,35 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Enable quirks for specific ARM
                         SOCs Currently sa1100 and
                         xscale3 are supported.</p></td>
+<td align="left" valign="top"><p class="table">disabled</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_em_mercury_em_specific_configuration_options">5.2.3. <em>Mercury</em>-specific configuration options</h4>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+<thead>
+<tr>
+<th align="center" valign="top">NAME              </th>
+<th align="center" valign="top">DESCRIPTION                    </th>
+<th align="center" valign="top">DEFAULT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><code>--enable-condvar-workaround</code></p></td>
+<td align="left" valign="top"><p class="table">Enable workaround for broken priority
+        inheritance with condition variables in glibc. This option
+        adds some overhead to RTOS API emulators.</p></td>
 <td align="left" valign="top"><p class="table">disabled</p></td>
 </tr>
 </tbody>
@@ -1846,6 +1987,17 @@ system. Try:</p></div>
 <pre><code>$ xeno-test --help</code></pre>
 </div></div>
 </div>
+<div class="sect2">
+<h3 id="_calibrating_the_em_cobalt_em_core_timer">7.3. Calibrating the <em>Cobalt</em> core timer</h3>
+<div class="paragraph"><p>The accuracy of the Cobalt timing services depends on proper
+calibration of its core timer. Sound factory-default calibration
+values are defined for each platform Xenomai supports, but it is
+recommended to calibrate the core timer specifically for the target
+system.</p></div>
+<div class="paragraph"><p>See the documentation about the
+<a href="../documentation/xenomai-3/html/man1/autotune/index.html">autotune(1)</a>
+utility.</p></div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -1874,7 +2026,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-15 12:10:21 CET
+Last updated 2015-04-16 20:59:33 CEST
 </div>
 </div>
 </body>

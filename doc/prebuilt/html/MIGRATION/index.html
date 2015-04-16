@@ -758,15 +758,29 @@ indifferently.
 <li>
 <p>
 Each <code>--skin=&lt;api&gt;</code> option specifier can be abbreviated as
- --&lt;api&gt;. For instance, <code>--psos</code> is a shorthand for <code>--skin=psos</code> on
+ <code>--&lt;api&gt;</code>. For instance, <code>--psos</code> is a shorthand for <code>--skin=psos</code> on
  the command line.
 </p>
 </li>
 <li>
 <p>
-Specifying <code>--[skin=]cobalt</code> or <code>--[skin=]posix</code> on the command line
-  is strictly equivalent. However, this does not make sense with
-  <em>Mercury</em> which does not define these switches.
+Over Cobalt, only <strong>xeno-config --posix --ldflags</strong> (or <strong>--rtdm</strong> as
+ an alias) returns the proper linker flags to cause POSIX routines
+ invoked by the application to be wrapped to their respective Xenomai
+ implementation. No other API will imply such wrapping. For this
+ reason, <strong>--cobalt --ldflags</strong> should be used for linking exclusively
+ against the Cobalt library (i.e. <code>libcobalt.so</code>) <strong>without</strong> symbol
+ wrapping. Conversely, mentioning <strong>--posix</strong> along with other API
+ switches with <strong>--ldflags</strong> will cause POSIX symbol wrapping to take
+ place, e.g. use <strong>--posix --alchemy --ldflags</strong> for mixed API support
+ with POSIX symbol wrapping.
+</p>
+</li>
+<li>
+<p>
+Over <em>Mercury</em>, <code>--posix</code> and <code>--rtdm</code> are ignored placeholders,
+   since the full POSIX API is available with the glibc and the
+   threading library.
 </p>
 </li>
 <li>
@@ -849,7 +863,7 @@ xeno_hal.clockfreq &#8594; xenomai.clockfreq
 </li>
 <li>
 <p>
-xeno_hal.disable &#8594; xenomai.disable
+xeno_hal.disable &#8594; xenomai.state=disabled
 </p>
 </li>
 <li>
@@ -893,11 +907,23 @@ xeno_hal.smi_mask (x86 only) &#8594; xenomai.smi_mask
 Obsolete parameters dropped
 </dt>
 <dd>
+<div class="ulist"><ul>
+<li>
 <p>
 xeno_rtdm.tick_arg
+</p>
+</li>
+<li>
+<p>
 rtdm.devname_hashtab_size
+</p>
+</li>
+<li>
+<p>
 rtdm.protocol_hashtab_size
 </p>
+</li>
+</ul></div>
 </dd>
 </dl></div>
 <div class="sidebarblock">
@@ -928,8 +954,8 @@ follows:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>/mount-point              /* registry fs root, defaults to /var/run/xenomai */
- [/user]                  /* user name, missing if "anon" session */
-    /session              /* shared session name or "anon" */
+ /user                    /* user name */
+    /session              /* shared session name or anon@&lt;pid&gt; */
       /pid                /* application (main) pid */
         /skin             /* API name: alchemy/vxworks/psos/... */
           /family         /* object class (task, semaphore, ...) */
@@ -939,8 +965,7 @@ follows:</p></div>
 <div class="paragraph"><p>Each leaf entry under a session hierarchy is normally viewable, for
 retrieving the information attached to the corresponding object, such
 as its state, and/or value. There can be multiple sessions hosted
-under a single registry mount point. Session-less application
-processes are grouped under the special "anon" hierarchy.</p></div>
+under a single registry mount point.</p></div>
 <div class="paragraph"><p>The /system hierarchy provides information about the current state of
 the Xenomai core, aggregating data from all processes which belong to
 the parent session. Typically, the status of all threads and heaps
@@ -981,10 +1006,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-3.0-rc3. Functionally speaking, only the former <em>master</em> time base
+3.0-rc4. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 3.0-rc3 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 3.0-rc4 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -3436,7 +3461,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-15 12:10:21 CET
+Last updated 2015-04-16 20:59:33 CEST
 </div>
 </div>
 </body>

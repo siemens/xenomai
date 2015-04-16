@@ -1,12 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"experimental_2e1000_2e1000__nvm_8h_source.html":[4,0,1,1,3,0,2,0,11],
-"experimental_2e1000_2e1000__osdep_8h_source.html":[4,0,1,1,3,0,2,0,12],
-"experimental_2e1000_2e1000__phy_8h_source.html":[4,0,1,1,3,0,2,0,13],
-"experimental_2e1000_2e1000__regs_8h_source.html":[4,0,1,1,3,0,2,0,14],
-"experimental_2e1000_2kcompat_8h_source.html":[4,0,1,1,3,0,2,0,15],
-"extension_8h_source.html":[4,0,1,0,2,3],
-"fcntl_8h_source.html":[4,0,0,2,5],
 "fd_8h.html":[4,0,0,2,1,0,6],
 "fd_8h.html#a24bb11700c627fca3ea4f8433a5cbc00":[4,0,0,2,1,0,6,1],
 "fd_8h.html#a3feba2db3d6f8619ce4720f24d84bfe8":[4,0,0,2,1,0,6,4],
@@ -61,12 +54,12 @@ var NAVTREEINDEX1 =
 "functions_vars_v.html":[3,1,2,19],
 "functions_vars_w.html":[3,1,2,20],
 "functions_w.html":[3,1,0,21],
-"globals.html":[4,1,0,0],
 "globals.html":[4,1,0],
+"globals.html":[4,1,0,0],
 "globals_b.html":[4,1,0,1],
 "globals_c.html":[4,1,0,2],
-"globals_defs.html":[4,1,5],
 "globals_defs.html":[4,1,5,0],
+"globals_defs.html":[4,1,5],
 "globals_defs_b.html":[4,1,5,1],
 "globals_defs_c.html":[4,1,5,2],
 "globals_defs_f.html":[4,1,5,3],
@@ -249,5 +242,12 @@ var NAVTREEINDEX1 =
 "group__analogy__buffer.html#ga7217681dd4b608810dca02951b9cf65b":[2,1,1,0,3,7],
 "group__analogy__buffer.html#ga75264f08ee19ea15503f7c8fe0da51d6":[2,1,1,0,3,4],
 "group__analogy__buffer.html#ga78213408a2e08c670b979921947322ed":[2,1,1,0,3,10],
-"group__analogy__buffer.html#ga826e5bd2b04928cf23d3728c52f7af93":[2,1,1,0,3,6]
+"group__analogy__buffer.html#ga826e5bd2b04928cf23d3728c52f7af93":[2,1,1,0,3,6],
+"group__analogy__buffer.html#ga832e2421fd8c1d5e32a4253082632f14":[2,1,1,0,3,12],
+"group__analogy__buffer.html#gaa29b1cd640705ca1ce86bea7d25e52e4":[2,1,1,0,3,9],
+"group__analogy__buffer.html#gaa84418c796397c95efc648a19e0c1550":[2,1,1,0,3,8],
+"group__analogy__buffer.html#gab257a290294e0292fdab71bb60893b07":[2,1,1,0,3,11],
+"group__analogy__buffer.html#gab258ce900ea38185e72c9b7cebd77c95":[2,1,1,0,3,2],
+"group__analogy__channel__range.html":[2,1,1,0,0],
+"group__analogy__channel__range.html#ga2db9f4e0fea6bd9279f40944bc0eb8d8":[4,0,0,2,1,0,0,1,8]
 };

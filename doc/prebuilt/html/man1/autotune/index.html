@@ -929,6 +929,28 @@ running the auto-tuner after each boot e.g:</p></div>
     /* change the user and kernel gravities to 1728 and 907 ns resp. */
 # echo "1728u 907k" &gt; /proc/xenomai/clock/coreclck</code></pre>
 </div></div>
+<div class="paragraph"><p>Alternatively, the gravity values can be statically defined in the
+kernel configuration of the target kernel:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+CONFIG_XENO_OPT_TIMING_SCHEDLAT should be assigned the user gravity
+  value.
+</p>
+</li>
+<li>
+<p>
+CONFIG_XENO_OPT_TIMING_KSCHEDLAT should be assigned the kernel
+  gravity value.
+</p>
+</li>
+<li>
+<p>
+CONFIG_XENO_OPT_TIMING_IRQLAT should be assigned the IRQ gravity
+  value.
+</p>
+</li>
+</ul></div>
 </div>
 </div>
 <div class="sect1">
@@ -941,7 +963,7 @@ running the auto-tuner after each boot e.g:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-10 15:21:50 CET
+Last updated 2015-03-24 10:55:48 CET
 </div>
 </div>
 </body>

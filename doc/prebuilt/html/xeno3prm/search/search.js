@@ -11,7 +11,7 @@ function SearchBox(name, resultsPath, inFrame, label)
     {
       this.DOMSearchBox().className = 'MSearchBoxActive';
       var searchField = this.DOMSearchField();
-      if (searchField.value == this.searchLabel) 
+      if (searchField.value == this.searchLabel)
       {
         searchField.value = '';
       }

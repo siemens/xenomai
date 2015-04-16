@@ -845,8 +845,8 @@ switch is a nop over <em>Cobalt</em>.</p></div>
 <dd>
 <p>
         This switch disables registry support at runtime. No real-time
-        objects will be exported to <code>/var/run/xenomai/[&lt;user&gt;/]&lt;session&gt;/&lt;pid&gt;</code>,
-        despite the registry code was compiled in.
+        objects will be exported to <code>/var/run/xenomai</code>, despite the
+        registry code was compiled in.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -890,9 +890,10 @@ another process from the same session. This is done using a
 common heap area, shared by all processes within the same
 session.</p></div>
 <div class="paragraph"><p>This label is also used to form the registry mount point for
-each process, e.g. <code>/var/run/xenomai/[&lt;user&gt;/]&lt;session&gt;/&lt;pid&gt;</code>.
+each process, e.g. <code>/var/run/xenomai/&lt;user&gt;/&lt;session&gt;/&lt;pid&gt;</code>.
 See <code>--enable-registry</code> from the build options.</p></div>
-<div class="paragraph"><p>By default, <em>anon</em> is used as the session label.</p></div>
+<div class="paragraph"><p>By default, <code>anon@&lt;pid&gt;</code> is used as the session label, with &lt;pid&gt;
+equal to the system identifier of the process.</p></div>
 </dd>
 <dt class="hdlist1">
 <strong>--reset</strong>
@@ -1008,7 +1009,7 @@ package is called <em>valgrind-devel</em> on Fedora.</td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-15 12:10:21 CET
+Last updated 2015-04-16 20:59:33 CEST
 </div>
 </div>
 </body>

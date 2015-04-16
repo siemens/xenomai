@@ -1,7 +1,7 @@
 <map id="include/cobalt/kernel/rtdm/analogy/driver.h" name="include/cobalt/kernel/rtdm/analogy/driver.h">
-<area shape="rect" id="node3" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="2745,333,2931,360"/>
-<area shape="rect" id="node42" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="2049,333,2203,360"/>
-<area shape="rect" id="node43" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="2412,95,2557,121"/>
+<area shape="rect" id="node3" href="$rtdm__helpers_8h_source.html" title="rtdm/analogy/rtdm_helpers.h" alt="" coords="2745,333,2931,360"/>
+<area shape="rect" id="node42" href="$context_8h_source.html" title="rtdm/analogy/context.h" alt="" coords="2049,333,2203,360"/>
+<area shape="rect" id="node43" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h_source.html" title="rtdm/analogy/buffer.h" alt="" coords="2412,95,2557,121"/>
 <area shape="rect" id="node11" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="1276,408,1371,435"/>
 <area shape="rect" id="node18" href="$include_2cobalt_2kernel_2heap_8h_source.html" title="cobalt/kernel/heap.h" alt="" coords="601,490,739,517"/>
 <area shape="rect" id="node22" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="601,736,747,763"/>
@@ -26,6 +26,6 @@
 <area shape="rect" id="node46" href="$uapi_2analogy_8h.html" title="Analogy for Linux, UAPI bits. " alt="" coords="2571,333,2707,360"/>
 <area shape="rect" id="node47" href="$command_8h_source.html" title="rtdm/analogy/command.h" alt="" coords="2176,251,2345,278"/>
 <area shape="rect" id="node48" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="2399,169,2570,196"/>
-<area shape="rect" id="node49" href="$instruction_8h.html" title="Analogy for Linux, instruction related features. " alt="" coords="2369,251,2541,278"/>
+<area shape="rect" id="node49" href="$instruction_8h_source.html" title="rtdm/analogy/instruction.h" alt="" coords="2369,251,2541,278"/>
 <area shape="rect" id="node50" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features. " alt="" coords="2566,244,2713,285"/>
 </map>

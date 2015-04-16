@@ -838,7 +838,7 @@ Output the absolute path to the Xenomai installation directory.
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>--[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey}</strong>
+<strong>--[skin=]{posix, alchemy, rtdm, psos, vxworks, smokey, cobalt}</strong>
 </dt>
 <dd>
 <p>
@@ -855,7 +855,27 @@ POSIX API.
 <img src="../asciidoc-icons/note.png" alt="Note" />
 </td>
 <td class="content"><strong>--native</strong> and <strong>--skin=native</strong> are accepted for backward compatibility
-purpose. They are stricly equivalent as passing <strong>--alchemy --compat</strong>.</td>
+purpose. They are stricly equivalent as passing <strong>--alchemy --compat</strong>.
+Likewise, passing <strong>--rtdm</strong> or <strong>--skin=rtdm</strong> is stricly equivalent as
+passing <strong>--posix</strong>, enabling POSIX I/O routines to be wrapped to their
+respective Xenomai implementation.</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">Over Cobalt, only <strong>xeno-config --posix --ldflags</strong> (or <strong>--rtdm</strong> as an
+alias) returns the proper linker flags to cause POSIX routines invoked
+by the application to be wrapped to their respective Xenomai
+implementation. No other API will imply such wrapping. For this
+reason, <strong>--cobalt --ldflags</strong> should be used for linking exclusively
+against the Cobalt library (i.e. <code>libcobalt.so</code>) <strong>without</strong> symbol
+wrapping. Conversely, mentioning <strong>--posix</strong> along with other API
+switches with <strong>--ldflags</strong> will cause POSIX symbol wrapping to take
+place, e.g. use <strong>--posix --alchemy --ldflags</strong> for mixed API support
+with POSIX symbol wrapping.</td>
 </tr></table>
 </div>
 <div class="dlist"><dl>
@@ -1017,7 +1037,7 @@ Error.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-10 15:21:50 CET
+Last updated 2015-04-16 20:54:21 CEST
 </div>
 </div>
 </body>

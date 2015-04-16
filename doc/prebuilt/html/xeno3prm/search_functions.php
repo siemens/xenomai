@@ -1,5 +1,5 @@
 <script language="PHP">
-require_once "search-config.php";
+require_once "search_config.php";
 
 function end_form($value)
 {
