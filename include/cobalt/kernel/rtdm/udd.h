@@ -287,7 +287,10 @@ struct udd_device {
 		struct rtdm_driver driver;
 		struct rtdm_device device;
 		struct rtdm_driver mapper_driver;
-		struct rtdm_device mapper;
+		struct udd_mapper {
+			struct udd_device *udd;
+			struct rtdm_device dev;
+		} mapdev[UDD_NR_MAPS];
 		char *mapper_name;
 		int nr_maps;
 	} __reserved;

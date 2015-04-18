@@ -208,7 +208,7 @@ static int mapper_open(struct rtdm_fd *fd, int oflags)
 	if (minor < 0 || minor >= UDD_NR_MAPS)
 		return -EIO;
 
-	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.mapper);
+	udd = udd_get_device(fd);
 	if (udd->mem_regions[minor].type == UDD_MEM_NONE)
 		return -EIO;
 
@@ -227,7 +227,7 @@ static int mapper_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 	size_t len;
 	int ret;
 
-	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.mapper);
+	udd = udd_get_device(fd);
 	if (udd->ops.mmap)
 		/* Offload to client driver if handler is present. */
 		return udd->ops.mmap(fd, vma);
@@ -260,10 +260,6 @@ static int mapper_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 static inline int check_memregion(struct udd_device *udd,
 				  struct udd_memregion *rn)
 {
-	/* We allow sparse region arrays. */
-	if (rn->type == UDD_MEM_NONE)
-		return 0;
-
 	if (rn->name == NULL)
 		return -EINVAL;
 
@@ -273,16 +269,16 @@ static inline int check_memregion(struct udd_device *udd,
 	if (rn->len == 0)
 		return -EINVAL;
 
-	udd->__reserved.nr_maps++;
-
 	return 0;
 }
 
 static inline int register_mapper(struct udd_device *udd)
 {
 	struct udd_reserved *ur = &udd->__reserved;
-	struct rtdm_device *dev = &ur->mapper;
 	struct rtdm_driver *drv = &ur->mapper_driver;
+	struct udd_mapper *mapper;
+	struct udd_memregion *rn;
+	int n, ret;
 
 	ur->mapper_name = kasformat("%s,mapper%%d", udd->device_name);
 	if (ur->mapper_name == NULL)
@@ -291,17 +287,33 @@ static inline int register_mapper(struct udd_device *udd)
 	drv->profile_info = (struct rtdm_profile_info)
 		RTDM_PROFILE_INFO("mapper", RTDM_CLASS_MEMORY,
 				  RTDM_SUBCLASS_GENERIC, 0);
-	drv->device_flags = RTDM_NAMED_DEVICE;
+	drv->device_flags = RTDM_NAMED_DEVICE|RTDM_FIXED_MINOR;
 	drv->device_count = UDD_NR_MAPS;
 	drv->ops = (struct rtdm_fd_ops){
 		.open		=	mapper_open,
 		.close		=	mapper_close,
 		.mmap		=	mapper_mmap,
 	};
-	dev->driver = drv;
-	dev->label = ur->mapper_name;
 
-	return rtdm_dev_register(dev);
+	for (n = 0, mapper = ur->mapdev; n < UDD_NR_MAPS; n++, mapper++) {
+		rn = udd->mem_regions + n;
+		if (rn->type == UDD_MEM_NONE)
+			continue;
+		mapper->dev.driver = drv;
+		mapper->dev.label = ur->mapper_name;
+		mapper->dev.minor = n;
+		mapper->udd = udd;
+		ret = rtdm_dev_register(&mapper->dev);
+		if (ret)
+			goto undo;
+	}
+
+	return 0;
+undo:
+	while (--n >= 0)
+		rtdm_dev_unregister(&ur->mapdev[n].dev);
+
+	return ret;
 }
 
 /**
@@ -337,6 +349,7 @@ int udd_register_device(struct udd_device *udd)
 	struct rtdm_device *dev = &udd->__reserved.device;
 	struct udd_reserved *ur = &udd->__reserved;
 	struct rtdm_driver *drv = &ur->driver;
+	struct udd_memregion *rn;
 	int ret, n;
 
 	if (!realtime_core_enabled())
@@ -349,9 +362,14 @@ int udd_register_device(struct udd_device *udd)
 		return -EINVAL;
 
 	for (n = 0, ur->nr_maps = 0; n < UDD_NR_MAPS; n++) {
-		ret = check_memregion(udd, udd->mem_regions + n);
+		/* We allow sparse region arrays. */
+		rn = udd->mem_regions + n;
+		if (rn->type == UDD_MEM_NONE)
+			continue;
+		ret = check_memregion(udd, rn);
 		if (ret)
 			return ret;
+		udd->__reserved.nr_maps++;
 	}
 
 	drv->profile_info = (struct rtdm_profile_info)
@@ -398,7 +416,11 @@ int udd_register_device(struct udd_device *udd)
 	return 0;
 
 fail_irq_request:
-	rtdm_dev_unregister(&ur->mapper);
+	for (n = 0; n < UDD_NR_MAPS; n++) {
+		rn = udd->mem_regions + n;
+		if (rn->type != UDD_MEM_NONE)
+			rtdm_dev_unregister(&ur->mapdev[n].dev);
+	}
 fail_mapper:
 	rtdm_dev_unregister(dev);
 	if (ur->mapper_name)
@@ -425,6 +447,8 @@ EXPORT_SYMBOL_GPL(udd_register_device);
 int udd_unregister_device(struct udd_device *udd)
 {
 	struct udd_reserved *ur = &udd->__reserved;
+	struct udd_memregion *rn;
+	int n;
 
 	if (!realtime_core_enabled())
 		return -ENXIO;
@@ -434,7 +458,11 @@ int udd_unregister_device(struct udd_device *udd)
 	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM)
 		rtdm_irq_free(&ur->irqh);
 
-	rtdm_dev_unregister(&ur->mapper);
+	for (n = 0; n < UDD_NR_MAPS; n++) {
+		rn = udd->mem_regions + n;
+		if (rn->type != UDD_MEM_NONE)
+			rtdm_dev_unregister(&ur->mapdev[n].dev);
+	}
 
 	if (ur->mapper_name)
 		kfree(ur->mapper_name);
@@ -587,7 +615,7 @@ struct udd_device *udd_get_device(struct rtdm_fd *fd)
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 
 	if (dev->driver->profile_info.class_id == RTDM_CLASS_MEMORY)
-		return container_of(dev, struct udd_device, __reserved.mapper);
+		return container_of(dev, struct udd_mapper, dev)->udd;
 
 	return container_of(dev, struct udd_device, __reserved.device);
 }
