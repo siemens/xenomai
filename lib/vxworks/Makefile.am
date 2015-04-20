@@ -19,6 +19,8 @@ libvxworks_la_SOURCES = \
 	semLib.h	\
 	taskLib.c	\
 	taskLib.h	\
+	taskHookLib.c	\
+	taskHookLib.h	\
 	taskInfo.c	\
 	tickLib.c	\
 	tickLib.h	\

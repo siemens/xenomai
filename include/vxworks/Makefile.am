@@ -10,6 +10,7 @@ includesub_HEADERS =	\
 	rngLib.h	\
 	semLib.h	\
 	sysLib.h	\
+	taskHookLib.h	\
 	taskInfo.h	\
 	taskLib.h	\
 	tickLib.h	\

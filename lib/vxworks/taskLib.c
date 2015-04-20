@@ -28,6 +28,7 @@
 #include "taskLib.h"
 #include "tickLib.h"
 #include "msgQLib.h"
+#include "taskHookLib.h"
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/threadobj.h"
@@ -157,6 +158,7 @@ static void task_finalizer(struct threadobj *thobj)
 		write_lock_nocancel(&wind_task_lock);
 		pvlist_remove(&task->next);
 		write_unlock(&wind_task_lock);
+		wind_run_hooks(&wind_delete_hooks, task);
 	}
 
 	task->tcb->status |= WIND_DEAD;
@@ -256,6 +258,8 @@ static void *task_trampoline(void *arg)
 		warning("failed to export task %s to registry, %s",
 			task->name, symerror(ret));
 
+	wind_run_hooks(&wind_create_hooks, task);
+	
 	/* Wait for someone to run taskActivate() upon us. */
 	threadobj_wait_start();
 
