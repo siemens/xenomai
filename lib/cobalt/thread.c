@@ -182,7 +182,6 @@ int pthread_create_ex(pthread_t *ptid_r,
 	struct timespec timeout;
 	pthread_attr_t attr;
 	pthread_t lptid;
-	size_t stksz;
 
 	if (attr_ex == NULL)
 		attr_ex = &default_attr_ex;
@@ -216,8 +215,6 @@ int pthread_create_ex(pthread_t *ptid_r,
 		pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
 
 	pthread_attr_getdetachstate(&attr, &detachstate);
-	pthread_attr_getstacksize(&attr, &stksz);
-	pthread_attr_setstacksize(&attr, cobalt_get_stacksize(stksz));
 	pthread_attr_getpersonality_ex(attr_ex, &iargs.personality);
 
 	/*
