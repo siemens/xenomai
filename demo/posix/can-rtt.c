@@ -343,7 +343,6 @@ int main(int argc, char *argv[])
     /* Create receiver RT-thread */
     pthread_attr_init(&thattr);
     pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
-    pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN);
     ret = pthread_create(&rxthread, &thattr, &receiver, NULL);
     if (ret) {
 	fprintf(stderr, "%s: pthread_create(receiver) failed\n",
