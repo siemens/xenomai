@@ -52,7 +52,7 @@ static int std_maxpri;
 static void commit_stack_memory(void)
 {
 	if (pthread_self() == __cobalt_main_ptid) {
-		char stk[cobalt_get_stacksize(1)];
+		char stk[PTHREAD_STACK_MIN];
 		cobalt_commit_memory(stk);
 	}
 }
