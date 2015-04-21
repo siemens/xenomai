@@ -65,8 +65,6 @@ int cobalt_thread_stat(pid_t pid,
 
 int cobalt_serial_debug(const char *fmt, ...);
 
-size_t cobalt_get_stacksize(size_t size);
-
 void __cobalt_commit_memory(void *p, size_t len);
 
 void cobalt_thread_harden(void);

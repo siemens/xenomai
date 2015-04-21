@@ -666,7 +666,7 @@ static void spawn_printer_thread(void)
 	pthread_attr_t thattr;
 
 	pthread_attr_init(&thattr);
-	pthread_attr_setstacksize(&thattr, cobalt_get_stacksize(0));
+	pthread_attr_setstacksize(&thattr, COBALT_STACKSIZE_DEFAULT);
 	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
 }
 

@@ -143,23 +143,6 @@ int cobalt_serial_debug(const char *fmt, ...)
 	return ret;
 }
 
-size_t cobalt_get_stacksize(size_t size)
-{
-	static const size_t default_size = PTHREAD_STACK_MIN * 4;
-	static size_t min_size;
-
-	if (min_size == 0)
-		min_size = PTHREAD_STACK_MIN + getpagesize();
-
-	if (size == 0)
-		size = default_size;
-
-	if (size < min_size)
-		size = min_size;
-
-	return size;
-}
-
 static inline
 struct cobalt_monitor_state *get_monitor_state(cobalt_monitor_t *mon)
 {

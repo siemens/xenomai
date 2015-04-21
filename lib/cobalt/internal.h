@@ -18,8 +18,11 @@
 #ifndef _LIB_COBALT_INTERNAL_H
 #define _LIB_COBALT_INTERNAL_H
 
+#include <limits.h>
 #include <cobalt/sys/cobalt.h>
 #include "current.h"
+
+#define COBALT_STACKSIZE_DEFAULT	(PTHREAD_STACK_MIN * 4)
 
 extern void *cobalt_umm_private;
 
