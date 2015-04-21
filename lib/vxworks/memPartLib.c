@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <memory.h>
 #include <boilerplate/lock.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/init.h>
@@ -68,6 +69,9 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
 	__RT(pthread_mutex_init(&mp->lock, &mattr));
 	pthread_mutexattr_destroy(&mattr);
+	memset(&mp->stats, 0, sizeof(mp->stats));
+	mp->stats.numBytesFree = poolSize;
+	mp->stats.numBlocksFree = 1;
 	mp->magic = mempart_magic;
 
 	CANCEL_RESTORE(svc);
@@ -100,6 +104,9 @@ STATUS memPartAddToPool(PART_ID partId,
 	if (heapobj_extend(&mp->hobj, poolSize, pPool)) {
 		errno = S_memLib_INVALID_NBYTES;
 		ret = ERROR;
+	} else {
+		mp->stats.numBytesFree += poolSize;
+		mp->stats.numBlocksFree++;
 	}
 
 	__RT(pthread_mutex_unlock(&mp->lock));
@@ -148,7 +155,16 @@ void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 		return NULL;
 
 	__RT(pthread_mutex_lock(&mp->lock));
+
 	p = heapobj_alloc(&mp->hobj, nBytes);
+
+	mp->stats.numBytesAlloc += nBytes;
+	mp->stats.numBlocksAlloc++;
+	mp->stats.numBytesFree -= nBytes;
+	mp->stats.numBlocksFree--;
+	if (mp->stats.numBytesAlloc > mp->stats.maxBytesAlloc)
+		mp->stats.maxBytesAlloc = mp->stats.numBytesAlloc;
+
 	__RT(pthread_mutex_unlock(&mp->lock));
 
 	return p;
@@ -158,6 +174,7 @@ STATUS memPartFree(PART_ID partId, char *pBlock)
 {
 	struct wind_mempart *mp;
 	struct service svc;
+	size_t size;
 
 	if (pBlock == NULL)
 		return ERROR;
@@ -169,7 +186,15 @@ STATUS memPartFree(PART_ID partId, char *pBlock)
 	CANCEL_DEFER(svc);
 
 	__RT(pthread_mutex_lock(&mp->lock));
+
 	heapobj_free(&mp->hobj, pBlock);
+
+	size = heapobj_validate(&mp->hobj, pBlock);
+	mp->stats.numBytesAlloc -= size;
+	mp->stats.numBlocksAlloc--;
+	mp->stats.numBytesFree += size;
+	mp->stats.numBlocksFree++;
+	
 	__RT(pthread_mutex_unlock(&mp->lock));
 
 	CANCEL_RESTORE(svc);
@@ -188,4 +213,24 @@ void memAddToPool(char *pPool, unsigned int poolSize)
 	 * this when asked to extend it.
 	 */
 	warning("%s: extending the main partition is useless", __FUNCTION__);
+}
+
+STATUS memPartInfoGet(PART_ID partId, MEM_PART_STATS *ppartStats)
+{
+	struct wind_mempart *mp;
+	struct service svc;
+
+	mp = find_mempart_from_id(partId);
+	if (mp == NULL)
+		return ERROR;
+
+	CANCEL_DEFER(svc);
+
+	__RT(pthread_mutex_lock(&mp->lock));
+	*ppartStats = mp->stats;
+	__RT(pthread_mutex_unlock(&mp->lock));
+
+	CANCEL_RESTORE(svc);
+
+	return OK;
 }

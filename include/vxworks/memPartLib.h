@@ -28,6 +28,16 @@
 
 typedef uintptr_t PART_ID;
 
+struct wind_part_stats {
+	unsigned long numBytesFree;
+	unsigned long numBlocksFree;
+	unsigned long numBytesAlloc;
+	unsigned long numBlocksAlloc;
+	unsigned long maxBytesAlloc;
+};
+
+typedef struct wind_part_stats MEM_PART_STATS;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +55,9 @@ void *memPartAlloc(PART_ID  partId, unsigned int nBytes);
 STATUS memPartFree(PART_ID partId, char *pBlock);
 
 void memAddToPool(char *pPool, unsigned int poolSize);
+
+STATUS memPartInfoGet(PART_ID partId,
+		      MEM_PART_STATS *ppartStats);
 
 #ifdef __cplusplus
 }

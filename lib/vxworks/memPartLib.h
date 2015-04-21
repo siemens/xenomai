@@ -20,11 +20,13 @@
 #define _VXWORKS_MEMPARTLIB_H
 
 #include <copperplate/heapobj.h>
+#include <vxworks/memPartLib.h>
 
 struct wind_mempart {
 	unsigned int magic;
 	struct heapobj hobj;
 	pthread_mutex_t lock;
+	struct wind_part_stats stats;
 };
 
 #endif /* _VXWORKS_MEMPARTLIB_H */
