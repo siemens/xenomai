@@ -38,12 +38,6 @@ typedef struct pthread_attr_ex {
 extern "C" {
 #endif
 
-COBALT_DECL(int, pthread_attr_setschedpolicy(pthread_attr_t *attr,
-					     int policy));
-
-COBALT_DECL(int, pthread_attr_setschedparam(pthread_attr_t *attr,
-					    const struct sched_param *par));
-
 COBALT_DECL(int, pthread_create(pthread_t *ptid_r,
 				const pthread_attr_t *attr,
 				void *(*start) (void *),
