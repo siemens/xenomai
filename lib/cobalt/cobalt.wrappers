@@ -1,3 +1,4 @@
+--wrap pthread_attr_init
 --wrap pthread_create
 --wrap pthread_setschedparam
 --wrap pthread_getschedparam

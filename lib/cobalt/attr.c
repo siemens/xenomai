@@ -23,6 +23,12 @@
 #include <cobalt/uapi/thread.h>
 #include "internal.h"
 
+COBALT_IMPL(int, pthread_attr_init, (pthread_attr_t *attr))
+{
+	__STD(pthread_attr_init)(attr);
+	return pthread_attr_setstacksize(attr, COBALT_STACKSIZE_DEFAULT);
+}
+
 int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex)
 {
 	struct sched_param param;
@@ -31,7 +37,7 @@ int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex)
 	/* Start with defaulting all fields to null. */
 	memset(attr_ex, 0, sizeof(*attr_ex));
 	/* Merge in the default standard attribute set. */
-	pthread_attr_init(&attr_ex->std);
+	__COBALT(pthread_attr_init)(&attr_ex->std);
 	pthread_attr_getschedpolicy(&attr_ex->std, &policy);
 	attr_ex->nonstd.sched_policy = policy;
 	pthread_attr_getschedparam(&attr_ex->std, &param);

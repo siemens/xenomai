@@ -98,6 +98,13 @@ int __real_pthread_join(pthread_t ptid, void **retval)
 	return pthread_join(ptid, retval);
 }
 
+/* attr */
+__weak
+int __real_pthread_attr_init(pthread_attr_t *attr)
+{
+	return pthread_attr_init(attr);
+}
+
 /* semaphores */
 __weak
 int __real_sem_init(sem_t * sem, int pshared, unsigned value)
