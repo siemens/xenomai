@@ -357,7 +357,7 @@ static int __init rtnetproxy_init_module(void)
 	goto err1;
     }
 
-    dev_rtnetproxy = alloc_netdev(0, "rtproxy", rtnetproxy_init);
+    dev_rtnetproxy = alloc_netdev(0, "rtproxy", NET_NAME_UNKNOWN, rtnetproxy_init);
     if (!dev_rtnetproxy) {
 	err = -ENOMEM;
 	goto err1;

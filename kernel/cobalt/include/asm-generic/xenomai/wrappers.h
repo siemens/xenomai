@@ -60,4 +60,12 @@
 #define smp_mb__after_atomic()   smp_mb()
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+#include <linux/netdevice.h>
+
+#undef alloc_netdev
+#define alloc_netdev(sizeof_priv, name, name_assign_type, setup) \
+	alloc_netdev_mqs(sizeof_priv, name, setup, 1, 1)
+#endif
+
 #endif /* _COBALT_ASM_GENERIC_WRAPPERS_H */

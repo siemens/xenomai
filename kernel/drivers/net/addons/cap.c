@@ -401,7 +401,7 @@ int __init rtcap_init(void)
 		   sizeof(struct net_device_stats));
 
 	    dev = alloc_netdev(sizeof(struct rtnet_device *), rtdev->name,
-			       tap_dev_setup);
+			    NET_NAME_UNKNOWN, tap_dev_setup);
 	    if (!dev) {
 		ret = -ENOMEM;
 		goto error3;
@@ -420,7 +420,7 @@ int __init rtcap_init(void)
 
 	    if ((rtdev->flags & IFF_LOOPBACK) == 0) {
 		dev = alloc_netdev(sizeof(struct rtnet_device *), rtdev->name,
-				   tap_dev_setup);
+				NET_NAME_UNKNOWN, tap_dev_setup);
 		if (!dev) {
 		    ret = -ENOMEM;
 		    goto error3;
