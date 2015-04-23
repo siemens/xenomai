@@ -1,6 +1,4 @@
 
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai
-
 obj-$(CONFIG_XENO_DRIVERS_RTIPC) += xeno_rtipc.o
 
 xeno_rtipc-y := rtipc.o

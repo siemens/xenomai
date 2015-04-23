@@ -6,4 +6,4 @@ xenomai-y :=	core.o		\
 		drvlib.o	\
 		fd.o
 
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai -I$(src)/..
+ccflags-y += -I$(src)/..

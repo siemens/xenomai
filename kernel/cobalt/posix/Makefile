@@ -1,3 +1,6 @@
+
+ccflags-y += -Ikernel
+
 obj-$(CONFIG_XENOMAI) += xenomai.o
 
 xenomai-y :=		\
@@ -20,5 +23,3 @@ xenomai-y :=		\
 	timerfd.o
 
 xenomai-$(CONFIG_XENO_ARCH_SYS3264) += compat.o syscall32.o
-
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai -Ikernel

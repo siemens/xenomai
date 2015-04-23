@@ -1,6 +1,5 @@
 
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai \
-	-Idrivers/xenomai/analogy
+ccflags-y += -Idrivers/xenomai/analogy
 
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) += analogy_ni_mite.o
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY_NI_TIO) += analogy_ni_tio.o

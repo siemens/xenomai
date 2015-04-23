@@ -1,6 +1,4 @@
 
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai
-
 obj-$(CONFIG_XENO_DRIVERS_16550A) += xeno_16550A.o
 obj-$(CONFIG_XENO_DRIVERS_MPC52XX_UART) += xeno_mpc52xx_uart.o
 obj-$(CONFIG_XENO_DRIVERS_IMX_UART) += xeno_imx_uart.o

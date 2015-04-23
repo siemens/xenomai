@@ -1,5 +1,4 @@
-
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai -Ikernel
+ccflags-y += -Ikernel
 
 obj-$(CONFIG_XENO_DRIVERS_UDD) += xeno_udd.o
 

@@ -1,5 +1,4 @@
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai \
-	-Idrivers/xenomai/net/stack/include
+ccflags-y += -Idrivers/xenomai/net/stack/include
 
 obj-$(CONFIG_XENO_DRIVERS_NET_DRV_RT2500) += rt_rt2x00core.o rt_rt2500pci.o
 
