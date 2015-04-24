@@ -211,16 +211,30 @@ struct udd_device {
 		/**
 		 * Ancillary open() handler, optional. See
 		 * rtdm_open_handler().
+		 *
+		 * @note This handler is called from secondary mode
+		 * only.
 		 */
 		int (*open)(struct rtdm_fd *fd, int oflags);
 		/**
 		 * Ancillary close() handler, optional. See
 		 * rtdm_close_handler().
+		 *
+		 * @note This handler is called from secondary mode
+		 * only.
 		 */
 		void (*close)(struct rtdm_fd *fd);
 		/**
 		 * Ancillary ioctl() handler, optional. See
 		 * rtdm_ioctl_handler().
+		 *
+		 * If this routine returns -ENOSYS, the default action
+		 * implemented by the UDD core for the corresponding
+		 * request will be applied, as if no ioctl handler had
+		 * been defined.
+		 *
+		 * @note This handler is called from primary mode
+		 * only.
 		 */
 		int (*ioctl)(struct rtdm_fd *fd,
 			     unsigned int request, void *arg);
@@ -234,6 +248,9 @@ struct udd_device {
 		 * If this handler is NULL, the UDD core establishes
 		 * the mapping automatically, depending on the memory
 		 * type defined for the region.
+		 *
+		 * @note This handler is called from secondary mode
+		 * only.
 		 */
 		int (*mmap)(struct rtdm_fd *fd,
 			    struct vm_area_struct *vma);
@@ -261,6 +278,9 @@ struct udd_device {
 		 * Once the ->interrupt() handler has returned, the
 		 * UDD core notifies user-space Cobalt threads waiting
 		 * for IRQ events (if any).
+		 *
+		 * @note This handler is called from primary mode
+		 * only.
 		 */
 		int (*interrupt)(struct udd_device *udd);
 	} ops;
@@ -304,9 +324,9 @@ struct udd_device *udd_get_device(struct rtdm_fd *fd);
 
 void udd_notify_event(struct udd_device *udd);
 
-void udd_post_irq_enable(int irq);
+void udd_post_irq_enable(int irq, rtdm_event_t *done);
 
-void udd_post_irq_disable(int irq);
+void udd_post_irq_disable(int irq, rtdm_event_t *done);
 
 /** @} */
 

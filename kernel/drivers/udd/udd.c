@@ -63,7 +63,8 @@ static int udd_ioctl_rt(struct rtdm_fd *fd,
 	struct udd_signotify signfy;
 	struct udd_reserved *ur;
 	struct udd_device *udd;
-	int ret = 0;
+	rtdm_event_t done;
+	int ret;
 
 	udd = container_of(rtdm_fd_device(fd), struct udd_device, __reserved.device);
 	if (udd->ops.ioctl) {
@@ -91,15 +92,20 @@ static int udd_ioctl_rt(struct rtdm_fd *fd,
 		}
 		break;
 	case UDD_RTIOC_IRQEN:
-		if (udd->irq == UDD_IRQ_NONE)
-			return -EIO;
-		udd_post_irq_enable(udd->irq);
-		break;
 	case UDD_RTIOC_IRQDIS:
 		if (udd->irq == UDD_IRQ_NONE)
 			return -EIO;
-		udd_post_irq_disable(udd->irq);
+		rtdm_event_init(&done, 0);
+		if (request == UDD_RTIOC_IRQEN)
+			udd_post_irq_enable(udd->irq, &done);
+		else
+			udd_post_irq_disable(udd->irq, &done);
+		ret = rtdm_event_wait(&done);
+		if (ret != -EIDRM)
+			rtdm_event_destroy(&done);
 		break;
+	default:
+		ret = -EINVAL;
 	}
 
 	return ret;
@@ -513,6 +519,7 @@ struct irqswitch_work {
 	struct ipipe_work_header work; /* Must be first. */
 	int irq;
 	int enabled;
+	rtdm_event_t *done;
 };
 
 static void lostage_irqswitch_line(struct ipipe_work_header *work)
@@ -528,9 +535,12 @@ static void lostage_irqswitch_line(struct ipipe_work_header *work)
 		ipipe_enable_irq(rq->irq);
 	else
 		ipipe_disable_irq(rq->irq);
+
+	if (rq->done)
+		rtdm_event_signal(rq->done);
 }
 
-static void switch_irq_line(int irq, int enable)
+static void switch_irq_line(int irq, int enable, rtdm_event_t *done)
 {
 	struct irqswitch_work switchwork = {
 		.work = {
@@ -539,6 +549,7 @@ static void switch_irq_line(int irq, int enable)
 		},
 		.irq = irq,
 		.enabled = enable,
+		.done = done,
 	};
 
 	/*
@@ -556,19 +567,26 @@ static void switch_irq_line(int irq, int enable)
  * This service issues a request to the regular kernel for enabling
  * the IRQ line mentioned. If the caller runs in primary mode, the
  * request is scheduled but deferred until the current CPU leaves the
- * real-time domain. Otherwise, the request is immediately handled.
+ * real-time domain (see note). Otherwise, the request is immediately
+ * handled.
  *
  * @param irq IRQ line to enable.
+ *
+ * @param done Optional event to signal upon completion. If non-NULL,
+ * @a done will be posted by a call to rtdm_event_signal() after the
+ * interrupt line is enabled.
  *
  * @coretags{unrestricted}
  *
  * @note The deferral is required as some interrupt management code
  * involved in enabling interrupt lines may not be safely executed
- * from primary mode.
+ * from primary mode. By passing a valid @a done object address, the
+ * caller can wait for the request to complete, by sleeping on
+ * rtdm_event_wait().
  */
-void udd_post_irq_enable(int irq)
+void udd_post_irq_enable(int irq, rtdm_event_t *done)
 {
-	switch_irq_line(irq, 1);
+	switch_irq_line(irq, 1, done);
 }
 EXPORT_SYMBOL_GPL(udd_post_irq_enable);
 
@@ -578,19 +596,26 @@ EXPORT_SYMBOL_GPL(udd_post_irq_enable);
  * This service issues a request to the regular kernel for disabling
  * the IRQ line mentioned. If the caller runs in primary mode, the
  * request is scheduled but deferred until the current CPU leaves the
- * real-time domain. Otherwise, the request is immediately handled.
+ * real-time domain (see note). Otherwise, the request is immediately
+ * handled.
  *
  * @param irq IRQ line to disable.
+ *
+ * @param done Optional event to signal upon completion. If non-NULL,
+ * @a done will be posted by a call to rtdm_event_signal() after the
+ * interrupt line is disabled.
  *
  * @coretags{unrestricted}
  *
  * @note The deferral is required as some interrupt management code
  * involved in disabling interrupt lines may not be safely executed
- * from primary mode.
+ * from primary mode. By passing a valid @a done object address, the
+ * caller can wait for the request to complete, by sleeping on
+ * rtdm_event_wait().
  */
-void udd_post_irq_disable(int irq)
+void udd_post_irq_disable(int irq, rtdm_event_t *done)
 {
-	switch_irq_line(irq, 0);
+	switch_irq_line(irq, 0, done);
 }
 EXPORT_SYMBOL_GPL(udd_post_irq_disable);
 

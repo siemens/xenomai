@@ -64,15 +64,17 @@ struct udd_signotify {
  */
 
 /**
- * Enable the interrupt line. The UDD-class mini-driver in kernel
- * space should act upon this request appropriately when received via
- * its ->ioctl() handler.
+ * Enable the interrupt line. The UDD-class mini-driver should handle
+ * this request when received through its ->ioctl() handler if
+ * provided. Otherwise, the UDD core enables the interrupt line in the
+ * interrupt controller.
  */
 #define UDD_RTIOC_IRQEN		_IO(RTDM_CLASS_UDD, 0)
 /**
- * Disable the interrupt line. The UDD-class mini-driver in kernel
- * should act upon this request appropriately when received via its
- * ->ioctl() handler.
+ * Disable the interrupt line. The UDD-class mini-driver should handle
+ * this request when received through its ->ioctl() handler if
+ * provided. Otherwise, the UDD core disables the interrupt line in
+ * the interrupt controller.
  */
 #define UDD_RTIOC_IRQDIS	_IO(RTDM_CLASS_UDD, 1)
 /**
