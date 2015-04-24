@@ -67,14 +67,14 @@ struct udd_signotify {
  * Enable the interrupt line. The UDD-class mini-driver should handle
  * this request when received through its ->ioctl() handler if
  * provided. Otherwise, the UDD core enables the interrupt line in the
- * interrupt controller.
+ * interrupt controller before returning to the caller.
  */
 #define UDD_RTIOC_IRQEN		_IO(RTDM_CLASS_UDD, 0)
 /**
  * Disable the interrupt line. The UDD-class mini-driver should handle
  * this request when received through its ->ioctl() handler if
  * provided. Otherwise, the UDD core disables the interrupt line in
- * the interrupt controller.
+ * the interrupt controller before returning to the caller.
  */
 #define UDD_RTIOC_IRQDIS	_IO(RTDM_CLASS_UDD, 1)
 /**

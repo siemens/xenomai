@@ -324,9 +324,11 @@ struct udd_device *udd_get_device(struct rtdm_fd *fd);
 
 void udd_notify_event(struct udd_device *udd);
 
-void udd_post_irq_enable(int irq, rtdm_event_t *done);
+void udd_enable_irq(struct udd_device *udd,
+		    rtdm_event_t *done);
 
-void udd_post_irq_disable(int irq, rtdm_event_t *done);
+void udd_disable_irq(struct udd_device *udd,
+		     rtdm_event_t *done);
 
 /** @} */
 

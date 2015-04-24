@@ -97,9 +97,9 @@ static int udd_ioctl_rt(struct rtdm_fd *fd,
 			return -EIO;
 		rtdm_event_init(&done, 0);
 		if (request == UDD_RTIOC_IRQEN)
-			udd_post_irq_enable(udd->irq, &done);
+			udd_enable_irq(udd, &done);
 		else
-			udd_post_irq_disable(udd->irq, &done);
+			udd_disable_irq(udd, &done);
 		ret = rtdm_event_wait(&done);
 		if (ret != -EIDRM)
 			rtdm_event_destroy(&done);
@@ -517,7 +517,7 @@ EXPORT_SYMBOL_GPL(udd_notify_event);
 
 struct irqswitch_work {
 	struct ipipe_work_header work; /* Must be first. */
-	int irq;
+	rtdm_irq_t *irqh;
 	int enabled;
 	rtdm_event_t *done;
 };
@@ -532,22 +532,22 @@ static void lostage_irqswitch_line(struct ipipe_work_header *work)
 	 */
 	rq = container_of(work, struct irqswitch_work, work);
 	if (rq->enabled)
-		ipipe_enable_irq(rq->irq);
+		rtdm_irq_enable(rq->irqh);
 	else
-		ipipe_disable_irq(rq->irq);
+		rtdm_irq_disable(rq->irqh);
 
 	if (rq->done)
 		rtdm_event_signal(rq->done);
 }
 
-static void switch_irq_line(int irq, int enable, rtdm_event_t *done)
+static void switch_irq_line(rtdm_irq_t *irqh, int enable, rtdm_event_t *done)
 {
 	struct irqswitch_work switchwork = {
 		.work = {
 			.size = sizeof(switchwork),
 			.handler = lostage_irqswitch_line,
 		},
-		.irq = irq,
+		.irqh = irqh,
 		.enabled = enable,
 		.done = done,
 	};
@@ -562,15 +562,16 @@ static void switch_irq_line(int irq, int enable, rtdm_event_t *done)
 }
 
 /**
- * @brief Post a request for enabling an IRQ line
+ * @brief Enable the device IRQ line
  *
  * This service issues a request to the regular kernel for enabling
- * the IRQ line mentioned. If the caller runs in primary mode, the
- * request is scheduled but deferred until the current CPU leaves the
- * real-time domain (see note). Otherwise, the request is immediately
- * handled.
+ * the IRQ line registered by the driver. If the caller runs in
+ * primary mode, the request is scheduled but deferred until the
+ * current CPU leaves the real-time domain (see note). Otherwise, the
+ * request is immediately handled.
  *
- * @param irq IRQ line to enable.
+ * @param irq IRQ line to enable. If no IRQ was registered by the
+ * driver at the UDD core, this routine has no effect.
  *
  * @param done Optional event to signal upon completion. If non-NULL,
  * @a done will be posted by a call to rtdm_event_signal() after the
@@ -584,22 +585,26 @@ static void switch_irq_line(int irq, int enable, rtdm_event_t *done)
  * caller can wait for the request to complete, by sleeping on
  * rtdm_event_wait().
  */
-void udd_post_irq_enable(int irq, rtdm_event_t *done)
+void udd_enable_irq(struct udd_device *udd, rtdm_event_t *done)
 {
-	switch_irq_line(irq, 1, done);
+	struct udd_reserved *ur = &udd->__reserved;
+
+	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM)
+		switch_irq_line(&ur->irqh, 1, done);
 }
-EXPORT_SYMBOL_GPL(udd_post_irq_enable);
+EXPORT_SYMBOL_GPL(udd_enable_irq);
 
 /**
- * @brief Post a request for disabling an IRQ line
+ * @brief Disable the device IRQ line
  *
  * This service issues a request to the regular kernel for disabling
- * the IRQ line mentioned. If the caller runs in primary mode, the
- * request is scheduled but deferred until the current CPU leaves the
- * real-time domain (see note). Otherwise, the request is immediately
- * handled.
+ * the IRQ line registered by the driver. If the caller runs in
+ * primary mode, the request is scheduled but deferred until the
+ * current CPU leaves the real-time domain (see note). Otherwise, the
+ * request is immediately handled.
  *
- * @param irq IRQ line to disable.
+ * @param irq IRQ line to disable. If no IRQ was registered by the
+ * driver at the UDD core, this routine has no effect.
  *
  * @param done Optional event to signal upon completion. If non-NULL,
  * @a done will be posted by a call to rtdm_event_signal() after the
@@ -613,11 +618,14 @@ EXPORT_SYMBOL_GPL(udd_post_irq_enable);
  * caller can wait for the request to complete, by sleeping on
  * rtdm_event_wait().
  */
-void udd_post_irq_disable(int irq, rtdm_event_t *done)
+void udd_disable_irq(struct udd_device *udd, rtdm_event_t *done)
 {
-	switch_irq_line(irq, 0, done);
+	struct udd_reserved *ur = &udd->__reserved;
+
+	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM)
+		switch_irq_line(&ur->irqh, 0, done);
 }
-EXPORT_SYMBOL_GPL(udd_post_irq_disable);
+EXPORT_SYMBOL_GPL(udd_disable_irq);
 
 /**
  * @brief RTDM file descriptor to target UDD device
