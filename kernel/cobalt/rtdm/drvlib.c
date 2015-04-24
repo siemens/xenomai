@@ -1376,13 +1376,14 @@ int rtdm_irq_free(rtdm_irq_t *irq_handle);
  *
  * @return 0 on success, otherwise negative error code
  *
- * @note This service is for exceptional use only. Drivers should always prefer
- * interrupt masking at device level (via corresponding control registers etc.)
- * over masking at line level. Keep in mind that the latter is incompatible
- * with IRQ line sharing and can also be more costly as interrupt controller
- * access requires broader synchronization. Also, certain IRQ types may not
- * allow the invocation over RT and interrupt contexts. The caller is
- * responsible for excluding such conflicts.
+ * @note This service is for exceptional use only. Drivers should
+ * always prefer interrupt masking at device level (via corresponding
+ * control registers etc.)  over masking at line level. Keep in mind
+ * that the latter is incompatible with IRQ line sharing and can also
+ * be more costly as interrupt controller access requires broader
+ * synchronization. Also, such service is solely available from
+ * secondary mode. The caller is responsible for excluding such
+ * conflicts.
  *
  * @coretags{secondary-only}
  */
@@ -1395,13 +1396,14 @@ int rtdm_irq_enable(rtdm_irq_t *irq_handle);
  *
  * @return 0 on success, otherwise negative error code
  *
- * @note This service is for exceptional use only. Drivers should always prefer
- * interrupt masking at device level (via corresponding control registers etc.)
- * over masking at line level. Keep in mind that the latter is incompatible
- * with IRQ line sharing and can also be more costly as interrupt controller
- * access requires broader synchronization. Also, certain IRQ types may not
- * allow the invocation over RT and interrupt contexts. The caller is
- * responsible for excluding such conflicts.
+ * @note This service is for exceptional use only. Drivers should
+ * always prefer interrupt masking at device level (via corresponding
+ * control registers etc.)  over masking at line level. Keep in mind
+ * that the latter is incompatible with IRQ line sharing and can also
+ * be more costly as interrupt controller access requires broader
+ * synchronization.  Also, such service is solely available from
+ * secondary mode.  The caller is responsible for excluding such
+ * conflicts.
  *
  * @coretags{secondary-only}
  */
