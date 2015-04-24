@@ -18,7 +18,7 @@ BUILT_SOURCES = config-dump.h
 CLEANFILES = config-dump.h
 
 config-dump.h: Makefile $(CONFIG_HEADER)
-	( sed -e '/^#define CONFIG_/!d' \
+	@( sed -e '/^#define CONFIG_/!d' \
 	-e 's/^#[\t ]*define \(CONFIG_[^ ]*\) \(.*\)/\1=\2/' \
 	-e 's,\",\\&,g' \
 	-e 's/^.*$$/\"&\",/' $(CONFIG_HEADER); echo '"---",'; \
