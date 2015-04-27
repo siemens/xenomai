@@ -1,7 +1,7 @@
 
 noinst_LTLIBRARIES = libboilerplate.la
 
-libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -lpthread -version-info 0:0:0
+libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -lpthread
 
 libboilerplate_la_SOURCES =	\
 	ancillaries.c		\
