@@ -407,7 +407,6 @@ config XENO_OPT_DEBUG_CONTEXT
 
 config XENO_OPT_DEBUG_LOCKING
 	bool "Spinlock debugging support"
- 	select IPIPE_DEBUG_INTERNAL
 	default y if SMP
 	help
 
