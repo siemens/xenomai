@@ -77,6 +77,10 @@ if test $# -eq 0; then
     usage 1 1>&2
 fi
 
+do_ldflags=
+do_cflags=
+do_kcflags=
+
 while test $# -gt 0; do
     case "$1" in
         --v|--verbose)
@@ -123,48 +127,13 @@ while test $# -gt 0; do
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
-	    cflags="$XENO_BASE_CFLAGS"
-	    test -z "$skin_list" && skin_list=posix
-	    for skin in $skin_list; do
-		case "$skin" in
-		    vxworks|psos|alchemy|smokey)
-			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
-			;;
-		    posix|rtdm)
-			;;
-		    *)
-			echo "$skin is not a user-space API" 1>&2
-			exit 1
-			;;
-		esac
-	    done
-	    echo $cflags
+	    do_cflags=y
 	    ;;
 	--kcflags)
-	    for skin in $skin_list; do
-		if test \! "$skin" = rtdm; then
-		    echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
-		    exit 1
-		fi
-	    done
+	    do_kcflags=y
 	    ;;
 	--ldflags)
-	    test -z "$skin_list" && skin_list=posix
-	    ldflags="$WRAP_MAIN $XENO_BASE_LDFLAGS"
-	    for skin in $skin_list; do
-		case "$skin" in
-		    posix|rtdm)
-			;;
-		    vxworks|psos|alchemy|smokey)
-			ldflags="-l$skin $ldflags"
-			;;
-		    *)
-			echo "unknown API: $skin" 1>&2
-			exit 1
-			;;
-		esac
-	    done
-	    echo $ldflags
+	    do_ldflags=y
 	    ;;
 	--core)
 	    echo mercury
@@ -182,3 +151,52 @@ while test $# -gt 0; do
     esac
     shift
 done
+
+if test x$do_cflags = xy; then
+    cflags="$XENO_BASE_CFLAGS"
+    test -z "$skin_list" && skin_list=posix
+    for skin in $skin_list; do
+	case "$skin" in
+	    vxworks|psos|alchemy|smokey)
+		cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
+		;;
+	    posix|rtdm)
+		;;
+	    *)
+		echo "$skin is not a user-space API" 1>&2
+		exit 1
+		;;
+	esac
+    done
+    echo $cflags
+fi
+
+if test x$do_kcflags = xy; then
+    for skin in $skin_list; do
+	if test \! "$skin" = rtdm; then
+	    echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
+	    exit 1
+	fi
+    done
+fi
+
+if test x$do_ldflags = xy; then
+    test -z "$skin_list" && skin_list=posix
+    ldflags="$WRAP_MAIN $XENO_BASE_LDFLAGS"
+    for skin in $skin_list; do
+	case "$skin" in
+	    posix|rtdm)
+		;;
+	    vxworks|psos|alchemy|smokey)
+		ldflags="-l$skin $ldflags"
+		;;
+	    *)
+		echo "unknown API: $skin" 1>&2
+		exit 1
+		;;
+	esac
+    done
+    echo $ldflags
+fi
+
+exit 0

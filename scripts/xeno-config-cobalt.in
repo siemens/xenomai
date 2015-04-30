@@ -107,6 +107,10 @@ if test $# -eq 0; then
     usage 1 1>&2
 fi
 
+do_ldflags=
+do_cflags=
+do_kcflags=
+
 while test $# -gt 0; do
     case "$1" in
         --v|--verbose)
@@ -158,73 +162,13 @@ while test $# -gt 0; do
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
-	    if test -z "$skin_list"; then
-		echo "no API specified, missing --skin before --cflags" 1>&2
-		exit 1
-	    fi
-	    cflags="$XENO_BASE_CFLAGS"
-	    test x$compat = xy && cflags="-I$XENO_INCLUDE_DIR/trank -D__XENO_COMPAT__ $cflags"
-	    for skin in $skin_list; do
-		case "$skin" in
-		    posix|cobalt|rtdm)
-			;;
-		    vxworks|psos|alchemy|smokey)
-			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
-			;;
-		    *)
-			echo "$skin is not a user-space API" 1>&2
-			exit 1
-			;;
-		esac
-	    done
-	    echo $cflags
+	    do_cflags=y
 	    ;;
 	--kcflags)
-	    test -z "$skin_list" && skin_list=rtdm
-	    for skin in $skin_list; do
-		case "$skin" in
-		    rtdm)
-			kcflags='-Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai'
-		    	;;
-		    *)
-			echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
-			exit 1
-			;;
-		esac
-	    done
-	    echo $kcflags
+	    do_kcflags=y
 	    ;;
 	--ldflags)
-	    if test -z "$skin_list"; then
-		echo "no API specified, missing --skin before --ldflags" 1>&2
-		exit 1
-	    fi
-	    ldflags=
-	    test x$compat = xy && ldflags="-ltrank "
-	    copperplate=
-	    for skin in $skin_list; do
-		case "$skin" in
-		    posix|rtdm)
-			ldflags="`dump_wrappers cobalt.wrappers` $ldflags"
-			;;
-		    cobalt)
-			# do NOT wrap POSIX symbols in application code
-			# with --cobalt. On the contrary, --posix does.
-			;;
-		    vxworks|psos|alchemy|smokey)
-			copperplate="$WRAP_MAIN -lcopperplate"
-			ldflags="$ldflags -l$skin"
-			if [ -r ${XENO_LIBRARY_DIR}/${skin}.wrappers ]; then
-			    ldflags=" `dump_wrappers ${skin}.wrappers` $ldflags"
-			fi
-			;;
-		    *)
-			echo "unknown API: $skin" 1>&2
-			exit 1
-			;;
-		esac
-	    done
-	    echo "$ldflags $copperplate $XENO_POSIX_LDFLAGS"
+	    do_ldflags=y
 	    ;;
 	--core)
 	    echo cobalt
@@ -244,3 +188,77 @@ while test $# -gt 0; do
     esac
     shift
 done
+
+if test x$do_cflags = xy; then
+    if test -z "$skin_list"; then
+	echo "no API specified, missing --skin before --cflags" 1>&2
+	exit 1
+    fi
+    cflags="$XENO_BASE_CFLAGS"
+    test x$compat = xy && cflags="-I$XENO_INCLUDE_DIR/trank -D__XENO_COMPAT__ $cflags"
+    for skin in $skin_list; do
+	case "$skin" in
+	    posix|cobalt|rtdm)
+		;;
+	    vxworks|psos|alchemy|smokey)
+		cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
+		;;
+	    *)
+		echo "$skin is not a user-space API" 1>&2
+		exit 1
+		;;
+	esac
+    done
+    echo $cflags
+fi
+
+if test x$do_kcflags = xy; then
+    test -z "$skin_list" && skin_list=rtdm
+    for skin in $skin_list; do
+	case "$skin" in
+	    rtdm)
+		kcflags='-Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai'
+	    	;;
+	    *)
+		echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
+		exit 1
+		;;
+	esac
+    done
+    echo $kcflags
+fi
+
+if test x$do_ldflags = xy; then
+    if test -z "$skin_list"; then
+	echo "no API specified, missing --skin before --ldflags" 1>&2
+	exit 1
+    fi
+    ldflags=
+    test x$compat = xy && ldflags="-ltrank "
+    copperplate=
+    for skin in $skin_list; do
+	case "$skin" in
+	    posix|rtdm)
+		ldflags="`dump_wrappers cobalt.wrappers` $ldflags"
+		;;
+	    cobalt)
+		# do NOT wrap POSIX symbols in application code
+		# with --cobalt. On the contrary, --posix does.
+		;;
+	    vxworks|psos|alchemy|smokey)
+		copperplate="$WRAP_MAIN -lcopperplate"
+		ldflags="$ldflags -l$skin"
+		if [ -r ${XENO_LIBRARY_DIR}/${skin}.wrappers ]; then
+		    ldflags=" `dump_wrappers ${skin}.wrappers` $ldflags"
+		fi
+		;;
+	    *)
+		echo "unknown API: $skin" 1>&2
+		exit 1
+		;;
+	esac
+    done
+    echo "$ldflags $copperplate $XENO_POSIX_LDFLAGS"
+fi
+
+exit 0
