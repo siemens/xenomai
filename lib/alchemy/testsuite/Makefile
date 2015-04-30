@@ -36,6 +36,7 @@ TESTS :=		\
 	mutex-1		\
 	event-1		\
 	heap-1		\
+	heap-2		\
 	buffer-1	\
 	$(core-specific)
 
