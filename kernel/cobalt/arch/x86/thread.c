@@ -57,12 +57,12 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 	__asm__ __volatile__("pushfl\n\t"
 			     "pushl %%ebp\n\t"
-			     "movl %6,%%ecx\n\t"
+			     "movl %[spp_out_ptr],%%ecx\n\t"
 			     "movl %%esp,(%%ecx)\n\t"
-			     "movl %7,%%ecx\n\t"
+			     "movl %[ipp_out_ptr],%%ecx\n\t"
 			     "movl $1f,(%%ecx)\n\t"
-			     "movl %8,%%ecx\n\t"
-			     "movl %9,%%edi\n\t"
+			     "movl %[spp_in_ptr],%%ecx\n\t"
+			     "movl %[ipp_in_ptr],%%edi\n\t"
 			     "movl (%%ecx),%%esp\n\t"
 			     "pushl (%%edi)\n\t"
 			     __CANARY_SWITCH
@@ -76,10 +76,10 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 			       "+a"(outproc),
 			       "+d"(inproc)
 			       __CANARY_OUTPUT
-			     : "m"(out_tcb->spp),
-			       "m"(out_tcb->ipp),
-			       "m"(in_tcb->spp),
-			       "m"(in_tcb->ipp)
+			     : [spp_out_ptr] "m"(out_tcb->spp),
+			       [ipp_out_ptr] "m"(out_tcb->ipp),
+			       [spp_in_ptr] "m"(in_tcb->spp),
+			       [ipp_in_ptr] "m"(in_tcb->ipp)
 			       __CANARY_INPUT
 			     : "memory");
 }
