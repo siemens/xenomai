@@ -88,6 +88,8 @@ static pid_t agent_pid;
 
 struct remote_cancel {
 	pthread_t ptid;
+	int policy;
+	struct sched_param_ex param_ex;
 };
 
 struct remote_setsched {
@@ -139,6 +141,10 @@ static void *agent_loop(void *arg)
 							      &rq->u.setsched.param_ex);
 			break;
 		case RMT_CANCEL:
+			if (rq->u.cancel.policy != -1)
+				copperplate_renice_local_thread(rq->u.cancel.ptid,
+								rq->u.cancel.policy,
+								&rq->u.cancel.param_ex);
 			ret = pthread_cancel(rq->u.cancel.ptid);
 			break;
 		default:
@@ -995,6 +1001,8 @@ static int request_setschedparam(struct threadobj *thobj, int policy,
 
 static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped. */
 {
+	struct threadobj *current = threadobj_current();
+	int thprio = thobj->global_priority;
 	pthread_t ptid = thobj->ptid;
 #ifdef CONFIG_XENO_PSHARED
 	struct remote_request *rq;
@@ -1008,7 +1016,11 @@ static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped.
 
 		rq->req = RMT_CANCEL;
 		rq->u.cancel.ptid = ptid;
-
+		rq->u.cancel.policy = -1;
+		if (current) {
+			rq->u.cancel.policy = current->policy;
+			rq->u.cancel.param_ex = current->schedparam;
+		}
 		ret = __bt(send_agent(thobj, rq));
 		if (ret)
 			xnfree(rq);
@@ -1017,8 +1029,19 @@ static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped.
 #endif
 	threadobj_unlock(thobj);
 
-	/* We might race, glibc will check. */
+	/*
+	 * The caller will have to wait for the killed thread to enter
+	 * its finalizer, so we boost the latter thread to prevent a
+	 * priority inversion if need be.
+	 *
+	 * NOTE: Since we dropped the lock, we might race if ptid
+	 * disappears while we are busy killing it, glibc will check
+	 * and dismiss if so.
+	 */
 
+	if (current && thprio < current->global_priority)
+		copperplate_renice_local_thread(ptid, current->policy,
+						&current->schedparam);
 	pthread_cancel(ptid);
 
 	return 0;
