@@ -124,7 +124,7 @@ static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 void xnsynch_init(struct xnsynch *synch, int flags,
 		  atomic_t *fastlock);
 
-#define xnsynch_destroy(synch)	xnsynch_flush(synch, XNRMID)
+int xnsynch_destroy(struct xnsynch *synch);
 
 static inline void xnsynch_set_owner(struct xnsynch *synch,
 				     struct xnthread *thread)

@@ -99,6 +99,33 @@ void xnsynch_init(struct xnsynch *synch, int flags, atomic_t *fastlock)
 EXPORT_SYMBOL_GPL(xnsynch_init);
 
 /**
+ * @fn void xnsynch_destroy(struct xnsynch *synch)
+ * @brief Destroy a synchronization object.
+ *
+ * Destroys the synchronization object @a synch, unblocking all
+ * waiters with the XNRMID status.
+ *
+ * @return XNSYNCH_RESCHED is returned if at least one thread is
+ * unblocked, which means the caller should invoke xnsched_run() for
+ * applying the new scheduling state. Otherwise, XNSYNCH_DONE is
+ * returned.
+
+ * @sideeffect Same as xnsynch_flush().
+ *
+ * @coretags{task-unrestricted}
+ */
+int xnsynch_destroy(struct xnsynch *synch)
+{
+	int ret;
+	
+	ret = xnsynch_flush(synch, XNRMID);
+	XENO_BUG_ON(COBALT, synch->status & XNSYNCH_CLAIMED);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnsynch_destroy);
+
+/**
  * @fn int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
  * @brief Sleep on an ownerless synchronization object.
  *
@@ -650,6 +677,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 	}
 
 	lockp = xnsynch_fastlock(synch);
+	XENO_BUG_ON(COBALT, lockp == NULL);
 	threadh = thread->handle;
 	if (likely(xnsynch_fast_release(lockp, threadh)))
 		return NULL;
@@ -669,6 +697,8 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 	 */
 	if ((synch->status & XNSYNCH_PRIO) == 0)
 		return;
+
+	XENO_BUG_ON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
 
 	list_del(&thread->plink);
 	list_add_priff(thread, &synch->pendq, wprio, plink);
@@ -778,7 +808,8 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
  * lowered to its base priority value as a consequence of the priority
  * inheritance boost being cleared.
  *
- * - The synchronization object is no more owned by any thread.
+ * - After this operation has completed, the synchronization object is
+ * not owned by any thread.
  *
  * @coretags{unrestricted}
  */
