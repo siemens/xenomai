@@ -284,6 +284,9 @@ while : ; do
    arm)
       linux_arch=arm
       ;;
+   arm64)
+      linux_arch=arm64
+      ;;
    sh|sh4)
       linux_arch=sh
       ;;
