@@ -139,6 +139,10 @@ case "$build_for" in
 	target_cpu_arch=arm
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
 	;;
+ aarch64-*)
+	target_cpu_arch=arm64
+	CONFIG_XENO_DEFAULT_PERIOD=1000000
+	;;
  x86_64-*|amd64-*)
 	use_tls=yes
 	target_cpu_arch=x86
@@ -361,7 +365,7 @@ fi
 
 dnl VSYSCALL (default: enabled) for Cobalt/x86
 
-if test $XENO_TARGET_ARCH = x86 -a $rtcore_type = cobalt; then
+if test $target_cpu_arch = x86 -a $rtcore_type = cobalt; then
   CONFIG_XENO_X86_VSYSCALL=y
   AC_MSG_CHECKING(for x86 VSYSCALL availability)
   AC_ARG_ENABLE(x86-vsyscall,
@@ -773,7 +777,7 @@ dnl Autoconf-generated symbols have been listed.
 AH_BOTTOM([#endif /* __IN_XENO__ */])
 
 if test $rtcore_type = cobalt; then
-   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/kernel/cobalt/arch/$XENO_TARGET_ARCH/include $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$target_cpu_arch/include -I$topdir/kernel/cobalt/arch/$target_cpu_arch/include $XENO_USER_CFLAGS"
    XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
    case "$build_for" in
     i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
@@ -853,6 +857,10 @@ AC_CONFIG_FILES([ \
 	lib/cobalt/arch/arm/include/Makefile \
 	lib/cobalt/arch/arm/include/asm/Makefile \
 	lib/cobalt/arch/arm/include/asm/xenomai/Makefile \
+	lib/cobalt/arch/arm64/Makefile \
+	lib/cobalt/arch/arm64/include/Makefile \
+	lib/cobalt/arch/arm64/include/asm/Makefile \
+	lib/cobalt/arch/arm64/include/asm/xenomai/Makefile \
 	lib/cobalt/arch/powerpc/Makefile \
 	lib/cobalt/arch/powerpc/include/Makefile \
 	lib/cobalt/arch/powerpc/include/asm/Makefile \
