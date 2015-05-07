@@ -93,7 +93,7 @@ static int udd_ioctl_rt(struct rtdm_fd *fd,
 		break;
 	case UDD_RTIOC_IRQEN:
 	case UDD_RTIOC_IRQDIS:
-		if (udd->irq == UDD_IRQ_NONE)
+		if (udd->irq == UDD_IRQ_NONE || udd->irq == UDD_IRQ_CUSTOM)
 			return -EIO;
 		rtdm_event_init(&done, 0);
 		if (request == UDD_RTIOC_IRQEN)

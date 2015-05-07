@@ -75,12 +75,20 @@ struct udd_signotify {
  * this request when received through its ->ioctl() handler if
  * provided. Otherwise, the UDD core disables the interrupt line in
  * the interrupt controller before returning to the caller.
+ *
+ * @note The mini-driver must handle the UDD_RTIOC_IRQEN request for a
+ * custom IRQ from its ->ioctl() handler, otherwise such request
+ * receives -EIO from the UDD core.
  */
 #define UDD_RTIOC_IRQDIS	_IO(RTDM_CLASS_UDD, 1)
 /**
  * Enable/Disable signal notification upon interrupt event. A valid
  * @ref udd_signotify "notification descriptor" must be passed along
  * with this request, which is handled by the UDD core directly.
+ *
+ * @note The mini-driver must handle the UDD_RTIOC_IRQDIS request for
+ * a custom IRQ from its ->ioctl() handler, otherwise such request
+ * receives -EIO from the UDD core.
  */
 #define UDD_RTIOC_IRQSIG	_IOW(RTDM_CLASS_UDD, 2, struct udd_signotify)
 
