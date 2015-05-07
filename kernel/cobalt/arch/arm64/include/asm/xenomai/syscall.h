@@ -36,21 +36,21 @@
 #define __xn_reg_sys(__regs)	((__regs)->ARM_ORIG_r0)
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT
-#define __xn_syscall_p(__regs)	(((__regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
-				 ((__regs)->ARM_r7 == __ARM_NR_ipipe))
+#define __xn_syscall_p(__regs)	(((__regs)->regs[7] == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
+				 ((__regs)->regs[7] == __ARM_NR_ipipe))
 #else /* !CONFIG_OABI_COMPAT */
-#define __xn_syscall_p(__regs)	((__regs)->ARM_r7 == __ARM_NR_ipipe)
+#define __xn_syscall_p(__regs)	((__regs)->regs[7] == __ARM_NR_ipipe)
 #endif /* !CONFIG_OABI_COMPAT */
 #define __xn_syscall(__regs)	(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT)
 
-#define __xn_reg_rval(__regs)	((__regs)->ARM_r0)
-#define __xn_reg_arg1(__regs)	((__regs)->ARM_r1)
-#define __xn_reg_arg2(__regs)	((__regs)->ARM_r2)
-#define __xn_reg_arg3(__regs)	((__regs)->ARM_r3)
-#define __xn_reg_arg4(__regs)	((__regs)->ARM_r4)
-#define __xn_reg_arg5(__regs)	((__regs)->ARM_r5)
-#define __xn_reg_pc(__regs)	((__regs)->ARM_ip)
-#define __xn_reg_sp(__regs)	((__regs)->ARM_sp)
+#define __xn_reg_rval(__regs)	((__regs)->regs[0])
+#define __xn_reg_arg1(__regs)	((__regs)->regs[1])
+#define __xn_reg_arg2(__regs)	((__regs)->regs[2])
+#define __xn_reg_arg3(__regs)	((__regs)->regs[3])
+#define __xn_reg_arg4(__regs)	((__regs)->regs[4])
+#define __xn_reg_arg5(__regs)	((__regs)->regs[5])
+#define __xn_reg_pc(__regs)	((__regs)->ip)
+#define __xn_reg_sp(__regs)	((__regs)->sp)
 
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {

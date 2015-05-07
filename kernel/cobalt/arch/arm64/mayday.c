@@ -120,27 +120,27 @@ void *xnarch_get_mayday_page(void)
 void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
 			  unsigned long tramp)
 {
-	tcb->mayday.pc = regs->ARM_pc;
-	tcb->mayday.r0 = regs->ARM_r0;
+	tcb->mayday.pc = regs->pc;
+	tcb->mayday.r0 = regs->regs[0];
 #ifdef __ARM_EABI__
-	tcb->mayday.r7 = regs->ARM_r7;
+	tcb->mayday.r7 = regs->regs[7];
 #endif
 #ifdef CONFIG_ARM_THUMB
 	/* The code on the mayday page must be run in ARM mode */
-	tcb->mayday.psr = regs->ARM_cpsr;
-	regs->ARM_cpsr &= ~PSR_T_BIT;
+	tcb->mayday.psr = regs->cpsr;
+	regs->cpsr &= ~PSR_T_BIT;
 #endif
-	regs->ARM_pc = tramp;
+	regs->pc = tramp;
 }
 
 void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
 {
-	regs->ARM_pc = tcb->mayday.pc;
-	regs->ARM_r0 = tcb->mayday.r0;
+	regs->pc = tcb->mayday.pc;
+	regs->regs[0] = tcb->mayday.r0;
 #ifdef __ARM_EABI__
-	regs->ARM_r7 = tcb->mayday.r7;
+	regs->regs[7] = tcb->mayday.r7;
 #endif
 #ifdef CONFIG_ARM_THUMB
-	regs->ARM_cpsr = tcb->mayday.psr;
+	regs->cpsr = tcb->mayday.psr;
 #endif
 }
