@@ -18,10 +18,17 @@
 #ifndef _COBALT_ARM_ASM_UAPI_FPTEST_H
 #define _COBALT_ARM_ASM_UAPI_FPTEST_H
 
+#ifdef __aarch64__
+/* CP10 and CP11, used for the FP/NEON operations, are already excluded from
+the list of valid operands for the generic coprocessor instructions */
+#define __COBALT_HAVE_VFP  0
+#else
 #define __COBALT_HAVE_VFP  0x1
+#endif
 
 static inline void fp_regs_set(int features, unsigned int val)
 {
+#if __COBALT_HAVE_VFP != 0
 	unsigned long long e[16];
 	unsigned int i;
 
@@ -34,12 +41,15 @@ static inline void fp_regs_set(int features, unsigned int val)
 		__asm__ __volatile__("ldc p11, cr0, [%0],#32*4":
 				     "=r"(i): "0"(&e[0]): "memory");
 	}
+#endif
 }
 
 static inline unsigned int fp_regs_check(int features, unsigned int val,
 					 int (*report)(const char *fmt, ...))
 {
-	unsigned int result = val, i;
+	unsigned int result = val;
+#if __COBALT_HAVE_VFP != 0
+	unsigned int i;
 	unsigned long long e[16];
 
 	if (features & __COBALT_HAVE_VFP) {
@@ -54,6 +64,7 @@ static inline unsigned int fp_regs_check(int features, unsigned int val,
 				result = e[i];
 			}
 	}
+#endif
 
 	return result;
 }

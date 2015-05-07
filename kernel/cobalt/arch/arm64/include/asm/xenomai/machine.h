@@ -38,7 +38,8 @@
 #include <asm/ipipe.h>
 #include <asm/cacheflush.h>
 
-#define xnarch_cache_aliasing() cache_is_vivt()
+/* D-side always behaves as PIPT on AArch64 (see arch/arm64/include/asm/cachetype.h) */
+#define xnarch_cache_aliasing() 0
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
