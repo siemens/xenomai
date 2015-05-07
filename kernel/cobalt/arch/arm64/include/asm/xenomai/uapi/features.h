@@ -28,8 +28,10 @@
 
 #define XENOMAI_FEAT_MAN (__xn_feat_generic_man_mask)
 
+#ifndef __aarch64__
 #define XNARCH_HAVE_LLMULSHFT    1
 #define XNARCH_HAVE_NODIV_LLIMD  1
+#endif
 
 struct cobalt_featinfo_archdep { /* no arch-specific feature */ };
 
