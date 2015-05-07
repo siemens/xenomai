@@ -52,7 +52,7 @@ struct xnarchtcb {
 #define xnarch_fault_regs(d)	((d)->regs)
 #define xnarch_fault_trap(d)	((d)->exception)
 #define xnarch_fault_code(d)	(0)
-#define xnarch_fault_pc(d)	((d)->regs->ARM_pc - (thumb_mode((d)->regs) ? 2 : 4)) /* XXX ? */
+#define xnarch_fault_pc(d)	((d)->regs->pc - 4) /* XXX ? */
 
 #define xnarch_fault_pf_p(d)	((d)->exception == IPIPE_TRAP_ACCESS)
 #define xnarch_fault_bp_p(d)	((current->ptrace & PT_PTRACED) &&	\

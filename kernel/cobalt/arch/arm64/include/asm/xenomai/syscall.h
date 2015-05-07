@@ -28,12 +28,16 @@
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
+#ifndef __NR_SYSCALL_BASE
+#define __NR_SYSCALL_BASE 0
+#endif
+
 #ifndef __ARM_NR_ipipe
 /* Legacy pipelines do not define this. */
 #define __ARM_NR_ipipe	(__NR_SYSCALL_BASE + XENO_ARM_SYSCALL)
 #endif
 
-#define __xn_reg_sys(__regs)	((__regs)->ARM_ORIG_r0)
+#define __xn_reg_sys(__regs)	((__regs)->orig_x0)
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT
 #define __xn_syscall_p(__regs)	(((__regs)->regs[7] == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
@@ -49,7 +53,7 @@
 #define __xn_reg_arg3(__regs)	((__regs)->regs[3])
 #define __xn_reg_arg4(__regs)	((__regs)->regs[4])
 #define __xn_reg_arg5(__regs)	((__regs)->regs[5])
-#define __xn_reg_pc(__regs)	((__regs)->ip)
+#define __xn_reg_pc(__regs)	((__regs)->pc)
 #define __xn_reg_sp(__regs)	((__regs)->sp)
 
 static inline void __xn_error_return(struct pt_regs *regs, int v)
