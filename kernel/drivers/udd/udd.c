@@ -364,7 +364,8 @@ int udd_register_device(struct udd_device *udd)
 	if (udd->device_flags & RTDM_PROTOCOL_DEVICE)
 		return -EINVAL;
 
-	if (udd->irq != UDD_IRQ_NONE && udd->ops.interrupt == NULL)
+	if (udd->irq != UDD_IRQ_NONE && udd->irq != UDD_IRQ_CUSTOM &&
+	    udd->ops.interrupt == NULL)
 		return -EINVAL;
 
 	for (n = 0, ur->nr_maps = 0; n < UDD_NR_MAPS; n++) {
