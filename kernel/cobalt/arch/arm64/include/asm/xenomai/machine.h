@@ -32,53 +32,20 @@
 #include <asm/compiler.h>
 #include <asm/cmpxchg.h>
 #include <asm/switch_to.h>
-#include <asm/system_info.h>
 #include <asm/system_misc.h>
 #include <asm/timex.h>
 #include <asm/processor.h>
 #include <asm/ipipe.h>
-#include <asm/mach/irq.h>
 #include <asm/cacheflush.h>
 
 #define xnarch_cache_aliasing() cache_is_vivt()
 
-#if __LINUX_ARM_ARCH__ < 5
-static inline __attribute_const__ unsigned long ffnz(unsigned long x)
-{
-	int r = 0;
-
-	if (!x)
-		return 0;
-	if (!(x & 0xffff)) {
-		x >>= 16;
-		r += 16;
-	}
-	if (!(x & 0xff)) {
-		x >>= 8;
-		r += 8;
-	}
-	if (!(x & 0xf)) {
-		x >>= 4;
-		r += 4;
-	}
-	if (!(x & 3)) {
-		x >>= 2;
-		r += 2;
-	}
-	if (!(x & 1)) {
-		x >>= 1;
-		r += 1;
-	}
-	return r;
-}
-#else
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
 	int __r;
 	__asm__("clz\t%0, %1" : "=r" (__r) : "r"(ul & (-ul)) : "cc");
 	return 31 - __r;
 }
-#endif
 
 #include <asm-generic/xenomai/machine.h>
 

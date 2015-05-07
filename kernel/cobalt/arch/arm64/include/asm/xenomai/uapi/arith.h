@@ -20,7 +20,7 @@
 
 #include <asm/xenomai/uapi/features.h>
 
-#if __LINUX_ARM_ARCH__ >= 4 && (!defined(CONFIG_THUMB2_KERNEL) || !defined(CONFIG_FTRACE))
+#if !defined(CONFIG_FTRACE)
 static inline __attribute__((__const__)) unsigned long long
 mach_arm_nodiv_ullimd(const unsigned long long op,
 		       const unsigned long long frac,
@@ -49,7 +49,7 @@ mach_arm_nodiv_llimd(const long long op,
 
 #include <cobalt/uapi/asm-generic/arith.h>
 
-#if __LINUX_ARM_ARCH__ >= 4 && (!defined(CONFIG_THUMB2_KERNEL) || !defined(CONFIG_FTRACE))
+#if !defined(CONFIG_FTRACE)
 #define mach_arm_nodiv_ullimd_str			\
 	"umull %[tl], %[rl], %[opl], %[fracl]\n\t"	\
 	"umull %[rm], %[rh], %[oph], %[frach]\n\t"	\
