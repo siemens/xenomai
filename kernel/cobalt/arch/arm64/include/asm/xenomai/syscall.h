@@ -40,10 +40,10 @@
 #define __xn_reg_sys(__regs)	((__regs)->orig_x0)
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT
-#define __xn_syscall_p(__regs)	(((__regs)->regs[7] == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
-				 ((__regs)->regs[7] == __ARM_NR_ipipe))
+#define __xn_syscall_p(__regs)	(((__regs)->regs[8] == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
+				 ((__regs)->regs[8] == __ARM_NR_ipipe))
 #else /* !CONFIG_OABI_COMPAT */
-#define __xn_syscall_p(__regs)	((__regs)->regs[7] == __ARM_NR_ipipe)
+#define __xn_syscall_p(__regs)	((__regs)->regs[8] == __ARM_NR_ipipe)
 #endif /* !CONFIG_OABI_COMPAT */
 #define __xn_syscall(__regs)	(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT)
 
