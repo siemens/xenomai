@@ -47,6 +47,10 @@
 #define __LINUX_ARM_ARCH__ 7
 #endif /* armv7 */
 
+#if defined(__aarch64__)
+#define __LINUX_ARM_ARCH__ 8
+#endif /* armv8 */
+
 #ifndef __LINUX_ARM_ARCH__
 #error "Could not find current ARM architecture"
 #endif
