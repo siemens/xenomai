@@ -12,5 +12,6 @@ includesub_HEADERS =	\
 	obstack.h	\
 	private-list.h	\
 	scope.h		\
+	setup.h		\
 	shared-list.h	\
 	time.h

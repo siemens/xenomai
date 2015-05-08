@@ -89,13 +89,13 @@ int heapobj_pkg_init_private(void)
 	 * per-block overhead for an undefined number of individual
 	 * allocation requests. Ugly.
 	 */
-	mem = tlsf_malloc(__node_info.mem_pool);
-	size = init_memory_pool(__node_info.mem_pool, mem);
+	mem = tlsf_malloc(__copperplate_setup_data.mem_pool);
+	size = init_memory_pool(__copperplate_setup_data.mem_pool, mem);
 	if (size == (size_t)-1)
 		panic("cannot initialize TLSF memory manager");
 
 	destroy_memory_pool(mem);
-	tlsf_pool_overhead = __node_info.mem_pool - size;
+	tlsf_pool_overhead = __copperplate_setup_data.mem_pool - size;
 	tlsf_pool_overhead = (tlsf_pool_overhead + 1024) & ~15;
 	tlsf_free(mem);
 

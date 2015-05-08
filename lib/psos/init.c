@@ -130,19 +130,6 @@ static int psos_init(void)
 	return 0;
 }
 
-static struct copperskin psos_skin = {
-	.name = "psos",
-	.init = psos_init,
-	.options = psos_options,
-	.parse_option = psos_parse_option,
-	.help = psos_help,
-};
-
-static __libpsos_ctor void register_psos(void)
-{
-	copperplate_register_skin(&psos_skin);
-}
-
 const char *__psos_maybe_short_name(char shrt[5], const char *lng)
 {
 	if (psos_long_names)
@@ -153,3 +140,13 @@ const char *__psos_maybe_short_name(char shrt[5], const char *lng)
 
 	return (const char *)shrt;
 }
+
+static struct skin_descriptor psos_skin = {
+	.name = "psos",
+	.init = psos_init,
+	.options = psos_options,
+	.parse_option = psos_parse_option,
+	.help = psos_help,
+};
+
+DECLARE_SKIN(psos_skin, __LIBPSOS_CTOR_PRIO);

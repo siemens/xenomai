@@ -162,7 +162,7 @@ fail:
 	 * such unit tests on Mercury should be pinned on a single CPU
 	 * using --cpu-affinity.
 	 */
-	if (CPU_COUNT(&__node_info.cpu_affinity) == 0)
+	if (CPU_COUNT(&__base_setup_data.cpu_affinity) == 0)
 		warning("NOTE: --cpu-affinity option was not given - this might explain?");
 #endif
 #ifndef CONFIG_XENO_ASYNC_CANCEL

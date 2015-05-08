@@ -29,6 +29,8 @@
  * over Xenomai 3.x.
  */
 
+#define __libtrank_ctor  __attribute__ ((constructor(__LIBTRANK_CTOR_PRIO)))
+
 static __libtrank_ctor void init_trank(void)
 {
 	trank_init_interface();

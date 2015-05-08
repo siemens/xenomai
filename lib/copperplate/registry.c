@@ -100,7 +100,7 @@ int registry_add_dir(const char *fmt, ...)
 	int ret, state;
 	va_list ap;
 
-	if (__node_info.no_registry)
+	if (__copperplate_setup_data.no_registry)
 		return 0;
 
 	va_start(ap, fmt);
@@ -164,7 +164,7 @@ int registry_init_file(struct fsobj *fsobj,
 	pthread_mutexattr_t mattr;
 	int ret;
 
-	if (__node_info.no_registry)
+	if (__copperplate_setup_data.no_registry)
 		return 0;
 
 	fsobj->path = NULL;
@@ -191,7 +191,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	int ret, state;
 	va_list ap;
 
-	if (__node_info.no_registry)
+	if (__copperplate_setup_data.no_registry)
 		return 0;
 
 	va_start(ap, fmt);
@@ -244,7 +244,7 @@ void registry_destroy_file(struct fsobj *fsobj)
 	struct regfs_dir *d;
 	int state;
 
-	if (__node_info.no_registry)
+	if (__copperplate_setup_data.no_registry)
 		return;
 
 	write_lock_safe(&p->lock, state);
@@ -271,7 +271,7 @@ out:
 
 void registry_touch_file(struct fsobj *fsobj)
 {
-	if (__node_info.no_registry)
+	if (__copperplate_setup_data.no_registry)
 		return;
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &fsobj->mtime));
@@ -814,7 +814,7 @@ int registry_pkg_init(const char *arg0, int flags)
 	char *mountpt;
 	int ret;
 
-	ret = connect_regd(__node_info.session_root, &mountpt, flags);
+	ret = connect_regd(__copperplate_setup_data.session_root, &mountpt, flags);
 	if (ret)
 		return ret;
 

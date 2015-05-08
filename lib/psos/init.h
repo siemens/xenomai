@@ -20,6 +20,4 @@
 
 #define __LIBPSOS_CTOR_PRIO  300
 
-#define __libpsos_ctor  __attribute__ ((constructor(__LIBPSOS_CTOR_PRIO)))
-
 #endif /* _PSOS_INIT_H */

@@ -272,7 +272,7 @@ static const struct option smokey_options[] = {
 		.val = 1,
 	},
 	{
-		.name = NULL,
+		/* sentinel */
 	}
 };
 
@@ -415,6 +415,12 @@ static void list_all_tests(void)
 		       t->__reserved.id, t->name, t->description);
 }
 
+void smokey_register_plugin(struct smokey_test *t)
+{
+	pvlist_append(&t->__reserved.next, &register_list);
+	t->__reserved.id = test_count++;
+}
+
 static int smokey_parse_option(int optnum, const char *optarg)
 {
 	int ret = 0;
@@ -455,7 +461,7 @@ static int smokey_init(void)
 	return 0;
 }
 
-static struct copperskin smokey_interface = {
+static struct skin_descriptor smokey_interface = {
 	.name = "smokey",
 	.init = smokey_init,
 	.options = smokey_options,
@@ -463,14 +469,4 @@ static struct copperskin smokey_interface = {
 	.help = smokey_help,
 };
 
-static  __attribute__ ((constructor(__SMOKEYPLUG_CTOR_PRIO+1)))
-void register_smokey(void)
-{
-	copperplate_register_skin(&smokey_interface);
-}
-
-void smokey_register_plugin(struct smokey_test *t)
-{
-	pvlist_append(&t->__reserved.next, &register_list);
-	t->__reserved.id = test_count++;
-}
+DECLARE_SKIN(smokey_interface, __SMOKEYPLUG_CTOR_PRIO+1);

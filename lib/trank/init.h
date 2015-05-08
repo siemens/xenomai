@@ -20,6 +20,4 @@
 
 #define __LIBTRANK_CTOR_PRIO  350
 
-#define __libtrank_ctor  __attribute__ ((constructor(__LIBTRANK_CTOR_PRIO)))
-
 #endif /* !_TRANK_INIT_H */

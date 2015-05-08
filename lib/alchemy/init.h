@@ -20,6 +20,4 @@
 
 #define __LIBALCHEMY_CTOR_PRIO  300
 
-#define __libalchemy_ctor  __attribute__ ((constructor(__LIBALCHEMY_CTOR_PRIO)))
-
 #endif /* _ALCHEMY_INIT_H */

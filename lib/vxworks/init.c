@@ -102,7 +102,7 @@ static int vxworks_init(void)
 	return 0;
 }
 
-static struct copperskin vxworks_skin = {
+static struct skin_descriptor vxworks_skin = {
 	.name = "vxworks",
 	.init = vxworks_init,
 	.options = vxworks_options,
@@ -110,7 +110,4 @@ static struct copperskin vxworks_skin = {
 	.help = vxworks_help,
 };
 
-static __libvxworks_ctor void register_vxworks(void)
-{
-	copperplate_register_skin(&vxworks_skin);
-}
+DECLARE_SKIN(vxworks_skin, __LIBVXWORKS_CTOR_PRIO);

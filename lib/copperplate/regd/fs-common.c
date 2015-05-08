@@ -78,7 +78,7 @@ int open_threads(struct fsobj *fsobj, void *priv)
 	const char *sched_class;
 	int ret, count, len = 0;
 
-	ret = heapobj_bind_session(__node_info.session_label);
+	ret = heapobj_bind_session(__copperplate_setup_data.session_label);
 	if (ret)
 		return ret;
 
@@ -206,7 +206,7 @@ int open_heaps(struct fsobj *fsobj, void *priv)
 	struct shared_heap *heap;
 	int ret, count, len = 0;
 
-	ret = heapobj_bind_session(__node_info.session_label);
+	ret = heapobj_bind_session(__copperplate_setup_data.session_label);
 	if (ret)
 		return ret;
 

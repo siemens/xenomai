@@ -20,6 +20,4 @@
 
 #define __LIBVXWORKS_CTOR_PRIO  300
 
-#define __libvxworks_ctor  __attribute__ ((constructor(__LIBVXWORKS_CTOR_PRIO)))
-
 #endif /* _VXWORKS_INIT_H */

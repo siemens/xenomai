@@ -132,7 +132,7 @@ static int alchemy_init(void)
 	return 0;
 }
 
-static struct copperskin alchemy_skin = {
+static struct skin_descriptor alchemy_skin = {
 	.name = "alchemy",
 	.init = alchemy_init,
 	.options = alchemy_options,
@@ -140,7 +140,4 @@ static struct copperskin alchemy_skin = {
 	.help = alchemy_help,
 };
 
-static __libalchemy_ctor void register_alchemy(void)
-{
-	copperplate_register_skin(&alchemy_skin);
-}
+DECLARE_SKIN(alchemy_skin, __LIBALCHEMY_CTOR_PRIO);

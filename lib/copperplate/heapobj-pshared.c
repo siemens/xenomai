@@ -585,8 +585,8 @@ out:
 
 static int create_main_heap(pid_t *cnode_r)
 {
-	const char *session = __node_info.session_label;
-	size_t size = __node_info.mem_pool;
+	const char *session = __copperplate_setup_data.session_label;
+	size_t size = __copperplate_setup_data.mem_pool;
 	struct heapobj *hobj = &main_pool;
 	struct session_heap *m_heap;
 	struct stat sbuf;
@@ -806,7 +806,7 @@ int pshared_check(void *__heap, void *__addr)
 
 int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 {
-	const char *session = __node_info.session_label;
+	const char *session = __copperplate_setup_data.session_label;
 	struct shared_heap *heap;
 	size_t len;
 
@@ -953,7 +953,7 @@ int heapobj_pkg_init_shared(void)
 	ret = create_main_heap(&cnode);
 	if (ret == -EEXIST)
 		warning("session %s is still active (pid %d)\n",
-			__node_info.session_label, cnode);
+			__copperplate_setup_data.session_label, cnode);
 
 	return __bt(ret);
 }

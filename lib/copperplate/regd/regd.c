@@ -384,8 +384,8 @@ static void handle_requests(void)
 					delete_system_fs();
 					if (daemonize) {
 						note("unlinking session %s",
-						     __node_info.session_label);
-						heapobj_unlink_session(__node_info.session_label);
+						     __copperplate_setup_data.session_label);
+						heapobj_unlink_session(__copperplate_setup_data.session_label);
 					}
 					exit(0);
 				}
@@ -438,9 +438,9 @@ static void create_system_fs(const char *arg0, const char *rootdir, int flags)
 bootstrap:
 	atexit(delete_system_fs);
 
-	CPU_ZERO(&__node_info.cpu_affinity);
-	__node_info.session_label = session;
-	__node_info.registry_root = rootdir;
+	CPU_ZERO(&__base_setup_data.cpu_affinity);
+	__copperplate_setup_data.session_label = session;
+	__copperplate_setup_data.registry_root = rootdir;
 	sysroot = mountpt;
 	copperplate_bootstrap_minimal(arg0, mountpt, flags);
 

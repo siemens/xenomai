@@ -24,7 +24,7 @@ __attribute__((alias("copperplate_main"), weak));
 
 int copperplate_main(int argc, char *const argv[])
 {
-	copperplate_init(&argc, &argv);
+	xenomai_init(&argc, &argv);
 
 	return __real_main(argc, argv);
 }
