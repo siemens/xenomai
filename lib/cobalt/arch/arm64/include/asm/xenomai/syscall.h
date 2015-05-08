@@ -88,6 +88,7 @@
 #define __sys2(x)	#x
 #define __sys1(x)	__sys2(x)
 
+#ifndef __aarch64__
 #ifdef __ARM_EABI__
 #define __SYS_REG , "r7"
 #define __SYS_REG_DECL register unsigned long __r7 __asm__ ("r7")
@@ -101,6 +102,13 @@
 #define __SYS_REG_INPUT
 #define __NR_OABI_SYSCALL_BASE	0x900000
 #define __SYS_CALLOP "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
+#endif
+#else
+#define __SYS_REG , "r8"
+#define __SYS_REG_DECL register unsigned long __r8 __asm__ ("r8")
+#define __SYS_REG_SET __r8 = XENO_ARM_SYSCALL
+#define __SYS_REG_INPUT ,"r" (__r8)
+#define __SYS_CALLOP "svc\t0"
 #endif
 
 #define XENOMAI_DO_SYSCALL(nr, op, args...)				\
