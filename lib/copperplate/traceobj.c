@@ -21,7 +21,7 @@
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
-#include "copperplate/init.h"
+#include "xenomai/init.h"
 #include "internal.h"
 #ifdef CONFIG_XENO_VALGRIND_API
 #include <valgrind/valgrind.h>

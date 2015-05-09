@@ -21,6 +21,7 @@
 #include <boilerplate/list.h>
 #include <boilerplate/libc.h>
 #include <copperplate/clockobj.h>
+#include <xenomai/init.h>
 
 #define SMOKEY_INT(__name) {		\
 	 .name = # __name,		\
@@ -71,8 +72,6 @@ struct smokey_test {
 #define for_each_smokey_test(__pos)	\
 	pvlist_for_each_entry((__pos), &smokey_test_list, __reserved.next)
 
-#define __SMOKEYPLUG_CTOR_PRIO  310
-
 #define __smokey_arg_count(__args)	\
 	(sizeof(__args) / sizeof(__args[0]))
 
@@ -86,8 +85,7 @@ struct smokey_test {
 		.description = (__desc),				\
 		.run = run_ ## __plugin,				\
 	};								\
-	void smokey_plugin_ ## __plugin(void);				\
-	__attribute__((constructor(__SMOKEYPLUG_CTOR_PRIO)))		\
+	__early_ctor void smokey_plugin_ ## __plugin(void);		\
 	void smokey_plugin_ ## __plugin(void)				\
 	{								\
 		smokey_register_plugin(&(__plugin));			\

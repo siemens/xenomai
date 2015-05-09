@@ -28,7 +28,6 @@
 #include <asm/xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
-#include <boilerplate/ancillaries.h>
 
 /**
  * @ingroup cobalt_api
@@ -48,14 +47,6 @@ static pthread_attr_ex_t default_attr_ex;
 static int linuxthreads;
 
 static int std_maxpri;
-
-static void commit_stack_memory(void)
-{
-	if (pthread_self() == __cobalt_main_ptid) {
-		char stk[PTHREAD_STACK_MIN];
-		cobalt_commit_memory(stk);
-	}
-}
 
 static int libc_setschedparam(pthread_t thread,
 			      int policy, const struct sched_param_ex *param_ex)
@@ -120,7 +111,6 @@ static void *cobalt_thread_trampoline(void *p)
 	long ret;
 
 	cobalt_sigshadow_install_once();
-	commit_stack_memory();
 
 	personality = iargs->personality;
 	param_ex = iargs->param_ex;
@@ -661,7 +651,6 @@ int pthread_setschedparam_ex(pthread_t thread,
 				&u_winoff, &promoted);
 
 	if (ret == 0 && promoted) {
-		commit_stack_memory();
 		cobalt_sigshadow_install_once();
 		cobalt_set_tsd(u_winoff);
 		cobalt_thread_harden();

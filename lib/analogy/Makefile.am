@@ -19,8 +19,3 @@ libanalogy_la_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-I$(top_srcdir)/include 	\
 	-I$(top_srcdir)/lib/boilerplate	
-
-libanalogy_la_LIBADD = \
-	../boilerplate/libboilerplate.la	\
-	-lm
-

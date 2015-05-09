@@ -9,7 +9,7 @@ corectl_CPPFLAGS = 		\
 	$(XENO_USER_CFLAGS)	\
 	-I$(top_srcdir)/include
 
-corectl_LDFLAGS = $(XENO_POSIX_WRAPPERS)
+corectl_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 corectl_LDADD =					\
 	../../lib/cobalt/libcobalt.la		\

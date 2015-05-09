@@ -49,18 +49,13 @@ void cobalt_check_features(struct cobalt_featinfo *finfo)
 
 	err = XENOMAI_SYSCALL2(sc_cobalt_archcall,
 			       XENOMAI_SYSARCH_TSCINFO, &__xn_tscinfo.kinfo);
-	if (err) {
-		report_error("Your board/configuration does not "
-			     "allow TSC emulation in user-space: %s ",
+	if (err)
+		early_panic("missing TSC emulation: %s",
 			     strerror(-err));
-		exit(EXIT_FAILURE);
-	}
 
 	fd = __STD(open("/dev/mem", O_RDONLY | O_SYNC));
-	if (fd == -1) {
-		report_error("open(/dev/mem): %s", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (fd == -1)
+		early_panic("failed open(/dev/mem): %s", strerror(errno));
 
 	page_size = sysconf(_SC_PAGESIZE);
 
@@ -72,10 +67,8 @@ void cobalt_check_features(struct cobalt_featinfo *finfo)
 
 	addr = __STD(mmap(NULL, page_size, PROT_READ, MAP_SHARED,
 			  fd, phys_addr & ~(page_size - 1)));
-	if (addr == MAP_FAILED) {
-		report_error("mmap(/dev/mem): %s", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (addr == MAP_FAILED)
+		early_panic("failed mmap(/dev/mem): %s", strerror(errno));
 
 	__xn_tscinfo.kinfo.counter =
 		((volatile unsigned *)

@@ -29,7 +29,6 @@
 #include "tickLib.h"
 #include "msgQLib.h"
 #include "taskHookLib.h"
-#include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"

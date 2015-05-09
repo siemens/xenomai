@@ -13,7 +13,7 @@ test_PROGRAMS = \
 CPPFLAGS = $(XENO_USER_CFLAGS)			\
 	-I$(top_srcdir)/include
 
-LDFLAGS = $(XENO_POSIX_WRAPPERS)
+LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 LDADD = 					\
 	../../../lib/cobalt/libcobalt.la	\

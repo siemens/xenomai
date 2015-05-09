@@ -139,9 +139,9 @@ while test $# -gt 0; do
 	    ;;
 
 	-Wl,--wrap,main|-Wl,--wrap=main|-Wl,--dynamic-list=*)
-	    # special case so that Copperplate can interpose on the
-	    # main() routine. For this we need this wrapping to
-	    # take place in the second stage.
+	    # special case so that we can interpose on the main()
+	    # routine. For this we need this wrapping to take place in
+	    # the second stage.
 	    stage2_args="$stage2_args $arg"
 	    ;;
 

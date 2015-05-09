@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <memory.h>
-#include <copperplate/init.h>
 #include <copperplate/cluster.h>
 #include <boilerplate/lock.h>
 #include <psos/psos.h>

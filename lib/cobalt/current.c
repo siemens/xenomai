@@ -79,16 +79,17 @@ static inline void __cobalt_clear_tsd(void)
 
 static void init_current_keys(void)
 {
-	int err = pthread_key_create(&cobalt_current_key, NULL);
-	if (err)
-		goto error_exit;
+	int ret;
 
-	err = pthread_key_create(&cobalt_current_window_key, NULL);
-	if (err) {
-	  error_exit:
-		report_error("error creating TSD key: %s", strerror(err));
-		exit(EXIT_FAILURE);
-	}
+	ret = pthread_key_create(&cobalt_current_key, NULL);
+	if (ret)
+		goto fail;
+
+	ret = pthread_key_create(&cobalt_current_window_key, NULL);
+	if (ret == 0)
+		return;
+fail:
+	early_panic("error creating TSD key: %s", strerror(ret));
 }
 
 #endif /* !HAVE_TLS */
@@ -125,11 +126,8 @@ void cobalt_set_tsd(__u32 u_winoff)
 	int ret;
 
 	ret = XENOMAI_SYSCALL1(sc_cobalt_get_current, &current);
-	if (ret) {
-		report_error("error retrieving current handle: %s",
-			     strerror(-ret));
-		exit(EXIT_FAILURE);
-	}
+	if (ret)
+		panic("cannot retrieve current handle: %s", strerror(-ret));
 
 	__cobalt_set_tsd(current, u_winoff);
 

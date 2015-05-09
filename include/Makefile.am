@@ -9,7 +9,8 @@ SUBDIRS = 		\
 	alchemy		\
 	psos 		\
 	trank		\
-	vxworks
+	vxworks		\
+	xenomai
 
 if XENO_COBALT
 SUBDIRS += 		\
@@ -29,4 +30,5 @@ DIST_SUBDIRS = 		\
 	rtdm		\
 	smokey		\
 	trank		\
-	vxworks
+	vxworks		\
+	xenomai

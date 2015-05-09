@@ -52,15 +52,15 @@ static void *__map_umm(const char *name, uint32_t *size_r)
 
 	fd = __RT(open(name, O_RDWR));
 	if (fd < 0) {
-		report_error("cannot open RTDM device %s: %s", name,
-			     strerror(errno));
+		early_warning("cannot open RTDM device %s: %s", name,
+			      strerror(errno));
 		return MAP_FAILED;
 	}
 
 	ret = __RT(ioctl(fd, MEMDEV_RTIOC_STAT, &statbuf));
 	if (ret) {
-		report_error("failed getting status of %s: %s",
-			     name, strerror(errno));
+		early_warning("failed getting status of %s: %s",
+			      name, strerror(errno));
 		return MAP_FAILED;
 	}
 
@@ -102,31 +102,28 @@ void cobalt_unmap_umm(void)
 }
 
 /*
- * Will be called once at library loading time, and when re-binding
- * after a fork.
+ * Will be called once on behalf of xenomai_init(), and when
+ * re-binding after a fork.
  */
 static void init_bind(void)
 {
 	cobalt_umm_private = map_umm(COBALT_MEMDEV_PRIVATE, &private_size);
 	if (cobalt_umm_private == MAP_FAILED) {
-		report_error("cannot map private umm area: %s",
-			     strerror(errno));
-		report_error_cont("(CONFIG_DEVTMPFS_MOUNT not enabled?)");
-		exit(EXIT_FAILURE);
+		early_warning("cannot map private umm area: %s",
+			      strerror(errno));
+		early_panic("(CONFIG_DEVTMPFS_MOUNT not enabled?)");
 	}
 }
 
-/* Will be called only once, at library loading time. */
+/* Will be called only once, upon call to xenomai_init(). */
 static void init_loadup(__u32 vdso_offset)
 {
 	uint32_t size;
 
 	cobalt_umm_shared = map_umm(COBALT_MEMDEV_SHARED, &size);
-	if (cobalt_umm_shared == MAP_FAILED) {
-		report_error("cannot map shared umm area: %s",
-			     strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (cobalt_umm_shared == MAP_FAILED)
+		early_panic("cannot map shared umm area: %s",
+			    strerror(errno));
 
 	cobalt_vdso = (struct xnvdso *)(cobalt_umm_shared + vdso_offset);
 }

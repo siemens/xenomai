@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-#include <xeno_config.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -28,10 +27,14 @@
 #include <error.h>
 #include <sys/cobalt.h>
 #include <rtdm/autotune.h>
+#include <boilerplate/setup.h>
 
 static int tune_irqlat, tune_kernlat, tune_userlat;
 
-static int reset, noload, quiet, background;
+static int reset, noload, background;
+
+/* --quiet[=2] means fully quiet, quiet=1 means almost quiet */
+#define quiet_mode (__base_setup_data.quiet_mode)
 
 static const struct option base_options[] = {
 	{
@@ -72,24 +75,12 @@ static const struct option base_options[] = {
 		.val = 1
 	},
 	{
-#define quiet_opt	6
-		.name = "quiet",
-		.flag = &quiet,
-		.val = 2
-	},
-	{
-#define semiquiet_opt	7
-		.name = "semi-quiet",
-		.flag = &quiet,
-		.val = 1
-	},
-	{
-#define period_opt	8
+#define period_opt	6
 		.name = "period",
 		.has_arg = 1,
 	},
 	{
-#define background_opt	9
+#define background_opt	7
 		.name = "background",
 		.flag = &background,
 		.val = 1,
@@ -212,9 +203,7 @@ static void usage(void)
 	fprintf(stderr, "   --period		set the sampling period\n");
 	fprintf(stderr, "   --reset		reset core timer gravity to factory defaults\n");
 	fprintf(stderr, "   --noload		disable load generation\n");
-	fprintf(stderr, "   --semi-quiet	tame down verbosity\n");
-	fprintf(stderr, "   --quiet		disable all output\n");
-	fprintf(stderr, "   --background	run in the background\n");
+	fprintf(stderr, "   --background 	run in the background\n");
 	fprintf(stderr, "   --help		print this help\n\n");
 	fprintf(stderr, "if no option is given, tune for all contexts using the default period.\n");
 }
@@ -227,12 +216,12 @@ static void run_tuner(int fd, unsigned int op, int period, const char *type)
 	int ret;
 
 	setup.period = period;
-	setup.quiet = quiet;
+	setup.quiet = quiet_mode;
 	ret = ioctl(fd, op, &setup);
 	if (ret)
 		error(1, errno, "setup failed (%s)", type);
 
-	if (!quiet) {
+	if (!quiet_mode) {
 		printf("%s gravity... ", type);
 		fflush(stdout);
 	}
@@ -247,7 +236,7 @@ static void run_tuner(int fd, unsigned int op, int period, const char *type)
 	if (op == AUTOTUNE_RTIOC_USER)
 		pthread_cancel(sampler);
 
-	if (!quiet)
+	if (!quiet_mode)
 		printf("%u ns\n", gravity);
 }
 
@@ -281,8 +270,6 @@ int main(int argc, char *const argv[])
 				      CONFIG_XENO_DEFAULT_PERIOD);
 			break;
 		case noload_opt:
-		case quiet_opt:
-		case semiquiet_opt:
 		case background_opt:
 			break;
 		case irq_opt:
@@ -318,7 +305,7 @@ int main(int argc, char *const argv[])
 	if (tune_irqlat || tune_kernlat || tune_userlat) {
 		if (!noload)
 			create_load(&load_pth);
-		if (!quiet)
+		if (!quiet_mode)
 			printf("== auto-tuning started, period=%d ns (may take a while)\n",
 			       period);
 	} else
@@ -335,7 +322,7 @@ int main(int argc, char *const argv[])
 	if (tune_userlat)
 		run_tuner(fd, AUTOTUNE_RTIOC_USER, period, "user");
 
-	if (!quiet && (tune_userlat || tune_kernlat || tune_userlat))
+	if (!quiet_mode && (tune_userlat || tune_kernlat || tune_userlat))
 		printf("== auto-tuning completed after %ds\n",
 		       (int)(time(NULL) - start));
 

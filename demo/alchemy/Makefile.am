@@ -2,9 +2,7 @@ demodir = @XENO_DEMO_DIR@
 
 demo_PROGRAMS = altency
 
-core_libs =
 if XENO_COBALT
-core_libs += ../../lib/cobalt/libcobalt.la
 SUBDIRS = cobalt
 endif
 
@@ -15,7 +13,7 @@ cppflags = 				\
 ldadd = 					\
 	../../lib/alchemy/libalchemy.la		\
 	../../lib/copperplate/libcopperplate.la	\
-	$(core_libs)				\
+	../../lib/@XENO_CORE_LIB@		\
 	 @XENO_USER_LDADD@
 
 altency_SOURCES = altency.c

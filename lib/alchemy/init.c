@@ -21,8 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <copperplate/init.h>
-#include "init.h"
+#include <xenomai/init.h>
 #include "timer.h"
 #include "task.h"
 #include "sem.h"
@@ -78,7 +77,7 @@ static int alchemy_parse_option(int optnum, const char *optarg)
 
 static void alchemy_help(void)
 {
-        fprintf(stderr, "--alchemy-clock-resolution=<ns>  tick value (default 1ns, tickless)\n");
+        fprintf(stderr, "--alchemy-clock-resolution=<ns> tick value (default 1ns, tickless)\n");
 }
 
 #ifdef CONFIG_XENO_COBALT
@@ -132,7 +131,7 @@ static int alchemy_init(void)
 	return 0;
 }
 
-static struct skin_descriptor alchemy_skin = {
+static struct setup_descriptor alchemy_skin = {
 	.name = "alchemy",
 	.init = alchemy_init,
 	.options = alchemy_options,
@@ -140,4 +139,4 @@ static struct skin_descriptor alchemy_skin = {
 	.help = alchemy_help,
 };
 
-DECLARE_SKIN(alchemy_skin, __LIBALCHEMY_CTOR_PRIO);
+interface_setup_call(alchemy_skin);

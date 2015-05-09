@@ -29,6 +29,7 @@
 #include "copperplate/clockobj.h"
 #include "copperplate/registry.h"
 #include "copperplate/timerobj.h"
+#include "xenomai/init.h"
 #include "internal.h"
 
 struct copperplate_setup_data __copperplate_setup_data = {
@@ -76,24 +77,20 @@ static const struct option copperplate_options[] = {
  * code only, such as sysregd. No code traversed should depend on
  * __copperplate_setup_data.
  */
-void copperplate_bootstrap_minimal(const char *arg0, char *mountpt,
-				   int regflags)
+void copperplate_bootstrap_internal(const char *arg0, char *mountpt,
+				    int regflags)
 {
 	int ret;
 
-	boilerplate_init();
-
 	__node_id = get_thread_pid();
 
-	ret = debug_init();
-	if (ret) {
-		warning("failed to initialize debugging features");
-		goto fail;
-	}
+	CPU_ZERO(&__base_setup_data.cpu_affinity);
+
+	__boilerplate_init();
 
 	ret = heapobj_pkg_init_private();
 	if (ret) {
-		warning("failed to initialize main private heap");
+		early_warning("failed to initialize main private heap");
 		goto fail;
 	}
 
@@ -209,13 +206,13 @@ static int copperplate_parse_option(int optnum, const char *optarg)
 
 static void copperplate_help(void)
 {
-	fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
-        fprintf(stderr, "--no-registry                    suppress object registration\n");
-        fprintf(stderr, "--registry-root=<path>           root path of registry\n");
-        fprintf(stderr, "--session=<label>                label of shared multi-processing session\n");
+	fprintf(stderr, "--mem-pool-size=<sizeK> 	size of the main heap (kbytes)\n");
+        fprintf(stderr, "--no-registry			suppress object registration\n");
+        fprintf(stderr, "--registry-root=<path>		root path of registry\n");
+        fprintf(stderr, "--session=<label>		label of shared multi-processing session\n");
 }
 
-static struct skin_descriptor copperplate_interface = {
+static struct setup_descriptor copperplate_interface = {
 	.name = "copperplate",
 	.init = copperplate_init,
 	.options = copperplate_options,
@@ -223,7 +220,7 @@ static struct skin_descriptor copperplate_interface = {
 	.help = copperplate_help,
 };
 
-DECLARE_SKIN(copperplate_interface, __LIBCOPPERPLATE_CTOR_PRIO);
+copperplate_setup_call(copperplate_interface);
 
 /**
  * @{

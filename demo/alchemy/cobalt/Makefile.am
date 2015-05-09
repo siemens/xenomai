@@ -12,6 +12,7 @@ ldadd = 						\
 	../../../lib/alchemy/libalchemy.la		\
 	../../../lib/copperplate/libcopperplate.la	\
 	../../../lib/cobalt/libcobalt.la		\
+	@XENO_AUTOINIT_LDFLAGS@				\
 	$(XENO_POSIX_WRAPPERS)				\
 	 @XENO_USER_LDADD@				\
 	-lpthread -lrt

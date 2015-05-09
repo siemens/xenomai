@@ -47,7 +47,7 @@ static inline struct trank_context *trank_get_context(void)
 
 #endif
 
-void trank_init_interface(void);
+int trank_init_interface(void);
 
 extern sigset_t trank_sigperiod_set;
 

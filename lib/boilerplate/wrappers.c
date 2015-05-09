@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,9 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _VXWORKS_INIT_H
-#define _VXWORKS_INIT_H
+#include <boilerplate/compiler.h>
 
-#define __LIBVXWORKS_CTOR_PRIO  300
+int main(int argc, char *const argv[]);
 
-#endif /* _VXWORKS_INIT_H */
+int __real_main(int argc, char *const argv[]);
+
+__weak int __real_main(int argc, char *const argv[])
+{
+	return main(argc, argv);
+}

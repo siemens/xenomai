@@ -175,8 +175,8 @@ char *__get_error_buf(size_t *sizep)
 	return btd->eundef;
 }
 
-int debug_init(void)
+void debug_init(void)
 {
 	__RT(pthread_mutex_init(&main_btd.lock, NULL));
-	return -pthread_key_create(&btkey, NULL);
+	pthread_key_create(&btkey, NULL);
 }

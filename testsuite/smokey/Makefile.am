@@ -5,9 +5,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 smokey_SOURCES = main.c
 
-core_libs =
 if XENO_COBALT
-core_libs += ../../lib/cobalt/libcobalt.la
 wrappers = $(XENO_POSIX_WRAPPERS)
 SUBDIRS = 		\
 	arith 		\
@@ -38,14 +36,13 @@ smokey_CPPFLAGS = 			\
 	$(XENO_USER_CFLAGS)		\
 	-I$(top_srcdir)/include
 
-smokey_LDFLAGS=$(wrappers) -Wl,--wrap=main \
-	-Wl,--dynamic-list=$(top_srcdir)/scripts/dynlist.ld $(undef_list)
+smokey_LDFLAGS=$(wrappers) @XENO_AUTOINIT_LDFLAGS@ $(undef_list)
 
 smokey_LDADD = 					\
 	$(plugin_list)				\
 	../../lib/smokey/libsmokey.la		\
 	../../lib/copperplate/libcopperplate.la	\
-	$(core_libs)				\
+	../../lib/@XENO_CORE_LIB@		\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt
 

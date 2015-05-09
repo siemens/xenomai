@@ -45,7 +45,7 @@
 #include "copperplate/clockobj.h"
 #include "boilerplate/lock.h"
 #include "copperplate/debug.h"
-#include "copperplate/init.h"
+#include "xenomai/init.h"
 #include "internal.h"
 
 /*

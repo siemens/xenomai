@@ -39,18 +39,15 @@ void cobalt_check_features(struct cobalt_featinfo *finfo)
 	int fd;
 
 	fd = __STD(open("/dev/mem", O_RDWR | O_SYNC));
-	if (fd == -1) {
-		report_error("open(/dev/mem): %s", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (fd == -1)
+		early_panic("failed open(/dev/mem): %s", strerror(errno));
 
 	pagesz = sysconf(_SC_PAGESIZE);
 	p = __STD(mmap(NULL, pagesz, PROT_READ | PROT_WRITE, MAP_SHARED,
 		       fd, pa & ~(pagesz - 1)));
-	if (p == MAP_FAILED) {
-		report_error("mmap(/dev/mem): %s", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (p == MAP_FAILED)
+		early_panic("failed mmap(/dev/mem): %s", strerror(errno));
+
 	__STD(close(fd));
 
 	__cobalt_nios2_hrclock = (volatile void *)(p + (pa & (pagesz - 1)));

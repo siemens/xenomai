@@ -20,6 +20,7 @@
 
 #include <limits.h>
 #include <cobalt/sys/cobalt.h>
+#include <boilerplate/ancillaries.h>
 #include "current.h"
 
 #define COBALT_STACKSIZE_DEFAULT	(PTHREAD_STACK_MIN * 4)
@@ -58,11 +59,11 @@ void cobalt_default_mutexattr_init(void);
 
 void cobalt_default_condattr_init(void);
 
+int cobalt_init(void);
+
 struct cobalt_featinfo;
 
 void cobalt_check_features(struct cobalt_featinfo *finfo);
-
-extern pthread_t __cobalt_main_ptid;
 
 extern struct sigaction __cobalt_orig_sigdebug;
 

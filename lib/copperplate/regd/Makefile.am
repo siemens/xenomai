@@ -1,21 +1,16 @@
 sbin_PROGRAMS = sysregd
 
-if XENO_COBALT
-coredep_lib = ../../cobalt/libcobalt.la
-else
-coredep_lib =
-endif
-
-CPPFLAGS = 						\
-	@XENO_USER_CFLAGS@				\
-	@XENO_FUSE_CFLAGS@				\
+CPPFLAGS = 			\
+	@XENO_USER_CFLAGS@	\
+	@XENO_FUSE_CFLAGS@	\
+	-I$(top_srcdir)/lib	\
 	-I$(top_srcdir)/include
 
 LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 LDADD = 			\
 	../libcopperplate.la	\
-	$(coredep_lib)		\
+	../../@XENO_CORE_LIB@	\
 	@XENO_USER_LDADD@	\
 	-lpthread -lrt
 

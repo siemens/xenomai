@@ -20,9 +20,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <copperplate/init.h>
+#include <xenomai/init.h>
 #include <vxworks/errnoLib.h>
-#include "init.h"
 #include "tickLib.h"
 #include "taskLib.h"
 
@@ -75,7 +74,7 @@ static int vxworks_parse_option(int optnum, const char *optarg)
 
 static void vxworks_help(void)
 {
-        fprintf(stderr, "--vxworks-clock-resolution=<ns>  tick value (default 1ms)\n");
+        fprintf(stderr, "--vxworks-clock-resolution=<ns> tick value (default 1ms)\n");
 }
 
 static int vxworks_init(void)
@@ -102,7 +101,7 @@ static int vxworks_init(void)
 	return 0;
 }
 
-static struct skin_descriptor vxworks_skin = {
+static struct setup_descriptor vxworks_skin = {
 	.name = "vxworks",
 	.init = vxworks_init,
 	.options = vxworks_options,
@@ -110,4 +109,4 @@ static struct skin_descriptor vxworks_skin = {
 	.help = vxworks_help,
 };
 
-DECLARE_SKIN(vxworks_skin, __LIBVXWORKS_CTOR_PRIO);
+interface_setup_call(vxworks_skin);

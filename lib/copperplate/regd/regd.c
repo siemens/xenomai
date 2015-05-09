@@ -400,6 +400,30 @@ static void cleanup_handler(int sig)
 	_exit(1);
 }
 
+#ifdef CONFIG_XENO_COBALT
+
+#include "cobalt/internal.h"
+
+/*
+ * Bootstrapping Cobalt is something which is normally done through
+ * xenomai_bootstrap(), as available from lib/xenomai/bootstrap.o for
+ * normal applications. But sysregd is a peculiar one, and we need to
+ * drive the init sequence specifically for it.
+ */
+static inline int bootstrap_core(void)
+{
+	return cobalt_init();
+}
+
+#else
+
+static inline int bootstrap_core(void)
+{
+	return 0;
+}
+
+#endif
+
 static void create_system_fs(const char *arg0, const char *rootdir, int flags)
 {
 	struct sysreg_fsfile *f;
@@ -438,11 +462,14 @@ static void create_system_fs(const char *arg0, const char *rootdir, int flags)
 bootstrap:
 	atexit(delete_system_fs);
 
-	CPU_ZERO(&__base_setup_data.cpu_affinity);
+	ret = bootstrap_core();
+	if (ret)
+		error(1, -ret, "cannot bootstap core interface");
+
 	__copperplate_setup_data.session_label = session;
 	__copperplate_setup_data.registry_root = rootdir;
 	sysroot = mountpt;
-	copperplate_bootstrap_minimal(arg0, mountpt, flags);
+	copperplate_bootstrap_internal(arg0, mountpt, flags);
 
 	note("mounted system fs at %s", mountpt);
 

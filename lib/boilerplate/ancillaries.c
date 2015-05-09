@@ -29,30 +29,24 @@
 #include "boilerplate/lock.h"
 #include "boilerplate/time.h"
 #include "boilerplate/scope.h"
+#include "boilerplate/setup.h"
+#include "boilerplate/debug.h"
 #include "boilerplate/ancillaries.h"
+#include "xenomai/init.h"
 
 pthread_mutex_t __printlock;
 
-struct timespec __init_date;
+static struct timespec init_date;
 
-void __printout(const char *name, const char *header,
-		const char *fmt, va_list ap)
+static int init_done;
+
+static void __do_printout(const char *name, const char *header,
+			  unsigned int ms, unsigned int us,
+			  const char *fmt, va_list ap)
 {
-	unsigned long long ms, us, ns;
-	struct timespec now, delta;
 	FILE *fp = stderr;
 
-	__RT(clock_gettime(CLOCK_MONOTONIC, &now));
-	timespec_sub(&delta, &now, &__init_date);
-	ns = delta.tv_sec * 1000000000ULL;
-	ns += delta.tv_nsec;
-	ms = ns / 1000000ULL;
-	us = (ns % 1000000ULL) / 1000ULL;
-
-	SIGSAFE_LOCK_ENTRY(&__printlock);
-
-	fprintf(fp, "%4d\"%.3d.%.3d| ",
-		(int)ms / 1000, (int)ms % 1000, (int)us);
+	fprintf(fp, "%4u\"%.3u.%.3u| ", ms / 1000, ms % 1000, us);
 
 	if (header)
 		fputs(header, fp);
@@ -61,7 +55,34 @@ void __printout(const char *name, const char *header,
 	vfprintf(fp, fmt, ap);
 	fputc('\n', fp);
 	fflush(fp);
+}
 
+void __printout(const char *name, const char *header,
+		const char *fmt, va_list ap)
+{
+	struct timespec now, delta;
+	unsigned long long ns;
+	unsigned int ms, us;
+
+	/*
+	 * Catch early printouts, when the init sequence is not
+	 * completed yet. In such event, we don't care for serializing
+	 * output, since we must be running over the main thread
+	 * uncontended.
+	 */
+	if (!init_done) {
+		__do_printout(name, header, 0, 0, fmt, ap);
+		return;
+	}
+	
+	__RT(clock_gettime(CLOCK_MONOTONIC, &now));
+	timespec_sub(&delta, &now, &init_date);
+	ns = delta.tv_sec * 1000000000ULL;
+	ns += delta.tv_nsec;
+	ms = ns / 1000000ULL;
+	us = (ns % 1000000ULL) / 1000ULL;
+	SIGSAFE_LOCK_ENTRY(&__printlock);
+	__do_printout(name, header, ms, us, fmt, ap);
 	SIGSAFE_LOCK_EXIT(&__printlock);
 }
 
@@ -75,9 +96,14 @@ void __notice(const char *name, const char *fmt, va_list ap)
 	__printout(name, NULL, fmt, ap);
 }
 
-void __panic(const char *name, const char *fmt, va_list ap)
+void ___panic(const char *fn, const char *name,
+	     const char *fmt, va_list ap)
 {
-	__printout(name, "BUG: ", fmt, ap);
+	char *p;
+
+	if (asprintf(&p, "BUG in %s(): ", fn) < 0)
+		p = "BUG: ";
+	__printout(name, p, fmt, ap);
 	exit(1);
 }
 
@@ -153,17 +179,17 @@ void __run_cleanup_block(struct cleanup_block *cb)
 	cb->handler(cb->arg);
 }
 
-void early_panic(const char *fmt, ...)
+void __early_panic(const char *fn, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	__panic(NULL, fmt, ap);
+	___panic(fn, NULL, fmt, ap);
 	va_end(ap);
 }
 
-void panic(const char *fmt, ...)
-__attribute__((alias("early_panic"), weak));
+void __panic(const char *fn, const char *fmt, ...)
+__attribute__((alias("__early_panic"), weak));
 
 void early_warning(const char *fmt, ...)
 {
@@ -267,26 +293,30 @@ pid_t get_thread_pid(void)
 	return syscall(__NR_gettid);
 }
 
-static pthread_once_t init_once = PTHREAD_ONCE_INIT;
-
-static void reset_on_fork(void)
-{
-	init_once = PTHREAD_ONCE_INIT;
-}
-
-static void __boilerplate_init(void)
-{
-	pthread_atfork(NULL, NULL, reset_on_fork);
-	__RT(clock_gettime(CLOCK_MONOTONIC, &__init_date));
-	__RT(pthread_mutex_init(&__printlock, NULL));
-}
-
-void boilerplate_init(void)
-{
-	pthread_once(&init_once, __boilerplate_init);
-}
-
 const char *config_strings[] = {
 #include "config-dump.h"
 	NULL,
 };
+
+void __boilerplate_init(void)
+{
+	__RT(clock_gettime(CLOCK_MONOTONIC, &init_date));
+	__RT(pthread_mutex_init(&__printlock, NULL));
+	debug_init();
+	init_done = 1;
+}
+
+static int boilerplate_init(void)
+{
+	pthread_atfork(NULL, NULL, __boilerplate_init);
+	__boilerplate_init();
+
+	return 0;
+}
+
+static struct setup_descriptor boilerplate_interface = {
+	.name = "boilerplate",
+	.init = boilerplate_init,
+};
+
+boilerplate_setup_call(boilerplate_interface);

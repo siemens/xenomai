@@ -15,7 +15,7 @@ cppflags = 			\
 	$(XENO_USER_CFLAGS)	\
 	-I$(top_srcdir)/include
 
-ldflags = $(XENO_POSIX_WRAPPERS)
+ldflags = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 ldadd = 					\
 	../../../lib/cobalt/libcobalt.la	\

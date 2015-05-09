@@ -29,7 +29,6 @@
 #include <boilerplate/ancillaries.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/threadobj.h>
-#include <copperplate/init.h>
 #include "internal.h"
 
 static int thread_spawn_prologue(struct corethread_attributes *cta);
@@ -251,13 +250,13 @@ static int thread_spawn_epilogue(struct corethread_attributes *cta)
 	return __bt(cta->__reserved.status);
 }
 
-void panic(const char *fmt, ...)
+void __panic(const char *fn, const char *fmt, ...)
 {
 	struct threadobj *thobj = threadobj_current();
 	va_list ap;
 
 	va_start(ap, fmt);
-	__panic(thobj ? threadobj_get_name(thobj) : NULL, fmt, ap);
+	___panic(fn, thobj ? threadobj_get_name(thobj) : NULL, fmt, ap);
 }
 
 void warning(const char *fmt, ...)

@@ -864,8 +864,11 @@ dnl in-tree executables which require POSIX symbol wrapping.
    AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$cobalt_wrappers"])
 fi
 
-XENO_AUTOINIT_LDFLAGS="-Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
+XENO_AUTOINIT_LDFLAGS='$(top_builddir)/lib/boilerplate/init/bootstrap.o'" -Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
 AC_SUBST(XENO_AUTOINIT_LDFLAGS)
+
+XENO_CORE_LIB=$rtcore_type/lib${rtcore_type}.la
+AC_SUBST(XENO_CORE_LIB)
 
 dnl
 dnl Build the Makefiles
@@ -905,6 +908,7 @@ AC_CONFIG_FILES([ \
 	scripts/xeno \
 	lib/Makefile \
 	lib/boilerplate/Makefile \
+	lib/boilerplate/init/Makefile \
 	lib/cobalt/Makefile \
 	lib/cobalt/arch/Makefile \
 	lib/cobalt/arch/arm/Makefile \
@@ -931,6 +935,7 @@ AC_CONFIG_FILES([ \
 	lib/cobalt/arch/sh/include/Makefile \
 	lib/cobalt/arch/sh/include/asm/Makefile \
 	lib/cobalt/arch/sh/include/asm/xenomai/Makefile \
+	lib/mercury/Makefile \
 	lib/copperplate/Makefile \
 	lib/copperplate/regd/Makefile \
 	lib/alchemy/Makefile \
@@ -999,6 +1004,7 @@ AC_CONFIG_FILES([ \
 	include/trank/posix/Makefile \
 	include/trank/native/Makefile \
 	include/trank/rtdm/Makefile \
+	include/xenomai/Makefile \
 	doc/Makefile \
 	doc/doxygen/Makefile \
 	doc/doxygen/xeno3prm-common.conf \

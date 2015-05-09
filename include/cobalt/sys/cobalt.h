@@ -38,12 +38,6 @@
 #include <cobalt/uapi/cond.h>
 #include <cobalt/uapi/sem.h>
 
-#define report_error(fmt, args...) \
-	__STD(fprintf(stderr, "Xenomai/cobalt: %s(): " fmt "\n", __func__, ##args))
-
-#define report_error_cont(fmt, args...) \
-	__STD(fprintf(stderr, "                " fmt "\n", ##args))
-
 #define cobalt_commit_memory(p) __cobalt_commit_memory(p, sizeof(*p))
 
 struct cobalt_tsd_hook {
@@ -134,10 +128,6 @@ int cobalt_sched_weighted_prio(int policy,
 			       const struct sched_param_ex *param_ex);
 
 void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
-
-void __libcobalt_init(void);
-
-extern int __cobalt_defer_init;
 
 extern int __cobalt_no_shadow;
 

@@ -25,23 +25,26 @@
 #include <unistd.h>
 #include <memory.h>
 #include <malloc.h>
+#include <stdio.h>
 #include <assert.h>
 #include <xeno_config.h>
-#include <boilerplate/setup.h>
 #include <boilerplate/lock.h>
 #include <boilerplate/debug.h>
 #include <boilerplate/ancillaries.h>
+#include <xenomai/init.h>
 
 struct base_setup_data __base_setup_data = {
-	.no_mlock = 0,
 	.no_sanity = !CONFIG_XENO_SANITY,
-	.silent_mode = 0,
+	.quiet_mode = 0,
 	.arg0 = NULL,
+	.no_mlock = 0,
 };
 
 pid_t __node_id;
 
-static DEFINE_PRIVATE_LIST(skins);
+static int init_done;
+
+static DEFINE_PRIVATE_LIST(setup_list);
 
 static const struct option base_options[] = {
 	{
@@ -49,21 +52,20 @@ static const struct option base_options[] = {
 		.name = "help",
 	},
 	{
-#define no_mlock_opt	1
-		.name = "no-mlock",
-		.flag = &__base_setup_data.no_mlock,
-		.val = 1
-	},
-	{
-#define affinity_opt	2
+#define affinity_opt	1
 		.name = "cpu-affinity",
 		.has_arg = 1,
 	},
 	{
+#define quiet_opt	2
+		.name = "quiet",
+		.has_arg = 2,
+	},
+	{
 #define silent_opt	3
 		.name = "silent",
-		.flag = &__base_setup_data.silent_mode,
-		.val = 1
+		.flag = &__base_setup_data.quiet_mode,
+		.val = 2,
 	},
 	{
 #define version_opt	4
@@ -83,6 +85,14 @@ static const struct option base_options[] = {
 #define sanity_opt	7
 		.name = "sanity",
 		.flag = &__base_setup_data.no_sanity,
+	},
+	{
+#define no_mlock_opt	8
+#ifdef CONFIG_XENO_MERCURY
+		.name = "no-mlock",
+		.flag = &__base_setup_data.no_mlock,
+		.val = 1
+#endif
 	},
 	{
 		/* sentinel */
@@ -112,7 +122,7 @@ static int collect_cpu_affinity(const char *cpu_list)
 		cpu = atoi(p);
 		if (cpu >= CPU_SETSIZE) {
 			free(s);
-			warning("invalid CPU number '%d'", cpu);
+			early_warning("invalid CPU number '%d'", cpu);
 			return -EINVAL;
 		}
 		CPU_SET(cpu, &__base_setup_data.cpu_affinity);
@@ -134,7 +144,7 @@ static int collect_cpu_affinity(const char *cpu_list)
 	ret = sched_setaffinity(0, sizeof(__base_setup_data.cpu_affinity),
 				&__base_setup_data.cpu_affinity);
 	if (ret) {
-		warning("invalid CPU in affinity list '%s'", cpu_list);
+		early_warning("invalid CPU in affinity list '%s'", cpu_list);
 		return -errno;
 	}
 
@@ -200,16 +210,16 @@ static inline void pack_args(int *argcp, int *largcp, char **argv)
 
 static struct option *build_option_array(int *base_opt_startp)
 {
-	struct skin_descriptor *skin;
+	struct setup_descriptor *setup;
 	struct option *options, *q;
 	const struct option *p;
 	int nopts;
 
 	nopts = sizeof(base_options) / sizeof(base_options[0]);
 
-	if (!pvlist_empty(&skins)) {
-		pvlist_for_each_entry(skin, &skins, __reserved.next) {
-			p = skin->options;
+	if (!pvlist_empty(&setup_list)) {
+		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+			p = setup->options;
 			if (p) {
 				while (p->name) {
 					nopts++;
@@ -225,15 +235,15 @@ static struct option *build_option_array(int *base_opt_startp)
 
 	q = options;
 
-	if (!pvlist_empty(&skins)) {
-		pvlist_for_each_entry(skin, &skins, __reserved.next) {
-			p = skin->options;
+	if (!pvlist_empty(&setup_list)) {
+		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+			p = setup->options;
 			if (p) {
-				skin->__reserved.opt_start = q - options;
+				setup->__reserved.opt_start = q - options;
 				while (p->name)
 					memcpy(q++, p++, sizeof(*q));
 			}
-			skin->__reserved.opt_end = q - options;
+			setup->__reserved.opt_end = q - options;
 		}
 	}
 
@@ -245,23 +255,27 @@ static struct option *build_option_array(int *base_opt_startp)
 
 static void usage(void)
 {
-	struct skin_descriptor *skin;
+	struct setup_descriptor *setup;
 
 	print_version();
         fprintf(stderr, "usage: program <options>, where options may be:\n");
-        fprintf(stderr, "--no-mlock                       do not lock memory at init (Mercury only)\n");
-        fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>    set CPU affinity of threads\n");
-        fprintf(stderr, "--[no-]sanity                    disable/enable sanity checks\n");
-        fprintf(stderr, "--silent                         tame down verbosity\n");
-        fprintf(stderr, "--version                        get version information\n");
-        fprintf(stderr, "--dump-config                    dump configuration settings\n");
+        fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
+        fprintf(stderr, "--[no-]sanity			disable/enable sanity checks\n");
+        fprintf(stderr, "--quiet[=level] 		tame down verbosity to desired level\n");
+        fprintf(stderr, "--silent	 		same as --quiet\n");
+        fprintf(stderr, "--version			get version information\n");
+        fprintf(stderr, "--dump-config			dump configuration settings\n");
+#ifdef CONFIG_XENO_MERCURY
+        fprintf(stderr, "--no-mlock			do not lock memory at init\n");
+#endif
+        fprintf(stderr, "--help				display help\n");
 
-	if (pvlist_empty(&skins))
+	if (pvlist_empty(&setup_list))
 		return;
 
-	pvlist_for_each_entry(skin, &skins, __reserved.next) {
-		if (skin->help)
-			skin->help();
+	pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+		if (setup->help)
+			setup->help();
 	}
 }
 
@@ -290,10 +304,9 @@ static int parse_base_options(int *argcp, char *const **argvp,
 	/*
 	 * NOTE: since we pack the argument vector on the fly while
 	 * processing the options, optarg should be considered as
-	 * volatile by skin option handlers; i.e. strdup() is required
-	 * if the value has to be retained. Values from the user
-	 * vector returned by xenomai_init() live in permanent memory
-	 * though.
+	 * volatile by option handlers; i.e. strdup() is required if
+	 * the value has to be retained. Values from the user vector
+	 * returned by xenomai_init() live in permanent memory though.
 	 */
 
 	for (;;) {
@@ -310,10 +323,20 @@ static int parse_base_options(int *argcp, char *const **argvp,
 			if (ret)
 				return ret;
 			break;
+		case quiet_opt:
+			__base_setup_data.quiet_mode = 2;
+			if (optarg) {
+				if (strcmp(optarg, "semi") == 0 ||
+				    strcmp(optarg, "almost") == 0)
+					__base_setup_data.quiet_mode = 1;
+				else
+					__base_setup_data.quiet_mode = atoi(optarg);
+			}
+			break;
+		case silent_opt:
 		case no_mlock_opt:
 		case no_sanity_opt:
 		case sanity_opt:
-		case silent_opt:
 			break;
 		case version_opt:
 			print_version();
@@ -356,10 +379,10 @@ static int parse_base_options(int *argcp, char *const **argvp,
 	return 0;
 }
 
-static int parse_skin_options(int *argcp, int largc, char **uargv,
-			      const struct option *options)
+static int parse_setup_options(int *argcp, int largc, char **uargv,
+			       const struct option *options)
 {
-	struct skin_descriptor *skin;
+	struct setup_descriptor *setup;
 	int lindex, n, c, ret;
 
 	for (;;) {
@@ -369,14 +392,14 @@ static int parse_skin_options(int *argcp, int largc, char **uargv,
 			break;
 		if (lindex == -1)
 			continue; /* Not handled here. */
-		pvlist_for_each_entry(skin, &skins, __reserved.next) {
-			if (skin->parse_option == NULL)
+		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+			if (setup->parse_option == NULL)
 				continue;
-			if (lindex < skin->__reserved.opt_start ||
-			    lindex >= skin->__reserved.opt_end)
+			if (lindex < setup->__reserved.opt_start ||
+			    lindex >= setup->__reserved.opt_end)
 				continue;
-			lindex -= skin->__reserved.opt_start;
-			ret = skin->parse_option(lindex, optarg);
+			lindex -= setup->__reserved.opt_start;
+			ret = setup->parse_option(lindex, optarg);
 			if (ret == 0)
 				break;
 			return ret;
@@ -398,19 +421,16 @@ static int parse_skin_options(int *argcp, int largc, char **uargv,
 void xenomai_init(int *argcp, char *const **argvp)
 {
 	int ret, largc, base_opt_start;
-	struct skin_descriptor *skin;
+	struct setup_descriptor *setup;
 	struct option *options;
-	static int init_done;
 	char **uargv = NULL;
 	struct service svc;
 
 	if (init_done) {
-		warning("duplicate call to %s() ignored", __func__);
-		warning("(xeno-config --no-auto-init disables implicit call)");
+		early_warning("duplicate call to %s() ignored", __func__);
+		early_warning("(xeno-config --no-auto-init disables implicit call)");
 		return;
 	}
-
-	boilerplate_init();
 
 	/* Our node id. is the tid of the main thread. */
 	__node_id = get_thread_pid();
@@ -422,8 +442,7 @@ void xenomai_init(int *argcp, char *const **argvp)
 	CPU_ZERO(&__base_setup_data.cpu_affinity);
 
 	/*
-	 * Build the global option array, merging the base and
-	 * per-skin option sets.
+	 * Build the global option array, merging all option sets.
 	 */
 	options = build_option_array(&base_opt_start);
 	if (options == NULL) {
@@ -449,18 +468,12 @@ void xenomai_init(int *argcp, char *const **argvp)
 	}
 #endif
 
-	ret = debug_init();
-	if (ret) {
-		warning("failed to initialize debugging features");
-		goto fail;
-	}
-
 #ifdef CONFIG_XENO_MERCURY
 	if (__base_setup_data.no_mlock == 0) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret) {
 			ret = -errno;
-			warning("failed to lock memory");
+			early_warning("failed to lock memory");
 			goto fail;
 		}
 	}
@@ -468,26 +481,28 @@ void xenomai_init(int *argcp, char *const **argvp)
 
 	/*
 	 * Now that we have bootstrapped the core, we may call the
-	 * skin handlers for parsing their own options, which in turn
+	 * setup handlers for parsing their own options, which in turn
 	 * may create system objects on the fly.
 	 */
-	if (!pvlist_empty(&skins)) {
-		ret = parse_skin_options(argcp, largc, uargv, options);
+	if (!pvlist_empty(&setup_list)) {
+		ret = parse_setup_options(argcp, largc, uargv, options);
 		if (ret)
 			goto fail;
 
 		CANCEL_DEFER(svc);
 
-		pvlist_for_each_entry(skin, &skins, __reserved.next) {
-			ret = skin->init();
-			if (ret)
-				break;
+		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+			if (setup->init) {
+				ret = setup->init();
+				if (ret)
+					break;
+			}
 		}
 
 		CANCEL_RESTORE(svc);
 
 		if (ret) {
-			warning("skin %s won't initialize", skin->name);
+			early_warning("setup call %s failed", setup->name);
 			goto fail;
 		}
 	}
@@ -495,8 +510,8 @@ void xenomai_init(int *argcp, char *const **argvp)
 	free(options);
 
 #ifdef CONFIG_XENO_DEBUG
-	if (__base_setup_data.silent_mode == 0) {
-		warning("Xenomai compiled with %s debug enabled,\n"
+	if (__base_setup_data.quiet_mode == 0) {
+		early_warning("Xenomai compiled with %s debug enabled,\n"
 			"                              "
 			"%shigh latencies expected [--enable-debug=%s]",
 #ifdef CONFIG_XENO_DEBUG_FULL
@@ -521,7 +536,23 @@ fail:
 	early_panic("initialization failed, %s", symerror(ret));
 }
 
-void __register_skin(struct skin_descriptor *p)
+void __register_setup_call(struct setup_descriptor *p, int id)
 {
-	pvlist_append(&p->__reserved.next, &skins);
+	struct setup_descriptor *pos;
+
+	/*
+	 * Trap late registration due to wrong constructor priorities.
+	 */
+	assert(!init_done);
+	p->__reserved.id = id;
+
+	if (!pvlist_empty(&setup_list)) {
+		pvlist_for_each_entry_reverse(pos, &setup_list, __reserved.next) {
+			if (id >= pos->__reserved.id) {
+				atpvh(&pos->__reserved.next, &p->__reserved.next);
+				return;
+			}
+		}
+	}
+	pvlist_prepend(&p->__reserved.next, &setup_list);
 }

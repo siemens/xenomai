@@ -5,6 +5,8 @@ SUBDIRS +=	\
 	cobalt	\
 	analogy	\
 	trank
+else
+SUBDIRS += mercury
 endif
 
 SUBDIRS +=		\

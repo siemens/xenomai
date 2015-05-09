@@ -22,8 +22,8 @@
 #include "boilerplate/tlsf/tlsf.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
-#include "copperplate/init.h"
 #include "copperplate/threadobj.h"
+#include "xenomai/init.h"
 #include "internal.h"
 
 #if __WORDSIZE == 32

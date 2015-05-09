@@ -1,24 +1,21 @@
 demodir = @XENO_DEMO_DIR@
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
-core_libs =
 
 if XENO_COBALT
 SUBDIRS = cobalt
-core_libs += ../../lib/cobalt/libcobalt.la
 endif
 
-demo_PROGRAMS = 	\
-	can-rtt
+demo_PROGRAMS = can-rtt
 
 cppflags = 			\
 	$(XENO_USER_CFLAGS)	\
 	-I$(top_srcdir)/include
 
-ldflags = $(XENO_POSIX_WRAPPERS)
+ldflags = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 ldadd = 					\
-	$(core_libs)				\
+	../../lib/@XENO_CORE_LIB@		\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt
 

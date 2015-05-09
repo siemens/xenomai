@@ -24,7 +24,6 @@
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/clockobj.h>
-#include <copperplate/init.h>
 #include <copperplate/cluster.h>
 #include <psos/psos.h>
 #include "internal.h"

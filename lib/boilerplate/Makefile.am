@@ -8,7 +8,8 @@ libboilerplate_la_SOURCES =	\
 	hash.c			\
 	obstack.c		\
 	setup.c			\
-	time.c
+	time.c			\
+	wrappers.c
 
 if XENO_DEBUG
 libboilerplate_la_SOURCES += debug.c
@@ -82,6 +83,8 @@ libtlsf_la_CPPFLAGS =					\
 	-Itlsf @XENO_USER_CFLAGS@			\
 	-I$(top_srcdir)/include				\
 	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
+
+SUBDIRS = init
 
 EXTRA_DIST += tlsf/README
 

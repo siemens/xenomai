@@ -21,7 +21,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <copperplate/init.h>
 #include <boilerplate/lock.h>
 #include <vxworks/tickLib.h>
 #include "tickLib.h"

@@ -25,7 +25,6 @@
 #include <boilerplate/list.h>
 #include <boilerplate/hash.h>
 #include <boilerplate/obstack.h>
-#include <copperplate/init.h>
 
 struct fsobj;
 

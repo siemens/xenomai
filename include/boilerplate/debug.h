@@ -67,7 +67,7 @@ void __debug(const char *name, const char *fmt, ...);
 
 char *__get_error_buf(size_t *sizep);
 
-int debug_init(void);
+void debug_init(void);
 
 #ifdef __cplusplus
 }
@@ -118,7 +118,7 @@ struct backtrace_data {
 		__buf;				\
 	})
 
-#define debug_init()	({ 0; })
+#define debug_init()	do { } while (0)
 
 #endif /* !CONFIG_XENO_DEBUG */
 

@@ -21,12 +21,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <copperplate/init.h>
+#include <xenomai/init.h>
 #include <copperplate/registry.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/debug.h>
 #include <psos/psos.h>
-#include "init.h"
 #include "internal.h"
 #include "tm.h"
 #include "task.h"
@@ -95,8 +94,8 @@ static int psos_parse_option(int optnum, const char *optarg)
 
 static void psos_help(void)
 {
-        fprintf(stderr, "--psos-clock-resolution=<ns>    tick value (default 1ms)\n");
-        fprintf(stderr, "--psos-time-slice=<psos-ticks>  round-robin time slice\n");
+        fprintf(stderr, "--psos-clock-resolution=<ns>	tick value (default 1ms)\n");
+        fprintf(stderr, "--psos-time-slice=<psos-ticks>	round-robin time slice\n");
 }
 
 static int psos_init(void)
@@ -141,7 +140,7 @@ const char *__psos_maybe_short_name(char shrt[5], const char *lng)
 	return (const char *)shrt;
 }
 
-static struct skin_descriptor psos_skin = {
+static struct setup_descriptor psos_skin = {
 	.name = "psos",
 	.init = psos_init,
 	.options = psos_options,
@@ -149,4 +148,4 @@ static struct skin_descriptor psos_skin = {
 	.help = psos_help,
 };
 
-DECLARE_SKIN(psos_skin, __LIBPSOS_CTOR_PRIO);
+interface_setup_call(psos_skin);

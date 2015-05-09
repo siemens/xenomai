@@ -179,19 +179,23 @@ static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
 	static pthread_mutex_t uninit_errorcheck_mutex =
 		PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 	pthread_mutexattr_t mattr;
-	int err;
+	int ret, type;
 
-	if (memcmp(mutex, &uninit_normal_mutex, sizeof(*mutex))
-		&& memcmp(mutex, &uninit_recursive_mutex, sizeof(*mutex))
-		&& memcmp(mutex, &uninit_errorcheck_mutex, sizeof(*mutex)))
+	if (memcmp(mutex, &uninit_normal_mutex, sizeof(*mutex)) == 0)
+		type = PTHREAD_MUTEX_DEFAULT;
+	else if (memcmp(mutex, &uninit_recursive_mutex, sizeof(*mutex)) == 0)
+		type = PTHREAD_MUTEX_RECURSIVE_NP;
+	else if (memcmp(mutex, &uninit_errorcheck_mutex, sizeof(*mutex)) == 0)
+		type = PTHREAD_MUTEX_ERRORCHECK_NP;
+	else
 		return EINVAL;
 
 	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_settype(&mattr, mutex->__data.__kind);
-	err = __COBALT(pthread_mutex_init(mutex, &mattr));
+	pthread_mutexattr_settype(&mattr, type);
+	ret = __COBALT(pthread_mutex_init(mutex, &mattr));
 	pthread_mutexattr_destroy(&mattr);
 
-	return err;
+	return ret;
 }
 
 /**

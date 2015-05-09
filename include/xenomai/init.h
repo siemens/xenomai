@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,9 +15,23 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _TRANK_INIT_H
-#define _TRANK_INIT_H
+#ifndef _XENOMAI_XENOMAI_INIT_H
+#define _XENOMAI_XENOMAI_INIT_H
 
-#define __LIBTRANK_CTOR_PRIO  350
+#include <boilerplate/setup.h>
 
-#endif /* !_TRANK_INIT_H */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void xenomai_init(int *argcp, char *const **argvp);
+
+int xenomai_main(int argc, char *const argv[]);
+
+extern const char *xenomai_version_string;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _XENOMAI_XENOMAI_INIT_H */

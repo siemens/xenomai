@@ -18,7 +18,7 @@ XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR/cobalt -I$XENO_INCLUDE_DIR @XENO_USER_APP_
 XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lcobalt -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_LIBRARY_DIR="${staging}${libdir}"
 LD_FILE_OPTION="@LD_FILE_OPTION@"
-WRAP_MAIN_OPT="-Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+WRAP_MAIN_OPT="${staging}${libdir}/xenomai/bootstrap.o -Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
 WRAP_MAIN="$WRAP_MAIN_OPT"
 
 unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list compat
@@ -246,7 +246,7 @@ if test x$do_ldflags = xy; then
 		# with --cobalt. On the contrary, --posix does.
 		;;
 	    vxworks|psos|alchemy|smokey)
-		copperplate="$WRAP_MAIN -lcopperplate"
+		copperplate="-lcopperplate"
 		ldflags="$ldflags -l$skin"
 		if [ -r ${XENO_LIBRARY_DIR}/${skin}.wrappers ]; then
 		    ldflags=" `dump_wrappers ${skin}.wrappers` $ldflags"
@@ -258,7 +258,7 @@ if test x$do_ldflags = xy; then
 		;;
 	esac
     done
-    echo "$ldflags $copperplate $XENO_POSIX_LDFLAGS"
+    echo "$ldflags $copperplate $WRAP_MAIN $XENO_POSIX_LDFLAGS"
 fi
 
 exit 0

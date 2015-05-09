@@ -53,10 +53,8 @@ static void trank_init_context(void)
 	struct trank_context *tc;
 
 	tc = malloc(sizeof(*tc));
-	if (tc == NULL) {
-		report_error("error creating TSD: %s\n", strerror(ENOMEM));
-		exit(EXIT_FAILURE);
-	}
+	if (tc == NULL)
+		early_panic("error creating TSD: %s", strerror(ENOMEM));
 		
 	memset(tc, 0, sizeof(*tc));
 	pthread_setspecific(trank_context_key, tc);
@@ -85,17 +83,17 @@ static struct cobalt_tsd_hook tsd_hook = {
 	.delete_tsd = trank_destroy_context,
 };
 
-void trank_init_interface(void)
+int trank_init_interface(void)
 {
 #ifndef HAVE_TLS
 	int ret;
 
 	ret = pthread_key_create(&trank_context_key, __trank_destroy_context);
-	if (ret) {
-		report_error("error creating TSD key: %s\n", strerror(ret));
-		exit(EXIT_FAILURE);
-	}
+	if (ret)
+		early_panic("error creating TSD key: %s", strerror(ret));
 #endif
 	sigaddset(&trank_sigperiod_set, SIGPERIOD);
 	cobalt_register_tsd_hook(&tsd_hook);
+
+	return 0;
 }

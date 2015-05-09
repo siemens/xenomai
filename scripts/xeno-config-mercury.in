@@ -15,9 +15,9 @@ XENO_CC="@CC@"
 XENO_TARGET_ARCH="@XENO_BUILD_STRING@"
 XENO_INCLUDE_DIR="${staging}${includedir}"
 XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR/mercury -I$XENO_INCLUDE_DIR @XENO_USER_APP_CFLAGS@ -D__MERCURY__"
-XENO_BASE_LDFLAGS="-L${staging}${libdir} -lcopperplate -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
+XENO_BASE_LDFLAGS="-L${staging}${libdir} -lmercury -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_LIBRARY_DIR="${staging}${libdir}"
-WRAP_MAIN_OPT="-Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+WRAP_MAIN_OPT="${staging}${libdir}/xenomai/bootstrap.o -Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
 WRAP_MAIN="$WRAP_MAIN_OPT"
 
 unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
@@ -182,12 +182,14 @@ fi
 
 if test x$do_ldflags = xy; then
     test -z "$skin_list" && skin_list=posix
-    ldflags="$WRAP_MAIN $XENO_BASE_LDFLAGS"
+    ldflags=
+    copperplate=
     for skin in $skin_list; do
 	case "$skin" in
 	    posix|rtdm)
 		;;
 	    vxworks|psos|alchemy|smokey)
+		copperplate="-lcopperplate"
 		ldflags="-l$skin $ldflags"
 		;;
 	    *)
@@ -196,7 +198,7 @@ if test x$do_ldflags = xy; then
 		;;
 	esac
     done
-    echo $ldflags
+    echo "$ldflags $copperplate $WRAP_MAIN $XENO_BASE_LDFLAGS"
 fi
 
 exit 0

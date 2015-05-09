@@ -35,8 +35,7 @@ static void assert_nrt_inner(void)
 
 	ret = cobalt_thread_stat(0, &stat);
 	if (ret) {
-		report_error("cobalt_thread_stat() failed: %s",
-			strerror(-ret));
+		warning("cobalt_thread_stat() failed: %s", strerror(-ret));
 		return;
 	}
 

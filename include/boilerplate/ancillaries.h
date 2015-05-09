@@ -26,8 +26,6 @@
 #include <boilerplate/compiler.h>
 #include <boilerplate/atomic.h>
 
-extern struct timespec __init_date;
-
 extern pthread_mutex_t __printlock;
 
 struct error_frame;
@@ -58,7 +56,13 @@ void __namecpy_requires_character_array_as_destination(void);
 		__dst[sizeof(__dst) - 1] = '\0';			\
 		__dst;							\
 	 })
-	
+
+#define early_panic(__fmt, __args...)		\
+	__early_panic(__func__, __fmt, ##__args)
+
+#define panic(__fmt, __args...)			\
+	__panic(__func__, __fmt, ##__args)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,12 +73,15 @@ void __printout(const char *name,
 		const char *header,
 		const char *fmt, va_list ap);
 
-void __noreturn __panic(const char *name,
-			const char *fmt, va_list ap);
+void __noreturn __early_panic(const char *fn,
+			      const char *fmt, ...);
 
-void early_panic(const char *fmt, ...);
+void __noreturn ___panic(const char *fn,
+			 const char *name,
+			 const char *fmt, va_list ap);
 
-void __noreturn panic(const char *fmt, ...);
+void __noreturn __panic(const char *fn,
+			const char *fmt, ...);
 
 void __warning(const char *name,
 	       const char *fmt, va_list ap);
@@ -90,14 +97,14 @@ void early_notice(const char *fmt, ...);
 
 void notice(const char *fmt, ...);
 
+void __boilerplate_init(void);
+
 const char *symerror(int errnum);
 
 char *generate_name(char *buf, const char *radix,
 		    struct name_generator *ngen);
 
 void error_hook(struct error_frame *ef);
-
-void boilerplate_init(void);
 
 int get_static_cpu_count(void);
 

@@ -6,7 +6,6 @@ includesub_HEADERS =		\
 	debug.h			\
 	eventobj.h		\
 	heapobj.h		\
-	init.h			\
 	reference.h		\
 	registry.h		\
 	semobj.h		\

@@ -27,8 +27,8 @@
 #include <fnmatch.h>
 #include <boilerplate/list.h>
 #include <boilerplate/ancillaries.h>
-#include <copperplate/init.h>
 #include "copperplate/internal.h"
+#include <xenomai/init.h>
 #include <smokey/smokey.h>
 
 /**
@@ -266,22 +266,15 @@ static const struct option smokey_options[] = {
 		.val = 1,
 	},
 	{
-#define quiet_opt	3
-		.name = "quiet",
-		.flag = &smokey_quiet_mode,
-		.val = 1,
-	},
-	{
 		/* sentinel */
 	}
 };
 
 static void smokey_help(void)
 {
-        fprintf(stderr, "--keep-going               	don't stop upon test error\n");
-        fprintf(stderr, "--quiet                    	require tests to tame down verbosity\n");
-	fprintf(stderr, "--list                     	list all tests\n");
-	fprintf(stderr, "--run[=<id[,id...]>]]      	run [portion of] test list\n");
+        fprintf(stderr, "--keep-going			don't stop upon test error\n");
+	fprintf(stderr, "--list				list all tests\n");
+	fprintf(stderr, "--run[=<id[,id...]>]]		run [portion of] the test list\n");
 }
 
 static inline void pick_test_range(int start, int end)
@@ -427,7 +420,6 @@ static int smokey_parse_option(int optnum, const char *optarg)
 
 	switch (optnum) {
 	case keep_going_opt:
-	case quiet_opt:
 		break;
 	case run_opt:
 		if (pvlist_empty(&register_list)) {
@@ -456,12 +448,14 @@ static int smokey_parse_option(int optnum, const char *optarg)
 static int smokey_init(void)
 {
 	if (pvlist_empty(&smokey_test_list))
-		copperplate_set_silent();
+		copperplate_set_quiet();
+	else
+		smokey_quiet_mode = __base_setup_data.quiet_mode;
 
 	return 0;
 }
 
-static struct skin_descriptor smokey_interface = {
+static struct setup_descriptor smokey_interface = {
 	.name = "smokey",
 	.init = smokey_init,
 	.options = smokey_options,
@@ -469,4 +463,4 @@ static struct skin_descriptor smokey_interface = {
 	.help = smokey_help,
 };
 
-DECLARE_SKIN(smokey_interface, __SMOKEYPLUG_CTOR_PRIO+1);
+post_setup_call(smokey_interface);

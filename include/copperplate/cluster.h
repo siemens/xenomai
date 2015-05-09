@@ -20,7 +20,6 @@
 #define _COPPERPLATE_CLUSTER_H
 
 #include <boilerplate/hash.h>
-#include <copperplate/init.h>
 #include <copperplate/syncobj.h>
 
 #ifdef CONFIG_XENO_PSHARED

@@ -12,23 +12,17 @@ libcopperplate_la_SOURCES =	\
 	init.c		\
 	internal.c	\
 	internal.h	\
-	main.c		\
 	syncobj.c	\
 	semobj.c	\
 	threadobj.c	\
 	timerobj.c	\
-	traceobj.c	\
-	wrappers.c
+	traceobj.c
 
 libcopperplate_la_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-I$(top_srcdir)			\
 	-I$(top_srcdir)/include		\
 	-I$(top_srcdir)/lib
-
-if XENO_MERCURY
-libcopperplate_la_LIBADD += ../boilerplate/libboilerplate.la
-endif
 
 if XENO_REGISTRY
 libcopperplate_la_LIBADD += libregistry.la

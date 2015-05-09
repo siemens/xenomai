@@ -87,9 +87,9 @@ struct corethread_attributes {
 
 extern struct copperplate_setup_data __copperplate_setup_data;
 
-static inline void copperplate_set_silent(void)
+static inline void copperplate_set_quiet(void)
 {
-	__base_setup_data.silent_mode = 1;
+	__base_setup_data.quiet_mode = 1;
 }
 
 #ifdef __cplusplus
@@ -106,8 +106,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 int copperplate_renice_local_thread(pthread_t ptid, int policy,
 				    const struct sched_param_ex *param_ex);
 
-void copperplate_bootstrap_minimal(const char *arg0,
-				   char *mountpt, int regflags);
+void copperplate_bootstrap_internal(const char *arg0,
+				    char *mountpt, int regflags);
 
 #ifdef __cplusplus
 }

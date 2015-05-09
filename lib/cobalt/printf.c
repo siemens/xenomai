@@ -712,10 +712,9 @@ void cobalt_print_init(void)
 	if (value_str) {
 		errno = 0;
 		__cobalt_print_bufsz = strtol(value_str, NULL, 10);
-		if (errno || __cobalt_print_bufsz < RT_PRINT_LINE_BREAK) {
-			report_error("invalid %s", RT_PRINT_BUFFER_ENV);
-			exit(1);
-		}
+		if (errno || __cobalt_print_bufsz < RT_PRINT_LINE_BREAK)
+			early_panic("invalid %s=%s",
+				    RT_PRINT_BUFFER_ENV, value_str);
 	}
 
 	period = RT_PRINT_DEFAULT_PERIOD;
@@ -723,10 +722,9 @@ void cobalt_print_init(void)
 	if (value_str) {
 		errno = 0;
 		period = strtoll(value_str, NULL, 10);
-		if (errno) {
-			report_error("invalid %s", RT_PRINT_BUFFER_ENV);
-			exit(1);
-		}
+		if (errno)
+			early_panic("invalid %s=%s",
+				    RT_PRINT_BUFFER_ENV, value_str);
 	}
 	print_period.tv_sec  = period / 1000;
 	print_period.tv_nsec = (period % 1000) * 1000000;
@@ -741,10 +739,9 @@ void cobalt_print_init(void)
 		if (value_str) {
 			errno = 0;
 			buffers_count = strtoul(value_str, NULL, 0);
-			if (errno) {
-				report_error("invalid %s", RT_PRINT_BUFFERS_COUNT_ENV);
-				exit(1);
-			}
+			if (errno)
+				early_panic("invalid %s=%s",
+					    RT_PRINT_BUFFERS_COUNT_ENV, value_str);
 		}
 
 		pool_bitmap_len = (buffers_count + __WORDSIZE - 1)
@@ -753,18 +750,14 @@ void cobalt_print_init(void)
 			goto done;
 
 		pool_bitmap = malloc(pool_bitmap_len * sizeof(*pool_bitmap));
-		if (!pool_bitmap) {
-			report_error("error allocating rt_printf buffers");
-			exit(1);
-		}
+		if (!pool_bitmap)
+			early_panic("error allocating printf buffers");
 
 		pool_buf_size = sizeof(struct print_buffer) + __cobalt_print_bufsz;
 		pool_len = buffers_count * pool_buf_size;
 		pool_start = (unsigned long)malloc(pool_len);
-		if (!pool_start) {
-			report_error("error allocating rt_printf buffers");
-			exit(1);
-		}
+		if (!pool_start)
+			early_panic("error allocating printf buffers");
 
 		for (i = 0; i < buffers_count / __WORDSIZE; i++)
 			atomic_long_set(&pool_bitmap[i], ~0UL);
@@ -957,9 +950,7 @@ COBALT_IMPL(int, __vfprintf_chk, (FILE *f, int flag, const char *fmt, va_list ap
 		return __STD(__vfprintf_chk(f, flag, fmt, ap));
 	}
 #else
-	report_error("must build with --enable-fortify to support");
-	report_error_cont("applications compiled with -D_FORTIFY_SOURCE");
-	exit(EXIT_FAILURE);
+	panic("--enable-fortify is required with applications enabling _FORTIFY_SOURCE");
 #endif
 }
 
@@ -1003,9 +994,7 @@ COBALT_IMPL(void, __vsyslog_chk, (int pri, int flag, const char *fmt, va_list ap
 		__STD(__vsyslog_chk(pri, flag, fmt, ap));
 	}
 #else
-	report_error("must build with --enable-fortify to support");
-	report_error_cont("applications compiled with -D_FORTIFY_SOURCE");
-	exit(EXIT_FAILURE);
+	panic("--enable-fortify is required with applications enabling _FORTIFY_SOURCE");
 #endif
 }
 

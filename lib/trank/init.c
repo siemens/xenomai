@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#include "init.h"
+#include <xenomai/init.h>
 #include "internal.h"
 
 /**
@@ -29,9 +29,9 @@
  * over Xenomai 3.x.
  */
 
-#define __libtrank_ctor  __attribute__ ((constructor(__LIBTRANK_CTOR_PRIO)))
+static struct setup_descriptor trank_interface = {
+	.name = "trank",
+	.init = trank_init_interface,
+};
 
-static __libtrank_ctor void init_trank(void)
-{
-	trank_init_interface();
-}
+post_setup_call(trank_interface);
