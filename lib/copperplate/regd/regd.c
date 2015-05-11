@@ -288,6 +288,9 @@ static void unmount(const char *path)
 	if (ret != -1 && WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
 		return;
 
+	if (access("/usr/bin/umount", X_OK))
+		return;
+
 	ret = asprintf(&cmd, "/usr/bin/umount -l %s", path);
 	if (ret < 0)
 		return;
