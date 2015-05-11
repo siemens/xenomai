@@ -20,6 +20,7 @@
 
 #include <boilerplate/list.h>
 #include <boilerplate/wrappers.h>
+#include <string.h>
 #include <sched.h>
 
 struct base_setup_data {
@@ -64,7 +65,8 @@ struct setup_descriptor {
  *
  * - The last priority level is used for the bootstrap code
  * (__bootstrap_ctor), which is guaranteed to run after any
- * setup/early code.
+ * setup/early code, provided such code is part of the main
+ * executable.
  *
  * The guarantees on the init order don't go beyond what is stated
  * here, do NOT assume more than this.
@@ -98,5 +100,10 @@ extern struct base_setup_data __base_setup_data;
 #ifdef __cplusplus
 }
 #endif
+
+static inline const char *get_program_name(void)
+{
+	return basename(__base_setup_data.arg0 ?: "program");
+}
 
 #endif /* !_BOILERPLATE_SETUP_H */

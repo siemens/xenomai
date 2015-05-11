@@ -56,6 +56,7 @@
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #endif
+#include <xenomai/init.h>
 
 #define NSEC_PER_SEC 1000000000
 
@@ -78,16 +79,14 @@ struct rtt_stat {
     int counts_per_sec;
 };
 
-static void print_usage(char *prg)
+void application_usage(void)
 {
+    fprintf(stderr, "usage: %s [options] <tx-can-interface> <rx-can-interface>:\n",
+	    get_program_name());
     fprintf(stderr,
-	    "Usage: %s  [Options] <tx-can-interface> <rx-can-interface>\n"
-	    "Options:\n"
-	    " -h, --help     This help\n"
-	    " -r, --repeater Repeater, send back received messages\n"
-	    " -i, --id=ID    CAN Identifier (default = 0x1)\n"
-	    " -c, --cycle    Cycle time in us (default = 10000us)\n",
-	    prg);
+	    " -r, --repeater			Repeater, send back received messages\n"
+	    " -i, --id=ID			CAN Identifier (default = 0x1)\n"
+	    " -c, --cycle			Cycle time in us (default = 10000us)\n");
 }
 
 static void *transmitter(void *arg)
@@ -219,11 +218,10 @@ int main(int argc, char *argv[])
 	{ "id", required_argument, 0, 'i'},
 	{ "cycle", required_argument, 0, 'c'},
 	{ "repeater", no_argument, 0, 'r'},
-	{ "help", no_argument, 0, 'h'},
 	{ 0, 0, 0, 0},
     };
 
-    while ((opt = getopt_long(argc, argv, "hri:c:",
+    while ((opt = getopt_long(argc, argv, "ri:c:",
 			      long_options, NULL)) != -1) {
 	switch (opt) {
 	case 'c':
@@ -240,15 +238,13 @@ int main(int argc, char *argv[])
 
 	default:
 	    fprintf(stderr, "Unknown option %c\n", opt);
-	case 'h':
-	    print_usage(argv[0]);
 	    exit(-1);
 	}
     }
 
     printf("%d %d\n", optind, argc);
     if (optind + 2 != argc) {
-	print_usage(argv[0]);
+	xenomai_usage();
 	exit(0);
     }
 

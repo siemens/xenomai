@@ -25,6 +25,7 @@
 #include <error.h>
 #include <fcntl.h>
 #include <copperplate/cluster.h>
+#include <xenomai/init.h>
 
 static const struct option options[] = {
 	{
@@ -32,18 +33,13 @@ static const struct option options[] = {
 		.name = "dump-cluster",
 		.has_arg = 1,
 	},
-	{
-#define help_opt	1
-		.name = "help",
-	},
 	{ /* Sentinel */ }
 };
 
-static void usage(void)
+void application_usage(void)
 {
-	fprintf(stderr, "usage: hdb [options]:\n");
-	fprintf(stderr, "   --dump-cluster <name>	dump cluster <name>\n");
-	fprintf(stderr, "   --help			print this help\n\n");
+        fprintf(stderr, "usage: %s <option>:\n", get_program_name());
+	fprintf(stderr, "--dump-cluster <name>		dump cluster <name>\n");
 }
 
 static int check_shared_heap(const char *cmd)
@@ -127,16 +123,13 @@ int main(int argc, char *const argv[])
 		if (c == EOF)
 			break;
 		if (c == '?') {
-			usage();
+			xenomai_usage();
 			return EINVAL;
 		}
 		if (c > 0)
 			continue;
 
 		switch (lindex) {
-		case help_opt:
-			usage();
-			exit(0);
 		case dump_cluster_opt:
 			cluster_name = optarg;
 			break;

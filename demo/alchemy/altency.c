@@ -17,6 +17,7 @@
 #include <alchemy/sem.h>
 #include <rtdm/testing.h>
 #include <boilerplate/trace.h>
+#include <xenomai/init.h>
 
 RT_TASK latency_task, display_task;
 
@@ -490,6 +491,28 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 
 #endif /* CONFIG_XENO_COBALT */
 
+void application_usage(void)
+{
+        fprintf(stderr, "usage: %s [options]:\n", get_program_name());
+	fprintf(stderr,
+		"-h                              print histograms of min, avg, max latencies\n"
+		"-g <file>                       dump histogram to <file> in gnuplot format\n"
+		"-s                              print statistics of min, avg, max latencies\n"
+		"-H <histogram-size>             default = 200, increase if your last bucket is full\n"
+		"-B <bucket-size>                default = 1000ns, decrease for more resolution\n"
+		"-p <period_us>                  sampling period\n"
+		"-l <data-lines per header>      default=21, 0 to supress headers\n"
+		"-T <test_duration_seconds>      default=0, so ^C to end\n"
+		"-q                              supresses RTD, RTH lines if -T is used\n"
+		"-D <testing_device_no>          number of testing device, default=0\n"
+		"-t <test_mode>                  0=user task (default), 1=kernel task, 2=timer IRQ\n"
+		"-f                              freeze trace for each new max latency\n"
+		"-c <cpu>                        pin measuring task down to given CPU\n"
+		"-P <priority>                   task priority (test mode 0 and 1 only)\n"
+		"-b                              break upon mode switch\n"
+		);
+}
+
 int main(int argc, char *const *argv)
 {
 	struct sigaction sa __attribute__((unused));
@@ -552,24 +575,7 @@ int main(int argc, char *const *argv)
 			stop_upon_switch = 1;
 			break;
 		default:
-
-			fprintf(stderr,
-"usage: altency [options]\n"
-"  [-h]                         # print histograms of min, avg, max latencies\n"
-"  [-g <file>]                  # dump histogram to <file> in gnuplot format\n"
-"  [-s]                         # print statistics of min, avg, max latencies\n"
-"  [-H <histogram-size>]        # default = 200, increase if your last bucket is full\n"
-"  [-B <bucket-size>]           # default = 1000ns, decrease for more resolution\n"
-"  [-p <period_us>]             # sampling period\n"
-"  [-l <data-lines per header>] # default=21, 0 to supress headers\n"
-"  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
-"  [-q]                         # supresses RTD, RTH lines if -T is used\n"
-"  [-t <test_mode>]             # 0=user task (default), 1=kernel task, 2=timer IRQ\n"
-"  [-f]                         # freeze trace for each new max latency\n"
-"  [-c <cpu>]                   # pin measuring task down to given CPU\n"
-"  [-P <priority>]              # task priority (test mode 0 and 1 only)\n"
-"  [-b]                         # break upon mode switch\n"
-);
+			xenomai_usage();
 			exit(2);
 		}
 

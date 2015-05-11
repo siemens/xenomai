@@ -253,12 +253,35 @@ static struct option *build_option_array(int *base_opt_startp)
 	return options;
 }
 
-static void usage(void)
+void __weak application_usage(void)
+{
+	/*
+	 * Applications can implement this hook for dumping their own
+	 * help strings.
+	 */
+        fprintf(stderr, "usage: %s <options>:\n", get_program_name());
+}
+
+void xenomai_usage(void)
 {
 	struct setup_descriptor *setup;
 
 	print_version();
-        fprintf(stderr, "usage: program <options>, where options may be:\n");
+
+	/*
+	 * Dump help strings from the highest level code to the
+	 * lowest.
+	 */
+	application_usage();
+
+	if (!pvlist_empty(&setup_list)) {
+		pvlist_for_each_entry_reverse(setup, &setup_list,
+					      __reserved.next) {
+			if (setup->help)
+				setup->help();
+		}
+	}
+
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
         fprintf(stderr, "--[no-]sanity			disable/enable sanity checks\n");
         fprintf(stderr, "--quiet[=level] 		tame down verbosity to desired level\n");
@@ -269,14 +292,6 @@ static void usage(void)
         fprintf(stderr, "--no-mlock			do not lock memory at init\n");
 #endif
         fprintf(stderr, "--help				display help\n");
-
-	if (pvlist_empty(&setup_list))
-		return;
-
-	pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
-		if (setup->help)
-			setup->help();
-	}
 }
 
 static int parse_base_options(int *argcp, char *const **argvp,
@@ -345,7 +360,7 @@ static int parse_base_options(int *argcp, char *const **argvp,
 			dump_configuration();
 			exit(0);
 		case help_opt:
-			usage();
+			xenomai_usage();
 			exit(0);
 		default:
 			/* Skin option, don't process yet. */

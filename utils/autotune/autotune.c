@@ -27,7 +27,7 @@
 #include <error.h>
 #include <sys/cobalt.h>
 #include <rtdm/autotune.h>
-#include <boilerplate/setup.h>
+#include <xenomai/init.h>
 
 static int tune_irqlat, tune_kernlat, tune_userlat;
 
@@ -38,49 +38,42 @@ static int reset, noload, background;
 
 static const struct option base_options[] = {
 	{
-#define help_opt	0
-		.name = "help",
-		.has_arg = 0,
-		.flag = NULL,
-		.val = 0
-	},
-	{
-#define irq_opt		1
+#define irq_opt		0
 		.name = "irq",
 		.flag = &tune_irqlat,
 		.val = 1
 	},
 	{
-#define kernel_opt	2
+#define kernel_opt	1
 		.name = "kernel",
 		.flag = &tune_kernlat,
 		.val = 1
 	},
 	{
-#define user_opt	3
+#define user_opt	2
 		.name = "user",
 		.flag = &tune_userlat,
 		.val = 1
 	},
 	{
-#define reset_opt	4
+#define reset_opt	3
 		.name = "reset",
 		.flag = &reset,
 		.val = 1
 	},
 	{
-#define noload_opt	5
+#define noload_opt	4
 		.name = "noload",
 		.flag = &noload,
 		.val = 1
 	},
 	{
-#define period_opt	6
+#define period_opt	5
 		.name = "period",
 		.has_arg = 1,
 	},
 	{
-#define background_opt	7
+#define background_opt	6
 		.name = "background",
 		.flag = &background,
 		.val = 1,
@@ -194,18 +187,18 @@ static void create_load(pthread_t *tid)
 	pthread_setname_np(*tid, "loadgen");
 }
 
-static void usage(void)
+void application_usage(void)
 {
-	fprintf(stderr, "usage: autotune [options], tuning core timer for:\n");
-	fprintf(stderr, "   --irq		interrupt latency\n");
-	fprintf(stderr, "   --kernel		kernel scheduling latency\n");
-	fprintf(stderr, "   --user		user scheduling latency\n");
-	fprintf(stderr, "   --period		set the sampling period\n");
-	fprintf(stderr, "   --reset		reset core timer gravity to factory defaults\n");
-	fprintf(stderr, "   --noload		disable load generation\n");
-	fprintf(stderr, "   --background 	run in the background\n");
-	fprintf(stderr, "   --help		print this help\n\n");
-	fprintf(stderr, "if no option is given, tune for all contexts using the default period.\n");
+        fprintf(stderr, "usage: %s [options]:\n", get_program_name());
+	fprintf(stderr, "--irq				tune for interrupt latency\n");
+	fprintf(stderr, "--kernel			tune for kernel scheduling latency\n");
+	fprintf(stderr, "--user				tune for user scheduling latency\n");
+	fprintf(stderr, "    [ if none of --irq, --kernel and --user is given,\n"
+  		        "      tune for all contexts ]\n");
+	fprintf(stderr, "--period			set the sampling period\n");
+	fprintf(stderr, "--reset 			reset core timer gravity to factory defaults\n");
+	fprintf(stderr, "--noload			disable load generation\n");
+	fprintf(stderr, "--background 			run in the background\n");
 }
 
 static void run_tuner(int fd, unsigned int op, int period, const char *type)
@@ -253,16 +246,13 @@ int main(int argc, char *const argv[])
 		if (c == EOF)
 			break;
 		if (c == '?') {
-			usage();
+			xenomai_usage();
 			return EINVAL;
 		}
 		if (c > 0)
 			continue;
 
 		switch (lindex) {
-		case help_opt:
-			usage();
-			exit(0);
 		case period_opt:
 			period = atoi(optarg);
 			if (period <= 0)

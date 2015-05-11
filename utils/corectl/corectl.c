@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <error.h>
 #include <sys/cobalt.h>
+#include <xenomai/init.h>
 
 int __cobalt_no_shadow = 1;
 
@@ -50,20 +51,15 @@ static const struct option options[] = {
 		.flag = &action,
 		.val = start_opt,
 	},
-	{
-#define help_opt	3
-		.name = "help",
-	},
 	{ /* Sentinel */ }
 };
 
-static void usage(void)
+void application_usage(void)
 {
-	fprintf(stderr, "usage: corectl [options]:\n");
-	fprintf(stderr, "   --stop [<grace-seconds>]	stop Xenomai/cobalt services\n");
-	fprintf(stderr, "   --start			start Xenomai/cobalt services\n");
-	fprintf(stderr, "   --status			query Xenomai/cobalt status\n");
-	fprintf(stderr, "   --help			print this help\n\n");
+        fprintf(stderr, "usage: %s <option>:\n", get_program_name());
+	fprintf(stderr, "--stop [<grace-seconds>]	stop Xenomai/cobalt services\n");
+	fprintf(stderr, "--start  			start Xenomai/cobalt services\n");
+	fprintf(stderr, "--status			query Xenomai/cobalt status\n");
 }
 
 static int core_stop(int grace_period)
@@ -117,16 +113,13 @@ int main(int argc, char *const argv[])
 		if (c == EOF)
 			break;
 		if (c == '?') {
-			usage();
+			xenomai_usage();
 			return EINVAL;
 		}
 		if (c > 0)
 			continue;
 
 		switch (lindex) {
-		case help_opt:
-			usage();
-			exit(0);
 		case stop_opt:
 			grace_period = optarg ? atoi(optarg) : 0;
 		case start_opt:
@@ -148,8 +141,8 @@ int main(int argc, char *const argv[])
 		ret = core_status();
 		break;
 	default:
-		usage();
-		exit(0);
+		xenomai_usage();
+		exit(1);
 	}
 
 	if (ret)

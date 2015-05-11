@@ -28,6 +28,10 @@ void xenomai_init(int *argcp, char *const **argvp);
 
 int xenomai_main(int argc, char *const argv[]);
 
+void xenomai_usage(void);
+
+void application_usage(void);
+
 extern const char *xenomai_version_string;
 
 #ifdef __cplusplus
