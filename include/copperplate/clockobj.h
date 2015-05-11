@@ -102,6 +102,15 @@ int clockobj_init(struct clockobj *clkobj,
 
 int clockobj_destroy(struct clockobj *clkobj);
 
+#ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
+
+void __clockobj_ticks_to_timeout(struct clockobj *clkobj, clockid_t clk_id,
+				 ticks_t ticks, struct timespec *ts);
+
+void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
+				  ticks_t ticks, struct timespec *ts);
+#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
+
 #ifdef __cplusplus
 }
 #endif
@@ -211,12 +220,6 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 }
 
 #else /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
-
-void __clockobj_ticks_to_timeout(struct clockobj *clkobj, clockid_t clk_id,
-				 ticks_t ticks, struct timespec *ts);
-
-void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
-				  ticks_t ticks, struct timespec *ts);
 
 static inline
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
