@@ -498,10 +498,21 @@ void xenomai_init(int *argcp, char *const **argvp)
 
 	/*
 	 * Now that we have bootstrapped the core, we may call the
-	 * setup handlers for parsing their own options, which in turn
-	 * may create system objects on the fly.
+	 * setup handlers for tuning the configuration, then parsing
+	 * their own options, and eventually doing the init chores.
 	 */
 	if (!pvlist_empty(&setup_list)) {
+
+		CANCEL_DEFER(svc);
+
+		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+			if (setup->tune) {
+				ret = setup->tune();
+				if (ret)
+					break;
+			}
+		}
+		
 		ret = parse_setup_options(argcp, largc, uargv, options);
 		if (ret)
 			goto fail;
@@ -512,8 +523,6 @@ void xenomai_init(int *argcp, char *const **argvp)
 		 */
 		__config_done = 1;
 	
-		CANCEL_DEFER(svc);
-
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
 			if (setup->init) {
 				ret = setup->init();

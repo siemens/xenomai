@@ -36,6 +36,7 @@ struct option;
 struct setup_descriptor {
 	const char *name;
 	int (*init)(void);
+	int (*tune)(void);
 	const struct option *options;
 	int (*parse_option)(int optnum, const char *optarg);
 	void (*help)(void);
