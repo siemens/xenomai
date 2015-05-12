@@ -105,8 +105,8 @@ systems.  Therefore, keeping the load generation enabled most often
 leads to a more accurate estimation.
 
 *--quiet[=level]*::
-Tame down verbosity of the auto-tuner. --quiet[=2] means fully quiet,
-quiet=1 means almost quiet.
+Tame down verbosity of the auto-tuner. --quiet[=1] means fully quiet,
+any of --quiet=2, --quiet=semi or --quiet=almost means almost quiet.
 
 *--help*::
 Display a short help.
