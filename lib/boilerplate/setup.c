@@ -40,7 +40,9 @@ struct base_setup_data __base_setup_data = {
 	.no_mlock = 0,
 };
 
-pid_t __node_id;
+pid_t __node_id = 0;
+
+int __config_done = 0;
 
 static int init_done;
 
@@ -504,6 +506,12 @@ void xenomai_init(int *argcp, char *const **argvp)
 		if (ret)
 			goto fail;
 
+		/*
+		 * From now on, we may not assign configuration
+		 * tunables anymore.
+		 */
+		__config_done = 1;
+	
 		CANCEL_DEFER(svc);
 
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
@@ -520,7 +528,8 @@ void xenomai_init(int *argcp, char *const **argvp)
 			early_warning("setup call %s failed", setup->name);
 			goto fail;
 		}
-	}
+	} else
+		__config_done = 1;
 
 	free(options);
 

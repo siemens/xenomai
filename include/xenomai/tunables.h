@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2015 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,27 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _XENOMAI_INIT_H
-#define _XENOMAI_INIT_H
+#ifndef _XENOMAI_TUNABLES_H
+#define _XENOMAI_TUNABLES_H
 
-#include <boilerplate/setup.h>
+#include <boilerplate/tunables.h>
+#include <copperplate/tunables.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void xenomai_init(int *argcp, char *const **argvp);
-
-int xenomai_main(int argc, char *const argv[]);
-
-void xenomai_usage(void);
-
-void application_usage(void);
-
-extern const char *xenomai_version_string;
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _XENOMAI_INIT_H */
+#endif /* !_XENOMAI_TUNABLES_H */

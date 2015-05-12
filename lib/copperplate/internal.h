@@ -30,20 +30,13 @@
 #include <boilerplate/sched.h>
 #include <boilerplate/setup.h>
 #include <copperplate/heapobj.h>
+#include <copperplate/tunables.h>
 
 #ifdef CONFIG_XENO_REGISTRY
 #define DEFAULT_REGISTRY_ROOT		CONFIG_XENO_REGISTRY_ROOT
 #else
 #define DEFAULT_REGISTRY_ROOT		NULL
 #endif
-
-struct copperplate_setup_data {
-	const char *session_root;
-	const char *session_label;
-	const char *registry_root;
-	int no_registry;
-	unsigned int mem_pool;
-};
 
 #define HOBJ_MINLOG2    3
 #define HOBJ_MAXLOG2    22     /* Must hold pagemap::bcount objects */
@@ -84,13 +77,6 @@ struct corethread_attributes {
 		sem_t *released;
 	} __reserved;
 };
-
-extern struct copperplate_setup_data __copperplate_setup_data;
-
-static inline void copperplate_set_quiet(void)
-{
-	__base_setup_data.quiet_mode = 1;
-}
 
 #ifdef __cplusplus
 extern "C" {

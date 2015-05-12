@@ -29,6 +29,7 @@
 #include <boilerplate/ancillaries.h>
 #include "copperplate/internal.h"
 #include <xenomai/init.h>
+#include <xenomai/tunables.h>
 #include <smokey/smokey.h>
 
 /**
@@ -448,9 +449,9 @@ static int smokey_parse_option(int optnum, const char *optarg)
 static int smokey_init(void)
 {
 	if (pvlist_empty(&smokey_test_list))
-		copperplate_set_quiet();
+		set_runtime_tunable(quiet_mode, 1);
 	else
-		smokey_quiet_mode = __base_setup_data.quiet_mode;
+		smokey_quiet_mode = get_runtime_tunable(quiet_mode);
 
 	return 0;
 }

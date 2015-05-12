@@ -13,6 +13,7 @@ includesub_HEADERS =		\
 	threadobj.h		\
 	timerobj.h		\
 	traceobj.h		\
+	tunables.h		\
 	wrappers.h
 
 noinst_HEADERS =		\

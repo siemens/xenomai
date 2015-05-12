@@ -14,4 +14,5 @@ includesub_HEADERS =	\
 	scope.h		\
 	setup.h		\
 	shared-list.h	\
-	time.h
+	time.h		\
+	tunables.h

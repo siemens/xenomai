@@ -95,15 +95,17 @@ void __register_setup_call(struct setup_descriptor *p, int id);
 
 extern pid_t __node_id;
 
-extern struct base_setup_data __base_setup_data;
+extern int __config_done;
 
-#ifdef __cplusplus
-}
-#endif
+extern struct base_setup_data __base_setup_data;
 
 static inline const char *get_program_name(void)
 {
 	return basename(__base_setup_data.arg0 ?: "program");
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_BOILERPLATE_SETUP_H */

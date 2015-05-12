@@ -1,4 +1,6 @@
 includesubdir = $(includedir)/xenomai
 
 includesub_HEADERS =	\
-	init.h
+	init.h		\
+	tunables.h
+
