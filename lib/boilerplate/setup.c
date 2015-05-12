@@ -110,6 +110,8 @@ static inline void dump_configuration(void)
 {
 	int n;
 
+	print_version();
+
 	for (n = 0; config_strings[n]; n++)
 		puts(config_strings[n]);
 }
