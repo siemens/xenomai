@@ -184,9 +184,9 @@
  *   failure code from a smoke test should not abort the test loop.
  *   This flag is not otherwise interpreted by the Smokey API.
  *
- * - --quiet sets the boolean flag @a smokey_quiet_mode to a non-zero
- *   value, which is should be interpreted by all parties as an
- *   indication to tame down verbosity.
+ * - --verbose[=level] sets the integer @a smokey_verbose_mode to a
+ *   non-zero value, which should be interpreted by all parties as the
+ *   desired verbosity level (defaults to 1).
  *
  * @par Writing a test driver based on the Smokey API
  *
@@ -203,7 +203,7 @@
  *
  * The printf-like @a smokey_note() routine is available for issuing
  * progress messages to the output device (currently stdout), unless
- * --quiet was detected on the command line.
+ * --silent was detected on the command line.
  *
  * Therefore, a possible implementation of a test driver could be as
  * basic as:
@@ -246,7 +246,7 @@ static int test_count;
 
 static int do_list;
 
-int smokey_quiet_mode = 0;
+int smokey_verbose_mode = 1;
 
 static const struct option smokey_options[] = {
 	{
@@ -449,9 +449,9 @@ static int smokey_parse_option(int optnum, const char *optarg)
 static int smokey_init(void)
 {
 	if (pvlist_empty(&smokey_test_list))
-		set_runtime_tunable(quiet_mode, 1);
+		set_runtime_tunable(verbosity_level, 0);
 	else
-		smokey_quiet_mode = get_runtime_tunable(quiet_mode);
+		smokey_verbose_mode = get_runtime_tunable(verbosity_level);
 
 	return 0;
 }

@@ -125,6 +125,6 @@ extern struct pvlist smokey_test_list;
 
 extern int smokey_keep_going;
 
-extern int smokey_quiet_mode;
+extern int smokey_verbose_mode;
 
 #endif /* _XENOMAI_SMOKEY_SMOKEY_H */

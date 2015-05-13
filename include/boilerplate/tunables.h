@@ -99,14 +99,14 @@ static inline read_config_tunable(no_sanity, int)
 	return __base_setup_data.no_sanity;
 }
 
-static inline define_runtime_tunable(quiet_mode, int, mode)
+static inline define_runtime_tunable(verbosity_level, int, mode)
 {
-	__base_setup_data.quiet_mode = mode;
+	__base_setup_data.verbosity_level = mode;
 }
 
-static inline read_runtime_tunable(quiet_mode, int)
+static inline read_runtime_tunable(verbosity_level, int)
 {
-	return __base_setup_data.quiet_mode;
+	return __base_setup_data.verbosity_level;
 }
 
 #ifdef __cplusplus

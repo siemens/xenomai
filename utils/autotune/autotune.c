@@ -33,8 +33,10 @@ static int tune_irqlat, tune_kernlat, tune_userlat;
 
 static int reset, noload, background;
 
-/* --quiet[=2] means fully quiet, quiet=1 means almost quiet */
-#define quiet_mode (__base_setup_data.quiet_mode)
+/*
+ * --verbosity_level=0 means fully quiet, =1 means almost quiet.
+ */
+#define verbose (__base_setup_data.verbosity_level)
 
 static const struct option base_options[] = {
 	{
@@ -209,12 +211,12 @@ static void run_tuner(int fd, unsigned int op, int period, const char *type)
 	int ret;
 
 	setup.period = period;
-	setup.quiet = quiet_mode;
+	setup.quiet = verbose > 2 ? 0 : 2 - verbose;
 	ret = ioctl(fd, op, &setup);
 	if (ret)
 		error(1, errno, "setup failed (%s)", type);
 
-	if (!quiet_mode) {
+	if (verbose) {
 		printf("%s gravity... ", type);
 		fflush(stdout);
 	}
@@ -229,7 +231,7 @@ static void run_tuner(int fd, unsigned int op, int period, const char *type)
 	if (op == AUTOTUNE_RTIOC_USER)
 		pthread_cancel(sampler);
 
-	if (!quiet_mode)
+	if (verbose)
 		printf("%u ns\n", gravity);
 }
 
@@ -295,7 +297,7 @@ int main(int argc, char *const argv[])
 	if (tune_irqlat || tune_kernlat || tune_userlat) {
 		if (!noload)
 			create_load(&load_pth);
-		if (!quiet_mode)
+		if (verbose)
 			printf("== auto-tuning started, period=%d ns (may take a while)\n",
 			       period);
 	} else
@@ -312,7 +314,7 @@ int main(int argc, char *const argv[])
 	if (tune_userlat)
 		run_tuner(fd, AUTOTUNE_RTIOC_USER, period, "user");
 
-	if (!quiet_mode && (tune_userlat || tune_kernlat || tune_userlat))
+	if (verbose && (tune_userlat || tune_kernlat || tune_userlat))
 		printf("== auto-tuning completed after %ds\n",
 		       (int)(time(NULL) - start));
 

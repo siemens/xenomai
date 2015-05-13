@@ -35,7 +35,7 @@
 
 struct base_setup_data __base_setup_data = {
 	.no_sanity = !CONFIG_XENO_SANITY,
-	.quiet_mode = 0,
+	.verbosity_level = 1,
 	.arg0 = NULL,
 	.no_mlock = 0,
 };
@@ -59,37 +59,43 @@ static const struct option base_options[] = {
 		.has_arg = 1,
 	},
 	{
-#define quiet_opt	2
-		.name = "quiet",
+#define verbose_opt	2
+		.name = "verbose",
 		.has_arg = 2,
 	},
 	{
 #define silent_opt	3
 		.name = "silent",
-		.flag = &__base_setup_data.quiet_mode,
-		.val = 2,
+		.flag = &__base_setup_data.verbosity_level,
+		.val = 0,
 	},
 	{
-#define version_opt	4
+#define quiet_opt	4
+		.name = "quiet",
+		.flag = &__base_setup_data.verbosity_level,
+		.val = 0,
+	},
+	{
+#define version_opt	5
 		.name = "version",
 	},
 	{
-#define dumpconfig_opt	5
+#define dumpconfig_opt	6
 		.name = "dump-config",
 	},
 	{
-#define no_sanity_opt	6
+#define no_sanity_opt	7
 		.name = "no-sanity",
 		.flag = &__base_setup_data.no_sanity,
 		.val = 1
 	},
 	{
-#define sanity_opt	7
+#define sanity_opt	8
 		.name = "sanity",
 		.flag = &__base_setup_data.no_sanity,
 	},
 	{
-#define no_mlock_opt	8
+#define no_mlock_opt	9
 #ifdef CONFIG_XENO_MERCURY
 		.name = "no-mlock",
 		.flag = &__base_setup_data.no_mlock,
@@ -297,8 +303,8 @@ void xenomai_usage(void)
 
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
         fprintf(stderr, "--[no-]sanity			disable/enable sanity checks\n");
-        fprintf(stderr, "--quiet[=level] 		tame down verbosity to desired level\n");
-        fprintf(stderr, "--silent	 		same as --quiet\n");
+        fprintf(stderr, "--verbose[=level] 		set verbosity to desired level\n");
+        fprintf(stderr, "--silent, --quiet 		same as --verbose=0\n");
         fprintf(stderr, "--version			get version information\n");
         fprintf(stderr, "--dump-config			dump configuration settings\n");
 #ifdef CONFIG_XENO_MERCURY
@@ -351,17 +357,13 @@ static int parse_base_options(int *argcp, char *const **argvp,
 			if (ret)
 				return ret;
 			break;
-		case quiet_opt:
-			__base_setup_data.quiet_mode = 2;
-			if (optarg) {
-				if (strcmp(optarg, "semi") == 0 ||
-				    strcmp(optarg, "almost") == 0)
-					__base_setup_data.quiet_mode = 1;
-				else
-					__base_setup_data.quiet_mode = atoi(optarg);
-			}
+		case verbose_opt:
+			__base_setup_data.verbosity_level = 1;
+			if (optarg)
+				__base_setup_data.verbosity_level = atoi(optarg);
 			break;
 		case silent_opt:
+		case quiet_opt:
 		case no_mlock_opt:
 		case no_sanity_opt:
 		case sanity_opt:
@@ -554,7 +556,7 @@ void xenomai_init(int *argcp, char *const **argvp)
 	free(options);
 
 #ifdef CONFIG_XENO_DEBUG
-	if (__base_setup_data.quiet_mode == 0) {
+	if (__base_setup_data.verbosity_level > 0) {
 		early_warning("Xenomai compiled with %s debug enabled,\n"
 			"                              "
 			"%shigh latencies expected [--enable-debug=%s]",

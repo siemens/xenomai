@@ -27,7 +27,7 @@ struct base_setup_data {
 	cpu_set_t cpu_affinity;
 	int no_mlock;
 	int no_sanity;
-	int quiet_mode;
+	int verbosity_level;
 	const char *arg0;
 };
 

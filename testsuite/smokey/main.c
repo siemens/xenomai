@@ -38,7 +38,7 @@ int main(int argc, char *const argv[])
 			fails++;
 			if (smokey_keep_going)
 				continue;
-			if (!smokey_quiet_mode)
+			if (smokey_verbose_mode)
 				error(1, -ret, "test %s failed", t->name);
 		}
 		smokey_note("%s OK\n", t->name);
