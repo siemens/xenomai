@@ -25,6 +25,7 @@ struct copperplate_setup_data {
 	const char *session_label;
 	const char *registry_root;
 	int no_registry;
+	int shared_registry;
 	size_t mem_pool;
 };
 
@@ -62,6 +63,16 @@ static inline define_config_tunable(no_registry, int, noreg)
 static inline read_config_tunable(no_registry, int)
 {
 	return __copperplate_setup_data.no_registry;
+}
+
+static inline define_config_tunable(shared_registry, int, shared)
+{
+	__copperplate_setup_data.shared_registry = shared;
+}
+
+static inline read_config_tunable(shared_registry, int)
+{
+	return __copperplate_setup_data.shared_registry;
 }
 
 static inline define_config_tunable(mem_pool_size, size_t, size)

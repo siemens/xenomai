@@ -67,6 +67,12 @@ static const struct option copperplate_options[] = {
 		.has_arg = 1,
 	},
 	{
+#define shared_registry_opt	4
+		.name = "shared-registry",
+		.flag = &__copperplate_setup_data.shared_registry,
+		.val = 1,
+	},
+	{
 		/* sentinel */
 	}
 };
@@ -132,6 +138,9 @@ static int get_session_root(int *regflags_r)
 
 	__copperplate_setup_data.session_root = sessdir;
 
+	if (__copperplate_setup_data.shared_registry)
+		*regflags_r |= REGISTRY_SHARED;
+
 	return 0;
 }
 
@@ -194,6 +203,7 @@ static int copperplate_parse_option(int optnum, const char *optarg)
 	case regroot_opt:
 		__copperplate_setup_data.registry_root = strdup(optarg);
 		break;
+	case shared_registry_opt:
 	case no_registry_opt:
 		break;
 	default:
@@ -208,6 +218,7 @@ static void copperplate_help(void)
 {
 	fprintf(stderr, "--mem-pool-size=<sizeK> 	size of the main heap (kbytes)\n");
         fprintf(stderr, "--no-registry			suppress object registration\n");
+        fprintf(stderr, "--shared-registry		enable public access to registry\n");
         fprintf(stderr, "--registry-root=<path>		root path of registry\n");
         fprintf(stderr, "--session=<label>		label of shared multi-processing session\n");
 }

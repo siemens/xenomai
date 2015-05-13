@@ -628,9 +628,9 @@ static void sigchld_handler(int sig)
 static int spawn_daemon(const char *sessdir, int flags)
 {
 	struct sigaction sa;
-	char *path, *av[6];
+	char *path, *av[7];
+	int ret, n = 0;
 	pid_t pid;
-	int ret;
 
 	ret = asprintf(&path, "%s/sbin/sysregd", CONFIG_XENO_PREFIX);
 	if (ret < 0)
@@ -659,11 +659,13 @@ static int spawn_daemon(const char *sessdir, int flags)
 	av[1] = "--daemon";
 	av[2] = "--root";
 	av[3] = (char *)sessdir;
-	if (flags & REGISTRY_ANON) {
-		av[4] = "--anon";
-		av[5] = NULL;
-	} else
-		av[4] = NULL;
+	n = 4;
+	if (flags & REGISTRY_ANON)
+		av[n++] = "--anon";
+	if (flags & REGISTRY_SHARED)
+		av[n++] = "--shared";
+
+	av[n] = NULL;
 
 	pid = vfork();
 	switch (pid) {
