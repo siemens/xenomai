@@ -101,9 +101,18 @@ static const struct option base_options[] = {
 	}
 };
 
+void __weak application_version(void)
+{
+	/*
+	 * Applications can implement this hook for dumping their own
+	 * version stamp.
+	 */
+}
+
 static inline void print_version(void)
 {
-	fprintf(stderr, "%s\n", xenomai_version_string);
+	application_version();
+	fprintf(stderr, "based on %s\n", xenomai_version_string);
 }
 
 static inline void dump_configuration(void)

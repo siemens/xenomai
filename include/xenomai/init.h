@@ -32,6 +32,8 @@ void xenomai_usage(void);
 
 void application_usage(void);
 
+void application_version(void);
+
 extern const char *xenomai_version_string;
 
 #ifdef __cplusplus
