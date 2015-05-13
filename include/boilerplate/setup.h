@@ -87,6 +87,7 @@ static __setup_ctor void __declare_ ## __name(void)	\
 #define copperplate_setup_call(__name)	__setup_call(__name, 2)
 #define interface_setup_call(__name)	__setup_call(__name, 3)
 #define post_setup_call(__name)		__setup_call(__name, 4)
+#define user_setup_call(__name)		__setup_call(__name, 5)
 
 #ifdef __cplusplus
 extern "C" {
