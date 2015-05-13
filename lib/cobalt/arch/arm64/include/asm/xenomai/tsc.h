@@ -27,6 +27,8 @@
 
 #include <asm/xenomai/uapi/tsc.h>
 #include <asm/xenomai/features.h>
+#include <inttypes.h>
+#include <sys/time.h>
 
 /*
  * Putting kuser_tsc_get and kinfo.counter in the same struct results
@@ -39,10 +41,27 @@ struct __xn_full_tscinfo {
 };
 extern struct __xn_full_tscinfo __xn_tscinfo;
 
+static inline uint64_t get_counter(void)
+{
+        uint64_t cval;
+
+#ifdef __aarch64__
+	asm volatile("isb; mrs %0, cntvct_el0; isb; " : "=r" (cval) :: "memory");
+#else
+	asm volatile("isb; mrrc p15, 1, %Q0, %R0, c14; isb" : "=r" (cval) :: "memory");
+#endif
+
+	return cval;
+}
+
 static inline __attribute__((always_inline))
 unsigned long long cobalt_read_tsc(void)
 {
+#ifndef __aarch64__
 	return __xn_tscinfo.kuser_tsc_get(__xn_tscinfo.kinfo.counter);
+#else
+	return get_counter();
+#endif
 }
 
 #endif /* !_LIB_COBALT_ARM_TSC_H */
