@@ -402,10 +402,10 @@ void cobalt_sigdebug_handler(int sig, siginfo_t *si, void *context)
 		_exit(4);
 	case SIGDEBUG_RESCNT_IMBALANCE:
 		raw_write_out("resource locking imbalance");
-		_exit(5);
+		break;
 	case SIGDEBUG_RESCNT_SLEEP:
 		raw_write_out("sleeping while holding resource");
-		_exit(6);
+		break;
 	case SIGDEBUG_WATCHDOG:
 		raw_write_out("watchdog triggered");
 		break;
