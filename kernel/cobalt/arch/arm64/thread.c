@@ -29,9 +29,6 @@
 
 struct static_key __xeno_vfp_key = STATIC_KEY_INIT_TRUE;
 
-asmlinkage void __asm_thread_switch(struct thread_info *out,
-				    struct thread_info *in);
-
 asmlinkage void __asm_thread_trampoline(void);
 
 #if defined(CONFIG_XENO_ARCH_FPU) && defined(CONFIG_VFP)
@@ -341,7 +338,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 			enter_lazy_tlb(prev_mm, next);
 	}
 
-	__asm_thread_switch(out_tcb->core.tip, in_tcb->core.tip);
+	__switch_to(out_tcb->core.tip->task, in_tcb->core.tip->task);
 }
 
 int xnarch_escalate(void)
