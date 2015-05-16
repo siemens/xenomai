@@ -245,13 +245,13 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 		goto autoinit;
 
 	/*
-	 * We track resource ownership for non real-time shadows in
-	 * order to handle the auto-relax feature, so we must always
-	 * obtain them via a syscall.
+	 * We track resource ownership for auto-relax of non real-time
+	 * shadows and some debug features, so we must always obtain
+	 * them via a syscall.
 	 */
   cont:
 	status = cobalt_get_current_mode();
-	if ((status & (XNRELAX|XNWEAK)) == 0) {
+	if ((status & (XNRELAX|XNWEAK|XNDEBUG)) == 0) {
 		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (ret == 0) {
 			_mutex->lockcnt = 1;
@@ -342,7 +342,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 	/* See __cobalt_pthread_mutex_lock() */
   cont:
 	status = cobalt_get_current_mode();
-	if ((status & (XNRELAX|XNWEAK)) == 0) {
+	if ((status & (XNRELAX|XNWEAK|XNDEBUG)) == 0) {
 		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (ret == 0) {
 			_mutex->lockcnt = 1;
@@ -425,7 +425,7 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 
   cont:
 	status = cobalt_get_current_mode();
-	if ((status & (XNRELAX|XNWEAK)) == 0) {
+	if ((status & (XNRELAX|XNWEAK|XNDEBUG)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
 			_mutex->lockcnt = 1;
@@ -520,7 +520,7 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	if ((state->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
 
-	if (cobalt_get_current_mode() & XNWEAK)
+	if (cobalt_get_current_mode() & (XNWEAK|XNDEBUG))
 		goto do_syscall;
 
 	if (xnsynch_fast_release(&state->owner, cur))

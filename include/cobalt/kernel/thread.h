@@ -29,6 +29,7 @@
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/kernel/thread.h>
+#include <cobalt/uapi/signal.h>
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/thread.h>
 
@@ -477,6 +478,26 @@ int xnthread_map(struct xnthread *thread,
 		 struct completion *done);
 
 void xnthread_call_mayday(struct xnthread *thread, int reason);
+
+static inline void xnthread_get_resource(struct xnthread *thread)
+{
+	if (xnthread_test_state(thread, XNWEAK|XNDEBUG))
+		thread->res_count++;
+}
+
+static inline int xnthread_put_resource(struct xnthread *thread)
+{
+	if (xnthread_test_state(thread, XNWEAK|XNDEBUG)) {
+		if (unlikely(thread->res_count == 0)) {
+			xnthread_signal(thread, SIGDEBUG,
+					SIGDEBUG_RESCNT_IMBALANCE);
+			return -EPERM;
+		}
+		thread->res_count--;
+	}
+
+	return 0;
+}
 
 #ifdef CONFIG_SMP
 int xnthread_migrate(int cpu);

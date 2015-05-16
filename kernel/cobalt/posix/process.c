@@ -1014,7 +1014,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	XENO_BUG_ON(COBALT, thread == NULL);
 	trace_cobalt_shadow_unmap(thread);
 
-	if (xnthread_test_state(thread, XNDEBUG))
+	if (xnthread_test_state(thread, XNSSTEP))
 		unlock_timers();
 
 	xnthread_run_handler_stack(thread, exit_thread);
@@ -1079,7 +1079,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 	 * SIGSTOP and SIGINT in order to encompass both the NPTL and
 	 * LinuxThreads behaviours.
 	 */
-	if (xnthread_test_state(next, XNDEBUG)) {
+	if (xnthread_test_state(next, XNSSTEP)) {
 		if (signal_pending(next_task)) {
 			/*
 			 * Do not grab the sighand lock here: it's
@@ -1094,7 +1094,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 			    sigismember(&pending, SIGINT))
 				goto no_ptrace;
 		}
-		xnthread_clear_state(next, XNDEBUG);
+		xnthread_clear_state(next, XNSSTEP);
 		unlock_timers();
 	}
 
@@ -1139,7 +1139,7 @@ static int handle_sigwake_event(struct task_struct *p)
 	 * state bit will be set right after we return, when the task
 	 * is woken up.
 	 */
-	if ((p->ptrace & PT_PTRACED) && !xnthread_test_state(thread, XNDEBUG)) {
+	if ((p->ptrace & PT_PTRACED) && !xnthread_test_state(thread, XNSSTEP)) {
 		/* We already own the siglock. */
 		sigorsets(&pending,
 			  &p->pending.signal,
@@ -1148,7 +1148,7 @@ static int handle_sigwake_event(struct task_struct *p)
 		if (sigismember(&pending, SIGTRAP) ||
 		    sigismember(&pending, SIGSTOP)
 		    || sigismember(&pending, SIGINT)) {
-			xnthread_set_state(thread, XNDEBUG);
+			xnthread_set_state(thread, XNSSTEP);
 			lock_timers();
 		}
 	}

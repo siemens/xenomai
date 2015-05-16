@@ -171,6 +171,9 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	thread = xnthread_current();
 
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER) && thread->res_count > 0)
+		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_RESCNT_SLEEP);
+	
 	xnlock_get_irqsave(&nklock, s);
 
 	trace_cobalt_synch_sleepon(synch, thread);
@@ -372,8 +375,7 @@ int xnsynch_try_acquire(struct xnsynch *synch)
 			-EDEADLK : -EBUSY;
 
 	xnsynch_set_owner(synch, curr);
-	if (xnthread_test_state(curr, XNWEAK))
-		curr->res_count++;
+	xnthread_get_resource(curr);
 
 	return 0;
 }
@@ -438,8 +440,7 @@ redo:
 	h = atomic_cmpxchg(lockp, XN_NO_HANDLE, currh);
 	if (likely(h == XN_NO_HANDLE)) {
 		xnsynch_set_owner(synch, curr);
-		if (xnthread_test_state(curr, XNWEAK))
-			curr->res_count++;
+		xnthread_get_resource(curr);
 		xnthread_clear_info(curr, XNRMID | XNTIMEO | XNBREAK);
 		return 0;
 	}
@@ -544,8 +545,7 @@ block:
 		goto out;
 	}
  grab:
-	if (xnthread_test_state(curr, XNWEAK))
-		curr->res_count++;
+	xnthread_get_resource(curr);
 
 	if (xnsynch_pended_p(synch))
 		currh = xnsynch_fast_claimed(currh);
@@ -668,13 +668,8 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 
 	trace_cobalt_synch_release(synch);
 
-	if (unlikely(xnthread_test_state(thread, XNWEAK))) {
-		if (thread->res_count == 0)
-			xnthread_signal(thread, SIGDEBUG,
-					  SIGDEBUG_RESCNT_IMBALANCE);
-		else
-			thread->res_count--;
-	}
+	if (xnthread_put_resource(thread))
+		return;
 
 	lockp = xnsynch_fastlock(synch);
 	XENO_BUG_ON(COBALT, lockp == NULL);

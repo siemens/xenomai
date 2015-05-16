@@ -125,8 +125,7 @@ static int monitor_enter(xnhandle_t handle, struct xnthread *curr)
 	ret = xnsynch_fast_acquire(mon->gate.fastlock, curr->handle);
 	switch(ret) {
 	case 0:
-		if (xnthread_test_state(curr, XNWEAK))
-			curr->res_count++;
+		xnthread_get_resource(curr);
 		break;
 	default:
 		/* Nah, we really have to wait. */

@@ -36,7 +36,6 @@
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/thread.h>
-#include <cobalt/uapi/signal.h>
 #include <trace/events/cobalt-core.h>
 #include <asm-generic/xenomai/mayday.h>
 #include "debug.h"
@@ -167,6 +166,9 @@ int __xnthread_init(struct xnthread *thread,
 		ksformat(thread->name,
 			 sizeof(thread->name), "@%p", thread);
 
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER))
+		flags |= XNDEBUG;
+
 	thread->personality = attr->personality;
 	cpus_and(thread->affinity, attr->affinity, cobalt_cpu_affinity);
 	thread->sched = sched;
@@ -187,8 +189,7 @@ int __xnthread_init(struct xnthread *thread,
 	thread->entry = NULL;
 	thread->cookie = NULL;
 
-	gravity = xnthread_test_state(thread, XNUSER) ?
-		XNTIMER_UGRAVITY : XNTIMER_KGRAVITY;
+	gravity = flags & XNUSER ? XNTIMER_UGRAVITY : XNTIMER_KGRAVITY;
 	xntimer_init(&thread->rtimer, &nkclock, timeout_handler,
 		     sched, gravity);
 	xntimer_set_name(&thread->rtimer, thread->name);
@@ -1906,7 +1907,7 @@ int xnthread_harden(void)
 	 * is just silently queued up to here.
 	 */
 	if (signal_pending(p)) {
-		xnthread_relax(!xnthread_test_state(thread, XNDEBUG),
+		xnthread_relax(!xnthread_test_state(thread, XNSSTEP),
 			       SIGDEBUG_MIGRATE_SIGNAL);
 		return -ERESTARTSYS;
 	}

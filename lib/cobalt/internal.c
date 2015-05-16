@@ -186,7 +186,7 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 	 */
 
 	status = cobalt_get_current_mode();
-	if (status & (XNRELAX|XNWEAK))
+	if (status & (XNRELAX|XNWEAK|XNDEBUG))
 		goto syscall;
 
 	state = get_monitor_state(mon);
@@ -226,7 +226,7 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 		goto syscall;
 
 	status = cobalt_get_current_mode();
-	if (status & XNWEAK)
+	if (status & (XNWEAK|XNDEBUG))
 		goto syscall;
 
 	cur = cobalt_get_current();
@@ -398,11 +398,14 @@ void cobalt_sigdebug_handler(int sig, siginfo_t *si, void *context)
 
 	switch (sigdebug_reason(si)) {
 	case SIGDEBUG_NOMLOCK:
-		raw_write_out("process memory not locked (missing mlockall?)");
+		raw_write_out("process memory not locked");
 		_exit(4);
 	case SIGDEBUG_RESCNT_IMBALANCE:
-		raw_write_out("internal resource count imbalance");
+		raw_write_out("resource locking imbalance");
 		_exit(5);
+	case SIGDEBUG_RESCNT_SLEEP:
+		raw_write_out("sleeping while holding resource");
+		_exit(6);
 	case SIGDEBUG_WATCHDOG:
 		raw_write_out("watchdog triggered");
 		break;

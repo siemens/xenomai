@@ -90,7 +90,7 @@ static void prepare_for_signal(struct task_struct *p,
 			__xn_error_return(regs,
 					  (sysflags & __xn_exec_norestart) ?
 					  -EINTR : -ERESTARTSYS);
-			notify = !xnthread_test_state(thread, XNDEBUG);
+			notify = !xnthread_test_state(thread, XNSSTEP);
 			xnthread_clear_info(thread, XNBREAK);
 		}
 		xnthread_clear_info(thread, XNKICKED);

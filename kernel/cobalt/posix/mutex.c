@@ -316,8 +316,7 @@ COBALT_SYSCALL(mutex_trylock, primary,
 	err = xnsynch_fast_acquire(mutex->synchbase.fastlock, curr->handle);
 	switch(err) {
 	case 0:
-		if (xnthread_test_state(curr, XNWEAK))
-			curr->res_count++;
+		xnthread_get_resource(curr);
 		break;
 
 /* This should not happen, as recursive mutexes are handled in

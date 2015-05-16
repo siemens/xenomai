@@ -410,6 +410,7 @@ static const char *reason_str[] = {
     [SIGDEBUG_NOMLOCK] = "mlock-check",
     [SIGDEBUG_WATCHDOG] = "runaway-break",
     [SIGDEBUG_RESCNT_IMBALANCE] = "resource-count-imbalance",
+    [SIGDEBUG_RESCNT_SLEEP] = "sleep-holding-resource",
     [SIGDEBUG_LOCK_BREAK] = "scheduler-lock-break",
 };
 
