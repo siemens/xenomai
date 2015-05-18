@@ -30,8 +30,7 @@ static int messages[] = {
 
 MSG_Q_ID qid;
 
-static void peerTask(long a0, long a1, long a2, long a3, long a4,
-		     long a5, long a6, long a7, long a8, long a9)
+static void peerTask(long arg, ...)
 {
 	int ret, msg, n;
 
@@ -49,8 +48,7 @@ static void peerTask(long a0, long a1, long a2, long a3, long a4,
 	traceobj_exit(&trobj);
 }
 
-static void rootTask(long a0, long a1, long a2, long a3, long a4,
-		     long a5, long a6, long a7, long a8, long a9)
+static void rootTask(long arg, ...)
 {
 	TASK_ID tid;
 	int ret, n;

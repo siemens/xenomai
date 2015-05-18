@@ -22,8 +22,7 @@ static TASK_ID btid, ftid;
 
 static SEM_ID sem_id;
 
-static void backgroundTask(long a1, long a2, long a3, long a4, long a5,
-			   long a6, long a7, long a8, long a9, long a10)
+static void backgroundTask(long arg, ...)
 {
 	unsigned int safety = 100000000, count = 0;
 	int ret;
@@ -49,8 +48,7 @@ static void backgroundTask(long a1, long a2, long a3, long a4, long a5,
 	traceobj_exit(&trobj);
 }
 
-static void foregroundTask(long a1, long a2, long a3, long a4, long a5,
-			   long a6, long a7, long a8, long a9, long a10)
+static void foregroundTask(long arg, ...)
 {
 	int ret;
 

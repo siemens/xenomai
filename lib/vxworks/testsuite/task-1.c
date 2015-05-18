@@ -35,7 +35,7 @@ int main(int argc, char *const argv[])
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
-	tid = taskSpawn("windTask", 70, 0, 0, windTask,
+	tid = taskSpawn("windTask", 70, 0, 0, (FUNCPTR)windTask,
 			1, 2, 4, 8, 16, 32, 64, 128, 256, 512);
 	traceobj_assert(&trobj, tid != ERROR);
 
