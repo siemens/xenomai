@@ -986,9 +986,8 @@ static inline void init_hostrt(void) { }
 
 static inline void lock_timers(void)
 {
-	smp_mb__before_atomic();
+	/* We are covered by the core lock: no barriers needed. */
 	atomic_inc(&nkclklk);
-	smp_mb__after_atomic();
 }
 
 static inline void unlock_timers(void)
