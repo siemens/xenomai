@@ -110,29 +110,33 @@ void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
 {
 	struct pool_header *ph = hobj->pool;
 	struct block_header *bh;
-	void *ptr = NULL;
 
-	push_cleanup_lock(&ph->lock);
 	write_lock(&ph->lock);
 
+	ph->used += size;
 	/* Enforce hard limit. */
-	if (ph->used + size > hobj->size)
-		goto out;
+	if (ph->used > hobj->size)
+		goto fail;
 
+	write_unlock(&ph->lock);
+
+	/* malloc(3) is not a cancellation point. */
 	ptr = __STD(malloc(size + sizeof(*bh)));
-	if (ptr == NULL)
-		goto out;
+	if (ptr == NULL) {
+		write_lock(&ph->lock);
+		goto fail;
+	}
 
 	bh = ptr;
 	bh->magic = MALLOC_MAGIC;
 	bh->size = size;
-	ph->used += size;
-	ptr = bh + 1;
-out:
-	write_unlock(&ph->lock);
-	pop_cleanup_lock(&ph->lock);
 
-	return ptr;
+	return bh + 1;
+fail:
+	ph->used -= size;
+	write_unlock(&ph->lock);
+
+	return NULL;
 }
 
 void pvheapobj_free(struct heapobj *hobj, void *ptr)
@@ -140,13 +144,11 @@ void pvheapobj_free(struct heapobj *hobj, void *ptr)
 	struct block_header *bh = ptr - sizeof(*bh);
 	struct pool_header *ph = hobj->pool;
 
-	push_cleanup_lock(&ph->lock);
-	write_lock(&ph->lock);
 	assert(hobj->size >= bh->size);
-	ph->used -= bh->size;
 	__STD(free(bh));
+	write_lock(&ph->lock);
+	ph->used -= bh->size;
 	write_unlock(&ph->lock);
-	pop_cleanup_lock(&ph->lock);
 }
 
 size_t pvheapobj_inquire(struct heapobj *hobj)
