@@ -140,16 +140,9 @@ static void *timerobj_server(void *arg)
 	return NULL;
 }
 
-static int timerobj_spawn_server(void)
+static void timerobj_spawn_server(void)
 {
 	struct corethread_attributes cta;
-	int ret = 0;
-
-	push_cleanup_lock(&svlock);
-	write_lock(&svlock);
-
-	if (svthread)
-		goto out;
 
 	cta.policy = SCHED_CORE;
 	cta.param_ex.sched_priority = threadobj_irq_prio;
@@ -158,16 +151,13 @@ static int timerobj_spawn_server(void)
 	cta.arg = NULL;
 	cta.stacksize = PTHREAD_STACK_MIN * 16;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
-	ret = __bt(copperplate_create_thread(&cta, &svthread));
-out:
-	write_unlock(&svlock);
-	pop_cleanup_lock(&svlock);
 
-	return ret;
+	__bt(copperplate_create_thread(&cta, &svthread));
 }
 
 int timerobj_init(struct timerobj *tmobj)
 {
+	static pthread_once_t spawn_once;
 	pthread_mutexattr_t mattr;
 	struct sigevent sev;
 	int ret;
@@ -183,9 +173,9 @@ int timerobj_init(struct timerobj *tmobj)
 	 * very least), and spawning a short-lived thread at each
 	 * timeout expiration to run the handler is just overkill.
 	 */
-	ret = timerobj_spawn_server();
-	if (ret)
-		return __bt(ret);
+	pthread_once(&spawn_once, timerobj_spawn_server);
+	if (!svthread)
+		return __bt(-EAGAIN);
 
 	tmobj->handler = NULL;
 	pvholder_init(&tmobj->next); /* so we may use pvholder_linked() */
