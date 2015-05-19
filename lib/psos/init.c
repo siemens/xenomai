@@ -46,7 +46,7 @@
  * - Tasks, Events, Queues, Semaphores
  * - Partitions, Regions, Timers
  */
-unsigned int psos_long_names;
+int psos_long_names = 0;
 
 static unsigned int clock_resolution = 1000000; /* 1ms */
 
@@ -57,21 +57,20 @@ static const struct option psos_options[] = {
 #define clock_resolution_opt	0
 		.name = "psos-clock-resolution",
 		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
 	},
 	{
 #define time_slice_opt	1
 		.name = "psos-time-slice",
 		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
 	},
 	{
-		.name = NULL,
-		.has_arg = 0,
-		.flag = NULL,
-		.val = 0
+#define long_names_opt	2
+		.name = "psos-long-names",
+		.flag = &psos_long_names,
+		.val = 1
+	},
+	{
+		/* sentinel */
 	}
 };
 
@@ -83,6 +82,8 @@ static int psos_parse_option(int optnum, const char *optarg)
 		break;
 	case time_slice_opt:
 		time_slice_in_ticks = atoi(optarg);
+		break;
+	case long_names_opt:
 		break;
 	default:
 		/* Paranoid, can't happen. */
@@ -96,6 +97,7 @@ static void psos_help(void)
 {
         fprintf(stderr, "--psos-clock-resolution=<ns>	tick value (default 1ms)\n");
         fprintf(stderr, "--psos-time-slice=<psos-ticks>	round-robin time slice\n");
+        fprintf(stderr, "--psos-long-names		enable long names for objects (> 4 characters)\n");
 }
 
 static int psos_init(void)
@@ -127,17 +129,6 @@ static int psos_init(void)
 	clockobj_ticks_to_timespec(&psos_clock, time_slice_in_ticks, &psos_rrperiod);
 
 	return 0;
-}
-
-const char *__psos_maybe_short_name(char shrt[5], const char *lng)
-{
-	if (psos_long_names)
-		return lng;
-
-	strncpy(shrt, lng, 5 - 1);
-	shrt[4] = '\0';
-
-	return (const char *)shrt;
 }
 
 static struct setup_descriptor psos_skin = {

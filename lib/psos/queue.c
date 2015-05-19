@@ -97,7 +97,7 @@ static u_long __q_create(const char *name, u_long count,
 	if (name == NULL || *name == '\0')
 		sprintf(q->name, "q%lu", ++anon_qids);
 	else {
-		name = __psos_maybe_short_name(short_name, name);
+		name = psos_trunc_name(short_name, name);
 		namecpy(q->name, name);
 	}
 
@@ -215,7 +215,7 @@ static u_long __q_ident(const char *name,
 	if (node)
 		return ERR_NODENO;
 
-	name = __psos_maybe_short_name(short_name, name);
+	name = psos_trunc_name(short_name, name);
 
 	CANCEL_DEFER(svc);
 	cobj = cluster_findobj(&psos_queue_table, name);

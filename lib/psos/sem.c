@@ -91,7 +91,7 @@ u_long sm_create(const char *name,
 	if (name == NULL || *name == '\0')
 		sprintf(sem->name, "sm%lu", ++anon_smids);
 	else {
-		name = __psos_maybe_short_name(short_name, name);
+		name = psos_trunc_name(short_name, name);
 		namecpy(sem->name, name);
 	}
 
@@ -154,7 +154,7 @@ u_long sm_ident(const char *name, u_long node, u_long *smid_r)
 	if (node)
 		return ERR_NODENO;
 
-	name = __psos_maybe_short_name(short_name, name);
+	name = psos_trunc_name(short_name, name);
 
 	CANCEL_DEFER(svc);
 	cobj = cluster_findobj(&psos_sem_table, name);

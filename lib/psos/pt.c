@@ -145,7 +145,7 @@ u_long pt_create(const char *name,
 	if (name == NULL || *name == '\0')
 		sprintf(pt->name, "pt%lu", ++anon_ptids);
 	else {
-		name = __psos_maybe_short_name(short_name, name);
+		name = psos_trunc_name(short_name, name);
 		namecpy(pt->name, name);
 	}
 
@@ -295,7 +295,7 @@ u_long pt_ident(const char *name, u_long node, u_long *ptid_r)
 	if (node)
 		return ERR_NODENO;
 
-	name = __psos_maybe_short_name(short_name, name);
+	name = psos_trunc_name(short_name, name);
 
 	CANCEL_DEFER(svc);
 	cobj = pvcluster_findobj(&psos_pt_table, name);

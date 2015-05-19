@@ -18,7 +18,19 @@
 #ifndef _PSOS_INTERNAL_H
 #define _PSOS_INTERNAL_H
 
-const char *__psos_maybe_short_name(char shrt[5],
-				    const char *lng);
+#include <string.h>
+
+extern int psos_long_names;
+
+static inline
+const char *psos_trunc_name(char dst[5], const char *src)
+{
+	if (psos_long_names)
+		return src;
+
+	strncpy(dst, src, 4)[4] = '\0';
+
+	return dst;
+}
 
 #endif /* !_PSOS_INTERNAL_H */

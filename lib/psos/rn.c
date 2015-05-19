@@ -113,7 +113,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	if (name == NULL || *name == '\0')
 		sprintf(rn->name, "rn%lu", ++anon_rnids);
 	else {
-		name = __psos_maybe_short_name(short_name, name);
+		name = psos_trunc_name(short_name, name);
 		namecpy(rn->name, name);
 	}
 
@@ -200,7 +200,7 @@ u_long rn_ident(const char *name, u_long *rnid_r)
 	struct service svc;
 	char short_name[5];
 
-	name = __psos_maybe_short_name(short_name, name);
+	name = psos_trunc_name(short_name, name);
 
 	CANCEL_DEFER(svc);
 	cobj = pvcluster_findobj(&psos_rn_table, name);

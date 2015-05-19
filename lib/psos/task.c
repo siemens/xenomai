@@ -299,7 +299,7 @@ u_long t_create(const char *name, u_long prio,
 	if (name == NULL || *name == '\0')
 		generate_name(task->name, name, &task_namegen);
 	else {
-		name = __psos_maybe_short_name(short_name, name);
+		name = psos_trunc_name(short_name, name);
 		namecpy(task->name, name);
 	}
 
@@ -526,7 +526,7 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 		if (task == NULL)
 			goto out;
 	} else {
-		name = __psos_maybe_short_name(short_name, name);
+		name = psos_trunc_name(short_name, name);
 		cobj = cluster_findobj(&psos_task_table, name);
 		if (cobj == NULL) {
 			ret = ERR_OBJNF;
