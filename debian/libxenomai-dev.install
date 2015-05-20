@@ -1,8 +1,6 @@
-usr/bin/xeno-config
 usr/include
 usr/lib/*.la
 usr/lib/*.a
 usr/lib/*.so
 usr/lib/cobalt.wrappers
 usr/lib/dynlist.ld
-usr/share/man/man1/xeno-config.1
