@@ -122,13 +122,17 @@ static inline void xnpipe_dequeue_all(struct xnpipe_state *state, int mask)
 	xnpipe_enqueue_wait(__state, __mask);				\
 	xnlock_put_irqrestore(&nklock, __s);				\
 									\
-	prepare_to_wait_exclusive(__waitq, &__wait, TASK_INTERRUPTIBLE);\
-									\
-	if (!(__cond))							\
+	for (;;) {							\
+		__sigpending = signal_pending(current);			\
+		if (__sigpending)					\
+			break;						\
+		prepare_to_wait_exclusive(__waitq, &__wait, TASK_INTERRUPTIBLE); \
+		if (__cond)						\
+			break;						\
 		schedule();						\
+	}								\
 									\
 	finish_wait(__waitq, &__wait);					\
-	__sigpending = signal_pending(current);				\
 									\
 	/* Restore the interrupt state initially set by the caller. */	\
 	xnlock_get_irqsave(&nklock, __s);				\
