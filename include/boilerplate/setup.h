@@ -66,7 +66,7 @@ struct setup_descriptor {
  *
  * - The last priority level is used for the bootstrap code
  * (__bootstrap_ctor), which is guaranteed to run after any
- * setup/early code, provided such code is part of the main
+ * setup/early code, provided such bootstrap code is part of the main
  * executable.
  *
  * The guarantees on the init order don't go beyond what is stated
