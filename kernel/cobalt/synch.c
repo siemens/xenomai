@@ -669,7 +669,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 	trace_cobalt_synch_release(synch);
 
 	if (xnthread_put_resource(thread))
-		return;
+		return NULL;
 
 	lockp = xnsynch_fastlock(synch);
 	XENO_BUG_ON(COBALT, lockp == NULL);
