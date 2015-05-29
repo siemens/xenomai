@@ -284,7 +284,7 @@ config XENO_OPT_SYS_HEAPSZ
 
 config XENO_OPT_PRIVATE_HEAPSZ
 	int "Size of private heap (Kb)"
-	default 32
+	default 64
 	help
 
 	The Cobalt kernel implements fast IPC mechanisms within the
@@ -293,11 +293,11 @@ config XENO_OPT_PRIVATE_HEAPSZ
 	process. This option can be used to set the size of this
 	per-process heap.
 
-	32k is considered a large enough size for common use cases.
+	64k is considered a large enough size for common use cases.
 
 config XENO_OPT_SHARED_HEAPSZ
 	int "Size of shared heap (Kb)"
-	default 32
+	default 64
 	help
 
 	The Cobalt kernel implements fast IPC mechanisms between
@@ -306,7 +306,7 @@ config XENO_OPT_SHARED_HEAPSZ
 	processes. This option can be used to set the size of this
 	system-wide heap.
 
-	32k is considered a large enough size for common use cases.
+	64k is considered a large enough size for common use cases.
 
 config XENO_OPT_NRTIMERS
        int "Maximum number of POSIX timers per process"
