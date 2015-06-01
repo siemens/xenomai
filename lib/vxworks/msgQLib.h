@@ -39,7 +39,7 @@ struct wind_mq {
 
 struct wind_queue_wait {
 	size_t size;
-	void *ptr;
+	dref_type(void *) ptr;
 };
 
 #endif /* _VXWORKS_MSGQLIB_H */

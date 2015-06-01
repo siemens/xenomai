@@ -219,7 +219,7 @@ retry:
 		timespec = NULL;
 
 	wait = threadobj_prepare_wait(struct wind_queue_wait);
-	wait->ptr = buffer;
+	wait->ptr = __moff(buffer);
 	wait->size = maxNBytes;
 
 	ret = syncobj_wait_grant(&mq->sobj, timespec, &syns);
@@ -285,7 +285,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		if (bytes > maxbytes)
 			bytes = maxbytes;
 		if (bytes > 0)
-			memcpy(wait->ptr, buffer, bytes);
+			memcpy(__mptr(wait->ptr), buffer, bytes);
 		wait->size = bytes;
 		goto done;
 	}
