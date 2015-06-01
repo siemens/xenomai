@@ -654,7 +654,7 @@ int rt_queue_write(RT_QUEUE *queue,
 		if (size > usersz)
 			size = usersz;
 		if (size > 0)
-			memcpy(wait->userbuf, buf, size);
+			memcpy(__mptr(wait->userbuf), buf, size);
 		wait->usersz = size;
 		syncobj_grant_to(&qcb->sobj, waiter);
 		ret = 1;
@@ -981,7 +981,7 @@ wait:
 	}
 
 	wait = threadobj_prepare_wait(struct alchemy_queue_wait);
-	wait->userbuf = buf;
+	wait->userbuf = __moff(buf);
 	wait->usersz = size;
 	wait->msg = NULL;
 

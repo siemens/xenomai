@@ -50,7 +50,7 @@ struct alchemy_queue_msg {
 
 struct alchemy_queue_wait {
 	struct alchemy_queue_msg *msg;
-	void *userbuf;
+	dref_type(void *) userbuf;
 	size_t usersz;
 };
 
