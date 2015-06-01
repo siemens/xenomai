@@ -110,6 +110,7 @@ void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
 {
 	struct pool_header *ph = hobj->pool;
 	struct block_header *bh;
+	void *ptr;
 
 	write_lock(&ph->lock);
 
