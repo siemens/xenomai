@@ -264,7 +264,7 @@ starve:
 		timespec = NULL;
 
 	wait = threadobj_prepare_wait(struct psos_rn_wait);
-	wait->ptr = NULL;
+	wait->ptr = __moff(NULL);
 	wait->size = size;
 
 	ret = syncobj_wait_grant(&rn->sobj, timespec, &syns);
@@ -279,7 +279,7 @@ starve:
 		goto out;
 	}
 
-	*segaddr = wait->ptr;
+	*segaddr = __mptr(wait->ptr);
 done:
 	syncobj_unlock(&rn->sobj, &syns);
 out:
@@ -329,7 +329,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 		if (seg) {
 			rn->busynr++;
 			rn->usedmem += heapobj_validate(&rn->hobj, seg);
-			wait->ptr = seg;
+			wait->ptr = __moff(seg);
 			syncobj_grant_to(&rn->sobj, thobj);
 		}
 	}

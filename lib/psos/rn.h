@@ -41,7 +41,7 @@ struct psos_rn {
 
 struct psos_rn_wait {
 	size_t size;
-	void *ptr;
+	dref_type(void *) ptr;
 };
 
 extern struct pvcluster psos_rn_table;
