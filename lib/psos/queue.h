@@ -43,7 +43,7 @@ struct psos_queue {
 
 struct psos_queue_wait {
 	size_t size;
-	void *ptr;
+	dref_type(void *) ptr;
 };
 
 extern struct cluster psos_queue_table;

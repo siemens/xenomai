@@ -258,7 +258,7 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 		if (bytes > maxbytes)
 			bytes = maxbytes;
 		if (bytes > 0)
-			memcpy(wait->ptr, buffer, bytes);
+			memcpy(__mptr(wait->ptr), buffer, bytes);
 		wait->size = bytes;
 		goto done;
 	}
@@ -462,7 +462,7 @@ retry:
 		timespec = NULL;
 
 	wait = threadobj_prepare_wait(struct psos_queue_wait);
-	wait->ptr = buffer;
+	wait->ptr = __moff(buffer);
 	wait->size = msglen;
 
 	ret = syncobj_wait_grant(&q->sobj, timespec, &syns);
