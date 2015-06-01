@@ -31,7 +31,7 @@ struct alchemy_buffer {
 	struct clusterobj cobj;
 	size_t bufsz;
 	int mode;
-	void *buf;
+	dref_type(void *) buf;
 	size_t rdoff;
 	size_t wroff;
 	size_t fillsz;

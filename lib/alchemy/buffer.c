@@ -153,7 +153,7 @@ static void buffer_finalize(struct syncobj *sobj)
 
 	bcb = container_of(sobj, struct alchemy_buffer, sobj);
 	registry_destroy_file(&bcb->fsobj);
-	xnfree(bcb->buf);
+	xnfree(__mptr(bcb->buf));
 	xnfree(bcb);
 }
 fnref_register(libalchemy, buffer_finalize);
@@ -216,6 +216,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	struct alchemy_buffer *bcb;
 	struct service svc;
 	int sobj_flags = 0;
+	void *buf;
 	int ret;
 
 	if (threadobj_irq_p())
@@ -232,12 +233,13 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 		goto fail;
 	}
 
-	bcb->buf = xnmalloc(bufsz);
-	if (bcb == NULL) {
+	buf = xnmalloc(bufsz);
+	if (buf == NULL) {
 		ret = __bt(-ENOMEM);
 		goto fail_bufalloc;
 	}
 
+	bcb->buf = __moff(buf);
 	generate_name(bcb->name, name, &buffer_namegen);
 	bcb->mode = mode;
 	bcb->bufsz = bufsz;
@@ -276,7 +278,7 @@ fail_register:
 	registry_destroy_file(&bcb->fsobj);
 	syncobj_uninit(&bcb->sobj);
 fail_syncinit:
-	xnfree(bcb->buf);
+	xnfree(buf);
 fail_bufalloc:
 	xnfree(bcb);
 fail:
@@ -500,7 +502,7 @@ redo:
 				n = bcb->bufsz - rdoff;
 			else
 				n = rbytes;
-			memcpy(p, bcb->buf + rdoff, n);
+			memcpy(p, __mptr(bcb->buf) + rdoff, n);
 			p += n;
 			rdoff = (rdoff + n) % bcb->bufsz;
 			rbytes -= n;
@@ -716,7 +718,7 @@ ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
 			else
 				n = rbytes;
 
-			memcpy(bcb->buf + wroff, p, n);
+			memcpy(__mptr(bcb->buf) + wroff, p, n);
 			p += n;
 			wroff = (wroff + n) % bcb->bufsz;
 			rbytes -= n;
