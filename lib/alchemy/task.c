@@ -1698,6 +1698,7 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
 			   const struct timespec *abs_timeout)
 {
+	void *rbufin = NULL, *rbufout = NULL;
 	struct alchemy_task_wait *wait;
 	struct threadobj *current;
 	struct alchemy_task *tcb;
@@ -1741,10 +1742,31 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 		tcb->flowgen = 1;
 
 	wait->request = *mcb_s;
+	/*
+	 * Payloads exchanged with remote tasks have to go through the
+	 * main heap.
+	 */
+	if (mcb_s->size > 0 && !threadobj_local_p(&tcb->thobj)) {
+		rbufin = xnmalloc(mcb_s->size);
+		if (rbufin == NULL) {
+			ret = -ENOMEM;
+			goto cleanup;
+		}
+		memcpy(rbufin, mcb_s->data, mcb_s->size);
+		wait->request.__dref = __moff(rbufin);
+	}
 	wait->request.flowid = tcb->flowgen;
 	if (mcb_r) {
-		wait->reply.data = mcb_r->data;
 		wait->reply.size = mcb_r->size;
+		wait->reply.data = mcb_r->data;
+		if (mcb_r->size > 0 && !threadobj_local_p(&tcb->thobj)) {
+			rbufout = xnmalloc(mcb_r->size);
+			if (rbufout == NULL) {
+				ret = -ENOMEM;
+				goto cleanup;
+			}
+			wait->reply.__dref = __moff(rbufout);
+		}
 	} else {
 		wait->reply.data = NULL;
 		wait->reply.size = 0;
@@ -1760,12 +1782,20 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 			goto out;
 		goto done;
 	}
-	ret = wait->reply.size;
 
+	ret = wait->reply.size;
+	if (!threadobj_local_p(&tcb->thobj) && ret > 0 && mcb_r)
+		memcpy(mcb_r->data, rbufout, ret);
+cleanup:
 	threadobj_finish_wait();
 done:
 	syncobj_unlock(&tcb->sobj_msg, &syns);
 out:
+	if (rbufin)
+		xnfree(rbufin);
+	if (rbufout)
+		xnfree(rbufout);
+	
 	CANCEL_RESTORE(svc);
 
 	return ret;
@@ -1903,8 +1933,12 @@ int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 		goto fixup;
 	}
 
-	if (mcb_s->size > 0)
-		memcpy(mcb_r->data, mcb_s->data, mcb_s->size);
+	if (mcb_s->size > 0) {
+		if (!threadobj_local_p(thobj))
+			memcpy(mcb_r->data, __mptr(mcb_s->__dref), mcb_s->size);
+		else
+			memcpy(mcb_r->data, mcb_s->data, mcb_s->size);
+	}
 
 	/* The flow identifier is always strictly positive. */
 	ret = mcb_s->flowid;
@@ -2020,8 +2054,8 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	/*
 	 * NOTE: sending back a NULL or zero-length reply is perfectly
 	 * valid; it just means to unblock the client without passing
-	 * it back any reply data. What is invalid is sending a
-	 * response larger than what the client expects.
+	 * it back any reply data. Sending a response larger than what
+	 * the client expects is invalid.
 	 */
 	if (mcb_r->size < size) {
 		ret = -ENOBUFS;	/* Client will get this too. */
@@ -2029,8 +2063,12 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	} else {
 		ret = 0;
 		mcb_r->size = size;
-		if (size > 0)
-			memcpy(mcb_r->data, mcb_s->data, size);
+		if (size > 0) {
+			if (!threadobj_local_p(thobj))
+				memcpy(__mptr(mcb_r->__dref), mcb_s->data, size);
+			else
+				memcpy(mcb_r->data, mcb_s->data, size);
+		}
 	}
 
 	mcb_r->flowid = flowid;

@@ -52,7 +52,10 @@ typedef struct RT_TASK RT_TASK;
 struct RT_TASK_MCB {
 	int flowid;
 	int opcode;
-	void *data;
+	union {
+		dref_type(void *) __dref;
+		void *data;
+	};
 	ssize_t size;
 };
 
