@@ -245,7 +245,7 @@ int rt_heap_create(RT_HEAP *heap,
 	generate_name(hcb->name, name, &heap_namegen);
 	hcb->mode = mode;
 	hcb->size = heapsz;
-	hcb->sba = NULL;
+	hcb->sba = __moff(NULL);
 
 	if (mode & H_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
@@ -432,7 +432,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 		goto out;
 
 	if (hcb->mode & H_SINGLE) {
-		p = hcb->sba;
+		p = __mptr(hcb->sba);
 		if (p)
 			goto done;
 		if (size > 0 && size != hcb->size) {
@@ -444,7 +444,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 			ret = -ENOMEM;
 			goto done;
 		}
-		hcb->sba = p;
+		hcb->sba = __moff(p);
 		goto done;
 	}
 
@@ -467,7 +467,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 			goto out;
 		}
 	} else
-		p = wait->ptr;
+		p = __mptr(wait->ptr);
 
 	threadobj_finish_wait();
 done:
@@ -509,6 +509,7 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
+	void *ptr;
 
 	CANCEL_DEFER(svc);
 
@@ -534,9 +535,11 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 	 */
 	syncobj_for_each_grant_waiter_safe(&hcb->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
-		wait->ptr = heapobj_alloc(&hcb->hobj, wait->size);
-		if (wait->ptr)
+		ptr = heapobj_alloc(&hcb->hobj, wait->size);
+		if (ptr) {
+			wait->ptr = __moff(ptr);
 			syncobj_grant_to(&hcb->sobj, thobj);
+		}
 	}
 done:
 	put_alchemy_heap(hcb, &syns);

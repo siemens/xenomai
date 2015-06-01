@@ -33,13 +33,13 @@ struct alchemy_heap {
 	struct clusterobj cobj;
 	int mode;
 	size_t size;
-	void *sba;
+	dref_type(void *) sba;
 	struct fsobj fsobj;
 };
 
 struct alchemy_heap_wait {
 	size_t size;
-	void *ptr;
+	dref_type (void *) ptr;
 };
 
 #define heap_magic	0x8a8aebeb
