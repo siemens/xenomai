@@ -100,10 +100,10 @@ struct sysgroup *__main_sysgroup;
 
 static struct heapobj main_pool;
 
-#define __moff(h, p)		((caddr_t)(p) - (caddr_t)(h))
-#define __moff_check(h, p)	((p) ? __moff(h, p) : 0)
-#define __mref(h, o)		((void *)((caddr_t)(h) + (o)))
-#define __mref_check(h, o)	((o) ? __mref(h, o) : NULL)
+#define __shoff(h, p)		((caddr_t)(p) - (caddr_t)(h))
+#define __shoff_check(h, p)	((p) ? __shoff(h, p) : 0)
+#define __shref(h, o)		((void *)((caddr_t)(h) + (o)))
+#define __shref_check(h, o)	((o) ? __shref(h, o) : NULL)
 
 static inline size_t __align_to(size_t size, size_t al)
 {
@@ -131,13 +131,13 @@ static void init_extent(struct shared_heap *heap, struct shared_extent *extent)
 	__holder_init_nocheck(heap, &extent->link);
 
 	/* The initial extent starts right after the header. */
-	extent->membase = __moff(heap, extent) + heap->hdrsize;
+	extent->membase = __shoff(heap, extent) + heap->hdrsize;
 	lastpgnum = heap->npages - 1;
 
 	/* Mark each page as free in the page map. */
-	for (n = 0, freepage = __mref(heap, extent->membase);
+	for (n = 0, freepage = __shref(heap, extent->membase);
 	     n < lastpgnum; n++, freepage += HOBJ_PAGE_SIZE) {
-		*((memoff_t *)freepage) = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
+		*((memoff_t *)freepage) = __shoff(heap, freepage) + HOBJ_PAGE_SIZE;
 		extent->pagemap[n].type = page_free;
 		extent->pagemap[n].bcount = 0;
 	}
@@ -145,7 +145,7 @@ static void init_extent(struct shared_heap *heap, struct shared_extent *extent)
 	*((memoff_t *)freepage) = 0;
 	extent->pagemap[lastpgnum].type = page_free;
 	extent->pagemap[lastpgnum].bcount = 0;
-	extent->memlim = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
+	extent->memlim = __shoff(heap, freepage) + HOBJ_PAGE_SIZE;
 
 	/* The first page starts the free list of a new extent. */
 	extent->freelist = extent->membase;
@@ -228,7 +228,7 @@ static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2si
 	size_t pnum, pcont, fcont;
 
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
-		freepage = __mref_check(heap, extent->freelist);
+		freepage = __shref_check(heap, extent->freelist);
 		while (freepage) {
 			headpage = freepage;
 			fcont = 0;
@@ -239,7 +239,7 @@ static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2si
 			 */
 			do {
 				lastpage = freepage;
-				freepage = __mref_check(heap, *((memoff_t *)freepage));
+				freepage = __shref_check(heap, *((memoff_t *)freepage));
 				fcont += HOBJ_PAGE_SIZE;
 			} while (freepage == lastpage + HOBJ_PAGE_SIZE
 				 && fcont < bsize);
@@ -249,7 +249,7 @@ static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2si
 				 * page list, then proceed to the next
 				 * step.
 				 */
-				if (__moff(heap, headpage) == extent->freelist)
+				if (__shoff(heap, headpage) == extent->freelist)
 					extent->freelist = *((memoff_t *)lastpage);
 				else
 					*((memoff_t *)freehead) = *((memoff_t *)lastpage);
@@ -278,13 +278,13 @@ splitpage:
 		for (block = headpage, eblock =
 		     headpage + HOBJ_PAGE_SIZE - bsize; block < eblock;
 		     block += bsize)
-			*((memoff_t *)block) = __moff(heap, block) + bsize;
+			*((memoff_t *)block) = __shoff(heap, block) + bsize;
 
 		*((memoff_t *)eblock) = 0;
 	} else
 		*((memoff_t *)headpage) = 0;
 
-	pnum = (__moff(heap, headpage) - extent->membase) >> HOBJ_PAGE_SHIFT;
+	pnum = (__shoff(heap, headpage) - extent->membase) >> HOBJ_PAGE_SHIFT;
 
 	/*
 	 * Update the page map.  If log2size is non-zero (i.e. bsize
@@ -351,7 +351,7 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 
 		write_lock_nocancel(&heap->lock);
 
-		block = __mref_check(heap, heap->buckets[ilog].freelist);
+		block = __shref_check(heap, heap->buckets[ilog].freelist);
 		if (block == NULL) {
 			block = get_free_range(heap, bsize, log2size);
 			if (block == NULL)
@@ -364,13 +364,13 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 
 			/* Search for the source extent of block. */
 			__list_for_each_entry(heap, extent, &heap->extents, link) {
-				if (__moff(heap, block) >= extent->membase &&
-				    __moff(heap, block) < extent->memlim)
+				if (__shoff(heap, block) >= extent->membase &&
+				    __shoff(heap, block) < extent->memlim)
 					goto found;
 			}
 			assert(0);
 		found:
-			pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
+			pnum = (__shoff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 			++extent->pagemap[pnum].bcount;
 		}
 
@@ -408,8 +408,8 @@ static int free_block(struct shared_heap *heap, void *block)
 	 * originating from.
 	 */
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
-		if (__moff(heap, block) >= extent->membase &&
-		    __moff(heap, block) < extent->memlim)
+		if (__shoff(heap, block) >= extent->membase &&
+		    __shoff(heap, block) < extent->memlim)
 			goto found;
 	}
 
@@ -417,8 +417,8 @@ static int free_block(struct shared_heap *heap, void *block)
 	goto out;
 found:
 	/* Compute the heading page number in the page map. */
-	pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
-	boffset = (__moff(heap, block) -
+	pnum = (__shoff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
+	boffset = (__shoff(heap, block) -
 		   (extent->membase + (pnum << HOBJ_PAGE_SHIFT)));
 
 	switch (extent->pagemap[pnum].type) {
@@ -439,7 +439,7 @@ found:
 		for (freepage = (caddr_t)block,
 		     tailpage = (caddr_t)block + bsize - HOBJ_PAGE_SIZE;
 		     freepage < tailpage; freepage += HOBJ_PAGE_SIZE)
-			*((memoff_t *)freepage) = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
+			*((memoff_t *)freepage) = __shoff(heap, freepage) + HOBJ_PAGE_SIZE;
 
 	free_pages:
 		/* Mark the released pages as free in the extent's page map. */
@@ -449,16 +449,16 @@ found:
 		 * Return the sub-list to the free page list, keeping
 		 * an increasing address order to favor coalescence.
 		 */
-		for (nextpage = __mref_check(heap, extent->freelist), lastpage = NULL;
+		for (nextpage = __shref_check(heap, extent->freelist), lastpage = NULL;
 		     nextpage && nextpage < (caddr_t)block;
-		     lastpage = nextpage, nextpage = __mref_check(heap, *((memoff_t *)nextpage)))
+		     lastpage = nextpage, nextpage = __shref_check(heap, *((memoff_t *)nextpage)))
 		  ;	/* Loop */
 
-		*((memoff_t *)tailpage) = __moff_check(heap, nextpage);
+		*((memoff_t *)tailpage) = __shoff_check(heap, nextpage);
 		if (lastpage)
-			*((memoff_t *)lastpage) = __moff(heap, block);
+			*((memoff_t *)lastpage) = __shoff(heap, block);
 		else
-			extent->freelist = __moff(heap, block);
+			extent->freelist = __shoff(heap, block);
 		break;
 
 	default:
@@ -479,7 +479,7 @@ found:
 		if (--extent->pagemap[pnum].bcount > 0) {
 			/* Return the block to the bucketed memory space. */
 			*((memoff_t *)block) = heap->buckets[ilog].freelist;
-			heap->buckets[ilog].freelist = __moff(heap, block);
+			heap->buckets[ilog].freelist = __shoff(heap, block);
 			++heap->buckets[ilog].fcount;
 			break;
 		}
@@ -495,7 +495,7 @@ found:
 			 */
 			goto free_page_list;
 
-		freepage = __mref(heap, extent->membase) + (pnum << HOBJ_PAGE_SHIFT);
+		freepage = __shref(heap, extent->membase) + (pnum << HOBJ_PAGE_SHIFT);
 		block = freepage;
 		tailpage = freepage;
 		nextpage = freepage + HOBJ_PAGE_SIZE;
@@ -522,11 +522,12 @@ found:
 		 * comes first.
 		 */
 		for (tailptr = &heap->buckets[ilog].freelist,
-			     freeptr = __mref_check(heap, *tailptr), xpage = 1;
-		     freeptr && nblocks > 0; freeptr = __mref_check(heap, *((memoff_t *)freeptr))) {
+			     freeptr = __shref_check(heap, *tailptr), xpage = 1;
+		     freeptr && nblocks > 0;
+		     freeptr = __shref_check(heap, *((memoff_t *)freeptr))) {
 			if (freeptr < freepage || freeptr >= nextpage) {
 				if (xpage) { /* Limit random writes */
-					*tailptr = __moff(heap, freeptr);
+					*tailptr = __shoff(heap, freeptr);
 					xpage = 0;
 				}
 				tailptr = (memoff_t *)freeptr;
@@ -535,7 +536,7 @@ found:
 				xpage = 1;
 			}
 		}
-		*tailptr = __moff_check(heap, freeptr);
+		*tailptr = __shoff_check(heap, freeptr);
 		goto free_pages;
 	}
 
@@ -558,20 +559,20 @@ static size_t check_block(struct shared_heap *heap, void *block)
 	 * Find the extent the checked block is originating from.
 	 */
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
-		if (__moff(heap, block) >= extent->membase &&
-		    __moff(heap, block) < extent->memlim)
+		if (__shoff(heap, block) >= extent->membase &&
+		    __shoff(heap, block) < extent->memlim)
 			goto found;
 	}
 	goto out;
 found:
 	/* Compute the heading page number in the page map. */
-	pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
+	pnum = (__shoff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 	ptype = extent->pagemap[pnum].type;
 	if (ptype == page_free || ptype == page_cont)
 		goto out;
 
 	bsize = (1 << ptype);
-	boffset = (__moff(heap, block) -
+	boffset = (__shoff(heap, block) -
 		   (extent->membase + (pnum << HOBJ_PAGE_SHIFT)));
 	if ((boffset & (bsize - 1)) != 0) /* Not a block start? */
 		goto out;
@@ -796,8 +797,8 @@ int pshared_check(void *__heap, void *__addr)
 	assert(!list_empty(&heap->extents));
 
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
-		if (__moff(heap, __addr) >= extent->membase &&
-		    __moff(heap, __addr) < extent->memlim)
+		if (__shoff(heap, __addr) >= extent->membase &&
+		    __shoff(heap, __addr) < extent->memlim)
 			return 1;
 	}
 

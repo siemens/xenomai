@@ -179,7 +179,7 @@ struct threadobj {
 	struct holder wait_link;
 	int wait_status;
 	int wait_prio;
-	void *wait_union;
+  	dref_type(void *) wait_union;
 	size_t wait_size;
 	timer_t periodic_timer;
 
@@ -496,14 +496,14 @@ static inline int threadobj_get_errno(struct threadobj *thobj)
 		struct threadobj *__thobj = threadobj_current();	\
 		assert(__thobj != NULL);				\
 		assert(sizeof(typeof(T)) <= __thobj->wait_size);	\
-		__thobj->wait_union;					\
+		(void *)__mptr(__thobj->wait_union);			\
 	})
 
 #define threadobj_finish_wait()		do { } while (0)
 
 static inline void *threadobj_get_wait(struct threadobj *thobj)
 {
-	return thobj->wait_union;
+	return __mptr(thobj->wait_union);
 }
 
 static inline const char *threadobj_get_name(struct threadobj *thobj)

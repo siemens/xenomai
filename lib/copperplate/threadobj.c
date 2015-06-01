@@ -1064,7 +1064,7 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 
 	thobj = p + thobj_offset;
 	thobj->core_offset = thobj_offset;
-	thobj->wait_union = p + tcb_struct_size;
+	thobj->wait_union = __moff(p + tcb_struct_size);
 	thobj->wait_size = wait_union_size;
 
 	return p;

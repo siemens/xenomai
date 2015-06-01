@@ -255,9 +255,8 @@ redo:
 	hobj = hash_search(&main_catalog, name, strlen(name),
 			   &hash_operations);
 	if (hobj) {
-		d = container_of(hobj, struct syndictionary, hobj);
-		ret = 0;
-		goto out;
+		sc->d = container_of(hobj, struct syndictionary, hobj);
+		return 0;
 	}
 
 	d = xnmalloc(sizeof(*d));
@@ -277,7 +276,7 @@ redo:
 		xnfree(d);
 		goto redo;
 	}
-out:
+
 	sc->d = d;
 
 	return syncobj_init(&d->sobj, CLOCK_COPPERPLATE,
@@ -310,7 +309,7 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	 */
 	syncobj_for_each_grant_waiter_safe(&sc->d->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
-		if (*wait->name == *name && strcmp(wait->name, name) == 0)
+		if (strcmp(__mptr(wait->shared.name), name) == 0)
 			syncobj_grant_to(&sc->d->sobj, thobj);
 	}
 out:
@@ -366,7 +365,7 @@ int syncluster_findobj(struct syncluster *sc,
 		}
 		if (wait == NULL) {
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
-			wait->name = name;
+			wait->shared.name = __moff(xnstrdup(name));
 		}
 		ret = syncobj_wait_grant(&sc->d->sobj, timeout, &syns);
 		if (ret) {
@@ -378,8 +377,10 @@ int syncluster_findobj(struct syncluster *sc,
 
 	syncobj_unlock(&sc->d->sobj, &syns);
 out:
-	if (wait)
+	if (wait) {
+		xnfree(__mptr(wait->shared.name));
 		threadobj_finish_wait();
+	}
 
 	return ret;
 }
@@ -517,7 +518,7 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	 */
 	syncobj_for_each_grant_waiter_safe(&sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
-		if (*wait->name == *name && strcmp(wait->name, name) == 0)
+		if (strcmp(wait->private.name, name) == 0)
 			syncobj_grant_to(&sc->sobj, thobj);
 	}
 out:
@@ -572,7 +573,7 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 		}
 		if (wait == NULL) {
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
-			wait->name = name;
+			wait->private.name = name;
 		}
 		ret = syncobj_wait_grant(&sc->sobj, timeout, &syns);
 		if (ret) {

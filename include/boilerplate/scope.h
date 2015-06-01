@@ -31,10 +31,15 @@ extern void *__main_heap;
 
 int pshared_check(void *heap, void *addr);
 
-#define dref_type(t)		memoff_t
-#define __memoff(base, addr)	((caddr_t)(addr) - (caddr_t)(base))
-#define __memptr(base, off)	((caddr_t)(base) + (off))
-#define __memchk(base, addr)	pshared_check(base, addr)
+#define dref_type(t)	memoff_t
+
+#define __memoff(__base, __addr)	((caddr_t)(__addr) - (caddr_t)(__base))
+#define __memptr(__base, __off)		((caddr_t)(__base) + (__off))
+#define __memchk(__base, __addr)	pshared_check(__base, __addr)
+
+#define __moff(__p)	__memoff(__main_heap, __p)
+#define __mptr(__off)	__memptr(__main_heap, __off)
+#define __mchk(__p)	__memchk(__main_heap, __p)
 
 #define mutex_scope_attribute	PTHREAD_PROCESS_SHARED
 #define sem_scope_attribute	1
@@ -47,10 +52,15 @@ int pshared_check(void *heap, void *addr);
 
 #define __main_heap	NULL
 
-#define dref_type(t)		__typeof__(t)
-#define __memoff(base, addr)	(addr)
-#define __memptr(base, off)	(off)
-#define __memchk(base, addr)	1
+#define dref_type(t)	__typeof__(t)
+
+#define __memoff(__base, __addr)	(__addr)
+#define __memptr(__base, __off)		(__off)
+#define __memchk(__base, __addr)	1
+
+#define __moff(__p)	(__p)
+#define __mptr(__off)	(__off)
+#define __mchk(__p)	1
 
 #define mutex_scope_attribute	PTHREAD_PROCESS_PRIVATE
 #define sem_scope_attribute	0

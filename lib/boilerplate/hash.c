@@ -44,10 +44,6 @@
 	c -= a; c -= b; c ^= (b>>15);		\
 }
 
-#define __moff(__p)	__memoff(__main_heap, __p)
-#define __mptr(__p)	__memptr(__main_heap, __p)
-#define __mchk(__p)	__memchk(__main_heap, __p)
-
 static inline int store_key(struct hashobj *obj,
 			    const void *key, size_t len,
 			    const struct hash_operations *hops);

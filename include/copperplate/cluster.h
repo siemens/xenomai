@@ -155,7 +155,14 @@ pid_t pvclusterobj_cnode(const struct pvclusterobj *cobj)
 #endif /* !CONFIG_XENO_PSHARED */
 
 struct syncluster_wait_struct {
-	const char *name;
+	union {
+		struct {
+			dref_type(char *) name;
+		} shared;
+		struct {
+			const char *name;
+		} private;
+	};
 };
 
 #ifdef __cplusplus
