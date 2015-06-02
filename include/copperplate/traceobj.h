@@ -40,6 +40,20 @@ do {									\
 		__traceobj_assert_failed(trobj, __FILE__, __LINE__, __STRING(cond)); \
 } while(0)
 
+#define traceobj_check(__trobj, __status, __expected)			\
+do {									\
+	if (__status != __expected)					\
+		__traceobj_check_abort(__trobj, __FILE__, __LINE__, 	\
+				       __status, __expected);		\
+} while(0)
+
+#define traceobj_check_warn(__trobj, __status, __expected)		\
+do {									\
+	if (__status != __expected)					\
+		__traceobj_check_warn(__trobj, __FILE__, __LINE__, 	\
+				      __status, __expected);		\
+} while(0)
+
 #define traceobj_mark(trobj, mark)	\
 	__traceobj_mark(trobj, __FILE__, __LINE__, mark)
 
@@ -65,6 +79,14 @@ void traceobj_join(struct traceobj *trobj);
 void __traceobj_assert_failed(struct traceobj *trobj,
 			      const char *file, int line, const char *cond);
 
+void __traceobj_check_abort(struct traceobj *trobj,
+			    const char *file, int line,
+			    int received, int expected);
+
+void __traceobj_check_warn(struct traceobj *trobj,
+			   const char *file, int line,
+			   int received, int expected);
+	
 void __traceobj_mark(struct traceobj *trobj,
 		     const char *file, int line, int mark);
 

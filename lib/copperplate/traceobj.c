@@ -194,8 +194,7 @@ static void dump_marks(struct traceobj *trobj) /* lock held */
 	fflush(stderr);
 }
 
-void __traceobj_assert_failed(struct traceobj *trobj,
-			      const char *file, int line, const char *cond)
+static void dump_marks_on_error(struct traceobj *trobj)
 {
 	struct service svc;
 
@@ -208,8 +207,33 @@ void __traceobj_assert_failed(struct traceobj *trobj,
 	pop_cleanup_lock(&trobj->lock);
 
 	CANCEL_RESTORE(svc);
+}
 
-	panic("trace assertion failed:\n%s:%d => \"%s\"", file, line, cond);
+void __traceobj_assert_failed(struct traceobj *trobj,
+			      const char *file, int line, const char *cond)
+{
+	dump_marks_on_error(trobj);
+	panic("trace assertion failed:\n              %s:%d => \"%s\"", file, line, cond);
+}
+
+void __traceobj_check_abort(struct traceobj *trobj,
+			    const char *file, int line,
+			    int received, int expected)
+{
+	dump_marks_on_error(trobj);
+	panic("wrong return status:\n              %s:%d => %s (want %s)", file, line,
+	      symerror(received > 0 ? -received : received),
+	      symerror(expected > 0 ? -expected : expected));
+}
+
+void __traceobj_check_warn(struct traceobj *trobj,
+			   const char *file, int line,
+			   int received, int expected)
+{
+	dump_marks_on_error(trobj);
+	warning("wrong return status:\n              %s:%d => %s (want %s)", file, line,
+		symerror(received > 0 ? -received : received),
+		symerror(expected > 0 ? -expected : expected));
 }
 
 void __traceobj_mark(struct traceobj *trobj,

@@ -152,6 +152,7 @@ static const char *__esym_map[] = {
 	__esym_def(ENOSYS),
 	__esym_def(ETIMEDOUT),
 	__esym_def(ENOMSG),
+	__esym_def(EIDRM),
 	__esym_def(EADDRINUSE),
 };
 
