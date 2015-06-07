@@ -1,7 +1,5 @@
 nodist_include_HEADERS=$(CONFIG_HEADER)
 
-include_HEADERS = version.h
-
 SUBDIRS = 		\
 	boilerplate	\
 	copperplate	\

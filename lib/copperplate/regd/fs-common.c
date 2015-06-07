@@ -23,11 +23,11 @@
 #include <stdio.h>
 #include <signal.h>
 #include <malloc.h>
-#include <version.h>
 #include <sched.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/clockobj.h>
+#include <xenomai/version.h>
 #include "sysregfs.h"
 #include "../internal.h"
 
