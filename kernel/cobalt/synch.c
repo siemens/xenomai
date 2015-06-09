@@ -693,8 +693,6 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 	if ((synch->status & XNSYNCH_PRIO) == 0)
 		return;
 
-	XENO_BUG_ON(COBALT, (synch->status & XNSYNCH_OWNER) == 0);
-
 	list_del(&thread->plink);
 	list_add_priff(thread, &synch->pendq, wprio, plink);
 	owner = synch->owner;
