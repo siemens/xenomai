@@ -234,7 +234,7 @@ int pthread_create_ex(pthread_t *ptid_r,
 				*ptid_r = lptid;
 			break;
 		} else if (errno == ETIMEDOUT) {
-			ret = -EAGAIN;
+			ret = EAGAIN;
 			break;
 		}
 		ret = -errno;
