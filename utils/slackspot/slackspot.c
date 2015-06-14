@@ -279,7 +279,7 @@ cross_toolchain:
 		error(1, errno, "cannot run %s", cccmd);
 	free(cccmd);
 
-	ret = fscanf(fp, "libraries: =%a[^\n]\n", &search_path);
+	ret = fscanf(fp, "libraries: =%m[^\n]\n", &search_path);
 	if (ret != 1)
 		goto bad_output;
 
@@ -371,14 +371,14 @@ static void read_spots(FILE *fp)
 		if (p == NULL)
 			error(1, 0, "out of memory");
 
-		ret = fscanf(fp, "%a[^\n]\n", &p->exe_path);
+		ret = fscanf(fp, "%m[^\n]\n", &p->exe_path);
 		if (ret != 1) {
 			if (feof(fp))
 				return;
 			goto bad_input;
 		}
 
-		ret = fscanf(fp, "%d %d %a[^ ] %a[^\n]\n",
+		ret = fscanf(fp, "%d %d %m[^ ] %m[^\n]\n",
 			     &p->pid, &p->hits, &p->reason, &p->thread_name);
 		if (ret != 4)
 			goto bad_input;
@@ -391,7 +391,7 @@ static void read_spots(FILE *fp)
 			if (c == '.' && getc(fp) == '\n')
 				break;
 			ungetc(c, fp);
-			ret = fscanf(fp, "%lx %a[^\n]\n", &pc, &mapping);
+			ret = fscanf(fp, "%lx %m[^\n]\n", &pc, &mapping);
 			if (ret != 2)
 				goto bad_input;
 
@@ -528,7 +528,7 @@ static void resolve_spots(void)
 			error(1, errno, "cannot run %s", a2lcmd);
 
 		for (l = m->locs; l; l = l->next) {
-			ret = fscanf(fp, "%as\n", &l->function);
+			ret = fscanf(fp, "%ms\n", &l->function);
 			if (ret != 1)
 				goto bad_output;
 			/*
