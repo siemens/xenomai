@@ -22,6 +22,7 @@ DIST_SUBDIRS = 		\
 	boilerplate	\
 	cobalt		\
 	copperplate	\
+	mercury		\
 	psos		\
 	smokey		\
 	trank		\
