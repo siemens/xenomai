@@ -50,7 +50,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #elif defined(CONFIG_ARCH_MX6)
 	return 2000;
 #elif defined(CONFIG_SOC_IMX7)
-	ulat = 2500;
+	return 2500;
 #elif defined(CONFIG_ARCH_OMAP)
 	return cpu_is_omap44xx() ? 2500 : 5000;
 #else
