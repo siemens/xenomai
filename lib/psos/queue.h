@@ -37,7 +37,7 @@ struct psos_queue {
 	u_long msgcount;
 
 	struct syncobj sobj;
-	struct list msg_list;
+	struct listobj msg_list;
 	struct clusterobj cobj;
 };
 

@@ -25,8 +25,8 @@
 
 #include "calibration_ni_m.h"
 #include "calibration.h"
-struct list ai_calibration_list;
-struct list ao_calibration_list;
+struct listobj ai_calibration_list;
+struct listobj ao_calibration_list;
 
 static struct references references;
 static struct a4l_calibration_subdev mem_subd;
@@ -674,7 +674,7 @@ static int calibrate_base_range(struct polynomial *dst, struct polynomial *src)
 }
 
 
-static struct subdevice_calibration_node *get_calibration_node(struct list *l,
+static struct subdevice_calibration_node *get_calibration_node(struct listobj *l,
 	                                                       unsigned channel,
 	                                                       unsigned range)
 {
@@ -743,7 +743,7 @@ static int calibrate_pwm(struct polynomial *dst, struct pwm_info *pwm_info,
 	return 0;
 }
 
-static int append_calibration_node(struct list *l, struct polynomial *polynomial,
+static int append_calibration_node(struct listobj *l, struct polynomial *polynomial,
 			           unsigned channel, unsigned range)
 {
 	struct subdevice_calibration_node *q;
@@ -813,7 +813,7 @@ static int calibrate_ai_range(struct polynomial *dst,
 static int calibrate_ranges_above_threshold(struct polynomial *pwm_calibration,
 				            struct polynomial *non_lin_correct,
 				            unsigned pos_ref,
-				            struct list *calibration_list,
+				            struct listobj *calibration_list,
 				            struct calibrated_ranges *calibrated,
 				            double max_range_threshold )
 {

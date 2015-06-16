@@ -137,7 +137,7 @@ static inline void write_calibration(FILE *file, char *fmt, ...)
 }
 
 void
-write_calibration_file(FILE *dst, struct list *l,
+write_calibration_file(FILE *dst, struct listobj *l,
 		       struct a4l_calibration_subdev *subd, a4l_desc_t *desc)
 {
 	struct subdevice_calibration_node *e, *t;

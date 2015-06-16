@@ -31,7 +31,7 @@ struct holder {
 	dref_type(struct holder *) prev;
 };
 
-struct list {
+struct listobj {
 	struct holder head;
 };
 
@@ -78,17 +78,17 @@ static inline void dth(struct holder *holder)
 	__dth(__main_heap, holder);
 }
 
-static inline void __list_init(void *heap, struct list *list)
+static inline void __list_init(void *heap, struct listobj *list)
 {
 	__inith(heap, &list->head);
 }
 
-static inline void __list_init_nocheck(void *heap, struct list *list)
+static inline void __list_init_nocheck(void *heap, struct listobj *list)
 {
 	__inith_nocheck(heap, &list->head);
 }
 
-static inline void list_init(struct list *list)
+static inline void list_init(struct listobj *list)
 {
 	__list_init(__main_heap, list);
 }
@@ -124,23 +124,23 @@ static inline int holder_linked(const struct holder *holder)
 }
 
 static inline void __list_prepend(void *heap, struct holder *holder,
-				  struct list *list)
+				  struct listobj *list)
 {
 	__ath(heap, &list->head, holder);
 }
 
-static inline void list_prepend(struct holder *holder, struct list *list)
+static inline void list_prepend(struct holder *holder, struct listobj *list)
 {
 	__list_prepend(__main_heap, holder, list);
 }
 
 static inline void __list_append(void *heap, struct holder *holder,
-				 struct list *list)
+				 struct listobj *list)
 {
 	__ath(heap, __hptr(heap, list->head.prev), holder);
 }
 
-static inline void list_append(struct holder *holder, struct list *list)
+static inline void list_append(struct holder *holder, struct listobj *list)
 {
 	__list_append(__main_heap, holder, list);
 }
@@ -155,8 +155,8 @@ static inline void list_insert(struct holder *next, struct holder *prev)
 	__list_insert(__main_heap, next, prev);
 }
 
-static inline void __list_join(void *heap, struct list *lsrc,
-			       struct list *ldst)
+static inline void __list_join(void *heap, struct listobj *lsrc,
+			       struct listobj *ldst)
 {
 	struct holder *headsrc = __hptr(heap, lsrc->head.next);
 	struct holder *tailsrc = __hptr(heap, lsrc->head.prev);
@@ -170,7 +170,7 @@ static inline void __list_join(void *heap, struct list *lsrc,
 	headdst->next = __hoff(heap, headsrc);
 }
 
-static inline void list_join(struct list *lsrc, struct list *ldst)
+static inline void list_join(struct listobj *lsrc, struct listobj *ldst)
 {
 	__list_join(__main_heap, lsrc, ldst);
 }
@@ -196,36 +196,36 @@ static inline void list_remove_init(struct holder *holder)
 	__list_remove_init(__main_heap, holder);
 }
 
-static inline int __list_empty(void *heap, const struct list *list)
+static inline int __list_empty(void *heap, const struct listobj *list)
 {
 	return list->head.next == __hoff(heap, &list->head);
 }
 
-static inline int list_empty(const struct list *list)
+static inline int list_empty(const struct listobj *list)
 {
 	return __list_empty(__main_heap, list);
 }
 
-static inline struct holder *__list_pop(void *heap, struct list *list)
+static inline struct holder *__list_pop(void *heap, struct listobj *list)
 {
 	struct holder *holder = __hptr(heap, list->head.next);
 	__list_remove(heap, holder);
 	return holder;
 }
 
-static inline struct holder *list_pop(struct list *list)
+static inline struct holder *list_pop(struct listobj *list)
 {
 	return __list_pop(__main_heap, list);
 }
 
 static inline int __list_heading_p(void *heap, const struct holder *holder,
-				   const struct list *list)
+				   const struct listobj *list)
 {
 	return list->head.next == __hoff(heap, holder);
 }
 
 static inline int list_heading_p(const struct holder *holder,
-				 const struct list *list)
+				 const struct listobj *list)
 {
 	return __list_heading_p(__main_heap, holder, list);
 }

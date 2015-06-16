@@ -43,9 +43,9 @@ struct heapobj {
 
 struct sysgroup {
 	int thread_count;
-	struct list thread_list;
+	struct listobj thread_list;
 	int heap_count;
-	struct list heap_list;
+	struct listobj heap_list;
 	pthread_mutex_t lock;
 };
 
@@ -235,7 +235,7 @@ static inline memoff_t mainheap_off(void *addr)
 	})
 
 static inline void
-__sysgroup_add(struct sysgroup_memspec *obj, struct list *q, int *countp)
+__sysgroup_add(struct sysgroup_memspec *obj, struct listobj *q, int *countp)
 {
 	write_lock_nocancel(&__main_sysgroup->lock);
 	(*countp)++;

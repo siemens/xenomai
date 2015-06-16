@@ -34,7 +34,7 @@ struct alchemy_queue {
 	struct heapobj hobj;
 	struct syncobj sobj;
 	struct clusterobj cobj;
-	struct list mq;
+	struct listobj mq;
 	unsigned int mcount;
 	struct fsobj fsobj;
 };

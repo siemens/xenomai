@@ -34,7 +34,7 @@ struct wind_mq {
 
 	struct heapobj pool;
 	struct syncobj sobj;
-	struct list msg_list;
+	struct listobj msg_list;
 };
 
 struct wind_queue_wait {

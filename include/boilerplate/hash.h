@@ -34,7 +34,7 @@ struct hashobj {
 };
 
 struct hash_bucket {
-	struct list obj_list;
+	struct listobj obj_list;
 };
 
 struct hash_table {

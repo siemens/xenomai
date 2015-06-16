@@ -65,9 +65,9 @@ struct syncobj {
 	unsigned int magic;
 	int flags;
 	int wait_count;
-	struct list grant_list;
+	struct listobj grant_list;
 	int grant_count;
-	struct list drain_list;
+	struct listobj drain_list;
 	int drain_count;
 	struct syncobj_corespec core;
 	fnref_type(void (*)(struct syncobj *sobj)) finalizer;

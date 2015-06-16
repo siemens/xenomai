@@ -932,7 +932,7 @@ ssize_t fsobstack_pull(struct fsobstack *o, char *buf, size_t size)
 
 static int collect_wait_list(struct fsobstack *o,
 			     struct syncobj *sobj,
-			     struct list *wait_list,
+			     struct listobj *wait_list,
 			     int *wait_count,
 			     struct fsobstack_syncops *ops)
 {
