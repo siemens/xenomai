@@ -79,8 +79,8 @@ struct regfs_dir {
 	char *path;
 	const char *basename;
 	struct pvhashobj hobj;
-	struct pvlist file_list;
-	struct pvlist dir_list;
+	struct pvlistobj file_list;
+	struct pvlistobj dir_list;
 	int ndirs, nfiles;
 	struct timespec ctime;
 	struct pvholder link;

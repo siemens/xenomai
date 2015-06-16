@@ -121,7 +121,7 @@ void smokey_note(const char *fmt, ...);
 }
 #endif
 
-extern struct pvlist smokey_test_list;
+extern struct pvlistobj smokey_test_list;
 
 extern int smokey_keep_going;
 

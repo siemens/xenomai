@@ -68,7 +68,7 @@ struct pvhashobj {
 };
 
 struct pvhash_bucket {
-	struct pvlist obj_list;
+	struct pvlistobj obj_list;
 };
 
 struct pvhash_table {

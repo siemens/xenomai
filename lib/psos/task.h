@@ -40,7 +40,7 @@ struct psos_task {
 	int mode;
 	u_long events;
 	u_long notepad[PSOSTASK_NR_REGS];
-	struct pvlist timer_list; /* Private. Never accessed remotely. */
+	struct pvlistobj timer_list; /* Private. Never accessed remotely. */
 
 	char name[XNOBJECT_NAME_LEN];
 	struct psos_task_args args;

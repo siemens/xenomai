@@ -27,11 +27,11 @@ struct wind_task_hook {
 	struct pvholder next;
 };
 
-extern struct pvlist wind_create_hooks;
+extern struct pvlistobj wind_create_hooks;
 
-extern struct pvlist wind_delete_hooks;
+extern struct pvlistobj wind_delete_hooks;
 
-void wind_run_hooks(struct pvlist *list,
+void wind_run_hooks(struct pvlistobj *list,
 		    struct wind_task *task);
 
 #endif /* _VXWORKS_TASKHOOKLIB_H */

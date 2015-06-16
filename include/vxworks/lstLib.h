@@ -28,7 +28,7 @@
 #include <vxworks/types.h>
 
 typedef struct LIST {
-	struct pvlist list;
+	struct pvlistobj list;
 	int count;
 } LIST;
 

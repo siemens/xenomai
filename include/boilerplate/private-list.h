@@ -28,7 +28,7 @@ struct pvholder {
 	struct pvholder *prev;
 };
 
-struct pvlist {
+struct pvlistobj {
 	struct pvholder head;
 };
 
@@ -36,7 +36,7 @@ struct pvlist {
 	{ .head = { .next = &((__name).head), .prev = &((__name).head) } }
 
 #define DEFINE_PRIVATE_LIST(__name) \
-	struct pvlist __name = PRIVATE_LIST_INITIALIZER(__name)
+	struct pvlistobj __name = PRIVATE_LIST_INITIALIZER(__name)
 
 static inline void initpvh(struct pvholder *holder)
 {
@@ -59,7 +59,7 @@ static inline void dtpvh(struct pvholder *holder)
 	holder->next->prev = holder->prev;
 }
 
-static inline void pvlist_init(struct pvlist *list)
+static inline void pvlist_init(struct pvlistobj *list)
 {
 	initpvh(&list->head);
 }
@@ -79,12 +79,12 @@ static inline int pvholder_linked(const struct pvholder *holder)
 		 holder->prev == holder);
 }
 
-static inline void pvlist_prepend(struct pvholder *holder, struct pvlist *list)
+static inline void pvlist_prepend(struct pvholder *holder, struct pvlistobj *list)
 {
 	atpvh(&list->head, holder);
 }
 
-static inline void pvlist_append(struct pvholder *holder, struct pvlist *list)
+static inline void pvlist_append(struct pvholder *holder, struct pvlistobj *list)
 {
 	atpvh(list->head.prev, holder);
 }
@@ -94,7 +94,7 @@ static inline void pvlist_insert(struct pvholder *next, struct pvholder *prev)
 	atpvh(prev, next);
 }
 
-static inline void pvlist_join(struct pvlist *lsrc, struct pvlist *ldst)
+static inline void pvlist_join(struct pvlistobj *lsrc, struct pvlistobj *ldst)
 {
 	struct pvholder *headsrc = lsrc->head.next;
 	struct pvholder *tailsrc = lsrc->head.prev;
@@ -119,12 +119,12 @@ static inline void pvlist_remove_init(struct pvholder *holder)
 	initpvh(holder);
 }
 
-static inline int pvlist_empty(const struct pvlist *list)
+static inline int pvlist_empty(const struct pvlistobj *list)
 {
 	return list->head.next == &list->head;
 }
 
-static inline struct pvholder *pvlist_pop(struct pvlist *list)
+static inline struct pvholder *pvlist_pop(struct pvlistobj *list)
 {
 	struct pvholder *holder = list->head.next;
 	pvlist_remove(holder);
@@ -132,7 +132,7 @@ static inline struct pvholder *pvlist_pop(struct pvlist *list)
 }
 
 static inline int pvlist_heading_p(const struct pvholder *holder,
-				   const struct pvlist *list)
+				   const struct pvlistobj *list)
 {
 	return list->head.next == holder;
 }

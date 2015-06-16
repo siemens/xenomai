@@ -25,7 +25,7 @@ DEFINE_PRIVATE_LIST(wind_create_hooks);
 
 DEFINE_PRIVATE_LIST(wind_delete_hooks);
 
-static STATUS add_hook(struct pvlist *list, FUNCPTR hook, int prepend)
+static STATUS add_hook(struct pvlistobj *list, FUNCPTR hook, int prepend)
 {
 	struct wind_task_hook *p;
 
@@ -46,7 +46,7 @@ static STATUS add_hook(struct pvlist *list, FUNCPTR hook, int prepend)
 	return OK;
 }
 
-static STATUS remove_hook(struct pvlist *list, FUNCPTR hook)
+static STATUS remove_hook(struct pvlistobj *list, FUNCPTR hook)
 {
 	struct wind_task_hook *p = NULL;
 
@@ -71,7 +71,7 @@ found:
 	return ERROR;
 }
 
-void wind_run_hooks(struct pvlist *list, struct wind_task *task)
+void wind_run_hooks(struct pvlistobj *list, struct wind_task *task)
 {
 	struct wind_task_hook *p;
 	TASK_ID tid;

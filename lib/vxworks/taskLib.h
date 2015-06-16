@@ -97,7 +97,7 @@ int get_task_status(struct wind_task *task);
 
 extern struct cluster wind_task_table;
 
-extern struct pvlist wind_task_list;
+extern struct pvlistobj wind_task_list;
 
 extern pthread_mutex_t wind_task_lock;
 
