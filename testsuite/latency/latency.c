@@ -382,14 +382,36 @@ static double dump_histogram(int32_t *histogram, char *kind)
 
 static void dump_histo_gnuplot(int32_t *histogram)
 {
-	unsigned start, stop;
-	FILE *f;
+	unsigned int start, stop;
+	char *xconf, buf[BUFSIZ];
+	FILE *ifp, *ofp;
 	int n;
 
-	f = fopen(do_gnuplot, "w");
-	if (!f)
-		return;
+	if (strcmp(do_gnuplot, "-") == 0)
+		ofp = stdout;
+	else {
+		ofp = fopen(do_gnuplot, "w");
+		if (ofp == NULL)
+			return;
+	}
 
+	if (asprintf(&xconf, "%s/bin/xeno-config --info", CONFIG_XENO_PREFIX) < 0)
+		goto dump_data;
+
+	ifp = popen(xconf, "r");
+	free(xconf);
+	if (ifp == NULL)
+		goto dump_data;
+
+	while (fgets(buf, sizeof(buf), ifp)) {
+		fputc('#', ofp);
+		fputc(' ', ofp);
+		fputs(buf, ofp);
+	}
+
+	fclose(ifp);
+
+dump_data:
 	for (n = 0; n < histogram_size && histogram[n] == 0; n++)
 		;
 	start = n;
@@ -398,13 +420,14 @@ static void dump_histo_gnuplot(int32_t *histogram)
 		;
 	stop = n;
 
-	fprintf(f, "%g 1\n", start * bucketsize / 1000.0);
+	fprintf(ofp, "%g 1\n", start * bucketsize / 1000.0);
 	for (n = start; n <= stop; n++)
-		fprintf(f, "%g %d\n",
+		fprintf(ofp, "%g %d\n",
 			(n + 0.5) * bucketsize / 1000.0, histogram[n] + 1);
-	fprintf(f, "%g 1\n", (stop + 1) * bucketsize / 1000.0);
+	fprintf(ofp, "%g 1\n", (stop + 1) * bucketsize / 1000.0);
 
-	fclose(f);
+	if (ofp != stdout)
+		fclose(ofp);
 }
 
 static void dump_stats(int32_t *histogram, char *kind, double avg)
