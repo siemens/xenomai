@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+xnticks_t cobalt_read_hrclock(void);
+
 xnsticks_t cobalt_ticks_to_ns(xnsticks_t ticks);
 
 xnsticks_t cobalt_ticks_to_ns_rounded(xnsticks_t ticks);

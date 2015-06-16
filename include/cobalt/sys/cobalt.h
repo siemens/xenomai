@@ -37,6 +37,7 @@
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
 #include <cobalt/uapi/sem.h>
+#include <cobalt/ticks.h>
 
 #define cobalt_commit_memory(p) __cobalt_commit_memory(p, sizeof(*p))
 
