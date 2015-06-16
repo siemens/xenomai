@@ -383,29 +383,6 @@ if test $XENO_TARGET_ARCH = x86; then
   AC_MSG_RESULT(${CONFIG_XENO_X86_VSYSCALL:-no})
 fi
 
-dnl ARCH support for ARM (default: 4)
-
-if test $XENO_TARGET_ARCH = arm ; then
-  unset CONFIG_XENO_ARM_SA1100
-  unset CONFIG_XENO_CPU_XSC3
-
-  AC_ARG_ENABLE(arm-quirks,
-	AS_HELP_STRING([--enable-arm-quirks], [Enable quirks for
-	specific systems. Currently supported quirks are for sa1100 and
-	xscale3.]),
-	[case "$enableval" in
-	sa1100)	 CONFIG_XENO_ARM_SA1100=y;;
-	xscale3) CONFIG_XENO_CPU_XSC3=y;;
-	*)AC_MSG_ERROR([Invalid SOC selected: "$enableval"]);;
-	esac])
-
-  AC_MSG_CHECKING(for ARM SA1100 architecture)
-  AC_MSG_RESULT(${CONFIG_XENO_ARM_SA1100:-no})
-
-  AC_MSG_CHECKING(for ARM Xscale3 architecture)
-  AC_MSG_RESULT(${CONFIG_XENO_CPU_XSC3:-no})
-fi
-
 dnl Documentation package.
 
 XENO_DOC_GIT=
@@ -614,9 +591,6 @@ dnl
 
 test x$CONFIG_XENO_X86_VSYSCALL = xy && AC_DEFINE(CONFIG_XENO_X86_VSYSCALL,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
-test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config])
-test x$CONFIG_XENO_CPU_XSC3 = xy && AC_DEFINE(CONFIG_XENO_CPU_XSC3,1,[config])
-test $CONFIG_XENO_ARM_TSC_TYPE && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_TSC_TYPE,$CONFIG_XENO_ARM_TSC_TYPE,[config])
 
 dnl
 dnl Userland may want to know about MMU availability on the target.
