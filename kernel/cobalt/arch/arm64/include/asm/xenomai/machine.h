@@ -43,9 +43,7 @@
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
-	int __r;
-	__asm__("clz\t%0, %1" : "=r" (__r) : "r"(ul & (-ul)) : "cc");
-	return 31 - __r;
+	return __builtin_ffsl(ul) - 1;
 }
 
 #include <asm-generic/xenomai/machine.h>
