@@ -38,13 +38,13 @@ int __fnref_register(const char *libname,
 	int pos;
 
 	if ((unsigned int)libtag >= MAX_FNLIBS)
-		panic("reference table overflow for library %s",
-		      libname);
+		early_panic("reference table overflow for library %s",
+			    libname);
 
 	pos = nrefs[libtag]++;
 	if (pos >= MAX_FNREFS)
-		panic("too many function references in library %s (> %d)",
-		      libname, MAX_FNREFS);
+		early_panic("too many function references in library %s (> %d)",
+			    libname, MAX_FNREFS);
 
 	assert(__fnrefs[libtag][pos].fn == NULL);
 	__fnrefs[libtag][pos].fn = fn;

@@ -20,6 +20,7 @@
 
 #include <boilerplate/limits.h>
 #include <boilerplate/scope.h>
+#include <boilerplate/setup.h>
 
 #define libcopperplate_tag  0	/* Library tag - unique and constant. */
 #define libcopperplate_cbi  1	/* Callback binary interface level. */
@@ -69,7 +70,7 @@ static inline int __fnref_nofn(void *fnaddr)
 #define fnref_get(v, r)		((v) = (r) < 0 ? NULL :	__refchk(v, r))
 #define fnref_register(l, s)						\
 	int __refvar(l, s);						\
-	static void __attribute__ ((constructor)) __ifnref_ ## s(void)	\
+	static void __early_ctor __ifnref_ ## s(void)			\
 	{								\
 		__refvar(l, s) = __fnref_register(#l, l ## _tag,	\
 						  l ## _cbi,		\
