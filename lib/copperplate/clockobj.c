@@ -263,13 +263,13 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 {
-	unsigned long long ns;
+	ticks_t ns;
 
 	read_lock_nocancel(&clkobj->lock);
 
 	ns = cobalt_ticks_to_ns(clockobj_get_tsc());
 	/* Add offset to epoch. */
-	ns += (unsigned long long)clkobj->offset.tv_sec * 1000000000ULL;
+	ns += (ticks_t)clkobj->offset.tv_sec * 1000000000ULL;
 	ns += clkobj->offset.tv_nsec;
 	if (clockobj_get_resolution(clkobj) > 1)
 		ns /= clockobj_get_resolution(clkobj);
