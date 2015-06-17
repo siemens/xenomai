@@ -37,13 +37,23 @@
 #include <asm/processor.h>
 #include <asm/ipipe.h>
 #include <asm/cacheflush.h>
+#include <cobalt/kernel/assert.h>
 
 /* D-side always behaves as PIPT on AArch64 (see arch/arm64/include/asm/cachetype.h) */
 #define xnarch_cache_aliasing() 0
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
-	return __builtin_ffsl(ul) - 1;
+	int __r;
+
+	/* zero input is not valid */
+	XENO_WARN_ON(COBALT, ul == 0);
+
+	__asm__ ("rbit\t%0, %1\n"
+	         "clz\t%0, %0\n"
+	        : "=r" (__r) : "r"(ul) : "cc");
+
+	return __r;
 }
 
 #include <asm-generic/xenomai/machine.h>
