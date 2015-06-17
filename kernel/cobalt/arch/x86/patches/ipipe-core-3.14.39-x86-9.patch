@@ -268,7 +268,7 @@ index a94b82e..e185603 100644
  static inline bool is_debug_idt_enabled(void)
  {
 diff --git a/arch/x86/include/asm/fpu-internal.h b/arch/x86/include/asm/fpu-internal.h
-index cea1c76..50c8311 100644
+index 1ac1c00..33e2eba 100644
 --- a/arch/x86/include/asm/fpu-internal.h
 +++ b/arch/x86/include/asm/fpu-internal.h
 @@ -353,23 +353,31 @@ static inline void __drop_fpu(struct task_struct *tsk)
@@ -299,7 +299,7 @@ index cea1c76..50c8311 100644
 +	flags = hard_preempt_disable();
  	tsk->thread.fpu_counter = 0;
  	__drop_fpu(tsk);
- 	clear_used_math();
+ 	clear_stopped_child_used_math(tsk);
 -	preempt_enable();
 +	hard_preempt_enable(flags);
  }
@@ -442,7 +442,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..a244663
+index 0000000..6766b3d
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,96 @@
@@ -472,7 +472,7 @@ index 0000000..a244663
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	8
++#define IPIPE_CORE_RELEASE	9
 +
 +struct ipipe_domain;
 +
@@ -2905,7 +2905,7 @@ index c5a9cb9..1c20915 100644
  	CFI_ENDPROC
  END(general_protection)
 diff --git a/arch/x86/kernel/entry_64.S b/arch/x86/kernel/entry_64.S
-index 02553d6..7469c53 100644
+index 06469ee..9eed709 100644
 --- a/arch/x86/kernel/entry_64.S
 +++ b/arch/x86/kernel/entry_64.S
 @@ -50,6 +50,7 @@
@@ -2977,7 +2977,7 @@ index 02553d6..7469c53 100644
  
  	call schedule_tail			# rdi: 'prev' task parameter
  
-@@ -616,15 +638,61 @@ GLOBAL(system_call_after_swapgs)
+@@ -619,15 +641,61 @@ GLOBAL(system_call_after_swapgs)
  	movq  %rax,ORIG_RAX-ARGOFFSET(%rsp)
  	movq  %rcx,RIP-ARGOFFSET(%rsp)
  	CFI_REL_OFFSET rip,RIP-ARGOFFSET
@@ -3045,7 +3045,7 @@ index 02553d6..7469c53 100644
  	ja badsys
  	movq %r10,%rcx
  	call *sys_call_table(,%rax,8)  # XXX:	 rip relative
-@@ -648,6 +716,7 @@ sysret_check:
+@@ -651,6 +719,7 @@ sysret_check:
  	 * sysretq will re-enable interrupts:
  	 */
  	TRACE_IRQS_ON
@@ -3053,7 +3053,7 @@ index 02553d6..7469c53 100644
  	movq RIP-ARGOFFSET(%rsp),%rcx
  	CFI_REGISTER	rip,rcx
  	RESTORE_ARGS 1,-ARG_SKIP,0
-@@ -659,6 +728,8 @@ sysret_check:
+@@ -662,6 +731,8 @@ sysret_check:
  	/* Handle reschedules */
  	/* edx:	work, edi: workmask */
  sysret_careful:
@@ -3062,7 +3062,7 @@ index 02553d6..7469c53 100644
  	bt $TIF_NEED_RESCHED,%edx
  	jnc sysret_signal
  	TRACE_IRQS_ON
-@@ -668,6 +739,16 @@ sysret_careful:
+@@ -671,6 +742,16 @@ sysret_careful:
  	popq_cfi %rdi
  	jmp sysret_check
  
@@ -3079,7 +3079,7 @@ index 02553d6..7469c53 100644
  	/* Handle a signal */
  sysret_signal:
  	TRACE_IRQS_ON
-@@ -765,9 +846,15 @@ GLOBAL(int_with_check)
+@@ -768,9 +849,15 @@ GLOBAL(int_with_check)
  	movl TI_flags(%rcx),%edx
  	andl %edi,%edx
  	jnz   int_careful
@@ -3095,7 +3095,7 @@ index 02553d6..7469c53 100644
  	/* Either reschedule or signal or syscall exit tracking needed. */
  	/* First do a reschedule test. */
  	/* edx:	work, edi: workmask */
-@@ -973,7 +1060,31 @@ END(interrupt)
+@@ -976,7 +1063,31 @@ END(interrupt)
  	subq $ORIG_RAX-RBP, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-RBP
  	SAVE_ARGS_IRQ
@@ -3127,7 +3127,7 @@ index 02553d6..7469c53 100644
  	.endm
  
  /*
-@@ -986,10 +1097,27 @@ END(interrupt)
+@@ -989,10 +1100,27 @@ END(interrupt)
  	 */
  	.p2align CONFIG_X86_L1_CACHE_SHIFT
  common_interrupt:
@@ -3155,7 +3155,7 @@ index 02553d6..7469c53 100644
  	/* 0(%rsp): old_rsp-ARGOFFSET */
  ret_from_intr:
  	DISABLE_INTERRUPTS(CLBR_NONE)
-@@ -1003,7 +1131,7 @@ ret_from_intr:
+@@ -1006,7 +1134,7 @@ ret_from_intr:
  	CFI_DEF_CFA_REGISTER	rsp
  	CFI_ADJUST_CFA_OFFSET	RBP-ARGOFFSET
  
@@ -3164,7 +3164,7 @@ index 02553d6..7469c53 100644
  	GET_THREAD_INFO(%rcx)
  	testl $3,CS-ARGOFFSET(%rsp)
  	je retint_kernel
-@@ -1023,20 +1151,20 @@ retint_check:
+@@ -1026,20 +1154,20 @@ retint_check:
  	jnz  retint_careful
  
  retint_swapgs:		/* return to user-space */
@@ -3189,7 +3189,7 @@ index 02553d6..7469c53 100644
  restore_args:
  	RESTORE_ARGS 1,8,1
  
-@@ -1128,7 +1256,15 @@ ENTRY(retint_kernel)
+@@ -1131,7 +1259,15 @@ ENTRY(retint_kernel)
  	jnz  retint_restore_args
  	bt   $9,EFLAGS-ARGOFFSET(%rsp)	/* interrupts off? */
  	jnc  retint_restore_args
@@ -3206,7 +3206,7 @@ index 02553d6..7469c53 100644
  	jmp exit_intr
  #endif
  	CFI_ENDPROC
-@@ -1142,6 +1278,31 @@ END(common_interrupt)
+@@ -1145,6 +1281,31 @@ END(common_interrupt)
  /*
   * APIC interrupts.
   */
@@ -3238,7 +3238,7 @@ index 02553d6..7469c53 100644
  .macro apicinterrupt3 num sym do_sym
  ENTRY(\sym)
  	INTR_FRAME
-@@ -1153,6 +1314,7 @@ ENTRY(\sym)
+@@ -1156,6 +1317,7 @@ ENTRY(\sym)
  	CFI_ENDPROC
  END(\sym)
  .endm
@@ -3246,7 +3246,7 @@ index 02553d6..7469c53 100644
  
  #ifdef CONFIG_TRACING
  #define trace(sym) trace_##sym
-@@ -1209,6 +1371,14 @@ apicinterrupt CALL_FUNCTION_VECTOR \
+@@ -1212,6 +1374,14 @@ apicinterrupt CALL_FUNCTION_VECTOR \
  	call_function_interrupt smp_call_function_interrupt
  apicinterrupt RESCHEDULE_VECTOR \
  	reschedule_interrupt smp_reschedule_interrupt
@@ -3261,7 +3261,7 @@ index 02553d6..7469c53 100644
  #endif
  
  apicinterrupt ERROR_APIC_VECTOR \
-@@ -1224,7 +1394,7 @@ apicinterrupt IRQ_WORK_VECTOR \
+@@ -1227,7 +1397,7 @@ apicinterrupt IRQ_WORK_VECTOR \
  /*
   * Exception entry points.
   */
@@ -3270,7 +3270,7 @@ index 02553d6..7469c53 100644
  ENTRY(\sym)
  	INTR_FRAME
  	ASM_CLAC
-@@ -1236,13 +1406,28 @@ ENTRY(\sym)
+@@ -1239,13 +1409,28 @@ ENTRY(\sym)
  	DEFAULT_FRAME 0
  	movq %rsp,%rdi		/* pt_regs pointer */
  	xorl %esi,%esi		/* no error code */
@@ -3300,7 +3300,7 @@ index 02553d6..7469c53 100644
  ENTRY(\sym)
  	INTR_FRAME
  	ASM_CLAC
-@@ -1251,10 +1436,25 @@ ENTRY(\sym)
+@@ -1254,10 +1439,25 @@ ENTRY(\sym)
  	subq $ORIG_RAX-R15, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
@@ -3327,7 +3327,7 @@ index 02553d6..7469c53 100644
  	jmp paranoid_exit	/* %ebx: no swapgs flag */
  	CFI_ENDPROC
  END(\sym)
-@@ -1270,8 +1470,8 @@ ENTRY(\sym)
+@@ -1273,8 +1473,8 @@ ENTRY(\sym)
  	subq $ORIG_RAX-R15, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
@@ -3337,7 +3337,7 @@ index 02553d6..7469c53 100644
  	xorl %esi,%esi		/* no error code */
  	subq $EXCEPTION_STKSZ, INIT_TSS_IST(\ist)
  	call \do_sym
-@@ -1281,7 +1481,7 @@ ENTRY(\sym)
+@@ -1284,7 +1484,7 @@ ENTRY(\sym)
  END(\sym)
  .endm
  
@@ -3346,7 +3346,7 @@ index 02553d6..7469c53 100644
  ENTRY(\sym)
  	XCPT_FRAME
  	ASM_CLAC
-@@ -1293,25 +1493,40 @@ ENTRY(\sym)
+@@ -1296,25 +1496,40 @@ ENTRY(\sym)
  	movq %rsp,%rdi			/* pt_regs pointer */
  	movq ORIG_RAX(%rsp),%rsi	/* get error code */
  	movq $-1,ORIG_RAX(%rsp)		/* no syscall to restart */
@@ -3393,7 +3393,7 @@ index 02553d6..7469c53 100644
  ENTRY(\sym)
  	XCPT_FRAME
  	ASM_CLAC
-@@ -1320,29 +1535,44 @@ ENTRY(\sym)
+@@ -1323,29 +1538,44 @@ ENTRY(\sym)
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
  	DEFAULT_FRAME 0
@@ -3451,7 +3451,7 @@ index 02553d6..7469c53 100644
  
  
  	/* Reload gs selector with exception handling */
-@@ -1378,15 +1608,19 @@ ENTRY(do_softirq_own_stack)
+@@ -1381,15 +1611,19 @@ ENTRY(do_softirq_own_stack)
  	CFI_REL_OFFSET rbp,0
  	mov  %rsp,%rbp
  	CFI_DEF_CFA_REGISTER rbp
@@ -3471,7 +3471,7 @@ index 02553d6..7469c53 100644
  	ret
  	CFI_ENDPROC
  END(do_softirq_own_stack)
-@@ -1503,16 +1737,21 @@ apicinterrupt3 HYPERVISOR_CALLBACK_VECTOR \
+@@ -1506,16 +1740,21 @@ apicinterrupt3 HYPERVISOR_CALLBACK_VECTOR \
   */
  	.pushsection .kprobes.text, "ax"
  
@@ -3496,7 +3496,7 @@ index 02553d6..7469c53 100644
  #ifdef CONFIG_KVM_GUEST
  errorentry async_page_fault do_async_page_fault
  #endif
-@@ -1538,8 +1777,13 @@ ENTRY(paranoid_exit)
+@@ -1541,8 +1780,13 @@ ENTRY(paranoid_exit)
  	DEFAULT_FRAME
  	DISABLE_INTERRUPTS(CLBR_NONE)
  	TRACE_IRQS_OFF_DEBUG
@@ -3510,7 +3510,7 @@ index 02553d6..7469c53 100644
  	testl $3,CS(%rsp)
  	jnz   paranoid_userspace
  paranoid_swapgs:
-@@ -1610,7 +1854,6 @@ ENTRY(error_entry)
+@@ -1613,7 +1857,6 @@ ENTRY(error_entry)
  error_swapgs:
  	SWAPGS
  error_sti:
@@ -3689,10 +3689,10 @@ index 2e977b5..e91576e 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..767f838
+index 0000000..1bcee82
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,624 @@
+@@ -0,0 +1,584 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -4046,8 +4046,7 @@ index 0000000..767f838
 +int __ipipe_handle_exception(struct pt_regs *regs, long error_code, int vector)
 +{
 +	bool hard_irqs_off = hard_irqs_disabled();
-+	bool root_entry = false;
-+	unsigned long flags = 0;
++	unsigned long reg_flags, flags = 0;
 +	unsigned long cr2 = 0;
 +
 +#ifdef CONFIG_KGDB
@@ -4062,48 +4061,30 @@ index 0000000..767f838
 +	}
 +#endif /* CONFIG_KGDB */
 +
-+	if (ipipe_root_p) {
-+		root_entry = true;
-+
-+		local_save_flags(flags);
-+		/*
-+		 * Replicate hw interrupt state into the virtual mask
-+		 * before calling the I-pipe event handler over the
-+		 * root domain.
-+		 */
-+		if (hard_irqs_off)
-+			local_irq_disable();
-+	}
-+
 +	/*
 +	 * XXX: We don't trace page faults (yet?). */
 +	if (vector == ex_do_page_fault)
 +		cr2 = native_read_cr2();
 +
-+	if (unlikely(__ipipe_notify_trap(vector, regs))) {
-+		if (root_entry)
-+			ipipe_restore_root_nosync(flags);
++	if (unlikely(__ipipe_notify_trap(vector, regs)))
 +		return 1;
-+	}
++
++	reg_flags = regs->flags;
 +
 +	if (likely(ipipe_root_p)) {
-+		if (!root_entry) {
-+			local_save_flags(flags);
++		local_save_flags(flags);
 +
-+			/*
-+			 * Sync Linux interrupt state with hardware state on
-+			 * entry.
-+			 */
-+			if (hard_irqs_off)
-+				local_irq_disable();
-+		}
++		/*
++		 * Sync Linux interrupt state with hardware state on
++		 * entry.
++		 */
++		if (hard_irqs_off)
++			local_irq_disable();
 +		/*
 +		 * If root is not the topmost domain or in case we faulted in
 +		 * the iret path of x86-32, regs.flags does not match the root
-+		 * domain state. The fault handler or the low-level return
-+		 * code may evaluate it. So fix this up, either by the root
-+		 * state sampled on entry or, if we migrated to root, with the
-+		 * current state.
++		 * domain state. The fault handler may evaluate it. So fix this
++		 * up with the current state.
 +		 */
 +		__fixup_if(raw_irqs_disabled_flags(flags), regs);
 +	} else {
@@ -4146,11 +4127,11 @@ index 0000000..767f838
 +	__ipipe_std_extable[vector](regs, error_code);
 +
 +	/*
-+	 * Relevant for 64-bit: Restore root domain state as the low-level
-+	 * return code will not align it to regs.flags.
++	 * Restore root domain state as the low-level return code will not
++	 * align it to regs->flags.
 +	 */
-+	if (root_entry)
-+		ipipe_restore_root_nosync(flags);
++	ipipe_restore_root(raw_irqs_disabled_flags(flags));
++	__fixup_if(raw_irqs_disabled_flags(reg_flags), regs);
 +
 +	return 0;
 +}
@@ -4158,20 +4139,8 @@ index 0000000..767f838
 +int __ipipe_divert_exception(struct pt_regs *regs, int vector)
 +{
 +	bool hard_irqs_off = hard_irqs_disabled();
-+	bool root_entry = false;
 +	unsigned long flags = 0;
 +
-+	if (ipipe_root_p) {
-+		root_entry = true;
-+		local_save_flags(flags);
-+		if (hard_irqs_off) {
-+			/*
-+			 * Same root state handling as in
-+			 * __ipipe_handle_exception.
-+			 */
-+			local_irq_disable();
-+		}
-+	}
 +#ifdef CONFIG_KGDB
 +	/*
 +	 * Catch int1 and int3 for kgdb here. They may trigger over
@@ -4187,37 +4156,28 @@ index 0000000..767f838
 +			get_debugreg(condition, 6);
 +		}
 +		if (!user_mode(regs) &&
-+		    !kgdb_handle_exception(vector, SIGTRAP, condition, regs)) {
-+			if (root_entry) {
-+				ipipe_restore_root_nosync(flags);
-+				__fixup_if(root_entry ?
-+					   raw_irqs_disabled_flags(flags) :
-+					   raw_irqs_disabled(), regs);
-+			}
++		    !kgdb_handle_exception(vector, SIGTRAP, condition, regs))
 +			return 1;
-+		}
 +	}
 +skip_kgdb:
 +#endif /* CONFIG_KGDB */
 +
-+	if (unlikely(__ipipe_notify_trap(vector, regs))) {
-+		if (root_entry)
-+			ipipe_restore_root_nosync(flags);
++	if (unlikely(__ipipe_notify_trap(vector, regs)))
 +		return 1;
-+	}
 +
 +	/* see __ipipe_handle_exception */
 +	if (likely(ipipe_root_p)) {
-+		if (!root_entry) {
-+			local_save_flags(flags);
-+			if (hard_irqs_off)
-+				local_irq_disable();
-+		}
++		local_save_flags(flags);
++		if (hard_irqs_off)
++			local_irq_disable();
++		WARN_ON_ONCE(raw_irqs_disabled_flags(flags) &&
++			     ipipe_head_domain != ipipe_root_domain);
 +		__fixup_if(raw_irqs_disabled_flags(flags), regs);
 +	}
 +	/*
-+	 * No need to restore root state in the 64-bit case, the Linux
-+	 * handler and the return code will take care of it.
++	 * We should restore the root state after calling the Linux handler
++	 * but, in all cases which are not fatal to the system anyway, the
++	 * handler will re-enable interrupts anyway and therefore save us.
 +	 */
 +
 +	return 0;
@@ -4832,10 +4792,10 @@ index 09ce23a..a94e116 100644
  
  static void warn_bad_vsyscall(const char *level, struct pt_regs *regs,
 diff --git a/arch/x86/kernel/xsave.c b/arch/x86/kernel/xsave.c
-index dd50e26..e2def56 100644
+index 7a09aca..5c6595b 100644
 --- a/arch/x86/kernel/xsave.c
 +++ b/arch/x86/kernel/xsave.c
-@@ -563,6 +563,10 @@ static void __init xstate_enable_boot_cpu(void)
+@@ -564,6 +564,10 @@ static void __init xstate_enable_boot_cpu(void)
  	if (cpu_has_xsaveopt && eagerfpu != DISABLE)
  		eagerfpu = ENABLE;
  
@@ -4943,7 +4903,7 @@ index 80c22a3..c1157a4 100644
  	return &vmx->vcpu;
  
 diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index fab97ad..a328a06 100644
+index 1777f89..ce31c90 100644
 --- a/arch/x86/kvm/x86.c
 +++ b/arch/x86/kvm/x86.c
 @@ -39,6 +39,7 @@
@@ -5016,7 +4976,7 @@ index fab97ad..a328a06 100644
  
  	if (!smsr->registered) {
  		smsr->urn.on_user_return = kvm_on_user_return;
-@@ -2823,11 +2840,39 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
+@@ -2824,11 +2841,39 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
  
  void kvm_arch_vcpu_put(struct kvm_vcpu *vcpu)
  {
@@ -5056,7 +5016,7 @@ index fab97ad..a328a06 100644
  static int kvm_vcpu_ioctl_get_lapic(struct kvm_vcpu *vcpu,
  				    struct kvm_lapic_state *s)
  {
-@@ -5982,6 +6027,10 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
+@@ -5983,6 +6028,10 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
  	}
  
  	preempt_disable();
@@ -5067,7 +5027,7 @@ index fab97ad..a328a06 100644
  
  	kvm_x86_ops->prepare_guest_switch(vcpu);
  	if (vcpu->fpu_active)
-@@ -5997,12 +6046,11 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
+@@ -5998,12 +6047,11 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
  	 */
  	smp_mb__after_srcu_read_unlock();
  
@@ -14099,7 +14059,7 @@ index 126586a..f10614c 100644
  	if (pm_wakeup_pending()) {
  		error = -EAGAIN;
 diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index 8c086e6..2cd6549 100644
+index a755ad7..c54867a 100644
 --- a/kernel/printk/printk.c
 +++ b/kernel/printk/printk.c
 @@ -1650,6 +1650,43 @@ asmlinkage int printk_emit(int facility, int level,
@@ -14231,7 +14191,7 @@ index b30a292..27376a0 100644
  		return sched_clock();
  
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9a3f3c4..e745ea9 100644
+index 5e973ef..fb3a19b 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1520,7 +1520,9 @@ void scheduler_ipi(void)
@@ -14391,7 +14351,7 @@ index 9a3f3c4..e745ea9 100644
  		__preempt_count_sub(PREEMPT_ACTIVE);
  
  		/*
-@@ -3491,6 +3517,7 @@ change:
+@@ -3493,6 +3519,7 @@ change:
  	oldprio = p->prio;
  	prev_class = p->sched_class;
  	__setscheduler(rq, p, attr);
@@ -14399,7 +14359,7 @@ index 9a3f3c4..e745ea9 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -4585,10 +4612,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+@@ -4587,10 +4614,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
  	do_set_cpus_allowed(p, new_mask);
  
  	/* Can the task run on the task's current CPU? If so, we're done */
@@ -14414,7 +14374,7 @@ index 9a3f3c4..e745ea9 100644
  	if (p->on_rq) {
  		struct migration_arg arg = { p, dest_cpu };
  		/* Need help from migration thread: drop lock and wait. */
-@@ -8026,3 +8056,42 @@ void dump_cpu_task(int cpu)
+@@ -8028,3 +8058,42 @@ void dump_cpu_task(int cpu)
  	pr_info("Task dump for CPU %d:\n", cpu);
  	sched_show_task(cpu_curr(cpu));
  }
@@ -14877,7 +14837,7 @@ index 774a080..8b2f9dd 100644
  
  #else
 diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
-index 7113672..b27fc6a 100644
+index 813b021..6911c85 100644
 --- a/kernel/trace/trace.c
 +++ b/kernel/trace/trace.c
 @@ -2053,8 +2053,9 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
@@ -15202,7 +15162,7 @@ index f8e0e53..02175aa3 100644
  			wake_up_klogd();
  	}
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 0c9216c..f5331c0 100644
+index 0c9216c..1575d3e 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -10,6 +10,7 @@
@@ -15218,9 +15178,9 @@ index 0c9216c..f5331c0 100644
  	} while (pgd++, addr = next, addr != end);
  
 -	flush_cache_vmap(start, end);
-+	/* APEI may invoke this for temporarily remapping pages in NMI
++	/* APEI may invoke this for temporarily remapping pages in interrupt
 +	 * context - nothing we can and need to propagate globally. */
-+	if (!in_nmi()) {
++	if (!in_interrupt()) {
 +		__ipipe_pin_range_globally(start, end);
 +		flush_cache_vmap(start, end);
 +	}
@@ -15259,7 +15219,7 @@ index 0862816..aacbf2df 100644
  	help
  	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
-index 7f30bea..100a209 100644
+index 102af09..7d9fc91 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -788,6 +788,34 @@ out:
@@ -15498,7 +15458,7 @@ index b1eb536..ca23f83 100644
 +}
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index 085bcd8..ef56280 100644
+index d4c97ba..3c42466 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
 @@ -45,6 +45,10 @@
@@ -15546,10 +15506,35 @@ index 8a8cd02..81a1bf6 100644
  
  	if (active_mm != mm)
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index 769a67a..8c40894 100644
+index 769a67a..b67a1ab 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
-@@ -209,6 +209,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
+@@ -43,7 +43,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 	struct mm_struct *mm = vma->vm_mm;
+ 	pte_t *pte, oldpte;
+ 	spinlock_t *ptl;
+-	unsigned long pages = 0;
++	unsigned long pages = 0, flags;
+ 
+ 	pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
+ 	arch_enter_lazy_mmu_mode();
+@@ -54,6 +54,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 			bool updated = false;
+ 
+ 			if (!prot_numa) {
++				flags = hard_local_irq_save();
+ 				ptent = ptep_modify_prot_start(mm, addr, pte);
+ 				if (pte_numa(ptent))
+ 					ptent = pte_mknonnuma(ptent);
+@@ -65,6 +66,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 				if (dirty_accountable && pte_dirty(ptent))
+ 					ptent = pte_mkwrite(ptent);
+ 				ptep_modify_prot_commit(mm, addr, pte, ptent);
++				hard_local_irq_restore(flags);
+ 				updated = true;
+ 			} else {
+ 				struct page *page;
+@@ -209,6 +211,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
  		pages = hugetlb_change_protection(vma, start, end, newprot);
  	else
  		pages = change_protection_range(vma, start, end, newprot, dirty_accountable, prot_numa);

@@ -437,7 +437,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..68af8b7
+index 0000000..07859a5
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,118 @@
@@ -467,7 +467,7 @@ index 0000000..68af8b7
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	5
 +
 +struct ipipe_domain;
 +struct pt_regs;
@@ -1702,7 +1702,7 @@ index 7c1b294..569794d 100644
  
  static void flat_send_IPI_mask(const struct cpumask *cpumask, int vector)
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 81e08ef..9037972 100644
+index 81e08ef..125cff7 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
 @@ -71,8 +71,8 @@
@@ -1847,7 +1847,7 @@ index 81e08ef..9037972 100644
  
  	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
  }
-@@ -2124,7 +2165,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
+@@ -2124,11 +2165,12 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
  
  	raw_spin_lock_irqsave(&ioapic_lock, flags);
  	if (irq < legacy_pic->nr_legacy_irqs) {
@@ -1856,7 +1856,12 @@ index 81e08ef..9037972 100644
  		if (legacy_pic->irq_pending(irq))
  			was_pending = 1;
  	}
-@@ -2183,7 +2224,8 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
+ 	__unmask_ioapic(data->chip_data);
++	ipipe_unlock_irq(irq);
+ 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
+ 
+ 	return was_pending;
+@@ -2183,7 +2225,8 @@ asmlinkage __visible void smp_irq_move_cleanup_interrupt(void)
  	exit_idle();
  
  	me = smp_processor_id();
@@ -1866,7 +1871,7 @@ index 81e08ef..9037972 100644
  		int irq;
  		unsigned int irr;
  		struct irq_desc *desc;
-@@ -2344,14 +2386,16 @@ int native_ioapic_set_affinity(struct irq_data *data,
+@@ -2344,14 +2387,16 @@ int native_ioapic_set_affinity(struct irq_data *data,
  
  static void ack_apic_edge(struct irq_data *data)
  {
@@ -1885,7 +1890,7 @@ index 81e08ef..9037972 100644
  static bool io_apic_level_ack_pending(struct irq_cfg *cfg)
  {
  	struct irq_pin_list *entry;
-@@ -2379,7 +2423,7 @@ static inline bool ioapic_irqd_mask(struct irq_data *data, struct irq_cfg *cfg)
+@@ -2379,7 +2424,7 @@ static inline bool ioapic_irqd_mask(struct irq_data *data, struct irq_cfg *cfg)
  {
  	/* If we are moving the irq we need to mask it */
  	if (unlikely(irqd_is_setaffinity_pending(data))) {
@@ -1894,7 +1899,7 @@ index 81e08ef..9037972 100644
  		return true;
  	}
  	return false;
-@@ -2417,7 +2461,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+@@ -2417,7 +2462,7 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
  		 */
  		if (!io_apic_level_ack_pending(cfg))
  			irq_move_masked_irq(data);
@@ -1903,7 +1908,7 @@ index 81e08ef..9037972 100644
  	}
  }
  #else
-@@ -2431,12 +2475,46 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
+@@ -2431,12 +2476,46 @@ static inline void ioapic_irqd_unmask(struct irq_data *data,
  }
  #endif
  
@@ -1951,7 +1956,7 @@ index 81e08ef..9037972 100644
  
  	irq_complete_move(cfg);
  	masked = ioapic_irqd_mask(data, cfg);
-@@ -2496,8 +2574,50 @@ static void ack_apic_level(struct irq_data *data)
+@@ -2496,8 +2575,50 @@ static void ack_apic_level(struct irq_data *data)
  	}
  
  	ioapic_irqd_unmask(data, cfg, masked);
@@ -2002,7 +2007,7 @@ index 81e08ef..9037972 100644
  static struct irq_chip ioapic_chip __read_mostly = {
  	.name			= "IO-APIC",
  	.irq_startup		= startup_ioapic_irq,
-@@ -2507,6 +2627,13 @@ static struct irq_chip ioapic_chip __read_mostly = {
+@@ -2507,6 +2628,13 @@ static struct irq_chip ioapic_chip __read_mostly = {
  	.irq_eoi		= ack_apic_level,
  	.irq_set_affinity	= native_ioapic_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2016,7 +2021,7 @@ index 81e08ef..9037972 100644
  };
  
  static inline void init_IO_APIC_traps(void)
-@@ -2548,23 +2675,29 @@ static inline void init_IO_APIC_traps(void)
+@@ -2548,23 +2676,29 @@ static inline void init_IO_APIC_traps(void)
  
  static void mask_lapic_irq(struct irq_data *data)
  {
@@ -2049,7 +2054,7 @@ index 81e08ef..9037972 100644
  }
  
  static struct irq_chip lapic_chip __read_mostly = {
-@@ -2572,6 +2705,9 @@ static struct irq_chip lapic_chip __read_mostly = {
+@@ -2572,6 +2706,9 @@ static struct irq_chip lapic_chip __read_mostly = {
  	.irq_mask	= mask_lapic_irq,
  	.irq_unmask	= unmask_lapic_irq,
  	.irq_ack	= ack_lapic_irq,
@@ -2059,7 +2064,7 @@ index 81e08ef..9037972 100644
  };
  
  static void lapic_register_intr(int irq)
-@@ -2672,7 +2808,7 @@ static inline void __init check_timer(void)
+@@ -2672,7 +2809,7 @@ static inline void __init check_timer(void)
  	/*
  	 * get/set the timer IRQ vector:
  	 */
@@ -2068,7 +2073,7 @@ index 81e08ef..9037972 100644
  	assign_irq_vector(0, cfg, apic->target_cpus());
  
  	/*
-@@ -2729,7 +2865,7 @@ static inline void __init check_timer(void)
+@@ -2729,7 +2866,7 @@ static inline void __init check_timer(void)
  			int idx;
  			idx = find_irq_entry(apic1, pin1, mp_INT);
  			if (idx != -1 && irq_trigger(idx))
@@ -2077,7 +2082,7 @@ index 81e08ef..9037972 100644
  		}
  		if (timer_irq_works()) {
  			if (disable_timer_pin_1 > 0)
-@@ -2762,7 +2898,7 @@ static inline void __init check_timer(void)
+@@ -2762,7 +2899,7 @@ static inline void __init check_timer(void)
  		 * Cleanup, just in case ...
  		 */
  		local_irq_disable();
@@ -2086,7 +2091,7 @@ index 81e08ef..9037972 100644
  		clear_IO_APIC_pin(apic2, pin2);
  		apic_printk(APIC_QUIET, KERN_INFO "....... failed.\n");
  	}
-@@ -2771,6 +2907,10 @@ static inline void __init check_timer(void)
+@@ -2771,6 +2908,10 @@ static inline void __init check_timer(void)
  		    "...trying to set up timer as Virtual Wire IRQ...\n");
  
  	lapic_register_intr(0);
@@ -2097,7 +2102,7 @@ index 81e08ef..9037972 100644
  	apic_write(APIC_LVT0, APIC_DM_FIXED | cfg->vector);	/* Fixed mode */
  	legacy_pic->unmask(0);
  
-@@ -2779,7 +2919,7 @@ static inline void __init check_timer(void)
+@@ -2779,7 +2920,7 @@ static inline void __init check_timer(void)
  		goto out;
  	}
  	local_irq_disable();
@@ -2106,7 +2111,7 @@ index 81e08ef..9037972 100644
  	apic_write(APIC_LVT0, APIC_LVT_MASKED | APIC_DM_FIXED | cfg->vector);
  	apic_printk(APIC_QUIET, KERN_INFO "..... failed.\n");
  
-@@ -3030,6 +3170,9 @@ static struct irq_chip msi_chip = {
+@@ -3030,6 +3171,9 @@ static struct irq_chip msi_chip = {
  	.irq_ack		= ack_apic_edge,
  	.irq_set_affinity	= msi_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2116,7 +2121,7 @@ index 81e08ef..9037972 100644
  };
  
  int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-@@ -3128,6 +3271,9 @@ static struct irq_chip dmar_msi_type = {
+@@ -3128,6 +3272,9 @@ static struct irq_chip dmar_msi_type = {
  	.irq_ack		= ack_apic_edge,
  	.irq_set_affinity	= dmar_msi_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2126,7 +2131,7 @@ index 81e08ef..9037972 100644
  };
  
  int arch_setup_dmar_msi(unsigned int irq)
-@@ -3178,6 +3324,9 @@ static struct irq_chip hpet_msi_type = {
+@@ -3178,6 +3325,9 @@ static struct irq_chip hpet_msi_type = {
  	.irq_ack = ack_apic_edge,
  	.irq_set_affinity = hpet_msi_set_affinity,
  	.irq_retrigger = ioapic_retrigger_irq,
@@ -2136,7 +2141,7 @@ index 81e08ef..9037972 100644
  };
  
  int default_setup_hpet_msi(unsigned int irq, unsigned int id)
-@@ -3241,6 +3390,9 @@ static struct irq_chip ht_irq_chip = {
+@@ -3241,6 +3391,9 @@ static struct irq_chip ht_irq_chip = {
  	.irq_ack		= ack_apic_edge,
  	.irq_set_affinity	= ht_set_affinity,
  	.irq_retrigger		= ioapic_retrigger_irq,
@@ -2146,7 +2151,7 @@ index 81e08ef..9037972 100644
  };
  
  int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
-@@ -3528,6 +3680,18 @@ int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity)
+@@ -3528,6 +3681,18 @@ int acpi_get_override_irq(u32 gsi, int *trigger, int *polarity)
  	return 0;
  }
  
@@ -8900,7 +8905,7 @@ index 0000000..da17b04
 +	bool
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..40c82a2
+index 0000000..3c6cac8
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
 @@ -0,0 +1,95 @@
@@ -8930,8 +8935,8 @@ index 0000000..40c82a2
 +config IPIPE_TRACE
 +	bool "Latency tracing"
 +	depends on IPIPE_DEBUG
-+	select ARCH_WANT_FRAME_POINTERS if !ARM_UNWIND
-+	select FRAME_POINTER if !ARM_UNWIND
++	select CONFIG_FTRACE
++	select CONFIG_FUNCTION_TRACER
 +	select KALLSYMS
 +	select PROC_FS
 +	---help---
@@ -14800,7 +14805,7 @@ index 4de3e57..e9f0894 100644
  
  void set_graph_array(struct trace_array *tr)
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 7a638aa..c7be0e5 100644
+index 7a638aa..e2a7b98 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -312,6 +312,7 @@ config MAGIC_SYSRQ
@@ -14829,6 +14834,15 @@ index 7a638aa..c7be0e5 100644
  	---help---
  	  Say Y here if you want to check for overflows of kernel, IRQ
  	  and exception stacks (if your archicture uses them). This
+@@ -1107,7 +1110,7 @@ menu "RCU Debugging"
+ 
+ config PROVE_RCU
+ 	bool "RCU debugging: prove RCU correctness"
+-	depends on PROVE_LOCKING
++	depends on PROVE_LOCKING && !IPIPE
+ 	default n
+ 	help
+ 	 This feature enables lockdep extensions that check for correct
 diff --git a/lib/atomic64.c b/lib/atomic64.c
 index 08a4f06..15810f4 100644
 --- a/lib/atomic64.c
@@ -14963,7 +14977,7 @@ index f8e0e53..02175aa3 100644
  			wake_up_klogd();
  	}
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 0c9216c..f5331c0 100644
+index 0c9216c..1575d3e 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -10,6 +10,7 @@
@@ -14979,9 +14993,9 @@ index 0c9216c..f5331c0 100644
  	} while (pgd++, addr = next, addr != end);
  
 -	flush_cache_vmap(start, end);
-+	/* APEI may invoke this for temporarily remapping pages in NMI
++	/* APEI may invoke this for temporarily remapping pages in interrupt
 +	 * context - nothing we can and need to propagate globally. */
-+	if (!in_nmi()) {
++	if (!in_interrupt()) {
 +		__ipipe_pin_range_globally(start, end);
 +		flush_cache_vmap(start, end);
 +	}
