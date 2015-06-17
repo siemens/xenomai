@@ -380,7 +380,7 @@ static double dump_histogram(int32_t *histogram, char *kind)
 	return avg;
 }
 
-static void dump_histo_gnuplot(int32_t *histogram)
+static void dump_histo_gnuplot(int32_t *histogram, time_t duration)
 {
 	unsigned int start, stop;
 	char *xconf, buf[BUFSIZ];
@@ -394,6 +394,18 @@ static void dump_histo_gnuplot(int32_t *histogram)
 		if (ofp == NULL)
 			return;
 	}
+
+	fprintf(ofp, "# %.2ld:%.2ld:%.2ld (%s, %Ld us period, priority %d)\n",
+		duration / 3600, (duration / 60) % 60, duration % 60,
+		test_mode_names[test_mode],
+		period_ns / 1000, priority);
+	fprintf(ofp, "# %11s|%11s|%11s|%8s|%6s|\n",
+		"----lat min", "----lat avg",
+		"----lat max", "-overrun", "---msw");
+	fprintf(ofp,
+		"# %11.3f|%11.3f|%11.3f|%8d|%6u|\n",
+		(double)gminjitter / 1000, (double)gavgjitter / 1000,
+		(double)gmaxjitter / 1000, goverrun, max_relaxed);
 
 	if (asprintf(&xconf, "%s/bin/xeno-config --info", CONFIG_XENO_PREFIX) < 0)
 		goto dump_data;
@@ -455,7 +467,7 @@ static void dump_stats(int32_t *histogram, char *kind, double avg)
 	       kind, total_hits, avg, variance);
 }
 
-static void dump_hist_stats(void)
+static void dump_hist_stats(time_t duration)
 {
 	double minavg, maxavg, avgavg;
 
@@ -471,13 +483,18 @@ static void dump_hist_stats(void)
 	dump_stats(histogram_max, "max", maxavg);
 
 	if (do_gnuplot)
-		dump_histo_gnuplot(histogram_avg);
+		dump_histo_gnuplot(histogram_avg, duration);
 }
 
 static void cleanup(void)
 {
+	struct rttst_overall_bench_res overall;
 	time_t actual_duration;
-	long gmaxj, gminj, gavgj;
+
+	time(&test_end);
+	actual_duration = test_end - test_start - WARMUP_TIME;
+	if (!test_duration)
+		test_duration = actual_duration;
 
 	pthread_cancel(display_task);
 
@@ -486,43 +503,30 @@ static void cleanup(void)
 		pthread_join(latency_task, NULL);
 		sem_close(display_sem);
 		sem_unlink(sem_name);
-
 		gavgjitter /= (test_loops > 1 ? test_loops : 2) - 1;
-
-		gminj = gminjitter;
-		gmaxj = gmaxjitter;
-		gavgj = gavgjitter;
 	} else {
-		struct rttst_overall_bench_res overall;
-
 		overall.histogram_min = histogram_min;
 		overall.histogram_max = histogram_max;
 		overall.histogram_avg = histogram_avg;
-
 		ioctl(benchdev, RTTST_RTIOC_TMBENCH_STOP, &overall);
-
-		gminj = overall.result.min;
-		gmaxj = overall.result.max;
-		gavgj = overall.result.avg;
+		gminjitter = overall.result.min;
+		gmaxjitter = overall.result.max;
+		gavgjitter = overall.result.avg;
 		goverrun = overall.result.overruns;
 	}
+
 	pthread_join(display_task, NULL);
 
 	if (benchdev >= 0)
 		close(benchdev);
 
 	if (need_histo())
-		dump_hist_stats();
-
-	time(&test_end);
-	actual_duration = test_end - test_start - WARMUP_TIME;
-	if (!test_duration)
-		test_duration = actual_duration;
+		dump_hist_stats(actual_duration);
 
 	printf
 	    ("---|-----------|-----------|-----------|--------|------|-------------------------\n"
 	     "RTS|%11.3f|%11.3f|%11.3f|%8d|%6u|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
-	     (double)gminj / 1000, (double)gavgj / 1000, (double)gmaxj / 1000,
+	     (double)gminjitter / 1000, (double)gavgjitter / 1000, (double)gmaxjitter / 1000,
 	     goverrun, max_relaxed, actual_duration / 3600, (actual_duration / 60) % 60,
 	     actual_duration % 60, test_duration / 3600,
 	     (test_duration / 60) % 60, test_duration % 60);
