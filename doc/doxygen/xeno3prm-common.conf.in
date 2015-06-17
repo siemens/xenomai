@@ -649,6 +649,7 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED = DOXYGEN_CPP			\
 	CONFIG_SMP				\
+        "dref_type(T)=opaque"			\
         "EXPORT_SYMBOL_GPL(symbol)=//"		\
 	"COBALT_IMPL(T,I,A)=T I A"		\
 	"COBALT_DECL(T,P)=T P"			\

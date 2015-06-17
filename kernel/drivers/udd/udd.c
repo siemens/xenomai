@@ -571,8 +571,9 @@ static void switch_irq_line(rtdm_irq_t *irqh, int enable, rtdm_event_t *done)
  * current CPU leaves the real-time domain (see note). Otherwise, the
  * request is immediately handled.
  *
- * @param irq IRQ line to enable. If no IRQ was registered by the
- * driver at the UDD core, this routine has no effect.
+ * @param udd The UDD driver handling the IRQ to disable. If no IRQ
+ * was registered by the driver at the UDD core, this routine has no
+ * effect.
  *
  * @param done Optional event to signal upon completion. If non-NULL,
  * @a done will be posted by a call to rtdm_event_signal() after the
@@ -604,8 +605,9 @@ EXPORT_SYMBOL_GPL(udd_enable_irq);
  * current CPU leaves the real-time domain (see note). Otherwise, the
  * request is immediately handled.
  *
- * @param irq IRQ line to disable. If no IRQ was registered by the
- * driver at the UDD core, this routine has no effect.
+ * @param udd The UDD driver handling the IRQ to disable. If no IRQ
+ * was registered by the driver at the UDD core, this routine has no
+ * effect.
  *
  * @param done Optional event to signal upon completion. If non-NULL,
  * @a done will be posted by a call to rtdm_event_signal() after the
