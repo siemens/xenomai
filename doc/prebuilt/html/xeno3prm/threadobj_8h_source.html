@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -261,21 +261,21 @@ $(document).ready(function(){initNavTree('threadobj_8h_source.html','');});
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;        <span class="keyword">struct </span>holder wait_link;</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;        <span class="keywordtype">int</span> wait_status;</div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;        <span class="keywordtype">int</span> wait_prio;</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;        <span class="keywordtype">void</span> *wait_union;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;        dref_type(<span class="keywordtype">void</span> *) wait_union;</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;        <span class="keywordtype">size_t</span> wait_size;</div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;        timer_t periodic_timer;</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;        <span class="keyword">struct </span>threadobj_corespec core;</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;        <span class="keyword">struct </span>timespec tslice;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;        struct threadobj_corespec core;</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;        struct timespec tslice;</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;        pthread_cond_t barrier;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;        <span class="keyword">struct </span>traceobj *tracer;</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;        struct traceobj *tracer;</div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;        sem_t *cancel_sem;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        <span class="keyword">struct </span>sysgroup_memspec memspec;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        <span class="keyword">struct </span>agent_memspec agent;</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        <span class="keyword">struct </span>backtrace_data btd;</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        struct sysgroup_memspec memspec;</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        struct agent_memspec agent;</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        struct backtrace_data btd;</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;};</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="keyword">struct </span>threadobj_init_data {</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;struct threadobj_init_data {</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> magic;</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;        cpu_set_t affinity;</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        <span class="keywordtype">int</span> policy;</div>
@@ -578,14 +578,14 @@ $(document).ready(function(){initNavTree('threadobj_8h_source.html','');});
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="preprocessor">                struct threadobj *__thobj = threadobj_current();        \</span></div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;<span class="preprocessor">                assert(__thobj != NULL);                                \</span></div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;<span class="preprocessor">                assert(sizeof(typeof(T)) &lt;= __thobj-&gt;wait_size);        \</span></div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="preprocessor">                __thobj-&gt;wait_union;                                    \</span></div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="preprocessor">                (void *)__mptr(__thobj-&gt;wait_union);                    \</span></div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;<span class="preprocessor">        })</span></div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="preprocessor">#define threadobj_finish_wait()         do { } while (0)</span></div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *threadobj_get_wait(<span class="keyword">struct</span> threadobj *thobj)</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;{</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;        <span class="keywordflow">return</span> thobj-&gt;wait_union;</div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;        <span class="keywordflow">return</span> __mptr(thobj-&gt;wait_union);</div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;}</div>
 <div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;</div>
 <div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *threadobj_get_name(<span class="keyword">struct</span> threadobj *thobj)</div>
@@ -645,7 +645,7 @@ $(document).ready(function(){initNavTree('threadobj_8h_source.html','');});
 <div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _COPPERPLATE_THREADOBJ_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="group__cobalt__api__cond_html_ga20f98235b024efb10e5c76a64f0d94e5"><div class="ttname"><a href="group__cobalt__api__cond.html#ga20f98235b024efb10e5c76a64f0d94e5">pthread_cond_signal</a></div><div class="ttdeci">int pthread_cond_signal(pthread_cond_t *cond)</div><div class="ttdoc">Signal a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:423</div></div>
 <div class="ttc" id="group__cobalt__api__cond_html_gafc4b19aa8ea2dce0956579ce878b4998"><div class="ttname"><a href="group__cobalt__api__cond.html#gafc4b19aa8ea2dce0956579ce878b4998">pthread_cond_broadcast</a></div><div class="ttdeci">int pthread_cond_broadcast(pthread_cond_t *cond)</div><div class="ttdoc">Broadcast a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:483</div></div>
-<div class="ttc" id="group__cobalt__api__sched_html_ga357cd4b34c13011749dfffb42b489f09"><div class="ttname"><a href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a></div><div class="ttdeci">int sched_yield(void)</div><div class="ttdoc">Yield the processor. </div><div class="ttdef"><b>Definition:</b> thread.c:772</div></div>
+<div class="ttc" id="group__cobalt__api__sched_html_ga357cd4b34c13011749dfffb42b489f09"><div class="ttname"><a href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a></div><div class="ttdeci">int sched_yield(void)</div><div class="ttdoc">Yield the processor. </div><div class="ttdef"><b>Definition:</b> thread.c:758</div></div>
 <div class="ttc" id="group__cobalt__api__cond_html_ga907ae104b6dfd8fc12e23e84952aa7ca"><div class="ttname"><a href="group__cobalt__api__cond.html#ga907ae104b6dfd8fc12e23e84952aa7ca">pthread_cond_wait</a></div><div class="ttdeci">int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)</div><div class="ttdoc">Wait on a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:250</div></div>
 <div class="ttc" id="group__cobalt__api__cond_html_gab03e3ab6546f661d2b2f83bc12559e40"><div class="ttname"><a href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40">pthread_cond_timedwait</a></div><div class="ttdeci">int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime)</div><div class="ttdoc">Wait a bounded time on a condition variable. </div><div class="ttdef"><b>Definition:</b> cond.c:345</div></div>
 </div><!-- fragment --></div><!-- contents -->

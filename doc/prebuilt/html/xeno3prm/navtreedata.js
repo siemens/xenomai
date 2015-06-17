@@ -30,15 +30,15 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "16550A__io_8h_source.html",
-"fd_8h.html",
-"group__analogy__channel__range.html#ga2db9f4e0fea6bd9279f40944bc0eb8d8",
-"group__analogy__subdevice.html#gae9eee756dede608de5263143191edec2",
-"group__rtdm.html",
-"group__rtdm__device__register.html#ga15ae98f00745983239ee64b95f6cabfe",
-"group__rtdm__task.html#ga1763346568d041f9c66d68224816d15b",
-"kernel_2cobalt_2arch_2x86_2include_2asm_2xenomai_2uapi_2syscall_8h_source.html",
-"structRT__BUFFER__INFO.html#a68910bb1f35118aa27f3b8e2bf63a687",
-"structxnvfile__regular__iterator.html"
+"experimental_2e1000_2e1000__regs_8h_source.html",
+"group__analogy__buffer.html#gab257a290294e0292fdab71bb60893b07",
+"group__analogy__subdevice.html#gae4e41940b17d812ba852ac8739165262",
+"group__cobalt__core__vfile.html#ga6a9005ee997d929f7c8940cfcfcab171",
+"group__rtdm__clock.html",
+"group__rtdm__sync__spinlock.html#gad122b937f723fade24e729dcf1374ac6",
+"kernel_2cobalt_2arch_2x86_2include_2asm_2xenomai_2features_8h_source.html",
+"structRT__ALARM__INFO.html#af0a45680476596e86488276a0bb624ae",
+"structxnvfile__lock__ops.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

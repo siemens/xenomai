@@ -5,7 +5,6 @@ var dir_130ca89ed58471351bc0b0dbb35169ef =
     [ "cond.h", "lib_2alchemy_2cond_8h_source.html", null ],
     [ "event.h", "lib_2alchemy_2event_8h_source.html", null ],
     [ "heap.h", "lib_2alchemy_2heap_8h_source.html", null ],
-    [ "init.h", "lib_2alchemy_2init_8h_source.html", null ],
     [ "internal.h", "lib_2alchemy_2internal_8h_source.html", null ],
     [ "mutex.h", "lib_2alchemy_2mutex_8h_source.html", null ],
     [ "pipe.h", "lib_2alchemy_2pipe_8h_source.html", null ],

@@ -15,6 +15,7 @@ var group__cobalt__core__thread__states =
     [ "XNRELAX", "group__cobalt__core__thread__states.html#gadf5508cd88c2678ae01dfaf5570c661c", null ],
     [ "XNROOT", "group__cobalt__core__thread__states.html#ga73d7b1a4f5a25545ff21140a0598075a", null ],
     [ "XNRRB", "group__cobalt__core__thread__states.html#ga6f451131910f816dd01fe1ec1fb50fe9", null ],
+    [ "XNSSTEP", "group__cobalt__core__thread__states.html#gaa44db9c525cd4e87eaced36ea47a6cf3", null ],
     [ "XNSUSP", "group__cobalt__core__thread__states.html#ga6b605ad2bb16ae2386821be8ce8d341b", null ],
     [ "XNTRAPLB", "group__cobalt__core__thread__states.html#gad5651b09bfb391a0ac94f7d81c2e05f1", null ],
     [ "XNUSER", "group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06", null ],

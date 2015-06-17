@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 2014/08/03
 .\"    Manual: Xenomai Manual
-.\"    Source: Xenomai 3.0-rc4
+.\"    Source: Xenomai 3.0-rc5
 .\"  Language: English
 .\"
-.TH "AUTOTUNE" "1" "2014/08/03" "Xenomai 3\&.0\-rc4" "Xenomai Manual"
+.TH "AUTOTUNE" "1" "2014/08/03" "Xenomai 3\&.0\-rc5" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -139,9 +139,9 @@ Disable load generation while auto\-tuning\&.
 runs a load generator internally in parallel to estimating the latency, in order to eliminate irregular delays which tend to appear on fully idle systems\&. Therefore, keeping the load generation enabled most often leads to a more accurate estimation\&.
 .RE
 .PP
-\fB\-\-quiet\fR
+\fB\-\-verbose[=level]\fR
 .RS 4
-Tame down verbosity of the auto\-tuner\&.
+Set verbosity to the desired level, 1 means almost quiet (default), 2 means fully verbose\&.
 .RE
 .PP
 \fB\-\-help\fR

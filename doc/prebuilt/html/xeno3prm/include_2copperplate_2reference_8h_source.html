@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -165,7 +165,7 @@ $(document).ready(function(){initNavTree('include_2copperplate_2reference_8h_sou
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">#define fnref_get(v, r)         ((v) = (r) &lt; 0 ? NULL : __refchk(v, r))</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor">#define fnref_register(l, s)                                            \</span></div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor">        int __refvar(l, s);                                             \</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">        static void __attribute__ ((constructor)) __ifnref_ ## s(void)  \</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">        static void __early_ctor __ifnref_ ## s(void)                   \</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">        {                                                               \</span></div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">                __refvar(l, s) = __fnref_register(#l, l ## _tag,        \</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">                                                  l ## _cbi,            \</span></div>

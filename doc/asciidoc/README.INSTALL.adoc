@@ -487,12 +487,15 @@ Generic configuration options (both cores)
 	CONFIG_FUSE_FS must be enabled in the target kernel.
 
 [normal]
-When this option is enabled, the system creates a file hierachy under
-`/var/run/xenomai/<user>/<session>/<pid>`, where you can access the
-internal state of the active real-time objects. The session label is
-obtained from the --session runtime switch. If no session name is
-specified, `anon@<pid>` will be used. E.g. looking at the properties
-of a VxWorks task could be done as follows:
+When this option is enabled, the system creates a file hierachy at
+`<user>/<session>/<pid>` under the registry root path, where you
+can access the internal state of the active real-time objects. The
+session label is obtained from the --session runtime switch. If no
+session name is specified, `anon@<pid>` will be used. E.g. looking at
+the properties of a VxWorks task could be done as follows:
+
+If not specified in the configuration switch, the registry root path
+will be +/var/run/xenomai+.
 
 --------------------------------------------------------------------
 $ cat /var/run/xenomai/root/anon@12656/12656/vxworks/tasks/windTask 
@@ -952,10 +955,9 @@ You may want to have a look at
 link:building-applications-with-xenomai-3.x/[this
 document] for details about the application build process.
 
-In addition, you should refer to
-link:running-applications-with-xenomai-3.x/[this
-document] to learn about the builtin command line switches available
-with any Xenomai 3 application.
+In addition, you may refer to
+link:running-applications-with-xenomai-3.x/[this document] to learn
+about the command line options available with Xenomai 3 applications.
 
 Migrating applications to Xenomai 3
 -----------------------------------

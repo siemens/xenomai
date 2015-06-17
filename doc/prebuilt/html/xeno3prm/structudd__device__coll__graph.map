@@ -1,10 +1,10 @@
 <map id="udd_device" name="udd_device">
-<area shape="rect" id="node2" href="$structudd__device_1_1udd__reserved.html" title="Reserved to the UDD core. " alt="" coords="94,291,269,317"/>
+<area shape="rect" id="node2" href="$structudd__device_1_1udd__reserved.html" title="Reserved to the UDD core. " alt="" coords="94,276,269,303"/>
 <area shape="rect" id="node3" href="$structudd__signotify.html" title="UDD event notification descriptor. " alt="" coords="5,185,104,212"/>
 <area shape="rect" id="node4" href="$structrtdm__device.html" title="RTDM device. " alt="" coords="235,185,328,212"/>
 <area shape="rect" id="node5" href="$structrtdm__fd__ops.html" title="RTDM file operation descriptor. " alt="" coords="267,5,362,32"/>
 <area shape="rect" id="node6" href="$structrtdm__driver.html" title="RTDM driver. " alt="" coords="361,95,447,121"/>
 <area shape="rect" id="node7" href="$structatomic__t.html" title="Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. " alt="" coords="163,5,235,32"/>
 <area shape="rect" id="node8" href="$structrtdm__sm__ops.html" title="RTDM state management handlers. " alt="" coords="387,5,488,32"/>
-<area shape="rect" id="node9" href="$structudd__memregion.html" title="udd_memregion" alt="" coords="293,291,408,317"/>
+<area shape="rect" id="node9" href="$structudd__memregion.html" title="udd_memregion" alt="" coords="293,276,408,303"/>
 </map>

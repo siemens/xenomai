@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -139,9 +139,9 @@ $(document).ready(function(){initNavTree('heapobj_8h_source.html','');});
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keyword">struct </span>sysgroup {</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keywordtype">int</span> thread_count;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keyword">struct </span>list thread_list;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keyword">struct </span>listobj thread_list;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keywordtype">int</span> heap_count;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keyword">struct </span>list heap_list;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keyword">struct </span>listobj heap_list;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        pthread_mutex_t lock;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;};</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
@@ -329,7 +329,7 @@ $(document).ready(function(){initNavTree('heapobj_8h_source.html','');});
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="preprocessor">        })</span></div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;__sysgroup_add(<span class="keyword">struct</span> sysgroup_memspec *obj, <span class="keyword">struct</span> list *q, <span class="keywordtype">int</span> *countp)</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;__sysgroup_add(<span class="keyword">struct</span> sysgroup_memspec *obj, <span class="keyword">struct</span> listobj *q, <span class="keywordtype">int</span> *countp)</div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;{</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;        write_lock_nocancel(&amp;__main_sysgroup-&gt;lock);</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;        (*countp)++;</div>

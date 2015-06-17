@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -104,6 +104,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gafc3030603c9054b69f1abb44014f1838"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__synch.html#gafc3030603c9054b69f1abb44014f1838">xnsynch_init</a> (struct xnsynch *synch, int flags, <a class="el" href="structatomic__t.html">atomic_t</a> *fastlock)</td></tr>
 <tr class="memdesc:gafc3030603c9054b69f1abb44014f1838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a synchronization object.  <a href="#gafc3030603c9054b69f1abb44014f1838">More...</a><br /></td></tr>
 <tr class="separator:gafc3030603c9054b69f1abb44014f1838"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadd862461f55506485f04f4f98cdb6fb8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__synch.html#gadd862461f55506485f04f4f98cdb6fb8">xnsynch_destroy</a> (struct xnsynch *synch)</td></tr>
+<tr class="memdesc:gadd862461f55506485f04f4f98cdb6fb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy a synchronization object.  <a href="#gadd862461f55506485f04f4f98cdb6fb8">More...</a><br /></td></tr>
+<tr class="separator:gadd862461f55506485f04f4f98cdb6fb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga51cec970cb57608abe882c98bee72347"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__synch.html#ga51cec970cb57608abe882c98bee72347">xnsynch_sleep_on</a> (struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode)</td></tr>
 <tr class="memdesc:ga51cec970cb57608abe882c98bee72347"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sleep on an ownerless synchronization object.  <a href="#ga51cec970cb57608abe882c98bee72347">More...</a><br /></td></tr>
 <tr class="separator:ga51cec970cb57608abe882c98bee72347"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -176,9 +179,33 @@ Functions</h2></td></tr>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">primary-only, might-switch</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Unlike <a class="el" href="group__cobalt__core__synch.html#gad5cad7eeaa18834c9ba8843511a67628" title="Try acquiring the ownership of a synchronization object. ">xnsynch_try_acquire()</a>, this call does NOT check for invalid recursive locking request, which means that such request will always cause a deadlock for the caller. </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread__states.html#gaca3bcd5615c7331c73c3eadddb3d1b89">XNBOOST</a>, <a class="el" href="group__cobalt__core__thread__info.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, <a class="el" href="group__cobalt__core__thread__info.html#gad28db508d297929d6a0ec30964639d65">XNROBBED</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend()</a>, <a class="el" href="group__cobalt__core__thread__info.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>, <a class="el" href="group__cobalt__core__thread__info.html#ga53e49fa49b312e5266b31d66f7465d44">XNWAKEN</a>, and <a class="el" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread__states.html#gaca3bcd5615c7331c73c3eadddb3d1b89">XNBOOST</a>, <a class="el" href="group__cobalt__core__thread__info.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, <a class="el" href="group__cobalt__core__thread__info.html#gad28db508d297929d6a0ec30964639d65">XNROBBED</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend()</a>, <a class="el" href="group__cobalt__core__thread__info.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>, and <a class="el" href="group__cobalt__core__thread__info.html#ga53e49fa49b312e5266b31d66f7465d44">XNWAKEN</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__sync__mutex.html#ga0789968300701ba2a940f5fe8b1fd4d8">rtdm_mutex_timedlock()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gadd862461f55506485f04f4f98cdb6fb8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int xnsynch_destroy </td>
+          <td>(</td>
+          <td class="paramtype">struct xnsynch *&#160;</td>
+          <td class="paramname"><em>synch</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy a synchronization object. </p>
+<p>Destroys the synchronization object <em>synch</em>, unblocking all waiters with the XNRMID status.</p>
+<dl class="section return"><dt>Returns</dt><dd>XNSYNCH_RESCHED is returned if at least one thread is unblocked, which means the caller should invoke <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a" title="The rescheduling procedure. ">xnsched_run()</a> for applying the new scheduling state. Otherwise, XNSYNCH_DONE is returned.</dd></dl>
+<dl class="section user"><dt>Side effects</dt><dd>Same as <a class="el" href="group__cobalt__core__synch.html#ga51febbfe4ff33ef18778fe9ecf62c43a" title="Unblock all waiters pending on a resource. ">xnsynch_flush()</a>.</dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
+
+<p>References <a class="el" href="group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, and <a class="el" href="group__cobalt__core__synch.html#ga51febbfe4ff33ef18778fe9ecf62c43a">xnsynch_flush()</a>.</p>
 
 </div>
 </div>
@@ -224,13 +251,13 @@ Functions</h2></td></tr>
 <dl class="section user"><dt>Side effects</dt><dd></dd></dl>
 <ul>
 <li>The effective priority of the previous resource owner might be lowered to its base priority value as a consequence of the priority inheritance boost being cleared.</li>
-<li>The synchronization object is no more owned by any thread.</li>
+<li>After this operation has completed, the synchronization object is not owned by any thread.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__core__thread__states.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, and <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__rtdm__sync__event.html#ga1217402b82034b26fe25c26f1e5b32c9">rtdm_event_signal()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdm__sync__event.html#ga1217402b82034b26fe25c26f1e5b32c9">rtdm_event_signal()</a>, and <a class="el" href="group__cobalt__core__synch.html#gadd862461f55506485f04f4f98cdb6fb8">xnsynch_destroy()</a>.</p>
 
 </div>
 </div>
@@ -360,8 +387,6 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">primary-only, might-switch</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>.</p>
-
 <p>Referenced by <a class="el" href="group__rtdm__sync__mutex.html#gab40ed579324d8cc76387a0e06dd0f82a">rtdm_mutex_unlock()</a>.</p>
 
 </div>
@@ -446,7 +471,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">primary-only</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, and <a class="el" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__sync__mutex.html#ga0789968300701ba2a940f5fe8b1fd4d8">rtdm_mutex_timedlock()</a>.</p>
 

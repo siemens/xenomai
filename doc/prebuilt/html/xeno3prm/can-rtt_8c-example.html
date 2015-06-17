@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -146,6 +146,7 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line"><span class="preprocessor">#include &lt;linux/can.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;linux/can/raw.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#endif</span></div>
+<div class="line"><span class="preprocessor">#include &lt;xenomai/init.h&gt;</span></div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor">#define NSEC_PER_SEC 1000000000</span></div>
 <div class="line"></div>
@@ -168,16 +169,14 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="keywordtype">int</span> counts_per_sec;</div>
 <div class="line">};</div>
 <div class="line"></div>
-<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> print_usage(<span class="keywordtype">char</span> *prg)</div>
+<div class="line"><span class="keywordtype">void</span> application_usage(<span class="keywordtype">void</span>)</div>
 <div class="line">{</div>
+<div class="line">    fprintf(stderr, <span class="stringliteral">&quot;usage: %s [options] &lt;tx-can-interface&gt; &lt;rx-can-interface&gt;:\n&quot;</span>,</div>
+<div class="line">            get_program_name());</div>
 <div class="line">    fprintf(stderr,</div>
-<div class="line">            <span class="stringliteral">&quot;Usage: %s  [Options] &lt;tx-can-interface&gt; &lt;rx-can-interface&gt;\n&quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot;Options:\n&quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot; -h, --help     This help\n&quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot; -r, --repeater Repeater, send back received messages\n&quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot; -i, --id=ID    CAN Identifier (default = 0x1)\n&quot;</span></div>
-<div class="line">            <span class="stringliteral">&quot; -c, --cycle    Cycle time in us (default = 10000us)\n&quot;</span>,</div>
-<div class="line">            prg);</div>
+<div class="line">            <span class="stringliteral">&quot; -r, --repeater                    Repeater, send back received messages\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -i, --id=ID                       CAN Identifier (default = 0x1)\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -c, --cycle                       Cycle time in us (default = 10000us)\n&quot;</span>);</div>
 <div class="line">}</div>
 <div class="line"></div>
 <div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> *transmitter(<span class="keywordtype">void</span> *arg)</div>
@@ -309,11 +308,10 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">        { <span class="stringliteral">&quot;id&quot;</span>, required_argument, 0, <span class="charliteral">&#39;i&#39;</span>},</div>
 <div class="line">        { <span class="stringliteral">&quot;cycle&quot;</span>, required_argument, 0, <span class="charliteral">&#39;c&#39;</span>},</div>
 <div class="line">        { <span class="stringliteral">&quot;repeater&quot;</span>, no_argument, 0, <span class="charliteral">&#39;r&#39;</span>},</div>
-<div class="line">        { <span class="stringliteral">&quot;help&quot;</span>, no_argument, 0, <span class="charliteral">&#39;h&#39;</span>},</div>
 <div class="line">        { 0, 0, 0, 0},</div>
 <div class="line">    };</div>
 <div class="line"></div>
-<div class="line">    <span class="keywordflow">while</span> ((opt = getopt_long(argc, argv, <span class="stringliteral">&quot;hri:c:&quot;</span>,</div>
+<div class="line">    <span class="keywordflow">while</span> ((opt = getopt_long(argc, argv, <span class="stringliteral">&quot;ri:c:&quot;</span>,</div>
 <div class="line">                              long_options, NULL)) != -1) {</div>
 <div class="line">        <span class="keywordflow">switch</span> (opt) {</div>
 <div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;c&#39;</span>:</div>
@@ -330,15 +328,13 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line"></div>
 <div class="line">        <span class="keywordflow">default</span>:</div>
 <div class="line">            fprintf(stderr, <span class="stringliteral">&quot;Unknown option %c\n&quot;</span>, opt);</div>
-<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;h&#39;</span>:</div>
-<div class="line">            print_usage(argv[0]);</div>
 <div class="line">            exit(-1);</div>
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line"></div>
 <div class="line">    printf(<span class="stringliteral">&quot;%d %d\n&quot;</span>, optind, argc);</div>
 <div class="line">    <span class="keywordflow">if</span> (optind + 2 != argc) {</div>
-<div class="line">        print_usage(argv[0]);</div>
+<div class="line">        xenomai_usage();</div>
 <div class="line">        exit(0);</div>
 <div class="line">    }</div>
 <div class="line"></div>
@@ -433,7 +429,6 @@ $(document).ready(function(){initNavTree('can-rtt_8c-example.html','');});
 <div class="line">    <span class="comment">/* Create receiver RT-thread */</span></div>
 <div class="line">    pthread_attr_init(&amp;thattr);</div>
 <div class="line">    pthread_attr_setdetachstate(&amp;thattr, PTHREAD_CREATE_JOINABLE);</div>
-<div class="line">    pthread_attr_setstacksize(&amp;thattr, PTHREAD_STACK_MIN);</div>
 <div class="line">    ret = <a name="a17"></a><a class="code" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rxthread, &amp;thattr, &amp;receiver, NULL);</div>
 <div class="line">    <span class="keywordflow">if</span> (ret) {</div>
 <div class="line">        fprintf(stderr, <span class="stringliteral">&quot;%s: pthread_create(receiver) failed\n&quot;</span>,</div>

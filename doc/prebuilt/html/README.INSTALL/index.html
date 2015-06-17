@@ -1347,12 +1347,14 @@ allows debugging memory-related issues with the help of
 </td>
 </tr>
 </table></div>
-<div class="paragraph"><p>When this option is enabled, the system creates a file hierachy under
-<code>/var/run/xenomai/&lt;user&gt;/&lt;session&gt;/&lt;pid&gt;</code>, where you can access the
-internal state of the active real-time objects. The session label is
-obtained from the --session runtime switch. If no session name is
-specified, <code>anon@&lt;pid&gt;</code> will be used. E.g. looking at the properties
-of a VxWorks task could be done as follows:</p></div>
+<div class="paragraph"><p>When this option is enabled, the system creates a file hierachy at
+<code>&lt;user&gt;/&lt;session&gt;/&lt;pid&gt;</code> under the registry root path, where you
+can access the internal state of the active real-time objects. The
+session label is obtained from the --session runtime switch. If no
+session name is specified, <code>anon@&lt;pid&gt;</code> will be used. E.g. looking at
+the properties of a VxWorks task could be done as follows:</p></div>
+<div class="paragraph"><p>If not specified in the configuration switch, the registry root path
+will be <code>/var/run/xenomai</code>.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>$ cat /var/run/xenomai/root/anon@12656/12656/vxworks/tasks/windTask
@@ -2008,10 +2010,9 @@ deemed ready to run real-time applications.</p></div>
 <div class="paragraph"><p>You may want to have a look at
 <a href="building-applications-with-xenomai-3.x/">this
 document</a> for details about the application build process.</p></div>
-<div class="paragraph"><p>In addition, you should refer to
-<a href="running-applications-with-xenomai-3.x/">this
-document</a> to learn about the builtin command line switches available
-with any Xenomai 3 application.</p></div>
+<div class="paragraph"><p>In addition, you may refer to
+<a href="running-applications-with-xenomai-3.x/">this document</a> to learn
+about the command line options available with Xenomai 3 applications.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -2026,7 +2027,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-04-16 20:59:33 CEST
+Last updated 2015-06-17 20:52:20 CEST
 </div>
 </div>
 </body>

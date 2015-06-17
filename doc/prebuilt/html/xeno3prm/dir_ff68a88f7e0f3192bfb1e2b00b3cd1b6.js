@@ -10,7 +10,7 @@ var dir_ff68a88f7e0f3192bfb1e2b00b3cd1b6 =
     [ "clock.h", "include_2cobalt_2kernel_2clock_8h_source.html", null ],
     [ "compat.h", "cobalt_2kernel_2compat_8h_source.html", null ],
     [ "heap.h", "include_2cobalt_2kernel_2heap_8h_source.html", null ],
-    [ "init.h", "include_2cobalt_2kernel_2init_8h_source.html", null ],
+    [ "init.h", "cobalt_2kernel_2init_8h_source.html", null ],
     [ "intr.h", "intr_8h_source.html", null ],
     [ "list.h", "cobalt_2kernel_2list_8h_source.html", null ],
     [ "lock.h", "cobalt_2kernel_2lock_8h_source.html", null ],

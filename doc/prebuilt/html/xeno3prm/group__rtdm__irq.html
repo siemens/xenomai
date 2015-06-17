@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -242,7 +242,7 @@ RTDM_IRQ_xxx</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise negative error code</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>This service is for exceptional use only. Drivers should always prefer interrupt masking at device level (via corresponding control registers etc.) over masking at line level. Keep in mind that the latter is incompatible with IRQ line sharing and can also be more costly as interrupt controller access requires broader synchronization. Also, certain IRQ types may not allow the invocation over RT and interrupt contexts. The caller is responsible for excluding such conflicts.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This service is for exceptional use only. Drivers should always prefer interrupt masking at device level (via corresponding control registers etc.) over masking at line level. Keep in mind that the latter is incompatible with IRQ line sharing and can also be more costly as interrupt controller access requires broader synchronization. Also, such service is solely available from secondary mode. The caller is responsible for excluding such conflicts.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 </div>
@@ -269,7 +269,7 @@ RTDM_IRQ_xxx</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise negative error code</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>This service is for exceptional use only. Drivers should always prefer interrupt masking at device level (via corresponding control registers etc.) over masking at line level. Keep in mind that the latter is incompatible with IRQ line sharing and can also be more costly as interrupt controller access requires broader synchronization. Also, certain IRQ types may not allow the invocation over RT and interrupt contexts. The caller is responsible for excluding such conflicts.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This service is for exceptional use only. Drivers should always prefer interrupt masking at device level (via corresponding control registers etc.) over masking at line level. Keep in mind that the latter is incompatible with IRQ line sharing and can also be more costly as interrupt controller access requires broader synchronization. Also, such service is solely available from secondary mode. The caller is responsible for excluding such conflicts.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">secondary-only</a> </dd></dl>
 
 </div>

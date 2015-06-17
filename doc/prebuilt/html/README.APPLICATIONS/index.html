@@ -750,190 +750,31 @@ should at least provide high resolution timer support
 (<code>CONFIG_HIGH_RES_TIMERS</code>), and likely complete preemption
 (<em>PREEMPT_RT</em>) if your application requires short and bounded
 latencies.</p></div>
-<div class="paragraph"><p>An application recognises a set of options that may be passed on the
-command line, namely:</p></div>
-<div class="hdlist"><table>
-<tr>
-<td class="hdlist1">
-<strong>--&lt;api&gt;-clock-resolution=&lt;ns&gt;</strong>
-<br />
-</td>
-<td class="hdlist2">
-<p style="margin-top: 0;">
-        The clock resolution available with the real-time API, given
-        as a count of nano-seconds, i.e. HZ=(1000000000 / ns).
-</p>
-<div class="paragraph"><p>&lt;api&gt; is the name of one of the existing Xenomai APIs your
-application can be linked against, e.g. <em>psos</em>, <em>vxworks</em> or
-<em>alchemy</em>. When your application combines multiple APIs, you
-may pass several clock-resolution switches to set them all.</p></div>
-<div class="paragraph"><p>The default value depends on the API being considered. For
-instance, the VxWorks &#8482; and pSOS &#8482; emulators default to
-1 millisecond clock rates. The Alchemy API is tickless by
-default, i.e. <code>--alchemy-clock-resolution=1</code>.</p></div>
-</td>
-</tr>
-</table></div>
+<div class="paragraph"><p>Any Xenomai-based application recognizes a set of standard options
+that may be passed on the command line, described in
+<a href="application-setup-and-init#Standard_Xenomai_command_line_options">this document</a>.</p></div>
+<div class="paragraph"><p>In addition, the <strong>Alchemy</strong>, <strong>pSOS &#8482;</strong> and <strong>VxWorks &#8482;</strong> APIs running
+over the Xenomai core can define the clock resolution to be used,
+given as a count of nano-seconds, i.e. HZ=(1000000000 / ns), by the
+<code>--{alchemy/psos/vxworks}-clock-resolution=&lt;ns&gt;</code> option.</p></div>
+<div class="paragraph"><p>If your application combines multiple APIs, you may pass several
+clock-resolution switches to set them all.</p></div>
+<div class="paragraph"><p>The default value depends on the API being considered. For instance,
+the VxWorks &#8482; and pSOS &#8482; emulators default to millisecond clock
+rates. The Alchemy API is tickless by default,
+i.e. <code>--alchemy-clock-resolution=1</code>.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="../asciidoc-icons/caution.png" alt="Caution" />
 </td>
-<td class="content">Specifying a resolution greater than 1 nanosecond requires
-the low resolution clock support to be available from the Xenomai
-libraries (see the <code>--enable-lores-clock</code>
-<a href="installing-xenomai-3-x">configuration switch</a>).</td>
+<td class="content">Specifying a resolution greater than 1 nanosecond requires the low
+resolution clock support to be available from the Xenomai libraries
+(see the <code>--enable-lores-clock</code>
+<a href="installing-xenomai-3-x#Generic_configuration_options_both_cores">configuration
+switch</a>).</td>
 </tr></table>
 </div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-<strong>--mem-pool-size=&lt;kb&gt;</strong>
-</dt>
-<dd>
-<p>
-        The initial size in Kilobytes of the main memory pool. This
-        option only makes sense when the TLSF allocator is being used
-        (i.e. <code>--enable-debug</code> is not specified when compiling the
-        Xenomai libraries). This is only a hint, since TLSF will
-        increase the main pool size dynamically as needed, if needed.
-</p>
-<div class="paragraph"><p>However, this option may be used to pre-allocate the specified
-amount of memory to the application process, thus avoiding
-costly system calls to extend the data segment of such process
-while operating in time critical mode.</p></div>
-</dd>
-<dt class="hdlist1">
-<strong>--no-mlock</strong>
-</dt>
-<dd>
-<p>
-        Tells the Xenomai libraries not to lock the process memory
-        while initializing. The application will have to handle this
-        task when and how it sees fit, in order to avoid the extra
-        latency induced by virtual memory paging.  Otherwise,
-        <code>mlockall(MCL_CURRENT | MCL_FUTURE)</code> is automatically invoked
-        as part of the API initialization duties.
-</p>
-<div class="paragraph"><p>This flag only applies to the <em>Mercury</em> core. Memory must be
-locked when invoking dual kernel services, therefore this
-switch is a nop over <em>Cobalt</em>.</p></div>
-</dd>
-<dt class="hdlist1">
-<strong>--registry-root=&lt;path&gt;</strong>
-</dt>
-<dd>
-<p>
-        Tells Xenomai to root the object registry at the given path,
-        instead of <code>/var/run/xenomai</code> by default (see the
-        <code>--enable-registry</code> switch from the configuration options).
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--shared-registry</strong>
-</dt>
-<dd>
-<p>
-        Exports the registry of the process to other users. If access
-        is possible, also depends on permissions of the registry path.
-        By default, the registry is only accessible for the user that
-        started the Xenomai process.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--no-registry</strong>
-</dt>
-<dd>
-<p>
-        This switch disables registry support at runtime. No real-time
-        objects will be exported to <code>/var/run/xenomai</code>, despite the
-        registry code was compiled in.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--no-sanity</strong>
-</dt>
-<dt class="hdlist1">
-<strong>--sanity</strong>
-</dt>
-<dd>
-<p>
-        Turns off/on the sanity checks performed at application
-        startup by the Xenomai libraries. This option overrides the
-        --enable/disable-sanity options passed on the configuration
-        line when building the Xenomai libraries.
-</p>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="../asciidoc-icons/tip.png" alt="Tip" />
-</td>
-<td class="content">Passing <strong>--no-sanity</strong> allows running Xenomai libraries built
-for a single-processor system (i.e. --disable-smp) on a SMP
-system, assuming your application properly pins all threads
-to a single CPU.</td>
-</tr></table>
-</div>
-</dd>
-<dt class="hdlist1">
-<strong>--session=&lt;label&gt;</strong>
-</dt>
-<dd>
-<p>
-        Name of the session the new process will be part of (or create
-        if not present). If <code>--enable-pshared</code> was given when
-        configuring the Xenomai libraries, this label allows multiple
-        processes giving the same label at startup to operate on the
-        same set of objects.
-</p>
-<div class="paragraph"><p>For instance, a process can post a semaphore created by
-another process from the same session. This is done using a
-common heap area, shared by all processes within the same
-session.</p></div>
-<div class="paragraph"><p>This label is also used to form the registry mount point for
-each process, e.g. <code>/var/run/xenomai/&lt;user&gt;/&lt;session&gt;/&lt;pid&gt;</code>.
-See <code>--enable-registry</code> from the build options.</p></div>
-<div class="paragraph"><p>By default, <code>anon@&lt;pid&gt;</code> is used as the session label, with &lt;pid&gt;
-equal to the system identifier of the process.</p></div>
-</dd>
-<dt class="hdlist1">
-<strong>--reset</strong>
-</dt>
-<dd>
-<p>
-        Forces removal of an older session. This only works if the
-        process which initiated the former session has exited,
-        otherwise an error is raised.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--cpu-affinity=&lt;cpu[,cpu]&#8230;&gt;</strong>
-</dt>
-<dd>
-<p>
-        Sets the CPU affinity of threads created by the Xenomai
-        libraries within the new process.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--version</strong>
-</dt>
-<dd>
-<p>
-        Writes the Xenomai version information to stdout. The program
-        immediately exits with a success code afterwards.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--dump-config</strong>
-</dt>
-<dd>
-<p>
-        Dumps the configuration settings to stdout. Those settings are
-        defined as a result of running the configure script. The
-        program immediately exits with a success code afterwards.
-</p>
-</dd>
-</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -1009,7 +850,7 @@ package is called <em>valgrind-devel</em> on Fedora.</td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-04-16 20:59:33 CEST
+Last updated 2015-06-17 20:52:20 CEST
 </div>
 </div>
 </body>

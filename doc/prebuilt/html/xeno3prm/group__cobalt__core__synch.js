@@ -1,6 +1,7 @@
 var group__cobalt__core__synch =
 [
     [ "xnsynch_acquire", "group__cobalt__core__synch.html#ga43fa3ecdc81f6ae157f840175c7ea091", null ],
+    [ "xnsynch_destroy", "group__cobalt__core__synch.html#gadd862461f55506485f04f4f98cdb6fb8", null ],
     [ "xnsynch_flush", "group__cobalt__core__synch.html#ga51febbfe4ff33ef18778fe9ecf62c43a", null ],
     [ "xnsynch_init", "group__cobalt__core__synch.html#gafc3030603c9054b69f1abb44014f1838", null ],
     [ "xnsynch_peek_pendq", "group__cobalt__core__synch.html#ga4f98598194fa76a8b0ff298387429b9d", null ],

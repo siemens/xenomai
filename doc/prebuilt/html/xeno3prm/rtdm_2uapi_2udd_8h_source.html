@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc4</span>
+   &#160;<span id="projectnumber">3.0-rc5</span>
    </div>
   </td>
  </tr>
@@ -103,13 +103,13 @@ $(document).ready(function(){initNavTree('rtdm_2uapi_2udd_8h_source.html','');})
 <div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6">   56</a></span>&#160;        <span class="keywordtype">int</span> <a class="code" href="structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6">sig</a>;</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;};</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#ga3262c2cf44554d882cfe1fbcb8c5c06d">   71</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQEN         _IO(RTDM_CLASS_UDD, 0)</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#ga5e774aed523fce77d75ac2ba24e9aebc">   77</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQDIS        _IO(RTDM_CLASS_UDD, 1)</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#gad418ff50a125079ee342be1089adc081">   83</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQSIG        _IOW(RTDM_CLASS_UDD, 2, struct udd_signotify)</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#ga3262c2cf44554d882cfe1fbcb8c5c06d">   72</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQEN         _IO(RTDM_CLASS_UDD, 0)</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#ga5e774aed523fce77d75ac2ba24e9aebc">   83</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQDIS        _IO(RTDM_CLASS_UDD, 1)</span></div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_RTDM_UAPI_UDD_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="group__rtdm__udd.html#gad418ff50a125079ee342be1089adc081">   93</a></span>&#160;<span class="preprocessor">#define UDD_RTIOC_IRQSIG        _IOW(RTDM_CLASS_UDD, 2, struct udd_signotify)</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_RTDM_UAPI_UDD_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="structudd__signotify_html_a5d6a5db2ec1fd071c8aefb9da3268f5e"><div class="ttname"><a href="structudd__signotify.html#a5d6a5db2ec1fd071c8aefb9da3268f5e">udd_signotify::pid</a></div><div class="ttdeci">pid_t pid</div><div class="ttdoc">PID of the Cobalt thread to notify upon interrupt receipt. </div><div class="ttdef"><b>Definition:</b> udd.h:50</div></div>
 <div class="ttc" id="structudd__signotify_html_a224ee47db9f20ccdd86ec931ccd63bb6"><div class="ttname"><a href="structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6">udd_signotify::sig</a></div><div class="ttdeci">int sig</div><div class="ttdoc">Signal number to send to PID for notifying, which must be in the range [SIGRTMIN . </div><div class="ttdef"><b>Definition:</b> udd.h:56</div></div>
 <div class="ttc" id="structudd__signotify_html"><div class="ttname"><a href="structudd__signotify.html">udd_signotify</a></div><div class="ttdoc">UDD event notification descriptor. </div><div class="ttdef"><b>Definition:</b> udd.h:44</div></div>

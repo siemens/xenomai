@@ -9,6 +9,7 @@ var dir_1d4d4001358d67d4b4b025556012d559 =
     [ "rngLib.h", "include_2vxworks_2rngLib_8h_source.html", null ],
     [ "semLib.h", "include_2vxworks_2semLib_8h_source.html", null ],
     [ "sysLib.h", "sysLib_8h_source.html", null ],
+    [ "taskHookLib.h", "include_2vxworks_2taskHookLib_8h_source.html", null ],
     [ "taskInfo.h", "taskInfo_8h_source.html", null ],
     [ "taskLib.h", "include_2vxworks_2taskLib_8h_source.html", null ],
     [ "tickLib.h", "include_2vxworks_2tickLib_8h_source.html", null ],
