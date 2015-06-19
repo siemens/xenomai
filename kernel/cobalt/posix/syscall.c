@@ -71,8 +71,6 @@
 #define __xn_exec_nonrestartable (__xn_exec_primary|__xn_exec_norestart)
 /* Shorthand for domain probing syscall */
 #define __xn_exec_probing   (__xn_exec_conforming|__xn_exec_adaptive)
-/* Shorthand for oneway trap - does not return to call site. */
-#define __xn_exec_oneway    __xn_exec_norestart
 
 typedef long (*cobalt_syshand)(unsigned long arg1, unsigned long arg2,
 			       unsigned long arg3, unsigned long arg4,
@@ -246,7 +244,7 @@ static COBALT_SYSCALL(serialdbg, current,
 	return 0;
 }
 
-static COBALT_SYSCALL(mayday, oneway, (void))
+static COBALT_SYSCALL(mayday, current, (void))
 {
 	struct pt_regs *regs = task_pt_regs(current);
 	struct xnthread *cur;
@@ -800,7 +798,7 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(extend, lostage),
 	__COBALT_MODE(trace, current),
 	__COBALT_MODE(get_current, current),
-	__COBALT_MODE(mayday, oneway),
+	__COBALT_MODE(mayday, current),
 	__COBALT_MODE(backtrace, current),
 	__COBALT_MODE(serialdbg, current),
 	__COBALT_MODE(corectl, probing),
