@@ -179,7 +179,7 @@ fnref_register(libalchemy, heap_finalize);
  * @param heapsz The size (in bytes) of the memory pool, blocks will
  * be claimed and released to.  This area is not extensible, so this
  * value must be compatible with the highest memory pressure that
- * could be expected. The valid range is between 2k and 2Gb.
+ * could be expected. The valid range is between 1 byte and 2Gb.
  *
  * @param mode The heap creation mode. The following flags can be
  * OR'ed into this bitmask, each of them affecting the new heap:
@@ -195,8 +195,8 @@ fnref_register(libalchemy, heap_finalize);
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a mode is invalid, or @a heapsz is not in
- * the range [2k..2Gb].
+ * - -EINVAL is returned if @a mode is invalid, or @a heapsz is zero
+ * or larger than 2Gb.
  *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the heap.
@@ -222,7 +222,7 @@ int rt_heap_create(RT_HEAP *heap,
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	if (heapsz < 2048 || heapsz >= 1U << 31)
+	if (heapsz == 0 || heapsz >= 1U << 31)
 		return -EINVAL;
 
 	if (mode & ~(H_PRIO|H_SINGLE))
