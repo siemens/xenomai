@@ -34,7 +34,7 @@ int pshared_check(void *heap, void *addr);
 #define dref_type(t)	memoff_t
 
 #define __memoff(__base, __addr)	((caddr_t)(__addr) - (caddr_t)(__base))
-#define __memptr(__base, __off)		((caddr_t)(__base) + (__off))
+#define __memptr(__base, __off)		((void *)((caddr_t)(__base) + (__off)))
 #define __memchk(__base, __addr)	pshared_check(__base, __addr)
 
 #define __moff(__p)	__memoff(__main_heap, __p)

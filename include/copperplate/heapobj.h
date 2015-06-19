@@ -33,12 +33,19 @@
 #include <copperplate/debug.h>
 
 struct heapobj {
-	void *pool;
+	union {
+#ifdef CONFIG_XENO_PSHARED
+		struct {
+			dref_type(void *) pool;
+			char fsname[256];
+		} shared;
+#endif
+		struct {
+			void *pool;
+		} private;
+	};
 	size_t size;
 	char name[32];
-#ifdef CONFIG_XENO_PSHARED
-	char fsname[256];
-#endif
 };
 
 struct sysgroup {
@@ -78,13 +85,13 @@ size_t malloc_usable_size_ex(void *ptr, void *pool);
 static inline
 void pvheapobj_destroy(struct heapobj *hobj)
 {
-	destroy_memory_pool(hobj->pool);
+	destroy_memory_pool(hobj->private.pool);
 }
 
 static inline
 int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 {
-	hobj->size = add_new_area(hobj->pool, size, mem);
+	hobj->size = add_new_area(hobj->private.pool, size, mem);
 	if (hobj->size == (size_t)-1)
 		return __bt(-EINVAL);
 
@@ -94,25 +101,25 @@ int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 static inline
 void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	return malloc_ex(size, hobj->pool);
+	return malloc_ex(size, hobj->private.pool);
 }
 
 static inline
 void pvheapobj_free(struct heapobj *hobj, void *ptr)
 {
-	free_ex(ptr, hobj->pool);
+	free_ex(ptr, hobj->private.pool);
 }
 
 static inline
 size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	return malloc_usable_size_ex(ptr, hobj->pool);
+	return malloc_usable_size_ex(ptr, hobj->private.pool);
 }
 
 static inline
 size_t pvheapobj_inquire(struct heapobj *hobj)
 {
-	return get_used_size(hobj->pool);
+	return get_used_size(hobj->private.pool);
 }
 
 static inline void *pvmalloc(size_t size)

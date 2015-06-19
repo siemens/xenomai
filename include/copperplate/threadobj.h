@@ -496,7 +496,7 @@ static inline int threadobj_get_errno(struct threadobj *thobj)
 		struct threadobj *__thobj = threadobj_current();	\
 		assert(__thobj != NULL);				\
 		assert(sizeof(typeof(T)) <= __thobj->wait_size);	\
-		(void *)__mptr(__thobj->wait_union);			\
+		__mptr(__thobj->wait_union);				\
 	})
 
 #define threadobj_finish_wait()		do { } while (0)
