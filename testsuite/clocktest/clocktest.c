@@ -15,23 +15,22 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <errno.h>
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
+#include <error.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <ctype.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/syscall.h>
-#include <sys/mman.h>
 #include <sys/time.h>
 #include <boilerplate/atomic.h>
 #include <cobalt/uapi/kernel/vdso.h>
-
 #include <xeno_config.h>
 
 extern struct xnvdso *cobalt_vdso;
@@ -67,6 +66,7 @@ pthread_mutex_t lock;
 #define acquire_lock(lock)			pthread_mutex_lock(lock)
 #define release_lock(lock)			pthread_mutex_unlock(lock)
 #endif
+
 uint64_t last_common = 0;
 clockid_t clock_id = CLOCK_REALTIME;
 
@@ -239,8 +239,80 @@ static void sighand(int signal)
 	exit(0);
 }
 
+static clockid_t resolve_clock_name(const char *name,
+				    const char **real_name, int ext)
+{
+	char *path, buf[BUFSIZ];
+	clockid_t clock_id;
+	FILE *fp;
+	int id;
+
+	*real_name = name;
+
+	if (!ext) {
+		if (isdigit(*name)) {
+			clock_id = (clockid_t)atoi(name);
+			switch (clock_id) {
+			case CLOCK_REALTIME:
+				*real_name = "CLOCK_REALTIME";
+				break;
+			case CLOCK_MONOTONIC:
+				*real_name = "CLOCK_MONOTONIC";
+				break;
+			case CLOCK_MONOTONIC_RAW:
+				*real_name = "CLOCK_MONOTONIC_RAW";
+				break;
+			case CLOCK_HOST_REALTIME:
+				*real_name = "CLOCK_HOST_REALTIME";
+				break;
+			default:
+				error(1, EINVAL, "bad built-in clock id '%d'",
+				      clock_id);
+			}
+			return clock_id;
+		}
+		if (strcmp(name, "CLOCK_REALTIME") == 0)
+			return CLOCK_REALTIME;
+		if (strcmp(name, "CLOCK_MONOTONIC") == 0)
+			return CLOCK_MONOTONIC;
+		if (strcmp(name, "CLOCK_MONOTONIC_RAW") == 0)
+			return CLOCK_MONOTONIC_RAW;
+		if (strcmp(name, "CLOCK_HOST_REALTIME") == 0)
+			return CLOCK_HOST_REALTIME;
+		if (strcmp(name, "coreclk") == 0) {
+			/* Read the core clock as CLOCK_MONOTONIC_RAW */
+			*real_name = "CLOCK_MONOTONIC_RAW";
+			return CLOCK_MONOTONIC_RAW;
+		}
+	}
+
+	if (!isdigit(*name)) {
+		if (asprintf(&path, "/proc/xenomai/clock/%s", name) < 0)
+			error(1, ENOMEM, "resolve_clock_name");
+		fp = fopen(path, "r");
+		if (fp == NULL)
+			error(1, EINVAL, "bad extension clock name '%s'", name);
+		if (fgets(buf, sizeof(buf), fp) == NULL)
+			error(1, EIO, "cannot read %s", path);
+		free(path);
+		if (sscanf(buf, "%*[ ]id: %d\n", &id) != 1)
+			error(1, EINVAL, "bad extension clock name '%s'", name);
+		return __COBALT_CLOCK_EXT(id);
+	}
+
+	id = atoi(name);
+	if (!__COBALT_CLOCK_EXT_P(id) ||
+	    __COBALT_CLOCK_EXT_INDEX(id) >= COBALT_MAX_EXTCLOCKS)
+		error(1, EINVAL, "bad extension clock id '%d'", id);
+		
+	*real_name = "CLOCK_UNKNOWN";
+
+	return __COBALT_CLOCK_EXT(id);
+}
+
 int main(int argc, char *argv[])
 {
+	const char *clock_name = NULL, *real_clock_name = "CLOCK_REALTIME";
 	int cpus = sysconf(_SC_NPROCESSORS_ONLN);
 	int i;
 	int c;
@@ -250,7 +322,7 @@ int main(int argc, char *argv[])
 	while ((c = getopt(argc, argv, "C:ET:D")) != EOF)
 		switch (c) {
 		case 'C':
-			clock_id = atoi(optarg);
+			clock_name = optarg;
 			break;
 
 		case 'E':
@@ -267,30 +339,27 @@ int main(int argc, char *argv[])
 
 		default:
 			fprintf(stderr, "usage: clocktest [options]\n"
-				"  [-C <clock_id>]              # tested clock, default=%d (CLOCK_REALTIME)\n"
+				"  [-C <clock_id|clock_name>]   # tested clock, defaults to CLOCK_REALTIME\n"
 				"  [-E]                         # -C specifies extension clock\n"
 				"  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
-				"  [-D]                         # print extra diagnostics for CLOCK_HOST_REALTIME\n",
-				CLOCK_REALTIME);
+				"  [-D]                         # print extra diagnostics for CLOCK_HOST_REALTIME\n");
 			exit(2);
 		}
 
-	mlockall(MCL_CURRENT | MCL_FUTURE);
+	if (clock_name)
+		clock_id = resolve_clock_name(clock_name, &real_clock_name, ext);
 
 	signal(SIGALRM, sighand);
 
 	init_lock(&lock);
 
-	if (ext)
-		clock_id = __COBALT_CLOCK_EXT(clock_id);
 	if (d && clock_id == CLOCK_HOST_REALTIME)
 		show_hostrt_diagnostics();
 
 	per_cpu_data = malloc(sizeof(*per_cpu_data) * cpus);
-	if (!per_cpu_data) {
-		fprintf(stderr, "%s\n", strerror(ENOMEM));
-		exit(1);
-	}
+	if (per_cpu_data == NULL)
+		error(1, ENOMEM, "malloc");
+
 	memset(per_cpu_data, 0, sizeof(*per_cpu_data) * cpus);
 
 	for (i = 0; i < cpus; i++) {
@@ -299,30 +368,9 @@ int main(int argc, char *argv[])
 			       (void *)(long)i);
 	}
 
-	printf("== Tested %sclock: %d (", ext ? "extension " : "",
-	       __COBALT_CLOCK_EXT_INDEX(clock_id));
-	switch (clock_id) {
-	case CLOCK_REALTIME:
-		printf("CLOCK_REALTIME");
-		break;
-
-	case CLOCK_MONOTONIC:
-		printf("CLOCK_MONOTONIC");
-		break;
-
-	case CLOCK_MONOTONIC_RAW:
-		printf("CLOCK_MONOTONIC_RAW");
-		break;
-
-	case CLOCK_HOST_REALTIME:
-		printf("CLOCK_HOST_REALTIME");
-		break;
-
-	default:
-		printf("<unknown>");
-		break;
-	}
-	printf(")\nCPU      ToD offset [us] ToD drift [us/s]      warps max delta [us]\n"
+	printf("== Testing %s %s (%d)\n",
+	       ext ? "extension" : "built-in", real_clock_name, clock_id);
+	printf("CPU      ToD offset [us] ToD drift [us/s]      warps max delta [us]\n"
 	       "--- -------------------- ---------------- ---------- --------------\n");
 
 	while (1) {
