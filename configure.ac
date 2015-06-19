@@ -934,6 +934,7 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/bufp/Makefile \
 	testsuite/smokey/fork-exec/Makefile \
 	testsuite/smokey/sigdebug/Makefile \
+	testsuite/smokey/posix-clock/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
 	testsuite/regression/Makefile \

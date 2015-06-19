@@ -10,6 +10,7 @@ wrappers = $(XENO_POSIX_WRAPPERS)
 SUBDIRS = 		\
 	arith 		\
 	bufp		\
+	clock	 	\
 	cond-torture 	\
 	fork-exec	\
 	iddp		\
@@ -49,6 +50,7 @@ smokey_LDADD = 					\
 DIST_SUBDIRS = 		\
 	arith 		\
 	bufp		\
+	clock	 	\
 	cond-torture 	\
 	fork-exec	\
 	iddp		\
