@@ -18,8 +18,8 @@
 #pragma GCC system_header
 #include_next <pthread.h>
 
-#ifndef _XENOMAI_TRANK_TRANK_H
-#define _XENOMAI_TRANK_TRANK_H
+#ifndef _XENOMAI_TRANK_POSIX_PTHREAD_H
+#define _XENOMAI_TRANK_POSIX_PTHREAD_H
 
 /**
  * Set the mode of the current thread (compatibility service)
@@ -90,4 +90,4 @@ int pthread_wait_np(unsigned long *overruns_r);
 }
 #endif
 
-#endif /* _XENOMAI_TRANK_TRANK_H */
+#endif /* _XENOMAI_TRANK_POSIX_PTHREAD_H */
