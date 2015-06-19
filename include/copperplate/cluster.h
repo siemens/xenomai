@@ -158,10 +158,10 @@ struct syncluster_wait_struct {
 	union {
 		struct {
 			dref_type(char *) name;
-		} shared;
+		} shrd;
 		struct {
 			const char *name;
-		} private;
+		} priv;
 	};
 };
 

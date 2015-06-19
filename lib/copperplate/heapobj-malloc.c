@@ -71,7 +71,7 @@ int __heapobj_init_private(struct heapobj *hobj, const char *name,
 
 	ph->used = 0;
 
-	hobj->private.pool = ph;
+	hobj->priv.pool = ph;
 	hobj->size = size;
 	if (name)
 		snprintf(hobj->name, sizeof(hobj->name), "%s", name);
@@ -89,7 +89,7 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 
 void pvheapobj_destroy(struct heapobj *hobj)
 {
-	struct pool_header *ph = hobj->private.pool;
+	struct pool_header *ph = hobj->priv.pool;
 
 	__RT(pthread_mutex_destroy(&ph->lock));
 	__STD(free(ph));
@@ -97,7 +97,7 @@ void pvheapobj_destroy(struct heapobj *hobj)
 
 int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 {
-	struct pool_header *ph = hobj->private.pool;
+	struct pool_header *ph = hobj->priv.pool;
 
 	write_lock_nocancel(&ph->lock);
 	hobj->size += size;
@@ -108,7 +108,7 @@ int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 
 void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	struct pool_header *ph = hobj->private.pool;
+	struct pool_header *ph = hobj->priv.pool;
 	struct block_header *bh;
 	void *ptr;
 
@@ -143,7 +143,7 @@ fail:
 void pvheapobj_free(struct heapobj *hobj, void *ptr)
 {
 	struct block_header *bh = ptr - sizeof(*bh);
-	struct pool_header *ph = hobj->private.pool;
+	struct pool_header *ph = hobj->priv.pool;
 
 	assert(hobj->size >= bh->size);
 	__STD(free(bh));
@@ -154,7 +154,7 @@ void pvheapobj_free(struct heapobj *hobj, void *ptr)
 
 size_t pvheapobj_inquire(struct heapobj *hobj)
 {
-	struct pool_header *ph = hobj->private.pool;
+	struct pool_header *ph = hobj->priv.pool;
 
 	return ph->used;
 }

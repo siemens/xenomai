@@ -38,11 +38,11 @@ struct heapobj {
 		struct {
 			dref_type(void *) pool;
 			char fsname[256];
-		} shared;
+		} shrd;
 #endif
 		struct {
 			void *pool;
-		} private;
+		} priv;
 	};
 	size_t size;
 	char name[32];
@@ -85,13 +85,13 @@ size_t malloc_usable_size_ex(void *ptr, void *pool);
 static inline
 void pvheapobj_destroy(struct heapobj *hobj)
 {
-	destroy_memory_pool(hobj->private.pool);
+	destroy_memory_pool(hobj->priv.pool);
 }
 
 static inline
 int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 {
-	hobj->size = add_new_area(hobj->private.pool, size, mem);
+	hobj->size = add_new_area(hobj->priv.pool, size, mem);
 	if (hobj->size == (size_t)-1)
 		return __bt(-EINVAL);
 
@@ -101,25 +101,25 @@ int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 static inline
 void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	return malloc_ex(size, hobj->private.pool);
+	return malloc_ex(size, hobj->priv.pool);
 }
 
 static inline
 void pvheapobj_free(struct heapobj *hobj, void *ptr)
 {
-	free_ex(ptr, hobj->private.pool);
+	free_ex(ptr, hobj->priv.pool);
 }
 
 static inline
 size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	return malloc_usable_size_ex(ptr, hobj->private.pool);
+	return malloc_usable_size_ex(ptr, hobj->priv.pool);
 }
 
 static inline
 size_t pvheapobj_inquire(struct heapobj *hobj)
 {
-	return get_used_size(hobj->private.pool);
+	return get_used_size(hobj->priv.pool);
 }
 
 static inline void *pvmalloc(size_t size)

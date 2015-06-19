@@ -309,7 +309,7 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	 */
 	syncobj_for_each_grant_waiter_safe(&sc->d->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
-		if (strcmp(__mptr(wait->shared.name), name) == 0)
+		if (strcmp(__mptr(wait->shrd.name), name) == 0)
 			syncobj_grant_to(&sc->d->sobj, thobj);
 	}
 out:
@@ -365,7 +365,7 @@ int syncluster_findobj(struct syncluster *sc,
 		}
 		if (wait == NULL) {
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
-			wait->shared.name = __moff(xnstrdup(name));
+			wait->shrd.name = __moff(xnstrdup(name));
 		}
 		ret = syncobj_wait_grant(&sc->d->sobj, timeout, &syns);
 		if (ret) {
@@ -378,7 +378,7 @@ int syncluster_findobj(struct syncluster *sc,
 	syncobj_unlock(&sc->d->sobj, &syns);
 out:
 	if (wait) {
-		xnfree(__mptr(wait->shared.name));
+		xnfree(__mptr(wait->shrd.name));
 		threadobj_finish_wait();
 	}
 
@@ -518,7 +518,7 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	 */
 	syncobj_for_each_grant_waiter_safe(&sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
-		if (strcmp(wait->private.name, name) == 0)
+		if (strcmp(wait->priv.name, name) == 0)
 			syncobj_grant_to(&sc->sobj, thobj);
 	}
 out:
@@ -573,7 +573,7 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 		}
 		if (wait == NULL) {
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
-			wait->private.name = name;
+			wait->priv.name = name;
 		}
 		ret = syncobj_wait_grant(&sc->sobj, timeout, &syns);
 		if (ret) {
