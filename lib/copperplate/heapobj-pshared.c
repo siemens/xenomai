@@ -691,7 +691,7 @@ init:
 done:
 	flock(fd, LOCK_UN);
 	__STD(close(fd));
-	hobj->size = size;
+	hobj->size = m_heap->base.total;
 	__main_catalog = &m_heap->catalog;
 
 	return 0;
@@ -754,7 +754,7 @@ static int bind_main_heap(const char *session)
 	}
 
 	hobj->shrd.pool = __moff(&m_heap->base);
-	hobj->size = len - sizeof(*m_heap);
+	hobj->size = m_heap->base.total;
 	__main_heap = m_heap;
 	__main_catalog = &m_heap->catalog;
 	__main_sysgroup = &m_heap->sysgroup;
@@ -813,24 +813,23 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 {
 	const char *session = __copperplate_setup_data.session_label;
 	struct shared_heap *heap;
-	size_t len;
 
 	size += internal_overhead(size);
 	size = __align_to(size, HOBJ_PAGE_SIZE);
 	if (size > HOBJ_MAXEXTSZ)
 		return __bt(-EINVAL);
 
-	if (size - sizeof(struct shared_extent) < HOBJ_PAGE_SIZE * 2)
+	if (size - sizeof(struct shared_extent) < HOBJ_PAGE_SIZE * 2) {
 		size += HOBJ_PAGE_SIZE * 2;
-
-	len = size + sizeof(*heap);
+		size = __align_to(size, HOBJ_PAGE_SIZE);
+	}
 
 	/*
 	 * Create a heap nested in the main shared heap to hold data
 	 * we can share among processes which belong to the same
 	 * session.
 	 */
-	heap = alloc_block(&main_heap.base, len);
+	heap = alloc_block(&main_heap.base, size + sizeof(*heap));
 	if (heap == NULL) {
 		warning("%s() failed for %Zu bytes, raise --mem-pool-size?",
 			__func__);
@@ -842,9 +841,9 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 	else
 		snprintf(hobj->name, sizeof(hobj->name), "%s.%p", session, hobj);
 
-	hobj->shrd.pool = __moff(heap);
-	hobj->size = size;
 	init_heap(heap, hobj->name, (caddr_t)heap + sizeof(*heap), size);
+	hobj->shrd.pool = __moff(heap);
+	hobj->size = heap->total;
 	sysgroup_add(heap, &heap->memspec);
 
 	return 0;
@@ -902,7 +901,6 @@ int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 		heap->maxcont = size;
 	heap->total += size;
 	hobj->size += size;
-
 	write_unlock_safe(&heap->lock, state);
 
 	return 0;
