@@ -55,7 +55,9 @@ struct RT_HEAP_INFO {
 	 */
 	int mode;
 	/**
-	 * Overall size of heap (in bytes).
+	 * Size of heap (in bytes) as given to rt_heap_create(). The
+	 * maximum amount of memory available from this heap may be
+	 * larger, due to internal padding.
 	 */
 	size_t heapsize;
 	/**
@@ -65,7 +67,9 @@ struct RT_HEAP_INFO {
 	 */
 	size_t usablemem;
 	/**
-	 * Amount of heap memory currently consumed.
+	 * Amount of heap memory currently consumed. info.usablemem -
+	 * info.usedmem computes the current amount of free memory in
+	 * the relevant heap.
 	 */
 	size_t usedmem;
 	/**
