@@ -45,7 +45,7 @@ echo 0 > /proc/xenomai/latency || :
 testdir=@testdir@
 
 $testdir/smokey --run
-$testdir/clocktest -D -T 30 -C 32 || $testdir/clocktest -T 30
+$testdir/clocktest -D -T 30 -C CLOCK_HOST_REALTIME || $testdir/clocktest -T 30
 $testdir/switchtest -T 30
 
 start_load
