@@ -44,6 +44,11 @@ union copperplate_wait_union {
 	struct eventobj_wait_struct eventobj_wait;
 };
 
+union main_wait_union {
+	union copperplate_wait_union copperplate_wait;
+	char untyped_wait[1024];
+};
+
 static void finalize_thread(void *p);
 
 static void set_global_priority(struct threadobj *thobj, int policy,
@@ -1697,10 +1702,15 @@ static inline int main_overlay(void)
 	/*
 	 * Make the main() context a basic yet complete thread object,
 	 * so that it may use any services which require the caller to
-	 * have a Copperplate TCB (e.g. all blocking services).
+	 * have a Copperplate TCB (e.g. all blocking services). We
+	 * allocate a wait union which should be sufficient for
+	 * calling any blocking service from any high-level API from
+	 * an unshadowed main thread. APIs might have other reasons
+	 * not to allow such call though, in which case they should
+	 * check explicitly for those conditions.
 	 */
 	tcb = __threadobj_alloc(sizeof(*tcb),
-				sizeof(union copperplate_wait_union),
+				sizeof(union main_wait_union),
 				0);
 	if (tcb == NULL)
 		panic("failed to allocate main tcb");
