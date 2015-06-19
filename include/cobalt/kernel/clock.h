@@ -89,7 +89,7 @@ extern struct xnclock nkclock;
 
 extern unsigned long nktimerlat;
 
-extern atomic_t nkclklk;
+extern unsigned int nkclock_lock;
 
 int xnclock_register(struct xnclock *clock);
 

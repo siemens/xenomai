@@ -984,18 +984,26 @@ static inline void init_hostrt(void) { }
 
 #endif /* !CONFIG_XENO_OPT_HOSTRT */
 
-static inline void lock_timers(void)
+/* called with nklock held */
+static void register_debugged_thread(struct xnthread *thread)
 {
-	/* We are covered by the core lock: no barriers needed. */
-	atomic_inc(&nkclklk);
+	nkclock_lock++;
+
+	xnthread_set_state(thread, XNSSTEP);
 }
 
-static inline void unlock_timers(void)
+static void unregister_debugged_thread(struct xnthread *thread)
 {
-	XENO_BUG_ON(COBALT, atomic_read(&nkclklk) == 0);
-	smp_mb__before_atomic();
-	atomic_dec(&nkclklk);
-	smp_mb__after_atomic();
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	xnthread_clear_state(thread, XNSSTEP);
+
+	XENO_BUG_ON(COBALT, nkclock_lock == 0);
+	nkclock_lock--;
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */
@@ -1014,7 +1022,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	trace_cobalt_shadow_unmap(thread);
 
 	if (xnthread_test_state(thread, XNSSTEP))
-		unlock_timers();
+		unregister_debugged_thread(thread);
 
 	xnthread_run_handler_stack(thread, exit_thread);
 	/* Waiters will receive EIDRM */
@@ -1093,8 +1101,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 			    sigismember(&pending, SIGINT))
 				goto no_ptrace;
 		}
-		xnthread_clear_state(next, XNSSTEP);
-		unlock_timers();
+		unregister_debugged_thread(next);
 	}
 
 no_ptrace:
@@ -1146,10 +1153,8 @@ static int handle_sigwake_event(struct task_struct *p)
 
 		if (sigismember(&pending, SIGTRAP) ||
 		    sigismember(&pending, SIGSTOP)
-		    || sigismember(&pending, SIGINT)) {
-			xnthread_set_state(thread, XNSSTEP);
-			lock_timers();
-		}
+		    || sigismember(&pending, SIGINT))
+			register_debugged_thread(thread);
 	}
 
 	if (xnthread_test_state(thread, XNRELAX)) {

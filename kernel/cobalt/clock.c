@@ -34,7 +34,7 @@
  */
 unsigned long nktimerlat;
 
-atomic_t nkclklk;
+unsigned int nkclock_lock;
 
 static unsigned long long clockfreq;
 
@@ -471,7 +471,7 @@ void print_core_clock_status(struct xnclock *clock,
 {
 	const char *tm_status, *wd_status = "";
 
-	tm_status = atomic_read(&nkclklk) > 0 ? "locked" : "on";
+	tm_status = nkclock_lock > 0 ? "locked" : "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
@@ -715,7 +715,7 @@ void xnclock_tick(struct xnclock *clock)
 		}
 
 		/* Check for a locked clock state (i.e. ptracing). */
-		if (unlikely(atomic_read(&nkclklk) > 0)) {
+		if (unlikely(nkclock_lock > 0)) {
 			if (timer->status & XNTIMER_NOBLCK)
 				goto fire;
 			if (timer->status & XNTIMER_PERIODIC)
