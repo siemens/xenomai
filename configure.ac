@@ -927,14 +927,14 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/sched-tp/Makefile \
 	testsuite/smokey/rtdm/Makefile \
 	testsuite/smokey/vdso-access/Makefile \
-	testsuite/smokey/cond-torture/Makefile \
-	testsuite/smokey/mutex-torture/Makefile \
+	testsuite/smokey/posix-cond/Makefile \
+	testsuite/smokey/posix-mutex/Makefile \
+	testsuite/smokey/posix-clock/Makefile \
+	testsuite/smokey/posix-fork/Makefile \
 	testsuite/smokey/xddp/Makefile \
 	testsuite/smokey/iddp/Makefile \
 	testsuite/smokey/bufp/Makefile \
-	testsuite/smokey/fork-exec/Makefile \
 	testsuite/smokey/sigdebug/Makefile \
-	testsuite/smokey/posix-clock/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
 	testsuite/regression/Makefile \

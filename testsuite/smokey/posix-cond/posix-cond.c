@@ -16,9 +16,9 @@
 #include <pthread.h>
 #include <smokey/smokey.h>
 
-smokey_test_plugin(cond_torture,
+smokey_test_plugin(posix_cond,
 		   SMOKEY_NOARGS,
-		   "Check POSIX condition variables"
+		   "Check POSIX condition variable services"
 );
 
 #define NS_PER_MS (1000000)
@@ -626,7 +626,7 @@ static void cond_destroy_whilewait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-int run_cond_torture(struct smokey_test *t, int argc, char *const argv[])
+int run_posix_cond(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct sched_param sparam;
 
@@ -644,7 +644,6 @@ int run_cond_torture(struct smokey_test *t, int argc, char *const argv[])
 	sig_norestart_double();
 	sig_restart_double();
 	cond_destroy_whilewait();
-	fprintf(stderr, "Test OK\n");
 
 	return 0;
 }

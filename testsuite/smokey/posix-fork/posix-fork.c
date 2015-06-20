@@ -14,9 +14,9 @@
 #include <boilerplate/libc.h>
 #include <smokey/smokey.h>
 
-smokey_test_plugin(fork_exec,
+smokey_test_plugin(posix_fork,
 		   SMOKEY_NOARGS,
-		   "Check fork->exec sequence."
+		   "Check POSIX fork->exec sequence."
 );
 
 #ifdef HAVE_FORK
@@ -35,7 +35,7 @@ smokey_test_plugin(fork_exec,
  * We don't have to do much beyond firing such sequence fo testing: if
  * Cobalt messes up, the kernel will certainly crash.
  */
-static int run_fork_exec(struct smokey_test *t, int argc, char *const argv[])
+static int run_posix_fork(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct timespec req;
 

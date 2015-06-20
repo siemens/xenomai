@@ -10,17 +10,17 @@ wrappers = $(XENO_POSIX_WRAPPERS)
 SUBDIRS = 		\
 	arith 		\
 	bufp		\
-	posix-clock	 \
-	cond-torture 	\
-	fork-exec	\
 	iddp		\
-	mutex-torture 	\
+	posix-clock	\
+	posix-cond 	\
+	posix-fork	\
+	posix-mutex 	\
 	rtdm 		\
 	sched-quota 	\
 	sched-tp 	\
+	sigdebug	\
 	vdso-access 	\
-	xddp		\
-	sigdebug
+	xddp
 else
 SUBDIRS =
 wrappers =
@@ -50,14 +50,14 @@ smokey_LDADD = 					\
 DIST_SUBDIRS = 		\
 	arith 		\
 	bufp		\
-	posix-clock	\
-	cond-torture 	\
-	fork-exec	\
 	iddp		\
-	mutex-torture 	\
+	posix-clock	\
+	posix-cond 	\
+	posix-fork	\
+	posix-mutex 	\
 	rtdm 		\
 	sched-quota 	\
 	sched-tp 	\
+	sigdebug	\
 	vdso-access 	\
-	xddp		\
-	sigdebug
+	xddp

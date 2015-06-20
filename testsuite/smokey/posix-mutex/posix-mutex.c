@@ -21,9 +21,9 @@
 #include "lib/cobalt/current.h"
 #include <smokey/smokey.h>
 
-smokey_test_plugin(mutex_torture,
+smokey_test_plugin(posix_mutex,
 		   SMOKEY_NOARGS,
-		   "Check POSIX mutexes"
+		   "Check POSIX mutex services"
 );
 
 #define MUTEX_CREATE		1
@@ -550,7 +550,7 @@ static void pi_wait(void)
 	pthread_t waiter_tid;
 
 #ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
-	fprintf(stderr, "NOTE: pi_wait PTHREAD_PRIO_INHERIT: not supported\n");
+	smokey_note("PTHREAD_PRIO_INHERIT not supported");
 	return;
 #endif
 	fprintf(stderr, "pi_wait\n");
@@ -648,8 +648,7 @@ static void lock_stealing(void)
 	dispatch("lock_stealing mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 
 	if (trylock_result != 0)
-		fprintf(stderr,
-			"NOTE: lock_stealing mutex_trylock: not supported\n");
+		smokey_note("mutex_trylock not supported");
 }
 
 static void *victim(void *cookie)
@@ -875,7 +874,7 @@ static void auto_switchback(void)
 	dispatch("auto_switchback mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-int run_mutex_torture(struct smokey_test *t, int argc, char *const argv[])
+int run_posix_mutex(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct sched_param sparam;
 	struct sigaction sa;
