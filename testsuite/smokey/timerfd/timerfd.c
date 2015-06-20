@@ -62,7 +62,7 @@ static int timerfd_basic_check(void)
 			return ret;
 		if (!smokey_assert(ret == 8))
 			return -EINVAL;
-		smokey_note("%Ld direct read ticks", ticks);
+		smokey_trace("%Ld direct read ticks", ticks);
 		if (!smokey_assert(ticks >= 1))
 			return -EINVAL;
 	}
@@ -106,7 +106,7 @@ static int timerfd_select_check(void)
 		if (ret < 0)
 			return ret;
 		smokey_assert(ret == 8);
-		smokey_note("%Ld select+read ticks", ticks);
+		smokey_trace("%Ld select+read ticks", ticks);
 		if (!smokey_assert(ticks >= 1))
 			return -EINVAL;
 	}
@@ -139,7 +139,7 @@ static int timerfd_basic_overruns_check(void)
 		if (ret < 0)
 			return ret;
 		smokey_assert(ret == 8);
-		smokey_note("%Ld direct read ticks", ticks);
+		smokey_trace("%Ld direct read ticks", ticks);
 		if (!smokey_assert(ticks >= 10))
 			return -EINVAL;
 	}
@@ -184,7 +184,7 @@ static int timerfd_select_overruns_check(void)
 		if (ret < 0)
 			return ret;
 		smokey_assert(ret == 8);
-		smokey_note("%Ld select+read ticks", ticks);
+		smokey_trace("%Ld select+read ticks", ticks);
 		if (!smokey_assert(ticks >= 10))
 			return -EINVAL;
 	}
@@ -229,7 +229,7 @@ static int timerfd_select_overruns2_check(void)
 		if (ret < 0)
 			return ret;
 		smokey_assert(ret == 8);
-		smokey_note("%Ld select+read ticks", ticks);
+		smokey_trace("%Ld select+read ticks", ticks);
 		if (!smokey_assert(ticks >= 11))
 			return -EINVAL;
 	}
@@ -275,7 +275,7 @@ static int timerfd_select_overruns_before_check(void)
 		if (ret < 0)
 			return ret;
 		smokey_assert(ret == 8);
-		smokey_note("%Ld select+read ticks", ticks);
+		smokey_trace("%Ld select+read ticks", ticks);
 		if (!smokey_assert(ticks >= 10))
 			return -EINVAL;
 		sleep(1);

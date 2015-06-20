@@ -91,7 +91,7 @@ static void *mq_thread(void *cookie)
 			break;
 		}
 
-		smokey_note("received %s", buf);
+		smokey_trace("received %s", buf);
 		i = (i + 1) % (sizeof(tunes) / sizeof(tunes[0]));
 	}
 

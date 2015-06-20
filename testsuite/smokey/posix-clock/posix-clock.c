@@ -42,7 +42,7 @@ static int clock_increase_before_oneshot_timer_first_tick(void)
 	struct timespec now;
 	int t, ret;
 
-	smokey_note(__func__);
+	smokey_trace(__func__);
 	
 	t = smokey_check_errno(timerfd_create(CLOCK_REALTIME, 0));
 	if (t < 0)
@@ -99,7 +99,7 @@ static int clock_increase_before_periodic_timer_first_tick(void)
 	struct timespec now;
 	int t, ret;
 
-	smokey_note(__func__);
+	smokey_trace(__func__);
 	
 	t = smokey_check_errno(timerfd_create(CLOCK_REALTIME, 0));
 	if (t < 0)
@@ -161,7 +161,7 @@ static int clock_increase_after_periodic_timer_first_tick(void)
 	struct timespec now;
 	int t, ret;
 
-	smokey_note(__func__);
+	smokey_trace(__func__);
 	
 	t = smokey_check_errno(timerfd_create(CLOCK_REALTIME, 0));
 	if (t < 0)
@@ -237,7 +237,7 @@ static int clock_decrease_before_oneshot_timer_first_tick(void)
 	long long diff;
 	int t, ret;
 
-	smokey_note(__func__);
+	smokey_trace(__func__);
 	
 	t = smokey_check_errno(timerfd_create(CLOCK_REALTIME, 0));
 	if (t < 0)
@@ -296,7 +296,7 @@ static int clock_decrease_before_periodic_timer_first_tick(void)
 	long long diff;
 	int t, ret;
 
-	smokey_note(__func__);
+	smokey_trace(__func__);
 	
 	t = smokey_check_errno(timerfd_create(CLOCK_REALTIME, 0));
 	if (t < 0)
@@ -362,7 +362,7 @@ static int clock_decrease_after_periodic_timer_first_tick(void)
 	long long diff;
 	int t, ret;
 
-	smokey_note(__func__);
+	smokey_trace(__func__);
 
 	t = smokey_check_errno(timerfd_create(CLOCK_REALTIME, 0));
 	if (t < 0)
