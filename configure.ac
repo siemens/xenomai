@@ -936,6 +936,7 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/iddp/Makefile \
 	testsuite/smokey/bufp/Makefile \
 	testsuite/smokey/sigdebug/Makefile \
+	testsuite/smokey/timerfd/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
 	testsuite/regression/Makefile \
