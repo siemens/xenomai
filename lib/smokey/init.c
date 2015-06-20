@@ -199,12 +199,21 @@
  * including the test detection and the active test selection have
  * been performed by the Smokey API already.
  *
- * @par Issuing progress messages
+ * @par Issuing information notices
  *
  * The printf-like @a smokey_note() routine is available for issuing
+ * notices to the output device (currently stdout), unless --silent
+ * was detected on the command line. smokey_note() outputs a
+ * terminating newline character. Notes are enabled for any verbosity
+ * level greater than zero.
+ *
+ * @par Issuing trace messages
+ *
+ * The printf-like @a smokey_trace() routine is available for issuing
  * progress messages to the output device (currently stdout), unless
- * --silent was detected on the command line. smokey_note() outputs
- * a terminating newline character.
+ * --silent was detected on the command line. smokey_trace() outputs a
+ * terminating newline character. Traces are enabled for any verbosity
+ * level greater than one.
  *
  * Therefore, a possible implementation of a test driver could be as
  * basic as:

@@ -132,6 +132,20 @@ void smokey_note(const char *fmt, ...)
 	va_end(ap);
 }
 
+void smokey_trace(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	if (smokey_verbose_mode > 1) {
+		__RT(vfprintf(stdout, fmt, ap));
+		__RT(fprintf(stdout, "\n"));
+	}
+
+	va_end(ap);
+}
+
 void smokey_warning(const char *file, int lineno,
 		    const char *fmt, ...)
 {
