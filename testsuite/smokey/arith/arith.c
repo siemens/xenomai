@@ -33,13 +33,13 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 		if (rejected < 10000) {					\
 			avg = xnarch_llimd(avg, 10000, 10000 - rejected); \
 			avg = clockobj_tsc_to_ns(avg) - calib;		\
-			fprintf(stderr, "%s: 0x%016llx: %lld.%03llu ns," \
-				" rejected %d/10000\n",			\
-				display, result, avg / 10000,		\
-				((avg >= 0 ? avg : -avg) % 10000) / 10, \
-				rejected);				\
+			smokey_trace("%s: 0x%016llx: %lld.%03llu ns,"	\
+				    " rejected %d/10000",		\
+				    display, result, avg / 10000,	\
+				    ((avg >= 0 ? avg : -avg) % 10000) / 10, \
+				    rejected);				\
 		} else							\
-			fprintf(stderr, "%s: rejected 10000/10000\n", display); \
+			smokey_warning("%s: rejected 10000/10000", display); \
 	} while (0)
 
 static int run_arith(struct smokey_test *t, int argc, char *const argv[])
@@ -53,13 +53,13 @@ static int run_arith(struct smokey_test *t, int argc, char *const argv[])
 
 	/* Prepare. */
 	xnarch_init_llmulshft(nsec_per_sec, sample_freq, &mul, &shft);
-	fprintf(stderr, "mul: 0x%08x, shft: %d\n", mul, shft);
+	smokey_trace("mul: 0x%08x, shft: %d", mul, shft);
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 	xnarch_init_u32frac(&frac, nsec_per_sec, sample_freq);
-	fprintf(stderr, "integ: %d, frac: 0x%08llx\n", frac.integ, frac.frac);
+	smokey_trace("integ: %d, frac: 0x%08llx", frac.integ, frac.frac);
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 
-	fprintf(stderr, "\nsigned positive operation: 0x%016llx * %u / %d\n",
+	smokey_trace("\nsigned positive operation: 0x%016llx * %u / %d",
 		arg, nsec_per_sec, sample_freq);
 	bench("inline calibration", 0);
 	calib = avg;
@@ -82,8 +82,8 @@ static int run_arith(struct smokey_test *t, int argc, char *const argv[])
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 
 
-	fprintf(stderr, "\nsigned negative operation: 0x%016llx * %u / %d\n",
-		-arg, nsec_per_sec, sample_freq);
+	smokey_trace("\nsigned negative operation: 0x%016llx * %u / %d",
+		     -arg, nsec_per_sec, sample_freq);
 	calib = 0;
 	bench("inline calibration", 0);
 	calib = avg;
@@ -106,8 +106,8 @@ static int run_arith(struct smokey_test *t, int argc, char *const argv[])
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 
 #ifdef XNARCH_HAVE_NODIV_LLIMD
-	fprintf(stderr, "\nunsigned operation: 0x%016llx * %u / %d\n",
-		arg, nsec_per_sec, sample_freq);
+	smokey_trace("\nunsigned operation: 0x%016llx * %u / %d",
+		     arg, nsec_per_sec, sample_freq);
 	calib = 0;
 	bench("inline calibration", 0);
 	calib = avg;
