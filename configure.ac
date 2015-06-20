@@ -931,6 +931,7 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/posix-mutex/Makefile \
 	testsuite/smokey/posix-clock/Makefile \
 	testsuite/smokey/posix-fork/Makefile \
+	testsuite/smokey/posix-select/Makefile \
 	testsuite/smokey/xddp/Makefile \
 	testsuite/smokey/iddp/Makefile \
 	testsuite/smokey/bufp/Makefile \

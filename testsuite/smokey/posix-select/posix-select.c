@@ -20,21 +20,21 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-
 #include <unistd.h>
-#include <signal.h>
 #include <mqueue.h>
 #include <pthread.h>
 #include <sys/select.h>
-#include <sys/mman.h>
+#include <smokey/smokey.h>
 
-#include "check.h"
+smokey_test_plugin(posix_select,
+		   SMOKEY_NOARGS,
+		   "Check POSIX select service"
+);
 
 static const char *tunes[] = {
     "Surfing With The Alien",
@@ -55,64 +55,87 @@ static const char *tunes[] = {
     "Engines Of Creation"
 };
 
-static void *task(void *cookie)
+static int test_status;
+
+static void *mq_thread(void *cookie)
 {
 	mqd_t mqd = (mqd_t)(long)cookie;
-	fd_set inset;
-	unsigned i;
+	unsigned int i = 0, prio;
+	fd_set inset, tmp_inset;
+	char buf[128];
+	int ret;
 
 	FD_ZERO(&inset);
 	FD_SET(mqd, &inset);
 
-	for(i = 0; i < sizeof(tunes)/sizeof(tunes[0]); i++) {
-		fd_set tmp_inset = inset;
-		unsigned prio;
-		char buf[128];
+	for (;;) {
+		tmp_inset = inset;
 
-		check_unix(select(mqd + 1, &tmp_inset, NULL, NULL, NULL));
-
-		check_unix(mq_receive(mqd, buf, sizeof(buf), &prio));
-
-		if (strcmp(buf, tunes[i])) {
-			fprintf(stderr, "Received %s instead of %s\n",
-				buf, tunes[i]);
-			exit(EXIT_FAILURE);
+		ret = smokey_check_errno(select(mqd + 1, &tmp_inset, NULL, NULL, NULL));
+		if (ret < 0) {
+			test_status = ret;
+			break;
 		}
-		fprintf(stderr, "Received %s\n", buf);
+
+		ret = smokey_check_errno(mq_receive(mqd, buf, sizeof(buf), &prio));
+		if (ret < 0) {
+			test_status = ret;
+			break;
+		}
+
+		if (strcmp(buf, "/done") == 0)
+			break;
+	
+		if (!smokey_assert(strcmp(buf, tunes[i]) == 0)) {
+			test_status = -EINVAL;
+			break;
+		}
+
+		smokey_note("received %s", buf);
+		i = (i + 1) % (sizeof(tunes) / sizeof(tunes[0]));
 	}
 
 	return NULL;
 }
 
-int main(void)
+static int run_posix_select(struct smokey_test *t, int argc, char *const argv[])
 {
 	struct mq_attr qa;
 	pthread_t tcb;
+	int i, j, ret;
 	mqd_t mq;
-	int i;
-
-	fprintf(stderr, "Checking select service with posix message queues\n");
 
 	mq_unlink("/select_test_mq");
-
 	qa.mq_maxmsg = 128;
 	qa.mq_msgsize = 128;
-	mq = mq_open("/select_test_mq", O_RDWR | O_CREAT | O_NONBLOCK, 0, &qa);
-	check_unix(mq == -1 ? -1 : 0);
+	mq = smokey_check_errno(mq_open("/select_test_mq", O_RDWR | O_CREAT | O_NONBLOCK, 0, &qa));
+	if (mq < 0)
+		return mq;
 
-	check_pthread(pthread_create(&tcb, NULL, task, (void *)(long)mq));
+	ret = smokey_check_status(pthread_create(&tcb, NULL, mq_thread, (void *)(long)mq));
+	if (ret)
+		return ret;
 
-	alarm(30);
-
-	for(i = 0; i < sizeof(tunes) / sizeof(tunes[0]); i++) {
-		check_unix(mq_send(mq, tunes[i], strlen(tunes[i]) + 1, 0));
-
-		sleep(1);
+	for (j = 0; j < 3; j++) {
+		for (i = 0; i < sizeof(tunes) / sizeof(tunes[0]); i++) {
+			ret = smokey_check_errno(mq_send(mq, tunes[i], strlen(tunes[i]) + 1, 0));
+			if (ret < 0) {
+				smokey_check_status(pthread_cancel(tcb));
+				goto out;
+			}
+			usleep(100000);
+		}
 	}
-
-	check_pthread(pthread_join(tcb, NULL));
-
-	fprintf(stderr, "select service with posix message queues: success\n");
-
-	return EXIT_SUCCESS;
+	ret = smokey_check_errno(mq_send(mq, "/done", sizeof "/done", 0));
+	if (ret < 0) {
+		smokey_check_status(pthread_cancel(tcb));
+		goto out;
+	}
+	usleep(300000);
+	smp_rmb();
+	ret = test_status;
+out:
+	pthread_join(tcb, NULL);
+	
+	return ret;
 }

@@ -15,6 +15,7 @@ SUBDIRS = 		\
 	posix-cond 	\
 	posix-fork	\
 	posix-mutex 	\
+	posix-select 	\
 	rtdm 		\
 	sched-quota 	\
 	sched-tp 	\
@@ -55,6 +56,7 @@ DIST_SUBDIRS = 		\
 	posix-cond 	\
 	posix-fork	\
 	posix-mutex 	\
+	posix-select 	\
 	rtdm 		\
 	sched-quota 	\
 	sched-tp 	\

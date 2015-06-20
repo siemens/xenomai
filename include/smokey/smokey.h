@@ -108,6 +108,17 @@ struct smokey_test {
 		__ret;							\
 	})
 
+#define smokey_check_status(__expr)					\
+	({                                                              \
+		int __ret = (__expr);					\
+		if (__ret) {						\
+			smokey_warning(__FILE__, __LINE__, "%s: %s",	\
+				       #__expr, strerror(__ret));	\
+			__ret = -__ret;					\
+		}							\
+		__ret;							\
+	})
+
 #define smokey_assert(__expr)						\
 	({                                                              \
 		int __ret = (__expr);					\
