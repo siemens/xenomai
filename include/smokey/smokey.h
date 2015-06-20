@@ -97,6 +97,26 @@ struct smokey_test {
 #define SMOKEY_ARG_BOOL(__plugin, __arg)   (!!SMOKEY_ARG_INT(__plugin, __arg))
 #define SMOKEY_ARG_STRING(__plugin, __arg) (SMOKEY_ARG(__plugin, __arg)->u.s_val)
 
+#define smokey_check_errno(__expr)					\
+	({                                                              \
+		int __ret = (__expr);					\
+		if (__ret < 0) {					\
+			__ret = -errno;					\
+			smokey_warning(__FILE__, __LINE__, "%s: %s\n",  \
+				       #__expr, strerror(errno));	\
+		}							\
+		__ret;							\
+	})
+
+#define smokey_assert(__expr)						\
+	({                                                              \
+		int __ret = (__expr);					\
+		if (!__ret) 						\
+			smokey_warning(__FILE__, __LINE__,		\
+				       "assertion failed: %s\n", #__expr); \
+		__ret;							\
+	})
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -116,6 +136,9 @@ int smokey_parse_args(struct smokey_test *t,
 		      int argc, char *const argv[]);
 
 void smokey_note(const char *fmt, ...);
+
+void smokey_warning(const char *file, int lineno,
+		    const char *fmt, ...);
 
 #ifdef __cplusplus
 }

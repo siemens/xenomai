@@ -129,3 +129,18 @@ void smokey_note(const char *fmt, ...)
 
 	va_end(ap);
 }
+
+void smokey_warning(const char *file, int lineno,
+		    const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	if (smokey_verbose_mode) {
+		__RT(fprintf(stderr, "%s:%d, ", basename(file), lineno));
+		__RT(vfprintf(stderr, fmt, ap));
+	}
+
+	va_end(ap);
+}
