@@ -11,6 +11,7 @@ SUBDIRS = 		\
 	arith 		\
 	bufp		\
 	iddp		\
+	leaks		\
 	posix-clock	\
 	posix-cond 	\
 	posix-fork	\
@@ -53,6 +54,7 @@ DIST_SUBDIRS = 		\
 	arith 		\
 	bufp		\
 	iddp		\
+	leaks		\
 	posix-clock	\
 	posix-cond 	\
 	posix-fork	\

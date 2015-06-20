@@ -102,8 +102,8 @@ struct smokey_test {
 		int __ret = (__expr);					\
 		if (__ret < 0) {					\
 			__ret = -errno;					\
-			smokey_warning(__FILE__, __LINE__, "%s: %s",	\
-				       #__expr, strerror(errno));	\
+			__smokey_warning(__FILE__, __LINE__, "%s: %s",	\
+					 #__expr, strerror(errno));	\
 		}							\
 		__ret;							\
 	})
@@ -112,8 +112,8 @@ struct smokey_test {
 	({                                                              \
 		int __ret = (__expr);					\
 		if (__ret) {						\
-			smokey_warning(__FILE__, __LINE__, "%s: %s",	\
-				       #__expr, strerror(__ret));	\
+			__smokey_warning(__FILE__, __LINE__, "%s: %s",	\
+					 #__expr, strerror(__ret));	\
 			__ret = -__ret;					\
 		}							\
 		__ret;							\
@@ -123,10 +123,13 @@ struct smokey_test {
 	({                                                              \
 		int __ret = (__expr);					\
 		if (!__ret) 						\
-			smokey_warning(__FILE__, __LINE__,		\
-				       "assertion failed: %s", #__expr); \
+			__smokey_warning(__FILE__, __LINE__,		\
+					 "assertion failed: %s", #__expr); \
 		__ret;							\
 	})
+
+#define smokey_warning(__fmt, __args...)	\
+	__smokey_warning(__FILE__, __LINE__, __fmt, #__args)
 
 #ifdef __cplusplus
 extern "C" {
@@ -150,8 +153,8 @@ void smokey_trace(const char *fmt, ...);
 
 void smokey_note(const char *fmt, ...);
 
-void smokey_warning(const char *file, int lineno,
-		    const char *fmt, ...);
+void __smokey_warning(const char *file, int lineno,
+		      const char *fmt, ...);
 
 #ifdef __cplusplus
 }

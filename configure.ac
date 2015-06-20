@@ -937,10 +937,9 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/bufp/Makefile \
 	testsuite/smokey/sigdebug/Makefile \
 	testsuite/smokey/timerfd/Makefile \
+	testsuite/smokey/leaks/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
-	testsuite/regression/Makefile \
-	testsuite/regression/posix/Makefile \
 	utils/Makefile \
 	utils/hdb/Makefile \
 	utils/can/Makefile \
