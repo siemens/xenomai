@@ -87,7 +87,7 @@ static void *realtime_thread1(void *arg)
 			fail("recvfrom");
 		}
 
-		smokey_note("%s: %ld relayed by peer\n", __FUNCTION__, data);
+		smokey_note("%s: %ld relayed by peer", __FUNCTION__, data);
 	}
 
 	return NULL;
@@ -150,7 +150,7 @@ static void *realtime_thread2(void *arg)
 	if (ret || addrlen != sizeof(saddr))
 		fail("getpeername");
 
-	smokey_note("%s: NRT peer is reading from /dev/rtp%d\n",
+	smokey_note("%s: NRT peer is reading from /dev/rtp%d",
 		  __FUNCTION__, saddr.sipc_port);
 
 	FD_ZERO(&set);
@@ -173,7 +173,7 @@ static void *realtime_thread2(void *arg)
 		if (ret != sizeof(data))
 			fail("sendto");
 
-		smokey_note("%s: sent %d bytes, %ld\n", __FUNCTION__, ret, data);
+		smokey_note("%s: sent %d bytes, %ld", __FUNCTION__, ret, data);
 
 		ts.tv_sec = 0;
 		ts.tv_nsec = 100000000; /* 100 ms */

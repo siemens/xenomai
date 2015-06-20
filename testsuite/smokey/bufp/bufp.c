@@ -83,7 +83,7 @@ static void *server(void *arg)
 			errno = -EINVAL;
 			fail("recvfrom");
 		}
-		smokey_note("%s: received %d bytes, %ld from port %d\n",
+		smokey_note("%s: received %d bytes, %ld from port %d",
 			  __FUNCTION__, ret, data, claddr.sipc_port);
 	}
 
@@ -123,7 +123,7 @@ static void *client(void *arg)
 			close(s);
 			fail("sendto");
 		}
-		smokey_note("%s: sent %d bytes, %ld\n", __FUNCTION__, ret, data);
+		smokey_note("%s: sent %d bytes, %ld", __FUNCTION__, ret, data);
 		ts.tv_sec = 0;
 		ts.tv_nsec = 100000000; /* 100 ms */
 		clock_nanosleep(CLOCK_REALTIME, 0, &ts, NULL);

@@ -96,12 +96,12 @@ static void *rt_thread_body(void *cookie)
 	err = pthread_setmode_np(0, PTHREAD_WARNSW, NULL);
 	check_no_error("pthread_setmode_np", err);
 
-	smokey_note("syscall\n");
+	smokey_note("syscall");
 	setup_checkdebug(SIGDEBUG_MIGRATE_SYSCALL);
 	syscall(__NR_gettid);
 	check_sigdebug_received("SIGDEBUG_MIGRATE_SYSCALL");
 
-	smokey_note("signal\n");
+	smokey_note("signal");
 	setup_checkdebug(SIGDEBUG_MIGRATE_SIGNAL);
 	err = sem_post(&send_signal);
 	check_no_error("sem_post", err);
@@ -109,13 +109,13 @@ static void *rt_thread_body(void *cookie)
 	check_no_error("clock_nanosleep", err);
 	check_sigdebug_received("SIGDEBUG_MIGRATE_SIGNAL");
 
-	smokey_note("relaxed mutex owner\n");
+	smokey_note("relaxed mutex owner");
 	setup_checkdebug(SIGDEBUG_MIGRATE_PRIOINV);
 	err = pthread_mutex_lock(&prio_invert);
 	check_no_error("pthread_mutex_lock", err);
 	check_sigdebug_received("SIGDEBUG_MIGRATE_PRIOINV");
 
-	smokey_note("page fault\n");
+	smokey_note("page fault");
 	setup_checkdebug(SIGDEBUG_MIGRATE_FAULT);
 	delay.tv_nsec = 0;
 	err = clock_nanosleep(CLOCK_MONOTONIC, 0, &delay, NULL);
@@ -124,7 +124,7 @@ static void *rt_thread_body(void *cookie)
 	check_sigdebug_received("SIGDEBUG_MIGRATE_FAULT");
 
 	if (wd) {
-		smokey_note("watchdog\n");
+		smokey_note("watchdog");
 		rt_print_flush_buffers();
 		setup_checkdebug(SIGDEBUG_WATCHDOG);
 		clock_gettime(CLOCK_MONOTONIC, &now);
@@ -137,9 +137,9 @@ static void *rt_thread_body(void *cookie)
 			 !sigdebug_received);
 		check_sigdebug_received("SIGDEBUG_WATCHDOG");
 	} else
-		smokey_note("watchdog not tested\n");
+		smokey_note("watchdog not tested");
 
-	smokey_note("lock break\n");
+	smokey_note("lock break");
 	setup_checkdebug(SIGDEBUG_LOCK_BREAK);
 	err = pthread_setmode_np(0, PTHREAD_LOCK_SCHED |
 				    PTHREAD_DISABLE_LOCKBREAK, NULL);
@@ -251,7 +251,7 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 	err = pthread_attr_setschedparam(&attr, &params);
 	check_no_error("pthread_attr_setschedparam", err);
 
-	smokey_note("mlockall\n");
+	smokey_note("mlockall");
 	munlockall();
 	setup_checkdebug(SIGDEBUG_NOMLOCK);
 	err = pthread_create(&rt_thread, &attr, rt_thread_body, NULL);

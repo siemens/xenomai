@@ -31,7 +31,7 @@ int main(int argc, char *const argv[])
 		ret = t->run(t, argc, argv);
 		if (ret) {
 			if (ret == -ENOSYS) {
-				smokey_note("%s skipped (no kernel support)\n",
+				smokey_note("%s skipped (no kernel support)",
 					    t->name);
 				continue;
 			}
@@ -41,7 +41,7 @@ int main(int argc, char *const argv[])
 			if (smokey_verbose_mode)
 				error(1, -ret, "test %s failed", t->name);
 		}
-		smokey_note("%s OK\n", t->name);
+		smokey_note("%s OK", t->name);
 	}
 
 	return fails != 0;

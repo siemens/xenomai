@@ -102,7 +102,7 @@ struct smokey_test {
 		int __ret = (__expr);					\
 		if (__ret < 0) {					\
 			__ret = -errno;					\
-			smokey_warning(__FILE__, __LINE__, "%s: %s\n",  \
+			smokey_warning(__FILE__, __LINE__, "%s: %s",	\
 				       #__expr, strerror(errno));	\
 		}							\
 		__ret;							\
@@ -113,7 +113,7 @@ struct smokey_test {
 		int __ret = (__expr);					\
 		if (!__ret) 						\
 			smokey_warning(__FILE__, __LINE__,		\
-				       "assertion failed: %s\n", #__expr); \
+				       "assertion failed: %s", #__expr); \
 		__ret;							\
 	})
 

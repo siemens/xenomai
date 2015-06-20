@@ -203,7 +203,8 @@
  *
  * The printf-like @a smokey_note() routine is available for issuing
  * progress messages to the output device (currently stdout), unless
- * --silent was detected on the command line.
+ * --silent was detected on the command line. smokey_note() outputs
+ * a terminating newline character.
  *
  * Therefore, a possible implementation of a test driver could be as
  * basic as:
@@ -228,7 +229,7 @@
  *				continue;
  *			error(1, -ret, "test %s failed", t->name);
  *		}
- *		smokey_note("%s OK\n", t->name);
+ *		smokey_note("%s OK", t->name);
  *	}
  *
  *	return 0;

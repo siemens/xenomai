@@ -124,8 +124,10 @@ void smokey_note(const char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	if (smokey_verbose_mode)
+	if (smokey_verbose_mode) {
 		__RT(vfprintf(stdout, fmt, ap));
+		__RT(fprintf(stdout, "\n"));
+	}
 
 	va_end(ap);
 }
@@ -140,6 +142,7 @@ void smokey_warning(const char *file, int lineno,
 	if (smokey_verbose_mode) {
 		__RT(fprintf(stderr, "%s:%d, ", basename(file), lineno));
 		__RT(vfprintf(stderr, fmt, ap));
+		__RT(fprintf(stdout, "\n"));
 	}
 
 	va_end(ap);
