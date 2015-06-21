@@ -167,8 +167,10 @@ $(document).ready(function(){initNavTree('group__smokey.html','');});
 <dl class="section user"><dt>Writing a test driver based on the Smokey API</dt><dd></dd></dl>
 <p>A test driver provides the main() entry point, which should iterate over the test list (<em>smokey_test_list</em>) prepared by the Smokey API, for running each test individually. The <em>for_each_smokey_test()</em> helper is available for iterating over the active test list.</p>
 <p>When this entry point is called, all the initialization chores, including the test detection and the active test selection have been performed by the Smokey API already.</p>
-<dl class="section user"><dt>Issuing progress messages</dt><dd></dd></dl>
-<p>The printf-like <em>smokey_note()</em> routine is available for issuing progress messages to the output device (currently stdout), unless &ndash;silent was detected on the command line.</p>
+<dl class="section user"><dt>Issuing information notices</dt><dd></dd></dl>
+<p>The printf-like <em>smokey_note()</em> routine is available for issuing notices to the output device (currently stdout), unless &ndash;silent was detected on the command line. smokey_note() outputs a terminating newline character. Notes are enabled for any verbosity level greater than zero.</p>
+<dl class="section user"><dt>Issuing trace messages</dt><dd></dd></dl>
+<p>The printf-like <em>smokey_trace()</em> routine is available for issuing progress messages to the output device (currently stdout), unless &ndash;silent was detected on the command line. smokey_trace() outputs a terminating newline character. Traces are enabled for any verbosity level greater than one.</p>
 <p>Therefore, a possible implementation of a test driver could be as basic as:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;error.h&gt;</span></div>
@@ -189,7 +191,7 @@ $(document).ready(function(){initNavTree('group__smokey.html','');});
 <div class="line">                        <span class="keywordflow">continue</span>;</div>
 <div class="line">                error(1, -ret, <span class="stringliteral">&quot;test %s failed&quot;</span>, t-&gt;name);</div>
 <div class="line">        }</div>
-<div class="line">        smokey_note(<span class="stringliteral">&quot;%s OK\n&quot;</span>, t-&gt;name);</div>
+<div class="line">        smokey_note(<span class="stringliteral">&quot;%s OK&quot;</span>, t-&gt;name);</div>
 <div class="line">     }</div>
 <div class="line"></div>
 <div class="line">     <span class="keywordflow">return</span> 0;</div>

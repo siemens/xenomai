@@ -130,7 +130,7 @@ $(document).ready(function(){initNavTree('scope_8h_source.html','');});
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define dref_type(t)    memoff_t</span></div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#define __memoff(__base, __addr)        ((caddr_t)(__addr) - (caddr_t)(__base))</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#define __memptr(__base, __off)         ((caddr_t)(__base) + (__off))</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#define __memptr(__base, __off)         ((void *)((caddr_t)(__base) + (__off)))</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define __memchk(__base, __addr)        pshared_check(__base, __addr)</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define __moff(__p)     __memoff(__main_heap, __p)</span></div>

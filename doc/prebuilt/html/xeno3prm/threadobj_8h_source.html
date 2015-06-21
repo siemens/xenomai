@@ -578,7 +578,7 @@ $(document).ready(function(){initNavTree('threadobj_8h_source.html','');});
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="preprocessor">                struct threadobj *__thobj = threadobj_current();        \</span></div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;<span class="preprocessor">                assert(__thobj != NULL);                                \</span></div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;<span class="preprocessor">                assert(sizeof(typeof(T)) &lt;= __thobj-&gt;wait_size);        \</span></div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="preprocessor">                (void *)__mptr(__thobj-&gt;wait_union);                    \</span></div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="preprocessor">                __mptr(__thobj-&gt;wait_union);                            \</span></div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;<span class="preprocessor">        })</span></div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="preprocessor">#define threadobj_finish_wait()         do { } while (0)</span></div>

@@ -110,16 +110,14 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#ad934506c4e93c70ad1fcf2f934a0991b">mode</a></td></tr>
 <tr class="memdesc:ad934506c4e93c70ad1fcf2f934a0991b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creation mode flags as given to <a class="el" href="group__alchemy__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4" title="Create a heap. ">rt_heap_create()</a>. <br /></td></tr>
 <tr class="separator:ad934506c4e93c70ad1fcf2f934a0991b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2ffdb8f24680e5b31565c1c67dc0d47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab2ffdb8f24680e5b31565c1c67dc0d47"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#ab2ffdb8f24680e5b31565c1c67dc0d47">heapsize</a></td></tr>
-<tr class="memdesc:ab2ffdb8f24680e5b31565c1c67dc0d47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overall size of heap (in bytes). <br /></td></tr>
+<tr class="memitem:ab2ffdb8f24680e5b31565c1c67dc0d47"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#ab2ffdb8f24680e5b31565c1c67dc0d47">heapsize</a></td></tr>
+<tr class="memdesc:ab2ffdb8f24680e5b31565c1c67dc0d47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of heap (in bytes) as given to <a class="el" href="group__alchemy__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4" title="Create a heap. ">rt_heap_create()</a>.  <a href="#ab2ffdb8f24680e5b31565c1c67dc0d47">More...</a><br /></td></tr>
 <tr class="separator:ab2ffdb8f24680e5b31565c1c67dc0d47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf0c5f124ab3e315664507c6a89d2dab"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#adf0c5f124ab3e315664507c6a89d2dab">usablemem</a></td></tr>
 <tr class="memdesc:adf0c5f124ab3e315664507c6a89d2dab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum amount of memory available from the heap.  <a href="#adf0c5f124ab3e315664507c6a89d2dab">More...</a><br /></td></tr>
 <tr class="separator:adf0c5f124ab3e315664507c6a89d2dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f53bac1667b14a7f05108c2a3802f54"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8f53bac1667b14a7f05108c2a3802f54"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#a8f53bac1667b14a7f05108c2a3802f54">usedmem</a></td></tr>
-<tr class="memdesc:a8f53bac1667b14a7f05108c2a3802f54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amount of heap memory currently consumed. <br /></td></tr>
+<tr class="memitem:a8f53bac1667b14a7f05108c2a3802f54"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#a8f53bac1667b14a7f05108c2a3802f54">usedmem</a></td></tr>
+<tr class="memdesc:a8f53bac1667b14a7f05108c2a3802f54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amount of heap memory currently consumed.  <a href="#a8f53bac1667b14a7f05108c2a3802f54">More...</a><br /></td></tr>
 <tr class="separator:a8f53bac1667b14a7f05108c2a3802f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cdd30f308e5e09871b87755ca5224d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4cdd30f308e5e09871b87755ca5224d3"></a>
 char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRT__HEAP__INFO.html#a4cdd30f308e5e09871b87755ca5224d3">name</a> [XNOBJECT_NAME_LEN]</td></tr>
@@ -130,6 +128,23 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <div class="textblock"><p>Heap status descriptor. </p>
 <p><a class="anchor" id="RT_HEAP_INFO"></a> This structure reports various static and runtime information about a real-time heap, returned by a call to <a class="el" href="group__alchemy__heap.html#ga6af669528e1bcae4f1ed15b292bda08e" title="Query heap status. ">rt_heap_inquire()</a>. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="ab2ffdb8f24680e5b31565c1c67dc0d47"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t RT_HEAP_INFO::heapsize</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Size of heap (in bytes) as given to <a class="el" href="group__alchemy__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4" title="Create a heap. ">rt_heap_create()</a>. </p>
+<p>The maximum amount of memory available from this heap may be larger, due to internal padding. </p>
+
+<p>Referenced by <a class="el" href="group__alchemy__heap.html#ga6af669528e1bcae4f1ed15b292bda08e">rt_heap_inquire()</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="adf0c5f124ab3e315664507c6a89d2dab"></a>
 <div class="memitem">
 <div class="memproto">
@@ -142,6 +157,23 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 
 <p>Maximum amount of memory available from the heap. </p>
 <p>This value accounts for the overhead of internal data structures required to maintain the heap. </p>
+
+<p>Referenced by <a class="el" href="group__alchemy__heap.html#ga6af669528e1bcae4f1ed15b292bda08e">rt_heap_inquire()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a8f53bac1667b14a7f05108c2a3802f54"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t RT_HEAP_INFO::usedmem</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Amount of heap memory currently consumed. </p>
+<p>info.usablemem - info.usedmem computes the current amount of free memory in the relevant heap. </p>
 
 <p>Referenced by <a class="el" href="group__alchemy__heap.html#ga6af669528e1bcae4f1ed15b292bda08e">rt_heap_inquire()</a>.</p>
 

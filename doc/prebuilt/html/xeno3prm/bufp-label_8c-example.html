@@ -89,6 +89,23 @@ $(document).ready(function(){initNavTree('bufp-label_8c-example.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Copyright (C) 2009 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This library is free software; you can redistribute it and/or</span></div>
+<div class="line"><span class="comment"> * modify it under the terms of the GNU Lesser General Public</span></div>
+<div class="line"><span class="comment"> * License as published by the Free Software Foundation; either</span></div>
+<div class="line"><span class="comment"> * version 2 of the License, or (at your option) any later version.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This library is distributed in the hope that it will be useful,</span></div>
+<div class="line"><span class="comment"> * but WITHOUT ANY WARRANTY; without even the implied warranty of</span></div>
+<div class="line"><span class="comment"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</span></div>
+<div class="line"><span class="comment"> * Lesser General Public License for more details.</span></div>
+<div class="line"><span class="comment"></span></div>
+<div class="line"><span class="comment"> * You should have received a copy of the GNU Lesser General Public</span></div>
+<div class="line"><span class="comment"> * License along with this library; if not, write to the Free Software</span></div>
+<div class="line"><span class="comment"> * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> * BUFP-based client/server demo, using the read(2)/write(2)</span></div>
 <div class="line"><span class="comment"> * system calls to exchange data over a socket.</span></div>
 <div class="line"><span class="comment"> *</span></div>
@@ -142,7 +159,7 @@ $(document).ready(function(){initNavTree('bufp-label_8c-example.html','');});
 <div class="line">        <span class="keywordtype">size_t</span> bufsz;</div>
 <div class="line">        <span class="keywordtype">int</span> ret, s;</div>
 <div class="line"></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a2"></a><a class="code" href="group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53afb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a2"></a><a class="code" href="group__rtdm__ipc.html#gga77867ab4129f63159b37bca3b652a798afb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line"></div>
@@ -203,7 +220,7 @@ $(document).ready(function(){initNavTree('bufp-label_8c-example.html','');});
 <div class="line">        <span class="keywordtype">int</span> ret, s, n = 0, len;</div>
 <div class="line">        <span class="keyword">struct </span>timespec ts;</div>
 <div class="line"></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a class="code" href="group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53afb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a class="code" href="group__rtdm__ipc.html#gga77867ab4129f63159b37bca3b652a798afb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line"></div>

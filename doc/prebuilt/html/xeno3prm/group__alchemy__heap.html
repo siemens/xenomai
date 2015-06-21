@@ -276,7 +276,9 @@ Functions</h2></td></tr>
 <li>-EPERM is returned if this service should block, but was not called from a Xenomai thread.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-nowait, switch-primary</a></dd></dl>
-<dl class="section note"><dt>Note</dt><dd><em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If shared multi-processing is enabled (i.e. &ndash;enable-pshared was passed to the configure script), requests for a block size larger than twice the allocation page size are rounded up to the next page size. The allocation page size is currently 512 bytes long (HOBJ_PAGE_SIZE), which means that any request larger than 1k will be rounded up to the next 512 byte boundary.</dd>
+<dd>
+<em>abs_timeout</em> is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__heap.html#ga52678149ff2b66e47aa8cdcddab653a4">rt_heap_alloc()</a>, and <a class="el" href="group__alchemy__heap.html#ga1c06c617f85bb803676aa79273023454">rt_heap_alloc_until()</a>.</p>
 
@@ -429,7 +431,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">heap</td><td>The address of a heap descriptor which can be later used to identify uniquely the created object, upon success of this call.</td></tr>
     <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the heap. When non-NULL and non-empty, a copy of this string is used for indexing the created heap into the object registry.</td></tr>
-    <tr><td class="paramname">heapsz</td><td>The size (in bytes) of the memory pool, blocks will be claimed and released to. This area is not extensible, so this value must be compatible with the highest memory pressure that could be expected. The valid range is between 2k and 2Gb.</td></tr>
+    <tr><td class="paramname">heapsz</td><td>The size (in bytes) of the memory pool, blocks will be claimed and released to. This area is not extensible, so this value must be compatible with the highest memory pressure that could be expected. The valid range is between 1 byte and 2Gb.</td></tr>
     <tr><td class="paramname">mode</td><td>The heap creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new heap:</td></tr>
   </table>
   </dd>
@@ -441,7 +443,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section return"><dt>Returns</dt><dd>Zero is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>mode</em> is invalid, or <em>heapsz</em> is not in the range [2k..2Gb].</li>
+<li>-EINVAL is returned if <em>mode</em> is invalid, or <em>heapsz</em> is zero or larger than 2Gb.</li>
 <li>-ENOMEM is returned if the system fails to get memory from the main heap in order to create the heap.</li>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered heap.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>

@@ -22,10 +22,10 @@ var group__rtdm__ipc =
     [ "XDDP_MONITOR", "group__rtdm__ipc.html#ga6330fd82333ff062b27fb7ab7bce499e", null ],
     [ "XDDP_POOLSZ", "group__rtdm__ipc.html#ga40cc2513c4beb830fe3af2c205292d27", null ],
     [ "rtipc_port_t", "group__rtdm__ipc.html#gaca557a3fe7881593a440c797c94cd19a", [
-      [ "IPCPROTO_IPC", "group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53a9a5b551f46faa3b63b002fdde789e2ba", null ],
-      [ "IPCPROTO_XDDP", "group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53a28a488c3e7fc47dee4d5757f215f62e9", null ],
-      [ "IPCPROTO_IDDP", "group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53a7f1e80711306177a6f5d48031efe0080", null ],
-      [ "IPCPROTO_BUFP", "group__rtdm__ipc.html#ggab48899087cc647f0f791ed0c459adc53afb2400ca0886ef0a4eff1328afd92c18", null ]
+      [ "IPCPROTO_IPC", "group__rtdm__ipc.html#gga77867ab4129f63159b37bca3b652a798a9a5b551f46faa3b63b002fdde789e2ba", null ],
+      [ "IPCPROTO_XDDP", "group__rtdm__ipc.html#gga77867ab4129f63159b37bca3b652a798a28a488c3e7fc47dee4d5757f215f62e9", null ],
+      [ "IPCPROTO_IDDP", "group__rtdm__ipc.html#gga77867ab4129f63159b37bca3b652a798a7f1e80711306177a6f5d48031efe0080", null ],
+      [ "IPCPROTO_BUFP", "group__rtdm__ipc.html#gga77867ab4129f63159b37bca3b652a798afb2400ca0886ef0a4eff1328afd92c18", null ]
     ] ],
     [ "bind__AF_RTIPC", "group__rtdm__ipc.html#ga6f0c6f408fc0dee63c39393c42572d11", null ],
     [ "close__AF_RTIPC", "group__rtdm__ipc.html#ga446307f82b9d1e3464a852984bc875bc", null ],
