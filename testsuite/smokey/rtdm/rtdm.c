@@ -78,8 +78,11 @@ static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 	unsigned long long start;
 	int dev, dev2, status;
 
-	status = system("modprobe xeno_rtdmtest");
+	status = system("modprobe -q xeno_rtdmtest");
 	if (status < 0 || WEXITSTATUS(status))
+		return -ENOSYS;
+
+	if (access(devname, 0) < 0 && errno == ENOENT)
 		return -ENOSYS;
 
 	smokey_trace("Setup");
