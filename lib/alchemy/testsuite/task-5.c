@@ -23,7 +23,7 @@ static void background_task(void *arg)
 	traceobj_mark(&trobj, 1);
 
 	ret = rt_sem_p(&sem, TM_INFINITE);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 2);
 
@@ -40,12 +40,12 @@ static void foreground_task(void *arg)
 	traceobj_mark(&trobj, 3);
 
 	ret = rt_sem_p(&sem, TM_INFINITE);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 4);
 
 	ret = rt_sem_v(&sem);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 5);
 
@@ -55,12 +55,12 @@ static void foreground_task(void *arg)
 	traceobj_mark(&trobj, 6);
 
 	ret = rt_task_set_priority(&t_bgnd, info.prio);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 7);
 
 	ret = rt_task_set_priority(&t_bgnd, info.prio + 1);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 8);
 
@@ -74,28 +74,28 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	ret = rt_sem_create(&sem, "SEMA", 0, S_PRIO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 9);
 
 	ret = rt_task_create(&t_bgnd, "BGND", 0,  20, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_bgnd, background_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 10);
 
 	ret = rt_task_create(&t_fgnd, "FGND", 0,  21, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_fgnd, foreground_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 11);
 
 	ret = rt_sem_v(&sem);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 12);
 

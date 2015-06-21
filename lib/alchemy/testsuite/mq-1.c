@@ -30,36 +30,36 @@ static void main_task(void *arg)
 	traceobj_enter(&trobj);
 
 	ret = rt_queue_create(&q, "QUEUE", sizeof(messages), Q_UNLIMITED, 0xffffffff);
-	traceobj_assert(&trobj, ret == -EINVAL);
+	traceobj_check(&trobj, ret, -EINVAL);
 
 	ret = rt_queue_create(&q, "QUEUE", 0, NMESSAGES, Q_FIFO);
-	traceobj_assert(&trobj, ret == -EINVAL);
+	traceobj_check(&trobj, ret, -EINVAL);
 
 	ret = rt_queue_create(&q, "QUEUE", sizeof(messages), Q_UNLIMITED, Q_FIFO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_queue_delete(&q);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_queue_create(&q, "QUEUE", sizeof(messages), NMESSAGES, Q_PRIO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_queue_inquire(&q, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, info.nmessages == 0);
 
 	ret = rt_queue_write(&q, &messages[0], sizeof(int), Q_NORMAL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_queue_inquire(&q, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, info.nmessages == 1);
 
 	ret = rt_queue_write(&q, &messages[1], sizeof(int), Q_NORMAL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_queue_inquire(&q, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, info.nmessages == 2);
 
 	ret = rt_queue_read(&q, &msg, sizeof(msg), TM_NONBLOCK);
@@ -67,7 +67,7 @@ static void main_task(void *arg)
 	traceobj_assert(&trobj, msg == 0xfafafafa);
 
 	ret = rt_queue_inquire(&q, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, info.nmessages == 1);
 
 	ret = rt_queue_read(&q, &msg, sizeof(msg), TM_NONBLOCK);
@@ -75,14 +75,14 @@ static void main_task(void *arg)
 	traceobj_assert(&trobj, msg == 0xbebebebe);
 
 	ret = rt_queue_inquire(&q, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, info.nmessages == 0);
 
 	ret = rt_queue_read(&q, &msg, sizeof(msg), 1000000ULL);
-	traceobj_assert(&trobj, ret == -ETIMEDOUT);
+	traceobj_check(&trobj, ret, -ETIMEDOUT);
 
 	ret = rt_queue_delete(&q);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_exit(&trobj);
 }
@@ -95,7 +95,7 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rt_task_spawn(&t_main, "main_task", 0,  50, 0, main_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 

@@ -15,34 +15,34 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rt_task_create(&t_a, "taskA", 0,  20, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_b, "taskB", 0,  21, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_bind(&t, "taskA", TM_NONBLOCK);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, rt_task_same(&t, &t_a));
 
 	ret = rt_task_bind(&t, "taskB", TM_NONBLOCK);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, rt_task_same(&t, &t_b));
 
 	ret = rt_task_delete(&t_a);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	ret = rt_task_bind(&t, "taskA", TM_NONBLOCK);
-	traceobj_assert(&trobj, ret == -EWOULDBLOCK);
+	traceobj_check(&trobj, ret, -EWOULDBLOCK);
 
 	ret = rt_task_delete(&t_b);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	ret = rt_task_bind(&t, "taskB", TM_NONBLOCK);
-	traceobj_assert(&trobj, ret == -EWOULDBLOCK);
+	traceobj_check(&trobj, ret, -EWOULDBLOCK);
 
 	ret = rt_task_shadow(NULL, "main_task", 1, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_bind(&t, "taskB", 1000000000ULL);
-	traceobj_assert(&trobj, ret == -ETIMEDOUT);
+	traceobj_check(&trobj, ret, -ETIMEDOUT);
 
 	exit(0);
 }

@@ -79,28 +79,28 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rt_buffer_create(&buffer, NULL, 2, B_FIFO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_shadow(NULL, "main_task", 30, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_fgnd, "FGND", 0,  20, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_fgnd, foreground_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_bgnd, "BGND", 0,  10, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_bgnd, background_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_sleep(1500000000ULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_buffer_delete(&buffer);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 

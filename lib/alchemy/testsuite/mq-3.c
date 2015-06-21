@@ -24,24 +24,24 @@ static void main_task(void *arg)
 	traceobj_mark(&trobj, 1);
 
 	ret = rt_queue_create(&q, "QUEUE", NMESSAGES * sizeof(int), NMESSAGES, Q_FIFO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 2);
 
 	for (msg = 0; msg < NMESSAGES; msg++) {
 		ret = rt_queue_write(&q, &msg, sizeof(int), Q_NORMAL);
-		traceobj_assert(&trobj, ret == 0);
+		traceobj_check(&trobj, ret, 0);
 	}
 
 	traceobj_mark(&trobj, 3);
 
 	ret = rt_queue_write(&q, &msg, sizeof(int), Q_URGENT);
-	traceobj_assert(&trobj, ret == -ENOMEM);
+	traceobj_check(&trobj, ret, -ENOMEM);
 
 	rt_task_sleep(100000000ULL);
 
 	ret = rt_queue_write(&q, &msg, sizeof(int), Q_URGENT);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 4);
 
@@ -58,7 +58,7 @@ static void main_task(void *arg)
 	traceobj_mark(&trobj, 6);
 
 	ret = rt_queue_delete(&q);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 7);
 
@@ -84,7 +84,7 @@ static void peer_task(void *arg)
 
 	/* Valgrind will bark at this one, this is expected. */
 	ret = rt_queue_read(&q, &msg, sizeof(msg), TM_INFINITE);
-	traceobj_assert(&trobj, ret == -EINVAL);
+	traceobj_check(&trobj, ret, -EINVAL);
 
 	traceobj_mark(&trobj, 10);
 
@@ -101,12 +101,12 @@ int main(int argc, char *const argv[])
 	traceobj_mark(&trobj, 11);
 
 	ret = rt_task_spawn(&t_main, "main_task", 0,  50, 0, main_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 12);
 
 	ret = rt_task_spawn(&t_peer, "peer_task", 0,  49, 0, peer_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 13);
 

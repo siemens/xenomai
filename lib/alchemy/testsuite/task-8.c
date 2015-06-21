@@ -23,10 +23,10 @@ static void rr_task(void *arg)
 	traceobj_enter(&trobj);
 
 	ret = rt_task_slice(NULL, RR_QUANTUM);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_sem_p(&sem, TM_INFINITE);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	for (n = 0; n < 1000000; n++) {
 		d *= 0.99;
@@ -43,22 +43,22 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rt_sem_create(&sem, "SEMA", 0, S_FIFO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_rr1, "rr_task_1", 0, 10, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_rr1, rr_task, "t1");
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_rr2, "rr_task_2", 0, 10, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_rr2, rr_task, "t2");
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_sem_broadcast(&sem);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 

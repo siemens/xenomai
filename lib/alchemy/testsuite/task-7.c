@@ -15,10 +15,10 @@ static void background_task(void *arg)
 	traceobj_enter(&trobj);
 
 	ret = rt_task_reply(-1, &mcb);
-	traceobj_assert(&trobj, ret == -EINVAL);
+	traceobj_check(&trobj, ret, -EINVAL);
 
 	ret = rt_task_reply(999, &mcb);
-	traceobj_assert(&trobj, ret == -ENXIO);
+	traceobj_check(&trobj, ret, -ENXIO);
 
 	for (n = 0; n < 20; n++) {
 		mcb.data = &msg;
@@ -30,7 +30,7 @@ static void background_task(void *arg)
 		case 0x77:
 			msg = ~msg;
 			ret = rt_task_reply(flowid, &mcb);
-			traceobj_assert(&trobj, ret == 0);
+			traceobj_check(&trobj, ret, 0);
 			break;
 		case 0x78:
 			ret = rt_task_reply(flowid, &mcb);
@@ -80,7 +80,7 @@ static void foreground_task_b(void *arg)
 		mcb_r.data = NULL;
 		mcb_r.size = 0;
 		ret = rt_task_send(&t_bgnd, &mcb, &mcb_r, TM_INFINITE);
-		traceobj_assert(&trobj, ret == -ENOBUFS);
+		traceobj_check(&trobj, ret, -ENOBUFS);
 	}
 
 	traceobj_exit(&trobj);
@@ -93,22 +93,22 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rt_task_create(&t_bgnd, "BGND", 0,  20, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_fgnda, "FGND-A", 0,  21, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_fgnda, foreground_task_a, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_fgndb, "FGND-B", 0,  21, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_fgndb, foreground_task_b, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_bgnd, background_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 

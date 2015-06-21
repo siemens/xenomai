@@ -57,17 +57,17 @@ static void main_task(void *arg)
 	traceobj_enter(&trobj);
 
 	ret = rt_queue_create(&q, "QUEUE", sizeof(messages), NMESSAGES, Q_PRIO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 3);
 
 	ret = rt_task_set_priority(NULL, 11);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 4);
 
 	ret = rt_task_spawn(&t_peer, "peer_task", 0,  10, 0, peer_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 5);
 
@@ -85,7 +85,7 @@ static void main_task(void *arg)
 	traceobj_mark(&trobj, 7);
 
 	ret = rt_queue_inquire(&q, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	traceobj_assert(&trobj, info.nmessages == 0);
 
 	traceobj_verify(&trobj, tseq, sizeof(tseq) / sizeof(int));
@@ -101,7 +101,7 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	ret = rt_task_spawn(&t_main, "main_task", 0,  50, 0, main_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 

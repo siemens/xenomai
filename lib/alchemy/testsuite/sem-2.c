@@ -22,17 +22,17 @@ static void main_task(void *arg)
 	traceobj_mark(&trobj, 1);
 
 	ret = rt_sem_create(&sem, "SEMA", 1, S_FIFO);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 2);
 
 	ret = rt_sem_p(&sem, TM_NONBLOCK);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 3);
 
 	ret = rt_sem_p(&sem, TM_INFINITE);
-	traceobj_assert(&trobj, ret == -EIDRM);
+	traceobj_check(&trobj, ret, -EIDRM);
 
 	traceobj_mark(&trobj, 4);
 
@@ -46,15 +46,15 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	ret = rt_task_create(&t_main, "main_task", 0, 20, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_main, main_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 5);
 
 	ret = rt_sem_delete(&sem);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_mark(&trobj, 6);
 

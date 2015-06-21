@@ -27,7 +27,7 @@ static void realtime_task(void *arg)
 	traceobj_enter(&trobj);
 
 	ret = rt_pipe_bind(&pipe, "pipe", TM_INFINITE);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	while (seq < 8192) {
 		ret = rt_pipe_read(&pipe, &m, sizeof(m), TM_INFINITE);
@@ -81,23 +81,23 @@ int main(int argc, char *const argv[])
 	traceobj_assert(&trobj, ret >= 0);
 
 	ret = rt_pipe_delete(&pipe);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_real, "realtime", 0,  10, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_start(&t_real, realtime_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_pipe_create(&pipe, "pipe", P_MINOR_AUTO, 16384);
 	traceobj_assert(&trobj, ret >= 0);
 	minor = ret;
 
 	ret = rt_pipe_read(&pipe, &m, sizeof(m), TM_NONBLOCK);
-	traceobj_assert(&trobj, ret == -EWOULDBLOCK);
+	traceobj_check(&trobj, ret, -EWOULDBLOCK);
 
 	ret = pthread_create(&t_reg, NULL, regular_thread, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 

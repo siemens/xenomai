@@ -22,7 +22,7 @@ static void test_task(void *arg)
 	traceobj_enter(&trobj);
 
 	ret = rt_task_sleep_until(TM_INFINITE);
-	traceobj_assert(&trobj, ret == -EINTR);
+	traceobj_check(&trobj, ret, -EINTR);
 
 	traceobj_exit(&trobj);
 }
@@ -41,28 +41,28 @@ int main(int argc, char *const argv[])
 	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rt_task_create(&t_test, "test_task", 0, 10, 0);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_inquire(&t_test, &info);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 	ret = rt_task_start(&t_test, test_task, NULL);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_sleep(ONE_SECOND);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = __STD(kill(info.pid, SIGUSR1));
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_sleep(ONE_SECOND);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 	ret = rt_task_unblock(&t_test);
-	traceobj_assert(&trobj, ret == 0);
+	traceobj_check(&trobj, ret, 0);
 
 	traceobj_join(&trobj);
 
