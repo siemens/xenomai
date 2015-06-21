@@ -146,10 +146,10 @@ void pvheapobj_free(struct heapobj *hobj, void *ptr)
 	struct pool_header *ph = hobj->priv.pool;
 
 	assert(hobj->size >= bh->size);
-	__STD(free(bh));
 	write_lock(&ph->lock);
 	ph->used -= bh->size;
 	write_unlock(&ph->lock);
+	__STD(free(bh));
 }
 
 size_t pvheapobj_inquire(struct heapobj *hobj)
