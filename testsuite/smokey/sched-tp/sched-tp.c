@@ -169,15 +169,15 @@ static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 	if (ret)
 		error(1, ret, "sched_getconfig_np");
 
-	printf("check: %d windows\n", p->tp.nr_windows);
+	smokey_trace("check: %d windows", p->tp.nr_windows);
 	for (n = 0; n < 4; n++)
-		printf("[%d] offset = { %ld s, %ld ns }, duration = { %ld s, %ld ns }, ptid = %d\n",
-		       n,
-		       p->tp.windows[n].offset.tv_sec,
-		       p->tp.windows[n].offset.tv_nsec,
-		       p->tp.windows[n].duration.tv_sec,
-		       p->tp.windows[n].duration.tv_nsec,
-		       p->tp.windows[n].ptid);
+		smokey_trace("[%d] offset = { %ld s, %ld ns }, duration = { %ld s, %ld ns }, ptid = %d",
+			     n,
+			     p->tp.windows[n].offset.tv_sec,
+			     p->tp.windows[n].offset.tv_nsec,
+			     p->tp.windows[n].duration.tv_sec,
+			     p->tp.windows[n].duration.tv_nsec,
+			     p->tp.windows[n].ptid);
 
 	sem_init(&barrier, 0, 0);
 	create_thread(threadA, 0);

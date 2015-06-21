@@ -43,14 +43,14 @@ static void check_inner(const char *fn, int line, const char *msg,
 
 #define check(msg, status, expected) ({					\
 	int __status = status;						\
-	check_inner(__FUNCTION__, __LINE__, msg,			\
+	check_inner(__func__, __LINE__, msg,			\
 		    __status < 0 ? -errno : __status, expected);	\
 	__status;							\
 })
 
 #define check_no_error(msg, status) ({					\
 	int __status = status;						\
-	check_inner(__FUNCTION__, __LINE__, msg,			\
+	check_inner(__func__, __LINE__, msg,			\
 		    __status < 0 ? -errno : 0, 0);			\
 	__status;							\
 })
@@ -68,7 +68,7 @@ static void check_sleep_inner(const char *fn, int line,
 	}
 }
 #define check_sleep(msg, start) \
-	check_sleep_inner(__FUNCTION__, __LINE__, msg, start)
+	check_sleep_inner(__func__, __LINE__, msg, start)
 
 static const char *devname = "/dev/rtdm/rtdm0";
 static const char *devname2 = "/dev/rtdm/rtdm1";
@@ -82,17 +82,17 @@ static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 	if (status < 0 || WEXITSTATUS(status))
 		return -ENOSYS;
 
-	printf("Setup\n");
+	smokey_trace("Setup");
 	dev = check_no_error("open", open(devname, O_RDWR));
 
-	printf("Exclusive open\n");
+	smokey_trace("Exclusive open");
 	check("open", open(devname, O_RDWR), -EBUSY);
 
-	printf("Successive open\n");
+	smokey_trace("Successive open");
 	dev2 = check("open", open(devname2, O_RDWR), dev + 1);
 	check("close", close(dev2), 0);
 
-	printf("Defer close by pending reference\n");
+	smokey_trace("Defer close by pending reference");
 	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
 			     RTTST_RTDM_DEFER_CLOSE_CONTEXT), 0);
 	start = timer_get_tsc();
@@ -103,13 +103,13 @@ static int run_rtdm(struct smokey_test *t, int argc, char *const argv[])
 	usleep(301000);
 	dev = check("open", open(devname, O_RDWR), dev);
 
-	printf("Normal close\n");
+	smokey_trace("Normal close");
 	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
 			     RTTST_RTDM_NORMAL_CLOSE), 0);
 	check("close", close(dev), 0);
 	dev = check("open", open(devname, O_RDWR), dev);
 
-	printf("Deferred module unload\n");
+	smokey_trace("Deferred module unload");
 	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
 			     RTTST_RTDM_DEFER_CLOSE_CONTEXT), 0);
 	start = timer_get_tsc();

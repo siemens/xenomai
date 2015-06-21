@@ -162,12 +162,12 @@ static void check_inner(const char *file, int line, const char *fn, const char *
 	exit(EXIT_FAILURE);
 }
 #define check(msg, status, expected) \
-	check_inner(__FILE__, __LINE__, __FUNCTION__, msg, status, expected)
+	check_inner(__FILE__, __LINE__, __func__, msg, status, expected)
 
 #define check_unix(msg, status, expected)				\
 	({								\
 		int s = (status);					\
-		check_inner(__FILE__, __LINE__, __FUNCTION__, msg, s < 0 ? -errno : s, expected); \
+		check_inner(__FILE__, __LINE__, __func__, msg, s < 0 ? -errno : s, expected); \
 	})
 
 static void check_sleep_inner(const char *fn,
@@ -182,7 +182,7 @@ static void check_sleep_inner(const char *fn,
 	}
 }
 #define check_sleep(prefix, start) \
-	check_sleep_inner(__FUNCTION__, prefix, start)
+	check_sleep_inner(__func__, prefix, start)
 
 struct cond_mutex {
 	pthread_mutex_t *mutex;
@@ -216,7 +216,7 @@ static void simple_condwait(void)
 	};
 	pthread_t cond_signaler_tid;
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
 	check("cond_init", cond_init(&cond, 0), 0);
@@ -241,7 +241,7 @@ static void relative_condwait(void)
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
 	check("cond_init", cond_init(&cond, 0), 0);
@@ -264,7 +264,7 @@ static void absolute_condwait(void)
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
 	check("cond_init", cond_init(&cond, 1), 0);
@@ -320,7 +320,7 @@ static void sig_norestart_condwait(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
@@ -358,7 +358,7 @@ static void sig_restart_condwait(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
@@ -412,7 +412,7 @@ static void sig_norestart_condwait_mutex(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
@@ -452,7 +452,7 @@ static void sig_restart_condwait_mutex(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
@@ -508,7 +508,7 @@ static void sig_norestart_double(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
@@ -548,7 +548,7 @@ static void sig_restart_double(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
@@ -604,7 +604,7 @@ static void cond_destroy_whilewait(void)
 	};
 	sigemptyset(&sa.sa_mask);
 
-	fprintf(stderr, "%s\n", __FUNCTION__);
+	smokey_trace("%s", __func__);
 
 	check_unix("sigaction", sigaction(SIGRTMIN, &sa, NULL), 0);
 	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);

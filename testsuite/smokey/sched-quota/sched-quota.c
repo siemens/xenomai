@@ -182,8 +182,8 @@ static double run_quota(int quota)
 	if (ret)
 		error(1, ret, "sched_setconfig_np(set-quota, tgid=%d)", tgid);
 
-	printf("new thread group #%d on CPU0, quota sum is %d%%\n",
-	       tgid, cf.quota.info.quota_sum);
+	smokey_trace("new thread group #%d on CPU0, quota sum is %d%%",
+		     tgid, cf.quota.info.quota_sum);
 
 	for (n = 0; n < nrthreads; n++) {
 		sprintf(label, "t%d", n);
@@ -208,7 +208,7 @@ static double run_quota(int quota)
 	percent = ((double)count / TEST_SECS) * 100.0 / loops_per_sec;
 
 	for (n = 0; n < nrthreads; n++) {
-		__real_printf("done quota_thread[%d], count=%lu\n", n, counts[n]);
+		smokey_trace("done quota_thread[%d], count=%lu", n, counts[n]);
 		pthread_cancel(threads[n]);
 		pthread_join(threads[n], NULL);
 	}
@@ -322,11 +322,11 @@ static int run_sched_quota(struct smokey_test *t, int argc, char *const argv[])
 	calibrate();	/* Warming up, ignore result. */
 	loops_per_sec = calibrate();
 
-	printf("calibrating: %Lu loops/sec\n", loops_per_sec);
+	smokey_trace("calibrating: %Lu loops/sec", loops_per_sec);
 
 	effective = run_quota(quota);
-	__real_printf("%d thread%s: cap=%d%%, effective=%.1f%%\n",
-		      nrthreads, nrthreads > 1 ? "s": "", quota, effective);
+	smokey_trace("%d thread%s: cap=%d%%, effective=%.1f%%",
+		     nrthreads, nrthreads > 1 ? "s": "", quota, effective);
 
 	return 0;
 }

@@ -69,20 +69,20 @@ static void check_sigdebug_inner(const char *fn, int line, const char *reason)
 
 #define check(msg, status, expected) ({					\
 	int __status = status;						\
-	check_inner(__FUNCTION__, __LINE__, msg, __status, expected);	\
+	check_inner(__func__, __LINE__, msg, __status, expected);	\
 	__status;							\
 })
 
 #define check_no_error(msg, status) ({					\
 	int __status = status;						\
-	check_inner(__FUNCTION__, __LINE__, msg,			\
+	check_inner(__func__, __LINE__, msg,				\
 		    __status < 0 ? __status : 0, 0);			\
 	__status;							\
 })
 
 #define check_sigdebug_received(reason) do {				\
 	const char *__reason = reason;					\
-	check_sigdebug_inner(__FUNCTION__, __LINE__, __reason);		\
+	check_sigdebug_inner(__func__, __LINE__, __reason);		\
 } while (0)
 
 static void *rt_thread_body(void *cookie)

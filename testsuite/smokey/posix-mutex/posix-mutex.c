@@ -57,8 +57,8 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 {
 	unsigned int reason = sigdebug_reason(si);
 
-	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
-	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
+	smokey_trace("\nSIGDEBUG received, reason %d: %s\n", reason,
+		     reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
 }
 
 static inline unsigned long long timer_get_tsc(void)
@@ -281,7 +281,7 @@ static void autoinit_simple_wait(void)
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	pthread_t waiter_tid;
 
-	fprintf(stderr, "autoinit_simple_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("simple thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
@@ -309,7 +309,7 @@ static void simple_wait(void)
 	pthread_mutex_t mutex;
 	pthread_t waiter_tid;
 
-	fprintf(stderr, "simple_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("simple mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0, 0);
 	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
@@ -338,7 +338,7 @@ static void autoinit_recursive_wait(void)
 	pthread_mutex_t mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 	pthread_t waiter_tid;
 
-	fprintf(stderr, "autoinit_recursive_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("rec mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("rec mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
@@ -370,7 +370,7 @@ static void recursive_wait(void)
 	pthread_mutex_t mutex;
 	pthread_t waiter_tid;
 
-	fprintf(stderr, "recursive_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("rec mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
 		 PTHREAD_MUTEX_RECURSIVE);
@@ -405,7 +405,7 @@ static void autoinit_errorcheck_wait(void)
 	pthread_t waiter_tid;
 	int err;
 
-	fprintf(stderr, "autoinit_errorcheck_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("errorcheck mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
@@ -447,7 +447,7 @@ static void errorcheck_wait(void)
 	pthread_t waiter_tid;
 	int err;
 
-	fprintf(stderr, "errorcheck_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("errorcheck mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
 		 PTHREAD_MUTEX_ERRORCHECK);
@@ -509,7 +509,7 @@ static void timed_mutex(void)
 	pthread_mutex_t mutex;
 	pthread_t waiter_tid;
 
-	fprintf(stderr, "timed_mutex\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("timed_mutex mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 	dispatch("timed_mutex mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
@@ -529,7 +529,7 @@ static void mode_switch(void)
 	/* Cause a switch to secondary mode */
 	__real_sched_yield();
 
-	fprintf(stderr, "mode_switch\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 
@@ -553,7 +553,7 @@ static void pi_wait(void)
 	smokey_note("PTHREAD_PRIO_INHERIT not supported");
 	return;
 #endif
-	fprintf(stderr, "pi_wait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("pi mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 	dispatch("pi mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
@@ -593,7 +593,7 @@ static void lock_stealing(void)
 	   priority. Then main thread releases the mutex, but locks it again
 	   without giving the waiter a chance to get it beforehand. */
 
-	fprintf(stderr, "lock_stealing\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("lock_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 	dispatch("lock_stealing mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
@@ -673,7 +673,7 @@ static void deny_stealing(void)
 	pthread_mutex_t mutex;
 	pthread_t lowprio_tid;
 
-	fprintf(stderr, "deny_stealing\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("deny_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 	dispatch("deny_stealing mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
@@ -762,7 +762,7 @@ static void simple_condwait(void)
 	};
 	pthread_t cond_signaler_tid;
 
-	fprintf(stderr, "simple_condwait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("simple_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex);
 	dispatch("simple_condwait cond_init", COND_CREATE, 1, 0, &cond);
@@ -800,7 +800,7 @@ static void recursive_condwait(void)
 	};
 	pthread_t cond_signaler_tid;
 
-	fprintf(stderr, "recursive_condwait\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("rec_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
 		 PTHREAD_MUTEX_RECURSIVE);
@@ -860,7 +860,7 @@ static void auto_switchback(void)
 	pthread_t nrt_lock_tid;
 	pthread_mutex_t mutex;
 
-	fprintf(stderr, "auto_switchback\n");
+	smokey_trace("%s", __func__);
 
 	dispatch("auto_switchback mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1,
 		 PTHREAD_MUTEX_RECURSIVE);

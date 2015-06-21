@@ -24,8 +24,8 @@ int run_vdso_access(struct smokey_test *t, int argc, char *const argv[])
 		return 1;
 	}
 
-	printf("VDSO: features detected: %llx\n",
-	       (long long)cobalt_vdso->features);
+	smokey_trace("VDSO: features detected: %llx",
+		     (long long)cobalt_vdso->features);
 
 	return 0;
 }
