@@ -407,6 +407,13 @@ out:
  *
  * @apitags{xthread-nowait, switch-primary}
  *
+ * @note If shared multi-processing is enabled (i.e. --enable-pshared
+ * was passed to the configure script), requests for a block size
+ * larger than twice the allocation page size are rounded up to the
+ * next page size. The allocation page size is currently 512 bytes
+ * long (HOBJ_PAGE_SIZE), which means that any request larger than 1k
+ * will be rounded up to the next 512 byte boundary.
+ *
  * @note @a abs_timeout is interpreted as a multiple of the Alchemy
  * clock resolution (see --alchemy-clock-resolution option, defaults
  * to 1 nanosecond).
