@@ -31,8 +31,6 @@ static void background_task(void *arg)
 	while (--safety > 0)
 		count++;
 
-	traceobj_mark(&trobj, 3);
-
 	traceobj_exit(&trobj);
 }
 
