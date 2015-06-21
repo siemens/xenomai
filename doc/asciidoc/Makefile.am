@@ -107,11 +107,15 @@ $(tmpdir)/%.txt: %.adoc Makefile plaintext.conf plaintext.xsl
 %.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
 	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
-html/asciidoc-icons html/asciidoc-icons/callouts:
+html/asciidoc-icons:
 	@$(RM) -R asciidoc-icons
 	@test -d /usr/share/asciidoc/images && \
 	cp -a /usr/share/asciidoc/images/icons html/asciidoc-icons || \
 	cp -a /usr/share/asciidoc/icons html/asciidoc-icons
+
+html/asciidoc-icons/callouts: html/asciidoc-icons
+
+.PHONY: html/asciidoc-icons
 
 endif
 
