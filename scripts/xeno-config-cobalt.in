@@ -198,7 +198,10 @@ if test x$do_cflags = xy; then
     test x$compat = xy && cflags="-I$XENO_INCLUDE_DIR/trank -D__XENO_COMPAT__ $cflags"
     for skin in $skin_list; do
 	case "$skin" in
-	    posix|cobalt|rtdm)
+	    posix|rtdm)
+		test x$compat = xy && cflags="$cflags -I$XENO_INCLUDE_DIR/trank/posix"
+		;;
+	    cobalt)
 		;;
 	    vxworks|psos|alchemy|smokey)
 		cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
