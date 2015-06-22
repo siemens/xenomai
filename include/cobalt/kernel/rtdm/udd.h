@@ -65,8 +65,9 @@
 #define UDD_IRQ_NONE     0
 /**
  * IRQ directly managed from the mini-driver on top of the UDD
- * core. The mini-driver is in charge of notifying the Cobalt threads
- * waiting for IRQ events by calling the udd_notify_event() service.
+ * core. The mini-driver is in charge of attaching the handler(s) to
+ * the IRQ(s) it manages, notifying the Cobalt threads waiting for IRQ
+ * events by calling the udd_notify_event() service.
  */
 #define UDD_IRQ_CUSTOM   (-1)
 /** @} */

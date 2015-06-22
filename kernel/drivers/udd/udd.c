@@ -181,11 +181,6 @@ static int udd_irq_handler(rtdm_irq_t *irqh)
 	struct udd_device *udd;
 	int ret;
 
-	/*
-	 * CAUTION: irqh might live outside of the udd_device struct
-	 * (i.e. UDD_IRQ_CUSTOM), so we can't assume the latter is
-	 * the container of the former.
-	 */
 	udd = rtdm_irq_get_arg(irqh, struct udd_device);
 	ret = udd->ops.interrupt(udd);
 	if (ret == RTDM_IRQ_HANDLED)
@@ -495,7 +490,7 @@ EXPORT_SYMBOL_GPL(udd_unregister_device);
  *
  * @coretags{coreirq-only}
  *
- * @note In case the ref udd_irq_handler "IRQ handler" from the
+ * @note In case the @ref udd_irq_handler "IRQ handler" from the
  * mini-driver requested the UDD core not to re-enable the interrupt
  * line, the application may later request the unmasking by issuing
  * the UDD_RTIOC_IRQEN ioctl(2) command. Writing a non-zero integer to
