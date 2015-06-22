@@ -59,3 +59,16 @@ https://xenomai.org/installing-xenomai-3-x/
   http://download.gna.org/xenomai/
 
   Source tarballs are self-contained and ready for building.
+
+Licensing terms
+===============
+
+Source files which implement the Xenomai software system generally
+include a copyright notice and license header. In absence of license
+header in a particular file, the terms and conditions stated by the
+COPYING or LICENSE file present in the top-level directory of the
+relevant package apply.
+
+For instance, lib/cobalt/COPYING states the licensing terms and
+conditions applicable to the source files present in the hierarchy
+rooted at lib/cobalt.
