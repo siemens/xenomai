@@ -193,7 +193,7 @@ UDD_IOCTL</h2></td></tr>
 </div><div class="memdoc">
 
 <p>IRQ directly managed from the mini-driver on top of the UDD core. </p>
-<p>The mini-driver is in charge of notifying the Cobalt threads waiting for IRQ events by calling the <a class="el" href="group__rtdm__udd.html#ga7bd19086f467b6ba791690a565d2c509" title="Notify an IRQ event for an unmanaged interrupt. ">udd_notify_event()</a> service. </p>
+<p>The mini-driver is in charge of attaching the handler(s) to the IRQ(s) it manages, notifying the Cobalt threads waiting for IRQ events by calling the <a class="el" href="group__rtdm__udd.html#ga7bd19086f467b6ba791690a565d2c509" title="Notify an IRQ event for an unmanaged interrupt. ">udd_notify_event()</a> service. </p>
 
 <p>Referenced by <a class="el" href="group__rtdm__udd.html#gaafa15680426042c8c411b6fcf10627da">udd_disable_irq()</a>, <a class="el" href="group__rtdm__udd.html#ga7ee451ee6e96cbb88254877ca5dd5d3f">udd_enable_irq()</a>, <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>, and <a class="el" href="group__rtdm__udd.html#ga389544ffa49f17fe3417d97122ed3acb">udd_unregister_device()</a>.</p>
 
@@ -460,7 +460,7 @@ UDD_IOCTL</h2></td></tr>
   </dd>
 </dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">coreirq-only</a></dd></dl>
-<dl class="section note"><dt>Note</dt><dd>In case the ref udd_irq_handler "IRQ handler" from the mini-driver requested the UDD core not to re-enable the interrupt line, the application may later request the unmasking by issuing the UDD_RTIOC_IRQEN ioctl(2) command. Writing a non-zero integer to the device via the write(2) system call has the same effect. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>In case the <a class="el" href="structudd__device.html#udd_irq_handler">IRQ handler</a> from the mini-driver requested the UDD core not to re-enable the interrupt line, the application may later request the unmasking by issuing the UDD_RTIOC_IRQEN ioctl(2) command. Writing a non-zero integer to the device via the write(2) system call has the same effect. </dd></dl>
 
 <p>References <a class="el" href="group__rtdm__sync__event.html#ga1217402b82034b26fe25c26f1e5b32c9">rtdm_event_signal()</a>.</p>
 
