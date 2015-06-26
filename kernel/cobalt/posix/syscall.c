@@ -82,6 +82,9 @@ static void prepare_for_signal(struct task_struct *p,
 			       int sysflags)
 {
 	int notify = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	if (xnthread_test_info(thread, XNKICKED)) {
 		if (signal_pending(p)) {
@@ -93,6 +96,8 @@ static void prepare_for_signal(struct task_struct *p,
 		}
 		xnthread_clear_info(thread, XNKICKED);
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnthread_test_cancel();
 

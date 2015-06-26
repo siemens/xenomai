@@ -1989,6 +1989,7 @@ void xnthread_relax(int notify, int reason)
 	struct task_struct *p = current;
 	int cpu __maybe_unused;
 	siginfo_t si;
+	spl_t s;
 
 	primary_mode_only();
 
@@ -2045,7 +2046,9 @@ void xnthread_relax(int notify, int reason)
 			si.si_int = reason | sigdebug_marker;
 			send_sig_info(SIGDEBUG, &si, p);
 		}
+		xnlock_get_irqsave(&nklock, s);
 		xnsynch_detect_claimed_relax(thread);
+		xnlock_put_irqrestore(&nklock, s);
 	}
 
 	/*

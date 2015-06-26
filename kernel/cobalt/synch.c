@@ -443,7 +443,9 @@ redo:
 	if (likely(h == XN_NO_HANDLE)) {
 		xnsynch_set_owner(synch, curr);
 		xnthread_get_resource(curr);
+		xnlock_get_irqsave(&nklock, s);
 		xnthread_clear_info(curr, XNRMID | XNTIMEO | XNBREAK);
+		xnlock_put_irqrestore(&nklock, s);
 		return 0;
 	}
 
