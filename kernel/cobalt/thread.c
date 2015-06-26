@@ -851,9 +851,6 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	sched = thread->sched;
 	oldstate = thread->state;
 
-	if (thread == sched->curr)
-		xnsched_set_resched(sched);
-
 	/*
 	 * If attempting to suspend a runnable thread which is pending
 	 * a forced switch to secondary mode (XNKICKED), just raise
@@ -924,6 +921,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	 * defeat the purpose of xnarch_escalate().
 	 */
 	if (likely(thread == sched->curr)) {
+		xnsched_set_resched(sched);
 		sched->lflags &= ~XNINLOCK;
 		if (unlikely(mask & XNRELAX)) {
 			xnlock_clear_irqon(&nklock);
