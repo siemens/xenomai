@@ -270,6 +270,8 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 int xnarch_handle_fpu_fault(struct xnthread *from, 
 			struct xnthread *to, struct ipipe_trap_data *d)
 {
+	spl_t s;
+
 	if (xnthread_test_state(to, XNFPU))
 		/* FPU is already enabled, probably an exception */
                return 0;
@@ -281,7 +283,10 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 		return 0;
 #endif
 
+	xnlock_get_irqsave(&nklock, s);
 	xnthread_set_state(to, XNFPU);
+	xnlock_put_irqrestore(&nklock, s);
+
 	xnarch_switch_fpu(from, to);
 
 	/* Retry faulting instruction */

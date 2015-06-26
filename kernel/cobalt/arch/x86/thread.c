@@ -281,6 +281,7 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(to);
 	struct task_struct *p = tcb->core.host_task;
+	spl_t s;
 
 	if (__thread_has_fpu(p))
 		return 0;
@@ -309,7 +310,10 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 	}
 		
 	__thread_set_has_fpu(p);
+
+	xnlock_get_irqsave(&nklock, s);
 	xnthread_set_state(to, XNFPU);
+	xnlock_put_irqrestore(&nklock, s);
 
 	return 1;
 }
