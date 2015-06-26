@@ -1361,9 +1361,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	sched = thread->sched;
 	oldstate = thread->state;
 
-	if (thread == sched->curr)
-		xnsched_set_resched(sched);
-
 	/* Is the thread ready to run? */
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -1435,6 +1432,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 #endif /* __XENO_SIM__ */
 
 	if (thread == sched->curr) {
+		xnsched_set_resched(sched);
 		__clrbits(sched->lflags, XNINLOCK);
 		/*
 		 * If the current thread is being relaxed, we must
