@@ -686,15 +686,14 @@ int xnthread_start(struct xnthread *thread,
 EXPORT_SYMBOL_GPL(xnthread_start);
 
 /**
- * @fn void xnthread_set_mode(struct xnthread *thread,int clrmask,int setmask)
- * @brief Change thread control mode.
+ * @fn void xnthread_set_mode(int clrmask,int setmask)
+ * @brief Change control mode of the current thread.
  *
- * Change the control mode of a given thread. The control mode affects
- * the behaviour of the nucleus regarding the specified thread.
+ * Change the control mode of the current thread. The control mode
+ * affects several behaviours of the Cobalt core regarding this
+ * thread.
  *
- * @param thread The descriptor address of the affected thread.
- *
- * @param clrmask Clears the corresponding bits from the control field
+ * @param clrmask Clears the corresponding bits from the control mode
  * before setmask is applied. The scheduler lock held by the current
  * thread can be forcibly released by passing the XNLOCK bit in this
  * mask. In this case, the lock nesting count is also reset to zero.
@@ -702,74 +701,65 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * @param setmask The new thread mode. The following flags may be set
  * in this bitmask:
  *
- * - XNLOCK makes @a thread non-preemptible by other threads when
- * running on a CPU.  A non-preemptible thread may still block, in
- * which case, the lock is reasserted when the thread is scheduled
- * back in. If @a thread is current, the scheduler is immediately
- * locked, otherwise such lock will take effect next time @a thread
- * resumes on a CPU.
+ * - XNLOCK makes the current thread non-preemptible by other threads.
+ * Unless XNTRAPLB is also set for the thread, the latter may still
+ * block, in which case, the lock will be reacquired automatically
+ * when it is scheduled back in.
  *
- * - XNWARN is a debugging aid, causing the thread to receive a
- * SIGDEBUG signal when the following atypical or abnormal behavior is
- * detected:
+ * - XNWARN enables debugging notifications for the current thread.  A
+ * SIGDEBUG (Linux-originated) signal is sent when the following
+ * atypical or abnormal behavior is detected:
  *
- * - @a thread switches to secondary mode (usable for detecting
- * spurious relaxes).
+ * - the current thread switches to secondary mode. Such notification
+ * comes in handy for detecting spurious relaxes.
  *
- * - @a thread is about to sleep on a Cobalt mutex currently owned by
- * a thread running in secondary mode, which reveals a priority
- * inversion case.
+ * - the current thread is about to sleep on a Cobalt mutex currently
+ * owned by a thread running in secondary mode, which reveals a
+ * priority inversion case.
  *
- * - @a thread has both XNTRAPLB and XNLOCK set, and attempts to
- * block on a Cobalt service, causing a lock break.
+ * - the current thread is about to sleep while holding a Cobalt
+ * mutex. Blocking on a mutex does not trigger such signal though.
+ *
+ * - the current thread has both XNTRAPLB and XNLOCK set, and attempts
+ * to block on a Cobalt service, causing a lock break.
  *
  * - XNTRAPLB disallows breaking the scheduler lock. In the default
  * case, a thread which holds the scheduler lock is allowed to drop it
  * temporarily for sleeping. If this mode bit is set, such thread
  * would return immediately with XNBREAK set from
- * xnthread_suspend(). If XNWARN is set for @a thread, SIGDEBUG is
- * sent in addition to raising the break condition.
+ * xnthread_suspend(). If XNWARN is set for the current thread,
+ * SIGDEBUG is sent in addition to raising the break condition.
  *
- * @coretags{task-unrestricted, might-switch}
+ * @coretags{primary-only, might-switch}
  *
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
- * only returning the previous mode if @a mode_r is a valid address.
+ * in which case xnthread_set_mode() returns the current mode.
  */
-int xnthread_set_mode(struct xnthread *thread, int clrmask, int setmask)
+int xnthread_set_mode(int clrmask, int setmask)
 {
 	struct xnthread *curr;
-	unsigned long oldmode;
+	int oldmode;
 	spl_t s;
+
+	primary_mode_only();
 
 	xnlock_get_irqsave(&nklock, s);
 
 	curr = xnsched_current_thread();
-	oldmode = xnthread_get_state(thread) & XNTHREAD_MODE_BITS;
-	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
-	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
-	trace_cobalt_thread_set_mode(thread);
+	oldmode = xnthread_get_state(curr) & XNTHREAD_MODE_BITS;
+	xnthread_clear_state(curr, clrmask & XNTHREAD_MODE_BITS);
+	xnthread_set_state(curr, setmask & XNTHREAD_MODE_BITS);
+	trace_cobalt_thread_set_mode(curr);
 
-	/*
-	 * Marking the thread as (non-)preemptible requires special
-	 * handling, depending on whether @thread is current.
-	 */
-	if (xnthread_test_state(thread, XNLOCK)) {
-		if ((oldmode & XNLOCK) == 0) {
-			if (thread == curr)
-				__xnsched_lock();
-			else
-				curr->lock_count = 1;
-		}
-	} else if (oldmode & XNLOCK) {
-		if (thread == curr)
-			__xnsched_unlock_fully(); /* Will resched. */
-		else
-			curr->lock_count = 0;
-	}
+	if (xnthread_test_state(curr, XNLOCK)) {
+		if ((oldmode & XNLOCK) == 0)
+			__xnsched_lock();
+	} else if (oldmode & XNLOCK)
+		__xnsched_unlock_fully();
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return (int)oldmode;
+	return oldmode;
 }
 EXPORT_SYMBOL_GPL(xnthread_set_mode);
 

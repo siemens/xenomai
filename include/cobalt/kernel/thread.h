@@ -428,8 +428,7 @@ int xnthread_init(struct xnthread *thread,
 int xnthread_start(struct xnthread *thread,
 		   const struct xnthread_start_attr *attr);
 
-int xnthread_set_mode(struct xnthread *thread,
-		      int clrmask,
+int xnthread_set_mode(int clrmask,
 		      int setmask);
 
 void xnthread_suspend(struct xnthread *thread,

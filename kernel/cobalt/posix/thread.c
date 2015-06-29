@@ -432,17 +432,16 @@ static void pthread_discard(struct cobalt_thread *thread)
 static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
 	const int valid_flags = XNLOCK|XNWARN|XNTRAPLB;
-	struct xnthread *curr = xnthread_current();
 	int old;
 
 	/*
 	 * The conforming mode bit is actually zero, since jumping to
-	 * this code entailed switching to the proper mode already.
+	 * this code entailed switching to primary mode already.
 	 */
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return -EINVAL;
 
-	old = xnthread_set_mode(curr, clrmask, setmask);
+	old = xnthread_set_mode(clrmask, setmask);
 	if (mode_r)
 		*mode_r = old;
 
