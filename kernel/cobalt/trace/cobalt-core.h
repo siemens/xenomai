@@ -251,7 +251,7 @@ TRACE_EVENT(cobalt_thread_suspend,
 		__entry->wchan = wchan;
 	),
 
-	TP_printk("thread=%p mask=%lu timeout=%Lu timeout_mode=%d wchan=%p",
+	TP_printk("thread=%p mask=0x%lx timeout=%Lu timeout_mode=%d wchan=%p",
 		  __entry->thread, __entry->mask,
 		  __entry->timeout, __entry->timeout_mode, __entry->wchan)
 );
