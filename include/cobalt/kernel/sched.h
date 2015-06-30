@@ -359,7 +359,7 @@ static inline int xnsched_interrupt_p(void)
 
 static inline int xnsched_locked_p(void)
 {
-	return xnthread_test_state(xnsched_current_thread(), XNLOCK);
+	return xnsched_current_thread()->lock_count > 0;
 }
 
 static inline int xnsched_root_p(void)
@@ -526,7 +526,8 @@ static inline void xnsched_tick(struct xnsched *sched)
 	 */
 	if (sched_class == curr->base_class &&
 	    sched_class->sched_tick &&
-	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS|XNLOCK|XNRRB) == XNRRB)
+	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS|XNRRB) == XNRRB &&
+		curr->lock_count == 0)
 		sched_class->sched_tick(sched);
 }
 

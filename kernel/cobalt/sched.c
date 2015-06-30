@@ -252,7 +252,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 		 * Do not preempt the current thread if it holds the
 		 * scheduler lock.
 		 */
-		if (xnthread_test_state(curr, XNLOCK)) {
+		if (curr->lock_count > 0) {
 			xnsched_set_self_resched(sched);
 			return curr;
 		}
@@ -324,10 +324,8 @@ void ___xnsched_lock(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 
-	if (curr->lock_count++ == 0) {
+	if (curr->lock_count++ == 0)
 		sched->lflags |= XNINLOCK;
-		xnthread_set_state(curr, XNLOCK);
-	}
 }
 EXPORT_SYMBOL_GPL(___xnsched_lock);
 
@@ -339,7 +337,6 @@ void ___xnsched_unlock(struct xnsched *sched)
 		return;
 
 	if (--curr->lock_count == 0) {
-		xnthread_clear_state(curr, XNLOCK);
 		xnthread_clear_info(curr, XNLBALERT);
 		sched->lflags &= ~XNINLOCK;
 		xnsched_run();
@@ -352,7 +349,6 @@ void ___xnsched_unlock_fully(struct xnsched *sched)
 	struct xnthread *curr = sched->curr;
 
 	curr->lock_count = 0;
-	xnthread_clear_state(curr, XNLOCK);
 	xnthread_clear_info(curr, XNLBALERT);
 	sched->lflags &= ~XNINLOCK;
 	xnsched_run();
@@ -882,7 +878,7 @@ out:
 	    xnsched_maybe_resched_after_unlocked_switch(sched))
 		goto reschedule;
 
-	if (curr->lock_count)
+	if (curr->lock_count > 0)
 		sched->lflags |= XNINLOCK;
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -969,6 +965,8 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->cprio = thread->cprio;
 	p->state = xnthread_get_state(thread);
+	if (thread->lock_count > 0)
+		p->state |= XNLOCK;
 	knamecpy(p->sched_class, thread->sched_class->name);
 	knamecpy(p->personality, thread->personality->name);
 	period = xnthread_get_period(thread);
@@ -1135,6 +1133,8 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->state = xnthread_get_state(thread);
+	if (thread->lock_count > 0)
+		p->state |= XNLOCK;
 	p->ssw = xnstat_counter_get(&thread->stat.ssw);
 	p->csw = xnstat_counter_get(&thread->stat.csw);
 	p->xsc = xnstat_counter_get(&thread->stat.xsc);

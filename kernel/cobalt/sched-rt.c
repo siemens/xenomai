@@ -73,11 +73,10 @@ static void xnsched_rt_rotate(struct xnsched *sched,
 	 * before we were called. The same goes if the current thread
 	 * holds the scheduler lock.
 	 */
-	if (thread == curr &&
-	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNLOCK))
-		return;
-
-	xnsched_putback(thread);
+	if (thread != curr ||
+	    (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS) &&
+	     curr->lock_count == 0))
+		xnsched_putback(thread);
 }
 
 void xnsched_rt_tick(struct xnsched *sched)

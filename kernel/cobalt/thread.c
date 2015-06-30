@@ -673,6 +673,8 @@ int xnthread_start(struct xnthread *thread,
 	xnthread_set_state(thread, attr->mode & (XNTHREAD_MODE_BITS | XNSUSP));
 	thread->entry = attr->entry;
 	thread->cookie = attr->cookie;
+	if (attr->mode & XNLOCK)
+		thread->lock_count = 1;
 
 	trace_cobalt_thread_start(thread);
 
@@ -737,27 +739,32 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  */
 int xnthread_set_mode(int clrmask, int setmask)
 {
+	int oldmode, lock_count;
 	struct xnthread *curr;
-	int oldmode;
 	spl_t s;
 
 	primary_mode_only();
 
 	xnlock_get_irqsave(&nklock, s);
-
 	curr = xnsched_current_thread();
 	oldmode = xnthread_get_state(curr) & XNTHREAD_MODE_BITS;
+	lock_count = curr->lock_count;
 	xnthread_clear_state(curr, clrmask & XNTHREAD_MODE_BITS);
 	xnthread_set_state(curr, setmask & XNTHREAD_MODE_BITS);
 	trace_cobalt_thread_set_mode(curr);
 
-	if (xnthread_test_state(curr, XNLOCK)) {
-		if ((oldmode & XNLOCK) == 0)
+	if (setmask & XNLOCK) {
+		if (lock_count == 0)
 			__xnsched_lock();
-	} else if (oldmode & XNLOCK)
-		__xnsched_unlock_fully();
+	} else if (clrmask & XNLOCK) {
+		if (lock_count > 0)
+			__xnsched_unlock_fully();
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	if (lock_count > 0)
+		oldmode |= XNLOCK;
 
 	return oldmode;
 }
@@ -856,7 +863,8 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 			if (xnthread_test_info(thread, XNKICKED))
 				goto abort;
 			if (thread == sched->curr &&
-			    (oldstate & (XNTRAPLB|XNLOCK)) == (XNTRAPLB|XNLOCK))
+			    thread->lock_count > 0 &&
+			    (oldstate & XNTRAPLB) != 0)
 				goto lock_break;
 		}
 		xnthread_clear_info(thread,
@@ -1813,7 +1821,8 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 	 * - we currently hold the scheduler lock, so we don't want
 	 * any round-robin effect to take place.
 	 */
-	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY) &&
+	    thread->lock_count == 0)
 		xnsched_putback(thread);
 
 	return ret;

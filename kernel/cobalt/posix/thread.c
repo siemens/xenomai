@@ -822,6 +822,8 @@ COBALT_SYSCALL(thread_getstat, current,
 	stat.xsc = xnstat_counter_get(&thread->stat.xsc);
 	stat.pf = xnstat_counter_get(&thread->stat.pf);
 	stat.status = xnthread_get_state(thread);
+	if (thread->lock_count > 0)
+		stat.status |= XNLOCK;
 	stat.timeout = xnthread_get_timeout(thread,
 					    xnclock_read_monotonic(&nkclock));
 	strcpy(stat.name, thread->name);

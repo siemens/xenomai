@@ -39,10 +39,9 @@
 #define XNRELAX   0x00000080 /**< Relaxed shadow thread (blocking bit) */
 #define XNMIGRATE 0x00000100 /**< Thread is currently migrating to another CPU. */
 #define XNHELD    0x00000200 /**< Thread is held to process emergency. */
-
 #define XNBOOST   0x00000400 /**< Undergoes a PIP boost */
 #define XNSSTEP   0x00000800 /**< Single-stepped by debugger */
-#define XNLOCK    0x00001000 /**< Holds the scheduler lock (i.e. not preemptible) */
+#define XNLOCK    0x00001000 /**< Scheduler lock control (pseudo-bit, not in ->state) */
 #define XNRRB     0x00002000 /**< Undergoes a round-robin scheduling */
 #define XNWARN    0x00004000 /**< Issue SIGDEBUG on error detection */
 #define XNFPU     0x00008000 /**< Thread uses FPU */
@@ -50,7 +49,7 @@
 #define XNWEAK    0x00020000 /**< Non real-time shadow (from the WEAK class) */
 #define XNUSER    0x00040000 /**< Shadow thread running in userland */
 #define XNJOINED  0x00080000 /**< Another thread waits for joining this thread */
-#define XNTRAPLB  0x00100000 /**< Trap lock break (i.e. may not sleep with XNLOCK) */
+#define XNTRAPLB  0x00100000 /**< Trap lock break (i.e. may not sleep with sched lock) */
 #define XNDEBUG   0x00200000 /**< User-level debugging enabled */
 
 /** @} */
@@ -94,8 +93,9 @@
  * 'r' -> Undergoes round-robin.
  * 't' -> Mode switches trapped.
  * 'L' -> Lock breaks trapped.
+ * 'd' -> Debug mode turned on.
  */
-#define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....L"
+#define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....Ld"
 
 struct xnthread_user_window {
 	__u32 state;
