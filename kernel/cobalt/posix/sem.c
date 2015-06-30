@@ -50,7 +50,8 @@ int __cobalt_sem_destroy(xnhandle_t handle)
 
 	cobalt_mark_deleted(sem);
 	xnregistry_remove(sem->resnode.handle);
-	cobalt_del_resource(&sem->resnode);
+	if (!sem->pathname)
+		cobalt_del_resource(&sem->resnode);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED) {
 		xnsched_run();
 		ret = 1;
@@ -106,9 +107,8 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	xnlock_get_irqsave(&nklock, s);
 
 	semq = &cobalt_current_resources(pshared)->semq;
-	if (!list_empty(semq) &&
-	    (sm->magic == COBALT_SEM_MAGIC ||
-	     sm->magic == COBALT_NAMED_SEM_MAGIC)) {
+	if ((sm->magic == COBALT_SEM_MAGIC && !list_empty(semq)) ||
+	    sm->magic == COBALT_NAMED_SEM_MAGIC) {
 		osem = xnregistry_lookup(sm->handle, NULL);
 		if (cobalt_obj_active(osem, COBALT_SEM_MAGIC, typeof(*osem))) {
 			ret = -EBUSY;
@@ -126,7 +126,10 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 		goto err_lock_put;
 
 	sem->magic = COBALT_SEM_MAGIC;
-	cobalt_add_resource(&sem->resnode, sem, pshared);
+	if (!name)
+		cobalt_add_resource(&sem->resnode, sem, pshared);
+	else
+		sem->resnode.scope = NULL;
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 	xnsynch_init(&sem->synchbase, sflags, NULL);
 
@@ -178,7 +181,7 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 		goto error;
 	}
 
-	if (sem_kqueue(sem) != sem->resnode.scope) {
+	if (sem->resnode.scope && sem_kqueue(sem) != sem->resnode.scope) {
 		ret = -EPERM;
 		goto error;
 	}
@@ -210,7 +213,7 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 		return -EINVAL;
 
 	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
-	    sem->resnode.scope != sem_kqueue(sem))
+	    sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
 		return -EPERM;
 
 	if (atomic_sub_return(1, &sem->state->value) < 0)
@@ -385,7 +388,7 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 		return -EINVAL;
 	}
 
-	if (sem->resnode.scope != sem_kqueue(sem)) {
+	if (sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EPERM;
 	}
