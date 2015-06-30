@@ -237,7 +237,7 @@ static int run_leaks(struct smokey_test *t, int argc, char *const argv[])
 		return child;
 	if (!child) {
 		subprocess_leak();
-		return EXIT_SUCCESS;
+		exit(EXIT_SUCCESS);
 	}
 	while (waitpid(child, NULL, 0) == -1 && errno == EINTR);
 	sleep(1);
