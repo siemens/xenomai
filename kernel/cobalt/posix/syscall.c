@@ -192,7 +192,7 @@ static COBALT_SYSCALL(get_current, current,
 				      sizeof(*u_handle));
 }
 
-static COBALT_SYSCALL(backtrace, current,
+static COBALT_SYSCALL(backtrace, lostage,
 		      (int nr, unsigned long __user *u_backtrace, int reason))
 {
 	unsigned long backtrace[SIGSHADOW_BACKTRACE_DEPTH];
@@ -799,7 +799,7 @@ static const int cobalt_sysmodes[] = {
 	__COBALT_MODE(trace, current),
 	__COBALT_MODE(get_current, current),
 	__COBALT_MODE(mayday, current),
-	__COBALT_MODE(backtrace, current),
+	__COBALT_MODE(backtrace, lostage),
 	__COBALT_MODE(serialdbg, current),
 	__COBALT_MODE(corectl, probing),
 	__COBALT_MODE(fcntl, current),
