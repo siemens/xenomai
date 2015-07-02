@@ -915,27 +915,26 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	 * opportunity for interrupt delivery right before switching
 	 * context, which shortens the uninterruptible code path.
 	 *
-	 * We have to shut irqs off before xnsched_run() though: if an
-	 * interrupt could preempt us in __xnsched_run() right after
-	 * the call to xnarch_escalate() but before we grab the
+	 * We have to shut irqs off before __xnsched_run() though: if
+	 * an interrupt could preempt us in ___xnsched_run() right
+	 * after the call to xnarch_escalate() but before we grab the
 	 * nklock, we would enter the critical section in
 	 * xnsched_run() while running in secondary mode, which would
 	 * defeat the purpose of xnarch_escalate().
 	 */
 	if (likely(thread == sched->curr)) {
 		xnsched_set_resched(sched);
-		sched->lflags &= ~XNINLOCK;
 		if (unlikely(mask & XNRELAX)) {
 			xnlock_clear_irqon(&nklock);
 			splmax();
-			xnsched_run();
+			__xnsched_run(sched);
 			return;
 		}
 		/*
 		 * If the thread is runnning on another CPU,
 		 * xnsched_run will trigger the IPI as required.
 		 */
-		xnsched_run();
+		__xnsched_run(sched);
 		goto out;
 	}
 

@@ -157,7 +157,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	 * resumes.
 	 *
 	 * The host tick deferral is cleared whenever Xenomai is about
-	 * to yield control to the host kernel (see __xnsched_run()),
+	 * to yield control to the host kernel (see ___xnsched_run()),
 	 * or a timer with an earlier timeout date is scheduled,
 	 * whichever comes first.
 	 */

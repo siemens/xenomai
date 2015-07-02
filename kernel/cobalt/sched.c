@@ -338,8 +338,7 @@ void xnsched_lock(void)
 		XENO_BUG_ON(COBALT, xnsched_current()->curr != curr);
 	}
 
-	if (curr->lock_count++ == 0)
-		curr->sched->lflags |= XNINLOCK;
+	curr->lock_count++;
 }
 EXPORT_SYMBOL_GPL(xnsched_lock);
 
@@ -357,7 +356,6 @@ void xnsched_unlock(void)
 	
 	if (--curr->lock_count == 0) {
 		xnthread_clear_localinfo(curr, XNLBALERT);
-		curr->sched->lflags &= ~XNINLOCK;
 		xnsched_run();
 	}
 }
@@ -800,7 +798,7 @@ void __xnsched_run_handler(void) /* hw interrupts off. */
 	xnsched_run();
 }
 
-int __xnsched_run(struct xnsched *sched)
+int ___xnsched_run(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr;
 	int switched, shadow;
@@ -886,9 +884,6 @@ out:
 	    xnsched_maybe_resched_after_unlocked_switch(sched))
 		goto reschedule;
 
-	if (curr->lock_count > 0)
-		sched->lflags |= XNINLOCK;
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	return switched;
@@ -909,7 +904,7 @@ shadow_epilogue:
 
 	return 1;
 }
-EXPORT_SYMBOL_GPL(__xnsched_run);
+EXPORT_SYMBOL_GPL(___xnsched_run);
 
 #ifdef CONFIG_XENO_OPT_VFILE
 

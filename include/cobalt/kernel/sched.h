@@ -45,7 +45,6 @@
 #define XNHTICK		0x00008000	/* Host tick pending  */
 #define XNINIRQ		0x00004000	/* In IRQ handling context */
 #define XNHDEFER	0x00002000	/* Host tick deferred */
-#define XNINLOCK	0x00001000	/* Scheduler locked */
 
 struct xnsched_rt {
 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
@@ -255,19 +254,18 @@ static inline int xnsched_supported_cpu(int cpu)
 	for_each_online_cpu(cpu)		\
 		if (xnsched_supported_cpu(cpu))	\
 
-int __xnsched_run(struct xnsched *sched);
+int ___xnsched_run(struct xnsched *sched);
 
 void __xnsched_run_handler(void);
 
-static inline int xnsched_run(void)
+static inline int __xnsched_run(struct xnsched *sched)
 {
-	struct xnsched *sched;
 	/*
-	 * NOTE: Since __xnsched_run() won't run if an escalation to
-	 * primary domain is needed, we won't use critical scheduler
-	 * information before we actually run in primary mode;
-	 * therefore we can first test the scheduler status then
-	 * escalate.
+	 * NOTE: Since ___xnsched_run() won't run immediately if an
+	 * escalation to primary domain is needed, we won't use
+	 * critical scheduler information before we actually run in
+	 * primary mode; therefore we can first test the scheduler
+	 * status then escalate.
 	 *
 	 * Running in the primary domain means that no Linux-triggered
 	 * CPU migration may occur from that point either. Finally,
@@ -280,18 +278,28 @@ static inline int xnsched_run(void)
 	 * in secondary mode; in which case we will escalate to the
 	 * primary domain, then unwind the current call frame without
 	 * running the rescheduling procedure in
-	 * __xnsched_run(). Therefore, the scheduler slot
+	 * ___xnsched_run(). Therefore, the scheduler slot
 	 * (i.e. "sched") will be either valid, or unused.
 	 */
-	sched = xnsched_current();
-	smp_rmb();
-	/*
-	 * No immediate rescheduling is possible if an ISR context is
-	 * active, the current thread holds the scheduler lock, or if
-	 * we are caught in the middle of an unlocked context switch.
-	 */
 	if (((sched->status|sched->lflags) &
-	     (XNINIRQ|XNINSW|XNRESCHED|XNINLOCK)) != XNRESCHED)
+	     (XNINIRQ|XNINSW|XNRESCHED)) != XNRESCHED)
+		return 0;
+
+	return ___xnsched_run(sched);
+}
+
+static inline int xnsched_run(void)
+{
+	struct xnsched *sched = xnsched_current();
+	/*
+	 * No rescheduling is possible, either if:
+	 *
+	 * - the current thread holds the scheduler lock
+	 * - an ISR context is active
+	 * - we are caught in the middle of an unlocked context switch.
+	 */
+	smp_rmb();
+	if (unlikely(sched->curr->lock_count > 0))
 		return 0;
 
 	return __xnsched_run(sched);
