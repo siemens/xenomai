@@ -163,8 +163,10 @@ static inline int timer_create(clockid_t clockid,
 			signo = 0; /* Don't notify. */
 		else {
 			signo = evp->sigev_signo;
-			if (signo < 1 || signo > _NSIG)
+			if (signo < 1 || signo > _NSIG) {
+				ret = -EINVAL;
 				goto fail;
+			}
 			timer->sigp.si.si_value = evp->sigev_value;
 		}
 	}
@@ -174,8 +176,10 @@ static inline int timer_create(clockid_t clockid,
 	timer->id = timer_id;
 
 	target = timer_init(timer, evp);
-	if (target == NULL)
+	if (target == NULL) {
+		ret = -EPERM;
 		goto fail;
+	}
 
 	if (IS_ERR(target)) {
 		ret = PTR_ERR(target);
