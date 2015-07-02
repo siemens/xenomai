@@ -100,8 +100,8 @@ patch_link() {
 	       recursive_opt="-maxdepth 1"
 	       dir_opt=""
            fi
-	   find_clean_opt="$recursive_opt \( $dir_opt $link_makefiles_opt -name Kconfig -o -name '*.[chS]' \)"
-	   find_link_opt="$recursive_opt \( $link_makefiles_opt -name Kconfig -o -name '*.[chS]' \)"
+	   find_clean_opt="$recursive_opt \( $dir_opt $link_makefiles_opt -name Kconfig -o -name '*.[chS]' -o -name '*.sh' \)"
+	   find_link_opt="$recursive_opt \( $link_makefiles_opt -name Kconfig -o -name '*.[chS]' -o -name '*.sh' \)"
 	fi
 
         if test "x$output_patch" = "x" -a -e $linux_tree/$link_dir; then
