@@ -344,17 +344,6 @@ void ___xnsched_unlock(struct xnsched *sched)
 }
 EXPORT_SYMBOL_GPL(___xnsched_unlock);
 
-void ___xnsched_unlock_fully(struct xnsched *sched)
-{
-	struct xnthread *curr = sched->curr;
-
-	curr->lock_count = 0;
-	xnthread_clear_localinfo(curr, XNLBALERT);
-	sched->lflags &= ~XNINLOCK;
-	xnsched_run();
-}
-EXPORT_SYMBOL_GPL(___xnsched_unlock_fully);
-
 /* Must be called with nklock locked, interrupts off. */
 void xnsched_putback(struct xnthread *thread)
 {

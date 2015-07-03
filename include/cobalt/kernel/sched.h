@@ -301,65 +301,37 @@ void ___xnsched_lock(struct xnsched *sched);
 
 void ___xnsched_unlock(struct xnsched *sched);
 
-void ___xnsched_unlock_fully(struct xnsched *sched);
-
 static inline void __xnsched_lock(void)
 {
-	struct xnsched *sched;
-
-	barrier();
-	sched = xnsched_current();
-	___xnsched_lock(sched);
+	___xnsched_lock(xnsched_current());
 }
 
 static inline void __xnsched_unlock(void)
 {
-	struct xnsched *sched;
-
-	barrier();
-	sched = xnsched_current();
-	___xnsched_unlock(sched);
-}
-
-static inline void __xnsched_unlock_fully(void)
-{
-	struct xnsched *sched;
-
-	barrier();
-	sched = xnsched_current();
-	___xnsched_unlock_fully(sched);
+	___xnsched_unlock(xnsched_current());
 }
 
 static inline void xnsched_lock(void)
 {
-	struct xnsched *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	sched = xnsched_current();
-	___xnsched_lock(sched);
+	__xnsched_lock();
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 static inline void xnsched_unlock(void)
 {
-	struct xnsched *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	sched = xnsched_current();
-	___xnsched_unlock(sched);
+	__xnsched_unlock();
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 static inline int xnsched_interrupt_p(void)
 {
 	return xnsched_current()->lflags & XNINIRQ;
-}
-
-static inline int xnsched_locked_p(void)
-{
-	return xnsched_current_thread()->lock_count > 0;
 }
 
 static inline int xnsched_root_p(void)

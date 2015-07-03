@@ -758,8 +758,11 @@ int xnthread_set_mode(int clrmask, int setmask)
 		if (lock_count == 0)
 			__xnsched_lock();
 	} else if (clrmask & XNLOCK) {
-		if (lock_count > 0)
-			__xnsched_unlock_fully();
+		if (lock_count > 0) {
+			curr->lock_count = 0;
+			xnthread_clear_localinfo(curr, XNLBALERT);
+			xnsched_run();
+		}
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -1645,12 +1648,12 @@ int xnthread_migrate(int cpu)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!xnsched_primary_p() || xnsched_locked_p()) {
+	curr = xnthread_current();
+	if (!xnsched_primary_p() || curr->lock_count > 0) {
 		ret = -EPERM;
 		goto unlock_and_exit;
 	}
 
-	curr = xnthread_current();
 	if (!cpu_isset(cpu, curr->affinity)) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
