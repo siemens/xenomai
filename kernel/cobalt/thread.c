@@ -756,7 +756,7 @@ int xnthread_set_mode(int clrmask, int setmask)
 
 	if (setmask & XNLOCK) {
 		if (lock_count == 0)
-			__xnsched_lock();
+			xnsched_lock();
 	} else if (clrmask & XNLOCK) {
 		if (lock_count > 0) {
 			curr->lock_count = 0;

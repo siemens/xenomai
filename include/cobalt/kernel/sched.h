@@ -297,37 +297,9 @@ static inline int xnsched_run(void)
 	return __xnsched_run(sched);
 }
 
-void ___xnsched_lock(struct xnsched *sched);
+void xnsched_lock(void);
 
-void ___xnsched_unlock(struct xnsched *sched);
-
-static inline void __xnsched_lock(void)
-{
-	___xnsched_lock(xnsched_current());
-}
-
-static inline void __xnsched_unlock(void)
-{
-	___xnsched_unlock(xnsched_current());
-}
-
-static inline void xnsched_lock(void)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	__xnsched_lock();
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-static inline void xnsched_unlock(void)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	__xnsched_unlock();
-	xnlock_put_irqrestore(&nklock, s);
-}
+void xnsched_unlock(void);
 
 static inline int xnsched_interrupt_p(void)
 {

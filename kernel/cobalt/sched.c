@@ -320,29 +320,48 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 
 #endif /* CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
 
-void ___xnsched_lock(struct xnsched *sched)
+void xnsched_lock(void)
 {
-	struct xnthread *curr = sched->curr;
+	struct xnthread *curr = xnthread_current();
+
+	/*
+	 * CAUTION: The fast xnthread_current() accessor carries the
+	 * relevant lock nesting count only if current runs in primary
+	 * mode. Otherwise, if the caller is unknown or relaxed
+	 * Xenomai-wise, then we fall back to the root thread on the
+	 * current scheduler, which must be done with IRQs off.
+	 * Either way, we don't need to grab the super lock.
+	 */
+	if (unlikely(curr == NULL || xnthread_test_state(curr, XNRELAX))) {
+		irqoff_only();
+		curr = &xnsched_current()->rootcb;
+		XENO_BUG_ON(COBALT, xnsched_current()->curr != curr);
+	}
 
 	if (curr->lock_count++ == 0)
-		sched->lflags |= XNINLOCK;
+		curr->sched->lflags |= XNINLOCK;
 }
-EXPORT_SYMBOL_GPL(___xnsched_lock);
+EXPORT_SYMBOL_GPL(xnsched_lock);
 
-void ___xnsched_unlock(struct xnsched *sched)
+void xnsched_unlock(void)
 {
-	struct xnthread *curr = sched->curr;
+	struct xnthread *curr = xnthread_current();
+
+	if (unlikely(curr == NULL || xnthread_test_state(curr, XNRELAX))) {
+		irqoff_only();
+		curr = &xnsched_current()->rootcb;
+	}
 
 	if (!XENO_ASSERT(COBALT, curr->lock_count > 0))
 		return;
-
+	
 	if (--curr->lock_count == 0) {
 		xnthread_clear_localinfo(curr, XNLBALERT);
-		sched->lflags &= ~XNINLOCK;
+		curr->sched->lflags &= ~XNINLOCK;
 		xnsched_run();
 	}
 }
-EXPORT_SYMBOL_GPL(___xnsched_unlock);
+EXPORT_SYMBOL_GPL(xnsched_unlock);
 
 /* Must be called with nklock locked, interrupts off. */
 void xnsched_putback(struct xnthread *thread)
