@@ -27,7 +27,7 @@
  * @{
  */
 
-/* State flags */
+/* State flags (shared) */
 
 #define XNSUSP    0x00000001 /**< Suspended. */
 #define XNPEND    0x00000002 /**< Sleep-wait for a resource. */
@@ -61,7 +61,7 @@
  * @{
  */
 
-/* Information flags */
+/* Information flags (shared) */
 
 #define XNTIMEO   0x00000001 /**< Woken up due to a timeout condition */
 #define XNRMID    0x00000002 /**< Pending on a removed resource */
@@ -70,9 +70,12 @@
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNCANCELD 0x00000040 /**< Cancellation request is pending */
-#define XNMOVED   0x00000080 /**< CPU migration in primary mode occurred */
-#define XNPIALERT 0x00001000 /**< Priority inversion alert (SIGDEBUG sent) */
-#define XNLBALERT 0x00002000 /**< Scheduler lock break alert (SIGDEBUG sent) */
+#define XNPIALERT 0x00000080 /**< Priority inversion alert (SIGDEBUG sent) */
+
+/* Local information flags (private to current thread) */
+
+#define XNMOVED   0x00000001 /**< CPU migration in primary mode occurred */
+#define XNLBALERT 0x00000002 /**< Scheduler lock break alert (SIGDEBUG sent) */
 
 /** @} */
 

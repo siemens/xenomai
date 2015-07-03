@@ -85,10 +85,11 @@ struct xnthread_personality {
 };
 
 struct xnthread {
-	struct xnarchtcb tcb;		/* Architecture-dependent block */
+	struct xnarchtcb tcb;	/* Architecture-dependent block */
 
 	__u32 state;		/* Thread state flags */
 	__u32 info;		/* Thread information flags */
+	__u32 local_info;	/* Local thread information flags */
 
 	struct xnsched *sched;		/* Thread scheduler */
 	struct xnsched_class *sched_class; /* Current scheduling class */
@@ -220,6 +221,21 @@ static inline void xnthread_set_info(struct xnthread *thread, int bits)
 static inline void xnthread_clear_info(struct xnthread *thread, int bits)
 {
 	thread->info &= ~bits;
+}
+
+static inline int xnthread_test_localinfo(struct xnthread *curr, int bits)
+{
+	return curr->local_info & bits;
+}
+
+static inline void xnthread_set_localinfo(struct xnthread *curr, int bits)
+{
+	curr->local_info |= bits;
+}
+
+static inline void xnthread_clear_localinfo(struct xnthread *curr, int bits)
+{
+	curr->local_info &= ~bits;
 }
 
 static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread)

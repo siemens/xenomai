@@ -174,6 +174,7 @@ int __xnthread_init(struct xnthread *thread,
 	thread->sched = sched;
 	thread->state = flags;
 	thread->info = 0;
+	thread->local_info = 0;
 	thread->lock_count = 0;
 	thread->rrperiod = XN_INFINITE;
 	thread->wchan = NULL;
@@ -984,9 +985,11 @@ out:
 	return;
 
 lock_break:
+	/* NOTE: thread is current */
 	if (xnthread_test_state(thread, XNWARN) &&
-	    !xnthread_test_info(thread, XNLBALERT)) {
-		xnthread_set_info(thread, XNLBALERT | XNKICKED);
+	    !xnthread_test_localinfo(thread, XNLBALERT)) {
+		xnthread_set_info(thread, XNKICKED);
+		xnthread_set_localinfo(thread, XNLBALERT);
 		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_LOCK_BREAK);
 	}
 abort:
@@ -1635,7 +1638,7 @@ EXPORT_SYMBOL_GPL(xnthread_join);
  */
 int xnthread_migrate(int cpu)
 {
-	struct xnthread *thread;
+	struct xnthread *curr;
 	struct xnsched *sched;
 	int ret = 0;
 	spl_t s;
@@ -1647,20 +1650,20 @@ int xnthread_migrate(int cpu)
 		goto unlock_and_exit;
 	}
 
-	thread = xnthread_current();
-	if (!cpu_isset(cpu, thread->affinity)) {
+	curr = xnthread_current();
+	if (!cpu_isset(cpu, curr->affinity)) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
 
 	sched = xnsched_struct(cpu);
-	if (sched == thread->sched)
+	if (sched == curr->sched)
 		goto unlock_and_exit;
 
-	trace_cobalt_thread_migrate(thread, cpu);
+	trace_cobalt_thread_migrate(curr, cpu);
 
 	/* Move to remote scheduler. */
-	xnsched_migrate(thread, sched);
+	xnsched_migrate(curr, sched);
 
 	/*
 	 * Migrate the thread's periodic timer. We don't have to care
@@ -1668,19 +1671,19 @@ int xnthread_migrate(int cpu)
 	 * current thread, which is, well, running, so it can't be
 	 * sleeping on any timed wait at the moment.
 	 */
-	__xntimer_migrate(&thread->ptimer, sched);
+	__xntimer_migrate(&curr->ptimer, sched);
 
 	/*
 	 * Reset execution time measurement period so that we don't
 	 * mess up per-CPU statistics.
 	 */
-	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
+	xnstat_exectime_reset_stats(&curr->stat.lastperiod);
 
 	/*
 	 * So that xnthread_relax() will pin the linux mate on the
 	 * same CPU next time the thread switches to secondary mode.
 	 */
-	xnthread_set_info(thread, XNMOVED);
+	xnthread_set_localinfo(curr, XNMOVED);
 
 	xnsched_run();
 
@@ -2041,8 +2044,8 @@ void xnthread_relax(int notify, int reason)
 	xnthread_sync_window(thread);
 
 #ifdef CONFIG_SMP
-	if (xnthread_test_info(thread, XNMOVED)) {
-		xnthread_clear_info(thread, XNMOVED);
+	if (xnthread_test_localinfo(thread, XNMOVED)) {
+		xnthread_clear_localinfo(thread, XNMOVED);
 		cpu = xnsched_cpu(thread->sched);
 		set_cpus_allowed(p, cpumask_of_cpu(cpu));
 	}
