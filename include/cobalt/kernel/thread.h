@@ -502,9 +502,10 @@ static inline void xnthread_get_resource(struct xnthread *thread)
 
 static inline int xnthread_put_resource(struct xnthread *thread)
 {
-	if (xnthread_test_state(thread, XNWEAK|XNDEBUG)) {
+	if (xnthread_test_state(thread, XNWEAK) ||
+	    IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER)) {
 		if (unlikely(thread->res_count == 0)) {
-			if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER))
+			if (xnthread_test_state(thread, XNWARN))
 				xnthread_signal(thread, SIGDEBUG,
 						SIGDEBUG_RESCNT_IMBALANCE);
 			return -EPERM;

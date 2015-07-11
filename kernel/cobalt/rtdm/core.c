@@ -104,12 +104,12 @@ open_devnode(struct rtdm_device *dev, const char *path, int oflag)
 	struct file *filp;
 	char *filename;
 
-#ifdef CONFIG_XENO_OPT_DEBUG_USER
-	if (strncmp(path, "/dev/rtdm/", 10))
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER) &&
+	    strncmp(path, "/dev/rtdm/", 10))
 		printk(XENO_WARNING
 		       "%s[%d] opens obsolete device path: %s\n",
 		       current->comm, current->pid, path);
-#endif
+
 	filename = kasprintf(GFP_KERNEL, "/dev/rtdm/%s", dev->name);
 	if (filename == NULL)
 		return ERR_PTR(-ENOMEM);

@@ -94,11 +94,10 @@
  * 'T' -> Ptraced and stopped.
  * 'l' -> Locks scheduler.
  * 'r' -> Undergoes round-robin.
- * 't' -> Mode switches trapped.
+ * 't' -> Runtime mode errors notified.
  * 'L' -> Lock breaks trapped.
- * 'd' -> Debug mode turned on.
  */
-#define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....Ld"
+#define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....L."
 
 struct xnthread_user_window {
 	__u32 state;

@@ -171,7 +171,9 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	thread = xnthread_current();
 
-	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER) && thread->res_count > 0)
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER) &&
+	    thread->res_count > 0 &&
+	    xnthread_test_state(thread, XNWARN))
 		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_RESCNT_SLEEP);
 	
 	xnlock_get_irqsave(&nklock, s);

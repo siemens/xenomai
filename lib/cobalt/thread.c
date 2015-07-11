@@ -332,30 +332,55 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
 /**
  * Set the mode of the current thread.
  *
- * This service sets the mode of the calling thread. @a clrmask and @a setmask
- * are two bit masks which are respectively cleared and set in the calling
- * thread status. They are a bitwise OR of the following values:
- * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the
- *   current thread from being switched out until the scheduler
- *   is unlocked;
- * - PTHREAD_WARNSW, when set, causes the signal SIGDEBUG to be sent to the
- *   current thread, whenever it involontary switches to secondary mode;
- * - PTHREAD_CONFORMING can be passed in @a setmask to switch the
- * current user-space task to its preferred runtime mode. The only
- * meaningful use of this switch is to force a real-time shadow back
- * to primary mode. Any other use leads to a nop.
- * - PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler
- * lock. In the default case, a thread which holds the scheduler lock
- * is allowed to drop it temporarily for sleeping. If this mode bit is set,
- * such thread would return with EINTR immediately from any blocking call.
+ * This service sets the mode of the calling thread, which affects its
+ * behavior under particular circumstances. @a clrmask and @a setmask
+ * are two masks of mode bits which are respectively cleared and set
+ * by pthread_setmode_np():
  *
- * PTHREAD_LOCK_SCHED and PTHREAD_DISABLE_LOCKBREAK are valid for any
- * Xenomai thread, other bits are valid for Xenomai user-space threads
- * only.
+ * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents
+ *   the current thread from being switched out until the scheduler is
+ *   unlocked. Unless PTHREAD_DISABLE_LOCKBREAK is also set, the
+ *   thread may still block, dropping the lock temporarily, in which
+ *   case, the lock will be reacquired automatically when the thread
+ *   resumes execution. When PTHREAD_LOCK_SCHED is cleared, the
+ *   current thread drops the scheduler lock, and the rescheduling
+ *   procedure is initiated.
+ *
+ * - When set, PTHREAD_WARNSW enables debugging notifications for the
+ *   current thread.  A SIGDEBUG (Linux-originated) signal is sent when
+ *   the following atypical or abnormal behavior is detected:
+ *
+ *   - the current thread switches to secondary mode. Such
+ *     notification comes in handy for detecting spurious relaxes.
+ *
+ *   - the current thread is about to sleep on a Cobalt mutex
+ *     currently owned by a thread running in secondary mode, which
+ *     reveals a priority inversion.
+ *
+ *   - the current thread is about to sleep while holding a Cobalt
+ *     mutex, and CONFIG_XENO_OPT_DEBUG_USER is enabled in the kernel
+ *     configuration. Blocking for acquiring a mutex does not trigger
+ *     such signal though.
+ *
+ *   - the current thread has enabled PTHREAD_DISABLE_LOCKBREAK and
+ *     PTHREAD_LOCK_SCHED, then attempts to block on a Cobalt service,
+ *     which would cause a lock break.
+ *
+ * - PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler
+ *   lock. Normally, the scheduler lock is dropped implicitly when the
+ *   current owner blocks, then reacquired automatically when the
+ *   owner resumes execution. If PTHREAD_DISABLE_LOCKBREAK is set, the
+ *   scheduler lock owner would return with EINTR immediately from any
+ *   blocking call instead (see PTHREAD_WARNSW notifications).
+ *
+ * - PTHREAD_CONFORMING can be passed in @a setmask to switch the
+ *   current user-space task to its preferred runtime mode. The only
+ *   meaningful use of this switch is to force a real-time thread back
+ *   to primary mode eagerly. Other usages have no effect.
  *
  * This service is a non-portable extension of the POSIX interface.
  *
- * @param clrmask set of bits to be cleared;
+ * @param clrmask set of bits to be cleared.
  *
  * @param setmask set of bits to be set.
  *
@@ -364,12 +389,16 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  * of active mode bits. If NULL, the previous set of active mode bits
  * will not be returned.
  *
- * @return 0 on success;
- * @return an error number if:
+ * @return 0 on success, otherwise:
+ *
  * - EINVAL, some bit in @a clrmask or @a setmask is invalid.
  *
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
+ *
+ * @caution Issuing PTHREAD_CONFORMING is most likely useless or even
+ * introduces pure overhead in regular applications, since the Cobalt
+ * kernel performs the necessary mode switches, only when required.
  */
 int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {

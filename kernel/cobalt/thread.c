@@ -166,6 +166,11 @@ int __xnthread_init(struct xnthread *thread,
 		ksformat(thread->name,
 			 sizeof(thread->name), "@%p", thread);
 
+	/*
+	 * We mirror the global user debug state into the per-thread
+	 * state, to speed up branch taking in lib/cobalt wherever
+	 * this needs to be tested.
+	 */
 	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER))
 		flags |= XNDEBUG;
 
@@ -706,8 +711,8 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  *
  * - XNLOCK makes the current thread non-preemptible by other threads.
  * Unless XNTRAPLB is also set for the thread, the latter may still
- * block, in which case, the lock will be reacquired automatically
- * when it is scheduled back in.
+ * block, dropping the lock temporarily, in which case, the lock will
+ * be reacquired automatically when the thread resumes execution.
  *
  * - XNWARN enables debugging notifications for the current thread.  A
  * SIGDEBUG (Linux-originated) signal is sent when the following
@@ -718,13 +723,15 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  *
  * - the current thread is about to sleep on a Cobalt mutex currently
  * owned by a thread running in secondary mode, which reveals a
- * priority inversion case.
+ * priority inversion.
  *
  * - the current thread is about to sleep while holding a Cobalt
- * mutex. Blocking on a mutex does not trigger such signal though.
+ * mutex, and CONFIG_XENO_OPT_DEBUG_USER is enabled in the kernel
+ * configuration. Blocking for acquiring a mutex does not trigger such
+ * signal though.
  *
  * - the current thread has both XNTRAPLB and XNLOCK set, and attempts
- * to block on a Cobalt service, causing a lock break.
+ * to block on a Cobalt service, which would cause a lock break.
  *
  * - XNTRAPLB disallows breaking the scheduler lock. In the default
  * case, a thread which holds the scheduler lock is allowed to drop it
