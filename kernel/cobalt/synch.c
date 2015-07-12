@@ -171,10 +171,10 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	thread = xnthread_current();
 
-	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER) &&
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP) &&
 	    thread->res_count > 0 &&
 	    xnthread_test_state(thread, XNWARN))
-		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_RESCNT_SLEEP);
+		xnthread_signal(thread, SIGDEBUG, SIGDEBUG_MUTEX_SLEEP);
 	
 	xnlock_get_irqsave(&nklock, s);
 
@@ -903,7 +903,7 @@ void xnsynch_release_all_ownerships(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_release_all_ownerships);
 
-#if XENO_DEBUG(USER)
+#if XENO_DEBUG(MUTEX_RELAXED)
 
 /*
  * Detect when a thread is about to sleep on a synchronization
@@ -945,6 +945,6 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 	}
 }
 
-#endif /* XENO_DEBUG(USER) */
+#endif /* XENO_DEBUG(MUTEX_RELAXED) */
 
 /** @} */

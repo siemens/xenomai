@@ -95,11 +95,11 @@ int cobalt_mutex_release(struct xnthread *cur,
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		 return -EINVAL;
 
-#if XENO_DEBUG(USER)
-	if (mutex->resnode.scope !=
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
+	    mutex->resnode.scope !=
 	    cobalt_current_resources(mutex->attr.pshared))
 		return -EPERM;
-#endif
+
 	state = container_of(mutex->synchbase.fastlock, struct cobalt_mutex_state, owner);
 	flags = state->flags;
 	need_resched = 0;
@@ -142,13 +142,14 @@ redo:
 		ret = -EINVAL;
 		goto out;
 	}
-#if XENO_DEBUG(USER)
-	if (mutex->resnode.scope !=
+
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
+	    mutex->resnode.scope !=
 	    cobalt_current_resources(mutex->attr.pshared)) {
 		ret = -EPERM;
 		goto out;
 	}
-#endif
+
 	if (xnsynch_owner_check(&mutex->synchbase, curr)) {
 		if (fetch_timeout) {
 			xnlock_put_irqrestore(&nklock, s);
@@ -171,11 +172,10 @@ redo:
 	switch(mutex->attr.type) {
 	case PTHREAD_MUTEX_NORMAL:
 		/* Attempting to relock a normal mutex, deadlock. */
-#if XENO_DEBUG(USER)
-		printk(XENO_WARNING
-		       "thread %s deadlocks on non-recursive mutex\n",
-		       curr->name);
-#endif
+		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO))
+			printk(XENO_WARNING
+			       "thread %s deadlocks on non-recursive mutex\n",
+			       curr->name);
 		/* Make the caller hang. */
 		__cobalt_mutex_acquire_unchecked(curr, mutex, NULL);
 		break;

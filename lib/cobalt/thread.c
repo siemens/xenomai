@@ -351,20 +351,33 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  *   the following atypical or abnormal behavior is detected:
  *
  *   - the current thread switches to secondary mode. Such
- *     notification comes in handy for detecting spurious relaxes.
+ *     notification comes in handy for detecting spurious relaxes,
+ *     with one of the following reason codes:
  *
- *   - the current thread is about to sleep on a Cobalt mutex
- *     currently owned by a thread running in secondary mode, which
- *     reveals a priority inversion.
+ *     - SIGDEBUG_MIGRATE_SYSCALL, if the thread issued a regular
+ *       Linux system call.
+ *
+ *     - SIGDEBUG_MIGRATE_SIGNAL, if the thread had to leave real-time
+ *       mode for handling a Linux signal.
+ *
+ *     - SIGDEBUG_MIGRATE_FAULT, if the thread had to leave real-time
+ *       mode for handling a processor fault/exception.
+ *
+ *   - the current thread is sleeping on a Cobalt mutex currently
+ *     owned by a thread running in secondary mode, which reveals a
+ *     priority inversion. In such an event, the reason code passed to
+ *     the signal handler will be SIGDEBUG_MIGRATE_PRIOINV.
  *
  *   - the current thread is about to sleep while holding a Cobalt
- *     mutex, and CONFIG_XENO_OPT_DEBUG_USER is enabled in the kernel
- *     configuration. Blocking for acquiring a mutex does not trigger
- *     such signal though.
+ *     mutex, and CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP is enabled in the
+ *     kernel configuration.  In such an event, the reason code passed
+ *     to the signal handler will be SIGDEBUG_MUTEX_SLEEP.  Blocking
+ *     for acquiring a mutex does not trigger such signal though.
  *
  *   - the current thread has enabled PTHREAD_DISABLE_LOCKBREAK and
  *     PTHREAD_LOCK_SCHED, then attempts to block on a Cobalt service,
- *     which would cause a lock break.
+ *     which would cause a lock break. In such an event, the reason
+ *     code passed to the signal handler will be SIGDEBUG_LOCK_BREAK.
  *
  * - PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler
  *   lock. Normally, the scheduler lock is dropped implicitly when the

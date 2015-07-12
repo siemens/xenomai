@@ -209,10 +209,9 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
-#if XENO_DEBUG(USER)
-	if (sem->resnode.scope != sem_kqueue(sem))
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
+	    sem->resnode.scope != sem_kqueue(sem))
 		return -EPERM;
-#endif
 
 	if (atomic_sub_return(1, &sem->state->value) < 0)
 		return -EAGAIN;
@@ -237,10 +236,9 @@ static int sem_post_inner(struct cobalt_sem *sem, int bcast)
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
-#if XENO_DEBUG(USER)
-	if (sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
+	    sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
 		return -EPERM;
-#endif
 
 	if (atomic_read(&sem->state->value) == SEM_VALUE_MAX)
 		return -EINVAL;

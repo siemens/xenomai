@@ -137,13 +137,12 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 		goto unlock_and_return;
 	}
 
-#if XENO_DEBUG(USER)
-	if (cond->resnode.scope !=
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
+	    cond->resnode.scope !=
 	    cobalt_current_resources(cond->attr.pshared)) {
 		err = -EPERM;
 		goto unlock_and_return;
 	}
-#endif
 
 	if (mutex->attr.pshared != cond->attr.pshared) {
 		err = -EINVAL;

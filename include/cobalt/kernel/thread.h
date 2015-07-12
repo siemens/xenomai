@@ -503,7 +503,7 @@ static inline void xnthread_get_resource(struct xnthread *thread)
 static inline int xnthread_put_resource(struct xnthread *thread)
 {
 	if (xnthread_test_state(thread, XNWEAK) ||
-	    IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER)) {
+	    IS_ENABLED(CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP)) {
 		if (unlikely(thread->res_count == 0)) {
 			if (xnthread_test_state(thread, XNWARN))
 				xnthread_signal(thread, SIGDEBUG,

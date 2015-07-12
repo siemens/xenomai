@@ -732,10 +732,9 @@ void rtdm_fd_init(void)
 
 static inline void warn_user(const char *name)
 {
-#ifdef CONFIG_XENO_OPT_DEBUG_USER
-	printk(XENO_WARNING "%s[%d] called regular %s() with RTDM file/socket\n",
+	printk(XENO_WARNING
+	       "%s[%d] called regular %s() with RTDM file/socket\n",
 	       current->comm, current->pid, name + 5);
-#endif
 }
 
 static ssize_t dumb_read(struct file *file, char  __user *buf,

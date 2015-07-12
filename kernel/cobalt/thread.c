@@ -171,7 +171,7 @@ int __xnthread_init(struct xnthread *thread,
 	 * state, to speed up branch taking in lib/cobalt wherever
 	 * this needs to be tested.
 	 */
-	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_USER))
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP))
 		flags |= XNDEBUG;
 
 	thread->personality = attr->personality;
@@ -718,20 +718,22 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * SIGDEBUG (Linux-originated) signal is sent when the following
  * atypical or abnormal behavior is detected:
  *
- * - the current thread switches to secondary mode. Such notification
- * comes in handy for detecting spurious relaxes.
+ *    - the current thread switches to secondary mode. Such notification
+ *      comes in handy for detecting spurious relaxes.
  *
- * - the current thread is about to sleep on a Cobalt mutex currently
- * owned by a thread running in secondary mode, which reveals a
- * priority inversion.
+ *    - CONFIG_XENO_OPT_DEBUG_MUTEX_RELAXED is enabled in the kernel
+ *      configuration, and the current thread is sleeping on a Cobalt
+ *      mutex currently owned by a thread running in secondary mode,
+ *      which reveals a priority inversion.
  *
- * - the current thread is about to sleep while holding a Cobalt
- * mutex, and CONFIG_XENO_OPT_DEBUG_USER is enabled in the kernel
- * configuration. Blocking for acquiring a mutex does not trigger such
- * signal though.
+ *    - the current thread is about to sleep while holding a Cobalt
+ *      mutex, and CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP is enabled in the
+ *      kernel configuration. Blocking for acquiring a mutex does not
+ *      trigger such a signal though.
  *
- * - the current thread has both XNTRAPLB and XNLOCK set, and attempts
- * to block on a Cobalt service, which would cause a lock break.
+ *    - the current thread has both XNTRAPLB and XNLOCK set, and
+ *      attempts to block on a Cobalt service, which would cause a
+ *      lock break.
  *
  * - XNTRAPLB disallows breaking the scheduler lock. In the default
  * case, a thread which holds the scheduler lock is allowed to drop it
