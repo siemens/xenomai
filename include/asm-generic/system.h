@@ -181,7 +181,9 @@ xnlock_dbg_acquired(xnlock_t *lock, int cpu, unsigned long long *start,
 	lock->cpu = cpu;
 }
 
-static inline int xnlock_dbg_release(xnlock_t *lock)
+static inline int
+xnlock_dbg_release(xnlock_t *lock,
+		const char *file, int line, const char *function)
 {
 	extern xnlockinfo_t xnlock_stats[];
 	unsigned long long lock_time = rthal_rdtsc() - lock->lock_date;
@@ -190,9 +192,10 @@ static inline int xnlock_dbg_release(xnlock_t *lock)
 
 	if (unlikely(atomic_read(&lock->owner) != cpu)) {
 		rthal_emergency_console();
-		printk(KERN_ERR "Xenomai: unlocking unlocked nucleus lock %p"
+		printk(KERN_ERR "Xenomai: %s:%u (%s()): unlocking unlocked nucleus lock %p"
 				" on CPU #%d\n"
 				"         owner  = %s:%u (%s(), CPU #%d)\n",
+			file, line, function,
 		       lock, cpu, lock->file, lock->line, lock->function,
 		       lock->cpu);
 		show_stack(NULL,NULL);
@@ -374,9 +377,9 @@ static inline int __xnlock_get(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 	return 0;
 }
 
-static inline void xnlock_put(xnlock_t *lock)
+static inline void __xnlock_put(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
-	if (xnlock_dbg_release(lock))
+	if (xnlock_dbg_release(lock /*, */ XNLOCK_DBG_PASS_CONTEXT))
 		return;
 
 	/*
@@ -389,6 +392,8 @@ static inline void xnlock_put(xnlock_t *lock)
 
 	xnarch_mb_after_unlock();
 }
+#define xnlock_put(lock) \
+	__xnlock_put((lock) /*, */ XNLOCK_DBG_CONTEXT)
 
 static inline spl_t
 __xnlock_get_irqsave(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
@@ -403,14 +408,17 @@ __xnlock_get_irqsave(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 	return flags;
 }
 
-static inline void xnlock_put_irqrestore(xnlock_t *lock, spl_t flags)
+static inline void
+__xnlock_put_irqrestore(xnlock_t *lock, spl_t flags /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	/* Only release the lock if we didn't take it recursively. */
 	if (!(flags & 2))
-		xnlock_put(lock);
+		__xnlock_put(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
 
 	rthal_local_irq_restore(flags & 1);
 }
+#define xnlock_put_irqrestore(lock, flags) \
+	__xnlock_put_irqrestore((lock), (flags) /*, */ XNLOCK_DBG_CONTEXT)
 
 static inline void xnarch_send_ipi(xnarch_cpumask_t cpumask)
 {
