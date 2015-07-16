@@ -45,14 +45,14 @@
 #define __syshand32x__(__name)	((cobalt_syshand)(cobalt32x_ ## __name))
 
 #define __COBALT_CALL32x_INITHAND(__handler)	\
-  , [__COBALT_X32_BASE ... __COBALT_X32_BASE + __NR_COBALT_SYSCALLS-1] = __handler
+	[__COBALT_X32_BASE ... __COBALT_X32_BASE + __NR_COBALT_SYSCALLS-1] = __handler,
 
 #define __COBALT_CALL32x_INITMODE(__mode)	\
-  , [__COBALT_X32_BASE ... __COBALT_X32_BASE + __NR_COBALT_SYSCALLS-1] = __mode
+	[__COBALT_X32_BASE ... __COBALT_X32_BASE + __NR_COBALT_SYSCALLS-1] = __mode,
 
 /* x32 default entry (no thunk) */
 #define __COBALT_CALL32x_ENTRY(__name, __handler)		\
-	, [sc_cobalt_ ## __name + __COBALT_X32_BASE] = __handler
+	[sc_cobalt_ ## __name + __COBALT_X32_BASE] = __handler,
 
 /* x32 thunk installation */
 #define __COBALT_CALL32x_pure_THUNK(__name)	\
@@ -113,14 +113,14 @@
 #define __syshand32emu__(__name)	((cobalt_syshand)(cobalt32emu_ ## __name))
 
 #define __COBALT_CALL32emu_INITHAND(__handler)	\
-  , [__COBALT_IA32_BASE ... __COBALT_IA32_BASE + __NR_COBALT_SYSCALLS-1] = __handler
+	[__COBALT_IA32_BASE ... __COBALT_IA32_BASE + __NR_COBALT_SYSCALLS-1] = __handler,
 
 #define __COBALT_CALL32emu_INITMODE(__mode)	\
-  , [__COBALT_IA32_BASE ... __COBALT_IA32_BASE + __NR_COBALT_SYSCALLS-1] = __mode
+	[__COBALT_IA32_BASE ... __COBALT_IA32_BASE + __NR_COBALT_SYSCALLS-1] = __mode,
 
 /* ia32 default entry (no thunk) */
 #define __COBALT_CALL32emu_ENTRY(__name, __handler)		\
-	, [sc_cobalt_ ## __name + __COBALT_IA32_BASE] = __handler
+	[sc_cobalt_ ## __name + __COBALT_IA32_BASE] = __handler,
 
 /* ia32 thunk installation */
 #define __COBALT_CALL32emu_THUNK(__name)	\
