@@ -614,7 +614,7 @@ static inline int disable_ondemand_memory(void)
  * initialized by a call to xnthread_init().
  *
  * @param u_winoff will receive the offset of the per-thread
- * "u_window" structure in the process shared heap associated to @a
+ * "u_window" structure in the global heap associated to @a
  * thread. This structure reflects thread state information visible
  * from userland through a shared memory window.
  *
@@ -649,8 +649,7 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 	if (ret)
 		return ret;
 
-	sys_ppd = cobalt_ppd_get(0);
-	umm = &sys_ppd->umm;
+	umm = &cobalt_kernel_ppd.umm;
 	u_window = cobalt_umm_alloc(umm, sizeof(*u_window));
 	if (u_window == NULL)
 		return -ENOMEM;
@@ -672,6 +671,7 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 	init_uthread_info(thread);
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
+	sys_ppd = cobalt_ppd_get(0);
 	atomic_inc(&sys_ppd->refcnt);
 	/*
 	 * ->map_thread() handler is invoked after the TCB is fully
@@ -1030,9 +1030,9 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	xnsched_run();
 
 	if (xnthread_test_state(thread, XNUSER)) {
-		sys_ppd = cobalt_ppd_get(0);
-		cobalt_umm_free(&sys_ppd->umm, thread->u_window);
+		cobalt_umm_free(&cobalt_kernel_ppd.umm, thread->u_window);
 		thread->u_window = NULL;
+		sys_ppd = cobalt_ppd_get(0);
 		if (atomic_dec_and_test(&sys_ppd->refcnt))
 			remove_process(cobalt_current_process());
 	}

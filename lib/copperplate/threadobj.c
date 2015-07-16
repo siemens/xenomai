@@ -248,13 +248,34 @@ static inline void threadobj_uninit_corespec(struct threadobj *thobj)
 {
 }
 
+#ifdef CONFIG_XENO_PSHARED
+
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	thobj->core.handle = cobalt_get_current();
-	thobj->core.u_window = cobalt_get_current_window();
+	thobj->core.shrd.u_winoff = (void *)cobalt_get_current_window() -
+		cobalt_umm_shared;
 
 	return 0;
 }
+
+struct xnthread_user_window *
+threadobj_get_window(struct threadobj_corespec *corespec)
+{
+	return cobalt_umm_shared + corespec->shrd.u_winoff;
+}
+
+#else /* !CONFIG_XENO_PSHARED */
+
+static inline int threadobj_setup_corespec(struct threadobj *thobj)
+{
+	thobj->core.handle = cobalt_get_current();
+	thobj->core.priv.u_window = cobalt_get_current_window();
+
+	return 0;
+}
+
+#endif /* !CONFIG_XENO_PSHARED */
 
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
@@ -335,7 +356,7 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 
 static inline int threadobj_unblocked_corespec(struct threadobj *current)
 {
-	return (current->core.u_window->info & XNBREAK) != 0;
+	return (threadobj_get_window(&current->core)->info & XNBREAK) != 0;
 }
 
 int __threadobj_lock_sched(struct threadobj *current)

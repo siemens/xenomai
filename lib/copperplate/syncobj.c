@@ -97,7 +97,8 @@ int monitor_wait_drain(struct syncobj *sobj,
 static inline
 void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
 {
-	cobalt_monitor_grant(&sobj->core.monitor, thobj->core.u_window);
+	cobalt_monitor_grant(&sobj->core.monitor,
+			     threadobj_get_window(&thobj->core));
 }
 
 static inline

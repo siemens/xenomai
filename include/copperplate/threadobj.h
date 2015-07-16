@@ -39,7 +39,14 @@ struct xnthread_user_window;
 
 struct threadobj_corespec {
 	xnhandle_t handle;
-	struct xnthread_user_window *u_window;
+	union {
+		struct {
+			__u32 u_winoff;
+		} shrd;
+		struct {
+			struct xnthread_user_window *u_window;
+		} priv;
+	};
 };
 
 struct threadobj_stat {
@@ -74,6 +81,21 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 	 * cobalt_thread_stat().
 	 */
 }
+
+#ifdef CONFIG_XENO_PSHARED
+
+struct xnthread_user_window *
+threadobj_get_window(struct threadobj_corespec *corespec);
+
+#else /* !CONFIG_XENO_PSHARED */
+
+static inline struct xnthread_user_window *
+threadobj_get_window(struct threadobj_corespec *corespec)
+{
+	return corespec->priv.u_window;
+}
+
+#endif /* !CONFIG_XENO_PSHARED */
 
 #else  /* CONFIG_XENO_MERCURY */
 

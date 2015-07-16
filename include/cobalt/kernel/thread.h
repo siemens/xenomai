@@ -176,7 +176,11 @@ struct xnthread {
 	void (*entry)(void *cookie); /* Thread entry routine */
 	void *cookie;		/* Cookie to pass to the entry routine */
 
-	struct xnthread_user_window *u_window;	/* Data visible from userland. */
+	/**
+	 * Thread data visible from userland through a window on the
+	 * global heap.
+	 */
+	struct xnthread_user_window *u_window;
 
 	struct xnthread_personality *personality;
 
