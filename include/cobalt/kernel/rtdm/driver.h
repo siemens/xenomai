@@ -656,13 +656,28 @@ static inline void rtdm_waitqueue_destroy(struct rtdm_waitqueue *wq)
 	xnsynch_destroy(&wq->wait);
 }
 
+static inline int __rtdm_dowait(struct rtdm_waitqueue *wq,
+				nanosecs_rel_t timeout, xntmode_t timeout_mode)
+{
+	int ret;
+	
+	ret = xnsynch_sleep_on(&wq->wait, timeout, timeout_mode);
+	if (ret & XNBREAK)
+		return -EINTR;
+	if (ret & XNTIMEO)
+		return -ETIMEDOUT;
+	if (ret & XNRMID)
+		return -EIDRM;
+	return 0;
+}
+
 static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 				   nanosecs_rel_t timeout, rtdm_toseq_t *toseq)
 {
 	if (toseq && timeout > 0)
-		return xnsynch_sleep_on(&wq->wait, *toseq, XN_ABSOLUTE);
+		return __rtdm_dowait(wq, *toseq, XN_ABSOLUTE);
 
-	return xnsynch_sleep_on(&wq->wait, timeout, XN_RELATIVE);
+	return __rtdm_dowait(wq, timeout, XN_RELATIVE);
 }
 
 #define rtdm_timedwait_condition_locked(__wq, __cond, __timeout, __toseq) \
@@ -677,8 +692,8 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 	({								\
 		int __ret = 0;						\
 		while (__ret == 0 && !(__cond))				\
-			__ret = xnsynch_sleep_on(&(__wq)->wait,		\
-						 XN_INFINITE, XN_RELATIVE); \
+			__ret = __rtdm_dowait(__wq,			\
+					      XN_INFINITE, XN_RELATIVE); \
 		__ret;							\
 	})
 
@@ -710,7 +725,7 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 	})
 
 #define rtdm_wait(__wq)							\
-	xnsynch_sleep_on(&(__wq)->wait,	XN_INFINITE, XN_RELATIVE)
+	__rtdm_dowait(__wq, XN_INFINITE, XN_RELATIVE)
 
 #define rtdm_wait_locked(__wq)  rtdm_wait(__wq)
 
