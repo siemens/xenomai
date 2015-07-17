@@ -935,6 +935,9 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
 	struct xnthread *sleeper;
 	struct xnsynch *synch;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	xnthread_for_each_claimed(synch, owner) {
 		xnsynch_for_each_sleeper(sleeper, synch) {
@@ -945,6 +948,8 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 			}
 		}
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 #endif /* XENO_DEBUG(MUTEX_RELAXED) */
