@@ -443,9 +443,6 @@ redo:
 	if (likely(h == XN_NO_HANDLE)) {
 		xnsynch_set_owner(synch, curr);
 		xnthread_get_resource(curr);
-		xnlock_get_irqsave(&nklock, s);
-		xnthread_clear_info(curr, XNRMID | XNTIMEO | XNBREAK);
-		xnlock_put_irqrestore(&nklock, s);
 		return 0;
 	}
 
@@ -559,7 +556,7 @@ block:
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return (int)xnthread_test_info(curr, XNRMID|XNTIMEO|XNBREAK);
+	return xnthread_test_info(curr, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 

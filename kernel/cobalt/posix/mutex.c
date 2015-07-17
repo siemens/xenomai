@@ -65,20 +65,21 @@ int __cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 				     struct cobalt_mutex *mutex,
 				     const struct timespec *ts)
 {
+	int ret;
+
 	if (ts) {
 		if (ts->tv_nsec >= ONE_BILLION)
 			return -EINVAL;
-		xnsynch_acquire(&mutex->synchbase, ts2ns(ts) + 1, XN_REALTIME);
+		ret = xnsynch_acquire(&mutex->synchbase, ts2ns(ts) + 1, XN_REALTIME);
 	} else
-		xnsynch_acquire(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
+		ret = xnsynch_acquire(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
 
-	if (xnthread_test_info(cur, XNBREAK | XNRMID | XNTIMEO)) {
-		if (xnthread_test_info(cur, XNBREAK))
+	if (ret) {
+		if (ret & XNBREAK)
 			return -EINTR;
-		else if (xnthread_test_info(cur, XNTIMEO))
+		if (ret & XNTIMEO)
 			return -ETIMEDOUT;
-		else /* XNRMID */
-			return -EINVAL;
+		return -EINVAL;
 	}
 
 	return 0;
