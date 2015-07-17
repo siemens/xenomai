@@ -189,7 +189,7 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return (int)xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
+	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 

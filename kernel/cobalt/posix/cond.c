@@ -125,8 +125,8 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 						 struct cobalt_mutex *mutex,
 						 xnticks_t abs_to)
 {
+	int err, ret;
 	spl_t s;
-	int err;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -166,10 +166,10 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 
 	/* Wait for another thread to signal the condition. */
 	if (abs_to != XN_INFINITE)
-		xnsynch_sleep_on(&cond->synchbase, abs_to,
-				 clock_flag(TIMER_ABSTIME, cond->attr.clock));
+		ret = xnsynch_sleep_on(&cond->synchbase, abs_to,
+				       clock_flag(TIMER_ABSTIME, cond->attr.clock));
 	else
-		xnsynch_sleep_on(&cond->synchbase, XN_INFINITE, XN_RELATIVE);
+		ret = xnsynch_sleep_on(&cond->synchbase, XN_INFINITE, XN_RELATIVE);
 
 	/* There are three possible wakeup conditions :
 	   - cond_signal / cond_broadcast, no status bit is set, and the function
@@ -185,12 +185,12 @@ static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 
 	err = 0;
 
-	if (xnthread_test_info(cur, XNBREAK))
+	if (ret & XNBREAK)
 		err = -EINTR;
-	else if (xnthread_test_info(cur, XNTIMEO))
+	else if (ret & XNTIMEO)
 		err = -ETIMEDOUT;
 
-      unlock_and_return:
+unlock_and_return:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;

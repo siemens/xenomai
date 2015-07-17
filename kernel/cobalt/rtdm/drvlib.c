@@ -769,8 +769,8 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
 	struct xnthread *thread;
+	int err = 0, ret;
 	spl_t s;
-	int err = 0;
 
 	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
@@ -793,23 +793,21 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
 		thread = xnthread_current();
 
-		if (timeout_seq && (timeout > 0)) {
+		if (timeout_seq && (timeout > 0))
 			/* timeout sequence */
-			xnsynch_sleep_on(&event->synch_base, *timeout_seq,
-					 XN_ABSOLUTE);
-		} else {
+			ret = xnsynch_sleep_on(&event->synch_base, *timeout_seq,
+					       XN_ABSOLUTE);
+		else
 			/* infinite or relative timeout */
-			xnsynch_sleep_on(&event->synch_base, timeout, XN_RELATIVE);
-		}
+			ret = xnsynch_sleep_on(&event->synch_base, timeout, XN_RELATIVE);
 
-		if (likely
-		    (!xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK))) {
+		if (likely(ret == 0)) {
 			xnsynch_clear_status(&event->synch_base,
 					    RTDM_EVENT_PENDING);
 			xnselect_signal(&event->select_block, 0);
-		} else if (xnthread_test_info(thread, XNTIMEO))
+		} else if (ret & XNTIMEO)
 			err = -ETIMEDOUT;
-		else if (xnthread_test_info(thread, XNRMID))
+		else if (ret & XNRMID)
 			err = -EIDRM;
 		else /* XNBREAK */
 			err = -EINTR;
@@ -1004,8 +1002,8 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq)
 {
 	struct xnthread *thread;
+	int err = 0, ret;
 	spl_t s;
-	int err = 0;
 
 	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
@@ -1024,18 +1022,18 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	else {
 		thread = xnthread_current();
 
-		if (timeout_seq && (timeout > 0)) {
+		if (timeout_seq && timeout > 0)
 			/* timeout sequence */
-			xnsynch_sleep_on(&sem->synch_base, *timeout_seq,
-					 XN_ABSOLUTE);
-		} else
+			ret = xnsynch_sleep_on(&sem->synch_base, *timeout_seq,
+					       XN_ABSOLUTE);
+		else
 			/* infinite or relative timeout */
-			xnsynch_sleep_on(&sem->synch_base, timeout, XN_RELATIVE);
+			ret = xnsynch_sleep_on(&sem->synch_base, timeout, XN_RELATIVE);
 
-		if (xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK)) {
-			if (xnthread_test_info(thread, XNTIMEO))
+		if (ret) {
+			if (ret & XNTIMEO)
 				err = -ETIMEDOUT;
-			else if (xnthread_test_info(thread, XNRMID))
+			else if (ret & XNRMID)
 				err = -EIDRM;
 			else /* XNBREAK */
 				err = -EINTR;
