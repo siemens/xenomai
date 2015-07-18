@@ -84,8 +84,12 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 
 #ifdef CONFIG_XENO_PSHARED
 
-struct xnthread_user_window *
-threadobj_get_window(struct threadobj_corespec *corespec);
+static inline struct xnthread_user_window *
+threadobj_get_window(struct threadobj_corespec *corespec)
+{
+	extern void *cobalt_umm_shared;
+	return cobalt_umm_shared + corespec->shrd.u_winoff;
+}
 
 #else /* !CONFIG_XENO_PSHARED */
 

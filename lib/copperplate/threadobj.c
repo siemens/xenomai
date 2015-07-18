@@ -259,12 +259,6 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	return 0;
 }
 
-struct xnthread_user_window *
-threadobj_get_window(struct threadobj_corespec *corespec)
-{
-	return cobalt_umm_shared + corespec->shrd.u_winoff;
-}
-
 #else /* !CONFIG_XENO_PSHARED */
 
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
