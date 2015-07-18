@@ -625,10 +625,10 @@ static int create_main_heap(pid_t *cnode_r)
 	 * bind to it.
 	 */
 	snprintf(hobj->name, sizeof(hobj->name), "%s.heap", session);
-	snprintf(hobj->shrd.fsname, sizeof(hobj->shrd.fsname),
+	snprintf(hobj->fsname, sizeof(hobj->fsname),
 		 "/xeno:%s", hobj->name);
 
-	fd = shm_open(hobj->shrd.fsname, O_RDWR|O_CREAT, 0600);
+	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
 	if (fd < 0)
 		return __bt(-errno);
 
@@ -652,7 +652,7 @@ static int create_main_heap(pid_t *cnode_r)
 			/* CAUTION: __moff() depends on __main_heap. */
 			__main_heap = m_heap;
 			__main_sysgroup = &m_heap->sysgroup;
-			hobj->shrd.pool = __moff(&m_heap->base);
+			hobj->pool_ref = __moff(&m_heap->base);
 			goto done;
 		}
 		*cnode_r = m_heap->cpid;
@@ -676,8 +676,8 @@ init:
 		goto unlink_fail;
 
 	m_heap->maplen = len;
-	/* CAUTION: init_main_heap() depends on hobj->shrd.pool. */
-	hobj->shrd.pool = __moff(&m_heap->base);
+	/* CAUTION: init_main_heap() depends on hobj->pool_ref. */
+	hobj->pool_ref = __moff(&m_heap->base);
 	ret = init_main_heap(m_heap, (caddr_t)m_heap + sizeof(*m_heap), size);
 	if (ret) {
 		errno = -ret;
@@ -699,7 +699,7 @@ unmap_fail:
 	munmap(m_heap, len);
 unlink_fail:
 	ret = __bt(-errno);
-	shm_unlink(hobj->shrd.fsname);
+	shm_unlink(hobj->fsname);
 	goto close_fail;
 errno_fail:
 	ret = __bt(-errno);
@@ -720,10 +720,10 @@ static int bind_main_heap(const char *session)
 	/* No error tracking, this is for internal users. */
 
 	snprintf(hobj->name, sizeof(hobj->name), "%s.heap", session);
-	snprintf(hobj->shrd.fsname, sizeof(hobj->shrd.fsname),
+	snprintf(hobj->fsname, sizeof(hobj->fsname),
 		 "/xeno:%s", hobj->name);
 
-	fd = shm_open(hobj->shrd.fsname, O_RDWR, 0400);
+	fd = shm_open(hobj->fsname, O_RDWR, 0400);
 	if (fd < 0)
 		return -errno;
 
@@ -753,7 +753,7 @@ static int bind_main_heap(const char *session)
 		return -ENOENT;
 	}
 
-	hobj->shrd.pool = __moff(&m_heap->base);
+	hobj->pool_ref = __moff(&m_heap->base);
 	hobj->size = m_heap->base.total;
 	__main_heap = m_heap;
 	__main_catalog = &m_heap->catalog;
@@ -780,7 +780,7 @@ int pshared_check(void *__heap, void *__addr)
 	 * this one, so the address shall fall into the file-backed
 	 * memory range.
 	 */
-	if (__moff(heap) == main_pool.shrd.pool) {
+	if (__moff(heap) == main_pool.pool_ref) {
 		m_heap = container_of(heap, struct session_heap, base);
 		return __addr >= (void *)m_heap &&
 			__addr < (void *)m_heap + m_heap->maplen;
@@ -842,7 +842,7 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 		snprintf(hobj->name, sizeof(hobj->name), "%s.%p", session, hobj);
 
 	init_heap(heap, hobj->name, (caddr_t)heap + sizeof(*heap), size);
-	hobj->shrd.pool = __moff(heap);
+	hobj->pool_ref = __moff(heap);
 	hobj->size = heap->total;
 	sysgroup_add(heap, &heap->memspec);
 
@@ -858,7 +858,7 @@ int heapobj_init_array(struct heapobj *hobj, const char *name,
 
 void heapobj_destroy(struct heapobj *hobj)
 {
-	struct shared_heap *heap = __mptr(hobj->shrd.pool);
+	struct shared_heap *heap = __mptr(hobj->pool_ref);
 	int cpid;
 
 	if (hobj != &main_pool) {
@@ -877,12 +877,12 @@ void heapobj_destroy(struct heapobj *hobj)
 	__RT(pthread_mutex_destroy(&heap->lock));
 	__RT(pthread_mutex_destroy(&main_heap.sysgroup.lock));
 	munmap(&main_heap, main_heap.maplen);
-	shm_unlink(hobj->shrd.fsname);
+	shm_unlink(hobj->fsname);
 }
 
 int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 {
-	struct shared_heap *heap = __mptr(hobj->shrd.pool);
+	struct shared_heap *heap = __mptr(hobj->pool_ref);
 	struct shared_extent *extent;
 	int state;
 
@@ -908,22 +908,22 @@ int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 
 void *heapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	return alloc_block(__mptr(hobj->shrd.pool), size);
+	return alloc_block(__mptr(hobj->pool_ref), size);
 }
 
 void heapobj_free(struct heapobj *hobj, void *ptr)
 {
-	free_block(__mptr(hobj->shrd.pool), ptr);
+	free_block(__mptr(hobj->pool_ref), ptr);
 }
 
 size_t heapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	return __bt(check_block(__mptr(hobj->shrd.pool), ptr));
+	return __bt(check_block(__mptr(hobj->pool_ref), ptr));
 }
 
 size_t heapobj_inquire(struct heapobj *hobj)
 {
-	struct shared_heap *heap = __mptr(hobj->shrd.pool);
+	struct shared_heap *heap = __mptr(hobj->pool_ref);
 	return heap->ubytes;
 }
 

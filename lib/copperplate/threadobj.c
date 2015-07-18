@@ -253,7 +253,7 @@ static inline void threadobj_uninit_corespec(struct threadobj *thobj)
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	thobj->core.handle = cobalt_get_current();
-	thobj->core.shrd.u_winoff = (void *)cobalt_get_current_window() -
+	thobj->core.u_winoff = (void *)cobalt_get_current_window() -
 		cobalt_umm_shared;
 
 	return 0;
@@ -264,7 +264,7 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	thobj->core.handle = cobalt_get_current();
-	thobj->core.priv.u_window = cobalt_get_current_window();
+	thobj->core.u_window = cobalt_get_current_window();
 
 	return 0;
 }

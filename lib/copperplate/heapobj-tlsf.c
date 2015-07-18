@@ -53,7 +53,7 @@ int __heapobj_init_private(struct heapobj *hobj, const char *name,
 	else
 		snprintf(hobj->name, sizeof(hobj->name), "%p", hobj);
 
-	hobj->priv.pool = mem;
+	hobj->pool = mem;
 	/* Make sure to wipe out tlsf's signature. */
 	memset(mem, 0, size < 32 ? size : 32);
 	hobj->size = init_memory_pool(size, mem);

@@ -40,12 +40,8 @@ struct xnthread_user_window;
 struct threadobj_corespec {
 	xnhandle_t handle;
 	union {
-		struct {
-			__u32 u_winoff;
-		} shrd;
-		struct {
-			struct xnthread_user_window *u_window;
-		} priv;
+		__u32 u_winoff;
+		struct xnthread_user_window *u_window;
 	};
 };
 
@@ -88,7 +84,7 @@ static inline struct xnthread_user_window *
 threadobj_get_window(struct threadobj_corespec *corespec)
 {
 	extern void *cobalt_umm_shared;
-	return cobalt_umm_shared + corespec->shrd.u_winoff;
+	return cobalt_umm_shared + corespec->u_winoff;
 }
 
 #else /* !CONFIG_XENO_PSHARED */
@@ -96,7 +92,7 @@ threadobj_get_window(struct threadobj_corespec *corespec)
 static inline struct xnthread_user_window *
 threadobj_get_window(struct threadobj_corespec *corespec)
 {
-	return corespec->priv.u_window;
+	return corespec->u_window;
 }
 
 #endif /* !CONFIG_XENO_PSHARED */

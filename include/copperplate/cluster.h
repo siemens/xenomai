@@ -156,12 +156,8 @@ pid_t pvclusterobj_cnode(const struct pvclusterobj *cobj)
 
 struct syncluster_wait_struct {
 	union {
-		struct {
-			dref_type(char *) name;
-		} shrd;
-		struct {
-			const char *name;
-		} priv;
+		dref_type(char *) name_ref;
+		const char *name;
 	};
 };
 
