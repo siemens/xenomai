@@ -1067,13 +1067,12 @@ static inline void signal_yield(void)
 static int handle_schedule_event(struct task_struct *next_task)
 {
 	struct task_struct *prev_task;
-	struct xnthread *prev, *next;
+	struct xnthread *next;
 	sigset_t pending;
 
 	signal_yield();
 
 	prev_task = current;
-	prev = xnthread_from_task(prev_task);
 	next = xnthread_from_task(next_task);
 	if (next == NULL)
 		goto out;
