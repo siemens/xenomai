@@ -84,7 +84,8 @@ static inline struct xnthread_user_window *
 threadobj_get_window(struct threadobj_corespec *corespec)
 {
 	extern void *cobalt_umm_shared;
-	return cobalt_umm_shared + corespec->u_winoff;
+	return (struct xnthread_user_window *)
+		((caddr_t)cobalt_umm_shared + corespec->u_winoff);
 }
 
 #else /* !CONFIG_XENO_PSHARED */
