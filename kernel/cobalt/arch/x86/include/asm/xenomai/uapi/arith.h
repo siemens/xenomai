@@ -117,7 +117,7 @@ mach_x86_32_ulldiv(const unsigned long long ull,
 		"mov  %[__s],%%ecx\n\t"					\
 		"shrd %%cl,%%edx,%%eax\n\t"				\
 		"shrd %%cl,%[__hi],%%edx\n\t"				\
-		: "=A" (__ret), [__lo] "=r" (__lo), [__hi] "=r" (__hi)	\
+		: "=A" (__ret), [__lo] "=&r" (__lo), [__hi] "=&r" (__hi) \
 		: "A" (ll), [__m] "m" (m), [__s] "m" (s)		\
 		: "ecx");						\
 	__ret;								\
