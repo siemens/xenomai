@@ -9,8 +9,10 @@ includesub_HEADERS =	\
 	sched.h		\
 	sem.h		\
 	signal.h	\
-	syscall.h	\
 	thread.h	\
 	time.h
+
+noinst_HEADERS =	\
+	syscall.h
 
 SUBDIRS = asm-generic kernel
