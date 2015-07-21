@@ -80,25 +80,35 @@ struct xntlholder {
 #define xntlholder_prio(h)	((h)->prio)
 #define xntlist_init(q)		INIT_LIST_HEAD(q)
 #define xntlist_empty(q)	list_empty(q)
-#define xntlist_head(q)							\
-	({								\
-		struct xntlholder *h = list_empty(q) ? NULL :		\
-			list_first_entry(q, struct xntlholder, link);	\
-		h;							\
-	})
 
-#define xntlist_second(q)						\
-	({								\
-		struct xntlholder *_h = xntlist_head(q);		\
-		_h == NULL ? NULL : xntlist_next(q, _h);		\
-	})
+static inline struct xntlholder *xntlist_head(struct list_head *q)
+{
+	if (list_empty(q))
+		return NULL;
 
-#define xntlist_next(q, h)						\
-	({								\
-		struct xntlholder *_h = list_is_last(&h->link, q) ? NULL : \
-			list_entry(h->link.next, struct xntlholder, link); \
-		_h;							\
-	})
+	return list_first_entry(q, struct xntlholder, link);
+}
+
+static inline struct xntlholder *xntlist_next(struct list_head *q,
+					      struct xntlholder *h)
+{
+	if (list_is_last(&h->link, q))
+		return NULL;
+
+	return list_entry(h->link.next, struct xntlholder, link);
+}
+
+static inline struct xntlholder *xntlist_second(struct list_head *q)
+{
+	struct xntlholder *h;
+
+	if (list_empty(q))
+		return NULL;
+
+	h = list_first_entry(q, struct xntlholder, link);
+
+	return xntlist_next(q, h);
+}
 
 static inline void xntlist_insert(struct list_head *q, struct xntlholder *holder)
 {
