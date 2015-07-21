@@ -28,27 +28,25 @@ static unsigned long mach_blackfin_calibrate(void)
 
 static void schedule_deferred(void)
 {
+	xnsched_run();
+}
+
+static int mach_blackfin_late_init(void)
+{
 	/*
-	 * We have a small race window which turns out to be
-	 * innocuous, i.e.:
+	 * We hook the rescheduling handler late in the init sequence
+	 * to prevent the race below from happening:
 	 *
 	 * mach_setup() ...
 	 *    IRQ/syscall
 	 *        => irq_tail_hook
 	 *           => xnsched_run()
 	 *    ...
-	 * xnsys_init()
+	 * xenomai_init()
 	 *
-	 * in which case, we would call xnsched_run() for a not yet
-	 * initialized system. However, we would be covered by the
-	 * check for XNSCHED in xnsched_run(), which basically makes
-	 * this call a nop.
+	 * in which case, we would spuriously call xnsched_run()
+	 * before the scheduler slot is initialized.
 	 */
-	xnsched_run();
-}
-
-static int mach_blackfin_init(void)
-{
 	__ipipe_irq_tail_hook = (unsigned long)schedule_deferred;
 
 	return 0;
@@ -83,7 +81,8 @@ static const char *const fault_labels[] = {
 
 struct cobalt_machine cobalt_machine = {
 	.name = "blackfin",
-	.init = mach_blackfin_init,
+	.init = NULL,
+	.late_init = mach_blackfin_late_init,
 	.cleanup = mach_blackfin_cleanup,
 	.calibrate = mach_blackfin_calibrate,
 	.prefault = NULL,

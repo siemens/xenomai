@@ -239,6 +239,14 @@ fail_apc:
 	return ret;
 }
 
+static inline int __init mach_late_setup(void)
+{
+	if (cobalt_machine.late_init)
+		return cobalt_machine.late_init();
+
+	return 0;
+}
+
 static __init void mach_cleanup(void)
 {
 	ipipe_unregister_head(&xnsched_realtime_domain);
@@ -367,6 +375,10 @@ static int __init xenomai_init(void)
 	ret = sys_init();
 	if (ret)
 		goto cleanup_select;
+
+	ret = mach_late_setup();
+	if (ret)
+		goto cleanup_sys;
 
 	ret = rtdm_init();
 	if (ret)

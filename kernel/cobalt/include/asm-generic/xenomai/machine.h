@@ -29,6 +29,7 @@ struct vm_area_struct;
 struct cobalt_machine {
 	const char *name;
 	int (*init)(void);
+	int (*late_init)(void);
 	void (*cleanup)(void);
 	void (*prefault)(struct vm_area_struct *vma);
 	unsigned long (*calibrate)(void);

@@ -65,6 +65,7 @@ static const char *const fault_labels[] = {
 struct cobalt_machine cobalt_machine = {
 	.name = "powerpc",
 	.init = mach_powerpc_init,
+	.late_init = NULL,
 	.cleanup = NULL,
 	.calibrate = mach_powerpc_calibrate,
 	.prefault = NULL,

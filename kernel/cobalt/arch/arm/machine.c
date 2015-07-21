@@ -111,6 +111,7 @@ static const char *const fault_labels[] = {
 struct cobalt_machine cobalt_machine = {
 	.name = "arm",
 	.init = NULL,
+	.late_init = NULL,
 	.cleanup = NULL,
 	.calibrate = mach_arm_calibrate,
 	.prefault = mach_arm_prefault,
