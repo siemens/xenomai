@@ -107,10 +107,13 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *
 #endif /* !HAVE_PTHREAD_MUTEXATTR_GETPROTOCOL */
 
 #ifndef HAVE_PTHREAD_ATTR_SETAFFINITY_NP
+#include <sched.h>
 static inline
 int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				size_t cpusetsize, const cpu_set_t *cpuset)
 {
+	if (CPU_ISSET(0, cpuset) && CPU_COUNT(cpuset) == 1)
+		return 0;
 	return ENOSYS;
 }
 #endif /* !HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
