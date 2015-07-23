@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <malloc.h>
 #include "boilerplate/atomic.h"
 #include "boilerplate/lock.h"
 #include "boilerplate/time.h"
@@ -292,6 +293,29 @@ int get_static_cpu_count(void)
 pid_t get_thread_pid(void)
 {
 	return syscall(__NR_gettid);
+}
+
+char *lookup_command(const char *cmd)
+{
+	const char *dirs[] = {
+		"/bin",
+		"/sbin",
+		"/usr/bin",
+		"/usr/sbin",
+	};
+	char *path;
+	int n, ret;
+
+	for (n = 0; n < sizeof(dirs) / sizeof(dirs[0]); n++) {
+		ret = asprintf(&path, "%s/%s", dirs[n], cmd);
+		if (ret < 0)
+			return NULL;
+		if (access(path, X_OK) == 0)
+			return path;
+		free(path);
+	}
+
+	return NULL;
 }
 
 const char *config_strings[] = {

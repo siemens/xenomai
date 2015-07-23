@@ -110,6 +110,8 @@ int get_static_cpu_count(void);
 
 pid_t get_thread_pid(void);
 
+char *lookup_command(const char *cmd);
+  
 #ifdef __cplusplus
 }
 #endif
