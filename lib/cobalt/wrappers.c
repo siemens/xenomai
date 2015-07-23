@@ -496,33 +496,3 @@ unsigned int __real_sleep(unsigned int seconds)
 {
 	return sleep(seconds);
 }
-
-#ifdef __PROVIDE_CPU_COUNT
-
-int __sched_cpucount(size_t setsize, const cpu_set_t *setp)
-{
-	int count, shift;
-	const char *p;
-
-	for (count = 0, p = setp; p < (char *)setp + setsize; p++) {
-		shift = *p;
-		while (shift) {
-			if (shift & 1)
-				count++;
-			shift >>= 1;
-		}
-	}
-
-	return count;
-}
-
-#endif /* __PROVIDE_CPU_COUNT */
-
-#ifdef __PROVIDE_CPU_FILL
-
-void __sched_cpufill(size_t setsize, cpu_set_t *setp)
-{
-	memset(setp, 0xff, setsize);
-}
-
-#endif /* __PROVIDE_CPU_COUNT */
