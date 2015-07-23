@@ -35,21 +35,6 @@
 
 extern struct xnvdso *cobalt_vdso;
 
-#ifndef HAVE_RECENT_SETAFFINITY
-#ifdef HAVE_OLD_SETAFFINITY
-#define sched_setaffinity(pid, len, mask)	sched_setaffinity(pid, mask)
-#else /* !HAVE_OLD_SETAFFINITY */
-#ifndef __cpu_set_t_defined
-typedef unsigned long cpu_set_t;
-#endif
-#define sched_setaffinity(pid, len, mask)	do { } while (0)
-#ifndef CPU_ZERO
-#define CPU_ZERO(set)				memset(set, 0, sizeof(*set))
-#define CPU_SET(n, set)				do { } while (0)
-#endif
-#endif /* !HAVE_OLD_SETAFFINITY */
-#endif /* !HAVE_RECENT_SETAFFINITY */
-
 /*
  * We can't really trust POSIX headers to check for features, since
  * some archs may not implement all of the declared uClibc POSIX

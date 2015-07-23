@@ -39,25 +39,8 @@
 #include <cobalt/trace.h>
 #include <rtdm/testing.h>
 
-#ifdef HAVE_RECENT_SETAFFINITY
-#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
-#else /* !HAVE_RECENT_SETAFFINITY */
-#ifdef HAVE_OLD_SETAFFINITY
-#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
-#else /* !HAVE_OLD_SETAFFINITY */
-#ifndef __cpu_set_t_defined
-typedef unsigned long cpu_set_t;
-#endif
-#define do_sched_setaffinity(pid,len,mask) 0
-#ifndef CPU_ZERO
-#define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
-#define	 CPU_SET(n,set)	do { *(set) |= (1 << n); } while(0)
-#endif
-#endif /* HAVE_OLD_SETAFFINITY */
-#endif /* HAVE_RECENT_SETAFFINITY */
-
 #if CONFIG_SMP
-#define smp_sched_setaffinity(pid,len,mask) do_sched_setaffinity(pid,len,mask)
+#define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
 #else /* !CONFIG_SMP */
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */

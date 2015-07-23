@@ -610,31 +610,6 @@ dnl debugging with valgrind, instrumented glibc etc.
 AM_CONDITIONAL(XENO_TLSF,[test x$rtcore_type = xcobalt -o x$debug_mode = x])
 test x$rtcore_type = xcobalt -o x$debug_mode = x && AC_DEFINE(CONFIG_XENO_TLSF,1,[config])
 
-AC_MSG_CHECKING([for sched_setaffinity])
-AC_CACHE_VAL(ac_cv_sched_setaffinity,
- save_CFLAGS="$CFLAGS"
- CFLAGS="-Wimplicit-function-declaration -Werror -D_GNU_SOURCE"
- [AC_TRY_LINK([#include <sched.h>],
- [cpu_set_t cpu_set; sched_setaffinity(0, sizeof(cpu_set), &cpu_set);],
- [ac_cv_sched_setaffinity=new],
- [ac_cv_sched_setaffinity=bad])]
- if test $ac_cv_sched_setaffinity = bad ; then
-   [AC_TRY_LINK([#include <sched.h>],
-   [cpu_set_t cpu_set; sched_setaffinity(0, &cpu_set);],
-   [ac_cv_sched_setaffinity=old],
-   [ac_cv_sched_setaffinity=no])]
- fi
- if test $ac_cv_sched_setaffinity = old ; then
-     AC_MSG_RESULT(old)
-     AC_DEFINE(HAVE_OLD_SETAFFINITY,1,[config])
- elif test $ac_cv_sched_setaffinity = new ; then
-     AC_MSG_RESULT(ok)
-     AC_DEFINE(HAVE_RECENT_SETAFFINITY,1,[config])
- else
-     AC_MSG_RESULT(no)
- fi
- CFLAGS="$save_CFLAGS")
-
 dnl Check for atomic builtins. For now we only check for the legacy
 dnl interface, i.e. __sync_*.
 
