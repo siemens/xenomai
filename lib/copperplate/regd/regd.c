@@ -377,10 +377,8 @@ static void handle_requests(void)
 		if (tmfd != -1 && FD_ISSET(tmfd, &set)) {
 			ret = __STD(read(tmfd, &exp, sizeof(exp)));
 			(void)ret;
-			if (pvlist_empty(&client_list)) {
-				delete_system_fs();
+			if (pvlist_empty(&client_list))
 				exit(0);
-			}
 		}
 		for (s = sockfd + 1; s < FD_SETSIZE; s++) {
 			if (!FD_ISSET(s, &set) || s == tmfd)
@@ -391,7 +389,6 @@ static void handle_requests(void)
 				__STD(close(s));
 				FD_CLR(s, &refset);
 				if (anon && pvlist_empty(&client_list)) {
-					delete_system_fs();
 					if (daemonize) {
 						note("unlinking session %s",
 						     __copperplate_setup_data.session_label);
