@@ -268,8 +268,8 @@ fail_nopath:
 
 static void unmount(const char *path)
 {
+	char *cmd, *cmdpath;
 	int flags, ret;
-	char *cmd;
 
 	/*
 	 * Silence stderr while we run the shell command - it may complain
@@ -279,7 +279,12 @@ static void unmount(const char *path)
 	if (flags >= 0)
 		fcntl(2, F_SETFD, flags | FD_CLOEXEC);
 
-	ret = asprintf(&cmd, "/usr/bin/fusermount -uzq %s", path);
+	cmdpath = lookup_command("fusermount");
+	if (cmdpath == NULL)
+		return;
+
+	ret = asprintf(&cmd, "%s -uzq %s", cmdpath, path);
+	free(cmdpath);
 	if (ret < 0)
 		return;
 
@@ -288,10 +293,12 @@ static void unmount(const char *path)
 	if (ret != -1 && WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
 		return;
 
-	if (access("/usr/bin/umount", X_OK))
+	cmdpath = lookup_command("umount");
+	if (cmdpath == NULL)
 		return;
 
-	ret = asprintf(&cmd, "/usr/bin/umount -l %s", path);
+	ret = asprintf(&cmd, "%s -l %s", cmdpath, path);
+	free(cmdpath);
 	if (ret < 0)
 		return;
 
