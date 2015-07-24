@@ -220,11 +220,6 @@ int cobalt_init(void)
 	return 0;
 }
 
-static void __attribute__((destructor)) __fini_cobalt(void)
-{
-	cobalt_print_exit();
-}
-
 static int cobalt_parse_option(int optnum, const char *optarg)
 {
 	switch (optnum) {

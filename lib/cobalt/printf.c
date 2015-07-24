@@ -773,16 +773,6 @@ void cobalt_print_init(void)
 	atexit(rt_print_flush_buffers);
 }
 
-void cobalt_print_exit(void)
-{
-	if (buffers) {
-		/* Flush the buffers. Do not call print_buffers here
-		 * since we do not know if our stack is big enough. */
-		nanosleep(&print_period, NULL);
-		nanosleep(&print_period, NULL);
-	}
-}
-
 COBALT_IMPL(int, vfprintf, (FILE *stream, const char *fmt, va_list args))
 {
 	if (cobalt_get_current() != XN_NO_HANDLE &&
