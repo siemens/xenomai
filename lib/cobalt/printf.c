@@ -78,7 +78,6 @@ static struct print_buffer *first_buffer;
 static int buffers;
 static uint32_t seq_no;
 static struct timespec print_period;
-static int auto_init;
 static pthread_mutex_t buffer_lock;
 static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
@@ -104,12 +103,7 @@ vprint_to_buffer(FILE *stream, int fortify_level, int priority,
 	int res = 0;
 
 	if (!buffer) {
-		res = 0;
-		if (auto_init)
-			res = rt_print_init(0, NULL);
-		else
-			res = EIO;
-
+		res = rt_print_init(0, NULL);
 		if (res) {
 			errno = res;
 			return -1;
@@ -467,11 +461,6 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 	return 0;
 }
 
-void rt_print_auto_init(int enable)
-{
-	auto_init = enable;
-}
-
 void rt_print_cleanup(void)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
@@ -492,13 +481,10 @@ void rt_print_cleanup(void)
 const char *rt_print_buffer_name(void)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
+	int res;
 
 	if (!buffer) {
-		int res = -1;
-
-		if (auto_init)
-			res = rt_print_init(0, NULL);
-
+		res = rt_print_init(0, NULL);
 		if (res)
 			return NULL;
 
@@ -784,7 +770,6 @@ void cobalt_print_init(void)
 
 	spawn_printer_thread();
 
-	rt_print_auto_init(1);
 	atexit(rt_print_flush_buffers);
 }
 

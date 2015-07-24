@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+static inline void rt_print_auto_init(int enable)
+{
+	/* stdio support is automatically enabled by libcobalt. */
+}
+
 #ifndef RTDM_NO_DEFAULT_USER_API
 
 #define rt_dev_call(__call, __args...)	\
