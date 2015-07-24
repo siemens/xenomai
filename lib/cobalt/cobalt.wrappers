@@ -47,6 +47,7 @@
 --wrap mq_timedreceive
 --wrap mq_notify
 --wrap open
+--wrap open64
 --wrap socket
 --wrap close
 --wrap ioctl
@@ -105,5 +106,6 @@
 --wrap kill
 --wrap sleep
 --wrap mmap
+--wrap mmap64
 --wrap time
 --wrap fcntl

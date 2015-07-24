@@ -152,16 +152,32 @@ int __real_sem_getvalue(sem_t * sem, int *sval)
 __weak
 int __real_open(const char *path, int oflag, ...)
 {
+	mode_t mode = 0;
 	va_list ap;
-	mode_t mode;
 
 	if (oflag & O_CREAT) {
 		va_start(ap, oflag);
 		mode = va_arg(ap, mode_t);
 		va_end(ap);
-		return open(path, oflag, mode);
-	} else
-		return open(path, oflag);
+	}
+
+	return open(path, oflag, mode);
+}
+
+/* rtdm */
+__weak
+int __real_open64(const char *path, int oflag, ...)
+{
+	mode_t mode = 0;
+	va_list ap;
+
+	if (oflag & O_CREAT) {
+		va_start(ap, oflag);
+		mode = va_arg(ap, mode_t);
+		va_end(ap);
+	}
+
+	return open64(path, oflag, mode);
 }
 
 __weak
@@ -322,6 +338,13 @@ void *__real_mmap(void *addr, size_t length, int prot, int flags,
 		  int fd, off_t offset)
 {
 	return mmap(addr, length, prot, flags, fd, offset);
+}
+
+__weak
+void *__real_mmap64(void *addr, size_t length, int prot, int flags,
+		  int fd, off64_t offset)
+{
+	return mmap64(addr, length, prot, flags, fd, offset);
 }
 
 __weak

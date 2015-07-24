@@ -78,8 +78,8 @@ typedef struct {
 } compat_fd_set;
 
 struct compat_rtdm_mmap_request {
+	u64 offset;
 	compat_size_t length;
-	compat_off_t offset;
 	int prot;
 	int flags;
 };

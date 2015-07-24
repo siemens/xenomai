@@ -39,10 +39,9 @@ static inline int set_errno(int ret)
 	return -1;
 }
 
-COBALT_IMPL(int, open, (const char *path, int oflag, ...))
+static int do_open(const char *path, int oflag, mode_t mode)
 {
 	int fd, oldtype;
-	va_list ap;
 
 	/*
 	 * Don't dereference path, as it might be invalid. Leave it to
@@ -55,12 +54,38 @@ COBALT_IMPL(int, open, (const char *path, int oflag, ...))
 		if (fd != -ENODEV && fd != -ENOSYS)
 			return set_errno(fd);
 
-		va_start(ap, oflag);
-		fd = __STD(open(path, oflag, va_arg(ap, mode_t)));
-		va_end(ap);
+		fd = __STD(open(path, oflag, mode));
 	}
 
 	return fd;
+}
+
+COBALT_IMPL(int, open, (const char *path, int oflag, ...))
+{
+	mode_t mode = 0;
+	va_list ap;
+
+	if (oflag & O_CREAT) {
+		va_start(ap, oflag);
+		mode = va_arg(ap, int);
+		va_end(ap);
+	}
+
+	return do_open(path, oflag, mode);
+}
+
+COBALT_IMPL(int, open64, (const char *path, int oflag, ...))
+{
+	mode_t mode = 0;
+	va_list ap;
+
+	if (oflag & O_CREAT) {
+		va_start(ap, oflag);
+		mode = va_arg(ap, int);
+		va_end(ap);
+	}
+
+	return do_open(path, oflag | O_LARGEFILE, mode);
 }
 
 COBALT_IMPL(int, socket, (int protocol_family, int socket_type, int protocol))
@@ -392,8 +417,8 @@ COBALT_IMPL(int, shutdown, (int fd, int how))
 	return __STD(shutdown(fd, how));
 }
 
-COBALT_IMPL(void *, mmap, (void *addr, size_t length, int prot, int flags,
-			   int fd, off_t offset))
+COBALT_IMPL(void *, mmap64, (void *addr, size_t length, int prot, int flags,
+			     int fd, off64_t offset))
 {
 	struct _rtdm_mmap_request rma;
 	int ret;
@@ -417,5 +442,11 @@ COBALT_IMPL(void *, mmap, (void *addr, size_t length, int prot, int flags,
 	}
 
 regular:
-	return __STD(mmap(addr, length, prot, flags, fd, offset));
+	return __STD(mmap64(addr, length, prot, flags, fd, offset));
+}
+
+COBALT_IMPL(void *, mmap, (void *addr, size_t length, int prot, int flags,
+			   int fd, off_t offset))
+{
+	return __COBALT(mmap64(addr, length, prot, flags, fd, offset));
 }

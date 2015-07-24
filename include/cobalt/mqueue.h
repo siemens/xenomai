@@ -27,8 +27,6 @@
 extern "C" {
 #endif
 
-COBALT_DECL(int, open(const char *path, int oflag, ...));
-
 COBALT_DECL(mqd_t, mq_open(const char *name,
 			   int oflags,
 			   ...));

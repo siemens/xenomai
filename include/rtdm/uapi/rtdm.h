@@ -197,8 +197,8 @@ struct _rtdm_setsockaddr_args {
 
 /* Internally used for mmap() */
 struct _rtdm_mmap_request {
+	__u64 offset;
 	size_t length;
-	off_t offset;
 	int prot;
 	int flags;
 };

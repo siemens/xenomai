@@ -21,6 +21,7 @@
 #ifndef _COBALT_SYS_MMAN_H
 #define _COBALT_SYS_MMAN_H
 
+#include <sys/types.h>
 #include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
@@ -29,6 +30,9 @@ extern "C" {
 
 COBALT_DECL(void *, mmap(void *addr, size_t length, int prot, int flags,
 			 int fd, off_t offset));
+
+COBALT_DECL(void *, mmap64(void *addr, size_t length, int prot, int flags,
+			   int fd, off64_t offset));
 
 #ifdef __cplusplus
 }

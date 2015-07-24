@@ -20,13 +20,14 @@
 #ifndef _RTDM_RTDM_H
 #define _RTDM_RTDM_H
 
+#include <linux/types.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
 #include <boilerplate/wrappers.h>
 
 /**
