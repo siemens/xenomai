@@ -21,7 +21,7 @@
 #include <linux/types.h>
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   12UL
+#define XENOMAI_ABI_REV   13UL
 
 #define XENOMAI_FEAT_DEP  __xn_feat_generic_mask
 
