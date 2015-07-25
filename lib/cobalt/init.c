@@ -30,6 +30,7 @@
 #include <boilerplate/setup.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <cobalt/ticks.h>
+#include <cobalt/tunables.h>
 #include <asm/xenomai/syscall.h>
 #include <xenomai/init.h>
 #include "umm.h"
@@ -54,6 +55,21 @@ static const struct option cobalt_options[] = {
 	{
 #define main_prio_opt		0
 		.name = "main-prio",
+		.has_arg = 1,
+	},
+	{
+#define print_bufsz_opt	1
+		.name = "print-buffer-size",
+		.has_arg = 1,
+	},
+	{
+#define print_bufcnt_opt	2
+		.name = "print-buffer-count",
+		.has_arg = 1,
+	},
+	{
+#define print_syncdelay_opt	3
+		.name = "print-sync-delay",
 		.has_arg = 1,
 	},
 	{
@@ -205,18 +221,61 @@ int cobalt_init(void)
 
 	ret = __RT(pthread_setschedparam(ptid, policy, &parm));
 	if (ret) {
-		early_warning("pthread_setschedparam failed");
+		early_warning("pthread_setschedparam failed (prio=%d)",
+			__cobalt_main_prio);
 		return ret;
 	}
 
 	return 0;
 }
 
+static int get_int_arg(const char *name, const char *arg,
+		       unsigned long long *valp)
+{
+	unsigned long long value;
+	char *p;
+	
+	errno = 0;
+	value = strtoll(arg, &p, 10);
+	if (errno || *p) {
+		early_warning("invalid value for %s: %s", name, arg);
+		return -errno;
+	}
+
+	*valp = value;
+
+	return 0;
+}
+
 static int cobalt_parse_option(int optnum, const char *optarg)
 {
+	unsigned long long value;
+	int ret;
+
 	switch (optnum) {
 	case main_prio_opt:
-		__cobalt_main_prio = atoi(optarg);
+		ret = get_int_arg("--main-prio", optarg, &value);
+		if (ret)
+			return ret;
+		__cobalt_main_prio = (int)value;
+		break;
+	case print_bufsz_opt:
+		ret = get_int_arg("--print-buffer-size", optarg, &value);
+		if (ret)
+			return ret;
+		__cobalt_print_bufsz = (int)value;
+		break;
+	case print_bufcnt_opt:
+		ret = get_int_arg("--print-buffer-count", optarg, &value);
+		if (ret)
+			return ret;
+		__cobalt_print_bufcount = (int)value;
+		break;
+	case print_syncdelay_opt:
+		ret = get_int_arg("--print-sync-delay", optarg, &value);
+		if (ret)
+			return ret;
+		__cobalt_print_syncdelay = value;
 		break;
 	default:
 		/* Paranoid, can't happen. */
@@ -228,7 +287,10 @@ static int cobalt_parse_option(int optnum, const char *optarg)
 
 static void cobalt_help(void)
 {
-        fprintf(stderr, "--main-prio=<prio>		set main thread priority\n");
+        fprintf(stderr, "--main-prio=<prio>		main thread priority\n");
+        fprintf(stderr, "--print-buffer-size=<bytes>	size of a print relay buffer (16k)\n");
+        fprintf(stderr, "--print-buffer-count=<num>	number of print relay buffers (4)\n");
+        fprintf(stderr, "--print-buffer-syncdelay=<ms>	max delay of output synchronization (100 ms)\n");
 }
 
 static struct setup_descriptor cobalt_interface = {

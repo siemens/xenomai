@@ -28,16 +28,12 @@
 #include <syslog.h>
 #include <boilerplate/atomic.h>
 #include <boilerplate/compiler.h>
+#include <cobalt/tunables.h>
 #include "current.h"
 #include "internal.h"
 
-#define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
 #define RT_PRINT_DEFAULT_BUFFER		16*1024
-
-#define RT_PRINT_PERIOD_ENV		"RT_PRINT_PERIOD"
-#define RT_PRINT_DEFAULT_PERIOD		100 /* ms */
-
-#define RT_PRINT_BUFFERS_COUNT_ENV      "RT_PRINT_BUFFERS_COUNT"
+#define RT_PRINT_DEFAULT_SYNCDELAY	100 /* ms */
 #define RT_PRINT_DEFAULT_BUFFERS_COUNT  4
 
 #define RT_PRINT_LINE_BREAK		256
@@ -74,10 +70,14 @@ struct print_buffer {
 
 __weak int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
 
+__weak int __cobalt_print_bufcount = RT_PRINT_DEFAULT_BUFFERS_COUNT;
+
+__weak unsigned long long __cobalt_print_syncdelay = RT_PRINT_DEFAULT_SYNCDELAY;
+
 static struct print_buffer *first_buffer;
 static int buffers;
 static uint32_t seq_no;
-static struct timespec print_period;
+static struct timespec syncdelay;
 static pthread_mutex_t buffer_lock;
 static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
@@ -641,7 +641,7 @@ static void *printer_loop(void *arg)
 
 		pthread_mutex_unlock(&buffer_lock);
 
-		nanosleep(&print_period, NULL);
+		nanosleep(&syncdelay, NULL);
 	}
 
 	return NULL;
@@ -688,81 +688,45 @@ void cobalt_print_init_atfork(void)
 
 void cobalt_print_init(void)
 {
-	const char *value_str;
-	unsigned long long period;
+	unsigned int i;
 
 	first_buffer = NULL;
 	seq_no = 0;
 
-	value_str = getenv(RT_PRINT_BUFFER_ENV);
-	if (value_str) {
-		errno = 0;
-		__cobalt_print_bufsz = strtol(value_str, NULL, 10);
-		if (errno || __cobalt_print_bufsz < RT_PRINT_LINE_BREAK)
-			early_panic("invalid %s=%s",
-				    RT_PRINT_BUFFER_ENV, value_str);
-	}
-
-	period = RT_PRINT_DEFAULT_PERIOD;
-	value_str = getenv(RT_PRINT_PERIOD_ENV);
-	if (value_str) {
-		errno = 0;
-		period = strtoll(value_str, NULL, 10);
-		if (errno)
-			early_panic("invalid %s=%s",
-				    RT_PRINT_BUFFER_ENV, value_str);
-	}
-	print_period.tv_sec  = period / 1000;
-	print_period.tv_nsec = (period % 1000) * 1000000;
+	syncdelay.tv_sec  = __cobalt_print_syncdelay / 1000ULL;
+	syncdelay.tv_nsec = (__cobalt_print_syncdelay % 1000ULL) * 1000000;
 
 	/* Fill the buffer pool */
-	{
-		unsigned buffers_count, i;
+	pool_bitmap_len = (__cobalt_print_bufcount+__WORDSIZE-1)/__WORDSIZE;
+	if (!pool_bitmap_len)
+		goto done;
 
-		buffers_count = RT_PRINT_DEFAULT_BUFFERS_COUNT;
+	pool_bitmap = malloc(pool_bitmap_len * sizeof(*pool_bitmap));
+	if (!pool_bitmap)
+		early_panic("error allocating print relay buffers");
 
-		value_str = getenv(RT_PRINT_BUFFERS_COUNT_ENV);
-		if (value_str) {
-			errno = 0;
-			buffers_count = strtoul(value_str, NULL, 0);
-			if (errno)
-				early_panic("invalid %s=%s",
-					    RT_PRINT_BUFFERS_COUNT_ENV, value_str);
-		}
+	pool_buf_size = sizeof(struct print_buffer) + __cobalt_print_bufsz;
+	pool_len = __cobalt_print_bufcount * pool_buf_size;
+	pool_start = (unsigned long)malloc(pool_len);
+	if (!pool_start)
+		early_panic("error allocating print relay buffers");
 
-		pool_bitmap_len = (buffers_count + __WORDSIZE - 1)
-			/ __WORDSIZE;
-		if (!pool_bitmap_len)
-			goto done;
+	for (i = 0; i < __cobalt_print_bufcount / __WORDSIZE; i++)
+		atomic_long_set(&pool_bitmap[i], ~0UL);
+	if (__cobalt_print_bufcount % __WORDSIZE)
+		atomic_long_set(&pool_bitmap[i],
+				(1UL << (__cobalt_print_bufcount % __WORDSIZE)) - 1);
 
-		pool_bitmap = malloc(pool_bitmap_len * sizeof(*pool_bitmap));
-		if (!pool_bitmap)
-			early_panic("error allocating printf buffers");
+	for (i = 0; i < __cobalt_print_bufcount; i++) {
+		struct print_buffer *buffer =
+			(struct print_buffer *)
+			(pool_start + i * pool_buf_size);
+		
+		buffer->ring = (char *)(buffer + 1);
 
-		pool_buf_size = sizeof(struct print_buffer) + __cobalt_print_bufsz;
-		pool_len = buffers_count * pool_buf_size;
-		pool_start = (unsigned long)malloc(pool_len);
-		if (!pool_start)
-			early_panic("error allocating printf buffers");
-
-		for (i = 0; i < buffers_count / __WORDSIZE; i++)
-			atomic_long_set(&pool_bitmap[i], ~0UL);
-		if (buffers_count % __WORDSIZE)
-			atomic_long_set(&pool_bitmap[i],
-					(1UL << (buffers_count % __WORDSIZE)) - 1);
-
-		for (i = 0; i < buffers_count; i++) {
-			struct print_buffer *buffer =
-				(struct print_buffer *)
-				(pool_start + i * pool_buf_size);
-
-			buffer->ring = (char *)(buffer + 1);
-
-			rt_print_init_inner(buffer, __cobalt_print_bufsz);
-		}
+		rt_print_init_inner(buffer, __cobalt_print_bufsz);
 	}
-  done:
-
+done:
 	pthread_mutex_init(&buffer_lock, NULL);
 	pthread_key_create(&buffer_key, (void (*)(void*))cleanup_buffer);
 

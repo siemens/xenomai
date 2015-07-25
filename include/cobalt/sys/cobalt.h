@@ -132,10 +132,6 @@ void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
 
 extern int __cobalt_control_bind;
 
-extern int __cobalt_main_prio;
-
-extern int __cobalt_print_bufsz;
-
 #ifdef __cplusplus
 }
 #endif

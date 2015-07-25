@@ -13,6 +13,7 @@ includesub_HEADERS =	\
 	ticks.h		\
 	time.h		\
 	trace.h		\
+	tunables.h	\
 	unistd.h	\
 	wrappers.h
 
