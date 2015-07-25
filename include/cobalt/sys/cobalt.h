@@ -130,8 +130,6 @@ int cobalt_sched_weighted_prio(int policy,
 
 void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
 
-extern int __cobalt_no_shadow;
-
 extern int __cobalt_control_bind;
 
 extern int __cobalt_main_prio;

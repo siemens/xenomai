@@ -44,8 +44,6 @@
  * Single Unix specification</a> over the Cobalt core.
  */
 
-__weak int __cobalt_no_shadow = 0;
-
 __weak int __cobalt_control_bind = 0;
 
 __weak int __cobalt_main_prio = -1;
@@ -54,13 +52,7 @@ struct sigaction __cobalt_orig_sigdebug;
 
 static const struct option cobalt_options[] = {
 	{
-#define no_shadow_opt		0
-		.name = "no-shadow",
-		.flag = &__cobalt_no_shadow,
-		.val = 1
-	},
-	{
-#define main_prio_opt		1
+#define main_prio_opt		0
 		.name = "main-prio",
 		.has_arg = 1,
 	},
@@ -184,7 +176,7 @@ int cobalt_init(void)
 	cobalt_default_condattr_init();
 	__cobalt_init();
 
-	if (__cobalt_no_shadow)
+	if (__cobalt_control_bind)
 		return 0;
 
 	ret = __STD(pthread_getschedparam(ptid, &policy, &parm));
@@ -226,8 +218,6 @@ static int cobalt_parse_option(int optnum, const char *optarg)
 	case main_prio_opt:
 		__cobalt_main_prio = atoi(optarg);
 		break;
-	case no_shadow_opt:
-		break;
 	default:
 		/* Paranoid, can't happen. */
 		return -EINVAL;
@@ -238,7 +228,6 @@ static int cobalt_parse_option(int optnum, const char *optarg)
 
 static void cobalt_help(void)
 {
-        fprintf(stderr, "--no-shadow			do not shadow main thread\n");
         fprintf(stderr, "--main-prio=<prio>		set main thread priority\n");
 }
 

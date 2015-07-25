@@ -25,8 +25,6 @@
 #include <sys/cobalt.h>
 #include <xenomai/init.h>
 
-int __cobalt_no_shadow = 1;
-
 int __cobalt_control_bind = 1;
 
 static int action;
