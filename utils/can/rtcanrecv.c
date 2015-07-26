@@ -5,7 +5,6 @@
 #include <time.h>
 #include <errno.h>
 #include <getopt.h>
-#include <sys/mman.h>
 
 #include <alchemy/task.h>
 
@@ -175,8 +174,6 @@ int main(int argc, char **argv)
 	{ "timestamp-rel", no_argument, 0, 'R'},
 	{ 0, 0, 0, 0},
     };
-
-    mlockall(MCL_CURRENT | MCL_FUTURE);
 
     signal(SIGTERM, cleanup_and_exit);
     signal(SIGINT, cleanup_and_exit);
