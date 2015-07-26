@@ -72,7 +72,7 @@ __weak int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
 
 __weak int __cobalt_print_bufcount = RT_PRINT_DEFAULT_BUFFERS_COUNT;
 
-__weak unsigned long long __cobalt_print_syncdelay = RT_PRINT_DEFAULT_SYNCDELAY;
+__weak int __cobalt_print_syncdelay = RT_PRINT_DEFAULT_SYNCDELAY;
 
 static struct print_buffer *first_buffer;
 static int buffers;
@@ -693,8 +693,8 @@ void cobalt_print_init(void)
 	first_buffer = NULL;
 	seq_no = 0;
 
-	syncdelay.tv_sec  = __cobalt_print_syncdelay / 1000ULL;
-	syncdelay.tv_nsec = (__cobalt_print_syncdelay % 1000ULL) * 1000000;
+	syncdelay.tv_sec  = __cobalt_print_syncdelay / 1000;
+	syncdelay.tv_nsec = (__cobalt_print_syncdelay % 1000) * 1000000;
 
 	/* Fill the buffer pool */
 	pool_bitmap_len = (__cobalt_print_bufcount+__WORDSIZE-1)/__WORDSIZE;

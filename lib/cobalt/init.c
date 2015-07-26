@@ -26,6 +26,7 @@
 #include <getopt.h>
 #include <limits.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <semaphore.h>
 #include <boilerplate/setup.h>
 #include <cobalt/uapi/kernel/heap.h>
@@ -230,16 +231,17 @@ int cobalt_init(void)
 }
 
 static int get_int_arg(const char *name, const char *arg,
-		       unsigned long long *valp)
+		       int *valp, int min)
 {
-	unsigned long long value;
+	int value, ret;
 	char *p;
 	
 	errno = 0;
-	value = strtoll(arg, &p, 10);
-	if (errno || *p) {
+	value = (int)strtol(arg, &p, 10);
+	if (errno || *p || value < min) {
+		ret = -errno ?: -EINVAL;
 		early_warning("invalid value for %s: %s", name, arg);
-		return -errno;
+		return ret;
 	}
 
 	*valp = value;
@@ -249,30 +251,29 @@ static int get_int_arg(const char *name, const char *arg,
 
 static int cobalt_parse_option(int optnum, const char *optarg)
 {
-	unsigned long long value;
-	int ret;
+	int value, ret;
 
 	switch (optnum) {
 	case main_prio_opt:
-		ret = get_int_arg("--main-prio", optarg, &value);
+		ret = get_int_arg("--main-prio", optarg, &value, INT32_MIN);
 		if (ret)
 			return ret;
-		__cobalt_main_prio = (int)value;
+		__cobalt_main_prio = value;
 		break;
 	case print_bufsz_opt:
-		ret = get_int_arg("--print-buffer-size", optarg, &value);
+		ret = get_int_arg("--print-buffer-size", optarg, &value, 0);
 		if (ret)
 			return ret;
-		__cobalt_print_bufsz = (int)value;
+		__cobalt_print_bufsz = value;
 		break;
 	case print_bufcnt_opt:
-		ret = get_int_arg("--print-buffer-count", optarg, &value);
+		ret = get_int_arg("--print-buffer-count", optarg, &value, 0);
 		if (ret)
 			return ret;
-		__cobalt_print_bufcount = (int)value;
+		__cobalt_print_bufcount = value;
 		break;
 	case print_syncdelay_opt:
-		ret = get_int_arg("--print-sync-delay", optarg, &value);
+		ret = get_int_arg("--print-sync-delay", optarg, &value, 0);
 		if (ret)
 			return ret;
 		__cobalt_print_syncdelay = value;

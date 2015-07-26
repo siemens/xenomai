@@ -31,7 +31,7 @@ extern int __cobalt_print_bufsz;
 
 extern int __cobalt_print_bufcount;
 
-extern unsigned long long __cobalt_print_syncdelay;
+extern int __cobalt_print_syncdelay;
 
 static inline define_config_tunable(main_prio, int, prio)
 {
@@ -63,12 +63,12 @@ static inline read_config_tunable(print_buffer_count, int)
 	return __cobalt_print_bufcount;
 }
 
-static inline define_config_tunable(print_sync_delay, unsigned long long, delay)
+static inline define_config_tunable(print_sync_delay, int, delay_ms)
 {
-	__cobalt_print_syncdelay = delay;
+	__cobalt_print_syncdelay = delay_ms;
 }
 
-static inline read_config_tunable(print_sync_delay, unsigned long long)
+static inline read_config_tunable(print_sync_delay, int)
 {
 	return __cobalt_print_syncdelay;
 }
