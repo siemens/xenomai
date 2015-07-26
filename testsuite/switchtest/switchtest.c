@@ -30,7 +30,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/mman.h>
 #include <semaphore.h>
 #include <setjmp.h>
 #include <getopt.h>
@@ -1126,11 +1125,6 @@ int main(int argc, const char *argv[])
 	status = EXIT_SUCCESS;
 
 	/* Initializations. */
-	if (mlockall(MCL_CURRENT|MCL_FUTURE)) {
-		perror("mlockall");
-		exit(EXIT_FAILURE);
-	}
-
 	if (__STD(sem_init(&sleeper_start, 0, 0))) {
 		perror("sem_init");
 		exit(EXIT_FAILURE);
