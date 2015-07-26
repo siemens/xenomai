@@ -30,7 +30,6 @@
 #include <signal.h>
 #include <sched.h>
 #include <time.h>
-#include <sys/mman.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -777,8 +776,6 @@ int main(int argc, char *const *argv)
 	       "== Test mode: %s\n"
 	       "== All results in microseconds\n",
 	       period_ns / 1000, test_mode_names[test_mode]);
-
-	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	if (test_mode != USER_TASK) {
 		benchdev = open("/dev/rtdm/timerbench", O_RDWR);
