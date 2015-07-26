@@ -471,7 +471,7 @@ bootstrap:
 
 	ret = bootstrap_core();
 	if (ret)
-		error(1, -ret, "cannot bootstap core interface");
+		error(1, -ret, "cannot bootstrap core interface");
 
 	__copperplate_setup_data.session_label = session;
 	__copperplate_setup_data.registry_root = rootdir;
@@ -501,6 +501,7 @@ bootstrap:
 int main(int argc, char *const *argv)
 {
 	int lindex, opt, ret, flags = 0;
+	struct sched_param schedp;
 	struct sigaction sa;
 
 	for (;;) {
@@ -532,6 +533,10 @@ int main(int argc, char *const *argv)
 
 	if (rootdir == NULL)
 		error(1, EINVAL, "--root must be given");
+
+	/* Force SCHED_OTHER. */
+	schedp.sched_priority = 0;
+	pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedp);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = SIG_IGN;

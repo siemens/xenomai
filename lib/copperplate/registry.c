@@ -751,6 +751,7 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int flags)
 {
 	struct regfs_data *p = regfs_get_context();
 	pthread_mutexattr_t mattr;
+	struct sched_param schedp;
 	pthread_attr_t thattr;
 	int ret;
 
@@ -768,8 +769,12 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int flags)
 
 	registry_add_dir("/");	/* Create the fs root. */
 
-	/* We want a SCHED_OTHER thread, use defaults. */
+	/* We want a SCHED_OTHER thread. */
 	pthread_attr_init(&thattr);
+	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_setschedpolicy(&thattr, SCHED_OTHER);
+	schedp.sched_priority = 0;
+	pthread_attr_setschedparam(&thattr, &schedp);
 	/*
 	 * Memory is locked as the process data grows, so we set a
 	 * smaller stack size for the fs thread than the default 8mb
