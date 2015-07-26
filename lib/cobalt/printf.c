@@ -68,11 +68,11 @@ struct print_buffer {
 	off_t read_pos;
 };
 
-__weak int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
+int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
 
-__weak int __cobalt_print_bufcount = RT_PRINT_DEFAULT_BUFFERS_COUNT;
+int __cobalt_print_bufcount = RT_PRINT_DEFAULT_BUFFERS_COUNT;
 
-__weak int __cobalt_print_syncdelay = RT_PRINT_DEFAULT_SYNCDELAY;
+int __cobalt_print_syncdelay = RT_PRINT_DEFAULT_SYNCDELAY;
 
 static struct print_buffer *first_buffer;
 static int buffers;

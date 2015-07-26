@@ -48,7 +48,7 @@
 
 __weak int __cobalt_control_bind = 0;
 
-__weak int __cobalt_main_prio = -1;
+int __cobalt_main_prio = -1;
 
 struct sigaction __cobalt_orig_sigdebug;
 
