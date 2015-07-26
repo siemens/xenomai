@@ -81,13 +81,14 @@ static struct timespec syncdelay;
 static pthread_mutex_t buffer_lock;
 static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
+static pthread_key_t cleanup_key;
 static pthread_t printer_thread;
 static atomic_long_t *pool_bitmap;
 static unsigned pool_bitmap_len;
 static unsigned pool_buf_size;
 static unsigned long pool_start, pool_len;
 
-static void cleanup_buffer(struct print_buffer *buffer);
+static void release_buffer(struct print_buffer *buffer);
 static void print_buffers(void);
 
 /* *** rt_print API *** */
@@ -408,7 +409,7 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 			set_buffer_name(buffer, buffer_name);
 			return 0;
 		}
-		cleanup_buffer(buffer);
+		release_buffer(buffer);
 		buffer = NULL;
 	}
 
@@ -461,23 +462,6 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 	return 0;
 }
 
-void rt_print_cleanup(void)
-{
-	struct print_buffer *buffer = pthread_getspecific(buffer_key);
-
-	if (buffer)
-		cleanup_buffer(buffer);
-	else {
-		pthread_mutex_lock(&buffer_lock);
-
-		print_buffers();
-
-		pthread_mutex_unlock(&buffer_lock);
-	}
-
-	pthread_cancel(printer_thread);
-}
-
 const char *rt_print_buffer_name(void)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
@@ -503,9 +487,11 @@ void rt_print_flush_buffers(void)
 	pthread_mutex_unlock(&buffer_lock);
 }
 
-static void cleanup_buffer(struct print_buffer *buffer)
+static void release_buffer(struct print_buffer *buffer)
 {
 	struct print_buffer *prev, *next;
+	unsigned long old_bitmap, bitmap;
+	unsigned int i, j;
 
 	assert_nrt();
 
@@ -518,29 +504,23 @@ static void cleanup_buffer(struct print_buffer *buffer)
 	pthread_mutex_unlock(&buffer_lock);
 
 	/* Return the buffer to the pool */
-	{
-		unsigned long old_bitmap, bitmap;
-		unsigned i, j;
+	if ((unsigned long)buffer - pool_start >= pool_len)
+		goto dofree;
 
-		if ((unsigned long)buffer - pool_start >= pool_len)
-			goto dofree;
+	j = ((unsigned long)buffer - pool_start) / pool_buf_size;
+	i = j / __WORDSIZE;
+	j = j % __WORDSIZE;
 
-		j = ((unsigned long)buffer - pool_start) / pool_buf_size;
-		i = j / __WORDSIZE;
-		j = j % __WORDSIZE;
+	old_bitmap = atomic_long_read(&pool_bitmap[i]);
+	do {
+		bitmap = old_bitmap;
+		old_bitmap = atomic_cmpxchg(&pool_bitmap[i],
+					    bitmap,
+					    bitmap | (1UL << j));
+	} while (old_bitmap != bitmap);
 
-		old_bitmap = atomic_long_read(&pool_bitmap[i]);
-		do {
-			bitmap = old_bitmap;
-			old_bitmap = atomic_cmpxchg(&pool_bitmap[i],
-						    bitmap,
-						    bitmap | (1UL << j));
-		} while (old_bitmap != bitmap);
-
-		return;
-	}
-  dofree:
-
+	return;
+dofree:
 	pthread_mutex_lock(&buffer_lock);
 
 	prev = buffer->prev;
@@ -559,6 +539,16 @@ static void cleanup_buffer(struct print_buffer *buffer)
 
 	free(buffer->ring);
 	free(buffer);
+}
+
+static void do_cleanup(void *arg)
+{
+	struct print_buffer *buffer = pthread_getspecific(buffer_key);
+
+	if (buffer)
+		release_buffer(buffer);
+
+	pthread_cancel(printer_thread);
 }
 
 static inline uint32_t get_next_seq_no(struct print_buffer *buffer)
@@ -651,7 +641,7 @@ static void spawn_printer_thread(void)
 {
 	pthread_attr_t thattr;
 
-	__COBALT(pthread_attr_init)(&thattr);
+	pthread_attr_init(&thattr);
 	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
 }
 
@@ -676,11 +666,11 @@ void cobalt_print_init_atfork(void)
 		if (*pbuffer == my_buffer)
 			pbuffer = &(*pbuffer)->next;
 		else if ((unsigned long)*pbuffer - pool_start < pool_len) {
-			cleanup_buffer(*pbuffer);
+			release_buffer(*pbuffer);
 			pbuffer = &(*pbuffer)->next;
 		}
 		else
-			cleanup_buffer(*pbuffer);
+			release_buffer(*pbuffer);
 	}
 
 	spawn_printer_thread();
@@ -728,11 +718,12 @@ void cobalt_print_init(void)
 	}
 done:
 	pthread_mutex_init(&buffer_lock, NULL);
-	pthread_key_create(&buffer_key, (void (*)(void*))cleanup_buffer);
-
+	pthread_key_create(&buffer_key, (void (*)(void*))release_buffer);
+	pthread_key_create(&cleanup_key, do_cleanup);
 	pthread_cond_init(&printer_wakeup, NULL);
-
 	spawn_printer_thread();
+	/* We just need a non-zero TSD to trigger the dtor upon unwinding. */
+	pthread_setspecific(cleanup_key, (void *)1);
 
 	atexit(rt_print_flush_buffers);
 }

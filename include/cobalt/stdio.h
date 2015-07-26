@@ -108,8 +108,6 @@ void rt_vsyslog(int priority, const char *format, va_list args);
 
 int rt_print_init(size_t buffer_size, const char *name);
 
-void rt_print_cleanup(void);
-
 const char *rt_print_buffer_name(void);
 
 void rt_print_flush_buffers(void);
