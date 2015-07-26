@@ -423,10 +423,6 @@ int main(int argc, char *argv[])
 	struct arguments args = {.argc = argc, .argv = argv};
 	int ret;
 
-	ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-	if (ret < 0)
-		exit_err("mlockall error (ret=%d)", errno);
-
 	ret = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	if (ret)
 		exit_err("pthread_setschedparam failed (ret=0x%x) ", ret);
