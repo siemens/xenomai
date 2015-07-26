@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc5</span>
+   &#160;<span id="projectnumber">3.0-rc6</span>
    </div>
   </td>
  </tr>
@@ -201,8 +201,8 @@ $(document).ready(function(){initNavTree('rtdm_2uapi_2rtdm_8h_source.html','');}
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="comment">/* Internally used for mmap() */</span></div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="keyword">struct </span>_rtdm_mmap_request {</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        <span class="keywordtype">size_t</span> length;</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        off_t offset;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        __u64 offset;</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        <span class="keywordtype">size_t</span> length;</div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;        <span class="keywordtype">int</span> prot;</div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        <span class="keywordtype">int</span> flags;</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;};</div>

@@ -1460,9 +1460,6 @@ services are used internally (i.e. pthread_set/getspecific()).</p></div>
 </p>
 <div class="paragraph"><p>To support dynamic loading when <code>--enable-tls</code> is turned on,
 the <em>global-dynamic</em> TLS model is automatically selected.</p></div>
-<div class="paragraph"><p>Applications loading <code>libcobalt.so</code> dynamically may want to
-create the XENO_NOSHADOW environment variable prior to calling
-<code>dlopen()</code>, to prevent auto-shadowing of the calling context.</p></div>
 <div class="paragraph"><p>Dynamic loading of Xenomai-based libraries is disabled by
 default.</p></div>
 </dd>
@@ -2026,7 +2023,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-23 15:36:01 CEST
+Last updated 2015-07-26 18:21:49 CEST
 </div>
 </div>
 </body>

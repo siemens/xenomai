@@ -578,11 +578,6 @@ does exist on the target kernel.
 	the _global-dynamic_ TLS model is automatically selected.
 
 [normal]
-	Applications loading `libcobalt.so` dynamically may want to
-	create the XENO_NOSHADOW environment variable prior to calling
-	`dlopen()`, to prevent auto-shadowing of the calling context.
-
-[normal]
 	Dynamic loading of Xenomai-based libraries is disabled by
 	default.
 

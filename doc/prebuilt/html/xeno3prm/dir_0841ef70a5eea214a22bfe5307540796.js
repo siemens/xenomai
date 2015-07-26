@@ -17,6 +17,7 @@ var dir_0841ef70a5eea214a22bfe5307540796 =
     [ "ticks.h", "ticks_8h_source.html", null ],
     [ "time.h", "cobalt_2time_8h_source.html", null ],
     [ "trace.h", "cobalt_2trace_8h_source.html", null ],
+    [ "tunables.h", "cobalt_2tunables_8h_source.html", null ],
     [ "unistd.h", "unistd_8h_source.html", null ],
     [ "wrappers.h", "include_2cobalt_2wrappers_8h_source.html", null ]
 ];

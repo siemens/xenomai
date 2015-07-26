@@ -1,5 +1,6 @@
 var NAVTREEINDEX7 =
 {
+"kernel_2cobalt_2arch_2x86_2include_2asm_2xenomai_2calibration_8h_source.html":[4,0,1,0,0,5,0,0,0,2],
 "kernel_2cobalt_2arch_2x86_2include_2asm_2xenomai_2features_8h_source.html":[4,0,1,0,0,5,0,0,0,3],
 "kernel_2cobalt_2arch_2x86_2include_2asm_2xenomai_2syscall_8h_source.html":[4,0,1,0,0,5,0,0,0,7],
 "kernel_2cobalt_2arch_2x86_2include_2asm_2xenomai_2thread_8h_source.html":[4,0,1,0,0,5,0,0,0,10],
@@ -248,6 +249,5 @@ var NAVTREEINDEX7 =
 "stdio_8h_source.html":[4,0,0,2,11],
 "stdlib_8h_source.html":[4,0,0,2,12],
 "structRT__ALARM__INFO.html":[2,3,0,0],
-"structRT__ALARM__INFO.html#a6d49da2aa84fe76b1099a47ad286415a":[2,3,0,0,2],
-"structRT__ALARM__INFO.html#a9f793d6a1ccdb6e4172c153821c11865":[2,3,0,0,1]
+"structRT__ALARM__INFO.html#a6d49da2aa84fe76b1099a47ad286415a":[2,3,0,0,2]
 };

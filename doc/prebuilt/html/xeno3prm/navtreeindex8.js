@@ -1,5 +1,6 @@
 var NAVTREEINDEX8 =
 {
+"structRT__ALARM__INFO.html#a9f793d6a1ccdb6e4172c153821c11865":[2,3,0,0,1],
 "structRT__ALARM__INFO.html#af0a45680476596e86488276a0bb624ae":[2,3,0,0,0],
 "structRT__BUFFER__INFO.html":[2,3,1,0],
 "structRT__BUFFER__INFO.html#a580872155787341161835de44f66e65e":[2,3,1,0,3],
@@ -248,6 +249,5 @@ var NAVTREEINDEX8 =
 "structxnsched.html#ac9262f830ab6073df75a6f22e905556d":[2,1,0,10,1,3],
 "structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48":[2,1,0,10,1,8],
 "structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236":[2,1,0,10,1,2],
-"structxnsched.html#afacfa3137dcabf83d2351fa27407164d":[2,1,0,10,1,4],
-"structxnsched.html#afd2e6c15e470a38b385930c613856e7b":[2,1,0,10,1,1]
+"structxnsched.html#afacfa3137dcabf83d2351fa27407164d":[2,1,0,10,1,4]
 };

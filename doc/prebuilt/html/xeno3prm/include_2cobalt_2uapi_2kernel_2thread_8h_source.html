@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc5</span>
+   &#160;<span id="projectnumber">3.0-rc6</span>
    </div>
   </td>
  </tr>
@@ -116,7 +116,7 @@ $(document).ready(function(){initNavTree('include_2cobalt_2uapi_2kernel_2thread_
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;cobalt/uapi/kernel/types.h&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">/* State flags */</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">/* State flags (shared) */</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
 <div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga6b605ad2bb16ae2386821be8ce8d341b">   32</a></span>&#160;<span class="preprocessor">#define XNSUSP    0x00000001 </span></div>
 <div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga153b45ee5ddcc4da154ca8a018ac1871">   33</a></span>&#160;<span class="preprocessor">#define XNPEND    0x00000002 </span></div>
@@ -128,57 +128,59 @@ $(document).ready(function(){initNavTree('include_2cobalt_2uapi_2kernel_2thread_
 <div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gadf5508cd88c2678ae01dfaf5570c661c">   39</a></span>&#160;<span class="preprocessor">#define XNRELAX   0x00000080 </span></div>
 <div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gae9aeb1b75ad94bca4f56f57481ffc309">   40</a></span>&#160;<span class="preprocessor">#define XNMIGRATE 0x00000100 </span></div>
 <div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga9394cc02e730535e3dd8b0aabb08ea86">   41</a></span>&#160;<span class="preprocessor">#define XNHELD    0x00000200 </span></div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gaca3bcd5615c7331c73c3eadddb3d1b89">   43</a></span>&#160;<span class="preprocessor">#define XNBOOST   0x00000400 </span></div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gaa44db9c525cd4e87eaced36ea47a6cf3">   44</a></span>&#160;<span class="preprocessor">#define XNSSTEP   0x00000800 </span></div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga2defcfb1f04f077baeac9881cbdda627">   45</a></span>&#160;<span class="preprocessor">#define XNLOCK    0x00001000 </span></div>
-<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga6f451131910f816dd01fe1ec1fb50fe9">   46</a></span>&#160;<span class="preprocessor">#define XNRRB     0x00002000 </span></div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482">   47</a></span>&#160;<span class="preprocessor">#define XNWARN    0x00004000 </span></div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga6b2ca9336a15f94f3a2e0665982ed081">   48</a></span>&#160;<span class="preprocessor">#define XNFPU     0x00008000 </span></div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga73d7b1a4f5a25545ff21140a0598075a">   49</a></span>&#160;<span class="preprocessor">#define XNROOT    0x00010000 </span></div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">   50</a></span>&#160;<span class="preprocessor">#define XNWEAK    0x00020000 </span></div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">   51</a></span>&#160;<span class="preprocessor">#define XNUSER    0x00040000 </span></div>
-<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gaaae7bc444a180ad0672bf710801d0275">   52</a></span>&#160;<span class="preprocessor">#define XNJOINED  0x00080000 </span></div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gad5651b09bfb391a0ac94f7d81c2e05f1">   53</a></span>&#160;<span class="preprocessor">#define XNTRAPLB  0x00100000 </span></div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">   54</a></span>&#160;<span class="preprocessor">#define XNDEBUG   0x00200000 </span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor"></span><span class="comment">/* Information flags */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gaa11d7fc754db50d3a1f1e41611d324e9">   67</a></span>&#160;<span class="preprocessor">#define XNTIMEO   0x00000001 </span></div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40">   68</a></span>&#160;<span class="preprocessor">#define XNRMID    0x00000002 </span></div>
-<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">   69</a></span>&#160;<span class="preprocessor">#define XNBREAK   0x00000004 </span></div>
-<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gab6ee242aa7e0f98235c5099cd345984c">   70</a></span>&#160;<span class="preprocessor">#define XNKICKED  0x00000008 </span></div>
-<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga53e49fa49b312e5266b31d66f7465d44">   71</a></span>&#160;<span class="preprocessor">#define XNWAKEN   0x00000010 </span></div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gad28db508d297929d6a0ec30964639d65">   72</a></span>&#160;<span class="preprocessor">#define XNROBBED  0x00000020 </span></div>
-<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">   73</a></span>&#160;<span class="preprocessor">#define XNCANCELD 0x00000040 </span></div>
-<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga2cb10fa1e4e888e3e23798b42deb1608">   74</a></span>&#160;<span class="preprocessor">#define XNMOVED   0x00000080 </span></div>
-<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gab657db6c8e6a0444a27104bc983da285">   75</a></span>&#160;<span class="preprocessor">#define XNPIALERT 0x00001000 </span></div>
-<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gac9a2238978202123c8f045d1529c59a2">   76</a></span>&#160;<span class="preprocessor">#define XNLBALERT 0x00002000 </span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor"></span><span class="comment">/*</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment"> * Must follow strictly the declaration order of the state flags</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment"> * defined above. Status symbols are defined as follows:</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment"> * &#39;S&#39; -&gt; Forcibly suspended.</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="comment"> * &#39;w&#39;/&#39;W&#39; -&gt; Waiting for a resource, with or without timeout.</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment"> * &#39;D&#39; -&gt; Delayed (without any other wait condition).</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment"> * &#39;R&#39; -&gt; Runnable.</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment"> * &#39;U&#39; -&gt; Unstarted or dormant.</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment"> * &#39;X&#39; -&gt; Relaxed shadow.</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="comment"> * &#39;H&#39; -&gt; Held in emergency.</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment"> * &#39;b&#39; -&gt; Priority boost undergoing.</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment"> * &#39;T&#39; -&gt; Ptraced and stopped.</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment"> * &#39;l&#39; -&gt; Locks scheduler.</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment"> * &#39;r&#39; -&gt; Undergoes round-robin.</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment"> * &#39;t&#39; -&gt; Mode switches trapped.</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment"> * &#39;L&#39; -&gt; Lock breaks trapped.</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment"> */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#define XNTHREAD_STATE_LABELS  &quot;SWDRU..X.HbTlrt.....L&quot;</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="keyword">struct </span>xnthread_user_window {</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        __u32 state;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        __u32 info;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        __u32 grant_value;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;};</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_UAPI_KERNEL_THREAD_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gaca3bcd5615c7331c73c3eadddb3d1b89">   42</a></span>&#160;<span class="preprocessor">#define XNBOOST   0x00000400 </span></div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gaa44db9c525cd4e87eaced36ea47a6cf3">   43</a></span>&#160;<span class="preprocessor">#define XNSSTEP   0x00000800 </span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga2defcfb1f04f077baeac9881cbdda627">   44</a></span>&#160;<span class="preprocessor">#define XNLOCK    0x00001000 </span></div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga6f451131910f816dd01fe1ec1fb50fe9">   45</a></span>&#160;<span class="preprocessor">#define XNRRB     0x00002000 </span></div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482">   46</a></span>&#160;<span class="preprocessor">#define XNWARN    0x00004000 </span></div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga6b2ca9336a15f94f3a2e0665982ed081">   47</a></span>&#160;<span class="preprocessor">#define XNFPU     0x00008000 </span></div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga73d7b1a4f5a25545ff21140a0598075a">   48</a></span>&#160;<span class="preprocessor">#define XNROOT    0x00010000 </span></div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">   49</a></span>&#160;<span class="preprocessor">#define XNWEAK    0x00020000 </span></div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">   50</a></span>&#160;<span class="preprocessor">#define XNUSER    0x00040000 </span></div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gaaae7bc444a180ad0672bf710801d0275">   51</a></span>&#160;<span class="preprocessor">#define XNJOINED  0x00080000 </span></div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#gad5651b09bfb391a0ac94f7d81c2e05f1">   52</a></span>&#160;<span class="preprocessor">#define XNTRAPLB  0x00100000 </span></div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__states.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">   53</a></span>&#160;<span class="preprocessor">#define XNDEBUG   0x00200000 </span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor"></span><span class="comment">/* Information flags (shared) */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gaa11d7fc754db50d3a1f1e41611d324e9">   66</a></span>&#160;<span class="preprocessor">#define XNTIMEO   0x00000001 </span></div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40">   67</a></span>&#160;<span class="preprocessor">#define XNRMID    0x00000002 </span></div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">   68</a></span>&#160;<span class="preprocessor">#define XNBREAK   0x00000004 </span></div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gab6ee242aa7e0f98235c5099cd345984c">   69</a></span>&#160;<span class="preprocessor">#define XNKICKED  0x00000008 </span></div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga53e49fa49b312e5266b31d66f7465d44">   70</a></span>&#160;<span class="preprocessor">#define XNWAKEN   0x00000010 </span></div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gad28db508d297929d6a0ec30964639d65">   71</a></span>&#160;<span class="preprocessor">#define XNROBBED  0x00000020 </span></div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">   72</a></span>&#160;<span class="preprocessor">#define XNCANCELD 0x00000040 </span></div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gab657db6c8e6a0444a27104bc983da285">   73</a></span>&#160;<span class="preprocessor">#define XNPIALERT 0x00000080 </span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor"></span><span class="comment">/* Local information flags (private to current thread) */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga2cb10fa1e4e888e3e23798b42deb1608">   77</a></span>&#160;<span class="preprocessor">#define XNMOVED   0x00000001 </span></div>
+<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gac9a2238978202123c8f045d1529c59a2">   78</a></span>&#160;<span class="preprocessor">#define XNLBALERT 0x00000002 </span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor"></span><span class="comment">/*</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment"> * Must follow strictly the declaration order of the state flags</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment"> * defined above. Status symbols are defined as follows:</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment"> * &#39;S&#39; -&gt; Forcibly suspended.</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment"> * &#39;w&#39;/&#39;W&#39; -&gt; Waiting for a resource, with or without timeout.</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment"> * &#39;D&#39; -&gt; Delayed (without any other wait condition).</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment"> * &#39;R&#39; -&gt; Runnable.</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="comment"> * &#39;U&#39; -&gt; Unstarted or dormant.</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment"> * &#39;X&#39; -&gt; Relaxed shadow.</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment"> * &#39;H&#39; -&gt; Held in emergency.</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment"> * &#39;b&#39; -&gt; Priority boost undergoing.</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment"> * &#39;T&#39; -&gt; Ptraced and stopped.</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment"> * &#39;l&#39; -&gt; Locks scheduler.</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment"> * &#39;r&#39; -&gt; Undergoes round-robin.</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment"> * &#39;t&#39; -&gt; Runtime mode errors notified.</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment"> * &#39;L&#39; -&gt; Lock breaks trapped.</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="comment"> */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#define XNTHREAD_STATE_LABELS  &quot;SWDRU..X.HbTlrt.....L.&quot;</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keyword">struct </span>xnthread_user_window {</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        __u32 state;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        __u32 info;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        __u32 grant_value;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;};</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_UAPI_KERNEL_THREAD_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -12,7 +12,7 @@ var group__cobalt__core__thread =
     [ "xnthread_migrate", "group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9", null ],
     [ "xnthread_relax", "group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83", null ],
     [ "xnthread_resume", "group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115", null ],
-    [ "xnthread_set_mode", "group__cobalt__core__thread.html#ga3ccfd7f396c40448c41a451fc06391eb", null ],
+    [ "xnthread_set_mode", "group__cobalt__core__thread.html#ga3c57e5332785644f1dc0c95ad2ee5097", null ],
     [ "xnthread_set_periodic", "group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804", null ],
     [ "xnthread_set_schedparam", "group__cobalt__core__thread.html#gafb78d40c8065b8569fafe7e24960742e", null ],
     [ "xnthread_set_slice", "group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c", null ],

@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc5</span>
+   &#160;<span id="projectnumber">3.0-rc6</span>
    </div>
   </td>
  </tr>
@@ -143,15 +143,16 @@ $(document).ready(function(){initNavTree('assert_8h_source.html','');});
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">#define interrupt_only()        XENO_BUG_ON(CONTEXT, !xnsched_interrupt_p())</span></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">#define realtime_cpu_only()     XENO_BUG_ON(CONTEXT, !xnsched_supported_cpu(ipipe_processor_id()))</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">#define thread_only()           XENO_BUG_ON(CONTEXT, xnsched_interrupt_p())</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#if XENO_DEBUG(LOCKING)</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#define atomic_only()           XENO_BUG_ON(CONTEXT, (xnlock_is_owner(&amp;nklock) &amp;&amp; hard_irqs_disabled()) == 0)</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#define preemptible_only()      XENO_BUG_ON(CONTEXT, xnlock_is_owner(&amp;nklock) || hard_irqs_disabled())</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#define atomic_only()           XENO_BUG_ON(CONTEXT, hard_irqs_disabled() == 0)</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#define preemptible_only()      XENO_BUG_ON(CONTEXT, hard_irqs_disabled() != 0)</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_ASSERT_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#define irqoff_only()           XENO_BUG_ON(CONTEXT, hard_irqs_disabled() == 0)</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#if XENO_DEBUG(LOCKING)</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#define atomic_only()           XENO_BUG_ON(CONTEXT, (xnlock_is_owner(&amp;nklock) &amp;&amp; hard_irqs_disabled()) == 0)</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#define preemptible_only()      XENO_BUG_ON(CONTEXT, xnlock_is_owner(&amp;nklock) || hard_irqs_disabled())</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#define atomic_only()           XENO_BUG_ON(CONTEXT, hard_irqs_disabled() == 0)</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#define preemptible_only()      XENO_BUG_ON(CONTEXT, hard_irqs_disabled() != 0)</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_ASSERT_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

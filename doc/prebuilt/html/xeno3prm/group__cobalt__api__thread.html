@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc5</span>
+   &#160;<span id="projectnumber">3.0-rc6</span>
    </div>
   </td>
  </tr>
@@ -318,29 +318,39 @@ an error number if:<ul>
 </div><div class="memdoc">
 
 <p>Set the mode of the current thread. </p>
-<p>This service sets the mode of the calling thread. <em>clrmask</em> and <em>setmask</em> are two bit masks which are respectively cleared and set in the calling thread status. They are a bitwise OR of the following values:</p><ul>
-<li>PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the current thread from being switched out until the scheduler is unlocked;</li>
-<li>PTHREAD_WARNSW, when set, causes the signal SIGDEBUG to be sent to the current thread, whenever it involontary switches to secondary mode;</li>
-<li>PTHREAD_CONFORMING can be passed in <em>setmask</em> to switch the current user-space task to its preferred runtime mode. The only meaningful use of this switch is to force a real-time shadow back to primary mode. Any other use leads to a nop.</li>
-<li>PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler lock. In the default case, a thread which holds the scheduler lock is allowed to drop it temporarily for sleeping. If this mode bit is set, such thread would return with EINTR immediately from any blocking call.</li>
+<p>This service sets the mode of the calling thread, which affects its behavior under particular circumstances. <em>clrmask</em> and <em>setmask</em> are two masks of mode bits which are respectively cleared and set by <a class="el" href="group__cobalt__api__thread.html#gae3b7df7f77c04253ed19fb6346f0f9b2" title="Set the mode of the current thread. ">pthread_setmode_np()</a>:</p>
+<ul>
+<li>PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the current thread from being switched out until the scheduler is unlocked. Unless PTHREAD_DISABLE_LOCKBREAK is also set, the thread may still block, dropping the lock temporarily, in which case, the lock will be reacquired automatically when the thread resumes execution. When PTHREAD_LOCK_SCHED is cleared, the current thread drops the scheduler lock, and the rescheduling procedure is initiated.</li>
+<li>When set, PTHREAD_WARNSW enables debugging notifications for the current thread. A SIGDEBUG (Linux-originated) signal is sent when the following atypical or abnormal behavior is detected:<ul>
+<li>the current thread switches to secondary mode. Such notification comes in handy for detecting spurious relaxes, with one of the following reason codes:<ul>
+<li>SIGDEBUG_MIGRATE_SYSCALL, if the thread issued a regular Linux system call.</li>
+<li>SIGDEBUG_MIGRATE_SIGNAL, if the thread had to leave real-time mode for handling a Linux signal.</li>
+<li>SIGDEBUG_MIGRATE_FAULT, if the thread had to leave real-time mode for handling a processor fault/exception.</li>
 </ul>
-<p>PTHREAD_LOCK_SCHED and PTHREAD_DISABLE_LOCKBREAK are valid for any Xenomai thread, other bits are valid for Xenomai user-space threads only.</p>
+</li>
+<li>the current thread is sleeping on a Cobalt mutex currently owned by a thread running in secondary mode, which reveals a priority inversion. In such an event, the reason code passed to the signal handler will be SIGDEBUG_MIGRATE_PRIOINV.</li>
+<li>the current thread is about to sleep while holding a Cobalt mutex, and CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP is enabled in the kernel configuration. In such an event, the reason code passed to the signal handler will be SIGDEBUG_MUTEX_SLEEP. Blocking for acquiring a mutex does not trigger such signal though.</li>
+<li>the current thread has enabled PTHREAD_DISABLE_LOCKBREAK and PTHREAD_LOCK_SCHED, then attempts to block on a Cobalt service, which would cause a lock break. In such an event, the reason code passed to the signal handler will be SIGDEBUG_LOCK_BREAK.</li>
+</ul>
+</li>
+<li>PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler lock. Normally, the scheduler lock is dropped implicitly when the current owner blocks, then reacquired automatically when the owner resumes execution. If PTHREAD_DISABLE_LOCKBREAK is set, the scheduler lock owner would return with EINTR immediately from any blocking call instead (see PTHREAD_WARNSW notifications).</li>
+<li>PTHREAD_CONFORMING can be passed in <em>setmask</em> to switch the current user-space task to its preferred runtime mode. The only meaningful use of this switch is to force a real-time thread back to primary mode eagerly. Other usages have no effect.</li>
+</ul>
 <p>This service is a non-portable extension of the POSIX interface.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">clrmask</td><td>set of bits to be cleared;</td></tr>
+    <tr><td class="paramname">clrmask</td><td>set of bits to be cleared.</td></tr>
     <tr><td class="paramname">setmask</td><td>set of bits to be set.</td></tr>
     <tr><td class="paramname">mode_r</td><td>If non-NULL, <em>mode_r</em> must be a pointer to a memory location which will be written upon success with the previous set of active mode bits. If NULL, the previous set of active mode bits will not be returned.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
-<dd>
-an error number if:<ul>
+<dl class="section return"><dt>Returns</dt><dd>0 on success, otherwise:</dd></dl>
+<ul>
 <li>EINVAL, some bit in <em>clrmask</em> or <em>setmask</em> is invalid.</li>
 </ul>
-</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>Setting <em>clrmask</em> and <em>setmask</em> to zero leads to a nop, only returning the previous mode if <em>mode_r</em> is a valid address. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Setting <em>clrmask</em> and <em>setmask</em> to zero leads to a nop, only returning the previous mode if <em>mode_r</em> is a valid address.</dd></dl>
+<p>Issuing PTHREAD_CONFORMING is most likely useless or even introduces pure overhead in regular applications, since the Cobalt kernel performs the necessary mode switches, only when required. </p>
 
 </div>
 </div>

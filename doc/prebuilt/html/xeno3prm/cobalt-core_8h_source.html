@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc5</span>
+   &#160;<span id="projectnumber">3.0-rc6</span>
    </div>
   </td>
  </tr>
@@ -347,7 +347,7 @@ $(document).ready(function(){initNavTree('cobalt-core_8h_source.html','');});
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;                __entry-&gt;wchan = wchan;</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        ),</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        TP_printk(<span class="stringliteral">&quot;thread=%p mask=%lu timeout=%Lu timeout_mode=%d wchan=%p&quot;</span>,</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        TP_printk(<span class="stringliteral">&quot;thread=%p mask=0x%lx timeout=%Lu timeout_mode=%d wchan=%p&quot;</span>,</div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;                  __entry-&gt;thread, __entry-&gt;mask,</div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;                  __entry-&gt;timeout, __entry-&gt;timeout_mode, __entry-&gt;wchan)</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;);</div>
@@ -709,8 +709,8 @@ $(document).ready(function(){initNavTree('cobalt-core_8h_source.html','');});
 <div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;</div>
 <div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="comment">/* This part must be outside protection */</span></div>
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="preprocessor">#include &lt;trace/define_trace.h&gt;</span></div>
-<div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:58</div></div>
-<div class="ttc" id="structxnsched_html_ad132581bc8d5df9af99f5ab7b1cadd48"><div class="ttname"><a href="structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48">xnsched::status</a></div><div class="ttdeci">unsigned long status</div><div class="ttdef"><b>Definition:</b> sched.h:60</div></div>
+<div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:57</div></div>
+<div class="ttc" id="structxnsched_html_ad132581bc8d5df9af99f5ab7b1cadd48"><div class="ttname"><a href="structxnsched.html#ad132581bc8d5df9af99f5ab7b1cadd48">xnsched::status</a></div><div class="ttdeci">unsigned long status</div><div class="ttdef"><b>Definition:</b> sched.h:59</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

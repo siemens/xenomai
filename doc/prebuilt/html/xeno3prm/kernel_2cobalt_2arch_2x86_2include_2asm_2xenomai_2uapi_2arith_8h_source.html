@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc5</span>
+   &#160;<span id="projectnumber">3.0-rc6</span>
    </div>
   </td>
  </tr>
@@ -194,7 +194,7 @@ $(document).ready(function(){initNavTree('kernel_2cobalt_2arch_2x86_2include_2as
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="preprocessor">                &quot;mov  %[__s],%%ecx\n\t&quot;                                 \</span></div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">                &quot;shrd %%cl,%%edx,%%eax\n\t&quot;                             \</span></div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">                &quot;shrd %%cl,%[__hi],%%edx\n\t&quot;                           \</span></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">                : &quot;=A&quot; (__ret), [__lo] &quot;=r&quot; (__lo), [__hi] &quot;=r&quot; (__hi)  \</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">                : &quot;=A&quot; (__ret), [__lo] &quot;=&amp;r&quot; (__lo), [__hi] &quot;=&amp;r&quot; (__hi) \</span></div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">                : &quot;A&quot; (ll), [__m] &quot;m&quot; (m), [__s] &quot;m&quot; (s)                \</span></div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor">                : &quot;ecx&quot;);                                               \</span></div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">        __ret;                                                          \</span></div>

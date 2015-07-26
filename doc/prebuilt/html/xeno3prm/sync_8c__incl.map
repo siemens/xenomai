@@ -1,24 +1,24 @@
 <map id="lib/analogy/sync.c" name="lib/analogy/sync.c">
-<area shape="rect" id="node4" href="$analogy_8h.html" title="Analogy for Linux, library facilities. " alt="" coords="595,80,703,107"/>
-<area shape="rect" id="node27" href="$lib_2analogy_2internal_8h.html" title="Analogy for Linux, internal declarations. " alt="" coords="1444,80,1519,107"/>
-<area shape="rect" id="node5" href="$stdio_8h_source.html" title="stdio.h" alt="" coords="613,237,675,263"/>
-<area shape="rect" id="node10" href="$uapi_2analogy_8h.html" title="Analogy for Linux, UAPI bits. " alt="" coords="425,155,561,181"/>
-<area shape="rect" id="node11" href="$boilerplate_2list_8h_source.html" title="boilerplate/list.h" alt="" coords="778,155,891,181"/>
-<area shape="rect" id="node8" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="1755,319,1880,345"/>
-<area shape="rect" id="node12" href="$assert_8h_source.html" title="assert.h" alt="" coords="281,237,351,263"/>
-<area shape="rect" id="node22" href="$scope_8h_source.html" title="boilerplate/scope.h" alt="" coords="996,237,1127,263"/>
-<area shape="rect" id="node24" href="$compiler_8h_source.html" title="boilerplate/compiler.h" alt="" coords="1151,237,1297,263"/>
-<area shape="rect" id="node25" href="$shared-list_8h_source.html" title="boilerplate/shared\l&#45;list.h" alt="" coords="847,229,971,271"/>
-<area shape="rect" id="node26" href="$private-list_8h_source.html" title="boilerplate/private\l&#45;list.h" alt="" coords="699,229,823,271"/>
-<area shape="rect" id="node14" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="246,319,386,345"/>
-<area shape="rect" id="node18" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="411,319,581,345"/>
-<area shape="rect" id="node17" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="277,393,401,435"/>
-<area shape="rect" id="node21" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="669,393,793,435"/>
-<area shape="rect" id="node28" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="1579,155,1669,181"/>
-<area shape="rect" id="node29" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="1651,237,1709,263"/>
-<area shape="rect" id="node30" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="1734,237,1802,263"/>
-<area shape="rect" id="node31" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="1827,237,1909,263"/>
-<area shape="rect" id="node32" href="$socket_8h_source.html" title="sys/socket.h" alt="" coords="1934,237,2031,263"/>
-<area shape="rect" id="node33" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="2056,237,2205,263"/>
-<area shape="rect" id="node34" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="1509,237,1627,263"/>
+<area shape="rect" id="node4" href="$analogy_8h.html" title="Analogy for Linux, library facilities. " alt="" coords="1038,80,1146,107"/>
+<area shape="rect" id="node27" href="$lib_2analogy_2internal_8h.html" title="Analogy for Linux, internal declarations. " alt="" coords="1440,80,1515,107"/>
+<area shape="rect" id="node5" href="$stdio_8h_source.html" title="stdio.h" alt="" coords="515,237,576,263"/>
+<area shape="rect" id="node10" href="$uapi_2analogy_8h.html" title="Analogy for Linux, UAPI bits. " alt="" coords="1024,155,1160,181"/>
+<area shape="rect" id="node11" href="$boilerplate_2list_8h_source.html" title="boilerplate/list.h" alt="" coords="813,155,926,181"/>
+<area shape="rect" id="node8" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="1721,319,1847,345"/>
+<area shape="rect" id="node12" href="$assert_8h_source.html" title="assert.h" alt="" coords="287,237,356,263"/>
+<area shape="rect" id="node22" href="$scope_8h_source.html" title="boilerplate/scope.h" alt="" coords="1067,237,1197,263"/>
+<area shape="rect" id="node24" href="$compiler_8h_source.html" title="boilerplate/compiler.h" alt="" coords="601,237,746,263"/>
+<area shape="rect" id="node25" href="$shared-list_8h_source.html" title="boilerplate/shared\l&#45;list.h" alt="" coords="770,229,894,271"/>
+<area shape="rect" id="node26" href="$private-list_8h_source.html" title="boilerplate/private\l&#45;list.h" alt="" coords="918,229,1042,271"/>
+<area shape="rect" id="node14" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="389,319,529,345"/>
+<area shape="rect" id="node18" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="195,319,365,345"/>
+<area shape="rect" id="node17" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="397,393,521,435"/>
+<area shape="rect" id="node21" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="249,393,373,435"/>
+<area shape="rect" id="node28" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="1542,155,1631,181"/>
+<area shape="rect" id="node29" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="1685,237,1768,263"/>
+<area shape="rect" id="node30" href="$socket_8h_source.html" title="sys/socket.h" alt="" coords="1793,237,1890,263"/>
+<area shape="rect" id="node31" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="1915,237,1973,263"/>
+<area shape="rect" id="node32" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="1998,237,2066,263"/>
+<area shape="rect" id="node33" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="1512,237,1661,263"/>
+<area shape="rect" id="node34" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="2091,237,2208,263"/>
 </map>

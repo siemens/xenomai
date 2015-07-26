@@ -276,22 +276,11 @@ variables may be accessed from any code module.
 
 === Main thread shadowing ===
 
-By default, any application linking against +libcobalt+ has its main
-thread attached to the real-time system automatically, this process is
-called _auto-shadowing_.
-
-This behavior may be disabled at runtime, by setting the XENO_NOSHADOW
-variable in the application process environment, before the
-+libcobalt+ library constructors are executed.
-
-This replaces the former static mechanism available with Xenomai 2.x,
-based on turning on +--enable-dlopen-skins+ when configuring. Starting
-with Xenomai 3.x, applications should set the XENO_NOSHADOW variable
-using putenv(3), before loading +libcolbalt+ using dlopen(3).
-
-When auto-shadowing is enabled, global memory locking is also
-performed, and remains in effect afterwards
-(i.e. mlockall(MCL_CURRENT|MCL_FUTURE)).
+Any application linked against +libcobalt+ has its main thread
+attached to the real-time system automatically, this operation is
+called _auto-shadowing_. As a side-effect, the entire process's memory
+is locked, for current and future mappings
+(i.e. +mlockall(MCL_CURRENT|MCL_FUTURE)+).
 
 === Shadow signal handler ===
 

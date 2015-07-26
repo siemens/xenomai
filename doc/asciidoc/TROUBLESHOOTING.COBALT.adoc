@@ -180,6 +180,10 @@ link:running-a-Xenomai-application-as-a-regular-user[this page].
 
 === incompatible ABI revision level
 
+Same as below:
+
+=== ABI mismatch
+
 Each major Xenomai release (e.g. 2.1.x, 2.2.x ... 2.6.x, 3.0.x ...)
 defines a kernel/user ABI, which remains stable across minor update
 releases (e.g. 2.6.0 -> 2.6.1). This guarantee makes partial updates

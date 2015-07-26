@@ -1006,10 +1006,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-3.0-rc5. Functionally speaking, only the former <em>master</em> time base
+3.0-rc6. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 3.0-rc5 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 3.0-rc6 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -1153,19 +1153,11 @@ variables may be accessed from any code module.</p></div>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_main_thread_shadowing">4.1. Main thread shadowing</h3>
-<div class="paragraph"><p>By default, any application linking against <code>libcobalt</code> has its main
-thread attached to the real-time system automatically, this process is
-called <em>auto-shadowing</em>.</p></div>
-<div class="paragraph"><p>This behavior may be disabled at runtime, by setting the XENO_NOSHADOW
-variable in the application process environment, before the
-<code>libcobalt</code> library constructors are executed.</p></div>
-<div class="paragraph"><p>This replaces the former static mechanism available with Xenomai 2.x,
-based on turning on <code>--enable-dlopen-skins</code> when configuring. Starting
-with Xenomai 3.x, applications should set the XENO_NOSHADOW variable
-using putenv(3), before loading <code>libcolbalt</code> using dlopen(3).</p></div>
-<div class="paragraph"><p>When auto-shadowing is enabled, global memory locking is also
-performed, and remains in effect afterwards
-(i.e. mlockall(MCL_CURRENT|MCL_FUTURE)).</p></div>
+<div class="paragraph"><p>Any application linked against <code>libcobalt</code> has its main thread
+attached to the real-time system automatically, this operation is
+called <em>auto-shadowing</em>. As a side-effect, the entire process&#8217;s memory
+is locked, for current and future mappings
+(i.e. <code>mlockall(MCL_CURRENT|MCL_FUTURE)</code>).</p></div>
 </div>
 <div class="sect2">
 <h3 id="_shadow_signal_handler">4.2. Shadow signal handler</h3>
@@ -3461,7 +3453,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-23 15:36:01 CEST
+Last updated 2015-07-26 18:21:49 CEST
 </div>
 </div>
 </body>

@@ -74,6 +74,7 @@ var NAVTREEINDEX0 =
 "cobalt_2sys_2time_8h_source.html":[4,0,0,2,2,5],
 "cobalt_2time_8h_source.html":[4,0,0,2,15],
 "cobalt_2trace_8h_source.html":[4,0,0,2,16],
+"cobalt_2tunables_8h_source.html":[4,0,0,2,17],
 "cobalt_2uapi_2kernel_2limits_8h_source.html":[4,0,0,2,3,1,1],
 "cobalt_2uapi_2kernel_2trace_8h_source.html":[4,0,0,2,3,1,5],
 "cobalt_2uapi_2kernel_2types_8h_source.html":[4,0,0,2,3,1,6],
@@ -248,6 +249,5 @@ var NAVTREEINDEX0 =
 "experimental_2e1000_2e1000__hw_8h_source.html":[4,0,1,1,3,0,2,0,7],
 "experimental_2e1000_2e1000__mac_8h_source.html":[4,0,1,1,3,0,2,0,9],
 "experimental_2e1000_2e1000__nvm_8h_source.html":[4,0,1,1,3,0,2,0,11],
-"experimental_2e1000_2e1000__osdep_8h_source.html":[4,0,1,1,3,0,2,0,12],
-"experimental_2e1000_2e1000__phy_8h_source.html":[4,0,1,1,3,0,2,0,13]
+"experimental_2e1000_2e1000__osdep_8h_source.html":[4,0,1,1,3,0,2,0,12]
 };
