@@ -48,7 +48,6 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include <sys/mman.h>
 
 #ifdef CONFIG_XENO_COBALT
 #include <rtdm/can.h>
@@ -318,7 +317,6 @@ int main(int argc, char *argv[])
     signal(SIGTERM, catch_signal);
     signal(SIGINT, catch_signal);
     signal(SIGHUP, catch_signal);
-    mlockall(MCL_CURRENT|MCL_FUTURE);
 
     printf("Round-Trip-Time test %s -> %s with CAN ID 0x%x\n",
 	   argv[optind], argv[optind + 1], can_id);
