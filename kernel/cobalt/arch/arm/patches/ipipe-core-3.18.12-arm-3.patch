@@ -1,5 +1,5 @@
 diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 89c4b5c..11ddea6 100644
+index 89c4b5c..46ec8f8 100644
 --- a/arch/arm/Kconfig
 +++ b/arch/arm/Kconfig
 @@ -33,8 +33,8 @@ config ARM
@@ -12,7 +12,15 @@ index 89c4b5c..11ddea6 100644
  	select HAVE_C_RECORDMCOUNT
  	select HAVE_DEBUG_KMEMLEAK
  	select HAVE_DMA_API_DEBUG
-@@ -85,6 +85,11 @@ config ARM
+@@ -67,6 +67,7 @@ config ARM
+ 	select HAVE_SYSCALL_TRACEPOINTS
+ 	select HAVE_UID16
+ 	select HAVE_VIRT_CPU_ACCOUNTING_GEN
++	select IPIPE_WANT_PTE_PINNING if IPIPE && !(CPU_V6K || CPU_V7)
+ 	select IRQ_FORCED_THREADING
+ 	select MODULES_USE_ELF_REL
+ 	select NO_BOOTMEM
+@@ -85,6 +86,11 @@ config ARM
  	  Europe.  There is an ARM Linux project with a web page at
  	  <http://www.arm.linux.org.uk/>.
  
@@ -24,7 +32,7 @@ index 89c4b5c..11ddea6 100644
  config ARM_HAS_SG_CHAIN
  	select ARCH_HAS_SG_CHAIN
  	bool
-@@ -377,6 +382,7 @@ config ARCH_AT91
+@@ -377,6 +383,7 @@ config ARCH_AT91
  	select NEED_MACH_IO_H if PCCARD
  	select PINCTRL
  	select PINCTRL_AT91 if USE_OF
@@ -32,7 +40,7 @@ index 89c4b5c..11ddea6 100644
  	help
  	  This enables support for systems based on Atmel
  	  AT91RM9200 and AT91SAM9* processors.
-@@ -515,6 +521,7 @@ config ARCH_IXP4XX
+@@ -515,6 +522,7 @@ config ARCH_IXP4XX
  	select CLKSRC_MMIO
  	select CPU_XSCALE
  	select DMABOUNCE if PCI
@@ -40,7 +48,7 @@ index 89c4b5c..11ddea6 100644
  	select GENERIC_CLOCKEVENTS
  	select MIGHT_HAVE_PCI
  	select NEED_MACH_IO_H
-@@ -710,6 +717,7 @@ config ARCH_SA1100
+@@ -710,6 +718,7 @@ config ARCH_SA1100
  
  config ARCH_S3C24XX
  	bool "Samsung S3C24XX SoCs"
@@ -48,7 +56,7 @@ index 89c4b5c..11ddea6 100644
  	select ARCH_REQUIRE_GPIOLIB
  	select ATAGS
  	select CLKDEV_LOOKUP
-@@ -1005,6 +1013,14 @@ config ARM_TIMER_SP804
+@@ -1005,6 +1014,14 @@ config ARM_TIMER_SP804
  	select CLKSRC_MMIO
  	select CLKSRC_OF if OF
  
@@ -63,7 +71,7 @@ index 89c4b5c..11ddea6 100644
  source "arch/arm/firmware/Kconfig"
  
  source arch/arm/mm/Kconfig
-@@ -1515,6 +1531,8 @@ config ARCH_NR_GPIO
+@@ -1515,6 +1532,8 @@ config ARCH_NR_GPIO
  
  	  If unsure, leave the default value.
  
@@ -1643,7 +1651,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..687c054
+index 0000000..4701f8d
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,272 @@
@@ -1691,7 +1699,7 @@ index 0000000..687c054
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	2
++#define IPIPE_CORE_RELEASE	3
 +
 +struct ipipe_domain;
 +
@@ -2914,6 +2922,21 @@ index 0000000..6579eec
 +#include <asm-generic/resource.h>
 +
 +#endif
+diff --git a/arch/arm/include/asm/setup.h b/arch/arm/include/asm/setup.h
+index e0adb9f..f024d86 100644
+--- a/arch/arm/include/asm/setup.h
++++ b/arch/arm/include/asm/setup.h
+@@ -25,4 +25,10 @@ extern int arm_add_memory(u64 start, u64 size);
+ extern void early_print(const char *str, ...);
+ extern void dump_machine_table(void);
+ 
++#ifdef CONFIG_IPIPE
++void __init smp_build_cpu_revmap(void);
++#else
++static inline void smp_build_cpu_revmap(void) { }
++#endif
++
+ #endif
 diff --git a/arch/arm/include/asm/switch_to.h b/arch/arm/include/asm/switch_to.h
 index c99e259..317b6a4 100644
 --- a/arch/arm/include/asm/switch_to.h
@@ -3156,6 +3179,19 @@ index 2d2d608..74655a6 100644
  #ifdef CONFIG_VFP
    DEFINE(TI_VFPSTATE,		offsetof(struct thread_info, vfpstate));
  #ifdef CONFIG_SMP
+diff --git a/arch/arm/kernel/devtree.c b/arch/arm/kernel/devtree.c
+index 11c54de..b2518c4 100644
+--- a/arch/arm/kernel/devtree.c
++++ b/arch/arm/kernel/devtree.c
+@@ -174,6 +174,8 @@ void __init arm_dt_init_cpu_maps(void)
+ 		cpu_logical_map(i) = tmp_map[i];
+ 		pr_debug("cpu logical map 0x%x\n", cpu_logical_map(i));
+ 	}
++
++	smp_build_cpu_revmap();
+ }
+ 
+ bool arch_match_cpu_phys_id(int cpu, u64 phys_id)
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
 index 2f5555d..a0cd9ce 100644
 --- a/arch/arm/kernel/entry-armv.S
@@ -4867,7 +4903,7 @@ index ef9119f..91f5d3b 100644
  	return 0;
  }
 diff --git a/arch/arm/kernel/setup.c b/arch/arm/kernel/setup.c
-index 306e1ac..d78a61d 100644
+index 306e1ac..c4e0fd0 100644
 --- a/arch/arm/kernel/setup.c
 +++ b/arch/arm/kernel/setup.c
 @@ -30,6 +30,7 @@
@@ -4878,43 +4914,47 @@ index 306e1ac..d78a61d 100644
  
  #include <asm/unified.h>
  #include <asm/cp15.h>
-@@ -490,18 +491,35 @@ void notrace cpu_init(void)
+@@ -490,7 +491,39 @@ void notrace cpu_init(void)
  #endif
  }
  
 -u32 __cpu_logical_map[NR_CPUS] = { [0 ... NR_CPUS-1] = MPIDR_INVALID };
 +u32 __cpu_logical_map[16] = { [0 ... 15] = MPIDR_INVALID };
++#ifdef CONFIG_IPIPE_LEGACY
 +#if NR_CPUS > 16
-+u32 __cpu_reverse_map[NR_CPUS] = { [0 ... NR_CPUS-1] = MPIDR_INVALID };
-+#else
-+u32 __cpu_reverse_map[16] = { [0 ... 15] = MPIDR_INVALID };
-+#endif
-+
++u32 __cpu_reverse_map[NR_CPUS];
++#else /* NR_CPUS < 16 */
++u32 __cpu_reverse_map[16];
++#endif /* NR_CPUS < 16 */
 +EXPORT_SYMBOL(__cpu_reverse_map);
++#endif /* CONFIG_IPIPE_LEGACY */
++
++#ifdef CONFIG_IPIPE
++
++void __init smp_build_cpu_revmap(void)
++{
++#ifdef CONFIG_IPIPE_LEGACY
++	int i;
++	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
++	u32 cpu = MPIDR_AFFINITY_LEVEL(mpidr, 0);
++	u32 max = cpu + 1 > nr_cpu_ids ? cpu + 1 : nr_cpu_ids;
++
++	BUG_ON(max > ARRAY_SIZE(__cpu_reverse_map));
++#endif /* CONFIG_IPIPE_LEGACY */
++
++	/* printk on I-pipe needs per cpu data */
++	set_my_cpu_offset(per_cpu_offset(0));
++
++#ifdef CONFIG_IPIPE_LEGACY
++	for (i = 0; i < nr_cpu_ids; ++i)
++		__cpu_reverse_map[cpu_logical_map(i) & 0xff] = i;
++#endif /* CONFIG_IPIPE_LEGACY */
++}
++
++#endif
  
  void __init smp_setup_processor_id(void)
  {
- 	int i;
- 	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
- 	u32 cpu = MPIDR_AFFINITY_LEVEL(mpidr, 0);
-+	u32 max = cpu + 1 > nr_cpu_ids ? cpu + 1 : nr_cpu_ids;
-+
-+#ifdef CONFIG_IPIPE
-+	/* printk on I-pipe needs per cpu data */
-+	set_my_cpu_offset(per_cpu_offset(0));
-+#endif
-+	BUG_ON(max > ARRAY_SIZE(__cpu_reverse_map));
- 
- 	cpu_logical_map(0) = cpu;
- 	for (i = 1; i < nr_cpu_ids; ++i)
- 		cpu_logical_map(i) = i == cpu ? 0 : i;
- 
-+	for (i = 0; i < nr_cpu_ids; ++i)
-+		__cpu_reverse_map[cpu_logical_map(i)] = i;
-+
- 	/*
- 	 * clear __my_cpu_offset on boot CPU to avoid hang caused by
- 	 * using percpu variable early, for example, lockdep will
 diff --git a/arch/arm/kernel/signal.c b/arch/arm/kernel/signal.c
 index bd19834..c49e067 100644
 --- a/arch/arm/kernel/signal.c
@@ -10870,14 +10910,14 @@ index e7a81ceb..c6ca62c 100644
  
  #ifdef CONFIG_CPU_HAS_ASID
 diff --git a/arch/arm/mm/ioremap.c b/arch/arm/mm/ioremap.c
-index d1e5ad7..0a0912d 100644
+index d1e5ad7..a1aa3a5 100644
 --- a/arch/arm/mm/ioremap.c
 +++ b/arch/arm/mm/ioremap.c
 @@ -328,6 +328,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
   	}
  
  	flush_cache_vmap(addr, addr + size);
-+	__ipipe_pin_range_globally(addr, addr + size);
++	__ipipe_pin_mapping_globally(addr, addr + size);
  	return (void __iomem *) (offset + addr);
  }
  
@@ -11007,38 +11047,33 @@ index 5e85ed3..ababa17 100644
  		info.flags = 0;
  		info.low_limit = mm->mmap_base;
 diff --git a/arch/arm/mm/pgd.c b/arch/arm/mm/pgd.c
-index 2493795..a1186ca 100644
+index 2493795..93059a1 100644
 --- a/arch/arm/mm/pgd.c
 +++ b/arch/arm/mm/pgd.c
-@@ -27,6 +27,176 @@
+@@ -27,6 +27,173 @@
  #define __pgd_free(pgd)	free_pages((unsigned long)pgd, 2)
  #endif
  
-+#ifdef CONFIG_IPIPE
++#ifdef CONFIG_IPIPE_WANT_PTE_PINNING
 +
 +/*
 + * Provide support for pinning the PTEs referencing kernel mappings in
 + * the current memory context, so that we don't get minor faults when
 + * treading over kernel memory.  For this we need to maintain a map of
 + * active PGDs.
-+ *
-+ * CAUTION: when LPAE is enabled, 1st level tables are small enough
-+ * (PTRS_PER_PGD for 3-level translation) that multiple PGDs can fit
-+ * into a single page, so we can't maintain our meta-data directly
-+ * into the struct page matching each PGD. Instead, we maintain this
-+ * data in a separate rbtree indexing the PGDs. To keep the
-+ * implementation straightforward, we also use this approach when LPAE
-+ * is disabled.
 + */
 +
 +#include <linux/rbtree.h>
++#include <linux/list.h>
 +
 +static DEFINE_SPINLOCK(pgd_index_lock);
 +static struct rb_root pgd_table = RB_ROOT;
++static LIST_HEAD(pgd_list);
 +
 +struct pgd_holder {
 +	pgd_t *pgd;
 +	struct rb_node rb;
++	struct list_head next;
 +};
 +
 +#define pgd_table_lock(__flags)		\
@@ -11084,6 +11119,7 @@ index 2493795..a1186ca 100644
 +
 +  	rb_link_node(&h->rb, parent, rbp);
 +  	rb_insert_color(&h->rb, &pgd_table);
++	list_add(&h->next, &pgd_list);
 +
 +	return 1;
 +}
@@ -11104,6 +11140,7 @@ index 2493795..a1186ca 100644
 +			node = node->rb_right;
 +		else {
 +			rb_erase(node, &pgd_table);
++			list_del(&p->next);
 +			pgd_table_unlock(flags);
 +			pgd_holder_drop(p);
 +			return;
@@ -11147,26 +11184,26 @@ index 2493795..a1186ca 100644
 +		copy_pmd(pmd, pmd_k);
 +}
 +
-+void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
++void __ipipe_pin_mapping_globally(unsigned long start, unsigned long end)
 +{
-+	unsigned long next, addr = start;
++	unsigned long next, addr;
 +	struct pgd_holder *h;
 +	unsigned long flags;
-+	struct rb_node *rb;
 +
-+	do {
-+		next = pgd_addr_end(addr, end);
-+		pgd_table_lock(flags);
-+		for (rb = rb_first(&pgd_table); rb; rb = rb_next(rb)) {
-+			h = rb_entry(rb, struct pgd_holder, rb);
++	pgd_table_lock(flags);
++
++	list_for_each_entry(h, &pgd_list, next) {
++		addr = start;
++		do {
++			next = pgd_addr_end(addr, end);
 +			pin_k_mapping(h->pgd, addr);
-+		}
-+		pgd_table_unlock(flags);
++		} while (addr = next, addr != end);
++	}
 +
-+	} while (addr = next, addr != end);
++	pgd_table_unlock(flags);
 +}
 +
-+#else  /* !CONFIG_IPIPE */
++#else  /* !CONFIG_IPIPE_WANT_PTE_PINNING */
 +
 +#define pgd_table_lock(__flags)		do { (void)(__flags); } while (0)
 +#define pgd_table_unlock(__flags)	do { (void)(__flags); } while (0)
@@ -11182,12 +11219,12 @@ index 2493795..a1186ca 100644
 +
 +static inline void pgd_holder_free(pgd_t *pgd) { }
 +
-+#endif  /* !CONFIG_IPIPE */
++#endif  /* !CONFIG_IPIPE_WANT_PTE_PINNING */
 +
  /*
   * need to get a 16k page for level 1
   */
-@@ -36,6 +206,9 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
+@@ -36,6 +203,9 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
  	pud_t *new_pud, *init_pud;
  	pmd_t *new_pmd, *init_pmd;
  	pte_t *new_pte, *init_pte;
@@ -11197,7 +11234,7 @@ index 2493795..a1186ca 100644
  
  	new_pgd = __pgd_alloc();
  	if (!new_pgd)
-@@ -47,9 +220,15 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
+@@ -47,9 +217,15 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
  	 * Copy over the kernel and IO PGD entries
  	 */
  	init_pgd = pgd_offset_k(0);
@@ -11213,7 +11250,7 @@ index 2493795..a1186ca 100644
  	clean_dcache_area(new_pgd, PTRS_PER_PGD * sizeof(pgd_t));
  
  #ifdef CONFIG_ARM_LPAE
-@@ -67,6 +246,10 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
+@@ -67,6 +243,10 @@ pgd_t *pgd_alloc(struct mm_struct *mm)
  #endif
  
  	if (!vectors_high()) {
@@ -11224,7 +11261,7 @@ index 2493795..a1186ca 100644
  		/*
  		 * On ARM, first page must always be allocated since it
  		 * contains the machine vectors. The vectors are always high
-@@ -119,7 +302,7 @@ void pgd_free(struct mm_struct *mm, pgd_t *pgd_base)
+@@ -119,7 +299,7 @@ void pgd_free(struct mm_struct *mm, pgd_t *pgd_base)
  	if (pgd_none_or_clear_bad(pgd))
  		goto no_pgd;
  
@@ -11233,7 +11270,7 @@ index 2493795..a1186ca 100644
  	if (pud_none_or_clear_bad(pud))
  		goto no_pud;
  
-@@ -137,6 +320,8 @@ no_pud:
+@@ -137,6 +317,8 @@ no_pud:
  	pgd_clear(pgd);
  	pud_free(mm, pud);
  no_pgd:
@@ -14723,10 +14760,10 @@ index 0000000..1d70705
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..ea01dd6
+index 0000000..a37358c
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,356 @@
+@@ -0,0 +1,358 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -14908,9 +14945,6 @@ index 0000000..ea01dd6
 +
 +void __ipipe_flush_printk(unsigned int irq, void *cookie);
 +
-+void __ipipe_pin_range_globally(unsigned long start,
-+				unsigned long end);
-+
 +#define __ipipe_get_cpu(flags)	({ (flags) = hard_preempt_disable(); ipipe_processor_id(); })
 +#define __ipipe_put_cpu(flags)	hard_preempt_enable(flags)
 +
@@ -15043,10 +15077,6 @@ index 0000000..ea01dd6
 +
 +static inline void __ipipe_init_taskinfo(struct task_struct *p) { }
 +
-+static inline void __ipipe_pin_range_globally(unsigned long start,
-+					      unsigned long end)
-+{ }
-+
 +#define hard_preempt_disable()		({ preempt_disable(); 0; })
 +#define hard_preempt_enable(flags)	({ preempt_enable(); (void)(flags); })
 +
@@ -15072,6 +15102,15 @@ index 0000000..ea01dd6
 +static inline void ipipe_root_only(void) { }
 +
 +#endif	/* !CONFIG_IPIPE */
++
++#ifdef CONFIG_IPIPE_WANT_PTE_PINNING
++void __ipipe_pin_mapping_globally(unsigned long start,
++				  unsigned long end);
++#else
++static inline void __ipipe_pin_mapping_globally(unsigned long start,
++						unsigned long end)
++{ }
++#endif
 +
 +static inline void ipipe_preempt_root_only(void)
 +{
@@ -17273,10 +17312,10 @@ index 9b7d746..562489c 100644
  	trace_task_newtask(p, clone_flags);
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..da17b04
+index 0000000..218f51da
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,65 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -17295,6 +17334,9 @@ index 0000000..da17b04
 +	def_bool y if IPIPE
 +
 +config IPIPE_WANT_CLOCKSOURCE
++       bool
++
++config IPIPE_WANT_PTE_PINNING
 +       bool
 +
 +config IPIPE_CORE_APIREV
@@ -25171,7 +25213,7 @@ index f8e0e53..02175aa3 100644
  			wake_up_klogd();
  	}
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 0c9216c..1575d3e 100644
+index 0c9216c..00a9a30 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -10,6 +10,7 @@
@@ -25190,7 +25232,7 @@ index 0c9216c..1575d3e 100644
 +	/* APEI may invoke this for temporarily remapping pages in interrupt
 +	 * context - nothing we can and need to propagate globally. */
 +	if (!in_interrupt()) {
-+		__ipipe_pin_range_globally(start, end);
++		__ipipe_pin_mapping_globally(start, end);
 +		flush_cache_vmap(start, end);
 +	}
  
@@ -25557,14 +25599,14 @@ index ace9345..6b56407 100644
  	return pages;
  }
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 90520af..ebbf9e2 100644
+index 90520af..dadc22d 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -193,6 +193,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
  			return err;
  	} while (pgd++, addr = next, addr != end);
  
-+ 	__ipipe_pin_range_globally(start, end);
++ 	__ipipe_pin_mapping_globally(start, end);
 + 
  	return nr;
  }
