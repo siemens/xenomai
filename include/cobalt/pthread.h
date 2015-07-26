@@ -45,8 +45,6 @@ COBALT_DECL(int, pthread_create(pthread_t *ptid_r,
 				void *(*start) (void *),
 				void *arg));
 
-COBALT_DECL(int, pthread_detach(pthread_t thread));
-
 COBALT_DECL(int, pthread_getschedparam(pthread_t thread,
 				       int *policy,
 				       struct sched_param *param));
