@@ -19,6 +19,7 @@
 #define _XENOMAI_INIT_H
 
 #include <boilerplate/setup.h>
+#include <boilerplate/ancillaries.h>
 
 #ifdef __cplusplus
 extern "C" {
