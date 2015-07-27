@@ -20,4 +20,11 @@
 
 #include <stdio.h>
 
+static inline void rt_print_auto_init(int enable)
+{
+	/* stdio support is automatically enabled by libcobalt. */
+}
+
+static inline void rt_print_cleanup(void) { }
+
 #endif /* _XENOMAI_TRANK_RTDK_H */
