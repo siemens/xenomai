@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <unistd.h>
+#include <math.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <sched.h>
@@ -327,6 +328,12 @@ static int run_sched_quota(struct smokey_test *t, int argc, char *const argv[])
 	effective = run_quota(quota);
 	smokey_trace("%d thread%s: cap=%d%%, effective=%.1f%%",
 		     nrthreads, nrthreads > 1 ? "s": "", quota, effective);
+
+	if (fabs(effective - (double)quota) > 0.5) {
+		smokey_warning("out of quota: %.1f%%",
+			       effective - (double)quota);
+		return -EPROTO;
+	}
 
 	return 0;
 }
