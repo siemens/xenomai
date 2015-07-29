@@ -357,9 +357,29 @@ DEFINE_EVENT(thread_event, cobalt_shadow_hardened,
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_shadow_gorelax,
-	TP_PROTO(struct xnthread *thread),
-	TP_ARGS(thread)
+#define cobalt_print_relax_reason(reason)				\
+	__print_symbolic(reason,					\
+			 { SIGDEBUG_UNDEFINED,		"undefined" },	\
+			 { SIGDEBUG_MIGRATE_SIGNAL,	"signal" },	\
+			 { SIGDEBUG_MIGRATE_SYSCALL,	"syscall" },	\
+			 { SIGDEBUG_MIGRATE_FAULT,	"fault" })
+
+TRACE_EVENT(cobalt_shadow_gorelax,
+	TP_PROTO(struct xnthread *thread, int reason),
+	TP_ARGS(thread, reason),
+
+	TP_STRUCT__entry(
+		__field(struct xnthread *, thread)
+		__field(int, reason)
+	),
+
+	TP_fast_assign(
+		__entry->thread = thread;
+		__entry->reason = reason;
+	),
+
+	TP_printk("thread=%p reason=%s",
+		  __entry->thread, cobalt_print_relax_reason(__entry->reason))
 );
 
 DEFINE_EVENT(thread_event, cobalt_shadow_relaxed,
