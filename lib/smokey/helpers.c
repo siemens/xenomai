@@ -156,7 +156,7 @@ void __smokey_warning(const char *file, int lineno,
 	if (smokey_verbose_mode) {
 		__RT(fprintf(stderr, "%s:%d, ", basename(file), lineno));
 		__RT(vfprintf(stderr, fmt, ap));
-		__RT(fprintf(stdout, "\n"));
+		__RT(fprintf(stderr, "\n"));
 	}
 
 	va_end(ap);

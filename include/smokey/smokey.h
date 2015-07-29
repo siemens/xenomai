@@ -129,7 +129,7 @@ struct smokey_test {
 	})
 
 #define smokey_warning(__fmt, __args...)	\
-	__smokey_warning(__FILE__, __LINE__, __fmt, #__args)
+	__smokey_warning(__FILE__, __LINE__, __fmt, ##__args)
 
 #ifdef __cplusplus
 extern "C" {
