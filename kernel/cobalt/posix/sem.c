@@ -1,5 +1,6 @@
 /*
  * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
+ * Copyright (C) 2014,2015 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -28,6 +29,18 @@ static inline struct cobalt_resources *sem_kqueue(struct cobalt_sem *sem)
 {
 	int pshared = !!(sem->flags & SEM_PSHARED);
 	return cobalt_current_resources(pshared);
+}
+
+static inline int sem_check(struct cobalt_sem *sem)
+{
+	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
+		return -EINVAL;
+
+	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
+	    sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
+		return -EPERM;
+
+	return 0;
 }
 
 int __cobalt_sem_destroy(xnhandle_t handle)
@@ -170,96 +183,47 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	if (sm->magic != COBALT_SEM_MAGIC) {
 		ret = -EINVAL;
-		goto error;
+		goto fail;
 	}
 
 	sem = xnregistry_lookup(sm->handle, NULL);
-	if (!cobalt_obj_active(sem, COBALT_SEM_MAGIC, typeof(*sem))) {
-		ret = -EINVAL;
-		goto error;
-	}
-
-	if (sem->resnode.scope && sem_kqueue(sem) != sem->resnode.scope) {
-		ret = -EPERM;
-		goto error;
-	}
+	ret = sem_check(sem);
+	if (ret)
+		goto fail;
 
 	if ((sem->flags & SEM_NOBUSYDEL) != 0 &&
 	    xnsynch_pended_p(&sem->synchbase)) {
 		ret = -EBUSY;
-		goto error;
+		goto fail;
 	}
 
 	warn = sem->flags & SEM_WARNDEL;
 	cobalt_mark_deleted(sm);
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	ret = __cobalt_sem_destroy(sem->resnode.handle);
 
 	return warn ? ret : 0;
-
-      error:
-
+fail:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
 
-static inline int sem_trywait_inner(struct cobalt_sem *sem)
+static inline int do_trywait(struct cobalt_sem *sem)
 {
-	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
-		return -EINVAL;
-
-	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
-	    sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
-		return -EPERM;
+	int ret;
+	
+	ret = sem_check(sem);
+	if (ret)
+		return ret;
 
 	if (atomic_sub_return(1, &sem->state->value) < 0)
 		return -EAGAIN;
-
-	return 0;
-}
-
-static int sem_trywait(xnhandle_t handle)
-{
-	int err;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = sem_trywait_inner(xnregistry_lookup(handle, NULL));
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-
-static int sem_post_inner(struct cobalt_sem *sem, int bcast)
-{
-	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
-		return -EINVAL;
-
-	if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_POSIX_SYNCHRO) &&
-	    sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem))
-		return -EPERM;
-
-	if (atomic_read(&sem->state->value) == SEM_VALUE_MAX)
-		return -EINVAL;
-
-	if (!bcast) {
-		if (atomic_inc_return(&sem->state->value) <= 0) {
-			if (xnsynch_wakeup_one_sleeper(&sem->synchbase))
-				xnsched_run();
-		} else if (sem->flags & SEM_PULSE)
-			atomic_set(&sem->state->value, 0);
-	} else {
-		if (atomic_read(&sem->state->value) < 0) {
-			atomic_set(&sem->state->value, 0);
-			if (xnsynch_flush(&sem->synchbase, 0) ==
-				XNSYNCH_RESCHED)
-				xnsched_run();
-		}
-	}
 
 	return 0;
 }
@@ -273,7 +237,7 @@ static int sem_wait(xnhandle_t handle)
 	xnlock_get_irqsave(&nklock, s);
 
 	sem = xnregistry_lookup(handle, NULL);
-	ret = sem_trywait_inner(sem);
+	ret = do_trywait(sem);
 	if (ret != -EAGAIN)
 		goto out;
 
@@ -282,7 +246,7 @@ static int sem_wait(xnhandle_t handle)
 	if (info & XNRMID) {
 		ret = -EINVAL;
 	} else if (info & XNBREAK) {
-		sem_post_inner(sem, 0);
+		atomic_inc(&sem->state->value); /* undo do_trywait() */
 		ret = -EINTR;
 	}
 out:
@@ -317,7 +281,7 @@ int __cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 
 	for (;;) {
 		sem = xnregistry_lookup(handle, NULL);
-		ret = sem_trywait_inner(sem);
+		ret = do_trywait(sem);
 		if (ret != -EAGAIN)
 			break;
 
@@ -367,8 +331,23 @@ static int sem_post(xnhandle_t handle)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	sem = xnregistry_lookup(handle, NULL);
-	ret = sem_post_inner(sem, 0);
+	ret = sem_check(sem);
+	if (ret)
+		goto out;
+
+	if (atomic_read(&sem->state->value) == SEM_VALUE_MAX) {
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (atomic_inc_return(&sem->state->value) <= 0) {
+		if (xnsynch_wakeup_one_sleeper(&sem->synchbase))
+			xnsched_run();
+	} else if (sem->flags & SEM_PULSE)
+		atomic_set(&sem->state->value, 0);
+out:	
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -377,20 +356,16 @@ static int sem_post(xnhandle_t handle)
 static int sem_getvalue(xnhandle_t handle, int *value)
 {
 	struct cobalt_sem *sem;
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	sem = xnregistry_lookup(handle, NULL);
-
-	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC) {
+	ret = sem_check(sem);
+	if (ret) {
 		xnlock_put_irqrestore(&nklock, s);
-		return -EINVAL;
-	}
-
-	if (sem->resnode.scope && sem->resnode.scope != sem_kqueue(sem)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -EPERM;
+		return ret;
 	}
 
 	*value = atomic_read(&sem->state->value);
@@ -455,12 +430,20 @@ COBALT_SYSCALL(sem_timedwait, primary,
 COBALT_SYSCALL(sem_trywait, primary,
 	       (struct cobalt_sem_shadow __user *u_sem))
 {
+	struct cobalt_sem *sem;
 	xnhandle_t handle;
+	int ret;
+	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
 	trace_cobalt_psem_trywait(handle);
 
-	return sem_trywait(handle);
+	xnlock_get_irqsave(&nklock, s);
+	sem = xnregistry_lookup(handle, NULL);
+	ret = do_trywait(sem);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 COBALT_SYSCALL(sem_getvalue, current,
@@ -504,17 +487,24 @@ COBALT_SYSCALL(sem_broadcast_np, current,
 	struct cobalt_sem *sem;
 	xnhandle_t handle;
 	spl_t s;
-	int err;
+	int ret;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
 	trace_cobalt_psem_broadcast(u_sem->handle);
 
 	xnlock_get_irqsave(&nklock, s);
+
 	sem = xnregistry_lookup(handle, NULL);
-	err = sem_post_inner(sem, 1);
+	ret = sem_check(sem);
+	if (ret == 0 && atomic_read(&sem->state->value) < 0) {
+		atomic_set(&sem->state->value, 0);
+		xnsynch_flush(&sem->synchbase, 0);
+		xnsched_run();
+	}
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 COBALT_SYSCALL(sem_inquire, current,
