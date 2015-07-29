@@ -155,6 +155,7 @@ static const char *__esym_map[] = {
 	__esym_def(ENOMSG),
 	__esym_def(EIDRM),
 	__esym_def(EADDRINUSE),
+	__esym_def(EPROTO),
 };
 
 #define __esym_max  (sizeof(__esym_map) / sizeof(__esym_map[0]))
