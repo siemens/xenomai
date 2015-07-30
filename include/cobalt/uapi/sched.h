@@ -57,7 +57,15 @@ struct sched_tp_window {
 	int ptid;
 };
 
+enum {
+	sched_tp_install,
+	sched_tp_uninstall,
+	sched_tp_start,
+	sched_tp_stop,
+};
+	
 struct __sched_config_tp {
+	int op;
 	int nr_windows;
 	struct sched_tp_window windows[0];
 };

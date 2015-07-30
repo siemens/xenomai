@@ -61,6 +61,7 @@ struct compat_sched_tp_window {
 };
 
 struct __compat_sched_config_tp {
+	int op;
 	int nr_windows;
 	struct compat_sched_tp_window windows[0];
 };

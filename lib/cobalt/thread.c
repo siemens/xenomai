@@ -979,32 +979,64 @@ COBALT_IMPL(int, pthread_yield, (void))
  *
  * @par Settings applicable to SCHED_TP
  *
- * This call installs the temporal partitions for @a cpu.
+ * This call controls the temporal partitions for @a cpu, depending on
+ * the operation requested.
  *
- * - config.tp.windows should be a non-null set of time windows,
- * defining the scheduling time slots for @a cpu. Each window defines
- * its offset from the start of the global time frame
- * (windows[].offset), a duration (windows[].duration), and the
- * partition id it applies to (windows[].ptid).
+ * - config.tp.op specifies the operation to perform:
  *
- * Time windows must be strictly contiguous, i.e. windows[n].offset +
- * windows[n].duration shall equal windows[n + 1].offset.
- * If windows[].ptid is in the range
+ * - @a sched_tp_install installs a new TP schedule on @a cpu, defined
+ *   by config.tp.windows[]. The global time frame is not activated
+ *   upon return from this request yet; @a sched_tp_start must be
+ *   issued to activate the temporal scheduling on @a CPU.
+ *
+ * - @a sched_tp_uninstall removes the current TP schedule from @a
+ *   cpu, releasing all the attached resources. If no TP schedule
+ *   exists on @a CPU, this request has no effect.
+ *
+ * - @a sched_tp_start enables the temporal scheduling on @a cpu,
+ * starting the global time frame. If no TP schedule exists on @a cpu,
+ * this action has no effect.
+ *
+ * - @a sched_tp_stop disables the temporal scheduling on @a cpu.  The
+ * current TP schedule is not uninstalled though, and may be
+ * re-started later by a @a sched_tp_start request.
+ * @caution As a consequence of this request, threads assigned to the
+ * un-scheduled partitions may be starved from CPU time.
+ *
+ * - for a @a sched_tp_install operation, config.tp.nr_windows
+ * indicates the number of elements present in the config.tp.windows[]
+ * array. If config.tp.nr_windows is zero, the action taken is
+ * identical to @a sched_tp_uninstall.
+ *
+ * - if config.tp.nr_windows is non-zero, config.tp.windows[] is a set
+ * scheduling time slots for threads assigned to @a cpu. Each window
+ * is specified by its offset from the start of the global time frame
+ * (windows[].offset), its duration (windows[].duration), and the
+ * partition id it should activate during such period of time
+ * (windows[].ptid). This field is not considered for other requests
+ * than @a sched_tp_install.
+ *
+ * Time slots must be strictly contiguous, i.e. windows[n].offset +
+ * windows[n].duration shall equal windows[n + 1].offset.  If
+ * windows[].ptid is in the range
  * [0..CONFIG_XENO_OPT_SCHED_TP_NRPART-1], SCHED_TP threads which
- * belong to the partition being referred to may run for the duration
- * of the time window.
+ * belong to the partition being referred to may be given CPU time on
+ * @a cpu, from time windows[].offset to windows[].offset +
+ * windows[].duration, provided those threads are in a runnable state.
  *
- * Time holes may be defined using windows assigned to the pseudo
- * partition #-1, during which no SCHED_TP threads may be scheduled.
+ * Time holes between valid time slots may be defined using windows
+ * activating the pseudo partition -1. When such window is active in
+ * the global time frame, no CPU time is available to SCHED_TP threads
+ * on @a cpu.
  *
- * - config.tp.nr_windows should define the number of elements present
- * in the config.tp.windows[] array.
- *
- * @a info is ignored for this request.
+ * @note The sched_tp_confsz(nr_windows) macro returns the length of
+ * config.tp depending on the number of time slots to be defined in
+ * config.tp.windows[], as specified by config.tp.nr_windows.
  *
  * @par Settings applicable to SCHED_QUOTA
  *
- * This call manages thread groups running on @a cpu.
+ * This call manages thread groups running on @a cpu, defining
+ * per-group quota for limiting their CPU consumption.
  *
  * - config.quota.op should define the operation to be carried
  * out. Valid operations are:

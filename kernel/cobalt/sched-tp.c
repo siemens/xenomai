@@ -221,16 +221,21 @@ void xnsched_tp_start_schedule(struct xnsched *sched)
 {
 	struct xnsched_tp *tp = &sched->tp;
 
+	if (tp->gps == NULL)
+		return;
+
 	tp->wnext = 0;
 	tp->tf_start = xnclock_read_monotonic(&nkclock);
-	tp_schedule_next(&sched->tp);
+	tp_schedule_next(tp);
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_start_schedule);
 
 void xnsched_tp_stop_schedule(struct xnsched *sched)
 {
 	struct xnsched_tp *tp = &sched->tp;
-	xntimer_stop(&tp->tf_timer);
+
+	if (tp->gps)
+		xntimer_stop(&tp->tf_timer);
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_stop_schedule);
 

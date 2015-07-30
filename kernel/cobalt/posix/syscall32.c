@@ -341,6 +341,7 @@ sys32_fetch_config(int policy, const void __user *u_config, size_t *len)
 	if (policy == SCHED_QUOTA)
 		memcpy(&buf->quota, &cbuf->quota, sizeof(cbuf->quota));
 	else {
+		buf->tp.op = cbuf->tp.op;
 		buf->tp.nr_windows = cbuf->tp.nr_windows;
 		for (n = 0; n < buf->tp.nr_windows; n++) {
 			buf->tp.windows[n].ptid = cbuf->tp.windows[n].ptid;
@@ -387,9 +388,12 @@ static ssize_t sys32_put_config(int policy,
 			sizeof(u_p->quota.info);
 	}
 
+	/* SCHED_TP */
+
 	if (u_len < compat_sched_tp_confsz(config->tp.nr_windows))
 		return -ENOSPC;
 
+	__xn_put_user(config->tp.op, &u_p->tp.op);
 	__xn_put_user(config->tp.nr_windows, &u_p->tp.nr_windows);
 
 	for (n = 0, ret = 0; n < config->tp.nr_windows; n++) {

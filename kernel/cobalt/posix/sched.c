@@ -242,14 +242,35 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 	if (len < sizeof(config->tp))
 		return -EINVAL;
 
-	if (config->tp.nr_windows == 0) {
+	sched = xnsched_struct(cpu);
+
+	switch (config->tp.op) {
+	case sched_tp_install:
+		if (config->tp.nr_windows > 0)
+			break;
+		/* Fallback wanted. */
+	case sched_tp_uninstall:
 		gps = NULL;
 		goto set_schedule;
+	case sched_tp_start:
+		xnlock_get_irqsave(&nklock, s);
+		xnsched_tp_start_schedule(sched);
+		xnlock_put_irqrestore(&nklock, s);
+		return 0;
+	case sched_tp_stop:
+		xnlock_get_irqsave(&nklock, s);
+		xnsched_tp_stop_schedule(sched);
+		xnlock_put_irqrestore(&nklock, s);
+		return 0;
+	default:
+		return -EINVAL;
 	}
+
+	/* Install a new TP schedule on CPU. */
 
 	gps = xnmalloc(sizeof(*gps) + config->tp.nr_windows * sizeof(*w));
 	if (gps == NULL)
-		goto fail;
+		return -ENOMEM;
 
 	for (n = 0, p = config->tp.windows, w = gps->pwins, next_offset = 0;
 	     n < config->tp.nr_windows; n++, p++, w++) {
@@ -279,10 +300,8 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 	gps->pwin_nr = n;
 	gps->tf_duration = next_offset;
 set_schedule:
-	sched = xnsched_struct(cpu);
 	xnlock_get_irqsave(&nklock, s);
 	ogps = xnsched_tp_set_schedule(sched, gps);
-	xnsched_tp_start_schedule(sched);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (ogps)
@@ -292,7 +311,7 @@ set_schedule:
 
 cleanup_and_fail:
 	xnfree(gps);
-fail:
+
 	return -EINVAL;
 }
 
@@ -333,6 +352,7 @@ ssize_t get_tp_config(int cpu, void __user *u_config, size_t len,
 		goto out;
 	}
 
+	config->tp.op = sched_tp_install;
 	config->tp.nr_windows = gps->pwin_nr;
 	for (n = 0, pp = p = config->tp.windows, pw = w = gps->pwins;
 	     n < gps->pwin_nr; pp = p, p++, pw = w, w++, n++) {
