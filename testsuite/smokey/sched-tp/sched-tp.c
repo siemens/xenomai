@@ -11,6 +11,7 @@
 #include <memory.h>
 #include <malloc.h>
 #include <unistd.h>
+#include <string.h>
 #include <signal.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -32,6 +33,18 @@ int clock_nanosleep(clockid_t __clock_id, int __flags,
 static pthread_t threadA, threadB, threadC;
 
 static sem_t barrier;
+
+static const char ref_schedule[] =
+	"CCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCC"
+	"BBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAA"
+	"CCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCC"
+	"BBBBBAACCCCCCCCCCBBBBBAACCCCCCCCCCBBBBBAACCCCCCCC";
+
+static char schedule[sizeof(ref_schedule) + 8], *curr = schedule;
+
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+static int overflow;
 
 static void *thread_body(void *arg)
 {
@@ -58,10 +71,22 @@ static void *thread_body(void *arg)
 	sem_post(&barrier);
 
 	for (;;) {
-		putchar('A' + part);
-		fflush(stdout);
+		/*
+		 * The mutex is there in case the scheduler behaves in
+		 * a really weird way so that we don't write out of
+		 * bounds; otherwise no serialization should happen
+		 * due to this lock.
+		 */
+		pthread_mutex_lock(&lock);
+		if (curr >= schedule + sizeof(schedule)) {
+			pthread_mutex_unlock(&lock);
+			overflow = 1;
+			break;
+		}
+		*curr++ = 'A' + part;
+		pthread_mutex_unlock(&lock);
 		ts.tv_sec = 0;
-		ts.tv_nsec = 10000000;
+		ts.tv_nsec = 10500000;
 		clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, NULL);
 	}
 
@@ -106,6 +131,7 @@ static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 	union sched_config *p;
 	int ret, n, policies;
 	size_t len;
+	char *s;
 
 	ret = cobalt_corectl(_CC_COBALT_GET_POLICIES, &policies, sizeof(policies));
 	if (ret || (policies & _CC_COBALT_SCHED_TP) == 0)
@@ -136,6 +162,7 @@ static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 	if (p == NULL)
 		error(1, ENOMEM, "malloc");
 
+	p->tp.op = sched_tp_install;
 	p->tp.nr_windows = NR_WINDOWS;
 	p->tp.windows[0].offset.tv_sec = 0;
 	p->tp.windows[0].offset.tv_nsec = 0;
@@ -158,10 +185,10 @@ static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 	p->tp.windows[3].duration.tv_nsec = 230000000;
 	p->tp.windows[3].ptid = -1;
 
-	/* Assign the TP schedule to CPU #0 */
+ 	/* Assign the TP schedule to CPU #0 */
 	ret = sched_setconfig_np(0, SCHED_TP, p, len);
 	if (ret)
-		error(1, ret, "sched_setconfig_np");
+		error(1, ret, "sched_setconfig_np(install)");
 
 	memset(p, 0xa5, len);
 
@@ -183,11 +210,36 @@ static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 	create_thread(threadA, 0);
 	create_thread(threadB, 1);
 	create_thread(threadC, 2);
-	sem_post(&barrier);
 
+	/* Start the TP schedule. */
+	len = sched_tp_confsz(0);
+	p->tp.op = sched_tp_start;
+	ret = sched_setconfig_np(0, SCHED_TP, p, len);
+	if (ret)
+		error(1, ret, "sched_setconfig_np(start)");
+
+	sem_post(&barrier);
 	sleep(5);
 	cleanup();
 	sem_destroy(&barrier);
+	free(p);
+
+	if (overflow) {
+		smokey_warning("schedule overflowed");
+		return -EPROTO;
+	}
+
+	/*
+	 * The first time window might be decreased for enough time to
+	 * skip an iteration due to lingering inits, and a few more
+	 * marks may be generated while we are busy stopping the
+	 * threads, so we look for a valid sub-sequence.
+	 */
+	s = strstr(ref_schedule, schedule);
+	if (s == NULL || s - ref_schedule > 1) {
+		smokey_warning("unexpected schedule:\n%s", schedule);
+		return -EPROTO;
+	}
 
 	return 0;
 }
