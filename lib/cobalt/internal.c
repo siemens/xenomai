@@ -70,6 +70,11 @@ pid_t cobalt_thread_pid(pthread_t thread)
 	return XENOMAI_SYSCALL1(sc_cobalt_thread_getpid, thread);
 }
 
+int cobalt_thread_mode(void)
+{
+	return cobalt_get_current_mode();
+}
+
 int cobalt_thread_join(pthread_t thread)
 {
 	int ret, oldtype;
