@@ -732,6 +732,11 @@ int main(int argc, char *const *argv)
 	if (test_mode < USER_TASK || test_mode > TIMER_HANDLER)
 		error(1, EINVAL, "invalid test mode");
 
+#ifdef CONFIG_XENO_MERCURY
+	if (test_mode != USER_TASK)
+		error(1, EINVAL, "-t1, -t2 not allowed over Mercury");
+#endif
+	
 	time(&test_start);
 
 	histogram_avg = calloc(histogram_size, sizeof(int32_t));
