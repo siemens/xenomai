@@ -343,7 +343,7 @@ static void handle_requests(void)
 	FD_ZERO(&refset);
 	FD_SET(sockfd, &refset);
 
-	if (!(linger || anon)) {
+	if (!linger) {
 		tmfd = __STD(timerfd_create(CLOCK_MONOTONIC, 0));
 		if (tmfd < 0)
 			error(1, errno, "handle_requests/timerfd_create");
@@ -371,8 +371,14 @@ static void handle_requests(void)
 				continue;
 			}
 			FD_SET(s, &refset);
-			if (tmfd != -1)
-				__STD(timerfd_settime(tmfd, 0, &its, NULL));
+			if (tmfd != -1) {
+				if (anon) {
+					FD_CLR(tmfd, &refset);
+					__STD(close(tmfd));
+					tmfd = -1;
+				} else
+					__STD(timerfd_settime(tmfd, 0, &its, NULL));
+			}
 		}
 		if (tmfd != -1 && FD_ISSET(tmfd, &set)) {
 			ret = __STD(read(tmfd, &exp, sizeof(exp)));
