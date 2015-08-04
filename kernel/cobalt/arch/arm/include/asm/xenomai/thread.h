@@ -56,7 +56,8 @@ struct xnarchtcb {
 
 #define xnarch_fault_pf_p(d)	((d)->exception == IPIPE_TRAP_ACCESS)
 #define xnarch_fault_bp_p(d)	((current->ptrace & PT_PTRACED) &&	\
-				 ((d)->exception == IPIPE_TRAP_BREAK))
+				 ((d)->exception == IPIPE_TRAP_BREAK ||	\
+				  (d)->exception == IPIPE_TRAP_UNDEFINSTR))
 
 #define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
