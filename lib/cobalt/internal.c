@@ -426,7 +426,7 @@ struct cobalt_event_state *get_event_state(cobalt_event_t *event)
 {
 	return event->flags & COBALT_EVENT_SHARED ?
 		cobalt_umm_shared + event->state_offset :
-		cobalt_umm_shared + event->state_offset;
+		cobalt_umm_private + event->state_offset;
 }
 
 int cobalt_event_init(cobalt_event_t *event, unsigned int value,
