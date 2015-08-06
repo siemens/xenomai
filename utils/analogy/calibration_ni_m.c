@@ -973,7 +973,7 @@ static int ni_m_calibrate_ai(void)
 	 * calibrate low, medium and high gain ranges
 	 */
 	for (i = 0; i < ARRAY_LEN(cal_info); i++) {
-		__debug("Calibrating AI: %s \n", cal_info[i]);
+		__debug("Calibrating AI: %s \n", cal_info[i].message);
 
 		if (cal_info[i].range >= 0)
 			goto calibrate;
