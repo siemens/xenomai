@@ -200,8 +200,12 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 	int i, j, k, index = -1, nb_elements = -1;
 	struct a4l_calibration_subdev_data *p = NULL;
 	struct _dictionary_ *d;
+	struct stat st;
 
 	if (access(name, R_OK))
+		return -1;
+
+	if (stat(name, &st) || !st.st_size)
 		return -1;
 
 	d = iniparser_load(name);
