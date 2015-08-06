@@ -628,7 +628,7 @@ static int create_main_heap(pid_t *cnode_r)
 	snprintf(hobj->fsname, sizeof(hobj->fsname),
 		 "/xeno:%s", hobj->name);
 
-	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
+	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0660);
 	if (fd < 0)
 		return __bt(-errno);
 
