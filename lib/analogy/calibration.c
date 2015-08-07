@@ -30,6 +30,12 @@
 #include "boilerplate/list.h"
 #include "calibration.h"
 
+#define CHK(func, ...)								\
+do {										\
+	int rc = func(__VA_ARGS__);						\
+	if (rc < 0) 								\
+		return -1;							\
+} while (0)
 
 #define ARRAY_LEN(a)  (sizeof(a) / sizeof((a)[0]))
 
@@ -212,12 +218,19 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 	if (d == NULL)
 		return -1;
 
-	read_str(&data->driver_name, d, PLATFORM_STR, DRIVER_STR);
-	read_str(&data->board_name, d, PLATFORM_STR, BOARD_STR);
+	CHK(read_str, &data->driver_name, d, PLATFORM_STR, DRIVER_STR);
+	CHK(read_str, &data->board_name, d, PLATFORM_STR, BOARD_STR);
 
 	for (k = 0; k < ARRAY_LEN(subdevice); k++) {
 		read_int(&nb_elements, d, subdevice[k], -1, ELEMENTS_STR);
-		read_int(&index, d, subdevice[k], -1, INDEX_STR);
+		if (nb_elements < 0 ) {
+			/* AO is optional */
+			if (!strncmp(subdevice[k], AO_SUBD_STR, sizeof(AO_SUBD_STR)))
+			     break;
+			return -1;
+		}
+
+		CHK(read_int, &index, d, subdevice[k], -1, INDEX_STR);
 
 		if (strncmp(subdevice[k], AI_SUBD_STR,
 			    strlen(AI_SUBD_STR)) == 0) {
@@ -236,19 +249,19 @@ int a4l_read_calibration_file(char *name, struct a4l_calibration_data *data)
 		}
 
 		for (i = 0; i < nb_elements; i++) {
-			read_int(&p->expansion, d, subdevice[k], i,
+			CHK(read_int, &p->expansion, d, subdevice[k], i,
 				 EXPANSION_STR);
-			read_int(&p->nb_coeff, d, subdevice[k], i,
+			CHK(read_int, &p->nb_coeff, d, subdevice[k], i,
 				 NBCOEFF_STR);
-			read_int(&p->channel, d, subdevice[k], i,
+			CHK(read_int, &p->channel, d, subdevice[k], i,
 				 CHANNEL_STR);
-			read_int(&p->range, d, subdevice[k], i,
+			CHK(read_int, &p->range, d, subdevice[k], i,
 				 RANGE_STR);
 
 			p->coeff = malloc(p->nb_coeff * sizeof(double));
 
 			for (j = 0; j < p->nb_coeff; j++) {
-				read_dbl(&p->coeff[j], d, subdevice[k], i,
+				CHK(read_dbl,&p->coeff[j], d, subdevice[k], i,
 					 COEFF_STR, j);
 			}
 

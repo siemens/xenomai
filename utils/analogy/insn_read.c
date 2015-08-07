@@ -223,7 +223,7 @@ static int dump_calibrated(a4l_desc_t *dsc, unsigned char *buf, int size)
 	err = a4l_read_calibration_file(calibration_file, &cal_info);
 	if (err < 0) {
 		fprintf(stderr,
-			"insn_read: failed to read /tmp/calibration.txt \n");
+			"insn_read: error reading the calibration file \n");
 		goto out;
 	}
 
