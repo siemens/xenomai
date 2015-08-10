@@ -215,7 +215,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 
 	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
 		registry_destroy_file(&evcb->fsobj);
-		eventobj_destroy(&evcb->evobj);
+		eventobj_uninit(&evcb->evobj);
 		xnfree(evcb);
 		ret = -EEXIST;
 	} else
