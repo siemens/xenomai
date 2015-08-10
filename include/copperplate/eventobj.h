@@ -82,6 +82,8 @@ int eventobj_init(struct eventobj *evobj,
 
 int eventobj_destroy(struct eventobj *evobj);
 
+void eventobj_uninit(struct eventobj *evobj);
+  
 int eventobj_post(struct eventobj *evobj,
 		  unsigned int bits);
 

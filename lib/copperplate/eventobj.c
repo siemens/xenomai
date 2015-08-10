@@ -59,6 +59,13 @@ int eventobj_destroy(struct eventobj *evobj)
 	return 0;
 }
 
+void eventobj_uninit(struct eventobj *evobj)
+{
+	int ret = cobalt_event_destroy(&evobj->core.event);
+	assert(ret == 0);
+	(void)ret;
+}
+
 int eventobj_wait(struct eventobj *evobj,
 		  unsigned int bits, unsigned int *bits_r,
 		  int mode, const struct timespec *timeout)
@@ -184,6 +191,11 @@ int eventobj_destroy(struct eventobj *evobj)
 		return ret;
 
 	return 0;
+}
+
+void eventobj_uninit(struct eventobj *evobj)
+{
+	syncobj_uninit(&evobj->core.sobj);
 }
 
 int eventobj_wait(struct eventobj *evobj,
