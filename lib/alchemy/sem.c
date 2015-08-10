@@ -226,7 +226,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 
 	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
 		registry_destroy_file(&scb->fsobj);
-		semobj_destroy(&scb->smobj);
+		semobj_uninit(&scb->smobj);
 		xnfree(scb);
 		ret = -EEXIST;
 	} else
