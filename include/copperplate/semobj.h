@@ -66,6 +66,8 @@ int semobj_init(struct semobj *smobj,
 
 int semobj_destroy(struct semobj *smobj);
 
+void semobj_uninit(struct semobj *smobj);
+
 int semobj_post(struct semobj *smobj);
 
 int semobj_broadcast(struct semobj *smobj);

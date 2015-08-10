@@ -73,6 +73,13 @@ int semobj_destroy(struct semobj *smobj)
 	return ret;
 }
 
+void semobj_uninit(struct semobj *smobj)
+{
+	int ret = __RT(sem_destroy(&smobj->core.sem));
+	assert(ret == 0);
+	(void)ret;
+}
+
 int semobj_post(struct semobj *smobj)
 {
 	int ret;
@@ -215,6 +222,11 @@ int semobj_destroy(struct semobj *smobj)
 		return -EINVAL;
 
 	return syncobj_destroy(&smobj->core.sobj, &syns);
+}
+
+void semobj_uninit(struct semobj *smobj)
+{
+	syncobj_uninit(&smobj->core.sobj);
 }
 
 int semobj_post(struct semobj *smobj)
