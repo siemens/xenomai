@@ -83,7 +83,7 @@ STATUS memPartAddToPool(PART_ID partId,
 {
 	struct wind_mempart *mp;
 	struct service svc;
-	STATUS ret;
+	STATUS ret = OK;
 
 	if (poolSize == 0) {
 		errno = S_memLib_INVALID_NBYTES;
