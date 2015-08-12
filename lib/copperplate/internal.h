@@ -50,9 +50,6 @@ struct shared_heap {
 	char name[XNOBJECT_NAME_LEN];
 	pthread_mutex_t lock;
 	struct listobj extents;
-	size_t extentsize;
-	size_t hdrsize;
-	size_t npages;
 	size_t ubytes;
 	size_t total;
 	size_t maxcont;
