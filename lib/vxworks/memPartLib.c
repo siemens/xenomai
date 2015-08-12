@@ -156,6 +156,8 @@ void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 	__RT(pthread_mutex_lock(&mp->lock));
 
 	p = heapobj_alloc(&mp->hobj, nBytes);
+	if (p == NULL)
+		goto out;
 
 	mp->stats.numBytesAlloc += nBytes;
 	mp->stats.numBlocksAlloc++;
@@ -163,7 +165,7 @@ void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 	mp->stats.numBlocksFree--;
 	if (mp->stats.numBytesAlloc > mp->stats.maxBytesAlloc)
 		mp->stats.maxBytesAlloc = mp->stats.numBytesAlloc;
-
+out:
 	__RT(pthread_mutex_unlock(&mp->lock));
 
 	return p;
