@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 #include <pwd.h>
 #include <errno.h>
 #include <getopt.h>
@@ -193,9 +194,24 @@ static int copperplate_init(void)
 
 static int copperplate_parse_option(int optnum, const char *optarg)
 {
+	size_t memsz;
+
 	switch (optnum) {
 	case mempool_opt:
-		__copperplate_setup_data.mem_pool = atoi(optarg) * 1024;
+		memsz = get_mem_size(optarg);
+		if (memsz == 0)
+			return -EINVAL;
+		/*
+		 * Emulate former sloppy syntax: values below 64k are
+		 * likely to represent kilobytes, not bytes.
+		 */
+		if (isdigit(optarg[strlen(optarg)-1]) &&
+		    memsz < 64 * 1024) {
+			memsz *= 1024;
+			if (__base_setup_data.no_sanity == 0)
+				warning("--mem-pool-size=<size[K|M|G]>, using %Zu bytes", memsz);
+		}
+		__copperplate_setup_data.mem_pool = memsz;
 		break;
 	case session_opt:
 		__copperplate_setup_data.session_label = strdup(optarg);
@@ -216,7 +232,7 @@ static int copperplate_parse_option(int optnum, const char *optarg)
 
 static void copperplate_help(void)
 {
-	fprintf(stderr, "--mem-pool-size=<sizeK> 	size of the main heap (kbytes)\n");
+	fprintf(stderr, "--mem-pool-size=<size[K|M|G]> 	size of the main heap\n");
         fprintf(stderr, "--no-registry			suppress object registration\n");
         fprintf(stderr, "--shared-registry		enable public access to registry\n");
         fprintf(stderr, "--registry-root=<path>		root path of registry\n");
