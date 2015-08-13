@@ -23,8 +23,10 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include <malloc.h>
 #include "boilerplate/atomic.h"
 #include "boilerplate/lock.h"
@@ -317,6 +319,35 @@ char *lookup_command(const char *cmd)
 	}
 
 	return NULL;
+}
+
+size_t get_mem_size(const char *arg)
+{
+	size_t size;
+	char *p;
+
+	size = strtol(arg, &p, 0);
+	if (size == LONG_MIN || size == LONG_MAX)
+		return 0;
+
+	if (*p == '\0')
+		return size;
+
+	switch (tolower(*p)) {
+	case 'k':
+		size *= 1024;
+		break;
+	case 'm':
+		size *= (1024 * 1024);
+		break;
+	case 'g':
+		size *= (1024 * 1024 * 1024);
+		break;
+	default:
+		size = 0;
+	}
+
+	return size;
 }
 
 const char *config_strings[] = {

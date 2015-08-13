@@ -111,7 +111,9 @@ int get_static_cpu_count(void);
 pid_t get_thread_pid(void);
 
 char *lookup_command(const char *cmd);
-  
+
+size_t get_mem_size(const char *arg);
+
 #ifdef __cplusplus
 }
 #endif
