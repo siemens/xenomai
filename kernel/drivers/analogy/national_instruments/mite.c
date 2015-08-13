@@ -127,7 +127,7 @@ int a4l_mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 
 	pci_set_master(mite->pcidev);
 
-	if (pci_request_regions( mite->pcidev, "mite")) {
+	if (pci_request_regions(mite->pcidev, "mite")) {
 		__a4l_err("failed to request mite io regions\n");
 		return -EIO;
 	};
@@ -139,6 +139,7 @@ int a4l_mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->mite_io_addr = ioremap(addr, length);
 	if (!mite->mite_io_addr) {
 		__a4l_err("failed to remap mite io memory address\n");
+		pci_release_regions(mite->pcidev);
 		return -ENOMEM;
 	}
 
@@ -154,6 +155,7 @@ int a4l_mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->daq_io_addr = ioremap(mite->daq_phys_addr, length);
 	if (!mite->daq_io_addr) {
 		__a4l_err("failed to remap daq io memory address\n");
+		pci_release_regions(mite->pcidev);
 		return -ENOMEM;
 	}
 
