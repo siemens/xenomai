@@ -128,7 +128,7 @@ static inline size_t get_pagemap_size(size_t h)
 	 */
 	assert((h & ~HOBJ_PAGE_MASK) == 0);
 	return __align_to((h >> HOBJ_PAGE_SHIFT) * sizeof(struct page_entry)
-			  + sizeof(struct shared_extent), HOBJ_PAGE_SIZE);
+			  + sizeof(struct shared_extent), HOBJ_MINALIGNSZ);
 }
 
 static void init_extent(void *base, struct shared_extent *extent)
