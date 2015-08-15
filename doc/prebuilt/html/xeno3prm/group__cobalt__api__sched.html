@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc6</span>
+   &#160;<span id="projectnumber">3.0-rc7</span>
    </div>
   </td>
  </tr>
@@ -675,18 +675,21 @@ a negative error number if:</dd></dl>
   </dd>
 </dl>
 <dl class="section user"><dt>Settings applicable to SCHED_TP</dt><dd></dd></dl>
-<p>This call installs the temporal partitions for <em>cpu</em>.</p>
+<p>This call controls the temporal partitions for <em>cpu</em>, depending on the operation requested.</p>
 <ul>
-<li>config.tp.windows should be a non-null set of time windows, defining the scheduling time slots for <em>cpu</em>. Each window defines its offset from the start of the global time frame (windows[].offset), a duration (windows[].duration), and the partition id it applies to (windows[].ptid).</li>
+<li>config.tp.op specifies the operation to perform:</li>
+<li><em>sched_tp_install</em> installs a new TP schedule on <em>cpu</em>, defined by config.tp.windows[]. The global time frame is not activated upon return from this request yet; <em>sched_tp_start</em> must be issued to activate the temporal scheduling on <em>CPU</em>.</li>
+<li><em>sched_tp_uninstall</em> removes the current TP schedule from <em>cpu</em>, releasing all the attached resources. If no TP schedule exists on <em>CPU</em>, this request has no effect.</li>
+<li><em>sched_tp_start</em> enables the temporal scheduling on <em>cpu</em>, starting the global time frame. If no TP schedule exists on <em>cpu</em>, this action has no effect.</li>
+<li><em>sched_tp_stop</em> disables the temporal scheduling on <em>cpu</em>. The current TP schedule is not uninstalled though, and may be re-started later by a <em>sched_tp_start</em> request.  As a consequence of this request, threads assigned to the un-scheduled partitions may be starved from CPU time.</li>
+<li>for a <em>sched_tp_install</em> operation, config.tp.nr_windows indicates the number of elements present in the config.tp.windows[] array. If config.tp.nr_windows is zero, the action taken is identical to <em>sched_tp_uninstall</em>.</li>
+<li>if config.tp.nr_windows is non-zero, config.tp.windows[] is a set scheduling time slots for threads assigned to <em>cpu</em>. Each window is specified by its offset from the start of the global time frame (windows[].offset), its duration (windows[].duration), and the partition id it should activate during such period of time (windows[].ptid). This field is not considered for other requests than <em>sched_tp_install</em>.</li>
 </ul>
-<p>Time windows must be strictly contiguous, i.e. windows[n].offset + windows[n].duration shall equal windows[n + 1].offset. If windows[].ptid is in the range [0..CONFIG_XENO_OPT_SCHED_TP_NRPART-1], SCHED_TP threads which belong to the partition being referred to may run for the duration of the time window.</p>
-<p>Time holes may be defined using windows assigned to the pseudo partition #-1, during which no SCHED_TP threads may be scheduled.</p>
-<ul>
-<li>config.tp.nr_windows should define the number of elements present in the config.tp.windows[] array.</li>
-</ul>
-<p><em>info</em> is ignored for this request.</p>
+<p>Time slots must be strictly contiguous, i.e. windows[n].offset + windows[n].duration shall equal windows[n + 1].offset. If windows[].ptid is in the range [0..CONFIG_XENO_OPT_SCHED_TP_NRPART-1], SCHED_TP threads which belong to the partition being referred to may be given CPU time on <em>cpu</em>, from time windows[].offset to windows[].offset + windows[].duration, provided those threads are in a runnable state.</p>
+<p>Time holes between valid time slots may be defined using windows activating the pseudo partition -1. When such window is active in the global time frame, no CPU time is available to SCHED_TP threads on <em>cpu</em>.</p>
+<dl class="section note"><dt>Note</dt><dd>The sched_tp_confsz(nr_windows) macro returns the length of config.tp depending on the number of time slots to be defined in config.tp.windows[], as specified by config.tp.nr_windows.</dd></dl>
 <dl class="section user"><dt>Settings applicable to SCHED_QUOTA</dt><dd></dd></dl>
-<p>This call manages thread groups running on <em>cpu</em>.</p>
+<p>This call manages thread groups running on <em>cpu</em>, defining per-group quota for limiting their CPU consumption.</p>
 <ul>
 <li>config.quota.op should define the operation to be carried out. Valid operations are:<ul>
 <li>sched_quota_add for creating a new thread group on <em>cpu</em>. The new group identifier will be written back to info.tgid upon success. A new group is given no initial runtime budget when created. sched_quota_set should be issued to enable it.</li>
