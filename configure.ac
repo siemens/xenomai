@@ -144,10 +144,6 @@ case "$build_for" in
 	XENO_TARGET_ARCH=x86
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
- nios2-*)
-	XENO_TARGET_ARCH=nios2
-	CONFIG_XENO_DEFAULT_PERIOD=10000000
-	;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $build_for -- Sorry."
@@ -158,15 +154,7 @@ esac
 
 AC_MSG_RESULT([$XENO_TARGET_ARCH])
 AM_CONDITIONAL(XENO_TARGET_ARCH_X86,[test $XENO_TARGET_ARCH = x86])
-
-case "$XENO_TARGET_ARCH" in
- nios2)
-	AC_DISABLE_SHARED
-	;;
- *)
-	AC_ENABLE_SHARED
-	;;
-esac
+AC_ENABLE_SHARED
 AC_PROG_LIBTOOL
 
 dnl
@@ -872,10 +860,6 @@ AC_CONFIG_FILES([ \
 	lib/cobalt/arch/x86/include/Makefile \
 	lib/cobalt/arch/x86/include/asm/Makefile \
 	lib/cobalt/arch/x86/include/asm/xenomai/Makefile \
-	lib/cobalt/arch/nios2/Makefile \
-	lib/cobalt/arch/nios2/include/Makefile \
-	lib/cobalt/arch/nios2/include/asm/Makefile \
-	lib/cobalt/arch/nios2/include/asm/xenomai/Makefile \
 	lib/mercury/Makefile \
 	lib/copperplate/Makefile \
 	lib/copperplate/regd/Makefile \
