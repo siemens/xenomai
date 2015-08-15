@@ -148,10 +148,6 @@ case "$build_for" in
 	XENO_TARGET_ARCH=nios2
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
 	;;
- sh-*|sh4-*)
-	XENO_TARGET_ARCH=sh
-	CONFIG_XENO_DEFAULT_PERIOD=100000
-	;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $build_for -- Sorry."
@@ -880,10 +876,6 @@ AC_CONFIG_FILES([ \
 	lib/cobalt/arch/nios2/include/Makefile \
 	lib/cobalt/arch/nios2/include/asm/Makefile \
 	lib/cobalt/arch/nios2/include/asm/xenomai/Makefile \
-	lib/cobalt/arch/sh/Makefile \
-	lib/cobalt/arch/sh/include/Makefile \
-	lib/cobalt/arch/sh/include/asm/Makefile \
-	lib/cobalt/arch/sh/include/asm/xenomai/Makefile \
 	lib/mercury/Makefile \
 	lib/copperplate/Makefile \
 	lib/copperplate/regd/Makefile \
