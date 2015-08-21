@@ -144,15 +144,7 @@ __weak inline int clock_nanosleep(clockid_t clock_id, int flags,
 
 	return nanosleep(&tmp, remain);
 }
-#else  /* HAVE_CLOCK_NANOSLEEP || COBALT */
-/*
- * Either libcobalt or the libc implements this, we only want the
- * possibly missing declaration from the libc headers.
- */
-int clock_nanosleep(clockid_t clock_id, int flags,
-		    const struct timespec *request,
-		    struct timespec *remain);
-#endif /* HAVE_CLOCK_NANOSLEEP || COBALT */
+#endif /* !HAVE_CLOCK_NANOSLEEP && MERCURY */
 
 #ifndef HAVE_SCHED_GETCPU
 /*
@@ -192,11 +184,25 @@ int pthread_setname_np(pthread_t thread, const char *name)
 {
 	return ENOSYS;
 }
-#else /* HAVE_PTHREAD_SETNAME_NP || COBALT */
-/* Same as clock_nanosleep() */
-int pthread_setname_np(pthread_t thread, const char *name);
-#endif /* HAVE_PTHREAD_SETNAME_NP || COBALT */
+#endif /* !HAVE_PTHREAD_SETNAME_NP && MERCURY */
 
 #endif /* __IN_XENO__ */
+
+#if defined(__COBALT_WRAP__) || defined(__IN_XENO__)
+/*
+ * clock_nanosleep() and pthread_setname_np() must be declared when the libc
+ * does not declare them, both for compiling xenomai, and for compiling
+ * applications wrapping these symbols to the libcobalt versions.
+ */
+#ifndef HAVE_CLOCK_NANOSLEEP
+int clock_nanosleep(clockid_t clock_id, int flags,
+		    const struct timespec *request,
+		    struct timespec *remain);
+#endif /* !HAVE_CLOCK_NANOSLEEP */
+
+#ifndef HAVE_PTHREAD_SETNAME_NP
+int pthread_setname_np(pthread_t thread, const char *name);
+#endif /* !HAVE_PTHREAD_SETNAME_NP */
+#endif /* __COBALT_WRAP__ || __IN_XENO__ */
 
 #endif /* _BOILERPLATE_LIBC_H */

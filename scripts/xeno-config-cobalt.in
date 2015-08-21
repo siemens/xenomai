@@ -195,6 +195,7 @@ if test x$do_cflags = xy; then
 	case "$skin" in
 	    posix|rtdm)
 		test x$compat = xy && cflags="$cflags -I$XENO_INCLUDE_DIR/trank/posix"
+		cflags="$cflags -D__COBALT_WRAP__"
 		;;
 	    cobalt)
 		;;
