@@ -79,7 +79,6 @@ fi
 
 do_ldflags=
 do_cflags=
-do_kcflags=
 
 while test $# -gt 0; do
     case "$1" in
@@ -129,9 +128,6 @@ while test $# -gt 0; do
 	--cflags)
 	    do_cflags=y
 	    ;;
-	--kcflags)
-	    do_kcflags=y
-	    ;;
 	--ldflags)
 	    do_ldflags=y
 	    ;;
@@ -169,15 +165,6 @@ if test x$do_cflags = xy; then
 	esac
     done
     echo $cflags
-fi
-
-if test x$do_kcflags = xy; then
-    for skin in $skin_list; do
-	if test \! "$skin" = rtdm; then
-	    echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
-	    exit 1
-	fi
-    done
 fi
 
 if test x$do_ldflags = xy; then

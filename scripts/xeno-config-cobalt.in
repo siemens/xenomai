@@ -55,7 +55,6 @@ Options :
         --[skin=]posix|vxworks|psos|alchemy|rtdm|smokey|cobalt
         --auto-init|no-auto-init
         --cflags
-        --kcflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
         --core
@@ -109,7 +108,6 @@ fi
 
 do_ldflags=
 do_cflags=
-do_kcflags=
 
 while test $# -gt 0; do
     case "$1" in
@@ -164,9 +162,6 @@ while test $# -gt 0; do
 	--cflags)
 	    do_cflags=y
 	    ;;
-	--kcflags)
-	    do_kcflags=y
-	    ;;
 	--ldflags)
 	    do_ldflags=y
 	    ;;
@@ -213,22 +208,6 @@ if test x$do_cflags = xy; then
 	esac
     done
     echo $cflags
-fi
-
-if test x$do_kcflags = xy; then
-    test -z "$skin_list" && skin_list=rtdm
-    for skin in $skin_list; do
-	case "$skin" in
-	    rtdm)
-		kcflags='-Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai'
-	    	;;
-	    *)
-		echo "$skin is not a kernel API (maybe --cflags?)" 1>&2
-		exit 1
-		;;
-	esac
-    done
-    echo $kcflags
 fi
 
 if test x$do_ldflags = xy; then

@@ -35,7 +35,7 @@ SYNOPSIS
 
 *xeno-config* *--version*
 
-*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--cflags*] [*--kcflags*] [*--ldflags*] [*--library-dir*|*--libdir*|*--user-libdir*]
+*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--cflags*] [*--ldflags*] [*--library-dir*|*--libdir*|*--user-libdir*]
 
 DESCRIPTION
 ------------
@@ -106,12 +106,6 @@ with POSIX symbol wrapping.
 *--cflags*::
 Output the C compiler command-line options (_CFLAGS_) which are required
 to compile applications based on the selected Xenomai API/skin.
-
-*--kcflags*::
-Output the C compiler command-line options (_CFLAGS_) which are
-required to compile a kernel driver based on the RTDM
-interface. *--rtdm* must appear on the command line before
-*--kcflags*.
 
 *--ldflags*::
 Output the C compiler command-line options (_LDFLAGS_) which are
