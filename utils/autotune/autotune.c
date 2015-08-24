@@ -159,7 +159,6 @@ static void create_sampler(pthread_t *tid, int fd)
 	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
 	param.sched_priority = 99;
 	pthread_attr_setschedparam(&attr, &param);
-	pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN * 4);
 	ret = pthread_create(tid, &attr, sampler_thread, (void *)(long)fd);
 	if (ret)
 		error(1, ret, "sampling thread");
@@ -180,7 +179,6 @@ static void create_load(pthread_t *tid)
 	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
 	param.sched_priority = 1;
 	pthread_attr_setschedparam(&attr, &param);
-	pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN * 8);
 	ret = pthread_create(tid, &attr, load_thread, NULL);
 	if (ret)
 		error(1, ret, "load thread");
