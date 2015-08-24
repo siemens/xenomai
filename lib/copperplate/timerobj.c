@@ -149,7 +149,7 @@ static void timerobj_spawn_server(void)
 	cta.prologue = server_prologue;
 	cta.run = timerobj_server;
 	cta.arg = NULL;
-	cta.stacksize = PTHREAD_STACK_MIN * 16;
+	cta.stacksize = PTHREAD_STACK_DEFAULT;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 
 	__bt(copperplate_create_thread(&cta, &svthread));
