@@ -129,6 +129,8 @@ static inline void dump_configuration(void)
 
 	for (n = 0; config_strings[n]; n++)
 		puts(config_strings[n]);
+
+	printf("PTHREAD_STACK_DEFAULT=%d\n", PTHREAD_STACK_DEFAULT);
 }
 
 static int collect_cpu_affinity(const char *cpu_list)

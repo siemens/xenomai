@@ -48,7 +48,7 @@ config-dump.h: Makefile $(CONFIG_HEADER)
 	-e 's/^.*$$/\"&\",/' $(CONFIG_HEADER); echo '"---",'; \
 	sed -e '/#undef CONFIG_/!d' \
 	-e 's/.*\(CONFIG_[^ ]*\).*/\1/' \
-	-e 's/^.*$$/\"& is OFF\",/' $(CONFIG_HEADER) ) > $@
+	-e 's/^.*$$/\"& is OFF\",/' $(CONFIG_HEADER); echo '"---",' ) > $@
 
 libboilerplate_la_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@				\

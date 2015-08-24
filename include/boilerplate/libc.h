@@ -18,6 +18,8 @@
 #ifndef _BOILERPLATE_LIBC_H
 #define _BOILERPLATE_LIBC_H
 
+#include <limits.h>
+
 #ifdef __IN_XENO__
 /*
  * Quirks for dealing with outdated libc* issues.  This header will be
@@ -204,5 +206,15 @@ int clock_nanosleep(clockid_t clock_id, int flags,
 int pthread_setname_np(pthread_t thread, const char *name);
 #endif /* !HAVE_PTHREAD_SETNAME_NP */
 #endif /* __COBALT_WRAP__ || __IN_XENO__ */
+
+#ifndef PTHREAD_STACK_DEFAULT
+#define PTHREAD_STACK_DEFAULT			\
+	({					\
+		int __ret = PTHREAD_STACK_MIN;	\
+		if (__ret < 65536)		\
+			__ret = 65536;		\
+		__ret;				\
+	})
+#endif /* !PTHREAD_STACK_DEFAULT */
 
 #endif /* _BOILERPLATE_LIBC_H */
