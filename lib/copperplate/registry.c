@@ -780,7 +780,7 @@ int __registry_pkg_init(const char *arg0, char *mountpt, int flags)
 	 * smaller stack size for the fs thread than the default 8mb
 	 * set by the Glibc.
 	 */
-	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN * 4);
+	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_DEFAULT);
 	pthread_attr_setscope(&thattr, PTHREAD_SCOPE_PROCESS);
 	p->arg0 = arg0;
 	p->mountpt = mountpt;
