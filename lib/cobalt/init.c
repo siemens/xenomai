@@ -178,7 +178,7 @@ static void __cobalt_init(void)
 
 static inline void commit_stack_memory(void)
 {
-	char stk[PTHREAD_STACK_MIN];
+	char stk[PTHREAD_STACK_MIN / 2];
 	cobalt_commit_memory(stk);
 }
 

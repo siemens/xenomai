@@ -26,7 +26,7 @@
 COBALT_IMPL(int, pthread_attr_init, (pthread_attr_t *attr))
 {
 	__STD(pthread_attr_init)(attr);
-	return pthread_attr_setstacksize(attr, COBALT_STACKSIZE_DEFAULT);
+	return pthread_attr_setstacksize(attr, PTHREAD_STACK_DEFAULT);
 }
 
 int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex)

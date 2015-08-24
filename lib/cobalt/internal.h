@@ -23,8 +23,6 @@
 #include <boilerplate/ancillaries.h>
 #include "current.h"
 
-#define COBALT_STACKSIZE_DEFAULT	(PTHREAD_STACK_MIN * 4)
-
 extern void *cobalt_umm_private;
 
 extern void *cobalt_umm_shared;
