@@ -1370,7 +1370,6 @@ int main(int argc, const char *argv[])
 	pthread_attr_setschedpolicy(&rt_attr, SCHED_FIFO);
 	sp.sched_priority = 1;
 	pthread_attr_setschedparam(&rt_attr, &sp);
-	pthread_attr_setstacksize(&rt_attr, PTHREAD_STACK_MIN);
 
 	if (quiet < 2)
 		printf("== Threads:");
