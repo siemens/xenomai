@@ -53,8 +53,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 		return __bt(ret);
 
 	stacksize = cta->stacksize;
-	if (stacksize < PTHREAD_STACK_MIN * 4)
-		stacksize = PTHREAD_STACK_MIN * 4;
+	if (stacksize < PTHREAD_STACK_DEFAULT)
+		stacksize = PTHREAD_STACK_DEFAULT;
 
 	pthread_attr_init_ex(&attr_ex);
 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
@@ -120,8 +120,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 		return __bt(ret);
 
 	stacksize = cta->stacksize;
-	if (stacksize < PTHREAD_STACK_MIN * 4)
-		stacksize = PTHREAD_STACK_MIN * 4;
+	if (stacksize < PTHREAD_STACK_DEFAULT)
+		stacksize = PTHREAD_STACK_DEFAULT;
 
 	pthread_attr_init(&attr);
 	pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
