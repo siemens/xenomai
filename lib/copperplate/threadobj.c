@@ -202,7 +202,7 @@ static void start_agent(void)
 	cta.prologue = agent_prologue;
 	cta.run = agent_loop;
 	cta.arg = NULL;
-	cta.stacksize = PTHREAD_STACK_MIN * 4;
+	cta.stacksize = PTHREAD_STACK_DEFAULT;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 
 	ret = copperplate_create_thread(&cta, &ptid);
