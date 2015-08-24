@@ -121,7 +121,6 @@ static void __create_quota_thread(pthread_t *tid, const char *name,
 	param_ex.sched_priority = 1;
 	param_ex.sched_quota_group = tgid;
 	pthread_attr_setschedparam_ex(&attr_ex, &param_ex);
-	pthread_attr_setstacksize_ex(&attr_ex, PTHREAD_STACK_MIN * 2);
 	ret = pthread_create_ex(tid, &attr_ex, thread_body, count_r);
 	if (ret)
 		error(1, ret, "pthread_create_ex(SCHED_QUOTA)");
@@ -146,7 +145,6 @@ static void __create_fifo_thread(pthread_t *tid, const char *name,
 	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
 	param.sched_priority = 1;
 	pthread_attr_setschedparam(&attr, &param);
-	pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN * 2);
 	ret = pthread_create(tid, &attr, thread_body, count_r);
 	if (ret)
 		error(1, ret, "pthread_create(SCHED_FIFO)");

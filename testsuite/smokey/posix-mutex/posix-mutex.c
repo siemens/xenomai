@@ -220,7 +220,6 @@ static int dispatch(const char *service_name,
 		pthread_attr_setschedparam(&threadattr, &param);
 		pthread_attr_setinheritsched(&threadattr,
 					     PTHREAD_EXPLICIT_SCHED);
-		pthread_attr_setstacksize(&threadattr, PTHREAD_STACK_MIN * 2);
 		handler = va_arg(ap, void *);
 		status = pthread_create(thread, &threadattr, handler,
 					va_arg(ap, void *));
