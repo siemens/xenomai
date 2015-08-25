@@ -237,6 +237,7 @@ int main(int argc, char *const argv[])
 {
 	int fd, period, ret, c, lindex, tuned = 0;
 	pthread_t load_pth;
+	cpu_set_t cpu_set;
 	time_t start;
 
 	period = CONFIG_XENO_DEFAULT_PERIOD;
@@ -272,6 +273,12 @@ int main(int argc, char *const argv[])
 			return EINVAL;
 		}
 	}
+
+	CPU_ZERO(&cpu_set);
+	CPU_SET(0, &cpu_set);
+	ret = sched_setaffinity(0, sizeof(cpu_set), &cpu_set);
+	if (ret)
+		error(1, errno, "cannot set CPU affinity");
 
 	if (background) {
 		ret = daemon(0, 0);
