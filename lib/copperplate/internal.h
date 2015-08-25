@@ -81,6 +81,8 @@ extern "C" {
 
 void copperplate_set_current_name(const char *name);
 
+int copperplate_get_current_name(char *name, size_t maxlen);
+
 int copperplate_kill_tid(pid_t tid, int sig);
 
 int copperplate_create_thread(struct corethread_attributes *cta,

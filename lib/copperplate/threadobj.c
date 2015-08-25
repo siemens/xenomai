@@ -1309,17 +1309,21 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		finalize_thread(current);
 	}
 
-	if (name)
+	if (name) {
 		namecpy(thobj->name, name);
-	else
-		*thobj->name = '\0';
+		copperplate_set_current_name(name);
+	} else {
+		ret = copperplate_get_current_name(thobj->name,
+						   sizeof(thobj->name));
+		if (ret)
+			warning("cannot get process name, %s", symerror(ret));
+	}
 
 	thobj->ptid = pthread_self();
 	thobj->pid = get_thread_pid();
 	thobj->errno_pointer = &errno;
 	threadobj_set_agent(thobj);
 	backtrace_init_context(&thobj->btd, name);
-	copperplate_set_current_name(thobj->name);
 	ret = threadobj_setup_corespec(thobj);
 	if (ret) {
 		warning("prologue failed for thread %s, %s",
@@ -1741,7 +1745,7 @@ static inline int main_overlay(void)
 	}
 
 	tcb->status = __THREAD_S_STARTED|__THREAD_S_ACTIVE;
-	threadobj_prologue(tcb, "main");
+	threadobj_prologue(tcb, NULL);
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
 	return 0;

@@ -153,6 +153,14 @@ static inline void prepare_wait_corespec(void)
 
 #endif  /* CONFIG_XENO_MERCURY */
 
+int copperplate_get_current_name(char *name, size_t maxlen)
+{
+	if (maxlen < 16)
+		return -ENOSPC;
+
+	return prctl(PR_GET_NAME, (unsigned long)name, 0, 0, 0);
+}
+
 static int thread_spawn_prologue(struct corethread_attributes *cta)
 {
 	int ret;
