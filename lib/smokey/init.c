@@ -188,6 +188,12 @@
  *   non-zero value, which should be interpreted by all parties as the
  *   desired verbosity level (defaults to 1).
  *
+ * - --vm gives a hint to the test code, about running in a virtual
+ * environment, such as KVM. When passed, the boolean @a smokey_on_vm
+ * is set. Each test may act upon this setting, such as skipping
+ * time-dependent checks that may fail due to any slowdown induced by
+ * the virtualization.
+ *
  * @par Writing a test driver based on the Smokey API
  *
  * A test driver provides the main() entry point, which should iterate
@@ -250,13 +256,15 @@ DEFINE_PRIVATE_LIST(smokey_test_list);
 
 int smokey_keep_going;
 
+int smokey_verbose_mode = 1;
+
+int smokey_on_vm = 0;
+
 static DEFINE_PRIVATE_LIST(register_list);
 
 static int test_count;
 
 static int do_list;
-
-int smokey_verbose_mode = 1;
 
 static const struct option smokey_options[] = {
 	{
@@ -277,6 +285,12 @@ static const struct option smokey_options[] = {
 		.val = 1,
 	},
 	{
+#define vm_opt		3
+		.name = "vm",
+		.flag = &smokey_on_vm,
+		.val = 1,
+	},
+	{
 		/* sentinel */
 	}
 };
@@ -286,6 +300,7 @@ static void smokey_help(void)
         fprintf(stderr, "--keep-going			don't stop upon test error\n");
 	fprintf(stderr, "--list				list all tests\n");
 	fprintf(stderr, "--run[=<id[,id...]>]]		run [portion of] the test list\n");
+	fprintf(stderr, "--vm				hint about running in a virtual environment\n");
 }
 
 static inline void pick_test_range(int start, int end)
@@ -431,6 +446,7 @@ static int smokey_parse_option(int optnum, const char *optarg)
 
 	switch (optnum) {
 	case keep_going_opt:
+	case vm_opt:
 		break;
 	case run_opt:
 		if (pvlist_empty(&register_list)) {

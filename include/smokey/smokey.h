@@ -166,4 +166,6 @@ extern int smokey_keep_going;
 
 extern int smokey_verbose_mode;
 
+extern int smokey_on_vm;
+
 #endif /* _XENOMAI_SMOKEY_SMOKEY_H */
