@@ -223,6 +223,9 @@ static int run_sched_tp(struct smokey_test *t, int argc, char *const argv[])
 	sem_destroy(&barrier);
 	free(p);
 
+	if (smokey_on_vm)
+		return 0;
+
 	if (overflow) {
 		smokey_warning("schedule overflowed");
 		return -EPROTO;
