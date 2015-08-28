@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libanalogy.la
 
-libanalogy_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 1:0:0
+libanalogy_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 1:0:0 -lm
 
 libanalogy_la_SOURCES =	\
 	async.c		\
