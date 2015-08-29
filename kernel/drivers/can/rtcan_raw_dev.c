@@ -233,66 +233,52 @@ static int rtcan_calc_bit_time(struct rtcan_device *dev,
 #endif /* CONFIG_XENO_DRIVERS_CAN_CALC_BITTIME_OLD */
 
 static inline int rtcan_raw_ioctl_dev_get(struct rtcan_device *dev,
-					  int request, struct ifreq *ifr)
+					  int request, struct can_ifreq *ifr)
 {
-    struct can_bittime *bittime;
-    can_baudrate_t *baudrate = NULL;
-    can_state_t *state;
-    can_ctrlmode_t *ctrlmode;
     rtdm_lockctx_t lock_ctx;
-    int ret = 0;
 
     switch (request) {
 
-    case SIOCGIFINDEX: {
+    case SIOCGIFINDEX:
 	ifr->ifr_ifindex = dev->ifindex;
 	break;
-    }
 
     case SIOCGCANSTATE:
-	state = (can_state_t *)&ifr->ifr_ifru;
 	rtdm_lock_get_irqsave(&dev->device_lock, lock_ctx);
 	if (dev->do_get_state)
 	    dev->state = dev->do_get_state(dev);
-	*state = dev->state;
+	ifr->ifr_ifru.state = dev->state;
 	rtdm_lock_put_irqrestore(&dev->device_lock, lock_ctx);
 	break;
 
     case SIOCGCANCTRLMODE:
-	ctrlmode = (can_ctrlmode_t *)&ifr->ifr_ifru;
-	*ctrlmode = dev->ctrl_mode;
+	ifr->ifr_ifru.ctrlmode = dev->ctrl_mode;
 	break;
 
     case SIOCGCANBAUDRATE:
-	baudrate = (can_baudrate_t *)&ifr->ifr_ifru;
-	*baudrate = dev->baudrate;
+	ifr->ifr_ifru.baudrate = dev->baudrate;
 	break;
 
     case SIOCGCANCUSTOMBITTIME:
-	bittime = (struct can_bittime *)&ifr->ifr_ifru;
-	*bittime = dev->bit_time;
+	ifr->ifr_ifru.bittime = dev->bit_time;
 	break;
     }
 
-    return ret;
+    return 0;
 }
 
 static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
-					  int request, struct ifreq *ifr)
+					  int request, struct can_ifreq *ifr)
 {
     rtdm_lockctx_t lock_ctx;
-    can_ctrlmode_t *ctrl_mode;
-    can_mode_t *mode;
     int ret = 0, started = 0;
     struct can_bittime bit_time, *bt;
-    can_baudrate_t *baudrate = NULL;
 
     switch (request) {
     case SIOCSCANBAUDRATE:
 	if (!dev->do_set_bit_time)
 	    return 0;
-	baudrate = (can_baudrate_t *)&ifr->ifr_ifru;
-	ret = rtcan_calc_bit_time(dev, *baudrate, &bit_time.std);
+	ret = rtcan_calc_bit_time(dev, ifr->ifr_ifru.baudrate, &bit_time.std);
 	if (ret)
 	    break;
 	bit_time.type = CAN_BITTIME_STD;
@@ -317,27 +303,26 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
 
     switch (request) {
     case SIOCSCANMODE:
-	mode = (can_mode_t *)&ifr->ifr_ifru;
 	if (dev->do_set_mode &&
-	    !(*mode == CAN_MODE_START && CAN_STATE_OPERATING(dev->state)))
-	    ret = dev->do_set_mode(dev, *mode, &lock_ctx);
+	    !(ifr->ifr_ifru.mode == CAN_MODE_START &&
+	      CAN_STATE_OPERATING(dev->state)))
+	    ret = dev->do_set_mode(dev, ifr->ifr_ifru.mode, &lock_ctx);
 	break;
 
     case SIOCSCANCTRLMODE:
-	ctrl_mode = (can_ctrlmode_t *)&ifr->ifr_ifru;
-	dev->ctrl_mode = *ctrl_mode;
+	dev->ctrl_mode = ifr->ifr_ifru.ctrlmode;
 	break;
 
     case SIOCSCANBAUDRATE:
 	ret = dev->do_set_bit_time(dev, &bit_time, &lock_ctx);
 	if (!ret) {
-	    dev->baudrate = *baudrate;
+	    dev->baudrate = ifr->ifr_ifru.baudrate;
 	    dev->bit_time = bit_time;
 	}
 	break;
 
     case SIOCSCANCUSTOMBITTIME:
-	bt = (struct can_bittime *)&ifr->ifr_ifru;
+	bt = &ifr->ifr_ifru.bittime;
 	ret = dev->do_set_bit_time(dev, bt, &lock_ctx);
 	if (!ret) {
 	    dev->bit_time = *bt;
@@ -354,7 +339,6 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
     default:
 	ret = -EOPNOTSUPP;
 	break;
-
     }
 
  out:
@@ -368,9 +352,18 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
 
 int rtcan_raw_ioctl_dev(struct rtdm_fd *fd, int request, void *arg)
 {
-    int ret = 0;
-    struct ifreq *ifr;
-    struct ifreq ifr_buf;
+    struct can_ifreq *ifr;
+    int ret = 0, get = 0;
+    union {
+	    /*
+	     * We need to deal with callers still passing struct ifreq
+	     * instead of can_ifreq, which might have a larger memory
+	     * footprint (but can't be smaller though). Field offsets
+	     * will be the same regardless.
+	     */
+	    struct ifreq ifr_legacy;
+	    struct can_ifreq ifr_can;
+    } ifr_buf;
     struct rtcan_device *dev;
 
     switch (request) {
@@ -379,53 +372,46 @@ int rtcan_raw_ioctl_dev(struct rtdm_fd *fd, int request, void *arg)
     case SIOCGCANSTATE:
     case SIOCGCANBAUDRATE:
     case SIOCGCANCUSTOMBITTIME:
-
-	if (rtdm_fd_is_user(fd)) {
-	    if (!rtdm_rw_user_ok(fd, arg, sizeof(struct ifreq)) ||
-		rtdm_copy_from_user(fd, &ifr_buf, arg,
-				    sizeof(struct ifreq)))
-		return -EFAULT;
-
-	    ifr = &ifr_buf;
-	} else
-	    ifr = (struct ifreq *)arg;
-
-	if ((dev = rtcan_dev_get_by_name(ifr->ifr_name)) == NULL)
-	    return -ENODEV;
-	ret = rtcan_raw_ioctl_dev_get(dev, request, ifr);
-	rtcan_dev_dereference(dev);
-
-	if (rtdm_fd_is_user(fd) && !ret) {
-	    /* Since we yet tested if user memory is rw safe,
-	       we can copy to user space directly */
-	    if (rtdm_copy_to_user(fd, arg, ifr,
-				  sizeof(struct ifreq)))
-		return -EFAULT;
-	}
-	break;
-
+	    get = 1;
+	    /* Falldown wanted. */
     case SIOCSCANMODE:
     case SIOCSCANCTRLMODE:
     case SIOCSCANBAUDRATE:
     case SIOCSCANCUSTOMBITTIME:
 
 	if (rtdm_fd_is_user(fd)) {
-	    /* Copy struct ifreq from userspace */
+	    /* Copy struct can_ifreq from userspace */
 	    if (!rtdm_read_user_ok(fd, arg,
-				   sizeof(struct ifreq)) ||
+				   sizeof(struct can_ifreq)) ||
 		rtdm_copy_from_user(fd, &ifr_buf, arg,
-				    sizeof(struct ifreq)))
+				    sizeof(struct can_ifreq)))
 		return -EFAULT;
 
-	    ifr = &ifr_buf;
+	    ifr = &ifr_buf.ifr_can;
 	} else
-	    ifr = (struct ifreq *)arg;
+	    ifr = (struct can_ifreq *)arg;
 
 	/* Get interface index and data */
-	if ((dev = rtcan_dev_get_by_name(ifr->ifr_name)) == NULL)
+	dev = rtcan_dev_get_by_name(ifr->ifr_name);
+	if (dev == NULL)
 	    return -ENODEV;
-	ret = rtcan_raw_ioctl_dev_set(dev, request, ifr);
-	rtcan_dev_dereference(dev);
+
+	if (get) {
+		ret = rtcan_raw_ioctl_dev_get(dev, request, ifr);
+		rtcan_dev_dereference(dev);
+		if (ret == 0 && rtdm_fd_is_user(fd)) {
+		    /*
+		     * Since we yet tested if user memory is rw safe,
+		     * we can copy to user space directly.
+		     */
+		    if (rtdm_copy_to_user(fd, arg, ifr,
+					  sizeof(struct can_ifreq)))
+			    return -EFAULT;
+		}
+	} else {
+		ret = rtcan_raw_ioctl_dev_set(dev, request, ifr);
+		rtcan_dev_dereference(dev);
+	}
 	break;
 
     default:

@@ -88,16 +88,7 @@ int main(int argc, char *argv[])
     int     new_ctrlmode = 0, set_ctrlmode = 0;
     int     verbose = 0;
     int     bittime_count = 0, bittime_data[6];
-    can_baudrate_t *baudrate;
-    can_ctrlmode_t *ctrlmode;
-    can_mode_t *mode;
-    union {
-      struct ifreq ifr;
-      struct can_bittime bittime;
-      can_baudrate_t baudrate;
-      can_ctrlmode_t ctrlmode;
-      can_mode_t mode;
-    } u;
+    struct can_ifreq ifr;
     struct can_bittime *bittime;
     int opt, ret;
     char* ptr;
@@ -169,7 +160,7 @@ int main(int argc, char *argv[])
     }
 
     strncpy(ifname, argv[optind], IFNAMSIZ);
-    strncpy(u.ifr.ifr_name, ifname, IFNAMSIZ);
+    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
 
     if (optind == argc - 2) {   /* Get mode setting */
 	new_mode = string_to_mode(argv[optind + 1]);
@@ -187,7 +178,7 @@ int main(int argc, char *argv[])
 	return can_fd;
     }
 
-    ret = ioctl(can_fd, SIOCGIFINDEX, &u.ifr);
+    ret = ioctl(can_fd, SIOCGIFINDEX, &ifr);
     if (ret) {
 	fprintf(stderr,"Can't get interface index for %s, code = %d\n", ifname, ret);
 	return ret;
@@ -197,16 +188,15 @@ int main(int argc, char *argv[])
     if (new_baudrate != -1) {
 	if (verbose)
 	    printf("baudrate: %d\n", new_baudrate);
-	baudrate = &u.baudrate;
-	*baudrate = new_baudrate;
-	ret = ioctl(can_fd, SIOCSCANBAUDRATE, &u.ifr);
+	ifr.ifr_ifru.baudrate = new_baudrate;
+	ret = ioctl(can_fd, SIOCSCANBAUDRATE, &ifr);
 	if (ret) {
 	    goto abort;
 	}
     }
 
     if (bittime_count) {
-	bittime = &u.bittime;
+	bittime = &ifr.ifr_ifru.bittime;
 	if (bittime_count == 2) {
 	    bittime->type = CAN_BITTIME_BTR;
 	    bittime->btr.btr0 = bittime_data[0];
@@ -233,7 +223,7 @@ int main(int argc, char *argv[])
 		       bittime->std.sam);
 	}
 
-	ret = ioctl(can_fd, SIOCSCANCUSTOMBITTIME, &u.ifr);
+	ret = ioctl(can_fd, SIOCSCANCUSTOMBITTIME, &ifr);
 	if (ret) {
 	    goto abort;
 	}
@@ -241,20 +231,18 @@ int main(int argc, char *argv[])
     }
 
     if (set_ctrlmode != 0) {
-	ctrlmode = &u.ctrlmode;
-	*ctrlmode = new_ctrlmode;
+	ifr.ifr_ifru.ctrlmode = new_ctrlmode;
 	if (verbose)
 	    printf("ctrlmode: %#x\n", new_ctrlmode);
-	ret = ioctl(can_fd, SIOCSCANCTRLMODE, &u.ifr);
+	ret = ioctl(can_fd, SIOCSCANCTRLMODE, &ifr);
 	if (ret) {
 	    goto abort;
 	}
     }
 
     if (new_mode != -1) {
-	mode = &u.mode;
-	*mode = new_mode;
-	ret = ioctl(can_fd, SIOCSCANMODE, &u.ifr);
+	ifr.ifr_ifru.mode = new_mode;
+	ret = ioctl(can_fd, SIOCSCANMODE, &ifr);
 	if (ret) {
 	    goto abort;
 	}

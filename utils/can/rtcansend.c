@@ -120,7 +120,7 @@ static void rt_task(void)
 int main(int argc, char **argv)
 {
     int i, opt, ret;
-    struct ifreq ifr;
+    struct can_ifreq ifr;
     char name[32];
 
     struct option long_options[] = {

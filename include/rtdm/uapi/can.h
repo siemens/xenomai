@@ -324,6 +324,26 @@ typedef struct can_frame {
 	uint8_t data[8] __attribute__ ((aligned(8)));
 } can_frame_t;
 
+/**
+ * CAN interface request descriptor
+ *
+ * Parameter block for submitting CAN control requests.
+ */
+struct can_ifreq {
+	union {
+		char	ifrn_name[IFNAMSIZ];
+	} ifr_ifrn;
+	
+	union {
+		struct can_bittime bittime;
+		can_baudrate_t baudrate;
+		can_ctrlmode_t ctrlmode;
+		can_mode_t mode;
+		can_state_t state;
+		int ifru_ivalue;
+	} ifr_ifru;
+};
+
 /*!
  * @anchor RTCAN_TIMESTAMPS   @name Timestamp switches
  * Arguments to pass to @ref RTCAN_RTIOC_TAKE_TIMESTAMP
@@ -445,16 +465,22 @@ typedef struct can_frame {
 /*!
  * @anchor CANIOCTLs @name IOCTLs
  * CAN device IOCTLs
+ *
+ * @deprecated Passing <TT>struct ifreq<TT> as a request descriptor
+ * for CAN IOCTLs is still accepted for backward compatibility,
+ * however it is recommended to switch to <TT>struct can_ifreq<TT> at
+ * the first opportunity.
+ *
  * @{ */
 
 /**
  * Get CAN interface index by name
  *
  * @param [in,out] arg Pointer to interface request structure buffer
- *                     (<TT>struct ifreq</TT> from linux/if.h). If
- *                     <TT>ifr_name</TT> holds a valid CAN interface name
- *                     <TT>ifr_ifindex</TT> will be filled with the
- *                     corresponding interface index.
+ *                     (<TT>struct can_ifreq</TT>). If
+ *                     <TT>ifr_name</TT> holds a valid CAN interface
+ *                     name <TT>ifr_ifindex</TT> will be filled with
+ *                     the corresponding interface index.
  *
  * @return 0 on success, otherwise:
  * - -EFAULT: It was not possible to access user space memory area at the
@@ -475,7 +501,7 @@ typedef struct can_frame {
  * @ref SIOCSCANCUSTOMBITTIME to set custom bit-timing.
  *
  * @param [in] arg Pointer to interface request structure buffer
- *                 (<TT>struct ifreq</TT> from linux/if.h).
+ *                 (<TT>struct can_ifreq</TT>).
  *                 <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                 <TT>ifr_ifru</TT> must be filled with an instance of
  *                 @ref can_baudrate_t.
@@ -493,13 +519,13 @@ typedef struct can_frame {
  * @note Setting the baud rate is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
  */
-#define SIOCSCANBAUDRATE	_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)
+#define SIOCSCANBAUDRATE	_IOW(RTIOC_TYPE_CAN, 0x01, struct can_ifreq)
 
 /**
  * Get baud rate
  *
  * @param [in,out] arg Pointer to interface request structure buffer
- *                    (<TT>struct ifreq</TT> from linux/if.h).
+ *                    (<TT>struct can_ifreq</TT>).
  *                    <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                    <TT>ifr_ifru</TT> will be filled with an instance of
  *                    @ref can_baudrate_t.
@@ -512,7 +538,7 @@ typedef struct can_frame {
  *
  * @coretags{task-unrestricted}
  */
-#define SIOCGCANBAUDRATE	_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)
+#define SIOCGCANBAUDRATE	_IOWR(RTIOC_TYPE_CAN, 0x02, struct can_ifreq)
 
 /**
  * Set custom bit time parameter
@@ -521,7 +547,7 @@ typedef struct can_frame {
  * struct can_bittime).
  *
  * @param [in] arg Pointer to interface request structure buffer
- *                 (<TT>struct ifreq</TT> from linux/if.h).
+ *                 (<TT>struct can_ifreq</TT>).
  *                 <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                 <TT>ifr_ifru</TT> must be filled with an instance of
  *                 struct can_bittime.
@@ -538,13 +564,13 @@ typedef struct can_frame {
  * @note Setting the bit-time is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
  */
-#define SIOCSCANCUSTOMBITTIME	_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)
+#define SIOCSCANCUSTOMBITTIME	_IOW(RTIOC_TYPE_CAN, 0x03, struct can_ifreq)
 
 /**
  * Get custom bit-time parameters
  *
  * @param [in,out] arg Pointer to interface request structure buffer
- *                    (<TT>struct ifreq</TT> from linux/if.h).
+ *                    (<TT>struct can_ifreq</TT>).
  *                    <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                    <TT>ifr_ifru</TT> will be filled with an instance of
  *                    struct can_bittime.
@@ -557,7 +583,7 @@ typedef struct can_frame {
  *
  * @coretags{task-unrestricted}
  */
-#define SIOCGCANCUSTOMBITTIME	_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)
+#define SIOCGCANCUSTOMBITTIME	_IOWR(RTIOC_TYPE_CAN, 0x04, struct can_ifreq)
 
 /**
  * Set operation mode of CAN controller
@@ -565,7 +591,7 @@ typedef struct can_frame {
  * See @ref CAN_MODE "CAN controller modes" for available modes.
  *
  * @param [in] arg Pointer to interface request structure buffer
- *                 (<TT>struct ifreq</TT> from linux/if.h).
+ *                 (<TT>struct can_ifreq</TT>).
  *                 <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                 <TT>ifr_ifru</TT> must be filled with an instance of
  *                 @ref can_mode_t.
@@ -592,7 +618,7 @@ typedef struct can_frame {
  * If a controller is bus-off, setting it into stop mode will return no error
  * but the controller remains bus-off.
  */
-#define SIOCSCANMODE		_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)
+#define SIOCSCANMODE		_IOW(RTIOC_TYPE_CAN, 0x05, struct can_ifreq)
 
 /**
  * Get current state of CAN controller
@@ -606,7 +632,7 @@ typedef struct can_frame {
  * @ref CAN_STATE "CAN controller states".
  *
  * @param [in,out] arg Pointer to interface request structure buffer
- *                    (<TT>struct ifreq</TT> from linux/if.h).
+ *                    (<TT>struct can_ifreq</TT>).
  *                    <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                    <TT>ifr_ifru</TT> will be filled with an instance of
  *                    @ref can_mode_t.
@@ -618,7 +644,7 @@ typedef struct can_frame {
  *
  * @coretags{task-unrestricted, might-switch}
  */
-#define SIOCGCANSTATE		_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)
+#define SIOCGCANSTATE		_IOWR(RTIOC_TYPE_CAN, 0x06, struct can_ifreq)
 
 /**
  * Set special controller modes
@@ -627,7 +653,7 @@ typedef struct can_frame {
  * @ref CAN_CTRLMODE for further information).
  *
  * @param [in] arg Pointer to interface request structure buffer
- *                 (<TT>struct ifreq</TT> from linux/if.h).
+ *                 (<TT>struct can_ifreq</TT>).
  *                 <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                 <TT>ifr_ifru</TT> must be filled with an instance of
  *                 @ref can_ctrlmode_t.
@@ -644,14 +670,14 @@ typedef struct can_frame {
  * @note Setting special controller modes is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
  */
-#define SIOCSCANCTRLMODE	_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)
+#define SIOCSCANCTRLMODE	_IOW(RTIOC_TYPE_CAN, 0x07, struct can_ifreq)
 
 /**
  * Get special controller modes
  *
  *
  * @param [in] arg Pointer to interface request structure buffer
- *                 (<TT>struct ifreq</TT> from linux/if.h).
+ *                 (<TT>struct can_ifreq</TT>).
  *                 <TT>ifr_name</TT> must hold a valid CAN interface name,
  *                 <TT>ifr_ifru</TT> must be filled with an instance of
  *                 @ref can_ctrlmode_t.
@@ -664,7 +690,7 @@ typedef struct can_frame {
  *
  * @coretags{task-unrestricted, might-switch}
  */
-#define SIOCGCANCTRLMODE	_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)
+#define SIOCGCANCTRLMODE	_IOWR(RTIOC_TYPE_CAN, 0x08, struct can_ifreq)
 
 /**
  * Enable or disable storing a high precision timestamp upon reception of

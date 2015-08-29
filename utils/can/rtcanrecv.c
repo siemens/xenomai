@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     int opt, ret;
     u_int32_t id, mask;
     u_int32_t err_mask = 0;
-    struct ifreq ifr;
+    struct can_ifreq ifr;
     char *ptr;
     char name[32];
 
