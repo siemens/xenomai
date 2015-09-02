@@ -45,7 +45,7 @@
 #else /* !CONFIG_OABI_COMPAT */
 #define __xn_syscall_p(__regs)	((__regs)->regs[8] == __ARM_NR_ipipe)
 #endif /* !CONFIG_OABI_COMPAT */
-#define __xn_syscall(__regs)	(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT)
+#define __xn_syscall(__regs)	((unsigned long)(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT))
 
 #define __xn_reg_rval(__regs)	((__regs)->regs[0])
 #define __xn_reg_arg1(__regs)	((__regs)->regs[1])
