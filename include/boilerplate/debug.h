@@ -82,6 +82,15 @@ void debug_init(void);
 		__ret;						\
 	})
 
+#define __bterrno(__exp)					\
+	({							\
+		typeof(__exp) __ret = (__exp);			\
+		if (unlikely(__ret < 0))			\
+			backtrace_log(-errno, __FUNCTION__,	\
+				      __FILE__, __LINE__);	\
+		__ret;						\
+	})
+
 #else /* !CONFIG_XENO_DEBUG */
 
 static inline int must_check(void)
@@ -93,6 +102,8 @@ struct backtrace_data {
 };
 
 #define __bt(__exp)			(__exp)
+
+#define __bterrno(__exp)		(__exp)
 
 #define backtrace_init_context(btd, name)	\
 	do { (void)(btd); (void)(name); } while (0)
