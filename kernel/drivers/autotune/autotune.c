@@ -25,21 +25,17 @@
 #include <rtdm/driver.h>
 #include <rtdm/autotune.h>
 
-MODULE_DESCRIPTION("Xenomai/cobalt autotuner");
+MODULE_DESCRIPTION("Xenomai/cobalt core clock autotuner");
 MODULE_AUTHOR("Philippe Gerum <rpm@xenomai.org>");
 MODULE_LICENSE("GPL");
 
 /* Auto-tuning services for the Cobalt core clock. */
 
 #define SAMPLING_TIME	500000000UL
-#define LOG_TIMESPAN	20000U	/* ns */
-#define BUCKET_TIMESPAN	500U	/* ns */
-#define NR_BUCKETS	(LOG_TIMESPAN / BUCKET_TIMESPAN)
 #define WARMUP_STEPS	3
-#define AUTOTUNE_STEPS  NR_BUCKETS
+#define AUTOTUNE_STEPS  40
 
 struct tuning_score {
-	int mean;
 	int pmean;
 	int stddev;
 	int minlat;
@@ -52,11 +48,12 @@ struct tuner_state {
 	xnticks_t step;
 	int min_lat;
 	int max_lat;
-	int pow_sum_avg;
-	int mean;
+	int prev_mean;
+	int prev_sqs;
+	int cur_sqs;
+	unsigned int sum;
 	unsigned int cur_samples;
 	unsigned int max_samples;
-	unsigned int log[NR_BUCKETS];
 };
 
 struct gravity_tuner {
@@ -121,7 +118,7 @@ static inline void done_sampling(struct gravity_tuner *tuner,
 static int add_sample(struct gravity_tuner *tuner, xnticks_t timestamp)
 {
 	struct tuner_state *state;
-	int b, n, delta;
+	int n, delta, cur_mean;
 
 	state = &tuner->state;
 
@@ -130,15 +127,26 @@ static int add_sample(struct gravity_tuner *tuner, xnticks_t timestamp)
 		state->min_lat = delta;
 	if (delta > state->max_lat)
 		state->max_lat = delta;
+	if (delta < 0)
+		delta = 0;
 
+	state->sum += delta;
 	state->ideal += state->step;
 	n = ++state->cur_samples;
 
-	b = (delta < 0 ? 0 : delta) / BUCKET_TIMESPAN;
-	state->log[b < NR_BUCKETS ? b : NR_BUCKETS - 1]++;
-	/* Build running mean and power sum average for stddev. */
-	state->mean += (delta - state->mean) / n;
-	state->pow_sum_avg += (delta * delta - state->pow_sum_avg) / n;
+	/*
+	 * Knuth citing Welford in TAOCP (Vol 2), single-pass
+	 * computation of variance using a recurrence relation.
+	 */
+	if (n == 1)
+		state->prev_mean = delta;
+	else {
+		cur_mean = state->prev_mean + (delta - state->prev_mean) / n;
+                state->cur_sqs = state->prev_sqs + (delta - state->prev_mean)
+			* (delta - cur_mean);
+                state->prev_mean = cur_mean; 
+                state->prev_sqs = state->cur_sqs;
+	}
 
 	if (n >= state->max_samples) {
 		done_sampling(tuner, 0);
@@ -415,17 +423,11 @@ struct uthread_gravity_tuner uthread_tuner = {
 static inline void build_score(struct gravity_tuner *tuner, int step)
 {
 	struct tuner_state *state = &tuner->state;
-	unsigned int sum, variance, n, b;
+	unsigned int variance, n;
 
-	for (b = sum = n = 0; b < NR_BUCKETS; b++) {
-		sum += (b * BUCKET_TIMESPAN + BUCKET_TIMESPAN / 2) * state->log[b];
-		n += state->log[b];
-	}
-
-	tuner->scores[step].mean = state->mean;
-	tuner->scores[step].pmean = sum / n;
-	variance = (state->pow_sum_avg * n - n *
-		    state->mean * state->mean) / (n - 1);
+	n = state->cur_samples;
+	tuner->scores[step].pmean = state->sum / n;
+	variance = n > 1 ? state->cur_sqs / (n - 1) : 0;
 	tuner->scores[step].stddev = int_sqrt(variance);
 	tuner->scores[step].minlat = state->min_lat;
 	tuner->scores[step].gravity = tuner->get_gravity(tuner);
@@ -433,21 +435,23 @@ static inline void build_score(struct gravity_tuner *tuner, int step)
 	tuner->nscores++;
 }
 
-#if XENO_DEBUG(COBALT)
 #define progress(__tuner, __fmt, __args...)				\
 	do {								\
 		if (!(__tuner)->quiet)					\
 			printk(XENO_INFO "autotune(%s) " __fmt "\n",	\
 			       (__tuner)->name, ##__args);		\
 	} while (0)
-#else
-#define progress(__tuner, __fmt, __args...)
-#endif
 
 static int cmp_score_mean(const void *c, const void *r)
 {
 	const struct tuning_score *sc = c, *sr = r;
 	return sc->pmean - sr->pmean;
+}
+
+static int cmp_score_stddev(const void *c, const void *r)
+{
+	const struct tuning_score *sc = c, *sr = r;
+	return sc->stddev - sr->stddev;
 }
 
 static int cmp_score_minlat(const void *c, const void *r)
@@ -459,13 +463,7 @@ static int cmp_score_minlat(const void *c, const void *r)
 static int cmp_score_gravity(const void *c, const void *r)
 {
 	const struct tuning_score *sc = c, *sr = r;
-	return (int)(sc->gravity - sr->gravity);
-}
-
-static int cmp_score_stddev(const void *c, const void *r)
-{
-	const struct tuning_score *sc = c, *sr = r;
-	return sc->stddev - sr->stddev;
+	return sc->gravity - sr->gravity;
 }
 
 static int filter_mean(struct gravity_tuner *tuner)
@@ -473,7 +471,18 @@ static int filter_mean(struct gravity_tuner *tuner)
 	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
 	     cmp_score_mean, NULL);
 
-	/* Top half of the best approximate pondered mean. */
+	/* Top half of the best pondered means. */
+
+	return (tuner->nscores + 1) / 2;
+}
+
+static int filter_stddev(struct gravity_tuner *tuner)
+{
+	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
+	     cmp_score_stddev, NULL);
+
+	/* Top half of the best standard deviations. */
+
 	return (tuner->nscores + 1) / 2;
 }
 
@@ -482,43 +491,43 @@ static int filter_minlat(struct gravity_tuner *tuner)
 	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
 	     cmp_score_minlat, NULL);
 
-	/* Top half of the best minimum latency observed. */
+	/* Top half of the minimum latencies. */
+
 	return (tuner->nscores + 1) / 2;
 }
 
 static int filter_gravity(struct gravity_tuner *tuner)
 {
-	int n;
-
 	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
 	     cmp_score_gravity, NULL);
 
-	/*
-	 * Top half of the smallest gravity applied, limited to values
-	 * not greater than twice the standard deviation of the set.
-	 */
-	for (n = 1; n < (tuner->nscores + 1) / 2; n++) {
-		if (tuner->scores[n].gravity >= tuner->scores[n].stddev * 2)
-			break;
-	}
+	/* Smallest gravity required among the shortest latencies. */
 
-	return n;
+	return tuner->nscores;
 }
 
-static int filter_stddev(struct gravity_tuner *tuner)
+static void dump_scores(struct gravity_tuner *tuner)
 {
-	sort(tuner->scores, tuner->nscores, sizeof(struct tuning_score),
-	     cmp_score_stddev, NULL);
+	int n;
 
-	/* Best standard deviation. */
+	if (tuner->quiet)
+		return;
 
-	return 1;
+	for (n = 0; n < tuner->nscores; n++)
+		printk(KERN_INFO
+		       ".. S%.2d pmean=%Ld stddev=%Lu minlat=%Lu gravity=%Lu\n",
+		       tuner->scores[n].step,
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[n].pmean),
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[n].stddev),
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[n].minlat),
+		       xnclock_ticks_to_ns(&nkclock, tuner->scores[n].gravity));
 }
 
 static inline void filter_score(struct gravity_tuner *tuner,
 				int (*filter)(struct gravity_tuner *tuner))
 {
 	tuner->nscores = filter(tuner);
+	dump_scores(tuner);
 }
 
 static int tune_gravity(struct gravity_tuner *tuner, int period)
@@ -532,18 +541,19 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 	orig_gravity = tuner->get_gravity(tuner);
 	tuner->set_gravity(tuner, 0);
 	tuner->nscores = 0;
-	adjust = xnclock_ns_to_ticks(&nkclock, BUCKET_TIMESPAN);
-	gravity_limit = AUTOTUNE_STEPS * adjust;
+	adjust = xnclock_ns_to_ticks(&nkclock, 500); /* Gravity adjustment step */
+	gravity_limit = state->step;
 	progress(tuner, "warming up...");
 
 	for (step = 0; step < WARMUP_STEPS + AUTOTUNE_STEPS; step++) {
-		state->ideal = xnclock_read_raw(&nkclock) + state->step * 3;
+		state->ideal = xnclock_read_raw(&nkclock) + state->step * WARMUP_STEPS;
 		state->min_lat = xnclock_ns_to_ticks(&nkclock, SAMPLING_TIME);
 		state->max_lat = 0;
-		state->mean = 0;
-		state->pow_sum_avg = 0;
+		state->prev_mean = 0;
+		state->prev_sqs = 0;
+		state->cur_sqs = 0;
+		state->sum = 0;
 		state->cur_samples = 0;
-		memset(state->log, 0, sizeof(state->log));
 
 		ret = tuner->start_tuner(tuner,
 					 xnclock_ticks_to_ns(&nkclock, state->ideal),
@@ -593,20 +603,17 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 			break;
 	}
 
+	progress(tuner, "calibration scores");
+	dump_scores(tuner);
+	progress(tuner, "pondered mean filter");
 	filter_score(tuner, filter_mean);
-	filter_score(tuner, filter_minlat);
-	filter_score(tuner, filter_gravity);
+	progress(tuner, "standard deviation filter");
 	filter_score(tuner, filter_stddev);
+	progress(tuner, "minimum latency filter");
+	filter_score(tuner, filter_minlat);
+	progress(tuner, "gravity filter");
+	filter_score(tuner, filter_gravity);
 	tuner->set_gravity(tuner, tuner->scores[0].gravity);
-	if (!tuner->quiet)
-		printk(XENO_INFO
-		       "autotune(%s) pmean=%Ld stddev=%Lu minlat=%Lu gravity=%Lu step=%d\n",
-		       tuner->name,
-		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].pmean),
-		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].stddev),
-		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].minlat),
-		       xnclock_ticks_to_ns(&nkclock, tuner->scores[0].gravity),
-		       tuner->scores[0].step);
 
 	return 0;
 fail:
@@ -730,7 +737,13 @@ static void autotune_close(struct rtdm_fd *fd)
 	tuner = context->tuner;
 	if (tuner) {
 		if (context->setup.quiet <= 1)
-			printk(XENO_INFO "autotune finished\n");
+			printk(XENO_INFO "autotune finished [%Lui/%Luk/%Luu]\n",
+			       xnclock_ticks_to_ns(&nkclock,
+						   xnclock_get_gravity(&nkclock, irq)),
+			       xnclock_ticks_to_ns(&nkclock,
+						   xnclock_get_gravity(&nkclock, kernel)),
+			       xnclock_ticks_to_ns(&nkclock,
+						   xnclock_get_gravity(&nkclock, user)));
 		tuner->destroy_tuner(tuner);
 	}
 }

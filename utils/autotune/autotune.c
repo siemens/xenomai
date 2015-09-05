@@ -130,7 +130,7 @@ static void *load_thread(void *arg)
 	for (;;) {
 		clock_nanosleep(CLOCK_MONOTONIC, 0, &rqt, NULL);
 
-		if (++count % wakelim) {
+		if ((++count % wakelim) == 0) {
 			cobalt_thread_relax();
 			continue;
 		}
