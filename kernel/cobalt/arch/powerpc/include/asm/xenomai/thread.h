@@ -81,9 +81,17 @@ xnarch_handle_fpu_fault(struct xnthread *from,
 	return 0;
 }
 
-void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
+static inline int xnarch_escalate(void)
+{
+	if (ipipe_root_p) {
+		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
+		return 1;
+	}
 
-int xnarch_escalate(void);
+	return 0;
+}
+
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
 
 void xnarch_save_fpu(struct xnthread *thread);
 

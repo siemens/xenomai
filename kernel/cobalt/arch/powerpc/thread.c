@@ -193,13 +193,3 @@ void xnarch_leave_root(struct xnthread *root)
 }
 
 #endif /* CONFIG_XENO_ARCH_FPU */
-
-int xnarch_escalate(void)
-{
-	if (ipipe_root_p) {
-		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
-		return 1;
-	}
-
-	return 0;
-}
