@@ -423,13 +423,3 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 	/* XNFPU is set upon first FPU fault */
 	xnthread_clear_state(thread, XNFPU);
 }
-
-int xnarch_escalate(void)
-{
-	if (ipipe_root_p) {
-		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
-		return 1;
-	}
-
-	return 0;
-}
