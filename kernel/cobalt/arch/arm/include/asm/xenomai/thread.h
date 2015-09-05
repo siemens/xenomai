@@ -65,7 +65,15 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
 
 static inline void xnarch_enter_root(struct xnthread *root) { }
 
-int xnarch_escalate(void);
+static inline int xnarch_escalate(void)
+{
+	if (ipipe_root_p) {
+		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
+		return 1;
+	}
+
+	return 0;
+}
 
 #if defined(CONFIG_XENO_ARCH_FPU) && defined(CONFIG_VFP)
 

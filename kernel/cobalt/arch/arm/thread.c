@@ -343,13 +343,3 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 
 	__asm_thread_switch(out_tcb->core.tip, in_tcb->core.tip);
 }
-
-int xnarch_escalate(void)
-{
-	if (ipipe_root_p) {
-		ipipe_raise_irq(cobalt_pipeline.escalate_virq);
-		return 1;
-	}
-
-	return 0;
-}
