@@ -67,8 +67,10 @@ timer_init(struct cobalt_timer *timer,
 	    timer->clockid != CLOCK_REALTIME)
 		return ERR_PTR(-EINVAL);
 
-	if (evp == NULL || evp->sigev_notify == SIGEV_NONE)
-		return owner;	/* Assume SIGEV_THREAD_ID. */
+	if (evp == NULL || evp->sigev_notify == SIGEV_NONE) {
+		target = owner;	/* Assume SIGEV_THREAD_ID. */
+		goto init;
+	}
 
 	if (evp->sigev_notify != SIGEV_THREAD_ID)
 		return ERR_PTR(-EINVAL);
@@ -80,7 +82,7 @@ timer_init(struct cobalt_timer *timer,
 	target = cobalt_thread_find_local(evp->sigev_notify_thread_id);
 	if (target == NULL)
 		return ERR_PTR(-EINVAL);
-
+init:
 	/*
 	 * All standard clocks are based on the core clock, and we
 	 * want to deliver a signal when a timer elapses.
