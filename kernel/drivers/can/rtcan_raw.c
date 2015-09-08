@@ -513,24 +513,18 @@ int rtcan_raw_ioctl(struct rtdm_fd *fd,
 }
 
 
-#define MEMCPY_FROM_RING_BUF(to, len)                                       \
-									    \
-    if (unlikely((recv_buf_index + len) > RTCAN_RXBUF_SIZE)) {              \
-	/* Wrap around end of buffer */                                     \
-									    \
-	first_part_size = RTCAN_RXBUF_SIZE - recv_buf_index;                \
-									    \
-	memcpy(to, &recv_buf[recv_buf_index], first_part_size);             \
-	memcpy((void *)to + first_part_size, recv_buf,                      \
-					     len - first_part_size);        \
-									    \
-    } else                                                                  \
-									    \
-	memcpy(to, &recv_buf[recv_buf_index], len);                         \
-									    \
-									    \
-    recv_buf_index = (recv_buf_index + len) & (RTCAN_RXBUF_SIZE - 1);
-
+#define MEMCPY_FROM_RING_BUF(to, len)					\
+do {									\
+	if (unlikely((recv_buf_index + len) > RTCAN_RXBUF_SIZE)) { 	\
+		/* Wrap around end of buffer */				\
+		first_part_size = RTCAN_RXBUF_SIZE - recv_buf_index; 	\
+		memcpy(to, &recv_buf[recv_buf_index], first_part_size);	\
+		memcpy((void *)to + first_part_size, recv_buf,		\
+		       len - first_part_size);				\
+	} else								\
+		memcpy(to, &recv_buf[recv_buf_index], len);		\
+	recv_buf_index = (recv_buf_index + len) & (RTCAN_RXBUF_SIZE - 1); \
+} while (0)
 
 ssize_t rtcan_raw_recvmsg(struct rtdm_fd *fd,
 			  struct msghdr *msg, int flags)
@@ -670,19 +664,14 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_fd *fd,
 
     /* If frame is an RTR or one with no payload it's not necessary
      * to copy the data bytes. */
-    if (!(frame.can_id & CAN_RTR_FLAG) && payload_size) {
+    if (!(frame.can_id & CAN_RTR_FLAG) && payload_size)
 	/* Copy data bytes */
 	MEMCPY_FROM_RING_BUF(frame.data, payload_size);
-    }
-
 
     /* Is a timestamp available and is the caller actually interested? */
-    if (msg->msg_controllen && (can_dlc & RTCAN_HAS_TIMESTAMP)) {
+    if (msg->msg_controllen && (can_dlc & RTCAN_HAS_TIMESTAMP))
 	/* Copy timestamp */
 	MEMCPY_FROM_RING_BUF(&timestamp, RTCAN_TIMESTAMP_SIZE);
-    }
-
-
 
     /* Message completely read from the socket's ring buffer. Now check if
      * caller is just peeking. */

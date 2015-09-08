@@ -219,6 +219,7 @@ static int rtcan_calc_bit_time(struct rtcan_device *dev,
     bt->phase_seg1 = tseg1 - bt->prop_seg;
     bt->phase_seg2 = tseg2;
     bt->sjw = 1;
+    bt->sam = 0;
     bt->brp = best_brp;
 
     /* real bit-rate */
