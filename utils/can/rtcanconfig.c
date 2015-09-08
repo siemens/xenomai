@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     ret = ioctl(can_fd, SIOCGIFINDEX, &ifr);
     if (ret) {
-	fprintf(stderr,"Can't get interface index for %s, code = %d\n", ifname, ret);
+	fprintf(stderr,"Can't get interface index for %s, errno = %d\n", ifname, errno);
 	return ret;
     }
 
