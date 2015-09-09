@@ -49,6 +49,7 @@ void rtcan_socket_init(struct rtdm_fd *fd)
     sock->flist = NULL;
     sock->err_mask = 0;
     sock->rx_buf_full = 0;
+    sock->flags = 0;
 #ifdef CONFIG_XENO_DRIVERS_CAN_LOOPBACK
     sock->loopback = 1;
 #endif
