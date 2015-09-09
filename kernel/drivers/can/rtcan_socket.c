@@ -71,7 +71,6 @@ void rtcan_socket_cleanup(struct rtdm_fd *fd)
     rtdm_lockctx_t lock_ctx;
     int tx_list_empty;
 
-
     /* Wake up sleeping senders. This is re-entrant-safe. */
     do {
 	cobalt_atomic_enter(lock_ctx);
@@ -86,7 +85,7 @@ void rtcan_socket_cleanup(struct rtdm_fd *fd)
 					struct tx_wait_queue, tx_wait_list);
 
 		/* Remove it from list */
-		list_del(&tx_waiting->tx_wait_list);
+		list_del_init(&tx_waiting->tx_wait_list);
 
 		/* Wake task up (atomic section is left implicitly) */
 		rtdm_task_unblock(tx_waiting->rt_task);

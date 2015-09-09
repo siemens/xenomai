@@ -888,9 +888,9 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 
     tx_wait.rt_task = rtdm_task_current();
 
-    /* If socket was not closed recently, register the task at the
-     * socket's TX wait queue and decrement the TX semaphore. This must be
-     * atomic. Finally, the task must be deregistered again (also atomic). */
+    /* Register the task at the socket's TX wait queue and decrement
+     * the TX semaphore. This must be atomic. Finally, the task must
+     * be deregistered again (also atomic). */
     cobalt_atomic_enter(s);
 
     list_add(&tx_wait.tx_wait_list, &sock->tx_wait_head);
@@ -900,9 +900,9 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 
     /* Only dequeue task again if socket isn't being closed i.e. if
      * this task was not unblocked within the close() function. */
-    if (likely(tx_wait.tx_wait_list.next != LIST_POISON1))
+    if (likely(!list_empty(&tx_wait.tx_wait_list)))
 	/* Dequeue this task from the TX wait queue */
-	list_del(&tx_wait.tx_wait_list);
+	list_del_init(&tx_wait.tx_wait_list);
     else
 	/* The socket was closed. */
 	ret = -EBADF;

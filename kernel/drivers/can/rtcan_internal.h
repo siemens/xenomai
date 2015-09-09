@@ -29,11 +29,6 @@
 #include <linux/module.h>
 #include <rtdm/driver.h>
 
-#ifndef LIST_POISON1
-/* 2.4 - 2.6 compatibility stuff */
-#define LIST_POISON1  ((void *) 0x0)
-#endif
-
 #ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 #define RTCAN_ASSERT(expr, func) \
     if (!(expr)) { \
