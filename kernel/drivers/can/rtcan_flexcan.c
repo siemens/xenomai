@@ -836,6 +836,13 @@ static int flexcan_mode_stop(struct rtcan_device *dev, rtdm_lockctx_t *lock_ctx)
 	if (!CAN_STATE_OPERATING(state))
 		goto out;
 
+	/*
+	 * Drop the device lock early, we should not need it and we
+	 * may not hold it for calling the regular kernel
+	 * infrastructure.
+	 */
+	rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
+
 	flexcan_chip_stop(dev);
 
 	/* Wake up waiting senders */
@@ -845,6 +852,7 @@ static int flexcan_mode_stop(struct rtcan_device *dev, rtdm_lockctx_t *lock_ctx)
 
 	flexcan_clk_disable(priv);
 
+	rtdm_lock_get_irqsave(&dev->device_lock, *lock_ctx);
 out:
 	return 0;
 }
@@ -854,6 +862,8 @@ static int flexcan_mode_start(struct rtcan_device *dev,
 {
 	struct flexcan_priv *priv = rtcan_priv(dev);
 	int err = 0;
+
+	rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
 
 	switch (dev->state) {
 
@@ -897,16 +907,19 @@ static int flexcan_mode_start(struct rtcan_device *dev,
 	case CAN_STATE_SLEEPING:
 	default:
 		/* Never reached, but we don't want nasty compiler warnings ... */
+		err = 0;
 		break;
 	}
 
-	return 0;
+	goto out;
 
 out_irq_free:
 	rtdm_irq_free(&dev->irq_handle);
 out_clk_disable:
 	flexcan_clk_disable(priv);
 out:
+	rtdm_lock_get_irqsave(&dev->device_lock, *lock_ctx);
+
 	return err;
 }
 

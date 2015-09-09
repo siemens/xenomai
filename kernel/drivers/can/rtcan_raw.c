@@ -978,7 +978,6 @@ static struct rtdm_driver rtcan_driver = {
 	.ops = {
 		.socket		= rtcan_raw_socket,
 		.close		= rtcan_raw_close,
-		.ioctl_rt	= rtcan_raw_ioctl,
 		.ioctl_nrt	= rtcan_raw_ioctl,
 		.recvmsg_rt	= rtcan_raw_recvmsg,
 		.sendmsg_rt	= rtcan_raw_sendmsg,
