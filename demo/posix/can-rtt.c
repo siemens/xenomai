@@ -100,9 +100,7 @@ static void *transmitter(void *arg)
     frame.can_id = can_id;
     frame.can_dlc = sizeof(*rtt_time);
 
-#ifdef CONFIG_XENO_COBALT
     pthread_setname_np(pthread_self(), "rtcan_rtt_transmitter");
-#endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
     clock_gettime(CLOCK_MONOTONIC, &next_period);
@@ -147,9 +145,7 @@ static void *receiver(void *arg)
     struct rtt_stat rtt_stat = {0, 1000000000000000000LL, -1000000000000000000LL,
 				0, 0, 0};
 
-#ifdef CONFIG_XENO_COBALT
     pthread_setname_np(pthread_self(), "rtcan_rtt_receiver");
-#endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
     rtt_stat.counts_per_sec = 1000000 / cycle;
@@ -197,6 +193,8 @@ static void *receiver(void *arg)
 static void catch_signal(int sig)
 {
     mq_close(mq);
+    close(rxsock);
+    close(txsock);
 }
 
 
@@ -210,7 +208,7 @@ int main(int argc, char *argv[])
     struct rtt_stat rtt_stat;
     char mqname[32];
     char *txdev, *rxdev;
-    struct ifreq ifr;
+    struct can_ifreq ifr;
     int ret, opt;
 
     struct option long_options[] = {
@@ -394,23 +392,16 @@ int main(int argc, char *argv[])
     printf("shutting down\n");
 
     /* Important: First close the sockets! */
-    while ((close(rxsock) < 0) && (errno == EAGAIN)) {
-	printf("RX socket busy - waiting...\n");
-	sleep(1);
-    }
-    while ((close(txsock) < 0) && (errno == EAGAIN)) {
-	printf("TX socket busy - waiting...\n");
-	sleep(1);
-    }
-
+    close(rxsock);
+    close(txsock);
     pthread_join(txthread, NULL);
-    pthread_kill(rxthread, SIGHUP);
+    pthread_cancel(rxthread);
     pthread_join(rxthread, NULL);
 
     return 0;
 
  failure4:
-    pthread_kill(rxthread, SIGHUP);
+    pthread_cancel(rxthread);
     pthread_join(rxthread, NULL);
  failure3:
     mq_close(mq);
