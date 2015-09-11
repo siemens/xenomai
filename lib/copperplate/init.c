@@ -25,6 +25,7 @@
 #include <pwd.h>
 #include <errno.h>
 #include <getopt.h>
+#include <grp.h>
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/clockobj.h"
@@ -39,6 +40,7 @@ struct copperplate_setup_data __copperplate_setup_data = {
 	.registry_root = DEFAULT_REGISTRY_ROOT,
 	.session_label = NULL,
 	.session_root = NULL,
+	.session_gid = USHRT_MAX,
 };
 
 #ifdef CONFIG_XENO_COBALT
@@ -145,6 +147,42 @@ static int get_session_root(int *regflags_r)
 	return 0;
 }
 
+static int get_session_label(const char *optarg)
+{
+	char *session, *grpname, *p;
+	struct group *grp;
+	gid_t gid;
+
+	session = strdup(optarg);
+	grpname = strrchr(session, '/');
+	if (grpname == NULL)
+		goto no_group;
+
+	*grpname++ = '\0';
+
+	if (isdigit(*grpname)) {
+		gid = (gid_t)strtol(grpname, &p, 10);
+		if (*p)
+			return -EINVAL;
+		errno = 0;
+		grp = getgrgid(gid);
+	} else {
+		errno = 0;
+		grp = getgrnam(grpname);
+	}
+
+	if (grp == NULL) {
+		warning("invalid group %s", grpname);
+		return errno ? -errno : -EINVAL;
+	}
+
+	__copperplate_setup_data.session_gid = grp->gr_gid;
+no_group:
+	__copperplate_setup_data.session_label = session;
+	
+	return 0;
+}
+
 static int copperplate_init(void)
 {
 	int ret, regflags = 0;
@@ -177,7 +215,7 @@ static int copperplate_init(void)
 			return ret;
 	}
 
-	ret = threadobj_pkg_init();
+	ret = threadobj_pkg_init((regflags & REGISTRY_ANON) != 0);
 	if (ret) {
 		warning("failed to initialize multi-threading package");
 		return ret;
@@ -195,6 +233,7 @@ static int copperplate_init(void)
 static int copperplate_parse_option(int optnum, const char *optarg)
 {
 	size_t memsz;
+	int ret;
 
 	switch (optnum) {
 	case mempool_opt:
@@ -214,7 +253,9 @@ static int copperplate_parse_option(int optnum, const char *optarg)
 		__copperplate_setup_data.mem_pool = memsz;
 		break;
 	case session_opt:
-		__copperplate_setup_data.session_label = strdup(optarg);
+		ret = get_session_label(optarg);
+		if (ret)
+			return ret;
 		break;
 	case regroot_opt:
 		__copperplate_setup_data.registry_root = strdup(optarg);
@@ -236,7 +277,7 @@ static void copperplate_help(void)
         fprintf(stderr, "--no-registry			suppress object registration\n");
         fprintf(stderr, "--shared-registry		enable public access to registry\n");
         fprintf(stderr, "--registry-root=<path>		root path of registry\n");
-        fprintf(stderr, "--session=<label>		label of shared multi-processing session\n");
+        fprintf(stderr, "--session=<label>[/<group>]	enable shared session\n");
 }
 
 static struct setup_descriptor copperplate_interface = {

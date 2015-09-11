@@ -91,6 +91,11 @@ int copperplate_kill_tid(pid_t tid, int sig)
 	return __RT(kill(tid, sig)) ? -errno : 0;
 }
 
+int copperplate_probe_tid(pid_t tid)
+{
+	return copperplate_kill_tid(tid, 0);
+}
+
 void copperplate_set_current_name(const char *name)
 {
 	__RT(pthread_setname_np(pthread_self(), name));
@@ -101,6 +106,11 @@ void copperplate_set_current_name(const char *name)
 int copperplate_kill_tid(pid_t tid, int sig)
 {
 	return syscall(__NR_tkill, tid, sig) ? -errno : 0;
+}
+
+int copperplate_probe_tid(pid_t tid)
+{
+	return copperplate_kill_tid(tid, 0) && errno != EPERM ? -errno : 0;
 }
 
 void copperplate_set_current_name(const char *name)

@@ -821,9 +821,10 @@ int registry_pkg_init(const char *arg0, int flags)
 	char *mountpt;
 	int ret;
 
-	ret = connect_regd(__copperplate_setup_data.session_root, &mountpt, flags);
+	ret = connect_regd(__copperplate_setup_data.session_root,
+			   &mountpt, flags);
 	if (ret)
-		return ret;
+		return __bt(ret);
 
 	return __bt(__registry_pkg_init(arg0, mountpt, flags));
 }

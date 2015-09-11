@@ -620,6 +620,7 @@ out:
 static int create_main_heap(pid_t *cnode_r)
 {
 	const char *session = __copperplate_setup_data.session_label;
+	gid_t gid =__copperplate_setup_data.session_gid;
 	size_t size = __copperplate_setup_data.mem_pool;
 	struct heapobj *hobj = &main_pool;
 	struct session_heap *m_heap;
@@ -666,21 +667,26 @@ static int create_main_heap(pid_t *cnode_r)
 		return __bt(-errno);
 
 	ret = flock(fd, LOCK_EX);
-	if (ret)
+	if (__bterrno(ret))
 		goto errno_fail;
 
 	ret = fstat(fd, &sbuf);
-	if (ret)
+	if (__bterrno(ret))
 		goto errno_fail;
 
 	if (sbuf.st_size == 0)
 		goto init;
 
 	m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
-	if (m_heap == MAP_FAILED)
-		goto errno_fail;
+	if (m_heap == MAP_FAILED) {
+		ret = __bt(-errno);
+		goto close_fail;
+	}
 
-	if (m_heap->cpid && kill(m_heap->cpid, 0) == 0) {
+	if (m_heap->cpid == 0)
+		goto reset;
+
+	if (copperplate_probe_tid(m_heap->cpid) == 0) {
 		if (m_heap->maplen == len) {
 			/* CAUTION: __moff() depends on __main_heap. */
 			__main_heap = m_heap;
@@ -693,25 +699,47 @@ static int create_main_heap(pid_t *cnode_r)
 		__STD(close(fd));
 		return __bt(-EEXIST);
 	}
-
+reset:
 	munmap(m_heap, len);
+	/*
+	 * Reset shared memory ownership to revoke permissions from a
+	 * former session with more permissive access rules, such as
+	 * group-controlled access.
+	 */
+	fchown(fd, geteuid(), getegid());
 init:
 	ret = ftruncate(fd, 0);  /* Clear all previous contents if any. */
-	if (ret)
+	if (__bterrno(ret))
 		goto unlink_fail;
 
 	ret = ftruncate(fd, len);
-	if (ret)
+	if (__bterrno(ret))
 		goto unlink_fail;
 
+	/*
+	 * If we need to share the heap between members of a group,
+	 * give the group RW access to the shared memory file backing
+	 * the heap.
+	 */
+	if (gid != USHRT_MAX) {
+		ret = fchown(fd, geteuid(), gid);
+		if (__bterrno(ret) < 0)
+			goto unlink_fail;
+		ret = fchmod(fd, 0660);
+		if (__bterrno(ret) < 0)
+			goto unlink_fail;
+	}
+
 	m_heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
-	if (m_heap == MAP_FAILED)
+	if (m_heap == MAP_FAILED) {
+		ret = __bt(-errno);
 		goto unlink_fail;
+	}
 
 	m_heap->maplen = len;
 	/* CAUTION: init_main_heap() depends on hobj->pool_ref. */
 	hobj->pool_ref = __moff(&m_heap->heap);
-	ret = init_main_heap(m_heap, size);
+	ret = __bt(init_main_heap(m_heap, size));
 	if (ret) {
 		errno = -ret;
 		goto unmap_fail;
@@ -731,7 +759,7 @@ done:
 unmap_fail:
 	munmap(m_heap, len);
 unlink_fail:
-	ret = __bt(-errno);
+	ret = -errno;
 	shm_unlink(hobj->fsname);
 	goto close_fail;
 errno_fail:
@@ -781,7 +809,7 @@ static int bind_main_heap(const char *session)
 	cpid = m_heap->cpid;
 	__STD(close(fd));
 
-	if (cpid == 0 || kill(cpid, 0)) {
+	if (cpid == 0 || copperplate_probe_tid(cpid)) {
 		munmap(m_heap, len);
 		return -ENOENT;
 	}
@@ -905,7 +933,8 @@ void heapobj_destroy(struct heapobj *hobj)
 	}
 
 	cpid = main_heap.cpid;
-	if (cpid != get_thread_pid() && kill(cpid, 0) == 0) {
+	if (cpid != 0 && cpid != get_thread_pid() &&
+	    copperplate_probe_tid(cpid) == 0) {
 		munmap(&main_heap, main_heap.maplen);
 		return;
 	}

@@ -85,6 +85,8 @@ int copperplate_get_current_name(char *name, size_t maxlen);
 
 int copperplate_kill_tid(pid_t tid, int sig);
 
+int copperplate_probe_tid(pid_t tid);
+  
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *ptid);
 

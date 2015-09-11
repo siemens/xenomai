@@ -168,6 +168,13 @@ static inline int send_agent(struct threadobj *thobj,
 			     struct remote_request *rq)
 {
 	union sigval val = { .sival_ptr = rq };
+
+	/*
+	 * We are not supposed to issue remote requests when nobody
+	 * else may share our session.
+	 */
+	assert(agent_pid != 0);
+
 	/*
 	 * XXX: No backtracing, may legitimately fail if the remote
 	 * process goes away (hopefully cleanly). However, the request
@@ -176,7 +183,7 @@ static inline int send_agent(struct threadobj *thobj,
 	 * creating user threads are unlikely to ungracefully leave
 	 * the session they belong to intentionally.
 	 */
-	return __RT(sigqueue(thobj->agent.pid, SIGAGENT, val));
+	return __RT(sigqueue(agent_pid, SIGAGENT, val));
 }
 
 static void start_agent(void)
@@ -197,7 +204,7 @@ static void start_agent(void)
 	sigaddset(&set, SIGAGENT);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-	cta.policy = SCHED_CORE;
+	cta.policy = threadobj_agent_prio ? SCHED_CORE : SCHED_OTHER;
 	cta.param_ex.sched_priority = threadobj_agent_prio;
 	cta.prologue = agent_prologue;
 	cta.run = agent_loop;
@@ -210,21 +217,11 @@ static void start_agent(void)
 		panic("failed to start agent thread, %s", symerror(ret));
 }
 
-static void threadobj_set_agent(struct threadobj *thobj)
-{
-	thobj->agent.pid = agent_pid;
-}
-
 #else  /* !CONFIG_XENO_PSHARED */
 
 static inline void start_agent(void)
 {
 	/* No agent in private (process-local) session. */
-}
-
-static inline void threadobj_set_agent(struct threadobj *thobj)
-{
-	/* nop */
 }
 
 #endif /* !CONFIG_XENO_PSHARED */
@@ -235,8 +232,15 @@ static inline void threadobj_set_agent(struct threadobj *thobj)
 
 static inline void pkg_init_corespec(void)
 {
+	/*
+	 * We must have CAP_SYS_NICE since we reached this code either
+	 * as root or as a member of the allowed group, as a result of
+	 * binding the current process to the Cobalt core earlier in
+	 * libcobalt's setup code.
+	 */
 	threadobj_irq_prio = sched_get_priority_max_ex(SCHED_CORE);
 	threadobj_high_prio = sched_get_priority_max_ex(SCHED_FIFO);
+	threadobj_agent_prio = threadobj_high_prio;
 }
 
 static inline int threadobj_init_corespec(struct threadobj *thobj)
@@ -556,6 +560,18 @@ static inline void pkg_init_corespec(void)
 	threadobj_irq_prio = sched_get_priority_max(SCHED_FIFO);
 	threadobj_lock_prio = threadobj_irq_prio - 1;
 	threadobj_high_prio = threadobj_irq_prio - 2;
+	threadobj_agent_prio = threadobj_high_prio;
+	/*
+	 * We allow a non-privileged process to start a low priority
+	 * agent thread only, on the assumption that it lacks
+	 * CAP_SYS_NICE, but this is pretty much the maximum extent of
+	 * our abilities for such processes. Other internal threads
+	 * requiring SCHED_CORE/FIFO scheduling such as the timer
+	 * manager won't start properly, therefore the corresponding
+	 * services won't be available.
+	 */
+	if (geteuid())
+		threadobj_agent_prio = 0;
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
@@ -1322,7 +1338,6 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	thobj->ptid = pthread_self();
 	thobj->pid = get_thread_pid();
 	thobj->errno_pointer = &errno;
-	threadobj_set_agent(thobj);
 	backtrace_init_context(&thobj->btd, name);
 	ret = threadobj_setup_corespec(thobj);
 	if (ret) {
@@ -1569,7 +1584,7 @@ int threadobj_sleep(const struct timespec *ts)
 		 */
 		if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
 			sigemptyset(&set);
-			ret = __RT(sigwaitinfo(&set, NULL)) ? errno : 0;
+			ret = __RT(sigwaitinfo(&set, NULL)) ? -errno : 0;
 		} else
 			ret = __RT(clock_nanosleep(CLOCK_COPPERPLATE,
 						   TIMER_ABSTIME, ts, NULL));
@@ -1751,12 +1766,13 @@ static inline int main_overlay(void)
 	return 0;
 }
 
-int threadobj_pkg_init(void)
+int threadobj_pkg_init(int anon_session)
 {
 	sigaddset(&sigperiod_set, SIGPERIOD);
 	pkg_init_corespec();
-	threadobj_agent_prio = threadobj_high_prio;
-	start_agent();
+
+	if (!anon_session)
+		start_agent();
 
 	return main_overlay();
 }

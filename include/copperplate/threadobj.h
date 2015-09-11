@@ -212,7 +212,6 @@ struct threadobj {
 	struct traceobj *tracer;
 	sem_t *cancel_sem;
 	struct sysgroup_memspec memspec;
-	struct agent_memspec agent;
 	struct backtrace_data btd;
 };
 
@@ -392,7 +391,7 @@ static inline int threadobj_local_p(struct threadobj *thobj)
 
 void threadobj_init_key(void);
 
-int threadobj_pkg_init(void);
+int threadobj_pkg_init(int anon_session);
 
 #ifdef __cplusplus
 }

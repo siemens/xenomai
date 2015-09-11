@@ -27,6 +27,7 @@ struct copperplate_setup_data {
 	int no_registry;
 	int shared_registry;
 	size_t mem_pool;
+	gid_t session_gid;
 };
 
 #ifdef __cplusplus
@@ -83,6 +84,16 @@ static inline define_config_tunable(mem_pool_size, size_t, size)
 static inline read_config_tunable(mem_pool_size, size_t)
 {
 	return __copperplate_setup_data.mem_pool;
+}
+
+static inline define_config_tunable(session_gid, gid_t, gid)
+{
+	__copperplate_setup_data.session_gid = gid;
+}
+
+static inline read_config_tunable(session_gid, gid_t)
+{
+	return __copperplate_setup_data.session_gid;
 }
 
 #ifdef __cplusplus

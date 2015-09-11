@@ -174,8 +174,11 @@ static int cluster_probe(struct hashobj *hobj)
 	 * we can send the latter a signal, the node is deemed active.
 	 * Over Cobalt, the main thread is always shadowed, therefore
 	 * we may use Cobalt's kill() service to probe for it.
+	 * Receiving EPERM does mean that we found an active node,
+	 * just that we don't have the credentials to actually send it
+	 * a signal.
 	 */
-	return __RT(kill(cobj->cnode, 0)) == 0;
+	return copperplate_probe_tid(cobj->cnode) == 0;
 }
 
 int cluster_addobj(struct cluster *c, const char *name,

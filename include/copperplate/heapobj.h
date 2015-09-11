@@ -192,11 +192,6 @@ struct sysgroup_memspec {
 	struct holder next;
 };
 
-struct agent_memspec {
-	/** Agent pid in owner process. */
-	pid_t pid;
-};
-
 static inline void *mainheap_ptr(memoff_t off)
 {
 	return off ? (void *)__memptr(__main_heap, off) : NULL;
@@ -324,9 +319,6 @@ char *xnstrdup(const char *ptr);
 #else /* !CONFIG_XENO_PSHARED */
 
 struct sysgroup_memspec {
-};
-
-struct agent_memspec {
 };
 
 /*
