@@ -21,21 +21,12 @@
 
 #include <asm-generic/xenomai/thread.h>
 
-#ifdef CONFIG_XENO_ARCH_FPU
-#ifdef CONFIG_VFP
-#include <asm/vfp.h>
-#endif /* CONFIG_VFP */
-#endif /* !CONFIG_XENO_ARCH_FPU */
 
 struct xnarchtcb {
 	struct xntcb core;
 #ifdef CONFIG_XENO_ARCH_FPU
-#ifdef CONFIG_VFP
-	union vfp_state *fpup;
+	struct fpsimd_state *fpup;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
-#else
-#define xnarch_fpu_ptr(tcb)     NULL
-#endif
 #endif
 	struct {
 		unsigned long pc;
@@ -67,7 +58,7 @@ static inline void xnarch_enter_root(struct xnthread *root) { }
 
 int xnarch_escalate(void);
 
-#if defined(CONFIG_XENO_ARCH_FPU) && defined(CONFIG_VFP)
+#if defined(CONFIG_XENO_ARCH_FPU)
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread)
 {
@@ -88,7 +79,7 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread);
 int xnarch_handle_fpu_fault(struct xnthread *from, 
 			struct xnthread *to, struct ipipe_trap_data *d);
 
-#else /* !CONFIG_XENO_ARCH_FPU || !CONFIG_VFP */
+#else /* !CONFIG_XENO_ARCH_FPU */
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
 static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
@@ -114,7 +105,7 @@ static inline int xnarch_handle_fpu_fault(struct xnthread *from,
 {
 	return 0;
 }
-#endif /*  !CONFIG_XENO_ARCH_FPU || !CONFIG_VFP */
+#endif /*  !CONFIG_XENO_ARCH_FPU */
 
 static inline void xnarch_enable_kfpu(void) { }
 

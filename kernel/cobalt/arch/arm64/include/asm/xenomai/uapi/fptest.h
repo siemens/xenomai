@@ -18,53 +18,86 @@
 #ifndef _COBALT_ARM_ASM_UAPI_FPTEST_H
 #define _COBALT_ARM_ASM_UAPI_FPTEST_H
 
-#ifdef __aarch64__
-/* CP10 and CP11, used for the FP/NEON operations, are already excluded from
-the list of valid operands for the generic coprocessor instructions */
-#define __COBALT_HAVE_VFP  0
-#else
-#define __COBALT_HAVE_VFP  0x1
-#endif
+#define __COBALT_HAVE_FPU  0x1
 
 static inline void fp_regs_set(int features, unsigned int val)
 {
-#if __COBALT_HAVE_VFP != 0
-	unsigned long long e[16];
+
+	unsigned long long e[32];
 	unsigned int i;
 
-	if (features & __COBALT_HAVE_VFP) {
-		for (i = 0; i < 16; i++)
+	if (features & __COBALT_HAVE_FPU) {
+
+		for (i = 0; i < 32; i++)
 			e[i] = val;
 
-		/* vldm %0!, {d0-d15},
-		   AKA fldmiax %0!, {d0-d15} */
-		__asm__ __volatile__("ldc p11, cr0, [%0],#32*4":
-				     "=r"(i): "0"(&e[0]): "memory");
+		__asm__ __volatile__("ldp     d0, d1, [%0, #8 * 0] \n\
+							ldp   d2, d3, [%0, #8 * 2] \n\
+							ldp     d4, d5, [%0, #8 * 4]\n\
+							ldp     d6, d7, [%0, #8 * 6]\n\
+							ldp     d8, d9, [%0, #8 * 8]\n\
+							ldp     d10, d11, [%0, #8 * 10]\n\
+							ldp     d12, d13, [%0, #8 * 12]\n\
+							ldp     d14, d15, [%0, #8 * 14]\n\
+							ldp     d16, d17, [%0, #8 * 16]\n\
+							ldp     d18, d19, [%0, #8 * 18]\n\
+							ldp     d20, d21, [%0, #8 * 20]\n\
+							ldp     d22, d23, [%0, #8 * 22]\n\
+							ldp     d24, d25, [%0, #8 * 24]\n\
+							ldp     d26, d27, [%0, #8 * 26]\n\
+							ldp     d28, d29, [%0, #8 * 28]\n\
+							ldp     d30, d31, [%0, #8 * 30]"
+
+				: /* No outputs. */
+				: "r"(&e[0])
+				  : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
+					"d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31", "memory"
+		);
 	}
-#endif
+
 }
 
 static inline unsigned int fp_regs_check(int features, unsigned int val,
 					 int (*report)(const char *fmt, ...))
 {
 	unsigned int result = val;
-#if __COBALT_HAVE_VFP != 0
+
 	unsigned int i;
-	unsigned long long e[16];
+	unsigned long long e[32];
 
-	if (features & __COBALT_HAVE_VFP) {
-		/* vstm %0!, {d0-d15},
-		   AKA fstmiax %0!, {d0-d15} */
-		__asm__ __volatile__("stc p11, cr0, [%0],#32*4":
-				     "=r"(i): "0"(&e[0]): "memory");
+	if (features & __COBALT_HAVE_FPU) {
 
-		for (i = 0; i < 16; i++)
+		__asm__ __volatile__("stp     d0, d1, [%0, #8 * 0] \n\
+							stp   d2, d3, [%0, #8 * 2] \n\
+							stp     d4, d5, [%0, #8 * 4]\n\
+							stp     d6, d7, [%0, #8 * 6]\n\
+							stp		d8, d9, [%0, #8 * 8]\n\
+							stp     d10, d11, [%0, #8 * 10]\n\
+							stp     d12, d13, [%0, #8 * 12]\n\
+							stp     d14, d15, [%0, #8 * 14]\n\
+							stp     d16, d17, [%0, #8 * 16]\n\
+							stp     d18, d19, [%0, #8 * 18]\n\
+							stp     d20, d21, [%0, #8 * 20]\n\
+							stp     d22, d23, [%0, #8 * 22]\n\
+							stp     d24, d25, [%0, #8 * 24]\n\
+							stp     d26, d27, [%0, #8 * 26]\n\
+							stp     d28, d29, [%0, #8 * 28]\n\
+							stp     d30, d31, [%0, #8 * 30]"
+
+				:  /* No outputs. */
+				: "r"(&e[0])
+				  : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
+					"d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31", "memory"
+		);
+
+
+
+		for (i = 0; i < 32; i++)
 			if (e[i] != val) {
 				report("d%d: %llu != %u\n", i, e[i], val);
 				result = e[i];
 			}
 	}
-#endif
 
 	return result;
 }

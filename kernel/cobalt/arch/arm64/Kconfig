@@ -8,7 +8,7 @@ config XENO_ARCH_WANT_TIP
        def_bool y
 
 config XENO_ARCH_FPU
-	def_bool VFP
+	def_bool y
 
 config XENO_ARCH_SYS3264
         def_bool n

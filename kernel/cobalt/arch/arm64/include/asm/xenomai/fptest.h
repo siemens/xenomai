@@ -20,15 +20,10 @@
 #define _COBALT_ARM_ASM_FPTEST_H
 
 #include <linux/errno.h>
+#include <asm/xenomai/uapi/fptest.h>
 #include <asm/hwcap.h>
 
-#ifdef CONFIG_VFP
-#define have_vfp (elf_hwcap & HWCAP_VFP)
-#else /* !CONFIG_VFP */
-#define have_vfp 0
-#endif /* !CONFIG_VFP */
-
-#include <asm/xenomai/uapi/fptest.h>
+#define have_fp (elf_hwcap & HWCAP_FP)
 
 static inline int fp_kernel_supported(void)
 {
@@ -46,7 +41,7 @@ static inline void fp_linux_end(void)
 
 static inline int fp_detect(void)
 {
-	return have_vfp ? __COBALT_HAVE_VFP : 0;
+	return have_fp ? __COBALT_HAVE_FPU : 0;
 }
 
 #endif /* _COBALT_ARM_ASM_FPTEST_H */

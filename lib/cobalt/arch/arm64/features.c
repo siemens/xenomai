@@ -94,8 +94,8 @@ int cobalt_fp_detect(void)
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		if(strncmp(buffer, "Features", sizeof("Features") - 1))
 			continue;
-		if (strstr(buffer, "vfp")) {
-			features |= __COBALT_HAVE_VFP;
+		if (strstr(buffer, "fp")) {
+			features |= __COBALT_HAVE_FPU;
 			break;
 		}
 	}
