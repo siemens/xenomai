@@ -1488,6 +1488,9 @@ __init int cobalt_init(void)
 	ipipe_set_hooks(ipipe_root_domain, IPIPE_SYSCALL|IPIPE_KEVENT);
 	ipipe_set_hooks(&xnsched_realtime_domain, IPIPE_SYSCALL|IPIPE_TRAP);
 
+	if (gid_arg != -1)
+		printk(XENO_INFO "allowing access to group %d\n", gid_arg);
+
 	return 0;
 fail_siginit:
 	cobalt_unregister_personality(0);
