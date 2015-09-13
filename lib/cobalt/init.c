@@ -93,9 +93,6 @@ static void low_init(void)
 	struct cobalt_featinfo *f;
 	int ret;
 
-	if (mlockall(MCL_CURRENT | MCL_FUTURE))
-		early_panic("mlockall: %s", strerror(errno));
-
 	old_sigill_handler = signal(SIGILL, sigill_handler);
 	if (old_sigill_handler == SIG_ERR)
 		early_panic("signal(SIGILL): %s", strerror(errno));
@@ -120,6 +117,9 @@ static void low_init(void)
 	default:
 		early_panic("binding failed: %s", strerror(-ret));
 	}
+
+	if (mlockall(MCL_CURRENT | MCL_FUTURE))
+		early_panic("mlockall: %s", strerror(errno));
 
 	cobalt_check_features(f);
 	cobalt_init_umm(f->vdso_offset);
