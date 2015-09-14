@@ -42,9 +42,9 @@ typedef struct RT_MUTEX RT_MUTEX;
  */
 struct RT_MUTEX_INFO {
 	/**
-	 * Current mutex owner, or null if unlocked. This information
-	 * is in essence transient, and may not be valid anymore once
-	 * used by the caller.
+	 * Current mutex owner, or NO_ALCHEMY_TASK if unlocked. This
+	 * information is in essence transient, and may not be valid
+	 * anymore once used by the caller.
 	 */
 	RT_TASK owner;
 	/**
