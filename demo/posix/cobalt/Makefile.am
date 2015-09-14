@@ -9,7 +9,8 @@ demo_PROGRAMS = 	\
 	iddp-sendrecv	\
 	xddp-echo	\
 	xddp-label	\
-	xddp-stream
+	xddp-stream	\
+	can_rtt
 
 cppflags = 			\
 	$(XENO_USER_CFLAGS)	\
@@ -56,3 +57,8 @@ xddp_stream_SOURCES = xddp-stream.c
 xddp_stream_CPPFLAGS = $(cppflags)
 xddp_stream_LDFLAGS = $(ldflags)
 xddp_stream_LDADD = $(ldadd)
+
+can_rtt_SOURCES = can-rtt.c
+can_rtt_CPPFLAGS = $(cppflags)
+can_rtt_LDFLAGS = $(ldflags)
+can_rtt_LDADD = $(ldadd)

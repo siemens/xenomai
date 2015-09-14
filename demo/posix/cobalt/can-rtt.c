@@ -48,13 +48,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-
-#ifdef CONFIG_XENO_COBALT
 #include <rtdm/can.h>
-#else
-#include <linux/can.h>
-#include <linux/can/raw.h>
-#endif
 #include <xenomai/init.h>
 
 #define NSEC_PER_SEC 1000000000
