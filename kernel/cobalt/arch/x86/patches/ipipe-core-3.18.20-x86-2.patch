@@ -1,5 +1,5 @@
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 3635fff..0f362ca 100644
+index c9148e2..8460d93 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -9,6 +9,7 @@ config 64BIT
@@ -10,17 +10,18 @@ index 3635fff..0f362ca 100644
  	select CLKSRC_I8253
  	select HAVE_UID16
  
-@@ -21,6 +22,9 @@ config X86_64
+@@ -21,6 +22,10 @@ config X86_64
  ### Arch settings
  config X86
  	def_bool y
 +	select IPIPE_HAVE_HOSTRT if IPIPE
 +	select IPIPE_HAVE_VM_NOTIFIER if IPIPE
 +	select IPIPE_HAVE_SAFE_THREAD_INFO if X86_64
++	select IPIPE_WANT_PTE_PINNING if IPIPE
  	select ARCH_MIGHT_HAVE_ACPI_PDC if ACPI
  	select ARCH_HAS_DEBUG_STRICT_USER_COPY_CHECKS
  	select ARCH_HAS_FAST_MULTIPLIER
-@@ -115,7 +119,7 @@ config X86
+@@ -115,7 +120,7 @@ config X86
  	select GENERIC_TIME_VSYSCALL
  	select GENERIC_STRNCPY_FROM_USER
  	select GENERIC_STRNLEN_USER
@@ -29,7 +30,7 @@ index 3635fff..0f362ca 100644
  	select HAVE_IRQ_TIME_ACCOUNTING
  	select VIRT_TO_BUS
  	select MODULES_USE_ELF_REL if X86_32
-@@ -612,6 +616,7 @@ if HYPERVISOR_GUEST
+@@ -612,6 +617,7 @@ if HYPERVISOR_GUEST
  
  config PARAVIRT
  	bool "Enable paravirtualization code"
@@ -37,7 +38,7 @@ index 3635fff..0f362ca 100644
  	---help---
  	  This changes the kernel so it can modify itself when it is run
  	  under a hypervisor, potentially improving performance significantly
-@@ -854,6 +859,8 @@ config SCHED_MC
+@@ -854,6 +860,8 @@ config SCHED_MC
  
  source "kernel/Kconfig.preempt"
  
@@ -437,7 +438,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..c875c46
+index 0000000..7145c10
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,118 @@
@@ -467,7 +468,7 @@ index 0000000..c875c46
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	2
 +
 +struct ipipe_domain;
 +struct pt_regs;
@@ -762,7 +763,7 @@ index 0000000..d000d7e
 +#endif	/* !__X86_IPIPE_64_H */
 diff --git a/arch/x86/include/asm/ipipe_base.h b/arch/x86/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..f940d4b
+index 0000000..a0a7391
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_base.h
 @@ -0,0 +1,206 @@
@@ -849,7 +850,7 @@ index 0000000..f940d4b
 +#endif
 +}
 +
-+void __ipipe_halt_root(void);
++void __ipipe_halt_root(int use_mwait);
 +
 +void ipipe_hrtimer_interrupt(void);
 +
@@ -1002,7 +1003,7 @@ index 5702d7e..dd61aa6 100644
  
  #define FPU_IRQ				  13
 diff --git a/arch/x86/include/asm/irqflags.h b/arch/x86/include/asm/irqflags.h
-index 0a8b519..0d052b7 100644
+index 0a8b519..c52d5e0 100644
 --- a/arch/x86/include/asm/irqflags.h
 +++ b/arch/x86/include/asm/irqflags.h
 @@ -4,6 +4,11 @@
@@ -1083,7 +1084,7 @@ index 0a8b519..0d052b7 100644
  {
 +#ifdef CONFIG_IPIPE
 +	barrier();
-+	__ipipe_halt_root();
++	__ipipe_halt_root(0);
 +#else
  	native_safe_halt();
 +#endif
@@ -1331,7 +1332,7 @@ index 4008734..33fc4b9 100644
  }
  
 diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
-index eb71ec7..2e63f86 100644
+index ddd8d13..d40d320 100644
 --- a/arch/x86/include/asm/processor.h
 +++ b/arch/x86/include/asm/processor.h
 @@ -478,6 +478,7 @@ struct thread_struct {
@@ -1343,7 +1344,7 @@ index eb71ec7..2e63f86 100644
  #ifdef CONFIG_X86_32
  	unsigned long		ip;
 diff --git a/arch/x86/include/asm/special_insns.h b/arch/x86/include/asm/special_insns.h
-index e820c08..a213f2b 100644
+index 6a4b00f..449a847 100644
 --- a/arch/x86/include/asm/special_insns.h
 +++ b/arch/x86/include/asm/special_insns.h
 @@ -4,6 +4,10 @@
@@ -2311,10 +2312,10 @@ index 9f6b934..ef8626a 100644
  	BLANK();
  	OFFSET(crypto_tfm_ctx_offset, crypto_tfm, __crt_ctx);
 diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
-index cfa9b5b..ba1d33b 100644
+index 7bc49c3..5c01e59 100644
 --- a/arch/x86/kernel/cpu/common.c
 +++ b/arch/x86/kernel/cpu/common.c
-@@ -1198,6 +1198,7 @@ void syscall_init(void)
+@@ -1199,6 +1199,7 @@ void syscall_init(void)
  DEFINE_PER_CPU(struct orig_ist, orig_ist);
  
  static DEFINE_PER_CPU(unsigned long, debug_stack_addr);
@@ -2322,7 +2323,7 @@ index cfa9b5b..ba1d33b 100644
  DEFINE_PER_CPU(int, debug_stack_usage);
  
  int is_debug_stack(unsigned long addr)
-@@ -1225,6 +1226,7 @@ void debug_stack_reset(void)
+@@ -1226,6 +1227,7 @@ void debug_stack_reset(void)
  		load_current_idt();
  }
  NOKPROBE_SYMBOL(debug_stack_reset);
@@ -2331,18 +2332,18 @@ index cfa9b5b..ba1d33b 100644
  #else	/* CONFIG_X86_64 */
  
 diff --git a/arch/x86/kernel/cpu/mcheck/mce.c b/arch/x86/kernel/cpu/mcheck/mce.c
-index 61a9668ce..9cd5447 100644
+index bf44e45..2a49c84 100644
 --- a/arch/x86/kernel/cpu/mcheck/mce.c
 +++ b/arch/x86/kernel/cpu/mcheck/mce.c
-@@ -45,6 +45,7 @@
- #include <asm/processor.h>
+@@ -46,6 +46,7 @@
+ #include <asm/tlbflush.h>
  #include <asm/mce.h>
  #include <asm/msr.h>
 +#include <asm/traps.h>
  
  #include "mce-internal.h"
  
-@@ -1677,6 +1678,16 @@ static void unexpected_machine_check(struct pt_regs *regs, long error_code)
+@@ -1683,6 +1684,16 @@ static void unexpected_machine_check(struct pt_regs *regs, long error_code)
  void (*machine_check_vector)(struct pt_regs *, long error_code) =
  						unexpected_machine_check;
  
@@ -2360,7 +2361,7 @@ index 61a9668ce..9cd5447 100644
   * Called for each booted CPU to set up machine checks.
   * Must be called with preempt off:
 diff --git a/arch/x86/kernel/cpu/mtrr/cyrix.c b/arch/x86/kernel/cpu/mtrr/cyrix.c
-index 9e451b0..fcf6bc5 100644
+index f8c81ba..9be0d9c 100644
 --- a/arch/x86/kernel/cpu/mtrr/cyrix.c
 +++ b/arch/x86/kernel/cpu/mtrr/cyrix.c
 @@ -18,7 +18,7 @@ cyrix_get_arr(unsigned int reg, unsigned long *base,
@@ -2427,7 +2428,7 @@ index 9e451b0..fcf6bc5 100644
  
  static const struct mtrr_ops cyrix_mtrr_ops = {
 diff --git a/arch/x86/kernel/cpu/mtrr/generic.c b/arch/x86/kernel/cpu/mtrr/generic.c
-index 0e25a1b..4b9465a 100644
+index 7d74f7b..f122207 100644
 --- a/arch/x86/kernel/cpu/mtrr/generic.c
 +++ b/arch/x86/kernel/cpu/mtrr/generic.c
 @@ -717,7 +717,7 @@ static void generic_set_all(void)
@@ -2503,7 +2504,7 @@ index ff86f19..3f4cf56 100644
  	/*
  	 * When in-kernel, we also print out the stack and code at the
 diff --git a/arch/x86/kernel/entry_32.S b/arch/x86/kernel/entry_32.S
-index 344b63f..6476af3 100644
+index 3dddb89..e5f3417 100644
 --- a/arch/x86/kernel/entry_32.S
 +++ b/arch/x86/kernel/entry_32.S
 @@ -45,6 +45,7 @@
@@ -2755,7 +2756,7 @@ index 344b63f..6476af3 100644
  
  #ifdef CONFIG_TRACING
  #define TRACE_BUILD_INTERRUPT(name, nr)		\
-@@ -1264,9 +1416,15 @@ error_code:
+@@ -1267,9 +1419,15 @@ error_code:
  	movl $(__USER_DS), %ecx
  	movl %ecx, %ds
  	movl %ecx, %es
@@ -2771,7 +2772,7 @@ index 344b63f..6476af3 100644
  	jmp ret_from_exception
  	CFI_ENDPROC
  END(page_fault)
-@@ -1306,7 +1464,9 @@ ENTRY(debug)
+@@ -1309,7 +1467,9 @@ ENTRY(debug)
  debug_stack_correct:
  	pushl_cfi $-1			# mark this as an int
  	SAVE_ALL
@@ -2781,7 +2782,7 @@ index 344b63f..6476af3 100644
  	xorl %edx,%edx			# error code 0
  	movl %esp,%eax			# pt_regs pointer
  	call do_debug
-@@ -1402,7 +1562,9 @@ ENTRY(int3)
+@@ -1405,7 +1565,9 @@ ENTRY(int3)
  	ASM_CLAC
  	pushl_cfi $-1			# mark this as an int
  	SAVE_ALL
@@ -2792,7 +2793,7 @@ index 344b63f..6476af3 100644
  	movl %esp,%eax		# pt_regs pointer
  	call do_int3
 diff --git a/arch/x86/kernel/entry_64.S b/arch/x86/kernel/entry_64.S
-index f1dc27f..8245bea 100644
+index e36d981..5c8c41a 100644
 --- a/arch/x86/kernel/entry_64.S
 +++ b/arch/x86/kernel/entry_64.S
 @@ -50,6 +50,7 @@
@@ -3193,7 +3194,7 @@ index f1dc27f..8245bea 100644
  	ret
  	CFI_ENDPROC
  END(do_softirq_own_stack)
-@@ -1246,8 +1437,13 @@ apicinterrupt3 HYPERVISOR_CALLBACK_VECTOR \
+@@ -1249,8 +1440,13 @@ apicinterrupt3 HYPERVISOR_CALLBACK_VECTOR \
  	hyperv_callback_vector hyperv_vector_handler
  #endif /* CONFIG_HYPERV */
  
@@ -3207,7 +3208,7 @@ index f1dc27f..8245bea 100644
  idtentry stack_segment do_stack_segment has_error_code=1
  #ifdef CONFIG_XEN
  idtentry xen_debug do_debug has_error_code=0
-@@ -1281,8 +1477,13 @@ ENTRY(paranoid_exit)
+@@ -1284,8 +1480,13 @@ ENTRY(paranoid_exit)
  	DEFAULT_FRAME
  	DISABLE_INTERRUPTS(CLBR_NONE)
  	TRACE_IRQS_OFF_DEBUG
@@ -3221,7 +3222,7 @@ index f1dc27f..8245bea 100644
  	testl $3,CS(%rsp)
  	jnz   paranoid_userspace
  paranoid_swapgs:
-@@ -1353,7 +1554,6 @@ ENTRY(error_entry)
+@@ -1356,7 +1557,6 @@ ENTRY(error_entry)
  error_swapgs:
  	SWAPGS
  error_sti:
@@ -3297,10 +3298,10 @@ index 319bcb9..49cc3ff 100644
  
  	printk(KERN_INFO "HPET: %d timers in total, %d timers will be used for per-cpu timer\n",
 diff --git a/arch/x86/kernel/i387.c b/arch/x86/kernel/i387.c
-index a9a4229..b26cd1d 100644
+index 8d6e954..6cdfefe 100644
 --- a/arch/x86/kernel/i387.c
 +++ b/arch/x86/kernel/i387.c
-@@ -72,7 +72,9 @@ EXPORT_SYMBOL(irq_fpu_usable);
+@@ -73,7 +73,9 @@ EXPORT_SYMBOL(irq_fpu_usable);
  void __kernel_fpu_begin(void)
  {
  	struct task_struct *me = current;
@@ -3310,7 +3311,7 @@ index a9a4229..b26cd1d 100644
  	if (__thread_has_fpu(me)) {
  		__thread_clear_has_fpu(me);
  		__save_init_fpu(me);
-@@ -81,6 +83,7 @@ void __kernel_fpu_begin(void)
+@@ -82,6 +84,7 @@ void __kernel_fpu_begin(void)
  		this_cpu_write(fpu_owner_task, NULL);
  		clts();
  	}
@@ -3400,10 +3401,10 @@ index e7cc537..bc5e8f8 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..35f9b62
+index 0000000..a06e6bb
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,512 @@
+@@ -0,0 +1,499 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -3465,20 +3466,6 @@ index 0000000..35f9b62
 +
 +DEFINE_PER_CPU(unsigned long, __ipipe_cr2);
 +EXPORT_PER_CPU_SYMBOL_GPL(__ipipe_cr2);
-+
-+void ipipe_raise_irq(unsigned int irq)
-+{
-+	struct pt_regs regs;
-+	unsigned long flags;
-+
-+	flags = hard_local_irq_save();
-+	regs.flags = flags;
-+	regs.orig_ax = irq;  /* >= 0, IRQ won't be acked */
-+	regs.cs = __KERNEL_CS;
-+	__ipipe_handle_irq(&regs);
-+	hard_local_irq_restore(flags);
-+}
-+EXPORT_SYMBOL_GPL(ipipe_raise_irq);
 +
 +int ipipe_get_sysinfo(struct ipipe_sysinfo *info)
 +{
@@ -3692,7 +3679,7 @@ index 0000000..35f9b62
 +		regs->flags |= X86_EFLAGS_IF;
 +}
 +
-+void __ipipe_halt_root(void)
++void __ipipe_halt_root(int use_mwait)
 +{
 +	struct ipipe_percpu_domain_data *p;
 +
@@ -3712,7 +3699,11 @@ index 0000000..35f9b62
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
 +		ipipe_trace_end(0x8000000E);
 +#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
-+		asm volatile("sti; hlt": : :"memory");
++		if (use_mwait)
++			asm volatile("sti; .byte 0x0f, 0x01, 0xc9;"
++				     :: "a" (0), "c" (0));
++		else
++			asm volatile("sti; hlt": : :"memory");
 +	}
 +}
 +EXPORT_SYMBOL_GPL(__ipipe_halt_root);
@@ -3905,9 +3896,6 @@ index 0000000..35f9b62
 +EXPORT_PER_CPU_SYMBOL_GPL(fpu_owner_task);
 +
 +EXPORT_PER_CPU_SYMBOL_GPL(init_tss);
-+#ifdef CONFIG_SMP
-+EXPORT_PER_CPU_SYMBOL_GPL(cpu_tlbstate);
-+#endif /* CONFIG_SMP */
 +
 +#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
 +EXPORT_SYMBOL(tasklist_lock);
@@ -3954,25 +3942,30 @@ index 3790775..218eb83 100644
  			cpumask_copy(&affinity_new, data->affinity);
  			cpu_clear(this_cpu, affinity_new);
 diff --git a/arch/x86/kernel/irqinit.c b/arch/x86/kernel/irqinit.c
-index 4de73ee..e850981 100644
+index 4de73ee..f6f3cbe 100644
 --- a/arch/x86/kernel/irqinit.c
 +++ b/arch/x86/kernel/irqinit.c
-@@ -125,6 +125,8 @@ static void __init smp_intr_init(void)
+@@ -125,6 +125,9 @@ static void __init smp_intr_init(void)
  {
  #ifdef CONFIG_SMP
  #if defined(CONFIG_X86_64) || defined(CONFIG_X86_LOCAL_APIC)
-+	unsigned cpu;
++	unsigned __maybe_unused cpu;
++	int __maybe_unused ret;
 +
  	/*
  	 * The reschedule interrupt is a CPU-to-CPU reschedule-helper
  	 * IPI, driven by wakeup.
-@@ -141,9 +143,16 @@ static void __init smp_intr_init(void)
+@@ -141,9 +144,20 @@ static void __init smp_intr_init(void)
  	/* Low priority IPI to cleanup after moving an irq */
  	set_intr_gate(IRQ_MOVE_CLEANUP_VECTOR, irq_move_cleanup_interrupt);
  	set_bit(IRQ_MOVE_CLEANUP_VECTOR, used_vectors);
++#ifdef CONFIG_IPIPE
++	ret = irq_alloc_descs(IRQ_MOVE_CLEANUP_VECTOR, 0, 1, 0);
++	BUG_ON(IRQ_MOVE_CLEANUP_VECTOR != ret);
 +	for_each_possible_cpu(cpu)
 +		per_cpu(vector_irq, cpu)[IRQ_MOVE_CLEANUP_VECTOR] =
 +			IRQ_MOVE_CLEANUP_VECTOR;
++#endif
  
  	/* IPI used for rebooting/stopping */
  	alloc_intr_gate(REBOOT_VECTOR, reboot_interrupt);
@@ -3983,7 +3976,7 @@ index 4de73ee..e850981 100644
  #endif
  #endif /* CONFIG_SMP */
  }
-@@ -173,6 +182,9 @@ static void __init apic_intr_init(void)
+@@ -173,6 +187,9 @@ static void __init apic_intr_init(void)
  	/* IPI vectors for APIC spurious and error interrupts */
  	alloc_intr_gate(SPURIOUS_APIC_VECTOR, spurious_interrupt);
  	alloc_intr_gate(ERROR_APIC_VECTOR, error_interrupt);
@@ -4076,10 +4069,10 @@ index a311ffc..482b42f 100644
  
  	return IS_ERR(pd) ? PTR_ERR(pd) : 0;
 diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-index e127dda..be572d1 100644
+index a388bb8..52ad777 100644
 --- a/arch/x86/kernel/process.c
 +++ b/arch/x86/kernel/process.c
-@@ -70,7 +70,7 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
+@@ -72,7 +72,7 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
  	dst->thread.fpu.has_fpu = 0;
  	dst->thread.fpu.last_cpu = ~0;
  	dst->thread.fpu.state = NULL;
@@ -4088,7 +4081,7 @@ index e127dda..be572d1 100644
  		int err = fpu_alloc(&dst->thread.fpu);
  		if (err)
  			return err;
-@@ -95,6 +95,11 @@ void arch_task_cache_init(void)
+@@ -97,6 +97,11 @@ void arch_task_cache_init(void)
          	kmem_cache_create("task_xstate", xstate_size,
  				  __alignof__(union thread_xstate),
  				  SLAB_PANIC | SLAB_NOTRACK, NULL);
@@ -4100,7 +4093,7 @@ index e127dda..be572d1 100644
  	setup_xstate_comp();
  }
  
-@@ -110,8 +115,16 @@ void exit_thread(void)
+@@ -112,8 +117,16 @@ void exit_thread(void)
  	if (bp) {
  		struct tss_struct *tss = &per_cpu(init_tss, get_cpu());
  
@@ -4118,7 +4111,7 @@ index e127dda..be572d1 100644
  		/*
  		 * Careful, clear this in the TSS too:
  		 */
-@@ -131,12 +144,14 @@ void flush_thread(void)
+@@ -133,12 +146,14 @@ void flush_thread(void)
  	flush_ptrace_hw_breakpoint(tsk);
  	memset(tsk->thread.tls_array, 0, sizeof(tsk->thread.tls_array));
  	drop_init_fpu(tsk);
@@ -4133,7 +4126,7 @@ index e127dda..be572d1 100644
  }
  
  static void hard_disable_TSC(void)
-@@ -329,7 +344,7 @@ bool xen_set_default_idle(void)
+@@ -331,7 +346,7 @@ bool xen_set_default_idle(void)
  #endif
  void stop_this_cpu(void *dummy)
  {
@@ -4142,7 +4135,7 @@ index e127dda..be572d1 100644
  	/*
  	 * Remove this CPU:
  	 */
-@@ -368,6 +383,10 @@ static void amd_e400_idle(void)
+@@ -370,6 +385,10 @@ static void amd_e400_idle(void)
  			if (!boot_cpu_has(X86_FEATURE_NONSTOP_TSC))
  				mark_tsc_unstable("TSC halt in AMD C1E");
  			pr_info("System has AMD C1E enabled\n");
@@ -4153,8 +4146,20 @@ index e127dda..be572d1 100644
  		}
  	}
  
+@@ -438,7 +457,11 @@ static void mwait_idle(void)
+ 
+ 		__monitor((void *)&current_thread_info()->flags, 0, 0);
+ 		if (!need_resched())
++#ifdef CONFIG_IPIPE
++			__ipipe_halt_root(1);
++#else
+ 			__sti_mwait(0, 0);
++#endif
+ 		else
+ 			local_irq_enable();
+ 	} else {
 diff --git a/arch/x86/kernel/process_32.c b/arch/x86/kernel/process_32.c
-index 8f3ebfe..ac6740e 100644
+index 603c4f9..08a142c 100644
 --- a/arch/x86/kernel/process_32.c
 +++ b/arch/x86/kernel/process_32.c
 @@ -247,7 +247,7 @@ __switch_to(struct task_struct *prev_p, struct task_struct *next_p)
@@ -4167,7 +4172,7 @@ index 8f3ebfe..ac6740e 100644
  	fpu_switch_t fpu;
  
 diff --git a/arch/x86/kernel/process_64.c b/arch/x86/kernel/process_64.c
-index 5a2c029..9958582 100644
+index 67fcc43..842036c 100644
 --- a/arch/x86/kernel/process_64.c
 +++ b/arch/x86/kernel/process_64.c
 @@ -51,6 +51,7 @@
@@ -4614,10 +4619,10 @@ index c7d791f..6ded074 100644
 +		ipipe_update_hostrt(tk);
  }
 diff --git a/arch/x86/kernel/xsave.c b/arch/x86/kernel/xsave.c
-index 8be1e17..4190e09 100644
+index cdc6cf9..d388d6d 100644
 --- a/arch/x86/kernel/xsave.c
 +++ b/arch/x86/kernel/xsave.c
-@@ -642,6 +642,10 @@ static void __init xstate_enable_boot_cpu(void)
+@@ -643,6 +643,10 @@ static void __init xstate_enable_boot_cpu(void)
  	if (cpu_has_xsaveopt && eagerfpu != DISABLE)
  		eagerfpu = ENABLE;
  
@@ -4629,10 +4634,10 @@ index 8be1e17..4190e09 100644
  		if (eagerfpu == DISABLE) {
  			pr_err("eagerfpu not present, disabling some xstate features: 0x%llx\n",
 diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 7527cef..dc9d668 100644
+index b83bff8..d7ea7f5 100644
 --- a/arch/x86/kvm/svm.c
 +++ b/arch/x86/kvm/svm.c
-@@ -3881,7 +3881,7 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
+@@ -3883,7 +3883,7 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
  
  	clgi();
  
@@ -4641,7 +4646,7 @@ index 7527cef..dc9d668 100644
  
  	asm volatile (
  		"push %%" _ASM_BP "; \n\t"
-@@ -3967,7 +3967,7 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
+@@ -3969,7 +3969,7 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
  
  	reload_tss(vcpu);
  
@@ -4650,7 +4655,7 @@ index 7527cef..dc9d668 100644
  
  	vcpu->arch.cr2 = svm->vmcb->save.cr2;
  	vcpu->arch.regs[VCPU_REGS_RAX] = svm->vmcb->save.rax;
-@@ -4319,6 +4319,7 @@ out:
+@@ -4323,6 +4323,7 @@ out:
  
  static void svm_handle_external_intr(struct kvm_vcpu *vcpu)
  {
@@ -4659,7 +4664,7 @@ index 7527cef..dc9d668 100644
  }
  
 diff --git a/arch/x86/kvm/vmx.c b/arch/x86/kvm/vmx.c
-index ed70394..add6fc3 100644
+index 0d7f1dc..0593f5d 100644
 --- a/arch/x86/kvm/vmx.c
 +++ b/arch/x86/kvm/vmx.c
 @@ -1808,9 +1808,11 @@ static void __vmx_load_host_state(struct vcpu_vmx *vmx)
@@ -4692,7 +4697,7 @@ index ed70394..add6fc3 100644
  
  	if (cpu_has_vmx_msr_bitmap())
  		vmx_set_msr_bitmap(&vmx->vcpu);
-@@ -7390,8 +7394,10 @@ static void vmx_handle_external_intr(struct kvm_vcpu *vcpu)
+@@ -7401,8 +7405,10 @@ static void vmx_handle_external_intr(struct kvm_vcpu *vcpu)
  			[ss]"i"(__KERNEL_DS),
  			[cs]"i"(__KERNEL_CS)
  			);
@@ -4704,7 +4709,7 @@ index ed70394..add6fc3 100644
  }
  
  static bool vmx_mpx_supported(void)
-@@ -7797,7 +7803,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
+@@ -7808,7 +7814,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
  	vmx_vcpu_load(&vmx->vcpu, cpu);
  	vmx->vcpu.cpu = cpu;
  	err = vmx_vcpu_setup(vmx);
@@ -4714,7 +4719,7 @@ index ed70394..add6fc3 100644
  	put_cpu();
  	if (err)
  		goto free_vmcs;
-@@ -7818,6 +7826,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
+@@ -7829,6 +7837,9 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
  
  	vmx->nested.current_vmptr = -1ull;
  	vmx->nested.current_vmcs12 = NULL;
@@ -4725,7 +4730,7 @@ index ed70394..add6fc3 100644
  	return &vmx->vcpu;
  
 diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index a38dd81..800426a 100644
+index 0bb431c..1966509 100644
 --- a/arch/x86/kvm/x86.c
 +++ b/arch/x86/kvm/x86.c
 @@ -39,6 +39,7 @@
@@ -4798,7 +4803,7 @@ index a38dd81..800426a 100644
  	if (!smsr->registered) {
  		smsr->urn.on_user_return = kvm_on_user_return;
  		user_return_notifier_register(&smsr->urn);
-@@ -2911,11 +2928,39 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
+@@ -2909,11 +2926,39 @@ void kvm_arch_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
  
  void kvm_arch_vcpu_put(struct kvm_vcpu *vcpu)
  {
@@ -4838,7 +4843,7 @@ index a38dd81..800426a 100644
  static int kvm_vcpu_ioctl_get_lapic(struct kvm_vcpu *vcpu,
  				    struct kvm_lapic_state *s)
  {
-@@ -6259,6 +6304,10 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
+@@ -6258,6 +6303,10 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
  	}
  
  	preempt_disable();
@@ -4849,7 +4854,7 @@ index a38dd81..800426a 100644
  
  	kvm_x86_ops->prepare_guest_switch(vcpu);
  	if (vcpu->fpu_active)
-@@ -6274,12 +6323,11 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
+@@ -6273,12 +6322,11 @@ static int vcpu_enter_guest(struct kvm_vcpu *vcpu)
  	 */
  	smp_mb__after_srcu_read_unlock();
  
@@ -4905,7 +4910,7 @@ index ddf9ecb..e1ac76d 100644
  
  	/*
 diff --git a/arch/x86/mm/fault.c b/arch/x86/mm/fault.c
-index 4d8ee82..e60bd88 100644
+index 6fa245a..6231412 100644
 --- a/arch/x86/mm/fault.c
 +++ b/arch/x86/mm/fault.c
 @@ -359,9 +359,9 @@ void vmalloc_sync_all(void)
@@ -4978,7 +4983,7 @@ index 4d8ee82..e60bd88 100644
  NOKPROBE_SYMBOL(do_page_fault);
  
 +#ifdef CONFIG_IPIPE
-+void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
++void __ipipe_pin_mapping_globally(unsigned long start, unsigned long end)
 +{
 +#ifdef CONFIG_X86_32
 +	unsigned long next, addr = start;
@@ -5044,10 +5049,10 @@ index 4d8ee82..e60bd88 100644
  NOKPROBE_SYMBOL(trace_do_page_fault);
  #endif /* CONFIG_TRACING */
 diff --git a/arch/x86/mm/tlb.c b/arch/x86/mm/tlb.c
-index ee61c36..c8f0b99 100644
+index 3250f23..6c907d0 100644
 --- a/arch/x86/mm/tlb.c
 +++ b/arch/x86/mm/tlb.c
-@@ -43,9 +43,12 @@ struct flush_tlb_info {
+@@ -40,9 +40,12 @@ struct flush_tlb_info {
   */
  void leave_mm(int cpu)
  {
@@ -5060,7 +5065,7 @@ index ee61c36..c8f0b99 100644
  	if (cpumask_test_cpu(cpu, mm_cpumask(active_mm))) {
  		cpumask_clear_cpu(cpu, mm_cpumask(active_mm));
  		load_cr3(swapper_pg_dir);
-@@ -57,6 +60,7 @@ void leave_mm(int cpu)
+@@ -54,6 +57,7 @@ void leave_mm(int cpu)
  		 */
  		trace_tlb_flush_rcuidle(TLB_FLUSH_ON_TASK_SWITCH, TLB_FLUSH_ALL);
  	}
@@ -5445,10 +5450,10 @@ index e5c31ea..8dce875 100644
  	.probe		= serial8250_probe,
  	.remove		= serial8250_remove,
 diff --git a/fs/exec.c b/fs/exec.c
-index 7302b75..e6035e6 100644
+index b7a5f46..0582bd6 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -820,6 +820,7 @@ static int exec_mmap(struct mm_struct *mm)
+@@ -823,6 +823,7 @@ static int exec_mmap(struct mm_struct *mm)
  {
  	struct task_struct *tsk;
  	struct mm_struct *old_mm, *active_mm;
@@ -5456,7 +5461,7 @@ index 7302b75..e6035e6 100644
  
  	/* Notify parent that we're no longer interested in the old VM */
  	tsk = current;
-@@ -843,8 +844,10 @@ static int exec_mmap(struct mm_struct *mm)
+@@ -846,8 +847,10 @@ static int exec_mmap(struct mm_struct *mm)
  	task_lock(tsk);
  	active_mm = tsk->active_mm;
  	tsk->mm = mm;
@@ -5758,18 +5763,6 @@ index abcafaa..a8440e4 100644
  } ____cacheline_aligned;
  
  /*
-diff --git a/include/linux/ftrace.h b/include/linux/ftrace.h
-index 662697b..6a9b6ad 100644
---- a/include/linux/ftrace.h
-+++ b/include/linux/ftrace.h
-@@ -108,6 +108,7 @@ enum {
- 	FTRACE_OPS_FL_ADDING			= 1 << 9,
- 	FTRACE_OPS_FL_REMOVING			= 1 << 10,
- 	FTRACE_OPS_FL_MODIFYING			= 1 << 11,
-+	FTRACE_OPS_FL_IPIPE_EXCLUSIVE		= 1 << 12,
- };
- 
- #ifdef CONFIG_DYNAMIC_FTRACE
 diff --git a/include/linux/hardirq.h b/include/linux/hardirq.h
 index cba442e..b513a46 100644
 --- a/include/linux/hardirq.h
@@ -5813,10 +5806,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..1d70705
+index 0000000..eafb7f3
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,455 @@
+@@ -0,0 +1,457 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5996,6 +5989,8 @@ index 0000000..1d70705
 +
 +void ipipe_free_irq(struct ipipe_domain *ipd,
 +		    unsigned int irq);
++
++void __ipipe_raise_irq(unsigned int irq);
 +
 +void ipipe_raise_irq(unsigned int irq);
 +
@@ -6274,10 +6269,10 @@ index 0000000..1d70705
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..ea01dd6
+index 0000000..a37358c
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,356 @@
+@@ -0,0 +1,358 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -6459,9 +6454,6 @@ index 0000000..ea01dd6
 +
 +void __ipipe_flush_printk(unsigned int irq, void *cookie);
 +
-+void __ipipe_pin_range_globally(unsigned long start,
-+				unsigned long end);
-+
 +#define __ipipe_get_cpu(flags)	({ (flags) = hard_preempt_disable(); ipipe_processor_id(); })
 +#define __ipipe_put_cpu(flags)	hard_preempt_enable(flags)
 +
@@ -6594,10 +6586,6 @@ index 0000000..ea01dd6
 +
 +static inline void __ipipe_init_taskinfo(struct task_struct *p) { }
 +
-+static inline void __ipipe_pin_range_globally(unsigned long start,
-+					      unsigned long end)
-+{ }
-+
 +#define hard_preempt_disable()		({ preempt_disable(); 0; })
 +#define hard_preempt_enable(flags)	({ preempt_enable(); (void)(flags); })
 +
@@ -6623,6 +6611,15 @@ index 0000000..ea01dd6
 +static inline void ipipe_root_only(void) { }
 +
 +#endif	/* !CONFIG_IPIPE */
++
++#ifdef CONFIG_IPIPE_WANT_PTE_PINNING
++void __ipipe_pin_mapping_globally(unsigned long start,
++				  unsigned long end);
++#else
++static inline void __ipipe_pin_mapping_globally(unsigned long start,
++						unsigned long end)
++{ }
++#endif
 +
 +static inline void ipipe_preempt_root_only(void)
 +{
@@ -8057,10 +8054,10 @@ index 3d770f55..0b21f46 100644
  
  #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
 diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index a6059bd..a4f80b6 100644
+index e4d8f70..22c313e 100644
 --- a/include/linux/kvm_host.h
 +++ b/include/linux/kvm_host.h
-@@ -232,6 +232,9 @@ struct kvm_vcpu {
+@@ -233,6 +233,9 @@ struct kvm_vcpu {
  #ifdef CONFIG_PREEMPT_NOTIFIERS
  	struct preempt_notifier preempt_notifier;
  #endif
@@ -8824,10 +8821,10 @@ index 9b7d746..562489c 100644
  	trace_task_newtask(p, clone_flags);
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..da17b04
+index 0000000..218f51da
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,65 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -8846,6 +8843,9 @@ index 0000000..da17b04
 +	def_bool y if IPIPE
 +
 +config IPIPE_WANT_CLOCKSOURCE
++       bool
++
++config IPIPE_WANT_PTE_PINNING
 +       bool
 +
 +config IPIPE_CORE_APIREV
@@ -9281,10 +9281,10 @@ index 0000000..797a849
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..b8eb85c
+index 0000000..0320453
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1890 @@
+@@ -0,0 +1,1917 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -10539,7 +10539,7 @@ index 0000000..b8eb85c
 +	 *   handling interrupts:
 +	 *
 +	 *   a) the root domain is alone, no registered head domain
-+	 *      => all interrupts are delivered via the fast dispatcher.
++	 *      => all interrupts go through the interrupt log
 +	 *   b) a head domain is registered
 +	 *      => head domain IRQs go through the fast dispatcher
 +	 *      => root domain IRQs go through the interrupt log
@@ -10646,6 +10646,33 @@ index 0000000..b8eb85c
 +sync:
 +	__ipipe_sync_pipeline(ipipe_head_domain);
 +}
++
++void ipipe_raise_irq(unsigned int irq)
++{
++	struct ipipe_domain *ipd = ipipe_head_domain;
++	unsigned long flags, control;
++
++	flags = hard_local_irq_save();
++
++	/*
++	 * Fast path: raising a virtual IRQ handled by the head
++	 * domain.
++	 */
++	if (likely(ipipe_virtual_irq_p(irq) && ipd != ipipe_root_domain)) {
++		control = ipd->irqs[irq].control;
++		if (likely(control & IPIPE_HANDLE_MASK)) {
++			dispatch_irq_head(irq);
++			goto out;
++		}
++	}
++
++	/* Emulate regular device IRQ receipt. */
++	__ipipe_dispatch_irq(irq, IPIPE_IRQF_NOACK);
++out:
++	hard_local_irq_restore(flags);
++
++}
++EXPORT_SYMBOL_GPL(ipipe_raise_irq);
 +
 +#ifdef CONFIG_PREEMPT
 +
@@ -10998,7 +11025,7 @@ index 0000000..b8eb85c
 +	 */
 +	if (this_domain == ipipe_root_domain) {
 +		p = raw_cpu_ptr(&ipipe_percpu.root);
-+		if (test_bit(IPIPE_STALL_FLAG, &p->status))
++		if (test_bit(IPIPE_STALL_FLAG, &p->status) || preempt_count())
 +			goto out;
 +	}
 +	/*
@@ -11679,7 +11706,7 @@ index 0000000..354bf29
 +#endif /* CONFIG_IPIPE_HAVE_HOSTRT */
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..5cce0bc
+index 0000000..c8c1b97
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
 @@ -0,0 +1,1447 @@
@@ -13004,7 +13031,7 @@ index 0000000..5cce0bc
 +
 +static struct ftrace_ops ipipe_trace_ops = {
 +	.func = ipipe_trace_function,
-+	.flags = FTRACE_OPS_FL_IPIPE_EXCLUSIVE,
++	.flags = FTRACE_OPS_FL_RECURSION_SAFE,
 +};
 +
 +static ssize_t __ipipe_wr_enable(struct file *file, const char __user *buffer,
@@ -13777,7 +13804,7 @@ index 4b082b5..67447fc 100644
   * The __lock_function inlines are taken from
   * include/linux/spinlock_api_smp.h
 diff --git a/kernel/module.c b/kernel/module.c
-index 88cec1d..54cfcbc 100644
+index c353707..79b3790 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
 @@ -878,7 +878,7 @@ static inline void print_unload_info(struct seq_file *m, struct module *mod)
@@ -13917,10 +13944,10 @@ index 1f35a34..4b3828b 100644
  	if (pm_wakeup_pending()) {
  		error = -EAGAIN;
 diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index bf95fda..6f3e466 100644
+index 3b9f01b..343b6c2 100644
 --- a/kernel/printk/printk.c
 +++ b/kernel/printk/printk.c
-@@ -1807,6 +1807,43 @@ asmlinkage int printk_emit(int facility, int level,
+@@ -1804,6 +1804,43 @@ asmlinkage int printk_emit(int facility, int level,
  }
  EXPORT_SYMBOL(printk_emit);
  
@@ -13964,7 +13991,7 @@ index bf95fda..6f3e466 100644
  /**
   * printk - print a kernel message
   * @fmt: format string
-@@ -1830,6 +1867,59 @@ EXPORT_SYMBOL(printk_emit);
+@@ -1827,6 +1864,59 @@ EXPORT_SYMBOL(printk_emit);
   */
  asmlinkage __visible int printk(const char *fmt, ...)
  {
@@ -14024,7 +14051,7 @@ index bf95fda..6f3e466 100644
  	va_list args;
  	int r;
  
-@@ -1847,6 +1937,8 @@ asmlinkage __visible int printk(const char *fmt, ...)
+@@ -1844,6 +1934,8 @@ asmlinkage __visible int printk(const char *fmt, ...)
  
  	return r;
  }
@@ -14034,7 +14061,7 @@ index bf95fda..6f3e466 100644
  
  #else /* CONFIG_PRINTK */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9f5ed5e..5396d4b 100644
+index 6810e57..fdc4ae3 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1598,7 +1598,9 @@ void scheduler_ipi(void)
@@ -14194,15 +14221,15 @@ index 9f5ed5e..5396d4b 100644
  		__preempt_count_sub(PREEMPT_ACTIVE);
  
  		/*
-@@ -3624,6 +3650,7 @@ change:
+@@ -3628,6 +3654,7 @@ change:
  
  	prev_class = p->sched_class;
- 	__setscheduler(rq, p, attr);
-+  	__ipipe_report_setsched(p);
+ 	__setscheduler(rq, p, attr, true);
++	__ipipe_report_setsched(p);
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -4743,10 +4770,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+@@ -4747,10 +4774,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
  	do_set_cpus_allowed(p, new_mask);
  
  	/* Can the task run on the task's current CPU? If so, we're done */
@@ -14217,7 +14244,7 @@ index 9f5ed5e..5396d4b 100644
  	if (task_running(rq, p) || p->state == TASK_WAKING) {
  		struct migration_arg arg = { p, dest_cpu };
  		/* Need help from migration thread: drop lock and wait. */
-@@ -8265,3 +8295,42 @@ void dump_cpu_task(int cpu)
+@@ -8269,3 +8299,42 @@ void dump_cpu_task(int cpu)
  	pr_info("Task dump for CPU %d:\n", cpu);
  	sched_show_task(cpu_curr(cpu));
  }
@@ -14544,1779 +14571,20 @@ index 3260ffd..76c9b92 100644
  /*
   * This function runs timers and the timer-tq in bottom half context.
   */
-diff --git a/kernel/timer.c b/kernel/timer.c
-new file mode 100644
-index 0000000..e3f1a90
---- /dev/null
-+++ b/kernel/timer.c
-@@ -0,0 +1,1753 @@
-+/*
-+ *  linux/kernel/timer.c
-+ *
-+ *  Kernel internal timers
-+ *
-+ *  Copyright (C) 1991, 1992  Linus Torvalds
-+ *
-+ *  1997-01-28  Modified by Finn Arne Gangstad to make timers scale better.
-+ *
-+ *  1997-09-10  Updated NTP code according to technical memorandum Jan '96
-+ *              "A Kernel Model for Precision Timekeeping" by Dave Mills
-+ *  1998-12-24  Fixed a xtime SMP race (we need the xtime_lock rw spinlock to
-+ *              serialize accesses to xtime/lost_ticks).
-+ *                              Copyright (C) 1998  Andrea Arcangeli
-+ *  1999-03-10  Improved NTP compatibility by Ulrich Windl
-+ *  2002-05-31	Move sys_sysinfo here and make its locking sane, Robert Love
-+ *  2000-10-05  Implemented scalable SMP per-CPU timer handling.
-+ *                              Copyright (C) 2000, 2001, 2002  Ingo Molnar
-+ *              Designed by David S. Miller, Alexey Kuznetsov and Ingo Molnar
-+ */
-+
-+#include <linux/kernel_stat.h>
-+#include <linux/export.h>
-+#include <linux/interrupt.h>
-+#include <linux/percpu.h>
-+#include <linux/init.h>
-+#include <linux/mm.h>
-+#include <linux/swap.h>
-+#include <linux/pid_namespace.h>
-+#include <linux/notifier.h>
-+#include <linux/thread_info.h>
-+#include <linux/time.h>
-+#include <linux/jiffies.h>
-+#include <linux/posix-timers.h>
-+#include <linux/cpu.h>
-+#include <linux/syscalls.h>
-+#include <linux/delay.h>
-+#include <linux/tick.h>
-+#include <linux/kallsyms.h>
-+#include <linux/irq_work.h>
-+#include <linux/sched.h>
-+#include <linux/sched/sysctl.h>
-+#include <linux/slab.h>
-+#include <linux/compat.h>
-+
-+#include <asm/uaccess.h>
-+#include <asm/unistd.h>
-+#include <asm/div64.h>
-+#include <asm/timex.h>
-+#include <asm/io.h>
-+
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/timer.h>
-+
-+__visible u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
-+
-+EXPORT_SYMBOL(jiffies_64);
-+
-+/*
-+ * per-CPU timer vector definitions:
-+ */
-+#define TVN_BITS (CONFIG_BASE_SMALL ? 4 : 6)
-+#define TVR_BITS (CONFIG_BASE_SMALL ? 6 : 8)
-+#define TVN_SIZE (1 << TVN_BITS)
-+#define TVR_SIZE (1 << TVR_BITS)
-+#define TVN_MASK (TVN_SIZE - 1)
-+#define TVR_MASK (TVR_SIZE - 1)
-+#define MAX_TVAL ((unsigned long)((1ULL << (TVR_BITS + 4*TVN_BITS)) - 1))
-+
-+struct tvec {
-+	struct list_head vec[TVN_SIZE];
-+};
-+
-+struct tvec_root {
-+	struct list_head vec[TVR_SIZE];
-+};
-+
-+struct tvec_base {
-+	spinlock_t lock;
-+	struct timer_list *running_timer;
-+	unsigned long timer_jiffies;
-+	unsigned long next_timer;
-+	unsigned long active_timers;
-+	unsigned long all_timers;
-+	struct tvec_root tv1;
-+	struct tvec tv2;
-+	struct tvec tv3;
-+	struct tvec tv4;
-+	struct tvec tv5;
-+} ____cacheline_aligned;
-+
-+struct tvec_base boot_tvec_bases;
-+EXPORT_SYMBOL(boot_tvec_bases);
-+static DEFINE_PER_CPU(struct tvec_base *, tvec_bases) = &boot_tvec_bases;
-+
-+/* Functions below help us manage 'deferrable' flag */
-+static inline unsigned int tbase_get_deferrable(struct tvec_base *base)
-+{
-+	return ((unsigned int)(unsigned long)base & TIMER_DEFERRABLE);
-+}
-+
-+static inline unsigned int tbase_get_irqsafe(struct tvec_base *base)
-+{
-+	return ((unsigned int)(unsigned long)base & TIMER_IRQSAFE);
-+}
-+
-+static inline struct tvec_base *tbase_get_base(struct tvec_base *base)
-+{
-+	return ((struct tvec_base *)((unsigned long)base & ~TIMER_FLAG_MASK));
-+}
-+
-+static inline void
-+timer_set_base(struct timer_list *timer, struct tvec_base *new_base)
-+{
-+	unsigned long flags = (unsigned long)timer->base & TIMER_FLAG_MASK;
-+
-+	timer->base = (struct tvec_base *)((unsigned long)(new_base) | flags);
-+}
-+
-+static unsigned long round_jiffies_common(unsigned long j, int cpu,
-+		bool force_up)
-+{
-+	int rem;
-+	unsigned long original = j;
-+
-+	/*
-+	 * We don't want all cpus firing their timers at once hitting the
-+	 * same lock or cachelines, so we skew each extra cpu with an extra
-+	 * 3 jiffies. This 3 jiffies came originally from the mm/ code which
-+	 * already did this.
-+	 * The skew is done by adding 3*cpunr, then round, then subtract this
-+	 * extra offset again.
-+	 */
-+	j += cpu * 3;
-+
-+	rem = j % HZ;
-+
-+	/*
-+	 * If the target jiffie is just after a whole second (which can happen
-+	 * due to delays of the timer irq, long irq off times etc etc) then
-+	 * we should round down to the whole second, not up. Use 1/4th second
-+	 * as cutoff for this rounding as an extreme upper bound for this.
-+	 * But never round down if @force_up is set.
-+	 */
-+	if (rem < HZ/4 && !force_up) /* round down */
-+		j = j - rem;
-+	else /* round up */
-+		j = j - rem + HZ;
-+
-+	/* now that we have rounded, subtract the extra skew again */
-+	j -= cpu * 3;
-+
-+	/*
-+	 * Make sure j is still in the future. Otherwise return the
-+	 * unmodified value.
-+	 */
-+	return time_is_after_jiffies(j) ? j : original;
-+}
-+
-+/**
-+ * __round_jiffies - function to round jiffies to a full second
-+ * @j: the time in (absolute) jiffies that should be rounded
-+ * @cpu: the processor number on which the timeout will happen
-+ *
-+ * __round_jiffies() rounds an absolute time in the future (in jiffies)
-+ * up or down to (approximately) full seconds. This is useful for timers
-+ * for which the exact time they fire does not matter too much, as long as
-+ * they fire approximately every X seconds.
-+ *
-+ * By rounding these timers to whole seconds, all such timers will fire
-+ * at the same time, rather than at various times spread out. The goal
-+ * of this is to have the CPU wake up less, which saves power.
-+ *
-+ * The exact rounding is skewed for each processor to avoid all
-+ * processors firing at the exact same time, which could lead
-+ * to lock contention or spurious cache line bouncing.
-+ *
-+ * The return value is the rounded version of the @j parameter.
-+ */
-+unsigned long __round_jiffies(unsigned long j, int cpu)
-+{
-+	return round_jiffies_common(j, cpu, false);
-+}
-+EXPORT_SYMBOL_GPL(__round_jiffies);
-+
-+/**
-+ * __round_jiffies_relative - function to round jiffies to a full second
-+ * @j: the time in (relative) jiffies that should be rounded
-+ * @cpu: the processor number on which the timeout will happen
-+ *
-+ * __round_jiffies_relative() rounds a time delta  in the future (in jiffies)
-+ * up or down to (approximately) full seconds. This is useful for timers
-+ * for which the exact time they fire does not matter too much, as long as
-+ * they fire approximately every X seconds.
-+ *
-+ * By rounding these timers to whole seconds, all such timers will fire
-+ * at the same time, rather than at various times spread out. The goal
-+ * of this is to have the CPU wake up less, which saves power.
-+ *
-+ * The exact rounding is skewed for each processor to avoid all
-+ * processors firing at the exact same time, which could lead
-+ * to lock contention or spurious cache line bouncing.
-+ *
-+ * The return value is the rounded version of the @j parameter.
-+ */
-+unsigned long __round_jiffies_relative(unsigned long j, int cpu)
-+{
-+	unsigned long j0 = jiffies;
-+
-+	/* Use j0 because jiffies might change while we run */
-+	return round_jiffies_common(j + j0, cpu, false) - j0;
-+}
-+EXPORT_SYMBOL_GPL(__round_jiffies_relative);
-+
-+/**
-+ * round_jiffies - function to round jiffies to a full second
-+ * @j: the time in (absolute) jiffies that should be rounded
-+ *
-+ * round_jiffies() rounds an absolute time in the future (in jiffies)
-+ * up or down to (approximately) full seconds. This is useful for timers
-+ * for which the exact time they fire does not matter too much, as long as
-+ * they fire approximately every X seconds.
-+ *
-+ * By rounding these timers to whole seconds, all such timers will fire
-+ * at the same time, rather than at various times spread out. The goal
-+ * of this is to have the CPU wake up less, which saves power.
-+ *
-+ * The return value is the rounded version of the @j parameter.
-+ */
-+unsigned long round_jiffies(unsigned long j)
-+{
-+	return round_jiffies_common(j, raw_smp_processor_id(), false);
-+}
-+EXPORT_SYMBOL_GPL(round_jiffies);
-+
-+/**
-+ * round_jiffies_relative - function to round jiffies to a full second
-+ * @j: the time in (relative) jiffies that should be rounded
-+ *
-+ * round_jiffies_relative() rounds a time delta  in the future (in jiffies)
-+ * up or down to (approximately) full seconds. This is useful for timers
-+ * for which the exact time they fire does not matter too much, as long as
-+ * they fire approximately every X seconds.
-+ *
-+ * By rounding these timers to whole seconds, all such timers will fire
-+ * at the same time, rather than at various times spread out. The goal
-+ * of this is to have the CPU wake up less, which saves power.
-+ *
-+ * The return value is the rounded version of the @j parameter.
-+ */
-+unsigned long round_jiffies_relative(unsigned long j)
-+{
-+	return __round_jiffies_relative(j, raw_smp_processor_id());
-+}
-+EXPORT_SYMBOL_GPL(round_jiffies_relative);
-+
-+/**
-+ * __round_jiffies_up - function to round jiffies up to a full second
-+ * @j: the time in (absolute) jiffies that should be rounded
-+ * @cpu: the processor number on which the timeout will happen
-+ *
-+ * This is the same as __round_jiffies() except that it will never
-+ * round down.  This is useful for timeouts for which the exact time
-+ * of firing does not matter too much, as long as they don't fire too
-+ * early.
-+ */
-+unsigned long __round_jiffies_up(unsigned long j, int cpu)
-+{
-+	return round_jiffies_common(j, cpu, true);
-+}
-+EXPORT_SYMBOL_GPL(__round_jiffies_up);
-+
-+/**
-+ * __round_jiffies_up_relative - function to round jiffies up to a full second
-+ * @j: the time in (relative) jiffies that should be rounded
-+ * @cpu: the processor number on which the timeout will happen
-+ *
-+ * This is the same as __round_jiffies_relative() except that it will never
-+ * round down.  This is useful for timeouts for which the exact time
-+ * of firing does not matter too much, as long as they don't fire too
-+ * early.
-+ */
-+unsigned long __round_jiffies_up_relative(unsigned long j, int cpu)
-+{
-+	unsigned long j0 = jiffies;
-+
-+	/* Use j0 because jiffies might change while we run */
-+	return round_jiffies_common(j + j0, cpu, true) - j0;
-+}
-+EXPORT_SYMBOL_GPL(__round_jiffies_up_relative);
-+
-+/**
-+ * round_jiffies_up - function to round jiffies up to a full second
-+ * @j: the time in (absolute) jiffies that should be rounded
-+ *
-+ * This is the same as round_jiffies() except that it will never
-+ * round down.  This is useful for timeouts for which the exact time
-+ * of firing does not matter too much, as long as they don't fire too
-+ * early.
-+ */
-+unsigned long round_jiffies_up(unsigned long j)
-+{
-+	return round_jiffies_common(j, raw_smp_processor_id(), true);
-+}
-+EXPORT_SYMBOL_GPL(round_jiffies_up);
-+
-+/**
-+ * round_jiffies_up_relative - function to round jiffies up to a full second
-+ * @j: the time in (relative) jiffies that should be rounded
-+ *
-+ * This is the same as round_jiffies_relative() except that it will never
-+ * round down.  This is useful for timeouts for which the exact time
-+ * of firing does not matter too much, as long as they don't fire too
-+ * early.
-+ */
-+unsigned long round_jiffies_up_relative(unsigned long j)
-+{
-+	return __round_jiffies_up_relative(j, raw_smp_processor_id());
-+}
-+EXPORT_SYMBOL_GPL(round_jiffies_up_relative);
-+
-+/**
-+ * set_timer_slack - set the allowed slack for a timer
-+ * @timer: the timer to be modified
-+ * @slack_hz: the amount of time (in jiffies) allowed for rounding
-+ *
-+ * Set the amount of time, in jiffies, that a certain timer has
-+ * in terms of slack. By setting this value, the timer subsystem
-+ * will schedule the actual timer somewhere between
-+ * the time mod_timer() asks for, and that time plus the slack.
-+ *
-+ * By setting the slack to -1, a percentage of the delay is used
-+ * instead.
-+ */
-+void set_timer_slack(struct timer_list *timer, int slack_hz)
-+{
-+	timer->slack = slack_hz;
-+}
-+EXPORT_SYMBOL_GPL(set_timer_slack);
-+
-+/*
-+ * If the list is empty, catch up ->timer_jiffies to the current time.
-+ * The caller must hold the tvec_base lock.  Returns true if the list
-+ * was empty and therefore ->timer_jiffies was updated.
-+ */
-+static bool catchup_timer_jiffies(struct tvec_base *base)
-+{
-+	if (!base->all_timers) {
-+		base->timer_jiffies = jiffies;
-+		return true;
-+	}
-+	return false;
-+}
-+
-+static void
-+__internal_add_timer(struct tvec_base *base, struct timer_list *timer)
-+{
-+	unsigned long expires = timer->expires;
-+	unsigned long idx = expires - base->timer_jiffies;
-+	struct list_head *vec;
-+
-+	if (idx < TVR_SIZE) {
-+		int i = expires & TVR_MASK;
-+		vec = base->tv1.vec + i;
-+	} else if (idx < 1 << (TVR_BITS + TVN_BITS)) {
-+		int i = (expires >> TVR_BITS) & TVN_MASK;
-+		vec = base->tv2.vec + i;
-+	} else if (idx < 1 << (TVR_BITS + 2 * TVN_BITS)) {
-+		int i = (expires >> (TVR_BITS + TVN_BITS)) & TVN_MASK;
-+		vec = base->tv3.vec + i;
-+	} else if (idx < 1 << (TVR_BITS + 3 * TVN_BITS)) {
-+		int i = (expires >> (TVR_BITS + 2 * TVN_BITS)) & TVN_MASK;
-+		vec = base->tv4.vec + i;
-+	} else if ((signed long) idx < 0) {
-+		/*
-+		 * Can happen if you add a timer with expires == jiffies,
-+		 * or you set a timer to go off in the past
-+		 */
-+		vec = base->tv1.vec + (base->timer_jiffies & TVR_MASK);
-+	} else {
-+		int i;
-+		/* If the timeout is larger than MAX_TVAL (on 64-bit
-+		 * architectures or with CONFIG_BASE_SMALL=1) then we
-+		 * use the maximum timeout.
-+		 */
-+		if (idx > MAX_TVAL) {
-+			idx = MAX_TVAL;
-+			expires = idx + base->timer_jiffies;
-+		}
-+		i = (expires >> (TVR_BITS + 3 * TVN_BITS)) & TVN_MASK;
-+		vec = base->tv5.vec + i;
-+	}
-+	/*
-+	 * Timers are FIFO:
-+	 */
-+	list_add_tail(&timer->entry, vec);
-+}
-+
-+static void internal_add_timer(struct tvec_base *base, struct timer_list *timer)
-+{
-+	(void)catchup_timer_jiffies(base);
-+	__internal_add_timer(base, timer);
-+	/*
-+	 * Update base->active_timers and base->next_timer
-+	 */
-+	if (!tbase_get_deferrable(timer->base)) {
-+		if (!base->active_timers++ ||
-+		    time_before(timer->expires, base->next_timer))
-+			base->next_timer = timer->expires;
-+	}
-+	base->all_timers++;
-+}
-+
-+#ifdef CONFIG_TIMER_STATS
-+void __timer_stats_timer_set_start_info(struct timer_list *timer, void *addr)
-+{
-+	if (timer->start_site)
-+		return;
-+
-+	timer->start_site = addr;
-+	memcpy(timer->start_comm, current->comm, TASK_COMM_LEN);
-+	timer->start_pid = current->pid;
-+}
-+
-+static void timer_stats_account_timer(struct timer_list *timer)
-+{
-+	unsigned int flag = 0;
-+
-+	if (likely(!timer->start_site))
-+		return;
-+	if (unlikely(tbase_get_deferrable(timer->base)))
-+		flag |= TIMER_STATS_FLAG_DEFERRABLE;
-+
-+	timer_stats_update_stats(timer, timer->start_pid, timer->start_site,
-+				 timer->function, timer->start_comm, flag);
-+}
-+
-+#else
-+static void timer_stats_account_timer(struct timer_list *timer) {}
-+#endif
-+
-+#ifdef CONFIG_DEBUG_OBJECTS_TIMERS
-+
-+static struct debug_obj_descr timer_debug_descr;
-+
-+static void *timer_debug_hint(void *addr)
-+{
-+	return ((struct timer_list *) addr)->function;
-+}
-+
-+/*
-+ * fixup_init is called when:
-+ * - an active object is initialized
-+ */
-+static int timer_fixup_init(void *addr, enum debug_obj_state state)
-+{
-+	struct timer_list *timer = addr;
-+
-+	switch (state) {
-+	case ODEBUG_STATE_ACTIVE:
-+		del_timer_sync(timer);
-+		debug_object_init(timer, &timer_debug_descr);
-+		return 1;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+/* Stub timer callback for improperly used timers. */
-+static void stub_timer(unsigned long data)
-+{
-+	WARN_ON(1);
-+}
-+
-+/*
-+ * fixup_activate is called when:
-+ * - an active object is activated
-+ * - an unknown object is activated (might be a statically initialized object)
-+ */
-+static int timer_fixup_activate(void *addr, enum debug_obj_state state)
-+{
-+	struct timer_list *timer = addr;
-+
-+	switch (state) {
-+
-+	case ODEBUG_STATE_NOTAVAILABLE:
-+		/*
-+		 * This is not really a fixup. The timer was
-+		 * statically initialized. We just make sure that it
-+		 * is tracked in the object tracker.
-+		 */
-+		if (timer->entry.next == NULL &&
-+		    timer->entry.prev == TIMER_ENTRY_STATIC) {
-+			debug_object_init(timer, &timer_debug_descr);
-+			debug_object_activate(timer, &timer_debug_descr);
-+			return 0;
-+		} else {
-+			setup_timer(timer, stub_timer, 0);
-+			return 1;
-+		}
-+		return 0;
-+
-+	case ODEBUG_STATE_ACTIVE:
-+		WARN_ON(1);
-+
-+	default:
-+		return 0;
-+	}
-+}
-+
-+/*
-+ * fixup_free is called when:
-+ * - an active object is freed
-+ */
-+static int timer_fixup_free(void *addr, enum debug_obj_state state)
-+{
-+	struct timer_list *timer = addr;
-+
-+	switch (state) {
-+	case ODEBUG_STATE_ACTIVE:
-+		del_timer_sync(timer);
-+		debug_object_free(timer, &timer_debug_descr);
-+		return 1;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+/*
-+ * fixup_assert_init is called when:
-+ * - an untracked/uninit-ed object is found
-+ */
-+static int timer_fixup_assert_init(void *addr, enum debug_obj_state state)
-+{
-+	struct timer_list *timer = addr;
-+
-+	switch (state) {
-+	case ODEBUG_STATE_NOTAVAILABLE:
-+		if (timer->entry.prev == TIMER_ENTRY_STATIC) {
-+			/*
-+			 * This is not really a fixup. The timer was
-+			 * statically initialized. We just make sure that it
-+			 * is tracked in the object tracker.
-+			 */
-+			debug_object_init(timer, &timer_debug_descr);
-+			return 0;
-+		} else {
-+			setup_timer(timer, stub_timer, 0);
-+			return 1;
-+		}
-+	default:
-+		return 0;
-+	}
-+}
-+
-+static struct debug_obj_descr timer_debug_descr = {
-+	.name			= "timer_list",
-+	.debug_hint		= timer_debug_hint,
-+	.fixup_init		= timer_fixup_init,
-+	.fixup_activate		= timer_fixup_activate,
-+	.fixup_free		= timer_fixup_free,
-+	.fixup_assert_init	= timer_fixup_assert_init,
-+};
-+
-+static inline void debug_timer_init(struct timer_list *timer)
-+{
-+	debug_object_init(timer, &timer_debug_descr);
-+}
-+
-+static inline void debug_timer_activate(struct timer_list *timer)
-+{
-+	debug_object_activate(timer, &timer_debug_descr);
-+}
-+
-+static inline void debug_timer_deactivate(struct timer_list *timer)
-+{
-+	debug_object_deactivate(timer, &timer_debug_descr);
-+}
-+
-+static inline void debug_timer_free(struct timer_list *timer)
-+{
-+	debug_object_free(timer, &timer_debug_descr);
-+}
-+
-+static inline void debug_timer_assert_init(struct timer_list *timer)
-+{
-+	debug_object_assert_init(timer, &timer_debug_descr);
-+}
-+
-+static void do_init_timer(struct timer_list *timer, unsigned int flags,
-+			  const char *name, struct lock_class_key *key);
-+
-+void init_timer_on_stack_key(struct timer_list *timer, unsigned int flags,
-+			     const char *name, struct lock_class_key *key)
-+{
-+	debug_object_init_on_stack(timer, &timer_debug_descr);
-+	do_init_timer(timer, flags, name, key);
-+}
-+EXPORT_SYMBOL_GPL(init_timer_on_stack_key);
-+
-+void destroy_timer_on_stack(struct timer_list *timer)
-+{
-+	debug_object_free(timer, &timer_debug_descr);
-+}
-+EXPORT_SYMBOL_GPL(destroy_timer_on_stack);
-+
-+#else
-+static inline void debug_timer_init(struct timer_list *timer) { }
-+static inline void debug_timer_activate(struct timer_list *timer) { }
-+static inline void debug_timer_deactivate(struct timer_list *timer) { }
-+static inline void debug_timer_assert_init(struct timer_list *timer) { }
-+#endif
-+
-+static inline void debug_init(struct timer_list *timer)
-+{
-+	debug_timer_init(timer);
-+	trace_timer_init(timer);
-+}
-+
-+static inline void
-+debug_activate(struct timer_list *timer, unsigned long expires)
-+{
-+	debug_timer_activate(timer);
-+	trace_timer_start(timer, expires);
-+}
-+
-+static inline void debug_deactivate(struct timer_list *timer)
-+{
-+	debug_timer_deactivate(timer);
-+	trace_timer_cancel(timer);
-+}
-+
-+static inline void debug_assert_init(struct timer_list *timer)
-+{
-+	debug_timer_assert_init(timer);
-+}
-+
-+static void do_init_timer(struct timer_list *timer, unsigned int flags,
-+			  const char *name, struct lock_class_key *key)
-+{
-+	struct tvec_base *base = __raw_get_cpu_var(tvec_bases);
-+
-+	timer->entry.next = NULL;
-+	timer->base = (void *)((unsigned long)base | flags);
-+	timer->slack = -1;
-+#ifdef CONFIG_TIMER_STATS
-+	timer->start_site = NULL;
-+	timer->start_pid = -1;
-+	memset(timer->start_comm, 0, TASK_COMM_LEN);
-+#endif
-+	lockdep_init_map(&timer->lockdep_map, name, key, 0);
-+}
-+
-+/**
-+ * init_timer_key - initialize a timer
-+ * @timer: the timer to be initialized
-+ * @flags: timer flags
-+ * @name: name of the timer
-+ * @key: lockdep class key of the fake lock used for tracking timer
-+ *       sync lock dependencies
-+ *
-+ * init_timer_key() must be done to a timer prior calling *any* of the
-+ * other timer functions.
-+ */
-+void init_timer_key(struct timer_list *timer, unsigned int flags,
-+		    const char *name, struct lock_class_key *key)
-+{
-+	debug_init(timer);
-+	do_init_timer(timer, flags, name, key);
-+}
-+EXPORT_SYMBOL(init_timer_key);
-+
-+static inline void detach_timer(struct timer_list *timer, bool clear_pending)
-+{
-+	struct list_head *entry = &timer->entry;
-+
-+	debug_deactivate(timer);
-+
-+	__list_del(entry->prev, entry->next);
-+	if (clear_pending)
-+		entry->next = NULL;
-+	entry->prev = LIST_POISON2;
-+}
-+
-+static inline void
-+detach_expired_timer(struct timer_list *timer, struct tvec_base *base)
-+{
-+	detach_timer(timer, true);
-+	if (!tbase_get_deferrable(timer->base))
-+		base->active_timers--;
-+	base->all_timers--;
-+	(void)catchup_timer_jiffies(base);
-+}
-+
-+static int detach_if_pending(struct timer_list *timer, struct tvec_base *base,
-+			     bool clear_pending)
-+{
-+	if (!timer_pending(timer))
-+		return 0;
-+
-+	detach_timer(timer, clear_pending);
-+	if (!tbase_get_deferrable(timer->base)) {
-+		base->active_timers--;
-+		if (timer->expires == base->next_timer)
-+			base->next_timer = base->timer_jiffies;
-+	}
-+	base->all_timers--;
-+	(void)catchup_timer_jiffies(base);
-+	return 1;
-+}
-+
-+/*
-+ * We are using hashed locking: holding per_cpu(tvec_bases).lock
-+ * means that all timers which are tied to this base via timer->base are
-+ * locked, and the base itself is locked too.
-+ *
-+ * So __run_timers/migrate_timers can safely modify all timers which could
-+ * be found on ->tvX lists.
-+ *
-+ * When the timer's base is locked, and the timer removed from list, it is
-+ * possible to set timer->base = NULL and drop the lock: the timer remains
-+ * locked.
-+ */
-+static struct tvec_base *lock_timer_base(struct timer_list *timer,
-+					unsigned long *flags)
-+	__acquires(timer->base->lock)
-+{
-+	struct tvec_base *base;
-+
-+	for (;;) {
-+		struct tvec_base *prelock_base = timer->base;
-+		base = tbase_get_base(prelock_base);
-+		if (likely(base != NULL)) {
-+			spin_lock_irqsave(&base->lock, *flags);
-+			if (likely(prelock_base == timer->base))
-+				return base;
-+			/* The timer has migrated to another CPU */
-+			spin_unlock_irqrestore(&base->lock, *flags);
-+		}
-+		cpu_relax();
-+	}
-+}
-+
-+static inline int
-+__mod_timer(struct timer_list *timer, unsigned long expires,
-+						bool pending_only, int pinned)
-+{
-+	struct tvec_base *base, *new_base;
-+	unsigned long flags;
-+	int ret = 0 , cpu;
-+
-+	timer_stats_timer_set_start_info(timer);
-+	BUG_ON(!timer->function);
-+
-+	base = lock_timer_base(timer, &flags);
-+
-+	ret = detach_if_pending(timer, base, false);
-+	if (!ret && pending_only)
-+		goto out_unlock;
-+
-+	debug_activate(timer, expires);
-+
-+	cpu = get_nohz_timer_target(pinned);
-+	new_base = per_cpu(tvec_bases, cpu);
-+
-+	if (base != new_base) {
-+		/*
-+		 * We are trying to schedule the timer on the local CPU.
-+		 * However we can't change timer's base while it is running,
-+		 * otherwise del_timer_sync() can't detect that the timer's
-+		 * handler yet has not finished. This also guarantees that
-+		 * the timer is serialized wrt itself.
-+		 */
-+		if (likely(base->running_timer != timer)) {
-+			/* See the comment in lock_timer_base() */
-+			timer_set_base(timer, NULL);
-+			spin_unlock(&base->lock);
-+			base = new_base;
-+			spin_lock(&base->lock);
-+			timer_set_base(timer, base);
-+		}
-+	}
-+
-+	timer->expires = expires;
-+	internal_add_timer(base, timer);
-+
-+out_unlock:
-+	spin_unlock_irqrestore(&base->lock, flags);
-+
-+	return ret;
-+}
-+
-+/**
-+ * mod_timer_pending - modify a pending timer's timeout
-+ * @timer: the pending timer to be modified
-+ * @expires: new timeout in jiffies
-+ *
-+ * mod_timer_pending() is the same for pending timers as mod_timer(),
-+ * but will not re-activate and modify already deleted timers.
-+ *
-+ * It is useful for unserialized use of timers.
-+ */
-+int mod_timer_pending(struct timer_list *timer, unsigned long expires)
-+{
-+	return __mod_timer(timer, expires, true, TIMER_NOT_PINNED);
-+}
-+EXPORT_SYMBOL(mod_timer_pending);
-+
-+/*
-+ * Decide where to put the timer while taking the slack into account
-+ *
-+ * Algorithm:
-+ *   1) calculate the maximum (absolute) time
-+ *   2) calculate the highest bit where the expires and new max are different
-+ *   3) use this bit to make a mask
-+ *   4) use the bitmask to round down the maximum time, so that all last
-+ *      bits are zeros
-+ */
-+static inline
-+unsigned long apply_slack(struct timer_list *timer, unsigned long expires)
-+{
-+	unsigned long expires_limit, mask;
-+	int bit;
-+
-+	if (timer->slack >= 0) {
-+		expires_limit = expires + timer->slack;
-+	} else {
-+		long delta = expires - jiffies;
-+
-+		if (delta < 256)
-+			return expires;
-+
-+		expires_limit = expires + delta / 256;
-+	}
-+	mask = expires ^ expires_limit;
-+	if (mask == 0)
-+		return expires;
-+
-+	bit = find_last_bit(&mask, BITS_PER_LONG);
-+
-+	mask = (1UL << bit) - 1;
-+
-+	expires_limit = expires_limit & ~(mask);
-+
-+	return expires_limit;
-+}
-+
-+/**
-+ * mod_timer - modify a timer's timeout
-+ * @timer: the timer to be modified
-+ * @expires: new timeout in jiffies
-+ *
-+ * mod_timer() is a more efficient way to update the expire field of an
-+ * active timer (if the timer is inactive it will be activated)
-+ *
-+ * mod_timer(timer, expires) is equivalent to:
-+ *
-+ *     del_timer(timer); timer->expires = expires; add_timer(timer);
-+ *
-+ * Note that if there are multiple unserialized concurrent users of the
-+ * same timer, then mod_timer() is the only safe way to modify the timeout,
-+ * since add_timer() cannot modify an already running timer.
-+ *
-+ * The function returns whether it has modified a pending timer or not.
-+ * (ie. mod_timer() of an inactive timer returns 0, mod_timer() of an
-+ * active timer returns 1.)
-+ */
-+int mod_timer(struct timer_list *timer, unsigned long expires)
-+{
-+	expires = apply_slack(timer, expires);
-+
-+	/*
-+	 * This is a common optimization triggered by the
-+	 * networking code - if the timer is re-modified
-+	 * to be the same thing then just return:
-+	 */
-+	if (timer_pending(timer) && timer->expires == expires)
-+		return 1;
-+
-+	return __mod_timer(timer, expires, false, TIMER_NOT_PINNED);
-+}
-+EXPORT_SYMBOL(mod_timer);
-+
-+/**
-+ * mod_timer_pinned - modify a timer's timeout
-+ * @timer: the timer to be modified
-+ * @expires: new timeout in jiffies
-+ *
-+ * mod_timer_pinned() is a way to update the expire field of an
-+ * active timer (if the timer is inactive it will be activated)
-+ * and to ensure that the timer is scheduled on the current CPU.
-+ *
-+ * Note that this does not prevent the timer from being migrated
-+ * when the current CPU goes offline.  If this is a problem for
-+ * you, use CPU-hotplug notifiers to handle it correctly, for
-+ * example, cancelling the timer when the corresponding CPU goes
-+ * offline.
-+ *
-+ * mod_timer_pinned(timer, expires) is equivalent to:
-+ *
-+ *     del_timer(timer); timer->expires = expires; add_timer(timer);
-+ */
-+int mod_timer_pinned(struct timer_list *timer, unsigned long expires)
-+{
-+	if (timer->expires == expires && timer_pending(timer))
-+		return 1;
-+
-+	return __mod_timer(timer, expires, false, TIMER_PINNED);
-+}
-+EXPORT_SYMBOL(mod_timer_pinned);
-+
-+/**
-+ * add_timer - start a timer
-+ * @timer: the timer to be added
-+ *
-+ * The kernel will do a ->function(->data) callback from the
-+ * timer interrupt at the ->expires point in the future. The
-+ * current time is 'jiffies'.
-+ *
-+ * The timer's ->expires, ->function (and if the handler uses it, ->data)
-+ * fields must be set prior calling this function.
-+ *
-+ * Timers with an ->expires field in the past will be executed in the next
-+ * timer tick.
-+ */
-+void add_timer(struct timer_list *timer)
-+{
-+	BUG_ON(timer_pending(timer));
-+	mod_timer(timer, timer->expires);
-+}
-+EXPORT_SYMBOL(add_timer);
-+
-+/**
-+ * add_timer_on - start a timer on a particular CPU
-+ * @timer: the timer to be added
-+ * @cpu: the CPU to start it on
-+ *
-+ * This is not very scalable on SMP. Double adds are not possible.
-+ */
-+void add_timer_on(struct timer_list *timer, int cpu)
-+{
-+	struct tvec_base *base = per_cpu(tvec_bases, cpu);
-+	unsigned long flags;
-+
-+	timer_stats_timer_set_start_info(timer);
-+	BUG_ON(timer_pending(timer) || !timer->function);
-+	spin_lock_irqsave(&base->lock, flags);
-+	timer_set_base(timer, base);
-+	debug_activate(timer, timer->expires);
-+	internal_add_timer(base, timer);
-+	/*
-+	 * Check whether the other CPU is in dynticks mode and needs
-+	 * to be triggered to reevaluate the timer wheel.
-+	 * We are protected against the other CPU fiddling
-+	 * with the timer by holding the timer base lock. This also
-+	 * makes sure that a CPU on the way to stop its tick can not
-+	 * evaluate the timer wheel.
-+	 *
-+	 * Spare the IPI for deferrable timers on idle targets though.
-+	 * The next busy ticks will take care of it. Except full dynticks
-+	 * require special care against races with idle_cpu(), lets deal
-+	 * with that later.
-+	 */
-+	if (!tbase_get_deferrable(timer->base) || tick_nohz_full_cpu(cpu))
-+		wake_up_nohz_cpu(cpu);
-+
-+	spin_unlock_irqrestore(&base->lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(add_timer_on);
-+
-+/**
-+ * del_timer - deactive a timer.
-+ * @timer: the timer to be deactivated
-+ *
-+ * del_timer() deactivates a timer - this works on both active and inactive
-+ * timers.
-+ *
-+ * The function returns whether it has deactivated a pending timer or not.
-+ * (ie. del_timer() of an inactive timer returns 0, del_timer() of an
-+ * active timer returns 1.)
-+ */
-+int del_timer(struct timer_list *timer)
-+{
-+	struct tvec_base *base;
-+	unsigned long flags;
-+	int ret = 0;
-+
-+	debug_assert_init(timer);
-+
-+	timer_stats_timer_clear_start_info(timer);
-+	if (timer_pending(timer)) {
-+		base = lock_timer_base(timer, &flags);
-+		ret = detach_if_pending(timer, base, true);
-+		spin_unlock_irqrestore(&base->lock, flags);
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(del_timer);
-+
-+/**
-+ * try_to_del_timer_sync - Try to deactivate a timer
-+ * @timer: timer do del
-+ *
-+ * This function tries to deactivate a timer. Upon successful (ret >= 0)
-+ * exit the timer is not queued and the handler is not running on any CPU.
-+ */
-+int try_to_del_timer_sync(struct timer_list *timer)
-+{
-+	struct tvec_base *base;
-+	unsigned long flags;
-+	int ret = -1;
-+
-+	debug_assert_init(timer);
-+
-+	base = lock_timer_base(timer, &flags);
-+
-+	if (base->running_timer != timer) {
-+		timer_stats_timer_clear_start_info(timer);
-+		ret = detach_if_pending(timer, base, true);
-+	}
-+	spin_unlock_irqrestore(&base->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(try_to_del_timer_sync);
-+
-+#ifdef CONFIG_SMP
-+/**
-+ * del_timer_sync - deactivate a timer and wait for the handler to finish.
-+ * @timer: the timer to be deactivated
-+ *
-+ * This function only differs from del_timer() on SMP: besides deactivating
-+ * the timer it also makes sure the handler has finished executing on other
-+ * CPUs.
-+ *
-+ * Synchronization rules: Callers must prevent restarting of the timer,
-+ * otherwise this function is meaningless. It must not be called from
-+ * interrupt contexts unless the timer is an irqsafe one. The caller must
-+ * not hold locks which would prevent completion of the timer's
-+ * handler. The timer's handler must not call add_timer_on(). Upon exit the
-+ * timer is not queued and the handler is not running on any CPU.
-+ *
-+ * Note: For !irqsafe timers, you must not hold locks that are held in
-+ *   interrupt context while calling this function. Even if the lock has
-+ *   nothing to do with the timer in question.  Here's why:
-+ *
-+ *    CPU0                             CPU1
-+ *    ----                             ----
-+ *                                   <SOFTIRQ>
-+ *                                   call_timer_fn();
-+ *                                     base->running_timer = mytimer;
-+ *  spin_lock_irq(somelock);
-+ *                                     <IRQ>
-+ *                                        spin_lock(somelock);
-+ *  del_timer_sync(mytimer);
-+ *   while (base->running_timer == mytimer);
-+ *
-+ * Now del_timer_sync() will never return and never release somelock.
-+ * The interrupt on the other CPU is waiting to grab somelock but
-+ * it has interrupted the softirq that CPU0 is waiting to finish.
-+ *
-+ * The function returns whether it has deactivated a pending timer or not.
-+ */
-+int del_timer_sync(struct timer_list *timer)
-+{
-+#ifdef CONFIG_LOCKDEP
-+	unsigned long flags;
-+
-+	/*
-+	 * If lockdep gives a backtrace here, please reference
-+	 * the synchronization rules above.
-+	 */
-+	local_irq_save(flags);
-+	lock_map_acquire(&timer->lockdep_map);
-+	lock_map_release(&timer->lockdep_map);
-+	local_irq_restore(flags);
-+#endif
-+	/*
-+	 * don't use it in hardirq context, because it
-+	 * could lead to deadlock.
-+	 */
-+	WARN_ON(in_irq() && !tbase_get_irqsafe(timer->base));
-+	for (;;) {
-+		int ret = try_to_del_timer_sync(timer);
-+		if (ret >= 0)
-+			return ret;
-+		cpu_relax();
-+	}
-+}
-+EXPORT_SYMBOL(del_timer_sync);
-+#endif
-+
-+static int cascade(struct tvec_base *base, struct tvec *tv, int index)
-+{
-+	/* cascade all the timers from tv up one level */
-+	struct timer_list *timer, *tmp;
-+	struct list_head tv_list;
-+
-+	list_replace_init(tv->vec + index, &tv_list);
-+
-+	/*
-+	 * We are removing _all_ timers from the list, so we
-+	 * don't have to detach them individually.
-+	 */
-+	list_for_each_entry_safe(timer, tmp, &tv_list, entry) {
-+		BUG_ON(tbase_get_base(timer->base) != base);
-+		/* No accounting, while moving them */
-+		__internal_add_timer(base, timer);
-+	}
-+
-+	return index;
-+}
-+
-+static void call_timer_fn(struct timer_list *timer, void (*fn)(unsigned long),
-+			  unsigned long data)
-+{
-+	int count = preempt_count();
-+
-+#ifdef CONFIG_LOCKDEP
-+	/*
-+	 * It is permissible to free the timer from inside the
-+	 * function that is called from it, this we need to take into
-+	 * account for lockdep too. To avoid bogus "held lock freed"
-+	 * warnings as well as problems when looking into
-+	 * timer->lockdep_map, make a copy and use that here.
-+	 */
-+	struct lockdep_map lockdep_map;
-+
-+	lockdep_copy_map(&lockdep_map, &timer->lockdep_map);
-+#endif
-+	/*
-+	 * Couple the lock chain with the lock chain at
-+	 * del_timer_sync() by acquiring the lock_map around the fn()
-+	 * call here and in del_timer_sync().
-+	 */
-+	lock_map_acquire(&lockdep_map);
-+
-+	trace_timer_expire_entry(timer);
-+	fn(data);
-+	trace_timer_expire_exit(timer);
-+
-+	lock_map_release(&lockdep_map);
-+
-+	if (count != preempt_count()) {
-+		WARN_ONCE(1, "timer: %pF preempt leak: %08x -> %08x\n",
-+			  fn, count, preempt_count());
-+		/*
-+		 * Restore the preempt count. That gives us a decent
-+		 * chance to survive and extract information. If the
-+		 * callback kept a lock held, bad luck, but not worse
-+		 * than the BUG() we had.
-+		 */
-+		preempt_count_set(count);
-+	}
-+}
-+
-+#define INDEX(N) ((base->timer_jiffies >> (TVR_BITS + (N) * TVN_BITS)) & TVN_MASK)
-+
-+/**
-+ * __run_timers - run all expired timers (if any) on this CPU.
-+ * @base: the timer vector to be processed.
-+ *
-+ * This function cascades all vectors and executes all expired timer
-+ * vectors.
-+ */
-+static inline void __run_timers(struct tvec_base *base)
-+{
-+	struct timer_list *timer;
-+
-+	spin_lock_irq(&base->lock);
-+	if (catchup_timer_jiffies(base)) {
-+		spin_unlock_irq(&base->lock);
-+		return;
-+	}
-+	while (time_after_eq(jiffies, base->timer_jiffies)) {
-+		struct list_head work_list;
-+		struct list_head *head = &work_list;
-+		int index = base->timer_jiffies & TVR_MASK;
-+
-+		/*
-+		 * Cascade timers:
-+		 */
-+		if (!index &&
-+			(!cascade(base, &base->tv2, INDEX(0))) &&
-+				(!cascade(base, &base->tv3, INDEX(1))) &&
-+					!cascade(base, &base->tv4, INDEX(2)))
-+			cascade(base, &base->tv5, INDEX(3));
-+		++base->timer_jiffies;
-+		list_replace_init(base->tv1.vec + index, head);
-+		while (!list_empty(head)) {
-+			void (*fn)(unsigned long);
-+			unsigned long data;
-+			bool irqsafe;
-+
-+			timer = list_first_entry(head, struct timer_list,entry);
-+			fn = timer->function;
-+			data = timer->data;
-+			irqsafe = tbase_get_irqsafe(timer->base);
-+
-+			timer_stats_account_timer(timer);
-+
-+			base->running_timer = timer;
-+			detach_expired_timer(timer, base);
-+
-+			if (irqsafe) {
-+				spin_unlock(&base->lock);
-+				call_timer_fn(timer, fn, data);
-+				spin_lock(&base->lock);
-+			} else {
-+				spin_unlock_irq(&base->lock);
-+				call_timer_fn(timer, fn, data);
-+				spin_lock_irq(&base->lock);
-+			}
-+		}
-+	}
-+	base->running_timer = NULL;
-+	spin_unlock_irq(&base->lock);
-+}
-+
-+#ifdef CONFIG_NO_HZ_COMMON
-+/*
-+ * Find out when the next timer event is due to happen. This
-+ * is used on S/390 to stop all activity when a CPU is idle.
-+ * This function needs to be called with interrupts disabled.
-+ */
-+static unsigned long __next_timer_interrupt(struct tvec_base *base)
-+{
-+	unsigned long timer_jiffies = base->timer_jiffies;
-+	unsigned long expires = timer_jiffies + NEXT_TIMER_MAX_DELTA;
-+	int index, slot, array, found = 0;
-+	struct timer_list *nte;
-+	struct tvec *varray[4];
-+
-+	/* Look for timer events in tv1. */
-+	index = slot = timer_jiffies & TVR_MASK;
-+	do {
-+		list_for_each_entry(nte, base->tv1.vec + slot, entry) {
-+			if (tbase_get_deferrable(nte->base))
-+				continue;
-+
-+			found = 1;
-+			expires = nte->expires;
-+			/* Look at the cascade bucket(s)? */
-+			if (!index || slot < index)
-+				goto cascade;
-+			return expires;
-+		}
-+		slot = (slot + 1) & TVR_MASK;
-+	} while (slot != index);
-+
-+cascade:
-+	/* Calculate the next cascade event */
-+	if (index)
-+		timer_jiffies += TVR_SIZE - index;
-+	timer_jiffies >>= TVR_BITS;
-+
-+	/* Check tv2-tv5. */
-+	varray[0] = &base->tv2;
-+	varray[1] = &base->tv3;
-+	varray[2] = &base->tv4;
-+	varray[3] = &base->tv5;
-+
-+	for (array = 0; array < 4; array++) {
-+		struct tvec *varp = varray[array];
-+
-+		index = slot = timer_jiffies & TVN_MASK;
-+		do {
-+			list_for_each_entry(nte, varp->vec + slot, entry) {
-+				if (tbase_get_deferrable(nte->base))
-+					continue;
-+
-+				found = 1;
-+				if (time_before(nte->expires, expires))
-+					expires = nte->expires;
-+			}
-+			/*
-+			 * Do we still search for the first timer or are
-+			 * we looking up the cascade buckets ?
-+			 */
-+			if (found) {
-+				/* Look at the cascade bucket(s)? */
-+				if (!index || slot < index)
-+					break;
-+				return expires;
-+			}
-+			slot = (slot + 1) & TVN_MASK;
-+		} while (slot != index);
-+
-+		if (index)
-+			timer_jiffies += TVN_SIZE - index;
-+		timer_jiffies >>= TVN_BITS;
-+	}
-+	return expires;
-+}
-+
-+/*
-+ * Check, if the next hrtimer event is before the next timer wheel
-+ * event:
-+ */
-+static unsigned long cmp_next_hrtimer_event(unsigned long now,
-+					    unsigned long expires)
-+{
-+	ktime_t hr_delta = hrtimer_get_next_event();
-+	struct timespec tsdelta;
-+	unsigned long delta;
-+
-+	if (hr_delta.tv64 == KTIME_MAX)
-+		return expires;
-+
-+	/*
-+	 * Expired timer available, let it expire in the next tick
-+	 */
-+	if (hr_delta.tv64 <= 0)
-+		return now + 1;
-+
-+	tsdelta = ktime_to_timespec(hr_delta);
-+	delta = timespec_to_jiffies(&tsdelta);
-+
-+	/*
-+	 * Limit the delta to the max value, which is checked in
-+	 * tick_nohz_stop_sched_tick():
-+	 */
-+	if (delta > NEXT_TIMER_MAX_DELTA)
-+		delta = NEXT_TIMER_MAX_DELTA;
-+
-+	/*
-+	 * Take rounding errors in to account and make sure, that it
-+	 * expires in the next tick. Otherwise we go into an endless
-+	 * ping pong due to tick_nohz_stop_sched_tick() retriggering
-+	 * the timer softirq
-+	 */
-+	if (delta < 1)
-+		delta = 1;
-+	now += delta;
-+	if (time_before(now, expires))
-+		return now;
-+	return expires;
-+}
-+
-+/**
-+ * get_next_timer_interrupt - return the jiffy of the next pending timer
-+ * @now: current time (in jiffies)
-+ */
-+unsigned long get_next_timer_interrupt(unsigned long now)
-+{
-+	struct tvec_base *base = __this_cpu_read(tvec_bases);
-+	unsigned long expires = now + NEXT_TIMER_MAX_DELTA;
-+
-+	/*
-+	 * Pretend that there is no timer pending if the cpu is offline.
-+	 * Possible pending timers will be migrated later to an active cpu.
-+	 */
-+	if (cpu_is_offline(smp_processor_id()))
-+		return expires;
-+
-+	spin_lock(&base->lock);
-+	if (base->active_timers) {
-+		if (time_before_eq(base->next_timer, base->timer_jiffies))
-+			base->next_timer = __next_timer_interrupt(base);
-+		expires = base->next_timer;
-+	}
-+	spin_unlock(&base->lock);
-+
-+	if (time_before_eq(expires, now))
-+		return now;
-+
-+	return cmp_next_hrtimer_event(now, expires);
-+}
-+#endif
-+
-+/*
-+ * Called from the timer interrupt handler to charge one tick to the current
-+ * process.  user_tick is 1 if the tick is user time, 0 for system.
-+ */
-+void update_process_times(int user_tick)
-+{
-+	struct task_struct *p = current;
-+	int cpu = smp_processor_id();
-+
-+	/* Note: this timer irq context must be accounted for as well. */
-+	account_process_tick(p, user_tick);
-+	run_local_timers();
-+	rcu_check_callbacks(cpu, user_tick);
-+#ifdef CONFIG_IRQ_WORK
-+	if (in_irq())
-+		irq_work_run();
-+#endif
-+	scheduler_tick();
-+	run_posix_cpu_timers(p);
-+}
-+
-+#ifdef CONFIG_IPIPE
-+
-+void update_root_process_times(struct pt_regs *regs)
-+{
-+	int cpu, user_tick = user_mode(regs);
-+
-+	if (__ipipe_root_tick_p(regs)) {
-+		update_process_times(user_tick);
-+		return;
-+	}
-+
-+	run_local_timers();
-+	cpu = smp_processor_id();
-+	rcu_check_callbacks(cpu, user_tick);
-+	run_posix_cpu_timers(current);
-+}
-+
-+#endif
-+
-+/*
-+ * This function runs timers and the timer-tq in bottom half context.
-+ */
-+static void run_timer_softirq(struct softirq_action *h)
-+{
-+	struct tvec_base *base = __this_cpu_read(tvec_bases);
-+
-+	hrtimer_run_pending();
-+
-+	if (time_after_eq(jiffies, base->timer_jiffies))
-+		__run_timers(base);
-+}
-+
-+/*
-+ * Called by the local, per-CPU timer interrupt on SMP.
-+ */
-+void run_local_timers(void)
-+{
-+	hrtimer_run_queues();
-+	raise_softirq(TIMER_SOFTIRQ);
-+}
-+
-+#ifdef __ARCH_WANT_SYS_ALARM
-+
-+/*
-+ * For backwards compatibility?  This can be done in libc so Alpha
-+ * and all newer ports shouldn't need it.
-+ */
-+SYSCALL_DEFINE1(alarm, unsigned int, seconds)
-+{
-+	return alarm_setitimer(seconds);
-+}
-+
-+#endif
-+
-+static void process_timeout(unsigned long __data)
-+{
-+	wake_up_process((struct task_struct *)__data);
-+}
-+
-+/**
-+ * schedule_timeout - sleep until timeout
-+ * @timeout: timeout value in jiffies
-+ *
-+ * Make the current task sleep until @timeout jiffies have
-+ * elapsed. The routine will return immediately unless
-+ * the current task state has been set (see set_current_state()).
-+ *
-+ * You can set the task state as follows -
-+ *
-+ * %TASK_UNINTERRUPTIBLE - at least @timeout jiffies are guaranteed to
-+ * pass before the routine returns. The routine will return 0
-+ *
-+ * %TASK_INTERRUPTIBLE - the routine may return early if a signal is
-+ * delivered to the current task. In this case the remaining time
-+ * in jiffies will be returned, or 0 if the timer expired in time
-+ *
-+ * The current task state is guaranteed to be TASK_RUNNING when this
-+ * routine returns.
-+ *
-+ * Specifying a @timeout value of %MAX_SCHEDULE_TIMEOUT will schedule
-+ * the CPU away without a bound on the timeout. In this case the return
-+ * value will be %MAX_SCHEDULE_TIMEOUT.
-+ *
-+ * In all cases the return value is guaranteed to be non-negative.
-+ */
-+signed long __sched schedule_timeout(signed long timeout)
-+{
-+	struct timer_list timer;
-+	unsigned long expire;
-+
-+	switch (timeout)
-+	{
-+	case MAX_SCHEDULE_TIMEOUT:
-+		/*
-+		 * These two special cases are useful to be comfortable
-+		 * in the caller. Nothing more. We could take
-+		 * MAX_SCHEDULE_TIMEOUT from one of the negative value
-+		 * but I' d like to return a valid offset (>=0) to allow
-+		 * the caller to do everything it want with the retval.
-+		 */
-+		schedule();
-+		goto out;
-+	default:
-+		/*
-+		 * Another bit of PARANOID. Note that the retval will be
-+		 * 0 since no piece of kernel is supposed to do a check
-+		 * for a negative retval of schedule_timeout() (since it
-+		 * should never happens anyway). You just have the printk()
-+		 * that will tell you if something is gone wrong and where.
-+		 */
-+		if (timeout < 0) {
-+			printk(KERN_ERR "schedule_timeout: wrong timeout "
-+				"value %lx\n", timeout);
-+			dump_stack();
-+			current->state = TASK_RUNNING;
-+			goto out;
-+		}
-+	}
-+
-+	expire = timeout + jiffies;
-+
-+	setup_timer_on_stack(&timer, process_timeout, (unsigned long)current);
-+	__mod_timer(&timer, expire, false, TIMER_NOT_PINNED);
-+	schedule();
-+	del_singleshot_timer_sync(&timer);
-+
-+	/* Remove the timer from the object tracker */
-+	destroy_timer_on_stack(&timer);
-+
-+	timeout = expire - jiffies;
-+
-+ out:
-+	return timeout < 0 ? 0 : timeout;
-+}
-+EXPORT_SYMBOL(schedule_timeout);
-+
-+/*
-+ * We can use __set_current_state() here because schedule_timeout() calls
-+ * schedule() unconditionally.
-+ */
-+signed long __sched schedule_timeout_interruptible(signed long timeout)
-+{
-+	__set_current_state(TASK_INTERRUPTIBLE);
-+	return schedule_timeout(timeout);
-+}
-+EXPORT_SYMBOL(schedule_timeout_interruptible);
-+
-+signed long __sched schedule_timeout_killable(signed long timeout)
-+{
-+	__set_current_state(TASK_KILLABLE);
-+	return schedule_timeout(timeout);
-+}
-+EXPORT_SYMBOL(schedule_timeout_killable);
-+
-+signed long __sched schedule_timeout_uninterruptible(signed long timeout)
-+{
-+	__set_current_state(TASK_UNINTERRUPTIBLE);
-+	return schedule_timeout(timeout);
-+}
-+EXPORT_SYMBOL(schedule_timeout_uninterruptible);
-+
-+static int init_timers_cpu(int cpu)
-+{
-+	int j;
-+	struct tvec_base *base;
-+	static char tvec_base_done[NR_CPUS];
-+
-+	if (!tvec_base_done[cpu]) {
-+		static char boot_done;
-+
-+		if (boot_done) {
-+			/*
-+			 * The APs use this path later in boot
-+			 */
-+			base = kzalloc_node(sizeof(*base), GFP_KERNEL,
-+					    cpu_to_node(cpu));
-+			if (!base)
-+				return -ENOMEM;
-+
-+			/* Make sure tvec_base has TIMER_FLAG_MASK bits free */
-+			if (WARN_ON(base != tbase_get_base(base))) {
-+				kfree(base);
-+				return -ENOMEM;
-+			}
-+			per_cpu(tvec_bases, cpu) = base;
-+		} else {
-+			/*
-+			 * This is for the boot CPU - we use compile-time
-+			 * static initialisation because per-cpu memory isn't
-+			 * ready yet and because the memory allocators are not
-+			 * initialised either.
-+			 */
-+			boot_done = 1;
-+			base = &boot_tvec_bases;
-+		}
-+		spin_lock_init(&base->lock);
-+		tvec_base_done[cpu] = 1;
-+	} else {
-+		base = per_cpu(tvec_bases, cpu);
-+	}
-+
-+
-+	for (j = 0; j < TVN_SIZE; j++) {
-+		INIT_LIST_HEAD(base->tv5.vec + j);
-+		INIT_LIST_HEAD(base->tv4.vec + j);
-+		INIT_LIST_HEAD(base->tv3.vec + j);
-+		INIT_LIST_HEAD(base->tv2.vec + j);
-+	}
-+	for (j = 0; j < TVR_SIZE; j++)
-+		INIT_LIST_HEAD(base->tv1.vec + j);
-+
-+	base->timer_jiffies = jiffies;
-+	base->next_timer = base->timer_jiffies;
-+	base->active_timers = 0;
-+	base->all_timers = 0;
-+	return 0;
-+}
-+
-+#ifdef CONFIG_HOTPLUG_CPU
-+static void migrate_timer_list(struct tvec_base *new_base, struct list_head *head)
-+{
-+	struct timer_list *timer;
-+
-+	while (!list_empty(head)) {
-+		timer = list_first_entry(head, struct timer_list, entry);
-+		/* We ignore the accounting on the dying cpu */
-+		detach_timer(timer, false);
-+		timer_set_base(timer, new_base);
-+		internal_add_timer(new_base, timer);
-+	}
-+}
-+
-+static void migrate_timers(int cpu)
-+{
-+	struct tvec_base *old_base;
-+	struct tvec_base *new_base;
-+	int i;
-+
-+	BUG_ON(cpu_online(cpu));
-+	old_base = per_cpu(tvec_bases, cpu);
-+	new_base = get_cpu_var(tvec_bases);
-+	/*
-+	 * The caller is globally serialized and nobody else
-+	 * takes two locks at once, deadlock is not possible.
-+	 */
-+	spin_lock_irq(&new_base->lock);
-+	spin_lock_nested(&old_base->lock, SINGLE_DEPTH_NESTING);
-+
-+	BUG_ON(old_base->running_timer);
-+
-+	for (i = 0; i < TVR_SIZE; i++)
-+		migrate_timer_list(new_base, old_base->tv1.vec + i);
-+	for (i = 0; i < TVN_SIZE; i++) {
-+		migrate_timer_list(new_base, old_base->tv2.vec + i);
-+		migrate_timer_list(new_base, old_base->tv3.vec + i);
-+		migrate_timer_list(new_base, old_base->tv4.vec + i);
-+		migrate_timer_list(new_base, old_base->tv5.vec + i);
-+	}
-+
-+	spin_unlock(&old_base->lock);
-+	spin_unlock_irq(&new_base->lock);
-+	put_cpu_var(tvec_bases);
-+}
-+#endif /* CONFIG_HOTPLUG_CPU */
-+
-+static int timer_cpu_notify(struct notifier_block *self,
-+				unsigned long action, void *hcpu)
-+{
-+	long cpu = (long)hcpu;
-+	int err;
-+
-+	switch(action) {
-+	case CPU_UP_PREPARE:
-+	case CPU_UP_PREPARE_FROZEN:
-+		err = init_timers_cpu(cpu);
-+		if (err < 0)
-+			return notifier_from_errno(err);
-+		break;
-+#ifdef CONFIG_HOTPLUG_CPU
-+	case CPU_DEAD:
-+	case CPU_DEAD_FROZEN:
-+		migrate_timers(cpu);
-+		break;
-+#endif
-+	default:
-+		break;
-+	}
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block timers_nb = {
-+	.notifier_call	= timer_cpu_notify,
-+};
-+
-+
-+void __init init_timers(void)
-+{
-+	int err;
-+
-+	/* ensure there are enough low bits for flags in timer->base pointer */
-+	BUILD_BUG_ON(__alignof__(struct tvec_base) & TIMER_FLAG_MASK);
-+
-+	err = timer_cpu_notify(&timers_nb, (unsigned long)CPU_UP_PREPARE,
-+			       (void *)(long)smp_processor_id());
-+	BUG_ON(err != NOTIFY_OK);
-+
-+	init_timer_stats();
-+	register_cpu_notifier(&timers_nb);
-+	open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
-+}
-+
-+/**
-+ * msleep - sleep safely even with waitqueue interruptions
-+ * @msecs: Time in milliseconds to sleep for
-+ */
-+void msleep(unsigned int msecs)
-+{
-+	unsigned long timeout = msecs_to_jiffies(msecs) + 1;
-+
-+	while (timeout)
-+		timeout = schedule_timeout_uninterruptible(timeout);
-+}
-+
-+EXPORT_SYMBOL(msleep);
-+
-+/**
-+ * msleep_interruptible - sleep waiting for signals
-+ * @msecs: Time in milliseconds to sleep for
-+ */
-+unsigned long msleep_interruptible(unsigned int msecs)
-+{
-+	unsigned long timeout = msecs_to_jiffies(msecs) + 1;
-+
-+	while (timeout && !signal_pending(current))
-+		timeout = schedule_timeout_interruptible(timeout);
-+	return jiffies_to_msecs(timeout);
-+}
-+
-+EXPORT_SYMBOL(msleep_interruptible);
-+
-+static int __sched do_usleep_range(unsigned long min, unsigned long max)
-+{
-+	ktime_t kmin;
-+	unsigned long delta;
-+
-+	kmin = ktime_set(0, min * NSEC_PER_USEC);
-+	delta = (max - min) * NSEC_PER_USEC;
-+	return schedule_hrtimeout_range(&kmin, delta, HRTIMER_MODE_REL);
-+}
-+
-+/**
-+ * usleep_range - Drop in replacement for udelay where wakeup is flexible
-+ * @min: Minimum time in usecs to sleep
-+ * @max: Maximum time in usecs to sleep
-+ */
-+void usleep_range(unsigned long min, unsigned long max)
-+{
-+	__set_current_state(TASK_UNINTERRUPTIBLE);
-+	do_usleep_range(min, max);
-+}
-+EXPORT_SYMBOL(usleep_range);
 diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
-index a5da09c..4f6d522 100644
+index a5da09c..6650799 100644
 --- a/kernel/trace/Kconfig
 +++ b/kernel/trace/Kconfig
 @@ -439,6 +439,7 @@ config DYNAMIC_FTRACE
  	bool "enable/disable function tracing dynamically"
  	depends on FUNCTION_TRACER
  	depends on HAVE_DYNAMIC_FTRACE
-+	depends on !IPIPE_TRACE_MCOUNT
++	depends on !IPIPE
  	default y
  	help
  	  This option will modify all the calls to function tracing
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index d1eff3d..ac1979d 100644
+index d1eff3d..2a324bc 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -32,6 +32,7 @@
@@ -16327,25 +14595,7 @@ index d1eff3d..ac1979d 100644
  
  #include <trace/events/sched.h>
  
-@@ -251,8 +252,17 @@ static inline void update_function_graph_func(void) { }
- 
- static void update_ftrace_function(void)
- {
-+	struct ftrace_ops *ops;
- 	ftrace_func_t func;
- 
-+	for (ops = ftrace_ops_list;
-+	     ops != &ftrace_list_end; ops = ops->next)
-+		if (ops->flags & FTRACE_OPS_FL_IPIPE_EXCLUSIVE) {
-+			function_trace_op = ops;
-+			ftrace_trace_function = ops->func;
-+			return;
-+		}
-+
- 	/*
- 	 * Prepare the ftrace_ops that the arch callback will use.
- 	 * If there's only one ftrace_ops registered, the ftrace_ops_list
-@@ -2298,6 +2308,9 @@ void __weak arch_ftrace_update_code(int command)
+@@ -2298,6 +2299,9 @@ void __weak arch_ftrace_update_code(int command)
  
  static void ftrace_run_update_code(int command)
  {
@@ -16355,7 +14605,7 @@ index d1eff3d..ac1979d 100644
  	int ret;
  
  	ret = ftrace_arch_code_modify_prepare();
-@@ -2311,7 +2324,13 @@ static void ftrace_run_update_code(int command)
+@@ -2311,7 +2315,13 @@ static void ftrace_run_update_code(int command)
  	 * is safe. The stop_machine() is the safest, but also
  	 * produces the most overhead.
  	 */
@@ -16369,7 +14619,7 @@ index d1eff3d..ac1979d 100644
  
  	ret = ftrace_arch_code_modify_post_process();
  	FTRACE_WARN_ON(ret);
-@@ -4621,10 +4640,10 @@ static int ftrace_process_locs(struct module *mod,
+@@ -4621,10 +4631,10 @@ static int ftrace_process_locs(struct module *mod,
  	 * reason to cause large interrupt latencies while we do it.
  	 */
  	if (!mod)
@@ -16382,7 +14632,7 @@ index d1eff3d..ac1979d 100644
  	ret = 0;
   out:
  	mutex_unlock(&ftrace_lock);
-@@ -4723,9 +4742,11 @@ void __init ftrace_init(void)
+@@ -4723,9 +4733,11 @@ void __init ftrace_init(void)
  	unsigned long count, flags;
  	int ret;
  
@@ -16396,21 +14646,39 @@ index d1eff3d..ac1979d 100644
  	if (ret)
  		goto failed;
  
+@@ -4891,7 +4903,16 @@ __ftrace_ops_list_func(unsigned long ip, unsigned long parent_ip,
+ 		}
+ 	} while_for_each_ftrace_op(op);
+ out:
+-	preempt_enable_notrace();
++#ifdef CONFIG_IPIPE
++	if (hard_irqs_disabled() || !__ipipe_root_p)
++		/*
++		 * Nothing urgent to schedule here. At latest the timer tick
++		 * will pick up whatever the tracing functions kicked off.
++		 */
++		preempt_enable_no_resched_notrace();
++	else
++#endif
++		preempt_enable_notrace();
+ 	trace_clear_recursion(bit);
+ }
+ 
 diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
-index f4fbbfc..fc316d2 100644
+index 0fc5cfe..33055b3 100644
 --- a/kernel/trace/ring_buffer.c
 +++ b/kernel/trace/ring_buffer.c
 @@ -2684,7 +2684,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
  
  static __always_inline int trace_recursive_lock(void)
  {
--	unsigned int val = this_cpu_read(current_context);
+-	unsigned int val = __this_cpu_read(current_context);
 +	unsigned long flags;
 +	unsigned int val;
  	int bit;
  
  	if (in_interrupt()) {
-@@ -2697,22 +2698,35 @@ static __always_inline int trace_recursive_lock(void)
+@@ -2697,21 +2698,34 @@ static __always_inline int trace_recursive_lock(void)
  	} else
  		bit = 3;
  
@@ -16424,28 +14692,24 @@ index f4fbbfc..fc316d2 100644
 +	}
  
  	val |= (1 << bit);
--	this_cpu_write(current_context, val);
-+	__this_cpu_write(current_context, val);
-+
-+	hard_local_irq_restore(flags);
+ 	__this_cpu_write(current_context, val);
  
++	hard_local_irq_restore(flags);
++
  	return 0;
  }
  
  static __always_inline void trace_recursive_unlock(void)
  {
--	unsigned int val = this_cpu_read(current_context);
+-	unsigned int val = __this_cpu_read(current_context);
 +	unsigned long flags;
 +	unsigned int val;
 +
 +	flags = hard_local_irq_save();
  
 +	val = __this_cpu_read(current_context);
- 	val--;
--	val &= this_cpu_read(current_context);
--	this_cpu_write(current_context, val);
-+	val &= __this_cpu_read(current_context);
-+	__this_cpu_write(current_context, val);
+ 	val &= val & (val - 1);
+ 	__this_cpu_write(current_context, val);
 +
 +	hard_local_irq_restore(flags);
  }
@@ -16528,7 +14792,7 @@ index 57f0ec9..80437ac 100644
  
  static struct tracer_opt func_opts[] = {
 diff --git a/kernel/trace/trace_functions_graph.c b/kernel/trace/trace_functions_graph.c
-index f0a0c98..310dd0a 100644
+index 2964333..7b15e42 100644
 --- a/kernel/trace/trace_functions_graph.c
 +++ b/kernel/trace/trace_functions_graph.c
 @@ -336,7 +336,7 @@ int trace_graph_entry(struct ftrace_graph_ent *trace)
@@ -16722,7 +14986,7 @@ index f8e0e53..02175aa3 100644
  			wake_up_klogd();
  	}
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 0c9216c..1575d3e 100644
+index 0c9216c..00a9a30 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -10,6 +10,7 @@
@@ -16741,7 +15005,7 @@ index 0c9216c..1575d3e 100644
 +	/* APEI may invoke this for temporarily remapping pages in interrupt
 +	 * context - nothing we can and need to propagate globally. */
 +	if (!in_interrupt()) {
-+		__ipipe_pin_range_globally(start, end);
++		__ipipe_pin_mapping_globally(start, end);
 +		flush_cache_vmap(start, end);
 +	}
  
@@ -17018,7 +15282,7 @@ index 73cf098..6928e67 100644
 +}
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index 3c83bec..3247e83 100644
+index f88b4f9..e9b401a 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
 @@ -49,6 +49,10 @@
@@ -17108,14 +15372,14 @@ index ace9345..6b56407 100644
  	return pages;
  }
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 90520af..ebbf9e2 100644
+index 90520af..dadc22d 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -193,6 +193,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
  			return err;
  	} while (pgd++, addr = next, addr != end);
  
-+ 	__ipipe_pin_range_globally(start, end);
++ 	__ipipe_pin_mapping_globally(start, end);
 + 
  	return nr;
  }
