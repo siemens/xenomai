@@ -22,11 +22,11 @@
 
 /* Regular (native) syscall handler implementation. */
 #define COBALT_SYSCALL(__name, __mode, __args)	\
-	long cobalt_ ## __name __args
+	long CoBaLt_ ## __name __args
 
 /* Regular (native) syscall handler declaration. */
 #define COBALT_SYSCALL_DECL(__name, __args)	\
-	long cobalt_ ## __name __args
+	long CoBaLt_ ## __name __args
 
 #include <asm/xenomai/syscall32.h>
 

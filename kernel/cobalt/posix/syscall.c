@@ -520,7 +520,7 @@ static COBALT_SYSCALL(corectl, probing,
 	return ret;
 }
 
-static int cobalt_ni(void)
+static int CoBaLt_ni(void)
 {
 	return -ENOSYS;
 }
@@ -585,7 +585,7 @@ static int cobalt_ni(void)
  *
  * --rpm
  */
-#define __syshand__(__name)	((cobalt_syshand)(cobalt_ ## __name))
+#define __syshand__(__name)	((cobalt_syshand)(CoBaLt_ ## __name))
 
 #define __COBALT_NI	__syshand__(ni)
 
