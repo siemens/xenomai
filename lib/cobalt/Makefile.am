@@ -25,6 +25,7 @@ libcobalt_la_SOURCES =		\
 	mutex.c			\
 	printf.c		\
 	rtdm.c			\
+	sched.c			\
 	select.c		\
 	semaphore.c		\
 	signal.c		\
