@@ -199,7 +199,7 @@ int cobalt_init(void)
 	ret = __STD(pthread_getschedparam(ptid, &policy, &parm));
 	if (ret) {
 		early_warning("pthread_getschedparam failed");
-		return ret;
+		return -ret;
 	}
 
 	/*
@@ -224,7 +224,7 @@ int cobalt_init(void)
 	if (ret) {
 		early_warning("pthread_setschedparam failed (prio=%d)",
 			__cobalt_main_prio);
-		return ret;
+		return -ret;
 	}
 
 	return 0;

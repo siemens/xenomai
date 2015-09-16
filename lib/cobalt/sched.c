@@ -172,6 +172,163 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
 }
 
 /**
+ * Set the scheduling policy and parameters of the specified process.
+ *
+ * This service set the scheduling policy of the Xenomai process
+ * identified by @a pid to the value @a pol, and its scheduling
+ * parameters (i.e. its priority) to the value pointed to by @a par.
+ *
+ * If the current Linux thread ID is passed (see gettid(2)), this
+ * service turns the current thread into a Xenomai thread. If @a pid
+ * is neither the identifier of the current thread nor the identifier
+ * of an existing Xenomai thread, this service falls back to the
+ * regular sched_setscheduler() service, causing a transition to
+ * secondary mode if the caller is a Xenomai thread.
+ *
+ * @param pid target process/thread;
+ *
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR, or
+ * SCHED_OTHER;
+ *
+ * @param param scheduling parameters address.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a pid is invalid;
+ * - EINVAL, @a pol or @a par->sched_priority is invalid;
+ * - EFAULT, @a par is an invalid address;
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_setscheduler.html">
+ * Specification.</a>
+ *
+ * @note
+ *
+ * When creating or shadowing a Xenomai thread for the first time,
+ * libcobalt installs an internal handler for the SIGSHADOW signal. If
+ * you had previously installed a handler for such signal before that
+ * point, such handler will be exclusively called for any SIGSHADOW
+ * occurrence Xenomai did not send.
+ *
+ * If, however, an application-defined handler for SIGSHADOW is
+ * installed afterwards, overriding the libcobalt handler, the new
+ * handler is required to call cobalt_sigshadow_handler() on
+ * entry. This routine returns a non-zero value for every occurrence
+ * of SIGSHADOW issued by the Cobalt core. If zero instead, the
+ * application-defined handler should process the signal.
+ *
+ * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ *
+ * You should register your handler with sigaction(2), setting the
+ * SA_SIGINFO flag.
+ */
+COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
+				      const struct sched_param *param))
+{
+	int ret;
+
+	struct sched_param_ex param_ex = {
+		.sched_priority = param->sched_priority,
+	};
+
+	ret = sched_setscheduler_ex(pid, policy, &param_ex);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
+ * Set extended scheduling policy of a process
+ *
+ * This service is an extended version of the sched_setscheduler()
+ * service, which supports Xenomai-specific and/or additional
+ * scheduling policies, not available with the host Linux environment.
+ * It sets the scheduling policy of the Xenomai process/thread
+ * identified by @a pid to the value @a pol, and the scheduling
+ * parameters (e.g. its priority) to the value pointed to by @a par.
+ *
+ * If the current Linux thread ID or zero is passed (see gettid(2)),
+ * this service may turn the current thread into a Xenomai thread.
+ *
+ * @param pid target process/thread. If zero, the current thread is
+ * assumed.
+ *
+ * @param policy scheduling policy, one of SCHED_WEAK, SCHED_FIFO,
+ * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP, SCHED_QUOTA or
+ * SCHED_NORMAL;
+ *
+ * @param param_ex scheduling parameters address. As a special
+ * exception, a negative sched_priority value is interpreted as if
+ * SCHED_WEAK was given in @a policy, using the absolute value of this
+ * parameter as the weak priority level.
+ *
+ * When CONFIG_XENO_OPT_SCHED_WEAK is enabled, SCHED_WEAK exhibits
+ * priority levels in the [0..99] range (inclusive). Otherwise,
+ * sched_priority must be zero for the SCHED_WEAK policy.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a pid is not found;
+ * - EINVAL, @a pid is negative, @a param_ex is NULL, any of @a policy or
+ *   @a param_ex->sched_priority is invalid;
+ * - EFAULT, @a param_ex is an invalid address;
+ *
+ * @note
+ *
+ * When creating or shadowing a Xenomai thread for the first time,
+ * libcobalt installs an internal handler for the SIGSHADOW signal. If
+ * you had previously installed a handler for such signal before that
+ * point, such handler will be exclusively called for any SIGSHADOW
+ * occurrence Xenomai did not send.
+ *
+ * If, however, an application-defined handler for SIGSHADOW is
+ * installed afterwards, overriding the libcobalt handler, the new
+ * handler is required to call cobalt_sigshadow_handler() on
+ * entry. This routine returns a non-zero value for every occurrence
+ * of SIGSHADOW issued by the Cobalt core. If zero instead, the
+ * application-defined handler should process the signal.
+ *
+ * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ *
+ * You should register your handler with sigaction(2), setting the
+ * SA_SIGINFO flag.
+ *
+ * sched_setscheduler_ex() may switch the caller to secondary mode.
+ */
+int sched_setscheduler_ex(pid_t pid,
+			  int policy, const struct sched_param_ex *param_ex)
+{
+	int ret, promoted, std_policy;
+	struct sched_param std_param;
+	__u32 u_winoff;
+
+	if (pid < 0 || param_ex == NULL)
+		return EINVAL;
+
+	/* See pthread_setschedparam_ex(). */
+	
+	std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
+	ret = __STD(sched_setscheduler(pid, std_policy, &std_param));
+	if (ret)
+		return errno;
+
+	ret = -XENOMAI_SYSCALL5(sc_cobalt_sched_setscheduler_ex,
+				pid, policy, param_ex,
+				&u_winoff, &promoted);
+
+	if (ret == 0 && promoted) {
+		cobalt_sigshadow_install_once();
+		cobalt_set_tsd(u_winoff);
+		cobalt_thread_harden();
+	}
+
+	return ret;
+}
+
+/**
  * Get extended maximum priority of the specified scheduling policy.
  *
  * This service returns the maximum priority of the scheduling policy

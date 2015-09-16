@@ -55,6 +55,9 @@ void cobalt_default_mutexattr_init(void);
 
 void cobalt_default_condattr_init(void);
 
+int cobalt_xlate_schedparam(int policy,
+			    const struct sched_param_ex *param_ex,
+			    struct sched_param *param);
 int cobalt_init(void);
 
 struct cobalt_featinfo;

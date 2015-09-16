@@ -77,6 +77,13 @@ int __real_sched_get_priority_max(int policy)
 	return sched_get_priority_max(policy);
 }
 
+__weak
+int __real_sched_setscheduler(pid_t pid, int policy,
+			      const struct sched_param *param)
+{
+	return sched_setscheduler(pid, policy, param);
+}
+
 /* pthread */
 __weak
 int __real_pthread_create(pthread_t *ptid_r,

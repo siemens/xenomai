@@ -25,19 +25,25 @@
 #include <cobalt/wrappers.h>
 #include <cobalt/uapi/sched.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 COBALT_DECL(int, sched_yield(void));
 
 COBALT_DECL(int, sched_get_priority_min(int policy));
 
 COBALT_DECL(int, sched_get_priority_max(int policy));
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+COBALT_DECL(int, sched_setscheduler(pid_t pid, int policy,
+				    const struct sched_param *param));
 
 int sched_get_priority_min_ex(int policy);
 
 int sched_get_priority_max_ex(int policy);
+
+int sched_setscheduler_ex(pid_t pid, int policy,
+			  const struct sched_param_ex *param_ex);
 
 int sched_setconfig_np(int cpu, int policy,
 		       const union sched_config *config, size_t len);

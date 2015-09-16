@@ -46,22 +46,26 @@ static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
 
-static int std_maxpri;
-
-static int libc_setschedparam(pthread_t thread,
-			      int policy, const struct sched_param_ex *param_ex)
+int cobalt_xlate_schedparam(int policy,
+			    const struct sched_param_ex *param_ex,
+			    struct sched_param *param)
 {
-	struct sched_param param;
-	int priority;
+	int std_policy, priority, std_maxpri;
 
+	/*
+	 * Translates Cobalt scheduling parameters to native ones,
+	 * based on a best approximation for Cobalt policies which are
+	 * not available from the host kernel.
+	 */
+	std_policy = policy;
 	priority = param_ex->sched_priority;
 
 	switch (policy) {
 	case SCHED_WEAK:
-		policy = priority ? SCHED_FIFO : SCHED_OTHER;
+		std_policy = priority ? SCHED_FIFO : SCHED_OTHER;
 		break;
 	default:
-		policy = SCHED_FIFO;
+		std_policy = SCHED_FIFO;
 		/* falldown wanted. */
 	case SCHED_OTHER:
 	case SCHED_FIFO:
@@ -73,16 +77,18 @@ static int libc_setschedparam(pthread_t thread,
 		 * "weak" (negative) priorities - which are only
 		 * meaningful for the Cobalt core - to regular values.
 		 */
+		std_maxpri = __STD(sched_get_priority_max(SCHED_FIFO));
 		if (priority > std_maxpri)
 			priority = std_maxpri;
-		else if (priority < 0)
-			priority = -priority;
 	}
 
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = priority;
+	if (priority < 0)
+		priority = -priority;
+	
+	memset(param, 0, sizeof(*param));
+	param->sched_priority = priority;
 
-	return __STD(pthread_setschedparam(thread, policy, &param));
+	return std_policy;
 }
 
 struct pthread_iargs {
@@ -102,11 +108,12 @@ static void *cobalt_thread_trampoline(void *p)
 	 * Volatile is to prevent (too) smart gcc releases from
 	 * trashing the syscall registers (see later comment).
 	 */
+	int personality, parent_prio, policy, std_policy;
 	volatile pthread_t ptid = pthread_self();
 	void *(*start)(void *), *arg, *retval;
-	int personality, parent_prio, policy;
 	struct pthread_iargs *iargs = p;
 	struct sched_param_ex param_ex;
+	struct sched_param std_param;
 	__u32 u_winoff;
 	long ret;
 
@@ -120,7 +127,8 @@ static void *cobalt_thread_trampoline(void *p)
 	arg = iargs->arg;
 
 	/* Set our scheduling parameters for the host kernel first. */
-	ret = libc_setschedparam(ptid, policy, &param_ex);
+	std_policy = cobalt_xlate_schedparam(policy, &param_ex, &std_param);
+	ret = __STD(pthread_setschedparam(ptid, std_policy, &std_param));
 	if (ret)
 		goto sync_with_creator;
 
@@ -677,14 +685,16 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
 int pthread_setschedparam_ex(pthread_t thread,
 			     int policy, const struct sched_param_ex *param_ex)
 {
-	int ret, promoted;
+	int ret, promoted, std_policy;
+	struct sched_param std_param;
 	__u32 u_winoff;
 
 	/*
 	 * First we tell the libc and the regular kernel about the
 	 * policy/param change, then we tell Xenomai.
 	 */
-	ret = libc_setschedparam(thread, policy, param_ex);
+	std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
+	ret = __STD(pthread_setschedparam(thread, std_policy, &std_param));
 	if (ret)
 		return ret;
 
@@ -815,5 +825,4 @@ void cobalt_thread_init(void)
 	linuxthreads = 1;
 #endif /* !_CS_GNU_LIBPTHREAD_VERSION */
 	pthread_attr_init_ex(&default_attr_ex);
-	std_maxpri = __STD(sched_get_priority_max(SCHED_FIFO));
 }
