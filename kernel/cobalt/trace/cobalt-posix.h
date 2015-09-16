@@ -156,6 +156,32 @@ DECLARE_EVENT_CLASS(cobalt_posix_schedparam,
 	)
 );
 
+DECLARE_EVENT_CLASS(cobalt_posix_scheduler,
+	TP_PROTO(pid_t pid, int policy,
+		 const struct sched_param_ex *param_ex),
+	TP_ARGS(pid, policy, param_ex),
+
+	TP_STRUCT__entry(
+		__field(pid_t, pid)
+		__field(int, policy)
+		__dynamic_array(char, param_ex, sizeof(struct sched_param_ex))
+	),
+
+	TP_fast_assign(
+		__entry->pid = pid;
+		__entry->policy = policy;
+		memcpy(__get_dynamic_array(param_ex), param_ex, sizeof(*param_ex));
+	),
+
+	TP_printk("pid=%d policy=%d(%s) param={ %s }",
+		  __entry->pid, __entry->policy,
+		  cobalt_print_sched_policy(__entry->policy),
+		  cobalt_print_sched_params(__entry->policy,
+					    (struct sched_param_ex *)
+					    __get_dynamic_array(param_ex))
+	)
+);
+
 DECLARE_EVENT_CLASS(cobalt_void,
 	TP_PROTO(int dummy),
 	TP_ARGS(dummy),
@@ -366,6 +392,12 @@ TRACE_EVENT(cobalt_sched_get_config,
 		  __entry->cpu, __entry->policy,
 		  cobalt_print_sched_policy(__entry->policy),
 		  __entry->rlen)
+);
+
+DEFINE_EVENT(cobalt_posix_scheduler, cobalt_sched_setscheduler,
+	TP_PROTO(pid_t pid, int policy,
+		 const struct sched_param_ex *param_ex),
+	TP_ARGS(pid, policy, param_ex)
 );
 
 DECLARE_EVENT_CLASS(cobalt_posix_prio_bound,

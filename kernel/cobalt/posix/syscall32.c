@@ -67,8 +67,8 @@ COBALT_SYSCALL32emu(thread_setschedparam_ex, conforming,
 	if (ret)
 		return ret;
 
-	return __cobalt_thread_setschedparam_ex(pth, policy, &param_ex,
-						u_winoff, u_promoted);
+	return cobalt_thread_setschedparam_ex(pth, policy, &param_ex,
+					      u_winoff, u_promoted);
 }
 
 COBALT_SYSCALL32emu(thread_getschedparam_ex, current,
@@ -428,6 +428,24 @@ COBALT_SYSCALL32emu(sched_getconfig_np, conformin,
 {
 	return __cobalt_sched_getconfig_np(cpu, policy, u_config, len,
 					   sys32_fetch_config, sys32_put_config);
+}
+
+COBALT_SYSCALL32emu(sched_setscheduler_ex, conforming,
+		    (compat_pid_t pid,
+		     int policy,
+		     const struct compat_sched_param_ex __user *u_param_ex,
+		     __u32 __user *u_winoff,
+		     int __user *u_promoted))
+{
+	struct sched_param_ex param_ex;
+	int ret;
+
+	ret = sys32_get_param_ex(policy, &param_ex, u_param_ex);
+	if (ret)
+		return ret;
+
+	return cobalt_sched_setscheduler_ex(pid, policy, &param_ex,
+					    u_winoff, u_promoted);
 }
 
 COBALT_SYSCALL32emu(timer_create, current,

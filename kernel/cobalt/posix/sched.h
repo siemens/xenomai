@@ -57,6 +57,12 @@ ssize_t __cobalt_sched_getconfig_np(int cpu, int policy,
 							  void __user *u_config, size_t u_len,
 							  const union sched_config *config,
 							  size_t len));
+int cobalt_sched_setscheduler_ex(pid_t pid,
+				 int policy,
+				 const struct sched_param_ex *param_ex,
+				 __u32 __user *u_winoff,
+				 int __user *u_promoted);
+
 struct xnsched_class *
 cobalt_sched_policy_param(union xnsched_policy_param *param,
 			  int u_policy, const struct sched_param_ex *param_ex,
@@ -81,6 +87,13 @@ COBALT_SYSCALL_DECL(sched_getconfig_np,
 		    (int cpu, int policy,
 		     union sched_config __user *u_config,
 		     size_t len));
+
+COBALT_SYSCALL_DECL(sched_setscheduler_ex,
+		    (pid_t pid,
+		     int policy,
+		     const struct sched_param_ex *param_ex,
+		     __u32 __user *u_winoff,
+		     int __user *u_promoted));
 
 void cobalt_sched_reclaim(struct cobalt_process *process);
 

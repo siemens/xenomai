@@ -122,11 +122,14 @@ int __cobalt_thread_create(unsigned long pth, int policy,
 			   struct sched_param_ex __user *u_param,
 			   int xid, __u32 __user *u_winoff);
 
-int __cobalt_thread_setschedparam_ex(unsigned long pth,
-				     int policy,
-				     const struct sched_param_ex *param_ex,
-				     __u32 __user *u_winoff,
-				     int __user *u_promoted);
+int __cobalt_thread_setschedparam_ex(struct cobalt_thread *thread, int policy,
+				     const struct sched_param_ex *param_ex);
+
+int cobalt_thread_setschedparam_ex(unsigned long pth,
+				   int policy,
+				   const struct sched_param_ex *param_ex,
+				   __u32 __user *u_winoff,
+				   int __user *u_promoted);
 
 int __cobalt_thread_getschedparam_ex(unsigned long pth,
 				     int __user *u_policy,

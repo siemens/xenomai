@@ -239,9 +239,8 @@ struct xnthread_personality *cobalt_thread_finalize(struct xnthread *zombie)
 	return NULL;
 }
 
-static inline int
-pthread_setschedparam_ex(struct cobalt_thread *thread,
-			 int policy, const struct sched_param_ex *param_ex)
+int __cobalt_thread_setschedparam_ex(struct cobalt_thread *thread, int policy,
+				     const struct sched_param_ex *param_ex)
 {
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
@@ -452,11 +451,11 @@ static inline int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 	return 0;
 }
 
-int __cobalt_thread_setschedparam_ex(unsigned long pth,
-				     int policy,
-				     const struct sched_param_ex *param_ex,
-				     __u32 __user *u_winoff,
-				     int __user *u_promoted)
+int cobalt_thread_setschedparam_ex(unsigned long pth,
+				   int policy,
+				   const struct sched_param_ex *param_ex,
+				   __u32 __user *u_winoff,
+				   int __user *u_promoted)
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -467,7 +466,10 @@ int __cobalt_thread_setschedparam_ex(unsigned long pth,
 	trace_cobalt_pthread_setschedparam(pth, policy, param_ex);
 
 	thread = thread_lookup(&hkey);
-	if (thread == NULL && u_winoff) {
+	if (thread == NULL) {
+		if (u_winoff == NULL)
+			return -ESRCH;
+			
 		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
 		if (IS_ERR(thread))
 			return PTR_ERR(thread);
@@ -475,23 +477,13 @@ int __cobalt_thread_setschedparam_ex(unsigned long pth,
 		promoted = 1;
 	}
 
-	if (thread)
-		ret = pthread_setschedparam_ex(thread, policy, param_ex);
-	else
-		ret = -EPERM;
+	ret = __cobalt_thread_setschedparam_ex(thread, policy, param_ex);
+	if (ret)
+		return ret;
 
-	if (ret == 0 &&
-	    cobalt_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		ret = -EFAULT;
-
-	return ret;
+	return cobalt_copy_to_user(u_promoted, &promoted, sizeof(promoted));
 }
 
-/*
- * NOTE: there is no cobalt_thread_setschedparam syscall defined by
- * the Cobalt ABI. Useland changes scheduling parameters only via the
- * extended cobalt_thread_setschedparam_ex syscall.
- */
 COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 	       (unsigned long pth,
 		int policy,
@@ -504,8 +496,8 @@ COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 	if (cobalt_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
 
-	return __cobalt_thread_setschedparam_ex(pth, policy, &param_ex,
-						u_winoff, u_promoted);
+	return cobalt_thread_setschedparam_ex(pth, policy, &param_ex,
+					      u_winoff, u_promoted);
 }
 
 int __cobalt_thread_getschedparam_ex(unsigned long pth,
