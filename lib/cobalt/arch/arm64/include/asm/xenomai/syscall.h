@@ -18,8 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _LIB_COBALT_ARM_SYSCALL_H
-#define _LIB_COBALT_ARM_SYSCALL_H
+#ifndef _LIB_COBALT_ARM64_SYSCALL_H
+#define _LIB_COBALT_ARM64_SYSCALL_H
 
 #include <xeno_config.h>
 #include <errno.h>
@@ -29,9 +29,6 @@
  * Some of the following macros have been adapted from Linux's
  * implementation of the syscall mechanism in <asm-arm/unistd.h>:
  */
-#if defined(HAVE_TLS) && __GNUC__ == 4 && __GNUC_MINOR__ >= 3
-#error TLS support (__thread) is broken with GCC >= 4.3, use --disable-tls when configuring
-#endif
 
 #define LOADARGS_0(syscode, dummy...)	\
 	__a0 = (unsigned long) (syscode)
@@ -143,4 +140,4 @@
 #define XENOMAI_SYSBIND(breq)			\
 	XENOMAI_DO_SYSCALL(1,sc_cobalt_bind,breq)
 
-#endif /* !_LIB_COBALT_ARM_SYSCALL_H */
+#endif /* !_LIB_COBALT_ARM64_SYSCALL_H */
