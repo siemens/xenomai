@@ -359,8 +359,6 @@ static inline int threadobj_unblocked_corespec(struct threadobj *current)
 
 int __threadobj_lock_sched(struct threadobj *current)
 {
-	smp_rmb();
-
 	if (current->schedlock_depth++ > 0)
 		return 0;
 
@@ -388,8 +386,6 @@ int __threadobj_unlock_sched(struct threadobj *current)
 	 * gracefully handle unbalanced calls here, and let them
 	 * decide of the outcome in case of error.
 	 */
-	smp_rmb();
-
 	if (current->schedlock_depth == 0)
 		return __bt(-EINVAL);
 
@@ -912,7 +908,7 @@ static void __threadobj_boost(void)
 		current->core.policy_unboosted = current->policy;
 		current->core.schedparam_unboosted = current->schedparam;
 	}
-	smp_mb();
+	barrier();
 
 	ret = pthread_setschedparam(current->ptid, SCHED_FIFO, &param);
 	if (ret) {
@@ -932,7 +928,6 @@ static void __threadobj_unboost(void)
 		return;
 
 	param.sched_priority = current->core.schedparam_unboosted.sched_priority;
-	smp_mb();
 
 	ret = pthread_setschedparam(current->ptid,
 				    current->core.policy_unboosted, &param);
