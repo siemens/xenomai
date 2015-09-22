@@ -329,6 +329,85 @@ int sched_setscheduler_ex(pid_t pid,
 }
 
 /**
+ * Get the scheduling policy of the specified process.
+ *
+ * This service retrieves the scheduling policy of the Xenomai process
+ * identified by @a pid.
+ *
+ * If @a pid does not identify an existing Xenomai thread/process, this
+ * service falls back to the regular sched_getscheduler() service.
+ *
+ * @param pid target process/thread;
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a pid is not found;
+ * - EINVAL, @a pid is negative
+ * - EFAULT, @a param_ex is an invalid address;
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_getscheduler.html">
+ * Specification.</a>
+ */
+COBALT_IMPL(int, sched_getscheduler, (pid_t pid))
+{
+	struct sched_param_ex param_ex;
+	int ret, policy;
+
+	if (pid < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	ret = XENOMAI_SYSCALL3(sc_cobalt_sched_getscheduler_ex,
+			       pid, &policy, &param_ex);
+	if (ret == -ESRCH)
+		return __STD(sched_getscheduler(pid));
+
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
+	
+	return policy;
+}
+
+/**
+ * Get extended scheduling policy of a process
+ *
+ * This service is an extended version of the sched_getscheduler()
+ * service, which supports Xenomai-specific and/or additional
+ * scheduling policies, not available with the host Linux environment.
+ * It retrieves the scheduling policy of the Xenomai process/thread
+ * identified by @a pid, and the associated scheduling parameters
+ * (e.g. the priority).
+ *
+ * @param pid queried process/thread. If zero, the current thread is
+ * assumed.
+ *
+ * @param policy_r a pointer to a variable receiving the current
+ * scheduling policy of @a pid.
+ *
+ * @param param_ex a pointer to a structure receiving the current
+ * scheduling parameters of @a pid.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a pid is not a Cobalt thread;
+ * - EINVAL, @a pid is negative or @a param_ex is NULL;
+ * - EFAULT, @a param_ex is an invalid address;
+ */
+int sched_getscheduler_ex(pid_t pid, int *policy_r,
+			  struct sched_param_ex *param_ex)
+{
+	if (pid < 0 || param_ex == NULL)
+		return EINVAL;
+
+	return -XENOMAI_SYSCALL3(sc_cobalt_sched_getscheduler_ex,
+				 pid, policy_r, param_ex);
+}
+
+/**
  * Get extended maximum priority of the specified scheduling policy.
  *
  * This service returns the maximum priority of the scheduling policy

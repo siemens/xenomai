@@ -7,6 +7,7 @@
 --wrap sched_get_priority_min
 --wrap sched_get_priority_max
 --wrap sched_setscheduler
+--wrap sched_getscheduler
 --wrap pthread_kill
 --wrap pthread_join
 --wrap pthread_setname_np

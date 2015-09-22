@@ -84,6 +84,12 @@ int __real_sched_setscheduler(pid_t pid, int policy,
 	return sched_setscheduler(pid, policy, param);
 }
 
+__weak
+int __real_sched_getscheduler(pid_t pid)
+{
+	return sched_getscheduler(pid);
+}
+
 /* pthread */
 __weak
 int __real_pthread_create(pthread_t *ptid_r,
