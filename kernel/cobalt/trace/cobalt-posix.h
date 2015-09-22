@@ -400,6 +400,11 @@ DEFINE_EVENT(cobalt_posix_scheduler, cobalt_sched_setscheduler,
 	TP_ARGS(pid, policy, param_ex)
 );
 
+DEFINE_EVENT(cobalt_posix_pid, cobalt_sched_getscheduler,
+	TP_PROTO(pid_t pid),
+	TP_ARGS(pid)
+);
+
 DECLARE_EVENT_CLASS(cobalt_posix_prio_bound,
 	TP_PROTO(int policy, int prio),
 	TP_ARGS(policy, prio),

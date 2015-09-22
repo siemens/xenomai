@@ -276,9 +276,9 @@ out:
 	return ret;
 }
 
-static inline int
-pthread_getschedparam_ex(struct cobalt_thread *thread,
-			 int *policy_r, struct sched_param_ex *param_ex)
+int __cobalt_thread_getschedparam_ex(struct cobalt_thread *thread,
+				     int *policy_r,
+				     struct sched_param_ex *param_ex)
 {
 	struct xnsched_class *base_class;
 	struct xnthread *base_thread;
@@ -289,13 +289,14 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC,
 			       struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
-		return ESRCH;
+		return -ESRCH;
 	}
 
 	base_thread = &thread->threadbase;
 	base_class = base_thread->base_class;
-	param_ex->sched_priority = xnthread_base_priority(base_thread);
 	*policy_r = base_class->policy;
+
+	param_ex->sched_priority = xnthread_base_priority(base_thread);
 	if (param_ex->sched_priority == 0) /* SCHED_FIFO/SCHED_WEAK */
 		*policy_r = SCHED_NORMAL;
 
@@ -304,14 +305,14 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 			ns2ts(&param_ex->sched_rr_quantum, base_thread->rrperiod);
 			*policy_r = SCHED_RR;
 		}
-		goto unlock_and_exit;
+		goto out;
 	}
 
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
 	if (base_class == &xnsched_class_weak) {
 		if (*policy_r != SCHED_WEAK)
 			param_ex->sched_priority = -param_ex->sched_priority;
-		goto unlock_and_exit;
+		goto out;
 	}
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
@@ -320,25 +321,24 @@ pthread_getschedparam_ex(struct cobalt_thread *thread,
 		ns2ts(&param_ex->sched_ss_repl_period, base_thread->pss->param.repl_period);
 		ns2ts(&param_ex->sched_ss_init_budget, base_thread->pss->param.init_budget);
 		param_ex->sched_ss_max_repl = base_thread->pss->param.max_repl;
-		goto unlock_and_exit;
+		goto out;
 	}
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	if (base_class == &xnsched_class_tp) {
 		param_ex->sched_tp_partition =
 			base_thread->tps - base_thread->sched->tp.partitions;
-		goto unlock_and_exit;
+		goto out;
 	}
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 	if (base_class == &xnsched_class_quota) {
 		param_ex->sched_quota_group = base_thread->quota->tgid;
-		goto unlock_and_exit;
+		goto out;
 	}
 #endif
 
-unlock_and_exit:
-
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -500,13 +500,13 @@ COBALT_SYSCALL(thread_setschedparam_ex, conforming,
 					      u_winoff, u_promoted);
 }
 
-int __cobalt_thread_getschedparam_ex(unsigned long pth,
-				     int __user *u_policy,
-				     struct sched_param_ex *param_ex)
+int cobalt_thread_getschedparam_ex(unsigned long pth,
+				   int *policy_r,
+				   struct sched_param_ex *param_ex)
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
-	int policy, ret;
+	int ret;
 
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
@@ -514,34 +514,30 @@ int __cobalt_thread_getschedparam_ex(unsigned long pth,
 	if (thread == NULL)
 		return -ESRCH;
 
-	ret = pthread_getschedparam_ex(thread, &policy, param_ex);
+	ret = __cobalt_thread_getschedparam_ex(thread, policy_r, param_ex);
 	if (ret)
 		return ret;
 
-	trace_cobalt_pthread_getschedparam(pth, policy, param_ex);
+	trace_cobalt_pthread_getschedparam(pth, *policy_r, param_ex);
 
-	if (cobalt_copy_to_user(u_policy, &policy, sizeof(int)))
-		return -EFAULT;
-
-	return policy;
+	return 0;
 }
 
-/*
- * NOTE: there is no cobalt_thread_getschedparam syscall defined by
- * the Cobalt ABI. Useland retrieves scheduling parameters only via
- * the extended cobalt_thread_getschedparam_ex syscall.
- */
 COBALT_SYSCALL(thread_getschedparam_ex, current,
 	       (unsigned long pth,
 		int __user *u_policy,
 		struct sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
-	int policy;
+	int ret, policy;
 
-	policy = __cobalt_thread_getschedparam_ex(pth, u_policy, &param_ex);
-	if (policy < 0)
-		return policy;
+	ret = cobalt_thread_getschedparam_ex(pth, &policy, &param_ex);
+	if (ret)
+		return ret;
+
+	ret = cobalt_copy_to_user(u_policy, &policy, sizeof(policy));
+	if (ret)
+		return ret;
 
 	return cobalt_copy_to_user(u_param, &param_ex, sizeof(param_ex));
 }

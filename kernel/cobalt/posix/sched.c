@@ -785,6 +785,47 @@ COBALT_SYSCALL(sched_setscheduler_ex, conforming,
 					    u_winoff, u_promoted);
 }
 
+int cobalt_sched_getscheduler_ex(pid_t pid,
+				 int *policy_r,
+				 struct sched_param_ex *param_ex)
+{
+	struct cobalt_thread *thread;
+	spl_t s;
+
+	trace_cobalt_sched_getscheduler(pid);
+
+	if (pid) {
+		xnlock_get_irqsave(&nklock, s);
+		thread = cobalt_thread_find(pid);
+		xnlock_put_irqrestore(&nklock, s);
+	} else
+		thread = cobalt_current_thread();
+
+	if (thread == NULL)
+		return -ESRCH;
+
+	return __cobalt_thread_getschedparam_ex(thread, policy_r, param_ex);
+}
+
+COBALT_SYSCALL(sched_getscheduler_ex, current,
+	       (pid_t pid,
+		int __user *u_policy,
+		struct sched_param_ex __user *u_param))
+{
+	struct sched_param_ex param_ex;
+	int ret, policy;
+
+	ret = cobalt_sched_getscheduler_ex(pid, &policy, &param_ex);
+	if (ret)
+		return ret;
+
+	if (cobalt_copy_to_user(u_param, &param_ex, sizeof(param_ex)) ||
+	    cobalt_copy_to_user(u_policy, &policy, sizeof(policy)))
+		return -EFAULT;
+
+	return 0;
+}
+
 void cobalt_sched_reclaim(struct cobalt_process *process)
 {
 	struct cobalt_resources *p = &process->resources;

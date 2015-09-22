@@ -131,8 +131,12 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
 				   __u32 __user *u_winoff,
 				   int __user *u_promoted);
 
-int __cobalt_thread_getschedparam_ex(unsigned long pth,
-				     int __user *u_policy,
+int cobalt_thread_getschedparam_ex(unsigned long pth,
+				   int *policy_r,
+				   struct sched_param_ex *param_ex);
+
+int __cobalt_thread_getschedparam_ex(struct cobalt_thread *thread,
+				     int *policy_r,
 				     struct sched_param_ex *param_ex);
 
 struct cobalt_thread *cobalt_thread_find(pid_t pid);

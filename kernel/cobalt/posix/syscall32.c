@@ -77,13 +77,15 @@ COBALT_SYSCALL32emu(thread_getschedparam_ex, current,
 		     struct compat_sched_param_ex __user *u_param))
 {
 	struct sched_param_ex param_ex;
-	int policy;
+	int ret, policy;
 
-	policy = __cobalt_thread_getschedparam_ex(pth, u_policy, &param_ex);
-	if (policy < 0)
-		return policy;
+	ret = cobalt_thread_getschedparam_ex(pth, &policy, &param_ex);
+	if (ret)
+		return ret;
 
-	return sys32_put_param_ex(policy, u_param, &param_ex);
+	ret = cobalt_copy_to_user(u_policy, &policy, sizeof(policy));
+
+	return ret ?: sys32_put_param_ex(policy, u_param, &param_ex);
 }
 
 static inline int sys32_fetch_timeout(struct timespec *ts,
@@ -446,6 +448,23 @@ COBALT_SYSCALL32emu(sched_setscheduler_ex, conforming,
 
 	return cobalt_sched_setscheduler_ex(pid, policy, &param_ex,
 					    u_winoff, u_promoted);
+}
+
+COBALT_SYSCALL32emu(sched_getscheduler_ex, current,
+		    (compat_pid_t pid,
+		     int __user *u_policy,
+		     struct compat_sched_param_ex __user *u_param))
+{
+	struct sched_param_ex param_ex;
+	int ret, policy;
+
+	ret = cobalt_sched_getscheduler_ex(pid, &policy, &param_ex);
+	if (ret)
+		return ret;
+
+	ret = cobalt_copy_to_user(u_policy, &policy, sizeof(policy));
+
+	return ret ?: sys32_put_param_ex(policy, u_param, &param_ex);
 }
 
 COBALT_SYSCALL32emu(timer_create, current,

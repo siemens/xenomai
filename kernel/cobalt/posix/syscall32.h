@@ -121,6 +121,11 @@ COBALT_SYSCALL32emu_DECL(sched_setscheduler_ex,
 			  __u32 __user *u_winoff,
 			  int __user *u_promoted));
 
+COBALT_SYSCALL32emu_DECL(sched_getscheduler_ex,
+			 (compat_pid_t pid,
+			  int __user *u_policy,
+			  struct compat_sched_param_ex __user *u_param));
+
 COBALT_SYSCALL32emu_DECL(timer_create,
 			 (clockid_t clock,
 			  const struct compat_sigevent __user *u_sev,
