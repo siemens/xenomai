@@ -36,10 +36,7 @@ extern "C" {
 
 extern struct copperplate_setup_data __copperplate_setup_data;
 
-static inline define_config_tunable(session_label, const char *, label)
-{
-	__copperplate_setup_data.session_label = label;
-}
+define_config_tunable(session_label, const char *, label);
 
 static inline read_config_tunable(session_label, const char *)
 {

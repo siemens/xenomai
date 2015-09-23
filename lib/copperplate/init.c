@@ -185,6 +185,11 @@ no_group:
 	return 0;
 }
 
+define_config_tunable(session_label, const char *, label)
+{
+	get_session_label(label);
+}
+
 static int copperplate_init(void)
 {
 	int ret, regflags = 0;
