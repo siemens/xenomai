@@ -152,6 +152,7 @@ static int get_session_label(const char *optarg)
 	char *session, *grpname, *p;
 	struct group *grp;
 	gid_t gid;
+	int ret;
 
 	session = strdup(optarg);
 	grpname = strrchr(session, '/');
@@ -172,8 +173,9 @@ static int get_session_label(const char *optarg)
 	}
 
 	if (grp == NULL) {
+		ret = errno ? -errno : -EINVAL;
 		warning("invalid group %s", grpname);
-		return errno ? -errno : -EINVAL;
+		return ret;
 	}
 
 	__copperplate_setup_data.session_gid = grp->gr_gid;
