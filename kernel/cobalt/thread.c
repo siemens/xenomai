@@ -1236,10 +1236,10 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * @param idate The initial (absolute) date of the first release
  * point, expressed in nanoseconds. The affected thread will be
  * delayed by the first call to xnthread_wait_period() until this
- * point is reached. If @a idate is equal to XN_INFINITE, the current
- * system date is used, and no initial delay takes place. In the
- * latter case, @a timeout_mode is not considered and can have any
- * valid value.
+ * point is reached. If @a idate is equal to XN_INFINITE, the first
+ * release point is set to @a period nanoseconds after the current
+ * date. In the latter case, @a timeout_mode is not considered and can
+ * have any valid value.
  *
  * @param timeout_mode The mode of the @a idate parameter. It can
  * either be set to XN_ABSOLUTE or XN_REALTIME with @a idate different

@@ -1033,12 +1033,15 @@ static inline void rtdm_task_set_priority(rtdm_task_t *task, int priority)
 }
 
 static inline int rtdm_task_set_period(rtdm_task_t *task,
+				       nanosecs_abs_t start_date,
 				       nanosecs_rel_t period)
 {
 	if (period < 0)
 		period = 0;
+	if (start_date == 0)
+		start_date = XN_INFINITE;
 
-	return xnthread_set_periodic(task, XN_INFINITE, XN_RELATIVE, period);
+	return xnthread_set_periodic(task, start_date, XN_ABSOLUTE, period);
 }
 
 static inline int rtdm_task_unblock(rtdm_task_t *task)
@@ -1054,11 +1057,11 @@ static inline rtdm_task_t *rtdm_task_current(void)
 	return xnthread_current();
 }
 
-static inline int rtdm_task_wait_period(void)
+static inline int rtdm_task_wait_period(unsigned long *overruns_r)
 {
 	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
 		return -EPERM;
-	return xnthread_wait_period(NULL);
+	return xnthread_wait_period(overruns_r);
 }
 
 static inline int rtdm_task_sleep(nanosecs_rel_t delay)

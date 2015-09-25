@@ -81,7 +81,7 @@ void rtcfg_timer(int ifindex)
 
         rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
 
-        rtdm_task_wait_period();
+        rtdm_task_wait_period(NULL);
     }
 
     rtcfg_dev->flags &= ~FLAG_TIMER_STARTED;

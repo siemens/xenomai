@@ -200,16 +200,35 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
 /**
  * @brief Adjust real-time task period
  *
- * @param[in,out] task Task handle as returned by rtdm_task_init()
- * @param[in] period New period in nanoseconds of a cyclic task, 0 for
- * non-cyclic mode
+ * @param[in,out] task Task handle as returned by rtdm_task_init(), or
+ * NULL for referring to the current RTDM task or Cobalt thread (see
+ * note).
+ *
+ * @param[in] start_date The initial (absolute) date of the first
+ * release point, expressed in nanoseconds.  @a task will be delayed
+ * by the first call to rtdm_task_wait_period() until this point is
+ * reached. If @a start_date is zero, the first release point is set
+ * to @a period nanoseconds after the current date.
+
+ * @param[in] period New period in nanoseconds of a cyclic task, zero
+ * for non-cyclic mode.
  *
  * @coretags{task-unrestricted}
+ *
+ * @note Both RTDM tasks in kernel space and Cobalt threads in
+ * user-space are based on Xenomai core threads, which implement this
+ * service. For this reason, enabling periodic timing for a Cobalt
+ * thread via the RTDM interface is possible.
  */
-int rtdm_task_set_period(rtdm_task_t *task, nanosecs_rel_t period);
+int rtdm_task_set_period(rtdm_task_t *task, nanosecs_abs_t start_date,
+			 nanosecs_rel_t period);
 
 /**
  * @brief Wait on next real-time task period
+ *
+ * @param[in] overrun_r Address of a long word receiving the count of
+ * overruns if -ETIMEDOUT is returned, or NULL if the caller don't
+ * need that information.
  *
  * @return 0 on success, otherwise:
  *
@@ -220,7 +239,7 @@ int rtdm_task_set_period(rtdm_task_t *task, nanosecs_rel_t period);
  *
  * @coretags{primary-only, might-switch}
  */
-int rtdm_task_wait_period(void);
+int rtdm_task_wait_period(unsigned long *overruns_r);
 
 /**
  * @brief Activate a blocked real-time task

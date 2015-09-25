@@ -250,7 +250,7 @@ void task_handler(void *arg)
 			break;
 
 		for (;;) {
-			ret = rtdm_task_wait_period();
+			ret = rtdm_task_wait_period(NULL);
 			if (ret && ret != -ETIMEDOUT)
 				goto out;
 
