@@ -1230,7 +1230,8 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * xnthread_wait_period() will delay the thread until the next
  * periodic release point in the processor timeline is reached.
  *
- * @param thread The core thread to make periodic.
+ * @param thread The core thread to make periodic. If NULL, the
+ * current thread is assumed.
  *
  * @param idate The initial (absolute) date of the first release
  * point, expressed in nanoseconds. The affected thread will be
@@ -1260,6 +1261,9 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * returned if @a timeout_mode is not compatible with @a idate, such
  * as XN_RELATIVE with @a idate different from XN_INFINITE.
  *
+ * - -EPERM is returned if @a thread is NULL, but the caller is not a
+ * Xenomai thread.
+ *
  * @coretags{task-unrestricted}
  */
 int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
@@ -1268,6 +1272,12 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 	int ret = 0;
 	spl_t s;
 
+	if (thread == NULL) {
+		thread = xnthread_current();
+		if (thread == NULL)
+			return -EPERM;
+	}
+		
 	xnlock_get_irqsave(&nklock, s);
 
 	if (period == XN_INFINITE) {
