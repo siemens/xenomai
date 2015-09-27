@@ -211,7 +211,7 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  * to @a period nanoseconds after the current date.
 
  * @param[in] period New period in nanoseconds of a cyclic task, zero
- * for non-cyclic mode.
+ * to disable cyclic mode for @a task.
  *
  * @coretags{task-unrestricted}
  *

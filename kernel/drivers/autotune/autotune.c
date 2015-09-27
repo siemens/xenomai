@@ -244,8 +244,8 @@ void task_handler(void *arg)
 		if (ret)
 			break;
 
-		ret = xnthread_set_periodic(&k_tuner->task, k_tuner->start_time,
-					    XN_ABSOLUTE, k_tuner->interval);
+		ret = rtdm_task_set_period(&k_tuner->task, k_tuner->start_time,
+					   k_tuner->interval);
 		if (ret)
 			break;
 
@@ -256,7 +256,7 @@ void task_handler(void *arg)
 
 			now = xnclock_read_raw(&nkclock);
 			if (add_sample(&k_tuner->tuner, now)) {
-				rtdm_task_set_period(&k_tuner->task, 0);
+				rtdm_task_set_period(&k_tuner->task, 0, 0);
 				break;
 			}
 		}
