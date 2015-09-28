@@ -303,6 +303,7 @@ static int register_driver(struct rtdm_driver *drv)
 
 	drv->named.major = MAJOR(rdev);
 	atomic_set(&drv->refcount, 1);
+
 done:
 	drv->nb_statechange.notifier_call = state_change_notifier;
 	drv->nb_statechange.priority = 0;
@@ -320,9 +321,6 @@ fail_cdev:
 static void unregister_driver(struct rtdm_driver *drv)
 {
 	XENO_BUG_ON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
-
-	if (!atomic_dec_and_test(&drv->refcount))
-		return;
 
 	cobalt_remove_notifier_chain(&drv->nb_statechange);
 	
@@ -452,7 +450,8 @@ fail:
 	if (kdev)
 		device_destroy(rtdm_class, rdev);
 
-	unregister_driver(drv);
+	if (atomic_dec_and_test(&drv->refcount))
+		unregister_driver(drv);
 
 	mutex_unlock(&register_lock);
 
