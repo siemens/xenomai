@@ -183,37 +183,44 @@ struct rtnet_ipv4_host_route_priv {
 };
 
 struct rtnet_ipv4_host_route_data {
-    unsigned key;
+    int key;
     char name[IFNAMSIZ];
     struct dest_route dest_host;
 };
 
 struct xnvfile_rev_tag host_route_tag;
 
-static int rtnet_ipv4_host_route_rewind(struct xnvfile_snapshot_iterator *it)
+static void *rtnet_ipv4_host_route_begin(struct xnvfile_snapshot_iterator *it)
 {
     struct rtnet_ipv4_host_route_priv *priv = xnvfile_iterator_priv(it);
-    struct host_route *entry_ptr;
-    unsigned key;
+    struct rtnet_ipv4_host_route_data *data;
+    unsigned routes;
     int err;
 
+    routes = allocated_host_routes;
+    if (!routes)
+	return VFILE_SEQ_EMPTY;
+
+    data = kmalloc(sizeof(*data) * routes, GFP_KERNEL);
+    if (data == NULL)
+	return NULL;
+
     err = rtnet_ipv4_module_lock(NULL);
-    if (err < 0)
-	return err;
+    if (err < 0) {
+	kfree(data);
+	return VFILE_SEQ_EMPTY;
+    }
 
-    for (key = 0; key < HOST_HASH_TBL_SIZE; key++)
-	if ((entry_ptr = host_hash_tbl[key]))
-	    break;
-
-    priv->key = key;
-    priv->entry_ptr = entry_ptr;
-    return allocated_host_routes;
+    priv->key = -1;
+    priv->entry_ptr = NULL;
+    return data;
 }
 
 static void rtnet_ipv4_host_route_end(struct xnvfile_snapshot_iterator *it,
 				    void *buf)
 {
     rtnet_ipv4_module_unlock(NULL);
+    kfree(buf);
 }
 
 static int rtnet_ipv4_host_route_next(struct xnvfile_snapshot_iterator *it,
@@ -271,7 +278,7 @@ static int rtnet_ipv4_host_route_show(struct xnvfile_snapshot_iterator *it,
 }
 
 static struct xnvfile_snapshot_ops rtnet_ipv4_host_route_vfile_ops = {
-    .rewind = rtnet_ipv4_host_route_rewind,
+    .begin = rtnet_ipv4_host_route_begin,
     .end = rtnet_ipv4_host_route_end,
     .next = rtnet_ipv4_host_route_next,
     .show = rtnet_ipv4_host_route_show,
@@ -314,7 +321,7 @@ struct rtnet_ipv4_net_route_priv {
 };
 
 struct rtnet_ipv4_net_route_data {
-    unsigned key;
+    int key;
     u32 dest_net_ip;
     u32 dest_net_mask;
     u32 gw_ip;
@@ -322,30 +329,37 @@ struct rtnet_ipv4_net_route_data {
 
 struct xnvfile_rev_tag net_route_tag;
 
-static int rtnet_ipv4_net_route_rewind(struct xnvfile_snapshot_iterator *it)
+static void *rtnet_ipv4_net_route_begin(struct xnvfile_snapshot_iterator *it)
 {
     struct rtnet_ipv4_net_route_priv *priv = xnvfile_iterator_priv(it);
-    struct net_route *entry_ptr;
-    unsigned key;
+    struct rtnet_ipv4_net_route_data *data;
+    unsigned routes;
     int err;
 
+    routes = allocated_net_routes;
+    if (!routes)
+	return VFILE_SEQ_EMPTY;
+
+    data = kmalloc(sizeof(*data) * routes, GFP_KERNEL);
+    if (data == NULL)
+	return NULL;
+
     err = rtnet_ipv4_module_lock(NULL);
-    if (err < 0)
-	return err;
+    if (err < 0) {
+	kfree(data);
+	return VFILE_SEQ_EMPTY;
+    }
 
-    for (key = 0; key < NET_HASH_TBL_SIZE + 1; key++)
-	if ((entry_ptr = net_hash_tbl[key]))
-	    break;
-
-    priv->key = key;
-    priv->entry_ptr = entry_ptr;
-    return allocated_net_routes;
+    priv->key = -1;
+    priv->entry_ptr = NULL;
+    return data;
 }
 
 static void rtnet_ipv4_net_route_end(struct xnvfile_snapshot_iterator *it,
 				    void *buf)
 {
     rtnet_ipv4_module_unlock(NULL);
+    kfree(buf);
 }
 
 static int rtnet_ipv4_net_route_next(struct xnvfile_snapshot_iterator *it,
@@ -400,7 +414,7 @@ static int rtnet_ipv4_net_route_show(struct xnvfile_snapshot_iterator *it,
 }
 
 static struct xnvfile_snapshot_ops rtnet_ipv4_net_route_vfile_ops = {
-    .rewind = rtnet_ipv4_net_route_rewind,
+    .begin = rtnet_ipv4_net_route_begin,
     .end = rtnet_ipv4_net_route_end,
     .next = rtnet_ipv4_net_route_next,
     .show = rtnet_ipv4_net_route_show,
