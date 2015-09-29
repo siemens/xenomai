@@ -112,7 +112,7 @@ static void alloc_collector(struct rtskb *skb, struct rtsocket *sock)
  * */
 static struct rtskb *add_to_collector(struct rtskb *skb, unsigned int offset, int more_frags)
 {
-    int                 i;
+	int                 i, err;
     rtdm_lockctx_t      context;
     struct ip_collector *p_coll;
     struct iphdr        *iph = skb->nh.iph;
@@ -174,7 +174,15 @@ static struct rtskb *add_to_collector(struct rtskb *skb, unsigned int offset, in
             if (!more_frags) {
                 p_coll->in_use = 0;
 
+		err = rt_socket_reference(p_coll->sock);
+
                 rtdm_lock_put_irqrestore(&p_coll->frags.lock, context);
+
+		if (err < 0) {
+			kfree_rtskb(first_skb);
+			return NULL;
+		}
+
                 return first_skb;
             } else {
                 rtdm_lock_put_irqrestore(&p_coll->frags.lock, context);
@@ -297,11 +305,8 @@ struct rtskb *rt_ip_defrag(struct rtskb *skb, struct rtinet_protocol *ipprot)
             return NULL;
         }
 
-        /* Acquire the rtskb at the expense of the socket's pool */
+	/* Acquire the rtskb, to unlock the device skb pool */
         ret = rtskb_acquire(skb, &sock->skb_pool);
-
-        /* socket is now implicitely locked by the missing rtskb */
-        rt_socket_dereference(sock);
 
         if (ret != 0) {
             /* Drop the rtskb */
@@ -310,6 +315,10 @@ struct rtskb *rt_ip_defrag(struct rtskb *skb, struct rtinet_protocol *ipprot)
             /* Allocates a new collector */
             alloc_collector(skb, sock);
         }
+
+        /* Packet is queued or freed, socket can be released */
+        rt_socket_dereference(sock);
+
         return NULL;
     }
     else

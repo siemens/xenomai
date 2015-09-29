@@ -49,38 +49,36 @@ MODULE_PARM_DESC(socket_rtskbs, "Default number of realtime socket buffers in so
  *  internal socket functions                                           *
  ************************************************************************/
 
-static int rtskb_socket_pool_trylock(void *cookie)
-{
-    return rtdm_fd_lock(cookie) >= 0;
-}
-
-static void rtskb_socket_pool_unlock(void *cookie)
-{
-    rtdm_fd_unlock(cookie);
-}
-
-static const struct rtskb_pool_lock_ops rtskb_socket_pool_ops = {
-    .trylock = rtskb_socket_pool_trylock,
-    .unlock = rtskb_socket_pool_unlock,
-};
-
-int rt_bare_socket_init(struct rtdm_fd *fd,
-			unsigned short protocol,
-			unsigned int priority, unsigned int pool_size)
+int __rt_bare_socket_init(struct rtdm_fd *fd, unsigned short protocol,
+			unsigned int priority, unsigned int pool_size,
+			struct module *module)
 {
     struct rtsocket *sock = rtdm_fd_to_private(fd);
+    int err;
+
+    err = try_module_get(module);
+    if (!err)
+	return -EAFNOSUPPORT;
+
+    err = rtskb_pool_init(&sock->skb_pool, pool_size, NULL, fd);
+    if (err < 0) {
+	module_put(module);
+	return err;
+    }
+
     sock->protocol = protocol;
     sock->priority = priority;
+    sock->owner = module;
 
-    return rtskb_pool_init(&sock->skb_pool,
-			pool_size, &rtskb_socket_pool_ops, fd);
+    return err;
 }
-EXPORT_SYMBOL_GPL(rt_bare_socket_init);
+EXPORT_SYMBOL_GPL(__rt_bare_socket_init);
 
 /***
  *  rt_socket_init - initialises a new socket structure
  */
-int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol)
+int __rt_socket_init(struct rtdm_fd *fd, unsigned short protocol,
+		struct module *module)
 {
     struct rtsocket *sock = rtdm_fd_to_private(fd);
     unsigned int    pool_size;
@@ -95,9 +93,10 @@ int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol)
     rtdm_lock_init(&sock->param_lock);
     rtdm_sem_init(&sock->pending_sem, 0);
 
-    pool_size = rt_bare_socket_init(fd, protocol,
-		RTSKB_PRIO_VALUE(SOCK_DEF_PRIO,
-				RTSKB_DEF_RT_CHANNEL), socket_rtskbs);
+    pool_size = __rt_bare_socket_init(fd, protocol,
+				    RTSKB_PRIO_VALUE(SOCK_DEF_PRIO,
+						    RTSKB_DEF_RT_CHANNEL),
+				    socket_rtskbs, module);
     sock->pool_size = pool_size;
     mutex_init(&sock->pool_nrt_lock);
 
@@ -112,7 +111,7 @@ int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol)
 
     return 0;
 }
-
+EXPORT_SYMBOL_GPL(__rt_socket_init);
 
 
 /***
@@ -133,8 +132,10 @@ void rt_socket_cleanup(struct rtdm_fd *fd)
 	rtskb_pool_release(&sock->skb_pool);
 
     mutex_unlock(&sock->pool_nrt_lock);
-}
 
+    module_put(sock->owner);
+}
+EXPORT_SYMBOL_GPL(rt_socket_cleanup);
 
 
 /***
@@ -217,6 +218,7 @@ int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg)
 
     return ret;
 }
+EXPORT_SYMBOL_GPL(rt_socket_common_ioctl);
 
 
 
@@ -313,6 +315,7 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
     rtdev_dereference(rtdev);
     return ret;
 }
+EXPORT_SYMBOL_GPL(rt_socket_if_ioctl);
 
 
 int rt_socket_select_bind(struct rtdm_fd *fd,
@@ -332,9 +335,4 @@ int rt_socket_select_bind(struct rtdm_fd *fd,
 
     return -EINVAL;
 }
-
 EXPORT_SYMBOL_GPL(rt_socket_select_bind);
-EXPORT_SYMBOL_GPL(rt_socket_init);
-EXPORT_SYMBOL_GPL(rt_socket_cleanup);
-EXPORT_SYMBOL_GPL(rt_socket_common_ioctl);
-EXPORT_SYMBOL_GPL(rt_socket_if_ioctl);

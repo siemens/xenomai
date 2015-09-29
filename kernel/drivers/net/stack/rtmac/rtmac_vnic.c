@@ -231,20 +231,6 @@ static void rtmac_vnic_setup(struct net_device *dev)
     dev->flags           &= ~IFF_MULTICAST;
 }
 
-static int rtmac_vnic_pool_trylock(void *cookie)
-{
-    return 1;
-}
-
-static void rtmac_vnic_pool_unlock(void *cookie)
-{
-}
-
-static const struct rtskb_pool_lock_ops rtmac_vnic_pool_lock_ops = {
-    .trylock = rtmac_vnic_pool_trylock,
-    .unlock = rtmac_vnic_pool_unlock,
-};
-
 int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 {
     int                 res;
@@ -263,8 +249,7 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 
     /* create the rtskb pool */
     if (rtskb_pool_init(&mac_priv->vnic_skb_pool,
-			    vnic_rtskbs, &rtmac_vnic_pool_lock_ops,
-			    NULL) < vnic_rtskbs) {
+			    vnic_rtskbs, NULL, NULL) < vnic_rtskbs) {
 	res = -ENOMEM;
 	goto error;
     }

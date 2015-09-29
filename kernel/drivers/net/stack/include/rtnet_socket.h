@@ -78,6 +78,8 @@ struct rtsocket {
 	    int                  ifindex;
 	} packet;
     } prot;
+
+    struct module *owner;
 };
 
 
@@ -91,7 +93,11 @@ static inline struct rtdm_fd *rt_socket_fd(struct rtsocket *sock)
 #define rt_socket_dereference(sock) \
     rtdm_fd_unlock(rt_socket_fd(sock))
 
-int rt_socket_init(struct rtdm_fd *fd, unsigned short protocol);
+int __rt_socket_init(struct rtdm_fd *fd, unsigned short protocol,
+		struct module *module);
+#define rt_socket_init(fd, proto) \
+    __rt_socket_init(fd, proto, THIS_MODULE)
+
 void rt_socket_cleanup(struct rtdm_fd *fd);
 int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg);
 int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg);
@@ -100,12 +106,16 @@ int rt_socket_select_bind(struct rtdm_fd *fd,
 			  enum rtdm_selecttype type,
 			  unsigned fd_index);
 
-int rt_bare_socket_init(struct rtdm_fd *fd, unsigned short protocol,
-			unsigned int priority, unsigned int pool_size);
+int __rt_bare_socket_init(struct rtdm_fd *fd, unsigned short protocol,
+			unsigned int priority, unsigned int pool_size,
+			struct module *module);
+#define rt_bare_socket_init(fd, proto, prio, pool_sz) \
+    __rt_bare_socket_init(fd, proto, prio, pool_sz, THIS_MODULE)
 
 static inline void rt_bare_socket_cleanup(struct rtsocket *sock)
 {
     rtskb_pool_release(&sock->skb_pool);
+    module_put(sock->owner);
 }
 
 #endif  /* __RTNET_SOCKET_H_ */

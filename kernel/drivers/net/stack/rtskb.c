@@ -295,6 +295,21 @@ void kfree_rtskb(struct rtskb *skb)
 EXPORT_SYMBOL_GPL(kfree_rtskb);
 
 
+static int rtskb_nop_pool_trylock(void *cookie)
+{
+    return 1;
+}
+
+static void rtskb_nop_pool_unlock(void *cookie)
+{
+}
+
+static const struct rtskb_pool_lock_ops rtskb_nop_pool_lock_ops = {
+    .trylock = rtskb_nop_pool_trylock,
+    .unlock = rtskb_nop_pool_unlock,
+};
+
+
 /***
  *  rtskb_pool_init
  *  @pool: pool to be initialized
@@ -316,7 +331,7 @@ unsigned int rtskb_pool_init(struct rtskb_pool *pool,
     if (rtskb_pools > rtskb_pools_max)
 	rtskb_pools_max = rtskb_pools;
 
-    pool->lock_ops = lock_ops;
+    pool->lock_ops = lock_ops ?: &rtskb_nop_pool_lock_ops;
     pool->lock_count = 0;
     pool->lock_cookie = lock_cookie;
 

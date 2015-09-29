@@ -67,6 +67,8 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
             skb = rt_ip_defrag(skb, ipprot);
             if (!skb)
                 return;
+
+	    sock = skb->sk;
         } else {
             /* Get the destination socket */
             if ((sock = ipprot->dest_socket(skb)) == NULL) {
@@ -81,11 +83,8 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
                 return;
             }
 
-            /* Acquire the rtskb at the expense of the protocol pool */
+            /* Acquire the rtskb, to unlock the device skb pool */
             err = rtskb_acquire(skb, &sock->skb_pool);
-
-            /* Socket is now implicitely locked by the rtskb */
-            rt_socket_dereference(sock);
 
             if (err) {
                 kfree_rtskb(skb);
@@ -95,6 +94,9 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
 
         /* Deliver the packet to the next layer */
         ipprot->rcv_handler(skb);
+
+	/* Packet is queued, socket can be released */
+	rt_socket_dereference(sock);
 #if IS_ENABLED(CONFIG_XENO_DRIVERS_NET_ADDON_PROXY)
     } else if (rt_ip_fallback_handler) {
         /* If a fallback handler for IP protocol has been installed,

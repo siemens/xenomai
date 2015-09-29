@@ -48,9 +48,6 @@ static int rt_packet_rcv(struct rtskb *skb, struct rtpacket_type *pt)
     if (unlikely((ifindex != 0) && (ifindex != skb->rtdev->ifindex)))
 	return -EUNATCH;
 
-    if (rt_socket_reference(sock) < 0)
-	return -EUNATCH;
-
 #ifdef CONFIG_XENO_DRIVERS_NET_ETH_P_ALL
     if (pt->type == htons(ETH_P_ALL)) {
 	struct rtskb *clone_skb = rtskb_clone(skb, &sock->skb_pool);
@@ -76,7 +73,6 @@ static int rt_packet_rcv(struct rtskb *skb, struct rtpacket_type *pt)
 	callback_func(rt_socket_fd(sock), callback_arg);
 
   out:
-    rt_socket_dereference(sock);
     return 0;
 }
 
