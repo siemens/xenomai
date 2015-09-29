@@ -242,7 +242,7 @@ static int rtdev_rx_pool_trylock(void *cookie)
 
 static void rtdev_rx_pool_unlock(void *cookie)
 {
-    return rtdev_dereference(cookie);
+    rtdev_dereference(cookie);
 }
 
 static const struct rtskb_pool_lock_ops rtdev_ops = {
