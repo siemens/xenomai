@@ -446,8 +446,7 @@ static struct rt_icmp_control rt_icmp_pointers[NR_ICMP_TYPES+1] =
  */
 struct rtsocket *rt_icmp_dest_socket(struct rtskb *skb)
 {
-    /* Note that the socket's refcount is not used by this protocol.
-     * The socket returned here is static and not part of the global pool. */
+    rt_socket_reference(icmp_socket);
     return icmp_socket;
 }
 
