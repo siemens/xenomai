@@ -5,12 +5,13 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 demo_PROGRAMS = 	\
 	bufp-label	\
 	bufp-readwrite	\
+	can_rtt		\
+	eth_p_all	\
 	iddp-label	\
 	iddp-sendrecv	\
 	xddp-echo	\
 	xddp-label	\
-	xddp-stream	\
-	can_rtt
+	xddp-stream
 
 cppflags = 			\
 	$(XENO_USER_CFLAGS)	\
@@ -32,6 +33,16 @@ bufp_readwrite_SOURCES = bufp-readwrite.c
 bufp_readwrite_CPPFLAGS = $(cppflags)
 bufp_readwrite_LDFLAGS = $(ldflags)
 bufp_readwrite_LDADD = $(ldadd)
+
+can_rtt_SOURCES = can-rtt.c
+can_rtt_CPPFLAGS = $(cppflags)
+can_rtt_LDFLAGS = $(ldflags)
+can_rtt_LDADD = $(ldadd)
+
+eth_p_all_SOURCES = eth_p_all.c
+eth_p_all_CPPFLAGS = $(cppflags)
+eth_p_all_LDFLAGS = $(ldflags)
+eth_p_all_LDADD = $(ldadd)
 
 iddp_label_SOURCES = iddp-label.c
 iddp_label_CPPFLAGS = $(cppflags)
@@ -57,8 +68,3 @@ xddp_stream_SOURCES = xddp-stream.c
 xddp_stream_CPPFLAGS = $(cppflags)
 xddp_stream_LDFLAGS = $(ldflags)
 xddp_stream_LDADD = $(ldadd)
-
-can_rtt_SOURCES = can-rtt.c
-can_rtt_CPPFLAGS = $(cppflags)
-can_rtt_LDFLAGS = $(ldflags)
-can_rtt_LDADD = $(ldadd)
