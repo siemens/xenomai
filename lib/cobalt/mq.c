@@ -42,8 +42,7 @@
 /**
  * @brief Open a message queue
  *
- * This service establishes a connection between the message queue named @a name
- * and the calling context (kernel-space as a whole, or user-space process).
+ * This service opens the message queue named @a name.
  *
  * One of the following values should be set in @a oflags:
  * - O_RDONLY, meaning that the returned queue descriptor may only be used for
@@ -88,8 +87,8 @@
  *   message queue already exists;
  * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the message queue
  *   does not exist;
- * - ENOSPC, allocation of system memory failed, or insufficient memory exists
- *   in the system heap to create the queue, try increasing
+ * - ENOSPC, allocation of system memory failed, or insufficient memory available
+ *   from the system heap to create the queue, try increasing
  *   CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EPERM, attempting to create a message queue from an invalid context;
  * - EINVAL, the @a attr argument is invalid;
@@ -528,16 +527,13 @@ COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
  * blocked in call to mq_receive() or mq_timedreceive(). After the
  * notification, the thread is unregistered.
  *
- * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE, the current
- * thread is unregistered.
+ * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE,
+ * the current thread is unregistered.
  *
  * Only one thread may be registered at a time.
  *
  * If the current thread is not a Cobalt thread (created with
  * pthread_create()), this service fails.
- *
- * Note that signals sent to user-space Cobalt threads will cause
- * them to switch to secondary mode.
  *
  * @param mqd message queue descriptor;
  *

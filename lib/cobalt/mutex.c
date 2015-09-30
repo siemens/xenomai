@@ -77,11 +77,11 @@ void cobalt_default_mutexattr_init(void)
  * @return an error number if:
  * - EINVAL, the mutex attributes object @a attr is invalid or uninitialized;
  * - EBUSY, the mutex @a mx was already initialized;
- * - ENOMEM, insufficient memory exists in the system heap to initialize the
+ * - ENOMEM, insufficient memory available from the system heap to initialize the
  *   mutex, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
- * - EAGAIN, insufficient memory exists in the semaphore heap to initialize the
+ * - EAGAIN, insufficient memory available to initialize the
  *   mutex, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared
- *   mutex, or CONFG_XENO_OPT_PRIVATE_HEAPSZ for a process-private mutex.
+ *   mutex, or CONFIG_XENO_OPT_PRIVATE_HEAPSZ for a process-private mutex.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
@@ -591,9 +591,9 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t * attr);
  * This service stores, at the address @a type, the value of the @a type
  * attribute in the mutex attributes object @a attr.
  *
- * See pthread_mutex_lock() and pthread_mutex_unlock() documentations for a
- * description of the values of the @a type attribute and their effect on a
- * mutex.
+ * See pthread_mutex_lock() and pthread_mutex_unlock() for a
+ * description of the values of the @a type attribute and their effect
+ * on a mutex.
  *
  * @param attr an initialized mutex attributes object,
  *
@@ -618,13 +618,13 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type);
  * This service set the @a type attribute of the mutex attributes object
  * @a attr.
  *
- * See pthread_mutex_lock() and pthread_mutex_unlock() documentations for a
- * description of the values of the @a type attribute and their effect on a
- * mutex.
+ * See pthread_mutex_lock() and pthread_mutex_unlock() for a
+ * description of the values of the @a type attribute and their effect
+ * on a mutex.
  *
  * The @a PTHREAD_MUTEX_DEFAULT default @a type is the same as @a
- * PTHREAD_MUTEX_NORMAL. Note that using a Xenomai POSIX skin recursive mutex
- * with a Xenomai POSIX skin condition variable is safe (see pthread_cond_wait()
+ * PTHREAD_MUTEX_NORMAL. Note that using a recursive Cobalt mutex with
+ * a Cobalt condition variable is safe (see pthread_cond_wait()
  * documentation).
  *
  * @param attr an initialized mutex attributes object,

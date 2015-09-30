@@ -88,10 +88,9 @@ void cobalt_default_condattr_init(void)
  * @fn int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
  * @brief Initialize a condition variable
  *
- * This service initializes the condition variable @a cond, using the condition
- * variable attributes object @a attr. If @a attr is @a NULL or this service is
- * called from user-space, default attributes are used (see
- * pthread_condattr_init()).
+ * This service initializes the condition variable @a cond, using the
+ * condition variable attributes object @a attr. If @a attr is @a
+ * NULL, default attributes are used (see pthread_condattr_init()).
  *
  * @param cond the condition variable to be initialized;
  *
@@ -102,7 +101,7 @@ void cobalt_default_condattr_init(void)
  * - EINVAL, the condition variable attributes object @a attr is invalid or
  *   uninitialized;
  * - EBUSY, the condition variable @a cond was already initialized;
- * - ENOMEM, insufficient memory exists in the system heap to initialize the
+ * - ENOMEM, insufficient memory available from the system heap to initialize the
  *   condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
  *
  * @see
@@ -223,10 +222,10 @@ static int __attribute__((cold)) cobalt_cond_autoinit(pthread_cond_t *cond)
  * calls this service specifying @a cnd as a condition variable but another
  * mutex than @a mx, this service returns immediately with the EINVAL status.
  *
- * This service is a cancellation point for Xenomai POSIX skin threads
- * (created with the pthread_create() service). When such a thread is cancelled
- * while blocked in a call to this service, the mutex @a mx is re-acquired
- * before the cancellation cleanup handlers are called.
+ * This service is a cancellation point for Cobalt threads (created
+ * with the pthread_create() service). When such a thread is cancelled
+ * while blocked in a call to this service, the mutex @a mx is
+ * re-acquired before the cancellation cleanup handlers are called.
  *
  * @param cond the condition variable to wait for;
  *
@@ -571,7 +570,7 @@ int pthread_condattr_destroy(pthread_condattr_t * attr);
  * This service stores, at the address @a clk_id, the value of the @a clock
  * attribute in the condition variable attributes object @a attr.
  *
- * See pthread_cond_timedwait() documentation for a description of the effect of
+ * See pthread_cond_timedwait() for a description of the effect of
  * this attribute on a condition variable. The clock ID returned is @a
  * CLOCK_REALTIME or @a CLOCK_MONOTONIC.
  *
@@ -598,8 +597,8 @@ int pthread_condattr_getclock(const pthread_condattr_t * attr,
  * This service set the @a clock attribute of the condition variable attributes
  * object @a attr.
  *
- * See pthread_cond_timedwait() documentation for a description of the effect
- * of this attribute on a condition variable.
+ * See pthread_cond_timedwait() for a description of the effect of
+ * this attribute on a condition variable.
  *
  * @param attr an initialized condition variable attributes object,
  *

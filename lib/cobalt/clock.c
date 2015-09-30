@@ -52,7 +52,7 @@
  *
  * CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time
  * values from a hardware timer which is not adjusted by NTP. This is
- * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
+ * strictly equivalent to CLOCK_MONOTONIC with Cobalt, which is not
  * NTP adjusted either.
  *
  * In addition, external clocks can be dynamically registered using
@@ -160,7 +160,7 @@ static int __do_clock_host_realtime(struct timespec *ts)
  *   precision independent from the system clock tick duration.
  * - CLOCK_HOST_REALTIME, the clock value as seen by the host, typically
  *   Linux. Resolution and precision depend on the host, but it is guaranteed
- *   that both, host and Xenomai, see the same information.
+ *   that both, host and Cobalt, see the same information.
  *
  * @param clock_id clock identifier, either CLOCK_REALTIME, CLOCK_MONOTONIC,
  *        or CLOCK_HOST_REALTIME;

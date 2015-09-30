@@ -33,7 +33,7 @@
  * @ingroup cobalt_api
  * @defgroup cobalt_api_thread Thread management
  *
- * Cobalt/POSIX thread management services
+ * Cobalt (POSIX) thread management services
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09">
@@ -216,8 +216,8 @@ int pthread_create_ex(pthread_t *ptid_r,
 	pthread_attr_getpersonality_ex(attr_ex, &iargs.personality);
 
 	/*
-	 * First start a native POSIX thread, then mate a Xenomai
-	 * shadow to it.
+	 * First start a regular POSIX thread, then mate a Cobalt
+	 * thread to it.
 	 */
 	iargs.start = start;
 	iargs.arg = arg;
@@ -260,16 +260,11 @@ out:
  * @fn int pthread_create(pthread_t *ptid_r, const pthread_attr_t *attr, void *(*start)(void *), void *arg)
  * @brief Create a new thread
  *
- * This service creates a thread managed by the Xenomai nucleus in
- * dual kernel configuration.
+ * This service creates a thread managed by the Cobalt core in a dual
+ * kernel configuration.
  *
- * The new thread signal mask is inherited from the current thread, if it was
- * also created with pthread_create(), otherwise the new thread signal mask is
- * empty.
- *
- * Other attributes of the new thread depend on the @a attr
- * argument. If @a attr is NULL, default values for these attributes
- * are used.
+ * Attributes of the new thread depend on the @a attr argument. If @a
+ * attr is NULL, default values for these attributes are used.
  *
  * Returning from the @a start routine has the same effect as calling
  * pthread_exit() with the return value.
@@ -286,7 +281,7 @@ out:
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr is invalid;
- * - EAGAIN, insufficient memory exists in the system heap to create a new
+ * - EAGAIN, insufficient memory available from the system heap to create a new
  *   thread, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EINVAL, thread attribute @a inheritsched is set to PTHREAD_INHERIT_SCHED
  *   and the calling thread does not belong to the Cobalt interface;
@@ -297,24 +292,23 @@ out:
  *
  * @note
  *
- * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGSHADOW signal. If
- * you had installed a handler before that, it will be automatically
- * called by Xenomai for SIGSHADOW signals that it has not sent.
+ * When creating a Cobalt thread for the first time, libcobalt
+ * installs an internal handler for the SIGSHADOW signal. If you had
+ * previously installed a handler for such signal before that point,
+ * such handler will be exclusively called for any SIGSHADOW
+ * occurrence Xenomai did not send.
  *
- * If, however, you install a signal handler for SIGSHADOW after
- * creating or shadowing the first Xenomai thread, you have to
- * explicitly call the function cobalt_sigshadow_handler at the beginning
- * of your signal handler, using its return to know if the signal was
- * in fact an internal signal of Xenomai (in which case it returns 1),
- * or if you should handle the signal (in which case it returns
- * 0). cobalt_sigshadow_handler prototype is:
+ * If, however, an application-defined handler for SIGSHADOW is
+ * installed afterwards, overriding the libcobalt handler, the new
+ * handler is required to call cobalt_sigshadow_handler() on
+ * entry. This routine returns a non-zero value for every occurrence
+ * of SIGSHADOW issued by the Cobalt core. If zero instead, the
+ * application-defined handler should process the signal.
  *
- * <b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b>
+ * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
  *
- * Which means that you should register your handler with sigaction,
- * using the SA_SIGINFO flag, and pass all the arguments you received
- * to cobalt_sigshadow_handler.
+ * You should register your handler with sigaction(2), setting the
+ * SA_SIGINFO flag.
  */
 COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
 				  const pthread_attr_t *attr,
@@ -395,11 +389,11 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  *   blocking call instead (see PTHREAD_WARNSW notifications).
  *
  * - PTHREAD_CONFORMING can be passed in @a setmask to switch the
- *   current user-space task to its preferred runtime mode. The only
+ *   current Cobalt thread to its preferred runtime mode. The only
  *   meaningful use of this switch is to force a real-time thread back
  *   to primary mode eagerly. Other usages have no effect.
  *
- * This service is a non-portable extension of the POSIX interface.
+ * This service is a non-portable extension of the Cobalt interface.
  *
  * @param clrmask set of bits to be cleared.
  *
@@ -417,9 +411,9 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
  *
- * @caution Issuing PTHREAD_CONFORMING is most likely useless or even
+ * @attention Issuing PTHREAD_CONFORMING is most likely useless or even
  * introduces pure overhead in regular applications, since the Cobalt
- * kernel performs the necessary mode switches, only when required.
+ * core performs the necessary mode switches, only when required.
  */
 int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
@@ -433,7 +427,7 @@ int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
  * This service set to @a name, the name of @a thread. This name is used for
  * displaying information in /proc/xenomai/sched.
  *
- * This service is a non-portable extension of the POSIX interface.
+ * This service is a non-portable extension of the Cobalt interface.
  *
  * @param thread target thread;
  *
@@ -452,9 +446,9 @@ COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
 /**
  * Send a signal to a thread.
  *
- * This service send the signal @a sig to the Xenomai POSIX skin thread @a
- * thread (created with pthread_create()). If @a sig is zero, this service check
- * for existence of the thread @a thread, but no signal is sent.
+ * This service send the signal @a sig to the Cobalt thread @a thread
+ * (created with pthread_create()). If @a sig is zero, this service
+ * check for existence of the thread @a thread, but no signal is sent.
  *
  * @param thread thread identifier;
  *
@@ -485,21 +479,18 @@ COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 /**
  * Wait for termination of a specified thread.
  *
- * If the thread @a thread is running and joinable, this service blocks the
- * calling thread until the thread @a thread terminates or detaches. In this
- * case, the calling context must be a blockable context (i.e. a Xenomai thread
- * without the scheduler locked) or the root thread (i.e. a module initilization
- * or cleanup routine). When @a thread terminates, the calling thread is
- * unblocked and its return value is stored at* the address @a value_ptr.
+ * If @a thread is running and joinable, this service blocks the
+ * caller until @a thread terminates or detaches.  When @a thread
+ * terminates, the caller is unblocked and its return value is stored
+ * at the address @a value_ptr.
  *
- * If, on the other hand, the thread @a thread has already finished execution,
- * its return value is stored at the address @a value_ptr and this service
- * returns immediately. In this case, this service may be called from any
- * context.
+ * On the other hand, if @a thread has already finished execution, its
+ * return value collected earlier is stored at the address @a
+ * value_ptr and this service returns immediately.
  *
- * This service is a cancelation point for POSIX skin threads: if the calling
- * thread is canceled while blocked in a call to this service, the cancelation
- * request is honored and @a thread remains joinable.
+ * This service is a cancelation point for Cobalt threads: if the
+ * calling thread is canceled while blocked in a call to this service,
+ * the cancelation request is honored and @a thread remains joinable.
  *
  * Multiple simultaneous calls to pthread_join() specifying the same running
  * target thread block all the callers until the target thread terminates.
@@ -540,40 +531,36 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
  * @ingroup cobalt_api
  * @defgroup cobalt_api_sched Scheduling management
  *
- * Cobalt/POSIX scheduling management services
+ * Cobalt scheduling management services
  * @{
  */
 
 /**
  * Set the scheduling policy and parameters of the specified thread.
  *
- * This service set the scheduling policy of the Xenomai POSIX skin thread @a
- * tid to the value @a  pol, and its scheduling parameters (i.e. its priority)
- * to the value pointed to by @a par.
+ * This service set the scheduling policy of the Cobalt thread
+ * identified by @a pid to the value @a policy, and its scheduling
+ * parameters (i.e. its priority) to the value pointed to by @a param.
  *
- * When used in user-space, passing the current thread ID as @a tid argument,
- * this service turns the current thread into a Xenomai POSIX skin thread. If @a
- * tid is neither the identifier of the current thread nor the identifier of a
- * Xenomai POSIX skin thread this service falls back to the regular
- * pthread_setschedparam() service, hereby causing the current thread to switch
- * to secondary mode if it is Xenomai thread.
+ * If pthread_self() is passed, this service turns the current thread
+ * into a Cobalt thread. If @a thread is not the identifier of a
+ * Cobalt thread, this service falls back to the regular
+ * pthread_setschedparam() service.
  *
- * @param thread target thread;
+ * @param thread target Cobalt thread;
  *
- * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
- * SCHED_SPORADIC, SCHED_TP or SCHED_OTHER;
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR, or
+ * SCHED_OTHER;
  *
- * @param param scheduling parameters address.
+ * @param param address of scheduling parameters.
  *
  * @return 0 on success;
  * @return an error number if:
- * - ESRCH, @a tid is invalid;
- * - EINVAL, @a pol or @a par->sched_priority is invalid;
- * - EAGAIN, in user-space, insufficient memory exists in the system heap,
+ * - ESRCH, @a pid is invalid;
+ * - EINVAL, @a policy or @a param->sched_priority is invalid;
+ * - EAGAIN, insufficient memory available from the system heap,
  *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
- * - EFAULT, in user-space, @a par is an invalid address;
- * - EPERM, in user-space, the calling process does not have superuser
- *   permissions.
+ * - EFAULT, @a param is an invalid address;
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
@@ -581,24 +568,7 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
  *
  * @note
  *
- * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGSHADOW signal. If you had
- * installed a handler before that, it will be automatically called by Xenomai
- * for SIGSHADOW signals that it has not sent.
- *
- * If, however, you install a signal handler for SIGSHADOW after creating
- * or shadowing the first Xenomai thread, you have to explicitly call the
- * function xeno_sigwinch_handler at the beginning of your signal handler,
- * using its return to know if the signal was in fact an internal signal of
- * Xenomai (in which case it returns 1), or if you should handle the signal (in
- * which case it returns 0). xeno_sigwinch_handler prototype is:
- *
- * <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b>
- *
- * Which means that you should register your handler with sigaction, using the
- * SA_SIGINFO flag, and pass all the arguments you received to
- * xeno_sigwinch_handler.
- *
+ * See pthread_create(), pthread_setschedparam_ex().
  */
 COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
 					 int policy, const struct sched_param *param))
@@ -619,15 +589,14 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
  * Set extended scheduling policy of thread
  *
  * This service is an extended version of the regular
- * pthread_setschedparam() service, which supports Xenomai-specific or
- * additional scheduling policies, not available with the host Linux
- * environment.
+ * pthread_setschedparam() service, which supports Cobalt-specific
+ * scheduling policies, not available with the host Linux environment.
  *
- * This service set the scheduling policy of the Xenomai thread @a
+ * This service set the scheduling policy of the Cobalt thread @a
  * thread to the value @a policy, and its scheduling parameters
  * (e.g. its priority) to the value pointed to by @a param_ex.
  *
- * If @a thread does not match the identifier of a Xenomai thread, this
+ * If @a thread does not match the identifier of a Cobalt thread, this
  * action falls back to the regular pthread_setschedparam() service.
  *
  * @param thread target Cobalt thread;
@@ -649,10 +618,10 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
  * @return an error number if:
  * - ESRCH, @a thread is invalid;
  * - EINVAL, @a policy or @a param_ex->sched_priority is invalid;
- * - EAGAIN, in user-space, insufficient memory exists in the system heap,
+ * - EAGAIN, insufficient memory available from the system heap,
  *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
- * - EFAULT, in user-space, @a param_ex is an invalid address;
- * - EPERM, in user-space, the calling process does not have superuser
+ * - EFAULT, @a param_ex is an invalid address;
+ * - EPERM, the calling process does not have superuser
  *   permissions.
  *
  * @see
@@ -661,24 +630,7 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
  *
  * @note
  *
- * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGSHADOW signal. If
- * you had installed a handler before that, it will be automatically
- * called by Xenomai for SIGSHADOW signals that it has not sent.
- *
- * If, however, you install a signal handler for SIGSHADOW after
- * creating or shadowing the first Xenomai thread, you have to
- * explicitly call the function cobalt_sigshadow_handler at the
- * beginning of your signal handler, using its return to know if the
- * signal was in fact an internal signal of Xenomai (in which case it
- * returns 1), or if you should handle the signal (in which case it
- * returns 0). cobalt_sigshadow_handler prototype is:
- *
- * <b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b>
- *
- * Which means that you should register your handler with sigaction,
- * using the SA_SIGINFO flag, and pass all the arguments you received
- * to cobalt_sigshadow_handler.
+ * See pthread_create(), pthread_setschedparam().
  *
  * pthread_setschedparam_ex() may switch the caller to secondary mode.
  */
@@ -714,11 +666,11 @@ int pthread_setschedparam_ex(pthread_t thread,
 /**
  * Get the scheduling policy and parameters of the specified thread.
  *
- * This service returns, at the addresses @a pol and @a par, the current
- * scheduling policy and scheduling parameters (i.e. priority) of the Xenomai
- * POSIX skin thread @a tid. If this service is called from user-space and @a
- * tid is not the identifier of a Xenomai POSIX skin thread, this service
- * fallback to Linux regular pthread_getschedparam service.
+ * This service returns, at the addresses @a policy and @a par, the
+ * current scheduling policy and scheduling parameters (i.e. priority)
+ * of the Cobalt thread @a tid. If @a thread is not the identifier of
+ * a Cobalt thread, this service fallback to the regular POSIX
+ * pthread_getschedparam() service.
  *
  * @param thread target thread;
  *
@@ -758,8 +710,8 @@ COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
  *
  * This service is an extended version of the regular
  * pthread_getschedparam() service, which also supports
- * Xenomai-specific or additional POSIX scheduling policies, not
- * available with the host Linux environment.
+ * Cobalt-specific policies, not available with the host Linux
+ * environment.
  *
  * @param thread target thread;
  *

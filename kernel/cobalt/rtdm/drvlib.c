@@ -226,7 +226,7 @@ int rtdm_task_set_period(rtdm_task_t *task, nanosecs_abs_t start_date,
 /**
  * @brief Wait on next real-time task period
  *
- * @param[in] overrun_r Address of a long word receiving the count of
+ * @param[in] overruns_r Address of a long word receiving the count of
  * overruns if -ETIMEDOUT is returned, or NULL if the caller don't
  * need that information.
  *

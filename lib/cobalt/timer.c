@@ -126,8 +126,7 @@ COBALT_IMPL(int, timer_delete, (timer_t timerid))
  * started. If the member @a it_interval is not zero, the timer is
  * periodic. The current thread must be a Cobalt thread (created with
  * pthread_create()) and will be notified via signal of timer
- * expirations. Note that these notifications will cause user-space
- * threads to switch to secondary mode.
+ * expirations.
  *
  * When starting the timer, if @a flags is TIMER_ABSTIME, the expiration value
  * is interpreted as an absolute date of the clock passed to the timer_create()

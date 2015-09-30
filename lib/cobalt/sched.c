@@ -174,16 +174,15 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
 /**
  * Set the scheduling policy and parameters of the specified process.
  *
- * This service set the scheduling policy of the Xenomai process
- * identified by @a pid to the value @a pol, and its scheduling
- * parameters (i.e. its priority) to the value pointed to by @a par.
+ * This service set the scheduling policy of the Cobalt process
+ * identified by @a pid to the value @a policy, and its scheduling
+ * parameters (i.e. its priority) to the value pointed to by @a param.
  *
  * If the current Linux thread ID is passed (see gettid(2)), this
- * service turns the current thread into a Xenomai thread. If @a pid
- * is neither the identifier of the current thread nor the identifier
- * of an existing Xenomai thread, this service falls back to the
- * regular sched_setscheduler() service, causing a transition to
- * secondary mode if the caller is a Xenomai thread.
+ * service turns the current regular POSIX thread into a Cobalt
+ * thread. If @a pid is neither the identifier of the current thread
+ * nor the identifier of an existing Cobalt thread, this service falls
+ * back to the regular sched_setscheduler() service.
  *
  * @param pid target process/thread;
  *
@@ -195,8 +194,10 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
  * @return 0 on success;
  * @return an error number if:
  * - ESRCH, @a pid is invalid;
- * - EINVAL, @a pol or @a par->sched_priority is invalid;
- * - EFAULT, @a par is an invalid address;
+ * - EINVAL, @a policy or @a param->sched_priority is invalid;
+ * - EAGAIN, insufficient memory available from the system heap,
+ *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EFAULT, @a param is an invalid address;
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_setscheduler.html">
@@ -204,23 +205,7 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
  *
  * @note
  *
- * When creating or shadowing a Xenomai thread for the first time,
- * libcobalt installs an internal handler for the SIGSHADOW signal. If
- * you had previously installed a handler for such signal before that
- * point, such handler will be exclusively called for any SIGSHADOW
- * occurrence Xenomai did not send.
- *
- * If, however, an application-defined handler for SIGSHADOW is
- * installed afterwards, overriding the libcobalt handler, the new
- * handler is required to call cobalt_sigshadow_handler() on
- * entry. This routine returns a non-zero value for every occurrence
- * of SIGSHADOW issued by the Cobalt core. If zero instead, the
- * application-defined handler should process the signal.
- *
- * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
- *
- * You should register your handler with sigaction(2), setting the
- * SA_SIGINFO flag.
+ * See sched_setscheduler_ex().
  */
 COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
 				      const struct sched_param *param))
@@ -244,14 +229,15 @@ COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
  * Set extended scheduling policy of a process
  *
  * This service is an extended version of the sched_setscheduler()
- * service, which supports Xenomai-specific and/or additional
+ * service, which supports Cobalt-specific and/or additional
  * scheduling policies, not available with the host Linux environment.
- * It sets the scheduling policy of the Xenomai process/thread
- * identified by @a pid to the value @a pol, and the scheduling
+ * It sets the scheduling policy of the Cobalt process/thread
+ * identified by @a pid to the value @a policy, and the scheduling
  * parameters (e.g. its priority) to the value pointed to by @a par.
  *
  * If the current Linux thread ID or zero is passed (see gettid(2)),
- * this service may turn the current thread into a Xenomai thread.
+ * this service may turn the current regular POSIX thread into a
+ * Cobalt thread.
  *
  * @param pid target process/thread. If zero, the current thread is
  * assumed.
@@ -260,7 +246,7 @@ COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
  * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP, SCHED_QUOTA or
  * SCHED_NORMAL;
  *
- * @param param_ex scheduling parameters address. As a special
+ * @param param_ex address of scheduling parameters. As a special
  * exception, a negative sched_priority value is interpreted as if
  * SCHED_WEAK was given in @a policy, using the absolute value of this
  * parameter as the weak priority level.
@@ -274,27 +260,13 @@ COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
  * - ESRCH, @a pid is not found;
  * - EINVAL, @a pid is negative, @a param_ex is NULL, any of @a policy or
  *   @a param_ex->sched_priority is invalid;
+ * - EAGAIN, insufficient memory available from the system heap,
+ *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EFAULT, @a param_ex is an invalid address;
  *
  * @note
  *
- * When creating or shadowing a Xenomai thread for the first time,
- * libcobalt installs an internal handler for the SIGSHADOW signal. If
- * you had previously installed a handler for such signal before that
- * point, such handler will be exclusively called for any SIGSHADOW
- * occurrence Xenomai did not send.
- *
- * If, however, an application-defined handler for SIGSHADOW is
- * installed afterwards, overriding the libcobalt handler, the new
- * handler is required to call cobalt_sigshadow_handler() on
- * entry. This routine returns a non-zero value for every occurrence
- * of SIGSHADOW issued by the Cobalt core. If zero instead, the
- * application-defined handler should process the signal.
- *
- * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
- *
- * You should register your handler with sigaction(2), setting the
- * SA_SIGINFO flag.
+ * See sched_setscheduler().
  *
  * sched_setscheduler_ex() may switch the caller to secondary mode.
  */
@@ -331,10 +303,10 @@ int sched_setscheduler_ex(pid_t pid,
 /**
  * Get the scheduling policy of the specified process.
  *
- * This service retrieves the scheduling policy of the Xenomai process
+ * This service retrieves the scheduling policy of the Cobalt process
  * identified by @a pid.
  *
- * If @a pid does not identify an existing Xenomai thread/process, this
+ * If @a pid does not identify an existing Cobalt thread/process, this
  * service falls back to the regular sched_getscheduler() service.
  *
  * @param pid target process/thread;
@@ -376,9 +348,9 @@ COBALT_IMPL(int, sched_getscheduler, (pid_t pid))
  * Get extended scheduling policy of a process
  *
  * This service is an extended version of the sched_getscheduler()
- * service, which supports Xenomai-specific and/or additional
+ * service, which supports Cobalt-specific and/or additional
  * scheduling policies, not available with the host Linux environment.
- * It retrieves the scheduling policy of the Xenomai process/thread
+ * It retrieves the scheduling policy of the Cobalt process/thread
  * identified by @a pid, and the associated scheduling parameters
  * (e.g. the priority).
  *
@@ -476,7 +448,7 @@ int sched_get_priority_max_ex(int policy)
  * - @a sched_tp_stop disables the temporal scheduling on @a cpu.  The
  * current TP schedule is not uninstalled though, and may be
  * re-started later by a @a sched_tp_start request.
- * @caution As a consequence of this request, threads assigned to the
+ * @attention As a consequence of this request, threads assigned to the
  * un-scheduled partitions may be starved from CPU time.
  *
  * - for a @a sched_tp_install operation, config.tp.nr_windows

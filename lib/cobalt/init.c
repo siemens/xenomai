@@ -203,12 +203,12 @@ int cobalt_init(void)
 	}
 
 	/*
-	 * Switch the main thread to a Xenomai shadow.
-	 * __cobalt_main_prio might have been overriden by
-	 * some compilation unit which has been linked in, to force
-	 * the scheduling parameters. Otherwise, the current policy
-	 * and priority are reused, for declaring the thread to the
-	 * Xenomai scheduler.
+	 * Turn the main thread into a Cobalt thread.
+	 * __cobalt_main_prio might have been overriden by some
+	 * compilation unit which has been linked in, to force the
+	 * scheduling parameters. Otherwise, the current policy and
+	 * priority are reused, for declaring the thread to the
+	 * Cobalt scheduler.
 	 *
 	 * SCHED_FIFO is assumed for __cobalt_main_prio > 0.
 	 */

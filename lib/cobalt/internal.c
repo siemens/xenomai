@@ -93,8 +93,8 @@ int cobalt_thread_join(pthread_t thread)
 	 * -EBUSY denotes a multiple join for several threads in
 	 * parallel to the same target.
 	 *
-	 * -EPERM may be received because the current context is not a
-	 * Xenomai thread.
+	 * -EPERM may be received because the caller is not a
+	 * Cobalt thread.
 	 *
 	 * -EINVAL is received in case the target is not a joinable
 	 * thread (i.e. detached).
@@ -186,7 +186,7 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 	/*
 	 * Assumptions on entry:
 	 *
-	 * - this is a Xenomai shadow (caller checked this).
+	 * - this is a Cobalt thread (caller checked this).
 	 * - no recursive entry/locking.
 	 */
 

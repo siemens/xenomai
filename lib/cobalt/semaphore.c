@@ -72,8 +72,9 @@ struct cobalt_sem_state *sem_get_state(struct cobalt_sem_shadow *shadow)
  * @retval 0 on success,
  * @retval -1 with @a errno set if:
  * - EBUSY, the semaphore @a sm was already initialized;
- * - ENOSPC, insufficient memory exists in the system heap to initialize the
- *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EAGAIN, insufficient memory available to initialize the
+ *   semaphore, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared
+ *   semaphore, or CONFIG_XENO_OPT_PRIVATE_HEAPSZ for a process-private semaphore.
  * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
  *
  * @see
@@ -427,8 +428,7 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
  * @fn int sem_open(const char *name, int oflags, mode_t mode, unsigned int value)
  * @brief Open a named semaphore
  *
- * This service establishes a connection between the semaphore named @a name and
- * the calling context (kernel-space as a whole, or user-space process).
+ * This opens the semaphore named @a name.
  *
  * If no semaphore named @a name exists and @a oflags has the @a O_CREAT bit
  * set, the semaphore is created by this function, using two more arguments:
@@ -443,9 +443,8 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
  * meaning. However, for portability, using a name which starts with a slash and
  * contains no other slash is recommended.
  *
- * If sem_open() is called from the same context (kernel-space as a whole, or
- * user-space process) several times with the same value of @a name, the same
- * address is returned.
+ * If sem_open() is called from the same process several times for the
+ * same @a name, the same address is returned.
  *
  * @param name the name of the semaphore to be created;
  *
@@ -459,7 +458,7 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
  * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the named semaphore
  *   does not exist;
  * - ENOMEM, not enough memory to create the semaphore. A usual
- *   suspect is a shortage in the Cobalt system heap, which may be
+ *   suspect is a shortage from system heap memory, which may be
  *   fixed by increasing CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
  *

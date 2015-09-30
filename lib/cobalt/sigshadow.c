@@ -74,7 +74,7 @@ static void sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 	if (cobalt_sigshadow_handler(sig, si, ctxt))
 		return;
 
-	/* Not a signal sent by the Xenomai nucleus */
+	/* Not a signal sent by the Cobalt core */
 	if (((sa->sa_flags & SA_SIGINFO) == 0 && sa->sa_handler == NULL)
 	    || ((sa->sa_flags & SA_SIGINFO) && sa->sa_sigaction == NULL))
 		return;
