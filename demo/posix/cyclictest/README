@@ -1,0 +1,5 @@
+
+This is the original cyclictest program from the PREEMPT-RT test
+suite as of version 0.92.
+
+See git://git.kernel.org/pub/scm/linux/kernel/git/clrkwllms/rt-tests.git

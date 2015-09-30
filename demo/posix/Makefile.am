@@ -1,6 +1,8 @@
 
+SUBDIRS = cyclictest
+
 if XENO_COBALT
-SUBDIRS = cobalt
+SUBDIRS += cobalt
 endif
 
-DIST_SUBDIRS = cobalt
+DIST_SUBDIRS = cyclictest cobalt

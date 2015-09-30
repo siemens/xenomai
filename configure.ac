@@ -904,6 +904,7 @@ AC_CONFIG_FILES([ \
 	utils/net/Makefile \
 	demo/Makefile \
 	demo/posix/Makefile \
+	demo/posix/cyclictest/Makefile \
 	demo/posix/cobalt/Makefile \
 	demo/alchemy/Makefile \
 	demo/alchemy/cobalt/Makefile \
