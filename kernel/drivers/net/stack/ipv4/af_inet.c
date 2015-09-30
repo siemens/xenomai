@@ -342,6 +342,8 @@ static int __init rt_ipv4_proto_init(void)
 
 static void __exit rt_ipv4_proto_release(void)
 {
+    rt_ip_release();
+
     rtdev_del_event_hook(&rtdev_hook);
     rtnet_unregister_ioctls(&ipv4_ioctls);
     rt_ip_routing_release();
@@ -355,7 +357,6 @@ static void __exit rt_ipv4_proto_release(void)
 
     /* Network-Layer */
     rt_arp_release();
-    rt_ip_release();
 }
 
 
