@@ -85,7 +85,7 @@ static bool rt_packet_trylock(struct rtpacket_type *pt)
     if (rtdm_fd_lock(fd) < 0)
 	return false;
 
-    return rtdev_lock_pack(pt);
+    return true;
 }
 
 static void rt_packet_unlock(struct rtpacket_type *pt)
@@ -93,7 +93,7 @@ static void rt_packet_unlock(struct rtpacket_type *pt)
     struct rtsocket *sock   = container_of(pt, struct rtsocket,
 					   prot.packet.packet_type);
     struct rtdm_fd *fd = rtdm_private_to_fd(sock);
-    rtdev_unlock_pack(pt);
+
     rtdm_fd_unlock(fd);
 }
 
@@ -119,10 +119,8 @@ static int rt_packet_bind(struct rtsocket *sock, const struct sockaddr *addr,
     rtdm_lock_get_irqsave(&sock->param_lock, context);
 
     /* release existing binding */
-    if ((pt->type != 0) && ((ret = rtdev_remove_pack(pt)) < 0)) {
-	rtdm_lock_put_irqrestore(&sock->param_lock, context);
-	return ret;
-    }
+    if (pt->type != 0)
+	    rtdev_remove_pack(pt);
 
     pt->type = new_type;
     sock->prot.packet.ifindex = sll->sll_ifindex;

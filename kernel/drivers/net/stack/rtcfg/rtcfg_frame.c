@@ -572,11 +572,7 @@ void rtcfg_cleanup_frames(void)
     struct rtskb *rtskb;
 
 
-    while (rtdev_remove_pack(&rtcfg_packet_type) == -EAGAIN) {
-	RTCFG_DEBUG(3, "RTcfg: waiting for protocol unregistration\n");
-	set_current_state(TASK_UNINTERRUPTIBLE);
-	schedule_timeout(1*HZ); /* wait a second */
-    }
+    rtdev_remove_pack(&rtcfg_packet_type);
 
     rtdm_event_destroy(&rx_event);
     rtdm_task_join_nrt(&rx_task, 100);

@@ -275,10 +275,6 @@ void __init rt_ip_init(void)
  */
 void rt_ip_release(void)
 {
-    while (rtdev_remove_pack(&ip_packet_type) == -EAGAIN) {
-	printk("RTnet IP: waiting for protocol unregistration\n");
-	set_current_state(TASK_UNINTERRUPTIBLE);
-	schedule_timeout(1*HZ); /* wait a second */
-    }
+    rtdev_remove_pack(&ip_packet_type);
     rt_ip_fragment_cleanup();
 }

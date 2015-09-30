@@ -216,9 +216,5 @@ void __init rt_arp_init(void)
  */
 void rt_arp_release(void)
 {
-    while (rtdev_remove_pack(&arp_packet_type) == -EAGAIN) {
-	printk("RTnet ARP: waiting for protocol unregistration\n");
-	set_current_state(TASK_UNINTERRUPTIBLE);
-	schedule_timeout(1*HZ); /* wait a second */
-    }
+    rtdev_remove_pack(&arp_packet_type);
 }

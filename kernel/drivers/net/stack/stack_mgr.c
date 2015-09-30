@@ -51,7 +51,7 @@ DEFINE_RTDM_LOCK(rt_packets_lock);
  *  rtdev_add_pack:         add protocol (Layer 3)
  *  @pt:                    the new protocol
  */
-int rtdev_add_pack(struct rtpacket_type *pt)
+int __rtdev_add_pack(struct rtpacket_type *pt, struct module *module)
 {
     int                     ret = 0;
     rtdm_lockctx_t          context;
@@ -62,6 +62,7 @@ int rtdev_add_pack(struct rtpacket_type *pt)
 	pt->trylock = rtdev_lock_pack;
     if (pt->unlock == NULL)
 	pt->unlock = rtdev_unlock_pack;
+    pt->owner = module;
 
     rtdm_lock_get_irqsave(&rt_packets_lock, context);
 
@@ -80,31 +81,23 @@ int rtdev_add_pack(struct rtpacket_type *pt)
     return ret;
 }
 
-EXPORT_SYMBOL_GPL(rtdev_add_pack);
+EXPORT_SYMBOL_GPL(__rtdev_add_pack);
 
 
 /***
  *  rtdev_remove_pack:  remove protocol (Layer 3)
  *  @pt:                protocol
  */
-int rtdev_remove_pack(struct rtpacket_type *pt)
+void rtdev_remove_pack(struct rtpacket_type *pt)
 {
     rtdm_lockctx_t  context;
-    int             ret = 0;
 
 
-    RTNET_ASSERT(pt != NULL, return -EINVAL;);
+    RTNET_ASSERT(pt != NULL, return;);
 
     rtdm_lock_get_irqsave(&rt_packets_lock, context);
-
-    if (pt->refcount > 0)
-	ret = -EAGAIN;
-    else
-	list_del(&pt->list_entry);
-
+    list_del(&pt->list_entry);
     rtdm_lock_put_irqrestore(&rt_packets_lock, context);
-
-    return ret;
 }
 
 EXPORT_SYMBOL_GPL(rtdev_remove_pack);

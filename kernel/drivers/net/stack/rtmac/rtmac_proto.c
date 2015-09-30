@@ -73,9 +73,5 @@ struct rtpacket_type rtmac_packet_type = {
 
 void rtmac_proto_release(void)
 {
-    while (rtdev_remove_pack(&rtmac_packet_type) == -EAGAIN) {
-        rtdm_printk("RTmac: waiting for protocol unregistration\n");
-        set_current_state(TASK_UNINTERRUPTIBLE);
-        schedule_timeout(1*HZ); /* wait a second */
-    }
+    rtdev_remove_pack(&rtmac_packet_type);
 }

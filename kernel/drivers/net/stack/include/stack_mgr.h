@@ -51,21 +51,25 @@ struct rtpacket_type {
                                        struct rtpacket_type *);
     bool                (*trylock)(struct rtpacket_type *);
     void                (*unlock)(struct rtpacket_type *);
+
+    struct module	*owner;
 };
 
 
-int rtdev_add_pack(struct rtpacket_type *pt);
-int rtdev_remove_pack(struct rtpacket_type *pt);
+int __rtdev_add_pack(struct rtpacket_type *pt, struct module *module);
+#define rtdev_add_pack(pt) \
+    __rtdev_add_pack(pt, THIS_MODULE)
+
+void rtdev_remove_pack(struct rtpacket_type *pt);
 
 static inline bool rtdev_lock_pack(struct rtpacket_type *pt)
 {
-    ++pt->refcount;
-    return true;
+    return try_module_get(pt->owner);
 }
 
 static inline void rtdev_unlock_pack(struct rtpacket_type *pt)
 {
-    --pt->refcount;
+    module_put(pt->owner);
 }
 
 void rt_stack_connect(struct rtnet_device *rtdev, struct rtnet_mgr *mgr);
