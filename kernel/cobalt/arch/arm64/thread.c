@@ -32,16 +32,31 @@
 #include <asm/fpsimd.h>
 #include <asm/processor.h>
 #include <asm/hw_breakpoint.h>
-
+#include <asm/fpsimd.h>
 
 #if defined(CONFIG_XENO_ARCH_FPU)
 
-static DEFINE_MUTEX(vfp_check_lock);
+static void enable_fpsimd(void) {
+	__asm__ __volatile__("mrs x1, cpacr_el1\n\
+			orr x1, x1, #(0x3 << 20)\n\
+			msr cpacr_el1, x1\n\
+			isb" : : : "x1", "memory", "cc");
+}
 
+static void disable_fpsimd(void) {
+	__asm__ __volatile__("mrs x1, cpacr_el1\n\
+				and x1, x1, #~(0x3 << 20)\n\
+				msr cpacr_el1, x1\n\
+				isb" : : : "x1", "memory", "cc");
+}
 
 int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 {
-	/* FPU never trapped, this will be a fault */
+	/* check if this is an FPU access trap to be handled by Xenomai */
+	if(d->exception == IPIPE_TRAP_FPU_ACC){
+		return 1;
+	}
+	/* FPU already enabled, propagate fault to kernel */
 	return 0;
 }
 
@@ -53,6 +68,7 @@ void xnarch_leave_root(struct xnthread *root)
 {
 	struct xnarchtcb *rootcb = xnthread_archtcb(root);
 	rootcb->fpup = get_fpu_owner(rootcb);
+	disable_fpsimd();
 }
 
 void xnarch_save_fpu(struct xnthread *thread)
@@ -65,45 +81,67 @@ void xnarch_save_fpu(struct xnthread *thread)
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 {
 	struct fpsimd_state *const from_fpup = from ? from->tcb.fpup : NULL;
-
-	/* always switch, no lazy switching */
-
 	struct fpsimd_state *const to_fpup = to->tcb.fpup;
 
-	if (from_fpup == to_fpup)
-		return;
+	/*
+	 * This only gets called if XNFPU flag is set, or if migrating to Linux.
+	 * In both cases, this means turn on FPU and switch.
+	 */
+	enable_fpsimd();
 
-	if (from_fpup)
-		fpsimd_save_state(from_fpup);
+	if (xnthread_test_state(to, XNROOT) == 0) {
+		if (from_fpup == to_fpup)
+			return;
 
-	fpsimd_load_state(to_fpup);
+		if (from_fpup)
+			fpsimd_save_state(from_fpup);
 
-	/* always set FPU enabled */
-	xnthread_set_state(to, XNFPU);
+		fpsimd_load_state(to_fpup);
+	}
+	else {
+		/* Going to Linux. */
+		if (from_fpup)
+			fpsimd_save_state(from_fpup);
+
+		fpsimd_load_state(to_fpup);
+	}
 
 }
 
 int xnarch_handle_fpu_fault(struct xnthread *from, 
 			struct xnthread *to, struct ipipe_trap_data *d)
 {
-	/* FPU always enabled, faults force exit to Linux */
-	return 0;
+	spl_t s;
+
+	if (xnthread_test_state(to, XNFPU))
+		/* FPU is already enabled, probably an exception */
+	   return 0;
+
+	xnlock_get_irqsave(&nklock, s);
+	xnthread_set_state(to, XNFPU);
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnarch_switch_fpu(from, to);
+
+	return 1;
+
 }
 
 void xnarch_init_shadow_tcb(struct xnthread *thread)
 {
+	spl_t s;
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 
 	tcb->fpup = &(tcb->core.host_task->thread.fpsimd_state);
 
-	/* XNFPU is always set, no lazy switching */
-	xnthread_set_state(thread, XNFPU);
+	xnlock_get_irqsave(&nklock, s);
+	xnthread_clear_state(thread, XNFPU);
+	xnlock_put_irqrestore(&nklock, s);
+
 }
 #endif /* CONFIG_XENO_ARCH_FPU */
 
-
 /* Switch support functions */
-
 static void xnarch_tls_thread_switch(struct task_struct *next)
 {
 	unsigned long tpidr, tpidrro;
@@ -141,8 +179,7 @@ static inline void xnarch_contextidr_thread_switch(struct task_struct *next)
 {
 }
 #endif
-
-/*/Switch support functions */
+/* End switch support functions */
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
@@ -172,6 +209,10 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 
 	xnarch_tls_thread_switch(in_tcb->core.tip->task);
 	xnarch_contextidr_thread_switch(in_tcb->core.tip->task);
+
+	/* check if we need to switch FPU on return to Linux */
+	if (xnthread_test_state(in, XNROOT) == 1)
+		xnarch_switch_fpu(out, in);
 
 	/*
 	 * Complete any pending TLB or cache maintenance on this CPU in case
