@@ -148,17 +148,26 @@ static int rtcfg_main_state_off(int ifindex, RTCFG_EVENT event_id,
 	case RTCFG_CMD_SERVER:
 	    INIT_LIST_HEAD(&rtcfg_dev->spec.srv.conn_list);
 
-	    ret = rtdm_task_init(&rtcfg_dev->timer_task, "rtcfg-timer",
-		    rtcfg_timer, (void *)(long)ifindex,
-		     RTDM_TASK_LOWEST_PRIORITY,
-		    ((nanosecs_rel_t)cmd_event->args.server.period)*1000000);
+	    ret = rtdm_timer_init(&rtcfg_dev->timer, rtcfg_timer, "rtcfg-timer");
+	    if (ret == 0) {
+		    ret = rtdm_timer_start(&rtcfg_dev->timer,
+					    XN_INFINITE,
+					    (nanosecs_rel_t)
+					    cmd_event->args.server.period
+					    * 1000000,
+					    RTDM_TIMERMODE_RELATIVE);
+		    if (ret < 0)
+			    rtdm_timer_destroy(&rtcfg_dev->timer);
+	    }
 	    if (ret < 0) {
 		rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
 		return ret;
 	    }
 
-	    rtcfg_dev->flags = FLAG_TIMER_STARTED |
-		(cmd_event->args.server.flags & RTCFG_FLAG_READY);
+	    if (cmd_event->args.server.flags & _RTCFG_FLAG_READY)
+		    set_bit(RTCFG_FLAG_READY, &rtcfg_dev->flags);
+	    set_bit(FLAG_TIMER_STARTED, &rtcfg_dev->flags);
+
 	    rtcfg_dev->burstrate = cmd_event->args.server.burstrate;
 
 	    rtcfg_dev->spec.srv.heartbeat = cmd_event->args.server.heartbeat;
@@ -251,10 +260,8 @@ static int rtcfg_main_state_server_running(int ifindex, RTCFG_EVENT event_id,
 	    else
 		rtcfg_queue_blocking_call(ifindex, call);
 
-	    if ((rtcfg_dev->flags & RTCFG_FLAG_READY) == 0) {
-		rtcfg_dev->flags |= RTCFG_FLAG_READY;
+	    if (!test_and_set_bit(RTCFG_FLAG_READY, &rtcfg_dev->flags))
 		rtcfg_send_ready(ifindex);
-	    }
 
 	    rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
 
@@ -427,7 +434,7 @@ static int rtcfg_server_del(struct rtcfg_cmd *cmd_event)
 		rtcfg_dev->stations_found--;
 		if (conn->state >= RTCFG_CONN_STAGE_2)
 		    rtcfg_dev->spec.srv.clients_configured--;
-		if (conn->flags & RTCFG_FLAG_READY)
+		if (conn->flags & _RTCFG_FLAG_READY)
 		    rtcfg_dev->stations_ready--;
 	    }
 
@@ -467,7 +474,7 @@ static int rtcfg_server_detach(int ifindex, struct rtcfg_cmd *cmd_event)
 	    rtcfg_dev->stations_found--;
 	    if (conn->state >= RTCFG_CONN_STAGE_2)
 		rtcfg_dev->spec.srv.clients_configured--;
-	    if (conn->flags & RTCFG_FLAG_READY)
+	    if (conn->flags & _RTCFG_FLAG_READY)
 		rtcfg_dev->stations_ready--;
 	}
 
@@ -482,11 +489,8 @@ static int rtcfg_server_detach(int ifindex, struct rtcfg_cmd *cmd_event)
 	return -EAGAIN;
     }
 
-    if (rtcfg_dev->flags & FLAG_TIMER_STARTED) {
-	/* It's safe to kill the task, it either waits for dev_mutex or the
-	   next period. */
-	rtdm_task_destroy(&rtcfg_dev->timer_task);
-    }
+    if (test_and_clear_bit(FLAG_TIMER_STARTED, &rtcfg_dev->flags))
+	rtdm_timer_destroy(&rtcfg_dev->timer);
     rtcfg_reset_device(ifindex);
 
     rtcfg_next_main_state(ifindex, RTCFG_MAIN_OFF);
@@ -737,11 +741,13 @@ void rtcfg_cleanup_state_machines(void)
     for (i = 0; i < MAX_RT_DEVICES; i++) {
 	rtcfg_dev = &device[i];
 
-	if (rtcfg_dev->flags & FLAG_TIMER_STARTED) {
-	    rtcfg_dev->flags |= FLAG_TIMER_SHUTDOWN;
-	    rtdm_task_unblock(&rtcfg_dev->timer_task);
-	    rtdm_task_join_nrt(&rtcfg_dev->timer_task, 100);
-	}
+	if (test_and_clear_bit(FLAG_TIMER_STARTED, &rtcfg_dev->flags))
+		rtdm_timer_destroy(&rtcfg_dev->timer);
+
+	/*
+	 * No need to synchronize with rtcfg_timer here: the task running
+	 * rtcfg_timer is already dead.
+	 */
 
 	rtdm_mutex_destroy(&rtcfg_dev->dev_mutex);
 

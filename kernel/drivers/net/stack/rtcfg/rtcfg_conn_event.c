@@ -151,14 +151,14 @@ static int rtcfg_conn_state_stage_1(struct rtcfg_connection *conn,
             ack_cfg = (struct rtcfg_frm_ack_cfg *)rtskb->data;
             conn->cfg_offs = ntohl(ack_cfg->ack_len);
 
-            if ((conn->flags & RTCFG_FLAG_STAGE_2_DATA) != 0) {
+            if ((conn->flags & _RTCFG_FLAG_STAGE_2_DATA) != 0) {
                 if (conn->cfg_offs >= conn->stage2_file->size) {
                     rtcfg_dev->spec.srv.clients_configured++;
                     if (rtcfg_dev->spec.srv.clients_configured ==
                         rtcfg_dev->other_stations)
                         rtcfg_complete_cmd(conn->ifindex, RTCFG_CMD_WAIT, 0);
                     rtcfg_next_conn_state(conn,
-                        ((conn->flags & RTCFG_FLAG_READY) != 0) ?
+                        ((conn->flags & _RTCFG_FLAG_READY) != 0) ?
                         RTCFG_CONN_READY : RTCFG_CONN_STAGE_2);
                 } else {
                     packets = conn->burstrate;
@@ -174,7 +174,7 @@ static int rtcfg_conn_state_stage_1(struct rtcfg_connection *conn,
                     rtcfg_dev->other_stations)
                     rtcfg_complete_cmd(conn->ifindex, RTCFG_CMD_WAIT, 0);
                 rtcfg_next_conn_state(conn,
-                    ((conn->flags & RTCFG_FLAG_READY) != 0) ?
+                    ((conn->flags & _RTCFG_FLAG_READY) != 0) ?
                     RTCFG_CONN_READY : RTCFG_CONN_STAGE_2);
             }
 
@@ -207,7 +207,7 @@ static int rtcfg_conn_state_stage_2(struct rtcfg_connection *conn,
 
             rtcfg_next_conn_state(conn, RTCFG_CONN_READY);
 
-            conn->flags |= RTCFG_FLAG_READY;
+            conn->flags |= _RTCFG_FLAG_READY;
             rtcfg_dev->stations_ready++;
 
             if (rtcfg_dev->stations_ready == rtcfg_dev->other_stations)
@@ -295,10 +295,10 @@ static void rtcfg_conn_recv_announce_new(struct rtcfg_connection *conn,
     rtcfg_next_conn_state(conn, RTCFG_CONN_STAGE_1);
 
     rtcfg_dev->stations_found++;
-    if ((conn->flags & RTCFG_FLAG_READY) != 0)
+    if ((conn->flags & _RTCFG_FLAG_READY) != 0)
         rtcfg_dev->stations_ready++;
 
-    if (((conn->flags & RTCFG_FLAG_STAGE_2_DATA) != 0) &&
+    if (((conn->flags & _RTCFG_FLAG_STAGE_2_DATA) != 0) &&
         (conn->stage2_file != NULL)) {
         packets = conn->burstrate - 1;
 
@@ -311,7 +311,7 @@ static void rtcfg_conn_recv_announce_new(struct rtcfg_connection *conn,
         }
     } else {
         rtcfg_send_stage_2(conn, 0);
-        conn->flags &= ~RTCFG_FLAG_STAGE_2_DATA;
+        conn->flags &= ~_RTCFG_FLAG_STAGE_2_DATA;
     }
 }
 

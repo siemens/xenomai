@@ -89,7 +89,10 @@ void nrt_xmit_task(void *arg)
     struct rtnet_device *rtdev;
 
 
-    while (rtdm_event_wait(&wakeup_sem) == 0)
+    while (!rtdm_task_should_stop()) {
+	if (rtdm_event_wait(&wakeup_sem) < 0)
+	    break;
+
         while ((rtskb = rtskb_dequeue(&nrt_rtskb_queue))) {
             rtdev = rtskb->rtdev;
 
@@ -98,6 +101,7 @@ void nrt_xmit_task(void *arg)
             rtmac_xmit(rtskb);
             rtdm_mutex_unlock(&rtdev->xmit_mutex);
         }
+    }
 }
 
 
@@ -134,6 +138,6 @@ int __init nomac_proto_init(void)
 
 void nomac_proto_cleanup(void)
 {
+    rtdm_task_destroy(&wrapper_task);
     rtdm_event_destroy(&wakeup_sem);
-    rtdm_task_join_nrt(&wrapper_task, 100);
 }

@@ -227,15 +227,13 @@ int tdma_detach(struct rtnet_device *rtdev, void *priv)
     struct tdma_job     *job, *tmp;
 
 
-    set_bit(TDMA_FLAG_SHUTDOWN, &tdma->flags);
-
     rtdm_event_destroy(&tdma->sync_event);
     rtdm_event_destroy(&tdma->xmit_event);
     rtdm_event_destroy(&tdma->worker_wakeup);
 
     tdma_dev_release(tdma);
 
-    rtdm_task_join_nrt(&tdma->worker_task, 100);
+    rtdm_task_destroy(&tdma->worker_task);
 
     list_for_each_entry_safe(job, tmp, &tdma->first_job->entry, entry) {
 	if (job->id >= 0)

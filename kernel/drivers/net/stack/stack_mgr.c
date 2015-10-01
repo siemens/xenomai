@@ -200,8 +200,10 @@ static void rt_stack_mgr_task(void *arg)
     rtdm_event_t            *mgr_event = &((struct rtnet_mgr *)arg)->event;
     struct rtskb            *rtskb;
 
+    while (!rtdm_task_should_stop()) {
+	if (rtdm_event_wait(mgr_event) < 0)
+	    break;
 
-    while (rtdm_event_wait(mgr_event) == 0) {
 	/* we are the only reader => no locking required */
 	while ((rtskb = __rtskb_fifo_remove(&rx.fifo)))
 	    rt_stack_deliver(rtskb);
@@ -259,6 +261,6 @@ int rt_stack_mgr_init (struct rtnet_mgr *mgr)
  */
 void rt_stack_mgr_delete (struct rtnet_mgr *mgr)
 {
+    rtdm_task_destroy(&mgr->task);
     rtdm_event_destroy(&mgr->event);
-    rtdm_task_join_nrt(&mgr->task, 100);
 }

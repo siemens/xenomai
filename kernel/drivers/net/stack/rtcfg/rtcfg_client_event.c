@@ -113,8 +113,10 @@ int rtcfg_main_state_client_1(int ifindex, RTCFG_EVENT event_id,
             rtcfg_queue_blocking_call(ifindex,
                 (struct rt_proc_call *)event_data);
 
-            rtcfg_dev->flags = cmd_event->args.announce.flags &
-                (RTCFG_FLAG_STAGE_2_DATA | RTCFG_FLAG_READY);
+	    if (cmd_event->args.announce.flags & _RTCFG_FLAG_STAGE_2_DATA)
+		set_bit(RTCFG_FLAG_STAGE_2_DATA, &rtcfg_dev->flags);
+	    if (cmd_event->args.announce.flags & _RTCFG_FLAG_READY)
+		set_bit(RTCFG_FLAG_READY, &rtcfg_dev->flags);
             if (cmd_event->args.announce.burstrate < rtcfg_dev->burstrate)
                 rtcfg_dev->burstrate = cmd_event->args.announce.burstrate;
 
@@ -324,8 +326,10 @@ int rtcfg_main_state_client_all_frames(int ifindex, RTCFG_EVENT event_id,
                     rtcfg_complete_cmd(ifindex, RTCFG_CMD_ANNOUNCE, 0);
 
                     rtcfg_next_main_state(ifindex,
-                        ((rtcfg_dev->flags & RTCFG_FLAG_READY) != 0) ?
-                        RTCFG_MAIN_CLIENT_READY : RTCFG_MAIN_CLIENT_2);
+					test_bit(RTCFG_FLAG_READY,
+						&rtcfg_dev->flags) ?
+					RTCFG_MAIN_CLIENT_READY
+					: RTCFG_MAIN_CLIENT_2);
                 }
 
                 rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
@@ -340,8 +344,10 @@ int rtcfg_main_state_client_all_frames(int ifindex, RTCFG_EVENT event_id,
                     rtcfg_complete_cmd(ifindex, RTCFG_CMD_ANNOUNCE, 0);
 
                     rtcfg_next_main_state(ifindex,
-                        ((rtcfg_dev->flags & RTCFG_FLAG_READY) != 0) ?
-                        RTCFG_MAIN_CLIENT_READY : RTCFG_MAIN_CLIENT_2);
+					test_bit(RTCFG_FLAG_READY,
+						&rtcfg_dev->flags) ?
+					RTCFG_MAIN_CLIENT_READY
+					: RTCFG_MAIN_CLIENT_2);
                 }
 
                 rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
@@ -393,10 +399,8 @@ int rtcfg_main_state_client_2(int ifindex, RTCFG_EVENT event_id,
 
             rtcfg_next_main_state(ifindex, RTCFG_MAIN_CLIENT_READY);
 
-            if ((rtcfg_dev->flags & RTCFG_FLAG_READY) == 0) {
-                rtcfg_dev->flags |= RTCFG_FLAG_READY;
+            if (!test_and_set_bit(RTCFG_FLAG_READY, &rtcfg_dev->flags))
                 rtcfg_send_ready(ifindex);
-            }
 
             rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
 
@@ -498,7 +502,7 @@ static int rtcfg_client_get_frag(int ifindex, struct rt_proc_call *call)
 {
     struct rtcfg_device *rtcfg_dev = &device[ifindex];
 
-    if ((rtcfg_dev->flags & RTCFG_FLAG_STAGE_2_DATA) == 0) {
+    if (test_bit(RTCFG_FLAG_STAGE_2_DATA, &rtcfg_dev->flags) == 0) {
         rtdm_mutex_unlock(&rtcfg_dev->dev_mutex);
         return -EINVAL;
     }
@@ -510,8 +514,9 @@ static int rtcfg_client_get_frag(int ifindex, struct rt_proc_call *call)
             rtpc_complete_call(call, 0);
 
             rtcfg_next_main_state(ifindex,
-                ((rtcfg_dev->flags & RTCFG_FLAG_READY) != 0) ?
-                RTCFG_MAIN_CLIENT_READY : RTCFG_MAIN_CLIENT_2);
+				test_bit(RTCFG_FLAG_READY,
+					&rtcfg_dev->flags) ?
+				RTCFG_MAIN_CLIENT_READY : RTCFG_MAIN_CLIENT_2);
         } else {
             rtcfg_next_main_state(ifindex, RTCFG_MAIN_CLIENT_ALL_FRAMES);
             rtcfg_queue_blocking_call(ifindex, call);
@@ -547,11 +552,8 @@ static void rtcfg_client_detach(int ifindex, struct rt_proc_call *call)
         rtpc_complete_call(call, -ENODEV);
     }
 
-    if (rtcfg_dev->flags & FLAG_TIMER_STARTED) {
-        /* It's safe to kill the task, it either waits for dev_mutex or the
-           next period. */
-        rtdm_task_destroy(&rtcfg_dev->timer_task);
-    }
+    if (test_and_clear_bit(FLAG_TIMER_STARTED, &rtcfg_dev->flags))
+        rtdm_timer_destroy(&rtcfg_dev->timer);
     rtcfg_reset_device(ifindex);
 
     rtcfg_next_main_state(cmd_event->internal.data.ifindex, RTCFG_MAIN_OFF);
@@ -726,7 +728,7 @@ static int rtcfg_add_to_station_list(struct rtcfg_device *rtcfg_dev,
         flags;
 
     rtcfg_dev->stations_found++;
-    if ((flags & RTCFG_FLAG_READY) != 0)
+    if ((flags & _RTCFG_FLAG_READY) != 0)
         rtcfg_dev->stations_ready++;
 
     return 0;
@@ -879,15 +881,21 @@ static void rtcfg_client_recv_stage_2_cfg(int ifindex, struct rtskb *rtskb)
     __rtskb_pull(rtskb, sizeof(struct rtcfg_frm_stage_2_cfg));
 
     if (stage_2_cfg->heartbeat_period) {
-        ret = rtdm_task_init(&rtcfg_dev->timer_task, "rtcfg-timer",
-                rtcfg_timer, (void *)(long)ifindex,
-                RTDM_TASK_LOWEST_PRIORITY,
-                (nanosecs_rel_t)ntohs(stage_2_cfg->heartbeat_period) *
-                    1000000);
+	ret = rtdm_timer_init(&rtcfg_dev->timer, rtcfg_timer, "rtcfg-timer");
+	if (ret == 0) {
+	    ret = rtdm_timer_start(&rtcfg_dev->timer,
+				XN_INFINITE,
+				(nanosecs_rel_t)ntohs(stage_2_cfg->heartbeat_period) *
+				1000000,
+				RTDM_TIMERMODE_RELATIVE);
+	    if (ret < 0)
+		rtdm_timer_destroy(&rtcfg_dev->timer);
+	}
+
         if (ret < 0)
             /*ERRMSG*/rtdm_printk("RTcfg: unable to create timer task\n");
         else
-            rtcfg_dev->flags |= FLAG_TIMER_STARTED;
+	    set_bit(FLAG_TIMER_STARTED, &rtcfg_dev->flags);
     }
 
     /* add server to station list */
@@ -903,7 +911,7 @@ static void rtcfg_client_recv_stage_2_cfg(int ifindex, struct rtskb *rtskb)
     rtcfg_dev->spec.clt.cfg_len = ntohl(stage_2_cfg->cfg_len);
     data_len = MIN(rtcfg_dev->spec.clt.cfg_len, rtskb->len);
 
-    if (((rtcfg_dev->flags & RTCFG_FLAG_STAGE_2_DATA) != 0) &&
+    if (test_bit(RTCFG_FLAG_STAGE_2_DATA, &rtcfg_dev->flags) &&
         (data_len > 0)) {
         rtcfg_client_queue_frag(ifindex, rtskb, data_len);
         rtskb = NULL;
@@ -915,8 +923,8 @@ static void rtcfg_client_recv_stage_2_cfg(int ifindex, struct rtskb *rtskb)
             rtcfg_complete_cmd(ifindex, RTCFG_CMD_ANNOUNCE, 0);
 
             rtcfg_next_main_state(ifindex,
-                ((rtcfg_dev->flags & RTCFG_FLAG_READY) != 0) ?
-                RTCFG_MAIN_CLIENT_READY : RTCFG_MAIN_CLIENT_2);
+				test_bit(RTCFG_FLAG_READY, &rtcfg_dev->flags) ?
+				RTCFG_MAIN_CLIENT_READY : RTCFG_MAIN_CLIENT_2);
         } else
             rtcfg_next_main_state(ifindex, RTCFG_MAIN_CLIENT_ALL_FRAMES);
 
@@ -951,7 +959,7 @@ static void rtcfg_client_recv_stage_2_frag(int ifindex, struct rtskb *rtskb)
     data_len = MIN(rtcfg_dev->spec.clt.cfg_len - rtcfg_dev->spec.clt.cfg_offs,
                    rtskb->len);
 
-    if ((rtcfg_dev->flags & RTCFG_FLAG_STAGE_2_DATA) == 0) {
+    if (test_bit(RTCFG_FLAG_STAGE_2_DATA, &rtcfg_dev->flags) == 0) {
         RTCFG_DEBUG(1, "RTcfg: unexpected stage 2 fragment, we did not "
                     "request any data!\n");
 
@@ -998,9 +1006,9 @@ static int rtcfg_client_recv_ready(int ifindex, struct rtskb *rtskb)
         if (memcmp(rtcfg_dev->spec.clt.station_addr_list[i].mac_addr,
                    rtskb->mac.ethernet->h_source, ETH_ALEN) == 0) {
             if ((rtcfg_dev->spec.clt.station_addr_list[i].flags &
-                 RTCFG_FLAG_READY) == 0) {
+                 _RTCFG_FLAG_READY) == 0) {
                 rtcfg_dev->spec.clt.station_addr_list[i].flags |=
-                    RTCFG_FLAG_READY;
+                    _RTCFG_FLAG_READY;
                 rtcfg_dev->stations_ready++;
             }
             break;
@@ -1071,7 +1079,7 @@ static void rtcfg_client_recv_dead_station(int ifindex, struct rtskb *rtskb)
         if (memcmp(rtcfg_dev->spec.clt.station_addr_list[i].mac_addr,
                    dead_station_frm->physical_addr, ETH_ALEN) == 0) {
             if ((rtcfg_dev->spec.clt.station_addr_list[i].flags &
-                 RTCFG_FLAG_READY) != 0)
+                 _RTCFG_FLAG_READY) != 0)
                 rtcfg_dev->stations_ready--;
 
             rtcfg_dev->stations_found--;

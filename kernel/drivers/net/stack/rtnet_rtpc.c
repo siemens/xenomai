@@ -92,11 +92,8 @@ int rtnet_rtpc_dispatch_call(rtpc_proc proc, unsigned int timeout,
 
 
     call = kmalloc(sizeof(struct rt_proc_call) + priv_data_size, GFP_KERNEL);
-    if (call == NULL) {
-	if (call->cleanup_handler != NULL)
-	    call->cleanup_handler(priv_data);
+    if (call == NULL)
 	return -ENOMEM;
-    }
 
     memcpy(call->priv_data, priv_data, priv_data_size);
 
@@ -194,12 +191,16 @@ static void rtpc_dispatch_handler(void *arg)
     int                 ret;
 
 
-    while (rtdm_event_wait(&dispatch_event) == 0)
+    while (!rtdm_task_should_stop()) {
+	if (rtdm_event_wait(&dispatch_event) < 0)
+	    break;
+
 	while ((call = rtpc_dequeue_pending_call())) {
 	    ret = call->proc(call);
 	    if (ret != -CALL_PENDING)
 		rtpc_complete_call(call, ret);
 	}
+    }
 }
 
 
@@ -271,8 +272,8 @@ int __init rtpc_init(void)
 
 void rtpc_cleanup(void)
 {
+    rtdm_task_destroy(&dispatch_task);
     rtdm_event_destroy(&dispatch_event);
-    rtdm_task_join_nrt(&dispatch_task, 100);
     rtdm_nrtsig_destroy(&rtpc_nrt_signal);
 }
 

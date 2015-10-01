@@ -35,7 +35,6 @@
 
 #define TDMA_MAGIC              0x3A0D4D0A
 
-#define TDMA_FLAG_SHUTDOWN      0
 #define TDMA_FLAG_CALIBRATED    1
 #define TDMA_FLAG_RECEIVED_SYNC 2
 #define TDMA_FLAG_MASTER        3   /* also set for backup masters */

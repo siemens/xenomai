@@ -184,7 +184,7 @@ void tdma_worker(void *arg)
 
     job = tdma->first_job;
 
-    while (!test_bit(TDMA_FLAG_SHUTDOWN, &tdma->flags)) {
+    while (!rtdm_task_should_stop()) {
         job->ref_count++;
         switch (job->id) {
             case WAIT_ON_SYNC:

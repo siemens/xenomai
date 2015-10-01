@@ -34,9 +34,13 @@
 #include <rtnet_rtpc.h>
 
 
-#define FLAG_TIMER_STARTED          0x00010000
-#define FLAG_TIMER_SHUTDOWN         0x00020000
+#define FLAG_TIMER_STARTED          16
+#define FLAG_TIMER_SHUTDOWN         17
+#define FLAG_TIMER_PENDING          18
 
+#define _FLAG_TIMER_STARTED         (1 << FLAG_TIMER_STARTED)
+#define _FLAG_TIMER_SHUTDOWN        (1 << FLAG_TIMER_SHUTDOWN)
+#define _FLAG_TIMER_PENDING         (1 << FLAG_TIMER_PENDING)
 
 typedef enum {
     RTCFG_MAIN_OFF,
@@ -63,8 +67,8 @@ struct rtcfg_device {
     rtdm_mutex_t                    dev_mutex;
     struct list_head                event_calls;
     rtdm_lock_t                     event_calls_lock;
-    rtdm_task_t                     timer_task;
-    unsigned int                    flags;
+    rtdm_timer_t                    timer;
+    unsigned long                   flags;
     unsigned int                    burstrate;
 #ifdef CONFIG_XENO_OPT_VFILE
     struct xnvfile_directory        proc_entry;

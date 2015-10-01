@@ -29,6 +29,7 @@
 #include <rtcfg/rtcfg.h>
 #include <rtcfg/rtcfg_conn_event.h>
 #include <rtcfg/rtcfg_frame.h>
+#include <rtcfg/rtcfg_timer.h>
 
 
 static unsigned int num_rtskbs = 32;
@@ -41,13 +42,17 @@ static rtdm_event_t         rx_event;
 static struct rtskb_queue   rx_queue;
 
 
+void rtcfg_thread_signal(void)
+{
+    rtdm_event_signal(&rx_event);
+}
 
 static int rtcfg_rx_handler(struct rtskb *rtskb, struct rtpacket_type *pt)
 {
     if (rtskb_acquire(rtskb, &rtcfg_pool) == 0) {
 	rtskb_queue_tail(&rx_queue, rtskb);
-	rtdm_event_signal(&rx_event);
-    } else
+	rtcfg_thread_signal();
+   } else
 	kfree_rtskb(rtskb);
 
     return 0;
@@ -62,7 +67,10 @@ static void rtcfg_rx_task(void *arg)
     struct rtnet_device   *rtdev;
 
 
-    while (rtdm_event_wait(&rx_event) == 0)
+    while (!rtdm_task_should_stop()) {
+	if (rtdm_event_wait(&rx_event) < 0)
+	    break;
+
 	while ((rtskb = rtskb_dequeue(&rx_queue))) {
 	    rtdev = rtskb->rtdev;
 
@@ -85,6 +93,9 @@ static void rtcfg_rx_task(void *arg)
 				    rtskb) < 0)
 		kfree_rtskb(rtskb);
 	}
+
+	rtcfg_timer_run();
+    }
 }
 
 
@@ -390,7 +401,7 @@ int rtcfg_send_announce_reply(int ifindex, u8 *dest_mac_addr)
     }
 #endif /* CONFIG_XENO_DRIVERS_NET_RTIPV4 */
 
-    announce_rpl->flags     = rtcfg_dev->flags & RTCFG_FLAG_READY;
+    announce_rpl->flags     = rtcfg_dev->flags & _RTCFG_FLAG_READY;
     announce_rpl->burstrate = 0; /* padding field */
 
     return rtcfg_send_frame(rtskb, rtdev, dest_mac_addr);
@@ -556,8 +567,8 @@ int __init rtcfg_init_frames(void)
     return 0;
 
   error2:
+    rtdm_task_destroy(&rx_task);
     rtdm_event_destroy(&rx_event);
-    rtdm_task_join_nrt(&rx_task, 100);
 
   error1:
     rtskb_pool_release(&rtcfg_pool);
@@ -574,8 +585,8 @@ void rtcfg_cleanup_frames(void)
 
     rtdev_remove_pack(&rtcfg_packet_type);
 
+    rtdm_task_destroy(&rx_task);
     rtdm_event_destroy(&rx_event);
-    rtdm_task_join_nrt(&rx_task, 100);
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
 	kfree_rtskb(rtskb);

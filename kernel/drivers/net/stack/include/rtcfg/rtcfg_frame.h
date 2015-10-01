@@ -51,9 +51,11 @@
 #define RTCFG_ADDRSIZE_IP           4
 #define RTCFG_MAX_ADDRSIZE          RTCFG_ADDRSIZE_IP
 
-#define RTCFG_FLAG_STAGE_2_DATA     1
-#define RTCFG_FLAG_READY            2
+#define RTCFG_FLAG_STAGE_2_DATA 0
+#define RTCFG_FLAG_READY        1
 
+#define _RTCFG_FLAG_STAGE_2_DATA (1 << RTCFG_FLAG_STAGE_2_DATA)
+#define _RTCFG_FLAG_READY        (1 << RTCFG_FLAG_READY)
 
 struct rtcfg_frm_head {
 #if defined(__LITTLE_ENDIAN_BITFIELD)

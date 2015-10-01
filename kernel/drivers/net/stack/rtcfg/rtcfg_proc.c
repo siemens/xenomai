@@ -59,7 +59,7 @@ int rtnet_rtcfg_dev_state_show(struct xnvfile_regular_iterator *it, void *data)
 	};
 
 	xnvfile_printf(it, "state:\t\t\t%d (%s)\n"
-				"flags:\t\t\t%08X\n"
+				"flags:\t\t\t%08lX\n"
 				"other stations:\t\t%d\n"
 				"stations found:\t\t%d\n"
 				"stations ready:\t\t%d\n",
