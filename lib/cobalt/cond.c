@@ -107,6 +107,8 @@ void cobalt_default_condattr_init(void)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 				     const pthread_condattr_t * attr))
@@ -161,6 +163,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, pthread_cond_destroy, (pthread_cond_t *cond))
 {
@@ -245,6 +248,7 @@ static int __attribute__((cold)) cobalt_cond_autoinit(pthread_cond_t *cond)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex))
 {
@@ -338,6 +342,7 @@ COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mute
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 					  pthread_mutex_t *mutex,
@@ -418,7 +423,8 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">
  * Specification.</a>
  *
- */
+  * @apitags{xthread-only}
+*/
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
@@ -478,6 +484,7 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">
  * Specification.</a>
  *
+  * @apitags{xthread-only}
  */
 COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
@@ -540,6 +547,7 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">
  * Specification.</a>
  *
+  * @apitags{thread-unrestricted}
  */
 int pthread_condattr_init(pthread_condattr_t * attr);
 
@@ -560,6 +568,7 @@ int pthread_condattr_init(pthread_condattr_t * attr);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">
  * Specification.</a>
  *
+  * @apitags{thread-unrestricted}
  */
 int pthread_condattr_destroy(pthread_condattr_t * attr);
 
@@ -587,6 +596,7 @@ int pthread_condattr_destroy(pthread_condattr_t * attr);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">
  * Specification.</a>
  *
+  * @apitags{thread-unrestricted}
  */
 int pthread_condattr_getclock(const pthread_condattr_t * attr,
 			clockid_t * clk_id);
@@ -614,6 +624,7 @@ int pthread_condattr_getclock(const pthread_condattr_t * attr,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">
  * Specification.</a>
  *
+  * @apitags{thread-unrestricted}
  */
 int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id);
 
@@ -642,6 +653,7 @@ int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getpshared.html">
  * Specification.</a>
  *
+  * @apitags{thread-unrestricted}
  */
 int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
 
@@ -670,6 +682,7 @@ int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setpshared.html">
  * Specification.</a>
  *
+  * @apitags{thread-unrestricted}
  */
 int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
 

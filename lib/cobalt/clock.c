@@ -95,6 +95,7 @@
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">
  * Specification.</a>
  *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
@@ -175,6 +176,7 @@ static int __do_clock_host_realtime(struct timespec *ts)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">
  * Specification.</a>
  *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 {
@@ -229,6 +231,7 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">
  * Specification.</a>
  *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 {
@@ -281,6 +284,7 @@ COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
 				   int flags,
@@ -326,6 +330,7 @@ COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, nanosleep, (const struct timespec *rqtp, struct timespec *rmtp))
 {
@@ -339,6 +344,8 @@ COBALT_IMPL(int, nanosleep, (const struct timespec *rqtp, struct timespec *rmtp)
 
 	return 0;
 }
+
+/* @apitags{thread-unrestricted, switch-primary} */
 
 COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
 {
@@ -357,6 +364,8 @@ COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
 	return 0;
 }
 
+/* @apitags{unrestricted} */
+
 COBALT_IMPL(int, gettimeofday, (struct timeval *tv, struct timezone *tz))
 {
 	struct timespec ts;
@@ -367,6 +376,8 @@ COBALT_IMPL(int, gettimeofday, (struct timeval *tv, struct timezone *tz))
 	}
 	return ret;
 }
+
+/* @apitags{unrestricted} */
 
 COBALT_IMPL(time_t, time, (time_t *t))
 {

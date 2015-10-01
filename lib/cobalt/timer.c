@@ -66,6 +66,8 @@
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, timer_create, (clockid_t clockid,
 				const struct sigevent *__restrict__ evp,
@@ -98,6 +100,7 @@ COBALT_IMPL(int, timer_create, (clockid_t clockid,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, timer_delete, (timer_t timerid))
 {
@@ -153,6 +156,8 @@ COBALT_IMPL(int, timer_delete, (timer_t timerid))
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">
  * Specification.</a>
+ *
+ * @apitags{xcontext, switch-primary}
  */
 COBALT_IMPL(int, timer_settime, (timer_t timerid,
 				 int flags,
@@ -197,6 +202,8 @@ COBALT_IMPL(int, timer_settime, (timer_t timerid,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">
  * Specification.</a>
+ *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, timer_gettime, (timer_t timerid, struct itimerspec *value))
 {
@@ -230,6 +237,7 @@ COBALT_IMPL(int, timer_gettime, (timer_t timerid, struct itimerspec *value))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
  * Specification.</a>
  *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, timer_getoverrun, (timer_t timerid))
 {

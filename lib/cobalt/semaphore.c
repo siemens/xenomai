@@ -81,6 +81,7 @@ struct cobalt_sem_state *sem_get_state(struct cobalt_sem_shadow *shadow)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned int value))
 {
@@ -131,6 +132,8 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned int value))
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 {
@@ -175,6 +178,8 @@ COBALT_IMPL(int, sem_destroy, (sem_t *sem))
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">
  * Specification.</a>
+ *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, sem_post, (sem_t *sem))
 {
@@ -235,6 +240,8 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
  * * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">
  * Specification.</a>
+ *
+ * @apitags{xthread-only}
  */
 COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 {
@@ -296,6 +303,8 @@ eagain:
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">
  * Specification.</a>
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, sem_wait, (sem_t *sem))
 {
@@ -349,6 +358,8 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">
  * Specification.</a>
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *abs_timeout))
 {
@@ -400,6 +411,8 @@ COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *abs_timeout)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">
  * Specification.</a>
+ *
+ * @apitags{unrestricted}
  */
 COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 {
@@ -465,6 +478,8 @@ COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 {
@@ -526,6 +541,8 @@ error:
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(int, sem_close, (sem_t *sem))
 {
@@ -571,6 +588,8 @@ COBALT_IMPL(int, sem_close, (sem_t *sem))
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(int, sem_unlink, (const char *name))
 {

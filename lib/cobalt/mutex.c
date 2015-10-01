@@ -87,6 +87,7 @@ void cobalt_default_mutexattr_init(void)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 				      const pthread_mutexattr_t *attr))
@@ -156,6 +157,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 {
@@ -229,6 +231,7 @@ static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
@@ -323,6 +326,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 					   const struct timespec *to))
@@ -408,6 +412,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
@@ -491,6 +496,7 @@ do_syscall:
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
@@ -562,6 +568,7 @@ do_syscall:
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_init(pthread_mutexattr_t * attr);
 
@@ -582,6 +589,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t * attr);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_destroy(pthread_mutexattr_t * attr);
 
@@ -609,6 +617,7 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t * attr);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type);
 
@@ -640,6 +649,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type);
 
@@ -667,6 +677,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto);
 
@@ -696,6 +707,7 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto);
 
@@ -723,6 +735,7 @@ int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getpshared.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared);
 
@@ -751,6 +764,7 @@ int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared);
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setpshared.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
 

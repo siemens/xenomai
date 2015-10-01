@@ -53,6 +53,7 @@
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted, switch-primary}
  */
 COBALT_IMPL(int, sched_yield, (void))
 {
@@ -79,6 +80,7 @@ COBALT_IMPL(int, sched_yield, (void))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, sched_get_priority_min, (int policy))
 {
@@ -117,6 +119,7 @@ COBALT_IMPL(int, sched_get_priority_min, (int policy))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int sched_get_priority_min_ex(int policy)
 {
@@ -149,6 +152,7 @@ int sched_get_priority_min_ex(int policy)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, sched_get_priority_max, (int policy))
 {
@@ -206,6 +210,8 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
  * @note
  *
  * See sched_setscheduler_ex().
+ *
+ * @apitags{thread-unrestricted, switch-secondary, switch-primary}
  */
 COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
 				      const struct sched_param *param))
@@ -268,7 +274,7 @@ COBALT_IMPL(int, sched_setscheduler, (pid_t pid, int policy,
  *
  * See sched_setscheduler().
  *
- * sched_setscheduler_ex() may switch the caller to secondary mode.
+ * @apitags{thread-unrestricted, switch-secondary, switch-primary}
  */
 int sched_setscheduler_ex(pid_t pid,
 			  int policy, const struct sched_param_ex *param_ex)
@@ -320,6 +326,8 @@ int sched_setscheduler_ex(pid_t pid,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_getscheduler.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, sched_getscheduler, (pid_t pid))
 {
@@ -368,6 +376,8 @@ COBALT_IMPL(int, sched_getscheduler, (pid_t pid))
  * - ESRCH, @a pid is not a Cobalt thread;
  * - EINVAL, @a pid is negative or @a param_ex is NULL;
  * - EFAULT, @a param_ex is an invalid address;
+ *
+ * @apitags{thread-unrestricted}
  */
 int sched_getscheduler_ex(pid_t pid, int *policy_r,
 			  struct sched_param_ex *param_ex)
@@ -395,6 +405,7 @@ int sched_getscheduler_ex(pid_t pid, int *policy_r,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 int sched_get_priority_max_ex(int policy)
 {
@@ -524,6 +535,8 @@ int sched_get_priority_max_ex(int policy)
  *
  * - ESRCH, with @a policy equal to SCHED_QUOTA, if the group
  *   identifier required to perform the operation is not valid.
+ *
+ * @apitags{thread-unrestricted, switch-primary}
  */
 int sched_setconfig_np(int cpu, int policy,
 		       const union sched_config *config, size_t len)
@@ -579,6 +592,8 @@ int sched_setconfig_np(int cpu, int policy,
  * - ENOMEM, lack of memory to perform the operation.
  *
  * - ENOSPC, @a len is too short.
+ *
+ * @apitags{thread-unrestricted, switch-primary}
  */
 ssize_t sched_getconfig_np(int cpu, int policy,
 			   union sched_config *config, size_t *len_r)

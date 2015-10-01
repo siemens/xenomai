@@ -97,6 +97,8 @@
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
 {
@@ -139,6 +141,7 @@ COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(int, mq_close, (mqd_t mqd))
 {
@@ -174,6 +177,7 @@ COBALT_IMPL(int, mq_close, (mqd_t mqd))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(int, mq_unlink, (const char *name))
 {
@@ -212,6 +216,7 @@ COBALT_IMPL(int, mq_unlink, (const char *name))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, mq_getattr, (mqd_t mqd, struct mq_attr *attr))
 {
@@ -252,6 +257,7 @@ COBALT_IMPL(int, mq_getattr, (mqd_t mqd, struct mq_attr *attr))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, mq_setattr, (mqd_t mqd,
 			      const struct mq_attr *__restrict__ attr,
@@ -317,6 +323,7 @@ COBALT_IMPL(int, mq_setattr, (mqd_t mqd,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned prio))
 {
@@ -370,6 +377,7 @@ COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned pri
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, mq_timedsend, (mqd_t q,
 				const char *buffer,
@@ -433,6 +441,7 @@ COBALT_IMPL(int, mq_timedsend, (mqd_t q,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *prio))
 {
@@ -490,6 +499,7 @@ COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *p
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
 				       char *__restrict__ buffer,
@@ -550,6 +560,7 @@ COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-primary}
  */
 COBALT_IMPL(int, mq_notify, (mqd_t mqd, const struct sigevent *evp))
 {

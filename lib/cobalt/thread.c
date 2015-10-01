@@ -309,6 +309,8 @@ out:
  *
  * You should register your handler with sigaction(2), setting the
  * SA_SIGINFO flag.
+ *
+ * @apitags{thread-unrestricted, switch-secondary}
  */
 COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
 				  const pthread_attr_t *attr,
@@ -414,6 +416,8 @@ COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
  * @attention Issuing PTHREAD_CONFORMING is most likely useless or even
  * introduces pure overhead in regular applications, since the Cobalt
  * core performs the necessary mode switches, only when required.
+ *
+ * @apitags{xthread-only, switch-primary}
  */
 int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
 {
@@ -437,6 +441,7 @@ int pthread_setmode_np(int clrmask, int setmask, int *mode_r)
  * @return an error number if:
  * - ESRCH, @a thread is invalid.
  *
+ * @apitags{xthread-only}
  */
 COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
 {
@@ -464,6 +469,7 @@ COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted, switch-primary}
  */
 COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 {
@@ -511,6 +517,7 @@ COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">
  * Specification.</a>
  *
+ * @apitags{xthread-only, switch-secondary, switch-primary}
  */
 COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
 {
@@ -569,6 +576,8 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
  * @note
  *
  * See pthread_create(), pthread_setschedparam_ex().
+ *
+ * @apitags{thread-unrestricted, switch-secondary, switch-primary}
  */
 COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
 					 int policy, const struct sched_param *param))
@@ -632,7 +641,7 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
  *
  * See pthread_create(), pthread_setschedparam().
  *
- * pthread_setschedparam_ex() may switch the caller to secondary mode.
+ * @apitags{thread-unrestricted, switch-secondary, switch-primary}
  */
 int pthread_setschedparam_ex(pthread_t thread,
 			     int policy, const struct sched_param_ex *param_ex)
@@ -688,6 +697,7 @@ int pthread_setschedparam_ex(pthread_t thread,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted}
  */
 COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
 					 int *__restrict__ policy,
@@ -728,6 +738,8 @@ COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
  * Specification.</a>
+ *
+ * @apitags{thread-unrestricted}
  */
 int pthread_getschedparam_ex(pthread_t thread,
 			     int *__restrict__ policy_r,
@@ -758,6 +770,7 @@ int pthread_getschedparam_ex(pthread_t thread,
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_yield.html">
  * Specification.</a>
  *
+ * @apitags{thread-unrestricted, switch-primary}
  */
 COBALT_IMPL(int, pthread_yield, (void))
 {

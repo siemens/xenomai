@@ -302,15 +302,25 @@ copperplate_setup_call(copperplate_interface);
  *
  * @page api-tags API service tags
  *
- * The non-POSIX API services based on the Copperplate library may be
- * restricted to particular calling contexts, or entail specific
- * side-effects. This information applies to the Alchemy API services,
- * and to all RTOS emulators as well. To describe this information,
- * each service documented by this section bears a set of tags when
- * applicable.
+ * All services from the Cobalt/POSIX library, or which belong to APIs
+ * based on the Copperplate library may be restricted to particular
+ * calling contexts, or entail specific side-effects. Therefore, the
+ * information below applies to all application-oriented APIs
+ * available with Xenomai, such as the Cobalt/POSIX library, the
+ * Alchemy API, and to all RTOS emulators as well. To describe this
+ * information, each service documented by this section bears a set of
+ * tags when applicable.
  *
  * The table below matches the tags used throughout the documentation
  * with the description of their meaning for the caller.
+ *
+ * @attention By Xenomai thread, we mean any thread created by a
+ * Xenomai API service, including real-time Cobalt/POSIX threads in
+ * dual kernel mode. By regular POSIX thread, we mean any thread
+ * directly created by the standard @a glibc-based POSIX service over
+ * Mercury (i.e. NPTL/linuxthreads pthread_create()), excluding such
+ * threads which have been promoted to the real-time domain afterwards
+ * (aka "shadowed") over Cobalt.
  *
  * @par
  * <b>Context tags</b>
@@ -325,19 +335,19 @@ copperplate_setup_call(copperplate_interface);
  * <TR><TD>unrestricted</TD>	<TD>May be called from any context previously described</TD></TR>
  * </TABLE>
  *
- * @note A Xenomai handler is most often used for callback-based
- * timeout notifications. This context is @a NOT mapped to a regular
- * Linux signal handler, it is actually underlaid by a special thread
- * context, so that async-unsafe POSIX services may be invoked
- * internally by the API implementation when running on behalf of such
- * handler. Therefore, calling Xenomai API services from asynchronous
- * regular signal handlers is fundamentally unsafe.
- *
- * @note A non-blocking call for an API service is defined by a
- * special value passed as a timeout specification.
+ * @note A Xenomai handler is used for callback-based notifications
+ * from Copperplate-based APIs, such as timeouts. This context is @a
+ * NOT mapped to a regular Linux signal handler, it is actually
+ * underlaid by a special thread context, so that async-unsafe POSIX
+ * services may be invoked internally by the API implementation when
+ * running on behalf of such handler. Therefore, calling Xenomai API
+ * services from asynchronous regular signal handlers is fundamentally
+ * unsafe.
  *
  * @par
- * <b>Possible side-effects over the Cobalt core (i.e. dual kernel configuration)</b>
+ * <b>Possible side-effects when running the application over the
+ * Cobalt core (i.e. dual kernel configuration)</b>
+ *
  * <TABLE>
  * <TR><TH>Tag</TH> <TH>Description</TH></TR>
  * <TR><TD>switch-primary</TD>		<TD>the caller may switch to primary mode</TD></TR>
