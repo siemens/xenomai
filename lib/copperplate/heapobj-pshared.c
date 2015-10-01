@@ -706,7 +706,8 @@ reset:
 	 * former session with more permissive access rules, such as
 	 * group-controlled access.
 	 */
-	fchown(fd, geteuid(), getegid());
+	ret = fchown(fd, geteuid(), getegid());
+	(void)ret;
 init:
 	ret = ftruncate(fd, 0);  /* Clear all previous contents if any. */
 	if (__bterrno(ret))
