@@ -172,6 +172,7 @@ static void __cobalt_init(void)
 			    sizeof(sem_t),
 			    sizeof(struct cobalt_sem_shadow));
 
+	cobalt_mutex_init();
 	cobalt_thread_init();
 	cobalt_print_init();
 }
@@ -189,7 +190,6 @@ int cobalt_init(void)
 	int policy, ret;
 
 	commit_stack_memory();	/* We only need this for the main thread */
-	cobalt_default_mutexattr_init();
 	cobalt_default_condattr_init();
 	__cobalt_init();
 

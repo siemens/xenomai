@@ -56,10 +56,21 @@
  */
 
 static pthread_mutexattr_t cobalt_default_mutexattr;
+static pthread_mutex_t cobalt_autoinit_mutex;
 
-void cobalt_default_mutexattr_init(void)
+void cobalt_mutex_init(void)
 {
+	pthread_mutexattr_t rt_init_mattr;
+	int err __attribute__((unused));
+
 	pthread_mutexattr_init(&cobalt_default_mutexattr);
+
+	pthread_mutexattr_init(&rt_init_mattr);
+	pthread_mutexattr_setprotocol(&rt_init_mattr, PTHREAD_PRIO_INHERIT);
+	err = __COBALT(pthread_mutex_init(&cobalt_autoinit_mutex,
+						&rt_init_mattr));
+	assert(err == 0);
+	pthread_mutexattr_destroy(&rt_init_mattr);
 }
 
 /**
@@ -176,12 +187,15 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
 {
 	static pthread_mutex_t uninit_normal_mutex = PTHREAD_MUTEX_INITIALIZER;
+	struct cobalt_mutex_shadow *_mutex =
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	static pthread_mutex_t uninit_recursive_mutex =
 		PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 	static pthread_mutex_t uninit_errorcheck_mutex =
 		PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+	int err __attribute__((unused));
 	pthread_mutexattr_t mattr;
-	int ret, type;
+	int ret = 0, type;
 
 	if (memcmp(mutex, &uninit_normal_mutex, sizeof(*mutex)) == 0)
 		type = PTHREAD_MUTEX_DEFAULT;
@@ -194,7 +208,13 @@ static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
 
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, type);
-	ret = __COBALT(pthread_mutex_init(mutex, &mattr));
+	err = __COBALT(pthread_mutex_lock(&cobalt_autoinit_mutex));
+	assert(err = 0);
+	if (_mutex->magic != COBALT_MUTEX_MAGIC)
+		ret = __COBALT(pthread_mutex_init(mutex, &mattr));
+	err = __COBALT(pthread_mutex_unlock(&cobalt_autoinit_mutex));
+	assert(err == 0);
+
 	pthread_mutexattr_destroy(&mattr);
 
 	return ret;
