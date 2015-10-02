@@ -201,8 +201,7 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  * @brief Adjust real-time task period
  *
  * @param[in,out] task Task handle as returned by rtdm_task_init(), or
- * NULL for referring to the current RTDM task or Cobalt thread (see
- * note).
+ * NULL for referring to the current RTDM task or Cobalt thread.
  *
  * @param[in] start_date The initial (absolute) date of the first
  * release point, expressed in nanoseconds.  @a task will be delayed
@@ -214,11 +213,6 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  * to disable cyclic mode for @a task.
  *
  * @coretags{task-unrestricted}
- *
- * @note Both RTDM tasks in kernel space and Cobalt threads in
- * user-space are based on Xenomai core threads, which implement this
- * service. For this reason, enabling periodic timing for a Cobalt
- * thread via the RTDM interface is possible.
  */
 int rtdm_task_set_period(rtdm_task_t *task, nanosecs_abs_t start_date,
 			 nanosecs_rel_t period);
