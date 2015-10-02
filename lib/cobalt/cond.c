@@ -194,11 +194,6 @@ static void __pthread_cond_cleanup(void *data)
 
 static int __attribute__((cold)) cobalt_cond_autoinit(pthread_cond_t *cond)
 {
-	static pthread_cond_t uninit_cond = PTHREAD_COND_INITIALIZER;
-
-	if (memcmp(cond, &uninit_cond, sizeof(*cond)))
-		return EINVAL;
-
 	return __COBALT(pthread_cond_init(cond, NULL));
 }
 
