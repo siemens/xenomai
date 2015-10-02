@@ -204,6 +204,35 @@ static void *cond_signaler(void *cookie)
 	return NULL;
 }
 
+static void autoinit_simple_condwait(void)
+{
+	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	unsigned long long start;
+	pthread_mutex_t mutex;
+	struct cond_mutex cm = {
+		.mutex = &mutex,
+		.cond = &cond,
+	};
+	pthread_t cond_signaler_tid;
+
+	smokey_trace("%s", __func__);
+
+	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
+	check("mutex_lock", mutex_lock(&mutex), 0);
+	check("thread_spawn",
+	      thread_spawn(&cond_signaler_tid, 2, cond_signaler, &cm), 0);
+	thread_msleep(11);
+
+	start = timer_get_tsc();
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
+	check_sleep("cond_wait", start);
+	thread_msleep(10);
+	check("mutex_unlock", mutex_unlock(&mutex), 0);
+	check("thread_join", thread_join(cond_signaler_tid), 0);
+	check("mutex_destroy", mutex_destroy(&mutex), 0);
+	check("cond_destroy", cond_destroy(&cond), 0);
+}
+
 static void simple_condwait(void)
 {
 	unsigned long long start;
@@ -251,6 +280,28 @@ static void relative_condwait(void)
 	      cond_wait(&cond, &mutex, 10 * NS_PER_MS), -ETIMEDOUT);
 	check_sleep("cond_wait", start);
 	thread_msleep(10);
+
+	check("mutex_unlock", mutex_unlock(&mutex), 0);
+	check("mutex_destroy", mutex_destroy(&mutex), 0);
+	check("cond_destroy", cond_destroy(&cond), 0);
+}
+
+static void autoinit_absolute_condwait(void)
+{
+	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	unsigned long long start;
+	pthread_mutex_t mutex;
+
+	smokey_trace("%s", __func__);
+
+	check("mutex_init", mutex_init(&mutex, PTHREAD_MUTEX_DEFAULT, 0), 0);
+	check("mutex_lock", mutex_lock(&mutex), 0);
+
+	start = timer_get_tsc();
+	check("cond_wait",
+	      cond_wait_until(&cond, &mutex, timer_read() + 10 * NS_PER_MS),
+	      -ETIMEDOUT);
+	check_sleep("cond_wait", start);
 
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
 	check("mutex_destroy", mutex_destroy(&mutex), 0);
@@ -633,8 +684,10 @@ int run_posix_cond(struct smokey_test *t, int argc, char *const argv[])
 	sparam.sched_priority = 2;
 	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
+	autoinit_simple_condwait();
 	simple_condwait();
 	relative_condwait();
+	autoinit_absolute_condwait();
 	absolute_condwait();
 	sig_norestart_condwait();
 	sig_restart_condwait();
