@@ -32,21 +32,6 @@
 #define SCHED_DEADLINE 6
 #endif
 
-#ifdef __x86_64__
-#define __NR_sched_setattr		314
-#define __NR_sched_getattr		315
-#endif
-
-#ifdef __i386__
-#define __NR_sched_setattr		351
-#define __NR_sched_getattr		352
-#endif
-
-#ifdef __arm__
-#define __NR_sched_setattr		380
-#define __NR_sched_getattr		381
-#endif
-
 struct sched_attr {
 	uint32_t size;
 	uint32_t sched_policy;
