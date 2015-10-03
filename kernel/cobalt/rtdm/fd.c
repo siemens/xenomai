@@ -730,37 +730,39 @@ void rtdm_fd_init(void)
 	kthread_run(fd_cleanup_thread, NULL, "rtdm_fd");
 }
 
-static inline void warn_user(const char *name)
+static inline void warn_user(struct file *file, const char *call)
 {
+	struct dentry *dentry = file->f_path.dentry;
+	
 	printk(XENO_WARNING
-	       "%s[%d] called regular %s() with RTDM file/socket\n",
-	       current->comm, current->pid, name + 5);
+	       "%s[%d] called regular %s() on /dev/rtdm/%s\n",
+	       current->comm, current->pid, call + 5, dentry->d_name.name);
 }
 
 static ssize_t dumb_read(struct file *file, char  __user *buf,
 			 size_t count, loff_t __user *ppos)
 {
-	warn_user(__func__);
+	warn_user(file, __func__);
 	return -EINVAL;
 }
 
 static ssize_t dumb_write(struct file *file,  const char __user *buf,
 			  size_t count, loff_t __user *ppos)
 {
-	warn_user(__func__);
+	warn_user(file, __func__);
 	return -EINVAL;
 }
 
 static unsigned int dumb_poll(struct file *file, poll_table *pt)
 {
-	warn_user(__func__);
+	warn_user(file, __func__);
 	return -EINVAL;
 }
 
 static long dumb_ioctl(struct file *file, unsigned int cmd,
 		       unsigned long arg)
 {
-	warn_user(__func__);
+	warn_user(file, __func__);
 	return -EINVAL;
 }
 
