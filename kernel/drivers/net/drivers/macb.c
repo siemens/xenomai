@@ -1539,6 +1539,7 @@ static const struct of_device_id macb_dt_ids[] = {
 	{ .compatible = "cdns,macb" },
 	{ .compatible = "cdns,pc302-gem" },
 	{ .compatible = "cdns,gem" },
+	{ .compatible = "atmel,sama5d3-gem" },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, macb_dt_ids);
