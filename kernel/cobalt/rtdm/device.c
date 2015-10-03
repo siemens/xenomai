@@ -303,6 +303,7 @@ static int register_driver(struct rtdm_driver *drv)
 
 	drv->named.major = MAJOR(rdev);
 	atomic_set(&drv->refcount, 1);
+	bitmap_zero(drv->minor_map, RTDM_MAX_MINOR);
 
 done:
 	drv->nb_statechange.notifier_call = state_change_notifier;
@@ -354,9 +355,9 @@ static void unregister_driver(struct rtdm_driver *drv)
  */
 int rtdm_dev_register(struct rtdm_device *dev)
 {
-	int ret, pos, major, minor;
 	struct device *kdev = NULL;
 	struct rtdm_driver *drv;
+	int ret, major, minor;
 	xnkey_t id;
 	dev_t rdev;
 
@@ -369,7 +370,6 @@ int rtdm_dev_register(struct rtdm_device *dev)
 
 	dev->name = NULL;
 	drv = dev->driver;
-	pos = atomic_read(&drv->refcount);
 	ret = register_driver(drv);
 	if (ret) {
 		mutex_unlock(&register_lock);
@@ -386,16 +386,22 @@ int rtdm_dev_register(struct rtdm_device *dev)
 	dev->ops.close = __rtdm_dev_close; /* Interpose on driver's handler. */
 	atomic_set(&dev->refcount, 0);
 
-	if (drv->device_flags & RTDM_FIXED_MINOR) {
-		minor = dev->minor;
-		if (minor < 0 || minor >= drv->device_count) {
-			ret = -EINVAL;
-			goto fail;
-		}
-	} else
-		dev->minor = minor = pos;
-
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
+		if (drv->device_flags & RTDM_FIXED_MINOR) {
+			minor = dev->minor;
+			if (minor < 0 || minor >= drv->device_count) {
+				ret = -ENXIO;
+				goto fail;
+			}
+		} else {
+			minor = find_first_zero_bit(drv->minor_map, RTDM_MAX_MINOR);
+			if (minor >= RTDM_MAX_MINOR) {
+				ret = -ENXIO;
+				goto fail;
+			}
+			dev->minor = minor;
+		}
+
 		major = drv->named.major;
 		dev->name = kasformat(dev->label, minor);
 		if (dev->name == NULL) {
@@ -416,7 +422,9 @@ int rtdm_dev_register(struct rtdm_device *dev)
 			ret = PTR_ERR(kdev);
 			goto fail;
 		}
+		__set_bit(minor, drv->minor_map);
 	} else {
+		dev->minor = -1;
 		dev->name = kstrdup(dev->label, GFP_KERNEL);
 		if (dev->name == NULL) {
 			ret = -ENOMEM;
@@ -489,9 +497,10 @@ void rtdm_dev_unregister(struct rtdm_device *dev)
 
 	mutex_lock(&register_lock);
 
-	if (drv->device_flags & RTDM_NAMED_DEVICE)
+	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		xnregistry_remove(dev->named.handle);
-	else
+		__clear_bit(dev->minor, drv->minor_map);
+	} else
 		xnid_remove(&protocol_devices, &dev->proto.id);
 
 	device_destroy(rtdm_class, dev->rdev);

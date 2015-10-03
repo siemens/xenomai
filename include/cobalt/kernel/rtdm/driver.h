@@ -93,6 +93,9 @@ enum rtdm_selecttype;
 #define RTDM_SECURE_DEVICE		0x80000000
 /** @} Device Flags */
 
+/** Maximum number of named devices per driver. */
+#define RTDM_MAX_MINOR	256
+
 /** @} rtdm_device_register */
 
 /*!
@@ -279,6 +282,7 @@ struct rtdm_driver {
 		};
 		atomic_t refcount;
 		struct notifier_block nb_statechange;
+		DECLARE_BITMAP(minor_map, RTDM_MAX_MINOR);
 	};
 };
 
