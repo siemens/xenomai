@@ -1053,9 +1053,6 @@ static void put_clocks(struct flexcan_priv *priv)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0)
 	clk_put(priv->clk);
-#else
-	clk_put(priv->clk_per);
-	clk_put(priv->clk_ipg);
 #endif
 }
 
