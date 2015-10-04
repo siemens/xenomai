@@ -210,9 +210,8 @@ static struct rtdm_driver umm_driver = {
 						  RTDM_CLASS_MEMORY,
 						  RTDM_SUBCLASS_GENERIC,
 						  0),
-	.device_flags	=	RTDM_NAMED_DEVICE,
+	.device_flags	=	RTDM_NAMED_DEVICE|RTDM_FIXED_MINOR,
 	.device_count	=	2,
-	.context_size	=	0,
 	.ops = {
 		.ioctl_rt		=	umm_ioctl_rt,
 		.ioctl_nrt		=	umm_ioctl_nrt,
@@ -225,10 +224,12 @@ static struct rtdm_device umm_devices[] = {
 	[ UMM_PRIVATE ] = {
 		.driver = &umm_driver,
 		.label = COBALT_MEMDEV_PRIVATE,
+		.minor = UMM_PRIVATE,
 	},
 	[ UMM_SHARED ] = {
 		.driver = &umm_driver,
 		.label = COBALT_MEMDEV_SHARED,
+		.minor = UMM_SHARED,
 	},
 };
 
@@ -239,7 +240,6 @@ static struct rtdm_driver sysmem_driver = {
 						  0),
 	.device_flags	=	RTDM_NAMED_DEVICE,
 	.device_count	=	1,
-	.context_size	=	0,
 	.ops = {
 		.open		=	sysmem_open,
 		.ioctl_rt	=	sysmem_ioctl_rt,
