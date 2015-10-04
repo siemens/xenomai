@@ -39,51 +39,34 @@ static const struct option base_options[] = {
 	{
 #define help_opt	0
 		.name = "help",
-		.has_arg = 0,
-		.flag = NULL,
-		.val = 0
+		.has_arg = no_argument,
 	},
 #define file_opt	1
 	{
 		.name = "file",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
 #define path_opt	2
 	{
 		.name = "path",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
 #define filter_opt	3	/* Alias for filter-in */
 	{
 		.name = "filter",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
 #define filter_in_opt	4
 	{
 		.name = "filter-in",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
 #define filter_out_opt	5	/* Alias for !filter-in */
 	{
 		.name = "filter-out",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
-	{
-		.name = NULL,
-		.has_arg = 0,
-		.flag = NULL,
-		.val = 0
-	}
+	{ /* Sentinel */ }
 };
 
 struct relax_spot;

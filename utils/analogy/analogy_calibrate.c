@@ -37,24 +37,19 @@ static const struct option options[] = {
 	{
 #define help_opt	0
 		.name = "help",
-		.has_arg = 0,
-		.flag = NULL,
+		.has_arg = no_argument,
 	},
 	{
 #define device_opt	1
 		.name = "device",
-		.has_arg = 1,
-		.flag = NULL,
+		.has_arg = required_argument,
 	},
 	{
 #define output_opt	2
 		.name = "output",
-		.has_arg = 1,
-		.flag = NULL,
+		.has_arg = required_argument,
 	},
-	{
-		.name = NULL,
-	}
+	{ /* Sentinel */ }
 };
 
 static void

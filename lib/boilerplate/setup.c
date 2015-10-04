@@ -56,55 +56,60 @@ static const struct option base_options[] = {
 	{
 #define affinity_opt	1
 		.name = "cpu-affinity",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define verbose_opt	2
 		.name = "verbose",
-		.has_arg = 2,
+		.has_arg = optional_argument,
 	},
 	{
 #define silent_opt	3
 		.name = "silent",
+		.has_arg = no_argument,
 		.flag = &__base_setup_data.verbosity_level,
 		.val = 0,
 	},
 	{
 #define quiet_opt	4
 		.name = "quiet",
+		.has_arg = no_argument,
 		.flag = &__base_setup_data.verbosity_level,
 		.val = 0,
 	},
 	{
 #define version_opt	5
 		.name = "version",
+		.has_arg = no_argument,
 	},
 	{
 #define dumpconfig_opt	6
 		.name = "dump-config",
+		.has_arg = no_argument,
 	},
 	{
 #define no_sanity_opt	7
 		.name = "no-sanity",
+		.has_arg = no_argument,
 		.flag = &__base_setup_data.no_sanity,
 		.val = 1
 	},
 	{
 #define sanity_opt	8
 		.name = "sanity",
+		.has_arg = no_argument,
 		.flag = &__base_setup_data.no_sanity,
 	},
 	{
 #define no_mlock_opt	9
 #ifdef CONFIG_XENO_MERCURY
 		.name = "no-mlock",
+		.has_arg = no_argument,
 		.flag = &__base_setup_data.no_mlock,
 		.val = 1
 #endif
 	},
-	{
-		/* sentinel */
-	}
+	{ /* Sentinel */ }
 };
 
 void __weak application_version(void)

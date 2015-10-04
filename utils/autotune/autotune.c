@@ -42,47 +42,51 @@ static const struct option base_options[] = {
 	{
 #define irq_opt		0
 		.name = "irq",
+		.has_arg = no_argument,
 		.flag = &tune_irqlat,
 		.val = 1
 	},
 	{
 #define kernel_opt	1
 		.name = "kernel",
+		.has_arg = no_argument,
 		.flag = &tune_kernlat,
 		.val = 1
 	},
 	{
 #define user_opt	2
 		.name = "user",
+		.has_arg = no_argument,
 		.flag = &tune_userlat,
 		.val = 1
 	},
 	{
 #define reset_opt	3
 		.name = "reset",
+		.has_arg = no_argument,
 		.flag = &reset,
 		.val = 1
 	},
 	{
 #define noload_opt	4
 		.name = "noload",
+		.has_arg = no_argument,
 		.flag = &noload,
 		.val = 1
 	},
 	{
 #define period_opt	5
 		.name = "period",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define background_opt	6
 		.name = "background",
+		.has_arg = no_argument,
 		.flag = &background,
 		.val = 1,
 	},
-	{
-		.name = NULL,
-	}
+	{ /* Sentinel */ }
 };
 
 static void *sampler_thread(void *arg)

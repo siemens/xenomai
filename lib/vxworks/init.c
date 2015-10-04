@@ -46,16 +46,9 @@ static const struct option vxworks_options[] = {
 	{
 #define clock_resolution_opt	0
 		.name = "vxworks-clock-resolution",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
-	{
-		.name = NULL,
-		.has_arg = 0,
-		.flag = NULL,
-		.val = 0
-	}
+	{ /* Sentinel */ }
 };
 
 static int vxworks_parse_option(int optnum, const char *optarg)

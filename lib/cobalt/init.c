@@ -56,26 +56,24 @@ static const struct option cobalt_options[] = {
 	{
 #define main_prio_opt		0
 		.name = "main-prio",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define print_bufsz_opt	1
 		.name = "print-buffer-size",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define print_bufcnt_opt	2
 		.name = "print-buffer-count",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define print_syncdelay_opt	3
 		.name = "print-sync-delay",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
-	{
-		/* sentinel */
-	}
+	{ /* Sentinel */ }
 };
 
 static void sigill_handler(int sig)

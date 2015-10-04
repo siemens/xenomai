@@ -51,33 +51,33 @@ static const struct option copperplate_options[] = {
 	{
 #define mempool_opt	0
 		.name = "mem-pool-size",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define regroot_opt	1
 		.name = "registry-root",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define no_registry_opt	2
 		.name = "no-registry",
+		.has_arg = no_argument,
 		.flag = &__copperplate_setup_data.no_registry,
 		.val = 1
 	},
 	{
 #define session_opt	3
 		.name = "session",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define shared_registry_opt	4
 		.name = "shared-registry",
+		.has_arg = no_argument,
 		.flag = &__copperplate_setup_data.shared_registry,
 		.val = 1,
 	},
-	{
-		/* sentinel */
-	}
+	{ /* Sentinel */ }
 };
 
 /*

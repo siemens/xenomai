@@ -80,46 +80,42 @@ static const struct option options[] = {
 	{
 #define help_opt	0
 		.name = "help",
-		.has_arg = 0,
-		.flag = NULL,
+		.has_arg = no_argument,
 	},
 	{
 #define daemonize_opt	1
 		.name = "daemonize",
-		.has_arg = 0,
+		.has_arg = no_argument,
 		.flag = &daemonize,
 		.val = 1,
 	},
 	{
 #define root_opt	2
 		.name = "root",
-		.has_arg = 1,
-		.flag = NULL,
+		.has_arg = required_argument,
 	},
 	{
 #define linger_opt	3
 		.name = "linger",
-		.has_arg = 0,
+		.has_arg = no_argument,
 		.flag = &linger,
 		.val = 1,
 	},
 	{
 #define shared_opt	4
 		.name = "shared",
-		.has_arg = 0,
+		.has_arg = no_argument,
 		.flag = &shared,
 		.val = 1,
 	},
 	{
 #define anon_opt	5
 		.name = "anon",
-		.has_arg = 0,
+		.has_arg = no_argument,
 		.flag = &anon,
 		.val = 1,
 	},
-	{
-		.name = NULL,
-	},
+	{ /* Sentinel */ },
 };
 
 static int create_directory_recursive(const char *dir) /* absolute path */

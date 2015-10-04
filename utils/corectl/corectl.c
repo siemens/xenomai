@@ -33,19 +33,21 @@ static const struct option options[] = {
 	{
 #define status_opt	0	/* Set this first, default action. */
 		.name = "status",
+		.has_arg = no_argument,
 		.flag = &action,
 		.val = status_opt,
 	},
 	{
 #define stop_opt	1
 		.name = "stop",
+		.has_arg = optional_argument,
 		.flag = &action,
 		.val = stop_opt,
-		.has_arg = 2,
 	},
 	{
 #define start_opt	2
 		.name = "start",
+		.has_arg = no_argument,
 		.flag = &action,
 		.val = start_opt,
 	},

@@ -56,22 +56,21 @@ static const struct option psos_options[] = {
 	{
 #define clock_resolution_opt	0
 		.name = "psos-clock-resolution",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define time_slice_opt	1
 		.name = "psos-time-slice",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{
 #define long_names_opt	2
 		.name = "psos-long-names",
+		.has_arg = no_argument,
 		.flag = &psos_long_names,
 		.val = 1
 	},
-	{
-		/* sentinel */
-	}
+	{ /* Sentinel */ }
 };
 
 static int psos_parse_option(int optnum, const char *optarg)

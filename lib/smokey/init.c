@@ -270,29 +270,30 @@ static const struct option smokey_options[] = {
 	{
 #define keep_going_opt	0
 		.name = "keep-going",
+		.has_arg = no_argument,
 		.flag = &smokey_keep_going,
 		.val = 1,
 	},
 	{
 #define run_opt		1
 		.name = "run",
-		.has_arg = 2,
+		.has_arg = optional_argument,
 	},
 	{
 #define list_opt	2
 		.name = "list",
+		.has_arg = no_argument,
 		.flag = &do_list,
 		.val = 1,
 	},
 	{
 #define vm_opt		3
 		.name = "vm",
+		.has_arg = no_argument,
 		.flag = &smokey_on_vm,
 		.val = 1,
 	},
-	{
-		/* sentinel */
-	}
+	{ /* Sentinel */ }
 };
 
 static void smokey_help(void)

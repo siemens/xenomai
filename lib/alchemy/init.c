@@ -49,16 +49,9 @@ static const struct option alchemy_options[] = {
 	{
 #define clock_resolution_opt	0
 		.name = "alchemy-clock-resolution",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
+		.has_arg = required_argument,
 	},
-	{
-		.name = NULL,
-		.has_arg = 0,
-		.flag = NULL,
-		.val = 0
-	}
+	{ /* Sentinel */ }
 };
 
 static int alchemy_parse_option(int optnum, const char *optarg)

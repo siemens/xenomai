@@ -31,7 +31,7 @@ static const struct option options[] = {
 	{
 #define dump_cluster_opt	0
 		.name = "dump-cluster",
-		.has_arg = 1,
+		.has_arg = required_argument,
 	},
 	{ /* Sentinel */ }
 };
