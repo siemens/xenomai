@@ -509,6 +509,7 @@ AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
 		pthread_condattr_setclock	\
 		pthread_spin_lock fork		\
 		pthread_attr_setaffinity_np	\
+		pthread_setaffinity_np		\
 		pthread_getattr_np		\
 		pthread_atfork			\
 		pthread_setname_np		\

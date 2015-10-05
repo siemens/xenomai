@@ -118,6 +118,16 @@ int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 		return 0;
 	return ENOSYS;
 }
+
+static inline
+int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
+			   const cpu_set_t *cpuset)
+{
+	if (CPU_ISSET(0, cpuset) && CPU_COUNT(cpuset) == 1)
+		return 0;
+	return ENOSYS;
+}
+
 #endif /* !HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
 
 #if !defined(HAVE_CLOCK_NANOSLEEP) && defined(CONFIG_XENO_MERCURY)
