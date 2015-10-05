@@ -2,6 +2,11 @@
 #define __RT_UTILS_H
 
 #include <stdint.h>
+#include <linux/sched.h>
+
+#ifndef SCHED_NORMAL
+#define SCHED_NORMAL SCHED_OTHER
+#endif
 
 #define _STR(x) #x
 #define STR(x) _STR(x)

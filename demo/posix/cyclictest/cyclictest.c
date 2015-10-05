@@ -43,51 +43,11 @@
 #define DEFAULT_INTERVAL 1000
 #define DEFAULT_DISTANCE 500
 
-#ifndef SCHED_IDLE
-#define SCHED_IDLE 5
-#endif
-#ifndef SCHED_NORMAL
-#define SCHED_NORMAL SCHED_OTHER
-#endif
-
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 /* Ugly, but .... */
 #define gettid() syscall(__NR_gettid)
 #define sigev_notify_thread_id _sigev_un._tid
-
-#ifdef __UCLIBC__
-#define MAKE_PROCESS_CPUCLOCK(pid, clock) \
-	((~(clockid_t) (pid) << 3) | (clockid_t) (clock))
-#define CPUCLOCK_SCHED          2
-
-static int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *req,
-			   struct timespec *rem)
-{
-	if (clock_id == CLOCK_THREAD_CPUTIME_ID)
-		return -EINVAL;
-	if (clock_id == CLOCK_PROCESS_CPUTIME_ID)
-		clock_id = MAKE_PROCESS_CPUCLOCK (0, CPUCLOCK_SCHED);
-
-	return syscall(__NR_clock_nanosleep, clock_id, flags, req, rem);
-}
-
-int sched_setaffinity (__pid_t __pid, size_t __cpusetsize,
-		       __const cpu_set_t *__cpuset)
-{
-	return -EINVAL;
-}
-
-#undef CPU_SET
-#undef CPU_ZERO
-#define CPU_SET(cpu, cpusetp)
-#define CPU_ZERO(cpusetp)
-
-#else
-extern int clock_nanosleep(clockid_t __clock_id, int __flags,
-			   __const struct timespec *__req,
-			   struct timespec *__rem);
-#endif
 
 #define USEC_PER_SEC		1000000
 #define NSEC_PER_SEC		1000000000
@@ -112,6 +72,12 @@ extern int clock_nanosleep(clockid_t __clock_id, int __flags,
 int enable_events;
 
 static char *policyname(int policy);
+
+#define write_check(__fd, __buf, __len)			\
+	do {						\
+		int __ret = write(__fd, __buf, __len);	\
+		(void)__ret;				\
+	} while (0);
 
 enum {
 	NOTRACE,
@@ -196,8 +162,6 @@ static pthread_mutex_t break_thread_id_lock = PTHREAD_MUTEX_INITIALIZER;
 static pid_t break_thread_id = 0;
 static uint64_t break_thread_value = 0;
 
-static pthread_barrier_t align_barr;
-static pthread_barrier_t globalt_barr;
 static struct timespec globalt;
 
 /* Backup of kernel variables that we modify */
@@ -437,7 +401,7 @@ static void tracemark(char *fmt, ...)
 	va_start(ap, fmt);
 	len = vsnprintf(tracebuf, TRACEBUFSIZ, fmt, ap);
 	va_end(ap);
-	write(tracemark_fd, tracebuf, len);
+	write_check(tracemark_fd, tracebuf, len);
 }
 
 
@@ -450,7 +414,7 @@ void tracing(int on)
 		case KV_26_LT24: prctl(0, 1); break;
 		case KV_26_33:
 		case KV_30:
-			write(trace_fd, "1", 1);
+			write_check(trace_fd, "1", 1);
 			break;
 		default:	 break;
 		}
@@ -460,7 +424,7 @@ void tracing(int on)
 		case KV_26_LT24: prctl(0, 0); break;
 		case KV_26_33:
 		case KV_30:
-			write(trace_fd, "0", 1);
+			write_check(trace_fd, "0", 1);
 			break;
 		default:	break;
 		}
@@ -737,6 +701,43 @@ try_again:
 	return err;
 }
 
+/* Work around lack of barriers in oldish uClibc-based toolchains. */
+
+static struct thread_barrier {
+	pthread_mutex_t lock;
+	pthread_cond_t wait;
+	unsigned int count;
+} align_barr, globalt_barr;
+
+static inline
+void barrier_init(struct thread_barrier *__restrict barrier,
+		 unsigned int count)
+{
+	pthread_mutex_init(&barrier->lock, NULL);
+	pthread_cond_init(&barrier->wait, NULL);
+	barrier->count = count;
+}
+
+static inline void barrier_destroy(struct thread_barrier *barrier)
+{
+	pthread_mutex_destroy(&barrier->lock);
+	pthread_cond_destroy(&barrier->wait);
+}
+
+static inline void barrier_wait(struct thread_barrier *barrier)
+{
+	pthread_mutex_lock(&barrier->lock);
+
+	if (barrier->count > 0) {
+		barrier->count--;
+		pthread_cond_broadcast(&barrier->wait);
+		while (barrier->count > 0)
+			pthread_cond_wait(&barrier->wait, &barrier->lock);
+	}
+	
+	pthread_mutex_unlock(&barrier->lock);
+}
+
 /*
  * timer thread
  *
@@ -800,7 +801,7 @@ void *timerthread(void *param)
 
 	/* Get current time */
 	if (aligned || secaligned) {
-		pthread_barrier_wait(&globalt_barr);
+		barrier_wait(&globalt_barr);
 		if (par->tnum == 0) {
 			clock_gettime(par->clock, &globalt);
 			if (secaligned) {
@@ -813,7 +814,7 @@ void *timerthread(void *param)
 				globalt.tv_nsec = 0;
 			}
 		}
-		pthread_barrier_wait(&align_barr);
+		barrier_wait(&align_barr);
 		now = globalt;
 		if(offset) {
 			if (aligned)
@@ -1558,8 +1559,8 @@ static void process_options (int argc, char *argv[], int max_cpus)
 		error = 1;
 
 	if (aligned || secaligned) {
-		pthread_barrier_init(&globalt_barr, NULL, num_threads);
-		pthread_barrier_init(&align_barr, NULL, num_threads);
+		barrier_init(&globalt_barr, num_threads);
+		barrier_init(&align_barr, num_threads);
 	}
 
 	if (error) {

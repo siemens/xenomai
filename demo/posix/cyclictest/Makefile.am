@@ -14,8 +14,7 @@ cyclictest_CPPFLAGS = 				\
 	-Wno-implicit-function-declaration	\
 	-Wno-missing-prototypes			\
 	-Wno-nonnull				\
-	-Wno-unused-function			\
-	-Wno-unused-result
+	-Wno-unused-function
 
 cyclictest_SOURCES =	\
 	cyclictest.c	\
