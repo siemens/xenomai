@@ -996,12 +996,6 @@ static void unregister_flexcandev(struct rtcan_device *dev)
 	rtcan_dev_unregister(dev);
 }
 
-static void put_clocks(struct flexcan_priv *priv)
-{
-	clk_put(priv->clk_per);
-	clk_put(priv->clk_ipg);
-}
-
 static struct of_device_id flexcan_of_match[] = {
 	{ .compatible = "fsl,p1010-flexcan", .data = &fsl_p1010_devtype_data, },
 	{ .compatible = "fsl,imx28-flexcan", .data = &fsl_imx28_devtype_data, },
@@ -1125,7 +1119,6 @@ out_register:
 out_map:
 	release_mem_region(mem->start, mem_size);
 out_get:
-	put_clocks(priv);
 	rtcan_dev_free(dev);
 
 	return err;
@@ -1143,7 +1136,6 @@ static int flexcan_remove(struct platform_device *pdev)
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	release_mem_region(mem->start, resource_size(mem));
-	put_clocks(priv);
 
 	rtcan_dev_free(dev);
 
