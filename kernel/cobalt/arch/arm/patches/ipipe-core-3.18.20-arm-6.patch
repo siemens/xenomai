@@ -159,17 +159,18 @@ index 38c89ca..7c954bc 100644
  
  # Keep at91 dtb files sorted alphabetically for each SoC
 diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
-index 9596ed5..3e7a4a3 100644
+index 9596ed5..8957633e 100644
 --- a/arch/arm/boot/dts/imx6qdl.dtsi
 +++ b/arch/arm/boot/dts/imx6qdl.dtsi
-@@ -125,6 +125,12 @@
+@@ -125,6 +125,13 @@
  			clocks = <&clks IMX6QDL_CLK_TWD>;
  		};
  
 +		timer@00a00200 {
 +			compatible = "arm,cortex-a9-global-timer";
 +			reg = <0x00a00200 0x20>;
-+			clocks = <&clks 15>;
++			interrupts = <1 11 0xf01>;
++			clocks = <&clks IMX6QDL_CLK_TWD>;
 +		};
 +
  		L2: l2-cache@00a02000 {
@@ -690,10 +691,10 @@ index 0000000..19b50df
 +	power = <50>;
 +};
 diff --git a/arch/arm/boot/dts/omap4.dtsi b/arch/arm/boot/dts/omap4.dtsi
-index 878c979..aae32e6 100644
+index 878c979..dc2450d 100644
 --- a/arch/arm/boot/dts/omap4.dtsi
 +++ b/arch/arm/boot/dts/omap4.dtsi
-@@ -72,6 +72,12 @@
+@@ -72,6 +72,13 @@
  		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_RAW(3) | IRQ_TYPE_LEVEL_HIGH)>;
  	};
  
@@ -701,6 +702,7 @@ index 878c979..aae32e6 100644
 +		compatible = "arm,cortex-a9-global-timer";
 +		reg = <0x48240200 0x20>;
 +		clocks = <&mpu_periphclk>;
++		interrupts = <GIC_PPI 11 (GIC_CPU_MASK_RAW(3) | IRQ_TYPE_LEVEL_HIGH)>;
 +	};
 +
  	/*
@@ -1651,7 +1653,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..5c7e9bd
+index 0000000..76c7b6b
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,272 @@
@@ -1699,7 +1701,7 @@ index 0000000..5c7e9bd
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	5
++#define IPIPE_CORE_RELEASE	6
 +
 +struct ipipe_domain;
 +
@@ -3717,6 +3719,19 @@ index 4176df7..8451be2 100644
  /*
   * These are the registers used in the syscall handler, and allow us to
   * have in theory up to 7 arguments to a function - r0 to r6.
+diff --git a/arch/arm/kernel/hibernate.c b/arch/arm/kernel/hibernate.c
+index cfb354f..d11d476 100644
+--- a/arch/arm/kernel/hibernate.c
++++ b/arch/arm/kernel/hibernate.c
+@@ -83,7 +83,7 @@ static void notrace arch_restore_image(void *unused)
+ {
+ 	struct pbe *pbe;
+ 
+-	cpu_switch_mm(idmap_pgd, &init_mm);
++	cpu_switch_mm(idmap_pgd, &init_mm, 1);
+ 	for (pbe = restore_pblist; pbe; pbe = pbe->next)
+ 		copy_page(pbe->orig_address, pbe->address);
+ 
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
 index 0000000..9577fbb
@@ -4285,10 +4300,10 @@ index 0000000..9577fbb
 +EXPORT_SYMBOL_GPL(cpu_architecture);
 diff --git a/arch/arm/kernel/ipipe_tsc.c b/arch/arm/kernel/ipipe_tsc.c
 new file mode 100644
-index 0000000..f0cfd86
+index 0000000..4a87f0c
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe_tsc.c
-@@ -0,0 +1,201 @@
+@@ -0,0 +1,203 @@
 +#include <linux/kernel.h>
 +#include <linux/module.h>
 +#include <linux/sched.h>
@@ -4456,6 +4471,8 @@ index 0000000..f0cfd86
 +	ipipe_tsc_update_timer.function = __ipipe_tsc_update_fn;
 +	mod_timer(&ipipe_tsc_update_timer,
 +		jiffies + ipipe_tsc_update_timer.data);
++
++	__ipipe_tracer_hrclock_initialized();
 +}
 +
 +void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
@@ -4969,7 +4986,7 @@ index bd19834..c49e067 100644
  	} while (thread_flags & _TIF_WORK_MASK);
  	return 0;
 diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
-index a8e32aa..bd81cc5 100644
+index a8e32aa..4939e05 100644
 --- a/arch/arm/kernel/smp.c
 +++ b/arch/arm/kernel/smp.c
 @@ -72,8 +72,24 @@ enum ipi_msg_type {
@@ -5016,18 +5033,16 @@ index a8e32aa..bd81cc5 100644
  
  	/*
  	 * All kernel threads share the same mm context; grab a
-@@ -514,6 +537,93 @@ void arch_irq_work_raise(void)
+@@ -514,6 +537,91 @@ void arch_irq_work_raise(void)
  #endif
  
  #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
 +
 +static inline void ipi_timer(void)
 +{
-+#ifdef CONFIG_IPIPE
-+#ifndef CONFIG_IPIPE_ARM_KUSER_TSC
++#if defined(CONFIG_IPIPE_LEGACY) && !defined(CONFIG_IPIPE_ARM_KUSER_TSC)
 +	__ipipe_mach_update_tsc();
-+#endif /* CONFIG_IPIPE_ARM_KUSER_TSC */
-+#endif /* CONFIG_IPIPE */
++#endif
 +
 +	tick_receive_broadcast();
 +}
@@ -5110,7 +5125,7 @@ index a8e32aa..bd81cc5 100644
  void tick_broadcast(const struct cpumask *mask)
  {
  	smp_cross_call(mask, IPI_TIMER);
-@@ -581,9 +691,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
+@@ -581,9 +689,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
  
  #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
  	case IPI_TIMER:
@@ -5123,7 +5138,7 @@ index a8e32aa..bd81cc5 100644
  		break;
  #endif
  
-@@ -592,35 +702,35 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
+@@ -592,35 +700,35 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
  		break;
  
  	case IPI_CALL_FUNC:
@@ -14272,10 +14287,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..eafb7f3
+index 0000000..0a9b5b6
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,457 @@
+@@ -0,0 +1,461 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -14455,8 +14470,6 @@ index 0000000..eafb7f3
 +
 +void ipipe_free_irq(struct ipipe_domain *ipd,
 +		    unsigned int irq);
-+
-+void __ipipe_raise_irq(unsigned int irq);
 +
 +void ipipe_raise_irq(unsigned int irq);
 +
@@ -14693,6 +14706,12 @@ index 0000000..eafb7f3
 +#else
 +#define __ipipe_uaccess_might_fault() might_fault()
 +#endif
++
++#ifdef CONFIG_IPIPE_TRACE
++void __ipipe_tracer_hrclock_initialized(void);
++#else /* !CONFIG_IPIPE_TRACE */
++#define __ipipe_tracer_hrclock_initialized()	do { } while(0)
++#endif /* !CONFIG_IPIPE_TRACE */
 +
 +#include <linux/ipipe_compat.h>
 +
@@ -15530,10 +15549,10 @@ index 0000000..5d7efef
 +#endif /* !__LINUX_IPIPE_DEBUG_H */
 diff --git a/include/linux/ipipe_domain.h b/include/linux/ipipe_domain.h
 new file mode 100644
-index 0000000..7420900
+index 0000000..d00c56b
 --- /dev/null
 +++ b/include/linux/ipipe_domain.h
-@@ -0,0 +1,311 @@
+@@ -0,0 +1,309 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_domain.h
 + *
@@ -15638,9 +15657,7 @@ index 0000000..7420900
 +	struct task_struct *rqlock_owner;
 +	struct ipipe_vm_notifier *vm_notifier;
 +	unsigned long nmi_state;
-+#ifdef CONFIG_IPIPE_WANT_ACTIVE_MM
 +	struct mm_struct *active_mm;
-+#endif
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +	int context_check;
 +	int context_check_saved;
@@ -20172,10 +20189,10 @@ index 0000000..354bf29
 +#endif /* CONFIG_IPIPE_HAVE_HOSTRT */
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..c8c1b97
+index 0000000..da272c50
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1447 @@
+@@ -0,0 +1,1468 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -20923,6 +20940,9 @@ index 0000000..c8c1b97
 +	unsigned long long abs_tsc;
 +	long us;
 +
++	if (!__ipipe_hrclock_ok())
++		return 0;
++
 +	/* ipipe_tsc2us works on unsigned => handle sign separately */
 +	abs_tsc = (tsc >= 0) ? tsc : -tsc;
 +	us = ipipe_tsc2us(abs_tsc);
@@ -21125,6 +21145,11 @@ index 0000000..c8c1b97
 +
 +		__ipipe_global_path_unlock(flags);
 +
++		if (!__ipipe_hrclock_ok()) {
++			seq_printf(m, "No hrclock available, dumping traces disabled\n");
++			return NULL;
++		}
++
 +		/* does this path actually contain data? */
 +		if (print_path->end == print_path->begin)
 +			return NULL;
@@ -21294,6 +21319,11 @@ index 0000000..c8c1b97
 +
 +		if (!print_path)
 +			return NULL;
++
++		if (!__ipipe_hrclock_ok()) {
++			seq_printf(m, "No hrclock available, dumping traces disabled\n");
++			return NULL;
++		}
 +
 +		/* back- and post-tracing length, post-trace length was frozen
 +		   in __ipipe_trace, back-trace may have to be reduced due to
@@ -21544,17 +21574,37 @@ index 0000000..c8c1b97
 +
 +extern struct proc_dir_entry *ipipe_proc_root;
 +
++void __init __ipipe_tracer_hrclock_initialized(void)
++{
++	unsigned long long start, end, min = ULLONG_MAX;
++	int i;
++
++#ifdef CONFIG_IPIPE_TRACE_VMALLOC
++	if (!per_cpu(trace_path, 0))
++		return;
++#endif
++	/* Calculate minimum overhead of __ipipe_trace() */
++	hard_local_irq_disable();
++	for (i = 0; i < 100; i++) {
++		ipipe_read_tsc(start);
++		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
++			      __BUILTIN_RETURN_ADDRESS1, 0);
++		ipipe_read_tsc(end);
++
++		end -= start;
++		if (end < min)
++			min = end;
++	}
++	hard_local_irq_enable();
++	trace_overhead = ipipe_tsc2ns(min);
++}
++
 +void __init __ipipe_init_tracer(void)
 +{
 +	struct proc_dir_entry *trace_dir;
-+	unsigned long long start, end, min = ULLONG_MAX;
-+	int i;
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
-+
-+	if (!__ipipe_hrclock_ok())
-+		return;
 +
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	for_each_possible_cpu(cpu) {
@@ -21577,20 +21627,8 @@ index 0000000..c8c1b97
 +	}
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
-+	/* Calculate minimum overhead of __ipipe_trace() */
-+	hard_local_irq_disable();
-+	for (i = 0; i < 100; i++) {
-+		ipipe_read_tsc(start);
-+		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
-+			      __BUILTIN_RETURN_ADDRESS1, 0);
-+		ipipe_read_tsc(end);
-+
-+		end -= start;
-+		if (end < min)
-+			min = end;
-+	}
-+	hard_local_irq_enable();
-+	trace_overhead = ipipe_tsc2ns(min);
++	if (__ipipe_hrclock_ok() && !trace_overhead)
++		__ipipe_tracer_hrclock_initialized();
 +
 +#ifdef CONFIG_IPIPE_TRACE_ENABLE
 +	ipipe_trace_enable = 1;
@@ -21624,7 +21662,7 @@ index 0000000..c8c1b97
 +#endif /* !CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index e5202f0..9ddc809 100644
+index e5202f0..524c2e5 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -15,6 +15,7 @@
@@ -21673,7 +21711,7 @@ index e5202f0..9ddc809 100644
  		desc->irq_data.chip->irq_shutdown(&desc->irq_data);
 -	else if (desc->irq_data.chip->irq_disable)
 +#ifdef CONFIG_IPIPE
-+		desc->istate |= ~IPIPE_IRQS_NEEDS_STARTUP;
++		desc->istate |= IPIPE_IRQS_NEEDS_STARTUP;
 +#endif
 +	} else if (desc->irq_data.chip->irq_disable)
  		desc->irq_data.chip->irq_disable(&desc->irq_data);
