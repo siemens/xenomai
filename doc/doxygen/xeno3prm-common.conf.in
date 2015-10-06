@@ -651,6 +651,7 @@ PREDEFINED = DOXYGEN_CPP			\
 	CONFIG_SMP				\
         "dref_type(T)=opaque"			\
         "EXPORT_SYMBOL_GPL(symbol)=//"		\
+        "DECLARE_BITMAP(symbol, nr)=unsigned long symbol[BITS_TO_LONGS(nr)]" \
 	"COBALT_IMPL(T,I,A)=T I A"		\
 	"COBALT_DECL(T,P)=T P"			\
 	"COBALT_SYSCALL(N,M,T,A)=T N A"		\
