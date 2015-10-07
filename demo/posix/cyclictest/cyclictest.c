@@ -1101,6 +1101,11 @@ static void display_help(int error)
 	exit(EXIT_SUCCESS);
 }
 
+void application_usage(void)
+{
+	display_help(0);
+}
+
 static int use_nanosleep;
 static int timermode = TIMER_ABSTIME;
 static int use_system;
