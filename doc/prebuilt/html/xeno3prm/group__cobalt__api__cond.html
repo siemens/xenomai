@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -177,7 +177,8 @@ an error number if:<ul>
 <li>EPERM, the condition variable is not process-shared and does not belong to the current process.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga37c6424e266f5c1df3439116dd429878">rt_cond_broadcast()</a>.</p>
 
@@ -213,7 +214,8 @@ an error number if:<ul>
 <li>EBUSY, some thread is currently using the condition variable.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>, and <a class="el" href="group__alchemy__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete()</a>.</p>
 
@@ -244,7 +246,7 @@ an error number if:<ul>
 </div><div class="memdoc">
 
 <p>Initialize a condition variable. </p>
-<p>This service initializes the condition variable <em>cond</em>, using the condition variable attributes object <em>attr</em>. If <em>attr</em> is <em>NULL</em> or this service is called from user-space, default attributes are used (see <a class="el" href="group__cobalt__api__cond.html#ga34083fe1cd54d5d67599b4cca593ffa4" title="Initialize a condition variable attributes object. ">pthread_condattr_init()</a>).</p>
+<p>This service initializes the condition variable <em>cond</em>, using the condition variable attributes object <em>attr</em>. If <em>attr</em> is <em>NULL</em>, default attributes are used (see <a class="el" href="group__cobalt__api__cond.html#ga34083fe1cd54d5d67599b4cca593ffa4" title="Initialize a condition variable attributes object. ">pthread_condattr_init()</a>).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cond</td><td>the condition variable to be initialized;</td></tr>
@@ -257,10 +259,11 @@ an error number if:<ul>
 an error number if:<ul>
 <li>EINVAL, the condition variable attributes object <em>attr</em> is invalid or uninitialized;</li>
 <li>EBUSY, the condition variable <em>cond</em> was already initialized;</li>
-<li>ENOMEM, insufficient memory exists in the system heap to initialize the condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.</li>
+<li>ENOMEM, insufficient memory available from the system heap to initialize the condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#ga700fa733113c7c04ce8dc38e3d414b16">pthread_condattr_getclock()</a>, and <a class="el" href="group__cobalt__api__cond.html#gaff70de20d7bdac1310aa2cdcada218d4">pthread_condattr_getpshared()</a>.</p>
 
@@ -298,7 +301,8 @@ an error number if:<ul>
 <li>EPERM, the condition variable is not process-shared and does not belong to the current process.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#gab7a59ee47db48a78ca45e4655b569dc9">rt_cond_signal()</a>.</p>
 
@@ -356,7 +360,8 @@ an error number if:<ul>
 <li>ETIMEDOUT, the specified timeout expired.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed()</a>.</p>
 
@@ -391,7 +396,7 @@ an error number if:<ul>
 <p>Spurious wakeups occur if a signal is delivered to the blocked thread, so, an application should not assume that the condition changed upon successful return from this service.</p>
 <p>Even if the mutex <em>mx</em> is recursive and its recursion count is greater than one on entry, it is unlocked before blocking the caller, and the recursion count is restored once the mutex is re-acquired by this service before returning.</p>
 <p>Once a thread is blocked on a condition variable, a dynamic binding is formed between the condition vairable <em>cnd</em> and the mutex <em>mx</em>; if another thread calls this service specifying <em>cnd</em> as a condition variable but another mutex than <em>mx</em>, this service returns immediately with the EINVAL status.</p>
-<p>This service is a cancellation point for Xenomai POSIX skin threads (created with the <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the mutex <em>mx</em> is re-acquired before the cancellation cleanup handlers are called.</p>
+<p>This service is a cancellation point for Cobalt threads (created with the <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the mutex <em>mx</em> is re-acquired before the cancellation cleanup handlers are called.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cond</td><td>the condition variable to wait for;</td></tr>
@@ -409,7 +414,8 @@ an error number if:<ul>
 <li>EPERM, the specified mutex is not owned by the caller.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388">rt_cond_wait_timed()</a>.</p>
 
@@ -443,7 +449,8 @@ an error number if:<ul>
 <li>EINVAL, the mutex attributes object <em>attr</em> is invalid.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>.</p>
 
@@ -475,7 +482,7 @@ an error number if:<ul>
 
 <p>Get the clock selection attribute from a condition variable attributes object. </p>
 <p>This service stores, at the address <em>clk_id</em>, the value of the <em>clock</em> attribute in the condition variable attributes object <em>attr</em>.</p>
-<p>See <a class="el" href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40" title="Wait a bounded time on a condition variable. ">pthread_cond_timedwait()</a> documentation for a description of the effect of this attribute on a condition variable. The clock ID returned is <em>CLOCK_REALTIME</em> or <em>CLOCK_MONOTONIC</em>.</p>
+<p>See <a class="el" href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40" title="Wait a bounded time on a condition variable. ">pthread_cond_timedwait()</a> for a description of the effect of this attribute on a condition variable. The clock ID returned is <em>CLOCK_REALTIME</em> or <em>CLOCK_MONOTONIC</em>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">attr</td><td>an initialized condition variable attributes object,</td></tr>
@@ -489,7 +496,8 @@ an error number if:<ul>
 <li>EINVAL, the attribute object <em>attr</em> is invalid.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__cobalt__api__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init()</a>.</p>
 
@@ -536,7 +544,8 @@ an error number if:<ul>
 <li>EINVAL, the condition variable attributes object <em>attr</em> is invalid.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getpshared.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getpshared.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__cobalt__api__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init()</a>.</p>
 
@@ -574,7 +583,8 @@ an error number if:<ul>
 <li>ENOMEM, the condition variable attribute object pointer <em>attr</em> is <em>NULL</em>.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>.</p>
 
@@ -606,7 +616,7 @@ an error number if:<ul>
 
 <p>Set the clock selection attribute of a condition variable attributes object. </p>
 <p>This service set the <em>clock</em> attribute of the condition variable attributes object <em>attr</em>.</p>
-<p>See <a class="el" href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40" title="Wait a bounded time on a condition variable. ">pthread_cond_timedwait()</a> documentation for a description of the effect of this attribute on a condition variable.</p>
+<p>See <a class="el" href="group__cobalt__api__cond.html#gab03e3ab6546f661d2b2f83bc12559e40" title="Wait a bounded time on a condition variable. ">pthread_cond_timedwait()</a> for a description of the effect of this attribute on a condition variable.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">attr</td><td>an initialized condition variable attributes object,</td></tr>
@@ -621,7 +631,8 @@ an error number if:<ul>
 <li>EINVAL, the value of <em>clk_id</em> is invalid for the <em>clock</em> attribute.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>.</p>
 
@@ -671,7 +682,8 @@ an error status if:<ul>
 <li>EINVAL, the value of <em>pshared</em> is invalid.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setpshared.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setpshared.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>.</p>
 

@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -150,7 +150,7 @@ $(document).ready(function(){initNavTree('extension_8h_source.html','');});
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                                       <span class="keywordtype">void</span> __user *u_si,</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                                       <span class="keyword">const</span> <span class="keyword">struct </span>siginfo *si,</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                                       <span class="keywordtype">int</span> overrun);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                int (*<a class="code" href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a>)(<span class="keyword">struct </span>cobalt_extref *curref);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                int (*<a class="code" href="group__cobalt__api__scheduler.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a>)(<span class="keyword">struct </span>cobalt_extref *curref);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                int (*thread_setsched)(<span class="keyword">struct </span>cobalt_extref *refthread, <span class="comment">/* nklocked, IRQs off. */</span></div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                                       <span class="keyword">struct </span>xnsched_class *sched_class,</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                                       <span class="keyword">union </span>xnsched_policy_param *param);</div>
@@ -220,10 +220,10 @@ $(document).ready(function(){initNavTree('extension_8h_source.html','');});
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_COBALT_EXTENSION */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_EXTENSION_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__cobalt__api__sched_html_ga357cd4b34c13011749dfffb42b489f09"><div class="ttname"><a href="group__cobalt__api__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a></div><div class="ttdeci">int sched_yield(void)</div><div class="ttdoc">Yield the processor. </div><div class="ttdef"><b>Definition:</b> thread.c:800</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga520e1913c35aa3352259dafa3259d140"><div class="ttname"><a href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a></div><div class="ttdeci">int timer_gettime(timer_t timerid, struct itimerspec *value)</div><div class="ttdoc">Get timer next expiration date and reload value. </div><div class="ttdef"><b>Definition:</b> timer.c:202</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_gad114bb350d7d5d12cff3fd19bf533303"><div class="ttname"><a href="group__cobalt__api__time.html#gad114bb350d7d5d12cff3fd19bf533303">timer_delete</a></div><div class="ttdeci">int timer_delete(timer_t timerid)</div><div class="ttdoc">Delete a timer object. </div><div class="ttdef"><b>Definition:</b> timer.c:102</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga2c513dc9b3734f5e23fc7b8a5cf11c95"><div class="ttname"><a href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a></div><div class="ttdeci">int timer_settime(timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</div><div class="ttdoc">Start or stop a timer. </div><div class="ttdef"><b>Definition:</b> timer.c:161</div></div>
+<div class="ttc" id="group__cobalt__api__scheduler_html_ga357cd4b34c13011749dfffb42b489f09"><div class="ttname"><a href="group__cobalt__api__scheduler.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a></div><div class="ttdeci">int sched_yield(void)</div><div class="ttdoc">Yield the processor. </div><div class="ttdef"><b>Definition:</b> sched.c:58</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga520e1913c35aa3352259dafa3259d140"><div class="ttname"><a href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a></div><div class="ttdeci">int timer_gettime(timer_t timerid, struct itimerspec *value)</div><div class="ttdoc">Get timer next expiration date and reload value. </div><div class="ttdef"><b>Definition:</b> timer.c:208</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_gad114bb350d7d5d12cff3fd19bf533303"><div class="ttname"><a href="group__cobalt__api__time.html#gad114bb350d7d5d12cff3fd19bf533303">timer_delete</a></div><div class="ttdeci">int timer_delete(timer_t timerid)</div><div class="ttdoc">Delete a timer object. </div><div class="ttdef"><b>Definition:</b> timer.c:105</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga2c513dc9b3734f5e23fc7b8a5cf11c95"><div class="ttname"><a href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a></div><div class="ttdeci">int timer_settime(timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</div><div class="ttdoc">Start or stop a timer. </div><div class="ttdef"><b>Definition:</b> timer.c:165</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -140,7 +140,7 @@ Functions</h2></td></tr>
 <p>Cobalt supports three built-in clocks:</p>
 <p>CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of time since the Epoch, with a resolution of one nanosecond.</p>
 <p>CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with <a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1" title="Sleep some amount of time. ">clock_nanosleep()</a>), the CLOCK_MONOTONIC clock has a resolution of one nanosecond, like the CLOCK_REALTIME clock.</p>
-<p>CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time values from a hardware timer which is not adjusted by NTP. This is strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not NTP adjusted either.</p>
+<p>CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time values from a hardware timer which is not adjusted by NTP. This is strictly equivalent to CLOCK_MONOTONIC with Cobalt, which is not NTP adjusted either.</p>
 <p>In addition, external clocks can be dynamically registered using the cobalt_clock_register() service. These clocks are fully managed by Cobalt extension code, which should advertise each incoming tick by calling <a class="el" href="group__cobalt__core__clock.html#ga1ab1751db4c73cf20a13982ab14e5563" title="Process a clock tick. ">xnclock_tick()</a> for the relevant clock, from an interrupt context.</p>
 <p>Timer objects may be created with the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a> service using any of the built-in or external clocks. The resolution of these timers is clock-specific. However, built-in clocks all have nanosecond resolution, as specified for <a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1" title="Sleep some amount of time. ">clock_nanosleep()</a>.</p>
 <dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">Specification.</a> </dd></dl>
@@ -189,7 +189,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -221,7 +222,7 @@ Functions</h2></td></tr>
 <p>This service returns, at the address <em>tp</em> the current value of the clock <em>clock_id</em>. If <em>clock_id</em> is:</p><ul>
 <li>CLOCK_REALTIME, the clock value represents the amount of time since the Epoch, with a precision of one system clock tick;</li>
 <li>CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW, the clock value is given by an architecture-dependent high resolution counter, with a precision independent from the system clock tick duration.</li>
-<li>CLOCK_HOST_REALTIME, the clock value as seen by the host, typically Linux. Resolution and precision depend on the host, but it is guaranteed that both, host and Xenomai, see the same information.</li>
+<li>CLOCK_HOST_REALTIME, the clock value as seen by the host, typically Linux. Resolution and precision depend on the host, but it is guaranteed that both, host and Cobalt, see the same information.</li>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -240,7 +241,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__alchemy__task.html#gababee94264156693cd4f5b9b70d3c5a1">rt_task_set_periodic()</a>.</p>
 
@@ -308,7 +310,8 @@ an error number if:<ul>
 <li>EINTR, this service was interrupted by a signal.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__cobalt__api__time.html#ga9ce6a1ed91a601dee133c8b6cf8b721a">nanosleep()</a>.</p>
 
@@ -358,7 +361,8 @@ an error number if:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -409,7 +413,8 @@ an error number if:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>.</p>
 
@@ -472,7 +477,8 @@ an error number if:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np()</a>.</p>
 
@@ -511,7 +517,8 @@ an error number if:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -544,7 +551,8 @@ an error number if:<ul>
 <li>EPERM, the timer <em>timerid</em> does not belong to the current process.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -591,7 +599,8 @@ an error number if:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -633,7 +642,7 @@ an error number if:<ul>
 
 <p>Start or stop a timer. </p>
 <p>This service sets a timer expiration date and reload value of the timer <em>timerid</em>. If <em>ovalue</em> is not <em>NULL</em>, the current expiration date and reload value are stored at the address <em>ovalue</em> as with <a class="el" href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140" title="Get timer next expiration date and reload value. ">timer_gettime()</a>.</p>
-<p>If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a Cobalt thread (created with <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>) and will be notified via signal of timer expirations. Note that these notifications will cause user-space threads to switch to secondary mode.</p>
+<p>If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a Cobalt thread (created with <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>) and will be notified via signal of timer expirations.</p>
 <p>When starting the timer, if <em>flags</em> is TIMER_ABSTIME, the expiration value is interpreted as an absolute date of the clock passed to the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a> service. Otherwise, the expiration value is interpreted as a time interval.</p>
 <p>Expiration date and reload value are rounded to an integer count of nanoseconds.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -655,7 +664,8 @@ an error number if:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xcontext, switch-primary</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np()</a>.</p>
 

@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -210,7 +210,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
 <div class="line">{</div>
 <div class="line">    <span class="keywordtype">int</span> i, opt, ret;</div>
-<div class="line">    <span class="keyword">struct </span>ifreq ifr;</div>
+<div class="line">    <span class="keyword">struct </span><a name="_a7"></a><a class="code" href="structcan__ifreq.html">can_ifreq</a> ifr;</div>
 <div class="line">    <span class="keywordtype">char</span> name[32];</div>
 <div class="line"></div>
 <div class="line">    <span class="keyword">struct </span>option long_options[] = {</div>
@@ -303,7 +303,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line">    <span class="keywordflow">if</span> (verbose)</div>
 <div class="line">        printf(<span class="stringliteral">&quot;interface %s\n&quot;</span>, argv[optind]);</div>
 <div class="line"></div>
-<div class="line">    ret = socket(<a name="a7"></a><a class="code" href="group__rtdm__can.html#gaeac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a8"></a><a class="code" href="group__rtdm__can.html#ga57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);</div>
+<div class="line">    ret = socket(<a name="a8"></a><a class="code" href="group__rtdm__can.html#gaeac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a9"></a><a class="code" href="group__rtdm__can.html#ga57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);</div>
 <div class="line">    <span class="keywordflow">if</span> (ret &lt; 0) {</div>
 <div class="line">        fprintf(stderr, <span class="stringliteral">&quot;socket: %s\n&quot;</span>, strerror(-ret));</div>
 <div class="line">        <span class="keywordflow">return</span> -1;</div>
@@ -311,7 +311,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line">    s = ret;</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">if</span> (loopback &gt;= 0) {</div>
-<div class="line">        ret = setsockopt(s, <a name="a9"></a><a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a10"></a><a class="code" href="group__rtdm__can.html#gaa7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a>,</div>
+<div class="line">        ret = setsockopt(s, <a name="a10"></a><a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a11"></a><a class="code" href="group__rtdm__can.html#gaa7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a>,</div>
 <div class="line">                                &amp;loopback, <span class="keyword">sizeof</span>(loopback));</div>
 <div class="line">        <span class="keywordflow">if</span> (ret &lt; 0) {</div>
 <div class="line">            fprintf(stderr, <span class="stringliteral">&quot;setsockopt: %s\n&quot;</span>, strerror(-ret));</div>
@@ -325,7 +325,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line">    <span class="keywordflow">if</span> (verbose)</div>
 <div class="line">        printf(<span class="stringliteral">&quot;s=%d, ifr_name=%s\n&quot;</span>, s, ifr.ifr_name);</div>
 <div class="line"></div>
-<div class="line">    ret = ioctl(s, <a name="a11"></a><a class="code" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);</div>
+<div class="line">    ret = ioctl(s, <a name="a12"></a><a class="code" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);</div>
 <div class="line">    <span class="keywordflow">if</span> (ret &lt; 0) {</div>
 <div class="line">        fprintf(stderr, <span class="stringliteral">&quot;ioctl: %s\n&quot;</span>, strerror(-ret));</div>
 <div class="line">        <span class="keywordflow">goto</span> failure;</div>
@@ -333,10 +333,10 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line"></div>
 <div class="line">    memset(&amp;to_addr, 0, <span class="keyword">sizeof</span>(to_addr));</div>
 <div class="line">    to_addr.can_ifindex = ifr.ifr_ifindex;</div>
-<div class="line">    to_addr.can_family = <a name="a12"></a><a class="code" href="group__rtdm__can.html#ga546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;</div>
+<div class="line">    to_addr.can_family = <a name="a13"></a><a class="code" href="group__rtdm__can.html#ga546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;</div>
 <div class="line">    <span class="keywordflow">if</span> (use_send) {</div>
 <div class="line">        <span class="comment">/* Suppress definiton of a default receive filter list */</span></div>
-<div class="line">        ret = setsockopt(s, <a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a13"></a><a class="code" href="group__rtdm__can.html#ga87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>, NULL, 0);</div>
+<div class="line">        ret = setsockopt(s, <a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a14"></a><a class="code" href="group__rtdm__can.html#ga87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>, NULL, 0);</div>
 <div class="line">        <span class="keywordflow">if</span> (ret &lt; 0) {</div>
 <div class="line">            fprintf(stderr, <span class="stringliteral">&quot;setsockopt: %s\n&quot;</span>, strerror(-ret));</div>
 <div class="line">            <span class="keywordflow">goto</span> failure;</div>
@@ -362,7 +362,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line">    }</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">if</span> (rtr)</div>
-<div class="line">        frame.can_id |= <a name="a14"></a><a class="code" href="group__rtdm__can.html#gaf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>;</div>
+<div class="line">        frame.can_id |= <a name="a15"></a><a class="code" href="group__rtdm__can.html#gaf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>;</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">if</span> (extended)</div>
 <div class="line">        frame.can_id |= <a class="code" href="group__rtdm__can.html#ga5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>;</div>
@@ -370,7 +370,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line">    <span class="keywordflow">if</span> (timeout) {</div>
 <div class="line">        <span class="keywordflow">if</span> (verbose)</div>
 <div class="line">            printf(<span class="stringliteral">&quot;Timeout: %lld ns\n&quot;</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timeout);</div>
-<div class="line">        ret = ioctl(s, <a name="a15"></a><a class="code" href="group__rtdm__can.html#gad3758528585b2779e8949df671f1cf6c">RTCAN_RTIOC_SND_TIMEOUT</a>, &amp;timeout);</div>
+<div class="line">        ret = ioctl(s, <a name="a16"></a><a class="code" href="group__rtdm__can.html#gad3758528585b2779e8949df671f1cf6c">RTCAN_RTIOC_SND_TIMEOUT</a>, &amp;timeout);</div>
 <div class="line">        <span class="keywordflow">if</span> (ret) {</div>
 <div class="line">            fprintf(stderr, <span class="stringliteral">&quot;ioctl SND_TIMEOUT: %s\n&quot;</span>, strerror(-ret));</div>
 <div class="line">            <span class="keywordflow">goto</span> failure;</div>
@@ -378,7 +378,7 @@ $(document).ready(function(){initNavTree('rtcansend_8c-example.html','');});
 <div class="line">    }</div>
 <div class="line"></div>
 <div class="line">    snprintf(name, <span class="keyword">sizeof</span>(name), <span class="stringliteral">&quot;rtcansend-%d&quot;</span>, getpid());</div>
-<div class="line">    ret = <a name="a16"></a><a class="code" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 1, 0);</div>
+<div class="line">    ret = <a name="a17"></a><a class="code" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 1, 0);</div>
 <div class="line">    <span class="keywordflow">if</span> (ret) {</div>
 <div class="line">        fprintf(stderr, <span class="stringliteral">&quot;rt_task_shadow: %s\n&quot;</span>, strerror(-ret));</div>
 <div class="line">        <span class="keywordflow">goto</span> failure;</div>

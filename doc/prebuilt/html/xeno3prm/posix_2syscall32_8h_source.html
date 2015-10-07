@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -200,118 +200,132 @@ $(document).ready(function(){initNavTree('posix_2syscall32_8h_source.html','');}
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                         (<span class="keywordtype">int</span> policy,</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_sched_param_ex __user *u_param));</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__sched.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a>,</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__scheduler.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a>,</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                         (<span class="keywordtype">int</span> cpu, <span class="keywordtype">int</span> policy,</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                          <span class="keyword">union</span> compat_sched_config __user *u_config,</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                          <span class="keywordtype">size_t</span> len));</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__sched.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a>,</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__scheduler.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a>,</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                         (<span class="keywordtype">int</span> cpu, <span class="keywordtype">int</span> policy,</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                          <span class="keyword">union</span> compat_sched_config __user *u_config,</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                          <span class="keywordtype">size_t</span> len));</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a>,</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                         (clockid_t clock,</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_sigevent __user *u_sev,</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                          timer_t __user *u_tm));</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a>,</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;                         (timer_t tm, <span class="keywordtype">int</span> flags,</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_itimerspec __user *u_newval,</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;                          <span class="keyword">struct</span> compat_itimerspec __user *u_oldval));</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a>,</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                         (timer_t tm,</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;                          <span class="keyword">struct</span> compat_itimerspec __user *u_val));</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;COBALT_SYSCALL32emu_DECL(timerfd_settime,</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> flags,</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_itimerspec __user *new_value,</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                          <span class="keyword">struct</span> compat_itimerspec __user *old_value));</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;COBALT_SYSCALL32emu_DECL(timerfd_gettime,</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> compat_itimerspec __user *value));</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__scheduler.html#ga796071f20fd35a5e05972157745728af">sched_setscheduler_ex</a>,</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                         (compat_pid_t pid,</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                          <span class="keywordtype">int</span> policy,</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_sched_param_ex __user *u_param,</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                          __u32 __user *u_winoff,</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                          <span class="keywordtype">int</span> __user *u_promoted));</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__scheduler.html#ga8b8d014b969054662e45afcbe5fff386">sched_getscheduler_ex</a>,</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;                         (compat_pid_t pid,</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;                          <span class="keywordtype">int</span> __user *u_policy,</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;                          <span class="keyword">struct</span> compat_sched_param_ex __user *u_param));</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a>,</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                         (clockid_t clock,</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_sigevent __user *u_sev,</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;                          timer_t __user *u_tm));</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a>,</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                         (timer_t tm, <span class="keywordtype">int</span> flags,</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_itimerspec __user *u_newval,</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                          <span class="keyword">struct</span> compat_itimerspec __user *u_oldval));</div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;COBALT_SYSCALL32emu_DECL(sigwait,</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                         (<span class="keyword">const</span> compat_sigset_t __user *u_set,</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;                          <span class="keywordtype">int</span> __user *u_sig));</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a>,</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                         (timer_t tm,</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;                          <span class="keyword">struct</span> compat_itimerspec __user *u_val));</div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;COBALT_SYSCALL32emu_DECL(sigtimedwait,</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;                         (<span class="keyword">const</span> compat_sigset_t __user *u_set,</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;                          <span class="keyword">struct</span> compat_siginfo __user *u_si,</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_timespec __user *u_timeout));</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;COBALT_SYSCALL32emu_DECL(timerfd_settime,</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> flags,</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_itimerspec __user *new_value,</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;                          <span class="keyword">struct</span> compat_itimerspec __user *old_value));</div>
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;COBALT_SYSCALL32emu_DECL(sigwaitinfo,</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;                         (<span class="keyword">const</span> compat_sigset_t __user *u_set,</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;                          <span class="keyword">struct</span> compat_siginfo __user *u_si));</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;COBALT_SYSCALL32emu_DECL(sigpending,</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                         (compat_old_sigset_t __user *u_set));</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;COBALT_SYSCALL32emu_DECL(timerfd_gettime,</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> compat_itimerspec __user *value));</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;COBALT_SYSCALL32emu_DECL(sigwait,</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                         (<span class="keyword">const</span> compat_sigset_t __user *u_set,</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                          <span class="keywordtype">int</span> __user *u_sig));</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;COBALT_SYSCALL32emu_DECL(sigqueue,</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;                         (pid_t pid, <span class="keywordtype">int</span> sig,</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;                          <span class="keyword">const</span> <span class="keyword">union</span> compat_sigval __user *u_value));</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;COBALT_SYSCALL32emu_DECL(monitor_wait,</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;                         (<span class="keyword">struct</span> cobalt_monitor_shadow __user *u_mon,</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                          <span class="keywordtype">int</span> event, <span class="keyword">const</span> <span class="keyword">struct</span> compat_timespec __user *u_ts,</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;                          <span class="keywordtype">int</span> __user *u_ret));</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;COBALT_SYSCALL32emu_DECL(sigtimedwait,</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;                         (<span class="keyword">const</span> compat_sigset_t __user *u_set,</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;                          <span class="keyword">struct</span> compat_siginfo __user *u_si,</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;                          <span class="keyword">const</span> <span class="keyword">struct</span> compat_timespec __user *u_timeout));</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;COBALT_SYSCALL32emu_DECL(sigwaitinfo,</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                         (<span class="keyword">const</span> compat_sigset_t __user *u_set,</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;                          <span class="keyword">struct</span> compat_siginfo __user *u_si));</div>
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;COBALT_SYSCALL32emu_DECL(event_wait,</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;                         (<span class="keyword">struct</span> cobalt_event_shadow __user *u_event,</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;                          <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> bits,</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;                          <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> __user *u_bits_r,</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;                          <span class="keywordtype">int</span> mode, <span class="keyword">const</span> <span class="keyword">struct</span> compat_timespec __user *u_ts));</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;COBALT_SYSCALL32emu_DECL(select,</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;                         (<span class="keywordtype">int</span> nfds,</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                          compat_fd_set __user *u_rfds,</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                          compat_fd_set __user *u_wfds,</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                          compat_fd_set __user *u_xfds,</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                          <span class="keyword">struct</span> compat_timeval __user *u_tv));</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;COBALT_SYSCALL32emu_DECL(recvmsg,</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> compat_msghdr __user *umsg,</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                          <span class="keywordtype">int</span> flags));</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;COBALT_SYSCALL32emu_DECL(sendmsg,</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> compat_msghdr __user *umsg,</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                          <span class="keywordtype">int</span> flags));</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;COBALT_SYSCALL32emu_DECL(mmap,</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;                         (<span class="keywordtype">int</span> fd,</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;                          <span class="keyword">struct</span> compat_rtdm_mmap_request __user *u_rma,</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;                          compat_uptr_t __user *u_addrp));</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;COBALT_SYSCALL32emu_DECL(backtrace,</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;                         (<span class="keywordtype">int</span> nr, compat_ulong_t __user *u_backtrace,</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;                          <span class="keywordtype">int</span> reason));</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;COBALT_SYSCALL32emu_DECL(sem_open,</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;                         (compat_uptr_t __user *u_addrp,</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *u_name,</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;                          <span class="keywordtype">int</span> oflags, mode_t mode, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value));</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a>,</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;                         (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;                          <span class="keyword">struct</span> compat_timespec __user *u_ts));</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_SYSCALL32_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga8a24ab6b0901162bbbbbca4f5205abd0"><div class="ttname"><a href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a></div><div class="ttdeci">int timer_create(clockid_t clockid, const struct sigevent *__restrict__ evp, timer_t *__restrict__ timerid)</div><div class="ttdoc">Create a timer. </div><div class="ttdef"><b>Definition:</b> timer.c:72</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_gaeb3dd7af457eca5b106d65c929a60a87"><div class="ttname"><a href="group__cobalt__api__time.html#gaeb3dd7af457eca5b106d65c929a60a87">clock_getres</a></div><div class="ttdeci">int clock_getres(clockid_t clock_id, struct timespec *tp)</div><div class="ttdoc">Get the resolution of the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:99</div></div>
-<div class="ttc" id="group__cobalt__api__mq_html_ga6d6542f6857baaef05e9c69a11ed9776"><div class="ttname"><a href="group__cobalt__api__mq.html#ga6d6542f6857baaef05e9c69a11ed9776">mq_getattr</a></div><div class="ttdeci">int mq_getattr(mqd_t qd, struct mq_attr *attr)</div><div class="ttdoc">Get message queue attributes. </div><div class="ttdef"><b>Definition:</b> mq.c:217</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga520e1913c35aa3352259dafa3259d140"><div class="ttname"><a href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a></div><div class="ttdeci">int timer_gettime(timer_t timerid, struct itimerspec *value)</div><div class="ttdoc">Get timer next expiration date and reload value. </div><div class="ttdef"><b>Definition:</b> timer.c:202</div></div>
-<div class="ttc" id="group__cobalt__api__sched_html_ga216b2f848839dd4a19909e73007ca190"><div class="ttname"><a href="group__cobalt__api__sched.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a></div><div class="ttdeci">ssize_t sched_getconfig_np(int cpu, int policy, union sched_config *config, size_t *len_r)</div><div class="ttdoc">Retrieve CPU-specific scheduler settings for a policy. </div><div class="ttdef"><b>Definition:</b> thread.c:1135</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga2c513dc9b3734f5e23fc7b8a5cf11c95"><div class="ttname"><a href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a></div><div class="ttdeci">int timer_settime(timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</div><div class="ttdoc">Start or stop a timer. </div><div class="ttdef"><b>Definition:</b> timer.c:161</div></div>
-<div class="ttc" id="group__cobalt__api__sched_html_ga0b8b3902421f04d35369423ebc059d74"><div class="ttname"><a href="group__cobalt__api__sched.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a></div><div class="ttdeci">int sched_setconfig_np(int cpu, int policy, const union sched_config *config, size_t len)</div><div class="ttdoc">Set CPU-specific scheduler settings for a policy. </div><div class="ttdef"><b>Definition:</b> thread.c:1080</div></div>
-<div class="ttc" id="group__cobalt__api__mq_html_ga445c542ee2055c389047e644990eef46"><div class="ttname"><a href="group__cobalt__api__mq.html#ga445c542ee2055c389047e644990eef46">mq_notify</a></div><div class="ttdeci">int mq_notify(mqd_t q, const struct sigevent *evp)</div><div class="ttdoc">Enable notification on message arrival. </div><div class="ttdef"><b>Definition:</b> mq.c:558</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_gab0dbabb3e47efe9483b81235fdd0c297"><div class="ttname"><a href="group__cobalt__api__time.html#gab0dbabb3e47efe9483b81235fdd0c297">clock_settime</a></div><div class="ttdeci">int clock_settime(clockid_t clock_id, const struct timespec *tp)</div><div class="ttdoc">Set the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:233</div></div>
-<div class="ttc" id="group__cobalt__api__mq_html_gad75b9593027d444b837f24af4fb86373"><div class="ttname"><a href="group__cobalt__api__mq.html#gad75b9593027d444b837f24af4fb86373">mq_timedsend</a></div><div class="ttdeci">int mq_timedsend(mqd_t q, const char *buffer, size_t len, unsigned prio, const struct timespec *timeout)</div><div class="ttdoc">Attempt, during a bounded time, to send a message to a message queue. </div><div class="ttdef"><b>Definition:</b> mq.c:378</div></div>
-<div class="ttc" id="group__cobalt__api__mq_html_ga6e6c4881ac0fd3ad18d733b96d088b8b"><div class="ttname"><a href="group__cobalt__api__mq.html#ga6e6c4881ac0fd3ad18d733b96d088b8b">mq_open</a></div><div class="ttdeci">mqd_t mq_open(const char *name, int oflags,...)</div><div class="ttdoc">Open a message queue. </div><div class="ttdef"><b>Definition:</b> mq.c:102</div></div>
-<div class="ttc" id="group__cobalt__api__mq_html_ga034caa6596c808e279857c480ad51e8e"><div class="ttname"><a href="group__cobalt__api__mq.html#ga034caa6596c808e279857c480ad51e8e">mq_timedreceive</a></div><div class="ttdeci">ssize_t mq_timedreceive(mqd_t q, char *__restrict__ buffer, size_t len, unsigned *__restrict__ prio, const struct timespec *__restrict__ timeout)</div><div class="ttdoc">Attempt, during a bounded time, to receive a message from a message queue. </div><div class="ttdef"><b>Definition:</b> mq.c:499</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga10b73e75d375e5c244e32ea46be775bf"><div class="ttname"><a href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a></div><div class="ttdeci">int clock_gettime(clockid_t clock_id, struct timespec *tp)</div><div class="ttdoc">Read the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:179</div></div>
-<div class="ttc" id="group__cobalt__api__time_html_ga924d51d78cdcd9d7dee2613fb3a33cd1"><div class="ttname"><a href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep</a></div><div class="ttdeci">int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp, struct timespec *rmtp)</div><div class="ttdoc">Sleep some amount of time. </div><div class="ttdef"><b>Definition:</b> clock.c:287</div></div>
-<div class="ttc" id="group__cobalt__api__sem_html_ga19192f37769545c4c4661dc8d0b3daf9"><div class="ttname"><a href="group__cobalt__api__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a></div><div class="ttdeci">int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)</div><div class="ttdoc">Attempt to decrement a semaphore with a time limit. </div><div class="ttdef"><b>Definition:</b> semaphore.c:352</div></div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;COBALT_SYSCALL32emu_DECL(sigpending,</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;                         (compat_old_sigset_t __user *u_set));</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;COBALT_SYSCALL32emu_DECL(sigqueue,</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;                         (pid_t pid, <span class="keywordtype">int</span> sig,</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;                          <span class="keyword">const</span> <span class="keyword">union</span> compat_sigval __user *u_value));</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;COBALT_SYSCALL32emu_DECL(monitor_wait,</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                         (<span class="keyword">struct</span> cobalt_monitor_shadow __user *u_mon,</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                          <span class="keywordtype">int</span> event, <span class="keyword">const</span> <span class="keyword">struct</span> compat_timespec __user *u_ts,</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                          <span class="keywordtype">int</span> __user *u_ret));</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;COBALT_SYSCALL32emu_DECL(event_wait,</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;                         (<span class="keyword">struct</span> cobalt_event_shadow __user *u_event,</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                          <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> bits,</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                          <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> __user *u_bits_r,</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;                          <span class="keywordtype">int</span> mode, <span class="keyword">const</span> <span class="keyword">struct</span> compat_timespec __user *u_ts));</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;COBALT_SYSCALL32emu_DECL(select,</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                         (<span class="keywordtype">int</span> nfds,</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;                          compat_fd_set __user *u_rfds,</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;                          compat_fd_set __user *u_wfds,</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;                          compat_fd_set __user *u_xfds,</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;                          <span class="keyword">struct</span> compat_timeval __user *u_tv));</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;COBALT_SYSCALL32emu_DECL(recvmsg,</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> compat_msghdr __user *umsg,</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;                          <span class="keywordtype">int</span> flags));</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;COBALT_SYSCALL32emu_DECL(sendmsg,</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;                         (<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> compat_msghdr __user *umsg,</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;                          <span class="keywordtype">int</span> flags));</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;COBALT_SYSCALL32emu_DECL(mmap,</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;                         (<span class="keywordtype">int</span> fd,</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;                          <span class="keyword">struct</span> compat_rtdm_mmap_request __user *u_rma,</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;                          compat_uptr_t __user *u_addrp));</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;COBALT_SYSCALL32emu_DECL(backtrace,</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;                         (<span class="keywordtype">int</span> nr, compat_ulong_t __user *u_backtrace,</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;                          <span class="keywordtype">int</span> reason));</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;COBALT_SYSCALL32emu_DECL(sem_open,</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;                         (compat_uptr_t __user *u_addrp,</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *u_name,</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                          <span class="keywordtype">int</span> oflags, mode_t mode, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value));</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;COBALT_SYSCALL32emu_DECL(<a class="code" href="group__cobalt__api__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a>,</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;                         (<span class="keyword">struct</span> cobalt_sem_shadow __user *u_sem,</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;                          <span class="keyword">struct</span> compat_timespec __user *u_ts));</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_POSIX_SYSCALL32_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__cobalt__api__scheduler_html_ga216b2f848839dd4a19909e73007ca190"><div class="ttname"><a href="group__cobalt__api__scheduler.html#ga216b2f848839dd4a19909e73007ca190">sched_getconfig_np</a></div><div class="ttdeci">ssize_t sched_getconfig_np(int cpu, int policy, union sched_config *config, size_t *len_r)</div><div class="ttdoc">Retrieve CPU-specific scheduler settings for a policy. </div><div class="ttdef"><b>Definition:</b> sched.c:598</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga8a24ab6b0901162bbbbbca4f5205abd0"><div class="ttname"><a href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a></div><div class="ttdeci">int timer_create(clockid_t clockid, const struct sigevent *__restrict__ evp, timer_t *__restrict__ timerid)</div><div class="ttdoc">Create a timer. </div><div class="ttdef"><b>Definition:</b> timer.c:74</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_gaeb3dd7af457eca5b106d65c929a60a87"><div class="ttname"><a href="group__cobalt__api__time.html#gaeb3dd7af457eca5b106d65c929a60a87">clock_getres</a></div><div class="ttdeci">int clock_getres(clockid_t clock_id, struct timespec *tp)</div><div class="ttdoc">Get the resolution of the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:100</div></div>
+<div class="ttc" id="group__cobalt__api__mq_html_ga6d6542f6857baaef05e9c69a11ed9776"><div class="ttname"><a href="group__cobalt__api__mq.html#ga6d6542f6857baaef05e9c69a11ed9776">mq_getattr</a></div><div class="ttdeci">int mq_getattr(mqd_t qd, struct mq_attr *attr)</div><div class="ttdoc">Get message queue attributes. </div><div class="ttdef"><b>Definition:</b> mq.c:221</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga520e1913c35aa3352259dafa3259d140"><div class="ttname"><a href="group__cobalt__api__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a></div><div class="ttdeci">int timer_gettime(timer_t timerid, struct itimerspec *value)</div><div class="ttdoc">Get timer next expiration date and reload value. </div><div class="ttdef"><b>Definition:</b> timer.c:208</div></div>
+<div class="ttc" id="group__cobalt__api__scheduler_html_ga796071f20fd35a5e05972157745728af"><div class="ttname"><a href="group__cobalt__api__scheduler.html#ga796071f20fd35a5e05972157745728af">sched_setscheduler_ex</a></div><div class="ttdeci">int sched_setscheduler_ex(pid_t pid, int policy, const struct sched_param_ex *param_ex)</div><div class="ttdoc">Set extended scheduling policy of a process. </div><div class="ttdef"><b>Definition:</b> sched.c:279</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga2c513dc9b3734f5e23fc7b8a5cf11c95"><div class="ttname"><a href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a></div><div class="ttdeci">int timer_settime(timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</div><div class="ttdoc">Start or stop a timer. </div><div class="ttdef"><b>Definition:</b> timer.c:165</div></div>
+<div class="ttc" id="group__cobalt__api__mq_html_ga445c542ee2055c389047e644990eef46"><div class="ttname"><a href="group__cobalt__api__mq.html#ga445c542ee2055c389047e644990eef46">mq_notify</a></div><div class="ttdeci">int mq_notify(mqd_t q, const struct sigevent *evp)</div><div class="ttdoc">Enable notification on message arrival. </div><div class="ttdef"><b>Definition:</b> mq.c:565</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_gab0dbabb3e47efe9483b81235fdd0c297"><div class="ttname"><a href="group__cobalt__api__time.html#gab0dbabb3e47efe9483b81235fdd0c297">clock_settime</a></div><div class="ttdeci">int clock_settime(clockid_t clock_id, const struct timespec *tp)</div><div class="ttdoc">Set the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:236</div></div>
+<div class="ttc" id="group__cobalt__api__mq_html_gad75b9593027d444b837f24af4fb86373"><div class="ttname"><a href="group__cobalt__api__mq.html#gad75b9593027d444b837f24af4fb86373">mq_timedsend</a></div><div class="ttdeci">int mq_timedsend(mqd_t q, const char *buffer, size_t len, unsigned prio, const struct timespec *timeout)</div><div class="ttdoc">Attempt, during a bounded time, to send a message to a message queue. </div><div class="ttdef"><b>Definition:</b> mq.c:385</div></div>
+<div class="ttc" id="group__cobalt__api__scheduler_html_ga8b8d014b969054662e45afcbe5fff386"><div class="ttname"><a href="group__cobalt__api__scheduler.html#ga8b8d014b969054662e45afcbe5fff386">sched_getscheduler_ex</a></div><div class="ttdeci">int sched_getscheduler_ex(pid_t pid, int *policy_r, struct sched_param_ex *param_ex)</div><div class="ttdoc">Get extended scheduling policy of a process. </div><div class="ttdef"><b>Definition:</b> sched.c:382</div></div>
+<div class="ttc" id="group__cobalt__api__mq_html_ga6e6c4881ac0fd3ad18d733b96d088b8b"><div class="ttname"><a href="group__cobalt__api__mq.html#ga6e6c4881ac0fd3ad18d733b96d088b8b">mq_open</a></div><div class="ttdeci">mqd_t mq_open(const char *name, int oflags,...)</div><div class="ttdoc">Open a message queue. </div><div class="ttdef"><b>Definition:</b> mq.c:103</div></div>
+<div class="ttc" id="group__cobalt__api__mq_html_ga034caa6596c808e279857c480ad51e8e"><div class="ttname"><a href="group__cobalt__api__mq.html#ga034caa6596c808e279857c480ad51e8e">mq_timedreceive</a></div><div class="ttdeci">ssize_t mq_timedreceive(mqd_t q, char *__restrict__ buffer, size_t len, unsigned *__restrict__ prio, const struct timespec *__restrict__ timeout)</div><div class="ttdoc">Attempt, during a bounded time, to receive a message from a message queue. </div><div class="ttdef"><b>Definition:</b> mq.c:508</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga10b73e75d375e5c244e32ea46be775bf"><div class="ttname"><a href="group__cobalt__api__time.html#ga10b73e75d375e5c244e32ea46be775bf">clock_gettime</a></div><div class="ttdeci">int clock_gettime(clockid_t clock_id, struct timespec *tp)</div><div class="ttdoc">Read the specified clock. </div><div class="ttdef"><b>Definition:</b> clock.c:181</div></div>
+<div class="ttc" id="group__cobalt__api__time_html_ga924d51d78cdcd9d7dee2613fb3a33cd1"><div class="ttname"><a href="group__cobalt__api__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep</a></div><div class="ttdeci">int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *rqtp, struct timespec *rmtp)</div><div class="ttdoc">Sleep some amount of time. </div><div class="ttdef"><b>Definition:</b> clock.c:291</div></div>
+<div class="ttc" id="group__cobalt__api__sem_html_ga19192f37769545c4c4661dc8d0b3daf9"><div class="ttname"><a href="group__cobalt__api__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a></div><div class="ttdeci">int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)</div><div class="ttdoc">Attempt to decrement a semaphore with a time limit. </div><div class="ttdef"><b>Definition:</b> semaphore.c:364</div></div>
+<div class="ttc" id="group__cobalt__api__scheduler_html_ga0b8b3902421f04d35369423ebc059d74"><div class="ttname"><a href="group__cobalt__api__scheduler.html#ga0b8b3902421f04d35369423ebc059d74">sched_setconfig_np</a></div><div class="ttdeci">int sched_setconfig_np(int cpu, int policy, const union sched_config *config, size_t len)</div><div class="ttdoc">Set CPU-specific scheduler settings for a policy. </div><div class="ttdef"><b>Definition:</b> sched.c:541</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

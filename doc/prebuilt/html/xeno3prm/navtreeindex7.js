@@ -1,5 +1,12 @@
 var NAVTREEINDEX7 =
 {
+"kernel_2vdso_8h_source.html":[4,0,0,2,1,34],
+"lib_2alchemy_2alarm_8h_source.html":[4,0,2,0,0],
+"lib_2alchemy_2buffer_8h_source.html":[4,0,2,0,1],
+"lib_2alchemy_2cond_8h_source.html":[4,0,2,0,2],
+"lib_2alchemy_2event_8h_source.html":[4,0,2,0,3],
+"lib_2alchemy_2heap_8h_source.html":[4,0,2,0,4],
+"lib_2alchemy_2internal_8h_source.html":[4,0,2,0,5],
 "lib_2alchemy_2mutex_8h_source.html":[4,0,2,0,6],
 "lib_2alchemy_2pipe_8h_source.html":[4,0,2,0,7],
 "lib_2alchemy_2queue_8h_source.html":[4,0,2,0,8],
@@ -242,12 +249,5 @@ var NAVTREEINDEX7 =
 "structRT__TASK__INFO.html#a3e5d47277ecea23aa3a5730e0b6b2d13":[2,3,9,0,0],
 "structRT__TASK__INFO.html#a632e09c1d8dabc29c020c828abf62ac6":[2,3,9,0,2],
 "structRT__TASK__INFO.html#a70c731ca5877ff4a6235fa81caa77798":[2,3,9,0,1],
-"structRT__TASK__INFO.html#ae327f3dca3f2ae89c8aa5bd0033ed4b0":[2,3,9,0,3],
-"structa4l__channel.html":[2,1,1,0,0,0],
-"structa4l__channel.html#a592787623448a2c5d4d74a53b523c90d":[2,1,1,0,0,0,1],
-"structa4l__channel.html#a629fd5faa5d0ea2d47aed56d96edc851":[2,1,1,0,0,0,0],
-"structa4l__channels__desc.html":[2,1,1,0,0,1],
-"structa4l__channels__desc.html#a243b1f336bb8963b6bd55b7b6d202700":[2,1,1,0,0,1,1],
-"structa4l__channels__desc.html#a8e19986b80e020e6c419ff0ddd87aa31":[2,1,1,0,0,1,2],
-"structa4l__channels__desc.html#ab151a433e82972f96e474a1c782e6d1e":[2,1,1,0,0,1,0]
+"structRT__TASK__INFO.html#ae327f3dca3f2ae89c8aa5bd0033ed4b0":[2,3,9,0,3]
 };

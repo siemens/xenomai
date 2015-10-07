@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -168,7 +168,7 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Alarms are process-private objects and thus cannot be shared by multiple processes, even if they belong to the same Xenomai session.</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000007">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000008">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -217,7 +217,7 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <li>-EINVAL is returned if <em>event</em> is not a valid event flag group descriptor.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a></dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000011">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000012">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -281,7 +281,7 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Event flag groups can be shared by multiple processes which belong to the same Xenomai session.</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -323,7 +323,7 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <li>-EINVAL is returned if <em>event</em> is not an event flag group descriptor.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted, switch-primary</a></dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000011">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -474,7 +474,7 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 <li>members of Xenomai's SCHED_FIFO class running in the primary domain have utmost priority over all Linux activities in the system, including Linux interrupt handlers.</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Tasks can be referred to from multiple processes which all belong to the same Xenomai session.</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -529,7 +529,7 @@ $(document).ready(function(){initNavTree('group__trank.html','');});
 Unlike the original Xenomai 2.x call, this emulation delays the caller until <em>idate</em> has elapsed only if <em>task</em> is NULL or equal to <a class="el" href="group__alchemy__task.html#ga8a17935f049171be2ac8945abc68da6a" title="Retrieve the current task descriptor. ">rt_task_self()</a>.</dd></dl>
 <dl class="section user"><dt>Side effects</dt><dd>Over Cobalt, -EINVAL is returned if <em>period</em> is different from TM_INFINITE but shorter than the user scheduling latency value for the target system, as displayed by /proc/xenomai/latency.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>idate</em> and <em>period</em> values are interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond).</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000007">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit. </dd></dl>
 
 </div>
 </div>
@@ -583,7 +583,7 @@ an error number if:<ul>
 </ul>
 </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Unlike the original Xenomai 2.x call, this emulation does not delay the caller waiting for the first periodic release point. In addition, <em>thread</em> must be equal to pthread_self().</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000012">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000013">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create()</a>, and <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime()</a>.</p>
 
@@ -619,7 +619,7 @@ an error number if:<ul>
 <li>EPERM is returned if this service was called from an invalid context.</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>If the current release point has already been reached at the time of the call, the current thread immediately returns from this service with no delay.</dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000013">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000014">Deprecated:</a></b></dt><dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts. </dd></dl>
 
 </div>
 </div>
@@ -647,7 +647,7 @@ an error number if:<ul>
 <li>-EIDRM is returned if <em>alarm</em> is deleted while the caller was sleeping on it. In such a case, <em>alarm</em> is no more valid upon return of this service.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a></dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000008">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit.</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>This is a compatibility service from the Transition Kit.</dd></dl>
 
 </div>
 </div>

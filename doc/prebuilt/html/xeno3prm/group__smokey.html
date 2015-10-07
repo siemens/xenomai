@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -163,6 +163,7 @@ $(document).ready(function(){initNavTree('group__smokey.html','');});
 </li>
 <li>&ndash;keep-going sets the boolean flag <em>smokey_keep_going</em> to a non-zero value, indicating to the test driver that receiving a failure code from a smoke test should not abort the test loop. This flag is not otherwise interpreted by the Smokey API.</li>
 <li>&ndash;verbose[=level] sets the integer <em>smokey_verbose_mode</em> to a non-zero value, which should be interpreted by all parties as the desired verbosity level (defaults to 1).</li>
+<li>&ndash;vm gives a hint to the test code, about running in a virtual environment, such as KVM. When passed, the boolean <em>smokey_on_vm</em> is set. Each test may act upon this setting, such as skipping time-dependent checks that may fail due to any slowdown induced by the virtualization.</li>
 </ul>
 <dl class="section user"><dt>Writing a test driver based on the Smokey API</dt><dd></dd></dl>
 <p>A test driver provides the main() entry point, which should iterate over the test list (<em>smokey_test_list</em>) prepared by the Smokey API, for running each test individually. The <em>for_each_smokey_test()</em> helper is available for iterating over the active test list.</p>

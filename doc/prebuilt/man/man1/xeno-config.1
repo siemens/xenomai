@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 2014/08/03
 .\"    Manual: Xenomai Manual
-.\"    Source: Xenomai 3.0-rc7
+.\"    Source: Xenomai 3.0
 .\"  Language: English
 .\"
-.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 3\&.0\-rc7" "Xenomai Manual"
+.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 3\&.0" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,7 +43,7 @@ xeno-config \- Retrieve Xenomai build flags and configuration
 .sp
 \fBxeno\-config\fR \fB\-\-version\fR
 .sp
-\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-cflags\fR] [\fB\-\-kcflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
+\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
 .SH "DESCRIPTION"
 .sp
 \fBxeno\-config\fR is a shell script which is aimed at retrieving the Xenomai build configuration data, such as the compiler and linker flags required for building applications\&. For this reason, \fBxeno\-config\fR is typically used in Makefiles\&.
@@ -135,14 +135,6 @@ Over Cobalt, only \fBxeno\-config \-\-posix \-\-ldflags\fR (or \fB\-\-rtdm\fR as
 \fB\-\-cflags\fR
 .RS 4
 Output the C compiler command\-line options (\fICFLAGS\fR) which are required to compile applications based on the selected Xenomai API/skin\&.
-.RE
-.PP
-\fB\-\-kcflags\fR
-.RS 4
-Output the C compiler command\-line options (\fICFLAGS\fR) which are required to compile a kernel driver based on the RTDM interface\&.
-\fB\-\-rtdm\fR
-must appear on the command line before
-\fB\-\-kcflags\fR\&.
 .RE
 .PP
 \fB\-\-ldflags\fR

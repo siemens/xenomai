@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -89,28 +89,32 @@ $(document).ready(function(){initNavTree('deprecated.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><dl class="reflist">
-<dt><a class="anchor" id="_deprecated000007"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga7b0812d15689d60089ea2364495a4df8">COMPAT__rt_alarm_create</a>  (RT_ALARM *alarm, const char *name)</dt>
+<dt><a class="anchor" id="_deprecated000008"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga7b0812d15689d60089ea2364495a4df8">COMPAT__rt_alarm_create</a>  (RT_ALARM *alarm, const char *name)</dt>
 <dd>This is a compatibility service from the Transition Kit.  </dd>
-<dt><a class="anchor" id="_deprecated000011"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga6e02ebb20c49674d47cb16e648baff45">COMPAT__rt_event_clear</a>  (RT_EVENT *event, unsigned long mask, unsigned long *mask_r)</dt>
+<dt><a class="anchor" id="_deprecated000012"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga6e02ebb20c49674d47cb16e648baff45">COMPAT__rt_event_clear</a>  (RT_EVENT *event, unsigned long mask, unsigned long *mask_r)</dt>
 <dd>This is a compatibility service from the Transition Kit.  </dd>
-<dt><a class="anchor" id="_deprecated000009"></a>globalScope&gt; Global <a class="el" href="group__trank.html#gabe889b984ed685d4bccdaabb2e0be6d4">COMPAT__rt_event_create</a>  (RT_EVENT *event, const char *name, unsigned long ivalue, int mode)</dt>
+<dt><a class="anchor" id="_deprecated000010"></a>globalScope&gt; Global <a class="el" href="group__trank.html#gabe889b984ed685d4bccdaabb2e0be6d4">COMPAT__rt_event_create</a>  (RT_EVENT *event, const char *name, unsigned long ivalue, int mode)</dt>
 <dd>This is a compatibility service from the Transition Kit.  </dd>
-<dt><a class="anchor" id="_deprecated000010"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga6b65888836cffb1674f6d61522674d15">COMPAT__rt_event_signal</a>  (RT_EVENT *event, unsigned long mask)</dt>
+<dt><a class="anchor" id="_deprecated000011"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga6b65888836cffb1674f6d61522674d15">COMPAT__rt_event_signal</a>  (RT_EVENT *event, unsigned long mask)</dt>
 <dd>This is a compatibility service from the Transition Kit.  </dd>
-<dt><a class="anchor" id="_deprecated000005"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga2d7b013823582c3374f6cbd7aabf155b">COMPAT__rt_task_create</a>  (RT_TASK *task, const char *name, int stksize, int prio, int mode)</dt>
+<dt><a class="anchor" id="_deprecated000006"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga2d7b013823582c3374f6cbd7aabf155b">COMPAT__rt_task_create</a>  (RT_TASK *task, const char *name, int stksize, int prio, int mode)</dt>
 <dd>This is a compatibility service from the Transition Kit.  </dd>
-<dt><a class="anchor" id="_deprecated000006"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga77e5158909dc88b778fd1d22c4aa2597">COMPAT__rt_task_set_periodic</a>  (RT_TASK *task, RTIME idate, RTIME period)</dt>
+<dt><a class="anchor" id="_deprecated000007"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga77e5158909dc88b778fd1d22c4aa2597">COMPAT__rt_task_set_periodic</a>  (RT_TASK *task, RTIME idate, RTIME period)</dt>
 <dd>This is a compatibility service from the Transition Kit.  </dd>
-<dt><a class="anchor" id="_deprecated000012"></a>globalScope&gt; Global <a class="el" href="group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np</a>  (pthread_t thread, struct timespec *starttp, struct timespec *periodtp)</dt>
-<dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts.  </dd>
-<dt><a class="anchor" id="_deprecated000013"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga1f18e6e7dd5342463ca8546ef3a36c34">pthread_wait_np</a>  (unsigned long *overruns_r)</dt>
-<dd>This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts.  </dd>
-<dt><a class="anchor" id="_deprecated000008"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a>  (RT_ALARM *alarm)</dt>
-<dd>This is a compatibility service from the Transition Kit. </dd>
+<dt><a class="anchor" id="_deprecated000002"></a>Module <a class="el" href="group__rtdm__can.html#amgrpa18f8b001f56d5e10d81e12685125407">IOCTLs</a>  </dt>
+<dd>Passing <code>struct ifreq<code> as a request descriptor for CAN IOCTLs is still accepted for backward compatibility, however it is recommended to switch to <code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a><code> at the first opportunity. </code></code></code></code></dd>
+<dt><a class="anchor" id="_deprecated000002"></a>Module <a class="el" href="group__rtdm__can.html#amgrpa18f8b001f56d5e10d81e12685125407">IOCTLs</a>  </dt>
+<dd><code><code><code><code> Passing <code>struct ifreq<code> as a request descriptor for CAN IOCTLs is still accepted for backward compatibility, however it is recommended to switch to <code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a><code> at the first opportunity. </code></code></code></code></code></code></code></code></dd>
+<dt><a class="anchor" id="_deprecated000013"></a>globalScope&gt; Global <a class="el" href="group__trank.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np</a>  (pthread_t thread, struct timespec *starttp, struct timespec *periodtp)</dt>
+<dd><code><code><code><code><code><code><code><code> This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts.  </code></code></code></code></code></code></code></code></dd>
+<dt><a class="anchor" id="_deprecated000014"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga1f18e6e7dd5342463ca8546ef3a36c34">pthread_wait_np</a>  (unsigned long *overruns_r)</dt>
+<dd><code><code><code><code><code><code><code><code> This service is a non-portable extension of the Xenomai 2.x POSIX interface, not available with Xenomai 3.x. Instead, Cobalt-based applications should set up a periodic timer using the <a class="el" href="group__cobalt__api__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a>, <a class="el" href="group__cobalt__api__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> call pair, then wait for release points via sigwaitinfo(). Overruns can be detected by looking at the siginfo.si_overrun field. Alternatively, applications may obtain a file descriptor referring to a Cobalt timer via the timerfd() call, and read() from it to wait for timeouts.  </code></code></code></code></code></code></code></code></dd>
+<dt><a class="anchor" id="_deprecated000009"></a>globalScope&gt; Global <a class="el" href="group__trank.html#ga6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a>  (RT_ALARM *alarm)</dt>
+<dd><code><code><code><code><code><code><code><code> This is a compatibility service from the Transition Kit. </code></code></code></code></code></code></code></code></dd>
 <dt><a class="anchor" id="_deprecated000001"></a>globalScope&gt; Global <a class="el" href="group__rtdm__sync__biglock.html#gabbaf52632d5dde7fa66e0b70d887493b">RTDM_EXECUTE_ATOMICALLY</a>  (code_block)</dt>
-<dd>This construct will be phased out in Xenomai 3.0. Please use rtdm_waitqueue services instead. </dd>
-<dt><a class="anchor" id="_deprecated000004"></a>globalScope&gt; Global <a class="el" href="group__rtdm__task.html#ga741998821c05483db33f17d77c733d99">rtdm_task_sleep_until</a>  (nanosecs_abs_t wakeup_time)</dt>
-<dd>Use rtdm_task_sleep_abs instead!</dd>
+<dd><code><code><code><code><code><code><code><code> This construct will be phased out in Xenomai 3.0. Please use rtdm_waitqueue services instead. </code></code></code></code></code></code></code></code></dd>
+<dt><a class="anchor" id="_deprecated000005"></a>globalScope&gt; Global <a class="el" href="group__rtdm__task.html#ga741998821c05483db33f17d77c733d99">rtdm_task_sleep_until</a>  (nanosecs_abs_t wakeup_time)</dt>
+<dd><code><code><code><code><code><code><code><code> Use rtdm_task_sleep_abs instead!</code></code></code></code></code></code></code></code></dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

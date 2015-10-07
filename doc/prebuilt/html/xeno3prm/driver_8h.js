@@ -20,6 +20,7 @@ var driver_8h =
     [ "rtdm_lock_irqrestore", "group__rtdm__sync__spinlock.html#gae03c387fcae8a55105dd31d7c008bbb4", null ],
     [ "rtdm_lock_irqsave", "group__rtdm__sync__spinlock.html#ga3d563fc5def018f743c55c452e061758", null ],
     [ "RTDM_LOCK_UNLOCKED", "group__rtdm__sync__spinlock.html#gad122b937f723fade24e729dcf1374ac6", null ],
+    [ "RTDM_MAX_MINOR", "group__rtdm__device__register.html#gad80a74742f48ad450107c3782030ca87", null ],
     [ "RTDM_NAMED_DEVICE", "group__rtdm__device__register.html#ga7651188ca1c05f7e68b36517874138b7", null ],
     [ "RTDM_PROFILE_INFO", "driver_8h.html#a64e99c7bda9b3c45863cea9c11dda761", null ],
     [ "RTDM_PROTOCOL_DEVICE", "group__rtdm__device__register.html#ga43ced044106ae9c1f5500d0041307d8f", null ],

@@ -982,27 +982,35 @@ users to access Xenomai services, by following the instructions on
 </div>
 <div class="sect2">
 <h3 id="_abi_mismatch">2.5. ABI mismatch</h3>
+<div class="paragraph"><p>The ABI concerned by this message is the system call binary interface
+between the Xenomai libraries and the real-time kernel services it
+invokes (e.g. <code>libcobalt</code> and the Cobalt kernel with Xenomai
+3.x). This ABI may evolve over time, only between major Xenomai
+releases or testing candidate releases (i.e. -rc series) though. When
+this happens, the ABI level required by the application linked against
+Xenomai libraries may not match the ABI exposed by the Xenomai
+co-kernel implementation on the target machine, which is the situation
+this message reports.</p></div>
+<div class="paragraph"><p>To fix this issue, just make sure to rebuild both the Xenomai kernel
+support and the user-space binaries for your target system. If however
+you did install the appropriate Xenomai binaries on your target
+system, chances are that stale files from a previous Xenomai
+installation still exist on your system, causing the mismatch.</p></div>
 <div class="paragraph"><p>Each major Xenomai release (e.g. 2.1.x, 2.2.x &#8230; 2.6.x, 3.0.x &#8230;)
-defines a kernel/user ABI, which remains stable across minor update
-releases (e.g. 2.6.0 &#8594; 2.6.1). This guarantee makes partial updates
-possible with production systems (i.e. kernel and/or user support).</p></div>
-<div class="paragraph"><p>For instance, any application built over the Xenomai 2.6.0 libraries
-can run over a Xenomai 2.6.3 kernel support, and conversely.</p></div>
-<div class="paragraph"><p>However, it is not possible to mix kernel and user-space supports from
-different major releases.</p></div>
+defines such kernel/user ABI, which remains stable across minor update
+releases (e.g. 2.6.0 &#8594; 2.6.4). This guarantee makes partial updates
+possible with production systems (i.e. kernel and/or user support).
+For instance, any application built over the Xenomai 2.6.0 binaries
+can run over a Xenomai 2.6.4 kernel support, and conversely.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="../asciidoc-icons/tip.png" alt="Tip" />
 </td>
-<td class="content">A common source of error is running a kernel with support from the
-Xenomai 2.6.x series, on a system with pre-installed Xenomai libraries
-from the 2.5.x series, shipped with a Debian-based Linux distribution
-(notably Ubuntu), which won&#8217;t work as the two series have different
-ABIs.  If however you did install the correct Xenomai user-space
-support on your target system, chances are that stale files from a
-previous Xenomai installation still exist on your system, causing the
-mismatch.</td>
+<td class="content">Debian-based distributions (notably Ubuntu) may ship with
+pre-installed Xenomai libraries. Make sure that these files don&#8217;t get
+in the way if you plan to install a more recent Xenomai kernel
+support.</td>
 </tr></table>
 </div>
 </div>
@@ -1459,7 +1467,7 @@ allocation requests.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-15 16:32:54 CEST
+Last updated 2015-10-07 11:08:43 CEST
 </div>
 </div>
 </body>

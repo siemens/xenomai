@@ -1,0 +1,5 @@
+<map id="can_ifreq" name="can_ifreq">
+<area shape="rect" id="node2" href="$structcan__bittime.html" title="Custom CAN bit&#45;time definition. " alt="" coords="84,95,173,121"/>
+<area shape="rect" id="node3" href="$structcan__bittime__btr.html" title="Hardware&#45;specific BTR bit&#45;times. " alt="" coords="5,5,116,32"/>
+<area shape="rect" id="node4" href="$structcan__bittime__std.html" title="Standard bit&#45;time parameters according to Bosch. " alt="" coords="141,5,255,32"/>
+</map>

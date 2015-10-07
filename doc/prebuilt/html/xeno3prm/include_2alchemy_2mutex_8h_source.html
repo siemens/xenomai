@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -178,7 +178,7 @@ $(document).ready(function(){initNavTree('include_2alchemy_2mutex_8h_source.html
 <div class="ttc" id="group__alchemy__mutex_html_ga3f308046a8fb83442d5d97e33d0516a4"><div class="ttname"><a href="group__alchemy__mutex.html#ga3f308046a8fb83442d5d97e33d0516a4">rt_mutex_unbind</a></div><div class="ttdeci">int rt_mutex_unbind(RT_MUTEX *mutex)</div><div class="ttdoc">Unbind from a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:508</div></div>
 <div class="ttc" id="group__alchemy__mutex_html_ga8f7db304bb5a839d81614f00c4cde145"><div class="ttname"><a href="group__alchemy__mutex.html#ga8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a></div><div class="ttdeci">int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)</div><div class="ttdoc">Query mutex status. </div><div class="ttdef"><b>Definition:</b> mutex.c:413</div></div>
 <div class="ttc" id="group__alchemy__mutex_html_ga8a087d5bfeaaf10b6f0a924b272d72c9"><div class="ttname"><a href="group__alchemy__mutex.html#ga8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a></div><div class="ttdeci">static int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Acquire/lock a mutex (with relative scalar timeout). </div><div class="ttdef"><b>Definition:</b> mutex.h:79</div></div>
-<div class="ttc" id="structRT__MUTEX__INFO_html_afc07033ecd5df60683b72edc1c4d3de4"><div class="ttname"><a href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">RT_MUTEX_INFO::owner</a></div><div class="ttdeci">RT_TASK owner</div><div class="ttdoc">Current mutex owner, or null if unlocked. </div><div class="ttdef"><b>Definition:</b> mutex.h:49</div></div>
+<div class="ttc" id="structRT__MUTEX__INFO_html_afc07033ecd5df60683b72edc1c4d3de4"><div class="ttname"><a href="structRT__MUTEX__INFO.html#afc07033ecd5df60683b72edc1c4d3de4">RT_MUTEX_INFO::owner</a></div><div class="ttdeci">RT_TASK owner</div><div class="ttdoc">Current mutex owner, or NO_ALCHEMY_TASK if unlocked. </div><div class="ttdef"><b>Definition:</b> mutex.h:49</div></div>
 <div class="ttc" id="group__alchemy__mutex_html_gad6c91e42bdbf7b7b6e9e2235e98efdf7"><div class="ttname"><a href="group__alchemy__mutex.html#gad6c91e42bdbf7b7b6e9e2235e98efdf7">rt_mutex_acquire_timed</a></div><div class="ttdeci">int rt_mutex_acquire_timed(RT_MUTEX *mutex, const struct timespec *abs_timeout)</div><div class="ttdoc">Acquire/lock a mutex (with absolute timeout date). </div><div class="ttdef"><b>Definition:</b> mutex.c:291</div></div>
 <div class="ttc" id="group__alchemy__mutex_html_ga1d7ee706d0f898f940d5c1139fa38194"><div class="ttname"><a href="group__alchemy__mutex.html#ga1d7ee706d0f898f940d5c1139fa38194">rt_mutex_acquire_until</a></div><div class="ttdeci">static int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)</div><div class="ttdoc">Acquire/lock a mutex (with absolute scalar timeout). </div><div class="ttdef"><b>Definition:</b> mutex.h:71</div></div>
 <div class="ttc" id="group__alchemy__mutex_html_gac89c13a781e4636acf9e66f02d9feb83"><div class="ttname"><a href="group__alchemy__mutex.html#gac89c13a781e4636acf9e66f02d9feb83">rt_mutex_create</a></div><div class="ttdeci">int rt_mutex_create(RT_MUTEX *mutex, const char *name)</div><div class="ttdoc">Create a mutex. </div><div class="ttdef"><b>Definition:</b> mutex.c:106</div></div>

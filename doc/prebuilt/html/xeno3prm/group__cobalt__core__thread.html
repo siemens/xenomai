@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -237,7 +237,7 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>The returned value may differ from xnsched_current_thread() called from the same context, since the latter returns the root thread descriptor for the current CPU if the caller is running in secondary mode.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">unrestricted</a> </dd></dl>
 
-<p>Referenced by <a class="el" href="group__rtdm__sync__event.html#gaf76f858a3951ca2e20d3b1e00afa17e0">rtdm_event_timedwait()</a>, <a class="el" href="group__rtdm__sync__mutex.html#ga0789968300701ba2a940f5fe8b1fd4d8">rtdm_mutex_timedlock()</a>, <a class="el" href="group__rtdm__sync__sem.html#ga8aadb120a93df5dfd717c5bac6d4c1a9">rtdm_sem_timeddown()</a>, <a class="el" href="group__cobalt__core__synch.html#ga43fa3ecdc81f6ae157f840175c7ea091">xnsynch_acquire()</a>, <a class="el" href="group__cobalt__core__synch.html#ga51cec970cb57608abe882c98bee72347">xnsynch_sleep_on()</a>, <a class="el" href="group__cobalt__core__synch.html#gad5cad7eeaa18834c9ba8843511a67628">xnsynch_try_acquire()</a>, <a class="el" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel()</a>, <a class="el" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden()</a>, <a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join()</a>, <a class="el" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map()</a>, <a class="el" href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate()</a>, <a class="el" href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax()</a>, <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>, and <a class="el" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2">xnthread_wait_period()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdm__sync__event.html#gaf76f858a3951ca2e20d3b1e00afa17e0">rtdm_event_timedwait()</a>, <a class="el" href="group__rtdm__sync__mutex.html#ga0789968300701ba2a940f5fe8b1fd4d8">rtdm_mutex_timedlock()</a>, <a class="el" href="group__rtdm__sync__sem.html#ga8aadb120a93df5dfd717c5bac6d4c1a9">rtdm_sem_timeddown()</a>, <a class="el" href="group__cobalt__core__synch.html#ga43fa3ecdc81f6ae157f840175c7ea091">xnsynch_acquire()</a>, <a class="el" href="group__cobalt__core__synch.html#ga51cec970cb57608abe882c98bee72347">xnsynch_sleep_on()</a>, <a class="el" href="group__cobalt__core__synch.html#gad5cad7eeaa18834c9ba8843511a67628">xnsynch_try_acquire()</a>, <a class="el" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel()</a>, <a class="el" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden()</a>, <a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join()</a>, <a class="el" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map()</a>, <a class="el" href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate()</a>, <a class="el" href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax()</a>, <a class="el" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic()</a>, <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>, and <a class="el" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2">xnthread_wait_period()</a>.</p>
 
 </div>
 </div>
@@ -689,8 +689,8 @@ Functions</h2></td></tr>
 <p>Make a thread periodic by programming its first release point and its period in the processor time line. Subsequent calls to <a class="el" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2" title="Wait for the next periodic release point. ">xnthread_wait_period()</a> will delay the thread until the next periodic release point in the processor timeline is reached.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">thread</td><td>The core thread to make periodic.</td></tr>
-    <tr><td class="paramname">idate</td><td>The initial (absolute) date of the first release point, expressed in nanoseconds. The affected thread will be delayed by the first call to <a class="el" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2" title="Wait for the next periodic release point. ">xnthread_wait_period()</a> until this point is reached. If <em>idate</em> is equal to XN_INFINITE, the current system date is used, and no initial delay takes place. In the latter case, <em>timeout_mode</em> is not considered and can have any valid value.</td></tr>
+    <tr><td class="paramname">thread</td><td>The core thread to make periodic. If NULL, the current thread is assumed.</td></tr>
+    <tr><td class="paramname">idate</td><td>The initial (absolute) date of the first release point, expressed in nanoseconds. The affected thread will be delayed by the first call to <a class="el" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2" title="Wait for the next periodic release point. ">xnthread_wait_period()</a> until this point is reached. If <em>idate</em> is equal to XN_INFINITE, the first release point is set to <em>period</em> nanoseconds after the current date. In the latter case, <em>timeout_mode</em> is not considered and can have any valid value.</td></tr>
     <tr><td class="paramname">timeout_mode</td><td>The mode of the <em>idate</em> parameter. It can either be set to XN_ABSOLUTE or XN_REALTIME with <em>idate</em> different from XN_INFINITE (see also <a class="el" href="group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b" title="Arm a timer. ">xntimer_start()</a>).</td></tr>
     <tr><td class="paramname">period</td><td>The period of the thread, expressed in nanoseconds. As a side-effect, passing XN_INFINITE attempts to stop the thread's periodic timer; in the latter case, the routine always exits succesfully, regardless of the previous state of this timer.</td></tr>
   </table>
@@ -700,10 +700,11 @@ Functions</h2></td></tr>
 <ul>
 <li>-ETIMEDOUT is returned <em>idate</em> is different from XN_INFINITE and represents a date in the past.</li>
 <li>-EINVAL is returned if <em>period</em> is different from XN_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency. -EINVAL is also returned if <em>timeout_mode</em> is not compatible with <em>idate</em>, such as XN_RELATIVE with <em>idate</em> different from XN_INFINITE.</li>
+<li>-EPERM is returned if <em>thread</em> is NULL, but the caller is not a Xenomai thread.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b">xntimer_start()</a>, and <a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop()</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__timer.html#ga5105f0fe627798b588a5f124715cb31b">xntimer_start()</a>, and <a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop()</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__task.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
 

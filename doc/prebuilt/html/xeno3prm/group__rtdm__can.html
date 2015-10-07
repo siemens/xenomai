@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -124,6 +124,9 @@ Data Structures</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__frame.html">can_frame</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Raw CAN frame.  <a href="structcan__frame.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__ifreq.html">can_ifreq</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">CAN interface request descriptor.  <a href="structcan__ifreq.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -304,33 +307,34 @@ RAW socket options</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
 IOCTLs</h2></td></tr>
-<tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrpa18f8b001f56d5e10d81e12685125407"></a><a class="anchor" id="CANIOCTLs"></a>CAN device IOCTLs </p>
+<tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrpa18f8b001f56d5e10d81e12685125407"></a><a class="anchor" id="CANIOCTLs"></a>CAN device IOCTLs</p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Passing <code>struct ifreq<code> as a request descriptor for CAN IOCTLs is still accepted for backward compatibility, however it is recommended to switch to <code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a><code> at the first opportunity.</code></code></code></code></dd></dl>
 </td></tr>
 <tr class="memitem:gaee74ae50c8ea0a6aee277c6f124a3866"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&#160;&#160;&#160;defined_by_kernel_header_file</td></tr>
 <tr class="memdesc:gaee74ae50c8ea0a6aee277c6f124a3866"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get CAN interface index by name.  <a href="#gaee74ae50c8ea0a6aee277c6f124a3866">More...</a><br /></td></tr>
 <tr class="separator:gaee74ae50c8ea0a6aee277c6f124a3866"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7c070037c218b40de849ebf4d299f977"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga7c070037c218b40de849ebf4d299f977">SIOCSCANBAUDRATE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</td></tr>
+<tr class="memitem:ga7c070037c218b40de849ebf4d299f977"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga7c070037c218b40de849ebf4d299f977">SIOCSCANBAUDRATE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x01, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga7c070037c218b40de849ebf4d299f977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set baud rate.  <a href="#ga7c070037c218b40de849ebf4d299f977">More...</a><br /></td></tr>
 <tr class="separator:ga7c070037c218b40de849ebf4d299f977"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga9a3032f07b3a6a2f92eb2ba25a4ff8bf">SIOCGCANBAUDRATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</td></tr>
+<tr class="memitem:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga9a3032f07b3a6a2f92eb2ba25a4ff8bf">SIOCGCANBAUDRATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x02, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get baud rate.  <a href="#ga9a3032f07b3a6a2f92eb2ba25a4ff8bf">More...</a><br /></td></tr>
 <tr class="separator:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">SIOCSCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</td></tr>
+<tr class="memitem:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">SIOCSCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x03, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set custom bit time parameter.  <a href="#ga4e9547dcb608fd0b8d5cf57f926e5176">More...</a><br /></td></tr>
 <tr class="separator:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab92b51127ca47c491069b9f3e5013a7f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gab92b51127ca47c491069b9f3e5013a7f">SIOCGCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</td></tr>
+<tr class="memitem:gab92b51127ca47c491069b9f3e5013a7f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gab92b51127ca47c491069b9f3e5013a7f">SIOCGCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x04, struct can_ifreq)</td></tr>
 <tr class="memdesc:gab92b51127ca47c491069b9f3e5013a7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get custom bit-time parameters.  <a href="#gab92b51127ca47c491069b9f3e5013a7f">More...</a><br /></td></tr>
 <tr class="separator:gab92b51127ca47c491069b9f3e5013a7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga72b56a34fe466bca858b1f5f401e1076"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga72b56a34fe466bca858b1f5f401e1076">SIOCSCANMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</td></tr>
+<tr class="memitem:ga72b56a34fe466bca858b1f5f401e1076"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga72b56a34fe466bca858b1f5f401e1076">SIOCSCANMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x05, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga72b56a34fe466bca858b1f5f401e1076"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set operation mode of CAN controller.  <a href="#ga72b56a34fe466bca858b1f5f401e1076">More...</a><br /></td></tr>
 <tr class="separator:ga72b56a34fe466bca858b1f5f401e1076"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5b5f750db08d56f40489679f22236ef4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</td></tr>
+<tr class="memitem:ga5b5f750db08d56f40489679f22236ef4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x06, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga5b5f750db08d56f40489679f22236ef4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get current state of CAN controller.  <a href="#ga5b5f750db08d56f40489679f22236ef4">More...</a><br /></td></tr>
 <tr class="separator:ga5b5f750db08d56f40489679f22236ef4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga26fa69d2cded6e172b96b4a6dc3798df">SIOCSCANCTRLMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</td></tr>
+<tr class="memitem:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga26fa69d2cded6e172b96b4a6dc3798df">SIOCSCANCTRLMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x07, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set special controller modes.  <a href="#ga26fa69d2cded6e172b96b4a6dc3798df">More...</a><br /></td></tr>
 <tr class="separator:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaa78d64e69ffd68a20f93a6aa64393d6a">SIOCGCANCTRLMODE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</td></tr>
+<tr class="memitem:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaa78d64e69ffd68a20f93a6aa64393d6a">SIOCGCANCTRLMODE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x08, struct can_ifreq)</td></tr>
 <tr class="memdesc:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get special controller modes.  <a href="#gaa78d64e69ffd68a20f93a6aa64393d6a">More...</a><br /></td></tr>
 <tr class="separator:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaedd7bd75a1983735052fed62e101e5ce"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x09, int)</td></tr>
@@ -820,7 +824,7 @@ Specific return values:<ul>
 <li>-EINVAL (Invalid length "optlen")</li>
 </ul>
 </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a19">rtcanrecv.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a20">rtcanrecv.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -856,7 +860,7 @@ Specific return values:<ul>
 <li>-ENOSPC (No space to store filter list, check RT-Socket-CAN kernel parameters)</li>
 </ul>
 </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a14">can-rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a20">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a13">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a15">can-rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a21">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a14">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -890,7 +894,7 @@ Specific return values:<ul>
 <li>-EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters). </li>
 </ul>
 </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a10">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a11">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -934,7 +938,7 @@ Specific return values:<ul>
 </ul>
 </dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a22">rtcanrecv.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a23">rtcanrecv.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -963,7 +967,7 @@ Specific return values:<ul>
 </ul>
 </dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a15">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a16">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -988,7 +992,7 @@ Specific return values:<ul>
 <dl class="section return"><dt>Returns</dt><dd>0 on success.</dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Activating taking timestamps only has an effect on newly received CAN messages from the bus. Frames that already are in the socket buffer do not have timestamps if it was deactivated before. See <a class="el" href="group__rtdm__can.html#Recv">Receive</a> for more details. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a23">rtcanrecv.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a24">rtcanrecv.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -997,7 +1001,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCGCANBAUDRATE&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</td>
+          <td class="memname">#define SIOCGCANBAUDRATE&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x02, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1005,7 +1009,7 @@ Specific return values:<ul>
 <p>Get baud rate. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> will be filled with an instance of <a class="el" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a>.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> will be filled with an instance of <a class="el" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1024,7 +1028,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCGCANCTRLMODE&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</td>
+          <td class="memname">#define SIOCGCANCTRLMODE&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x08, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1032,7 +1036,7 @@ Specific return values:<ul>
 <p>Get special controller modes. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#gaa1db20ee5ae4803157e38db4b6c6150b">can_ctrlmode_t</a>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#gaa1db20ee5ae4803157e38db4b6c6150b">can_ctrlmode_t</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1051,7 +1055,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCGCANCUSTOMBITTIME&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</td>
+          <td class="memname">#define SIOCGCANCUSTOMBITTIME&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x04, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1059,7 +1063,7 @@ Specific return values:<ul>
 <p>Get custom bit-time parameters. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> will be filled with an instance of struct <a class="el" href="structcan__bittime.html" title="Custom CAN bit-time definition. ">can_bittime</a>.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> will be filled with an instance of struct <a class="el" href="structcan__bittime.html" title="Custom CAN bit-time definition. ">can_bittime</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1078,7 +1082,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCGCANSTATE&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</td>
+          <td class="memname">#define SIOCGCANSTATE&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x06, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1087,7 +1091,7 @@ Specific return values:<ul>
 <p>States are divided into main states and additional error indicators. A CAN controller is always in exactly one main state. CAN bus errors are registered by the CAN hardware and collected by the driver. There is one error indicator (bit) per error type. If this IOCTL is triggered the error types which occured since the last call of this IOCTL are reported and thereafter the error indicators are cleared. See also <a class="el" href="group__rtdm__can.html#CAN_STATE">CAN controller states</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> will be filled with an instance of <a class="el" href="group__rtdm__can.html#ga47a129d7188a7cd7b68fbf60ebbfd9e8">can_mode_t</a>.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> will be filled with an instance of <a class="el" href="group__rtdm__can.html#ga47a129d7188a7cd7b68fbf60ebbfd9e8">can_mode_t</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1113,7 +1117,7 @@ Specific return values:<ul>
 <p>Get CAN interface index by name. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). If <code>ifr_name</code> holds a valid CAN interface name <code>ifr_ifindex</code> will be filled with the corresponding interface index.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). If <code>ifr_name</code> holds a valid CAN interface name <code>ifr_ifindex</code> will be filled with the corresponding interface index.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1123,7 +1127,7 @@ Specific return values:<ul>
 </ul>
 </dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a12">can-rtt.c</a>, <a class="el" href="rtcanconfig_8c-example.html#a8">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a17">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a11">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a13">can-rtt.c</a>, <a class="el" href="rtcanconfig_8c-example.html#a9">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a18">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a12">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1132,7 +1136,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCSCANBAUDRATE&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</td>
+          <td class="memname">#define SIOCSCANBAUDRATE&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x01, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1141,7 +1145,7 @@ Specific return values:<ul>
 <p>The baudrate must be specified in bits per second. The driver will try to calculate resonable CAN bit-timing parameters. You can use <a class="el" href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">SIOCSCANCUSTOMBITTIME</a> to set custom bit-timing.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1155,7 +1159,7 @@ Specific return values:<ul>
 </dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Setting the baud rate is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a9">rtcanconfig.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a10">rtcanconfig.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1164,7 +1168,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCSCANCTRLMODE&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</td>
+          <td class="memname">#define SIOCSCANCTRLMODE&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x07, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1173,7 +1177,7 @@ Specific return values:<ul>
 <p>Various special controller modes could be or'ed together (see <a class="el" href="group__rtdm__can.html#CAN_CTRLMODE">CAN_CTRLMODE</a> for further information).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#gaa1db20ee5ae4803157e38db4b6c6150b">can_ctrlmode_t</a>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#gaa1db20ee5ae4803157e38db4b6c6150b">can_ctrlmode_t</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1186,7 +1190,7 @@ Specific return values:<ul>
 </dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Setting special controller modes is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a24">rtcanconfig.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a25">rtcanconfig.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1195,7 +1199,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCSCANCUSTOMBITTIME&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</td>
+          <td class="memname">#define SIOCSCANCUSTOMBITTIME&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x03, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1204,7 +1208,7 @@ Specific return values:<ul>
 <p>Custem-bit time could be defined in various formats (see struct <a class="el" href="structcan__bittime.html" title="Custom CAN bit-time definition. ">can_bittime</a>).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of struct <a class="el" href="structcan__bittime.html" title="Custom CAN bit-time definition. ">can_bittime</a>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of struct <a class="el" href="structcan__bittime.html" title="Custom CAN bit-time definition. ">can_bittime</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1217,7 +1221,7 @@ Specific return values:<ul>
 </dd></dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Setting the bit-time is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a23">rtcanconfig.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a24">rtcanconfig.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1226,7 +1230,7 @@ Specific return values:<ul>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define SIOCSCANMODE&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</td>
+          <td class="memname">#define SIOCSCANMODE&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x05, struct can_ifreq)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1235,7 +1239,7 @@ Specific return values:<ul>
 <p>See <a class="el" href="group__rtdm__can.html#CAN_MODE">CAN controller modes</a> for available modes.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct ifreq</code> from linux/if.h). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#ga47a129d7188a7cd7b68fbf60ebbfd9e8">can_mode_t</a>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Pointer to interface request structure buffer (<code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a></code>). <code>ifr_name</code> must hold a valid CAN interface name, <code>ifr_ifru</code> must be filled with an instance of <a class="el" href="group__rtdm__can.html#ga47a129d7188a7cd7b68fbf60ebbfd9e8">can_mode_t</a>.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1251,7 +1255,7 @@ Specific return values:<ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>, bus-off recovery may still be in progress. <br />
 If a controller is bus-off, setting it into stop mode will return no error but the controller remains bus-off. </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a25">rtcanconfig.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a26">rtcanconfig.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1267,7 +1271,7 @@ If a controller is bus-off, setting it into stop mode will return no error but t
 
 <p>CAN socket levels. </p>
 <p>Used for <a class="el" href="group__rtdm__can.html#Sockopts">Sockopts</a> for the particular protocols. </p>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a13">can-rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a18">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a9">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a14">can-rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a19">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a10">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>

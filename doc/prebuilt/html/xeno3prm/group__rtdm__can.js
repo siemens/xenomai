@@ -30,6 +30,7 @@ var group__rtdm__can =
       [ "can_dlc", "structcan__frame.html#aa055f09fd81b299201618396b7dc9314", null ],
       [ "can_id", "structcan__frame.html#a0294f06f81a3ae0d155eb5fd14733d63", null ]
     ] ],
+    [ "can_ifreq", "structcan__ifreq.html", null ],
     [ "AF_CAN", "group__rtdm__can.html#ga546620c7e758f003b24b7fdae4f97bd4", null ],
     [ "CAN_CTRLMODE_3_SAMPLES", "group__rtdm__can.html#ga9ac4d541a8af54f03f51e1574676dd19", null ],
     [ "CAN_CTRLMODE_LISTENONLY", "group__rtdm__can.html#gae4ba49824d17e7d06300cb8b4a4bff45", null ],

@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -177,22 +177,26 @@ $(document).ready(function(){initNavTree('lib_2copperplate_2internal_8h_source.h
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">void</span> copperplate_set_current_name(<span class="keyword">const</span> <span class="keywordtype">char</span> *name);</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">int</span> copperplate_kill_tid(pid_t tid, <span class="keywordtype">int</span> sig);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">int</span> copperplate_get_current_name(<span class="keywordtype">char</span> *name, <span class="keywordtype">size_t</span> maxlen);</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">int</span> copperplate_create_thread(<span class="keyword">struct</span> corethread_attributes *cta,</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                              pthread_t *ptid);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keywordtype">int</span> copperplate_renice_local_thread(pthread_t ptid, <span class="keywordtype">int</span> policy,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                                    <span class="keyword">const</span> <span class="keyword">struct</span> sched_param_ex *param_ex);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keywordtype">void</span> copperplate_bootstrap_internal(<span class="keyword">const</span> <span class="keywordtype">char</span> *arg0,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                                    <span class="keywordtype">char</span> *mountpt, <span class="keywordtype">int</span> regflags);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">int</span> copperplate_kill_tid(pid_t tid, <span class="keywordtype">int</span> sig);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keywordtype">int</span> copperplate_probe_tid(pid_t tid);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  </div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keywordtype">int</span> copperplate_create_thread(<span class="keyword">struct</span> corethread_attributes *cta,</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                              pthread_t *ptid);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">int</span> copperplate_renice_local_thread(pthread_t ptid, <span class="keywordtype">int</span> policy,</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                                    <span class="keyword">const</span> <span class="keyword">struct</span> sched_param_ex *param_ex);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keywordtype">void</span> copperplate_bootstrap_internal(<span class="keyword">const</span> <span class="keywordtype">char</span> *arg0,</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;                                    <span class="keywordtype">char</span> *mountpt, <span class="keywordtype">int</span> regflags);</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _COPPERPLATE_INTERNAL_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;}</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* _COPPERPLATE_INTERNAL_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

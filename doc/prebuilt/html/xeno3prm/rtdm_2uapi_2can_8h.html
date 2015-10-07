@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -132,6 +132,9 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__frame.html">can_frame</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Raw CAN frame.  <a href="structcan__frame.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcan__ifreq.html">can_ifreq</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">CAN interface request descriptor.  <a href="structcan__ifreq.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -221,33 +224,34 @@ Macros</h2></td></tr>
 <tr class="memdesc:ga712942ca3d0d621184fb2019a24677c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">CAN receive own messages.  <a href="group__rtdm__can.html#ga712942ca3d0d621184fb2019a24677c3">More...</a><br /></td></tr>
 <tr class="separator:ga712942ca3d0d621184fb2019a24677c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">IOCTLs</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="CANIOCTLs"></a>CAN device IOCTLs </p>
+<tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="CANIOCTLs"></a>CAN device IOCTLs</p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Passing <code>struct ifreq<code> as a request descriptor for CAN IOCTLs is still accepted for backward compatibility, however it is recommended to switch to <code>struct <a class="el" href="structcan__ifreq.html" title="CAN interface request descriptor. ">can_ifreq</a><code> at the first opportunity.</code></code></code></code></dd></dl>
 </div></td></tr>
 <tr class="memitem:gaee74ae50c8ea0a6aee277c6f124a3866"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>&#160;&#160;&#160;defined_by_kernel_header_file</td></tr>
 <tr class="memdesc:gaee74ae50c8ea0a6aee277c6f124a3866"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get CAN interface index by name.  <a href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">More...</a><br /></td></tr>
 <tr class="separator:gaee74ae50c8ea0a6aee277c6f124a3866"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7c070037c218b40de849ebf4d299f977"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga7c070037c218b40de849ebf4d299f977">SIOCSCANBAUDRATE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</td></tr>
+<tr class="memitem:ga7c070037c218b40de849ebf4d299f977"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga7c070037c218b40de849ebf4d299f977">SIOCSCANBAUDRATE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x01, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga7c070037c218b40de849ebf4d299f977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set baud rate.  <a href="group__rtdm__can.html#ga7c070037c218b40de849ebf4d299f977">More...</a><br /></td></tr>
 <tr class="separator:ga7c070037c218b40de849ebf4d299f977"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga9a3032f07b3a6a2f92eb2ba25a4ff8bf">SIOCGCANBAUDRATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</td></tr>
+<tr class="memitem:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga9a3032f07b3a6a2f92eb2ba25a4ff8bf">SIOCGCANBAUDRATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x02, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get baud rate.  <a href="group__rtdm__can.html#ga9a3032f07b3a6a2f92eb2ba25a4ff8bf">More...</a><br /></td></tr>
 <tr class="separator:ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">SIOCSCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</td></tr>
+<tr class="memitem:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">SIOCSCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x03, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set custom bit time parameter.  <a href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">More...</a><br /></td></tr>
 <tr class="separator:ga4e9547dcb608fd0b8d5cf57f926e5176"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab92b51127ca47c491069b9f3e5013a7f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gab92b51127ca47c491069b9f3e5013a7f">SIOCGCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</td></tr>
+<tr class="memitem:gab92b51127ca47c491069b9f3e5013a7f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gab92b51127ca47c491069b9f3e5013a7f">SIOCGCANCUSTOMBITTIME</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x04, struct can_ifreq)</td></tr>
 <tr class="memdesc:gab92b51127ca47c491069b9f3e5013a7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get custom bit-time parameters.  <a href="group__rtdm__can.html#gab92b51127ca47c491069b9f3e5013a7f">More...</a><br /></td></tr>
 <tr class="separator:gab92b51127ca47c491069b9f3e5013a7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga72b56a34fe466bca858b1f5f401e1076"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga72b56a34fe466bca858b1f5f401e1076">SIOCSCANMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</td></tr>
+<tr class="memitem:ga72b56a34fe466bca858b1f5f401e1076"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga72b56a34fe466bca858b1f5f401e1076">SIOCSCANMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x05, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga72b56a34fe466bca858b1f5f401e1076"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set operation mode of CAN controller.  <a href="group__rtdm__can.html#ga72b56a34fe466bca858b1f5f401e1076">More...</a><br /></td></tr>
 <tr class="separator:ga72b56a34fe466bca858b1f5f401e1076"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5b5f750db08d56f40489679f22236ef4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</td></tr>
+<tr class="memitem:ga5b5f750db08d56f40489679f22236ef4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x06, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga5b5f750db08d56f40489679f22236ef4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get current state of CAN controller.  <a href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">More...</a><br /></td></tr>
 <tr class="separator:ga5b5f750db08d56f40489679f22236ef4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga26fa69d2cded6e172b96b4a6dc3798df">SIOCSCANCTRLMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</td></tr>
+<tr class="memitem:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga26fa69d2cded6e172b96b4a6dc3798df">SIOCSCANCTRLMODE</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x07, struct can_ifreq)</td></tr>
 <tr class="memdesc:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set special controller modes.  <a href="group__rtdm__can.html#ga26fa69d2cded6e172b96b4a6dc3798df">More...</a><br /></td></tr>
 <tr class="separator:ga26fa69d2cded6e172b96b4a6dc3798df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaa78d64e69ffd68a20f93a6aa64393d6a">SIOCGCANCTRLMODE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</td></tr>
+<tr class="memitem:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaa78d64e69ffd68a20f93a6aa64393d6a">SIOCGCANCTRLMODE</a>&#160;&#160;&#160;_IOWR(RTIOC_TYPE_CAN, 0x08, struct can_ifreq)</td></tr>
 <tr class="memdesc:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get special controller modes.  <a href="group__rtdm__can.html#gaa78d64e69ffd68a20f93a6aa64393d6a">More...</a><br /></td></tr>
 <tr class="separator:gaa78d64e69ffd68a20f93a6aa64393d6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaedd7bd75a1983735052fed62e101e5ce"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a>&#160;&#160;&#160;_IOW(RTIOC_TYPE_CAN, 0x09, int)</td></tr>

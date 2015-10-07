@@ -755,7 +755,7 @@ XENO-CONFIG(1) Manual Page
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--info</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--core</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--version</strong></p></div>
-<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--cflags</strong>] [<strong>--kcflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]</p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -886,17 +886,6 @@ with POSIX symbol wrapping.</td>
 <p>
 Output the C compiler command-line options (<em>CFLAGS</em>) which are required
 to compile applications based on the selected Xenomai API/skin.
-</p>
-</dd>
-<dt class="hdlist1">
-<strong>--kcflags</strong>
-</dt>
-<dd>
-<p>
-Output the C compiler command-line options (<em>CFLAGS</em>) which are
-required to compile a kernel driver based on the RTDM
-interface. <strong>--rtdm</strong> must appear on the command line before
-<strong>--kcflags</strong>.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1037,7 +1026,7 @@ Error.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-06 17:15:13 CEST
+Last updated 2015-10-06 16:52:49 CEST
 </div>
 </div>
 </body>

@@ -1,5 +1,13 @@
 var NAVTREEINDEX9 =
 {
+"sys_8c.html":[4,0,2,1,8],
+"syscall32-table_8h_source.html":[4,0,1,0,0,3,0,0,0,8],
+"syslog_8h_source.html":[4,0,0,2,13],
+"sysregfs_8h_source.html":[4,0,2,3,0,0],
+"taskInfo_8h_source.html":[4,0,0,9,10],
+"tcp_8h_source.html":[4,0,1,1,3,1,0,1,9],
+"tdma_8h_source.html":[4,0,1,1,3,1,0,3,1,0],
+"tdma__chrdev_8h_source.html":[4,0,1,1,3,1,0,22],
 "tdma__dev_8h_source.html":[4,0,1,1,3,1,0,3,1,1],
 "tdma__ioctl_8h_source.html":[4,0,1,1,3,1,0,3,1,2],
 "tdma__proto_8h_source.html":[4,0,1,1,3,1,0,3,1,3],

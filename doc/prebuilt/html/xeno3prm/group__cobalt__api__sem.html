@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -168,7 +168,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -207,7 +208,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -257,14 +259,15 @@ Functions</h2></td></tr>
     <tr><td class="paramname">0</td><td>on success, </td></tr>
     <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
 <li>EBUSY, the semaphore <em>sm</em> was already initialized;</li>
-<li>ENOSPC, insufficient memory exists in the system heap to initialize the semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li>
+<li>EAGAIN, insufficient memory available to initialize the semaphore, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared semaphore, or CONFIG_XENO_OPT_PRIVATE_HEAPSZ for a process-private semaphore.</li>
 <li>EINVAL, the <em>value</em> argument exceeds <em>SEM_VALUE_MAX</em>.</li>
 </ul>
 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -303,7 +306,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -355,7 +359,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait()</a>.</p>
 
@@ -396,7 +401,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="group__cobalt__api__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait()</a>, and <a class="el" href="group__cobalt__api__sem.html#gaad70020dca2241a2b78e272ca033271b">sem_wait()</a>.</p>
 
@@ -436,7 +442,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -476,7 +483,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait()</a>.</p>
 

@@ -1006,10 +1006,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-3.0-rc7. Functionally speaking, only the former <em>master</em> time base
+3.0. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 3.0-rc7 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 3.0 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -1722,23 +1722,25 @@ upon notification, which therefore applies to RTDM tasks as well.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<code>rtdm_task_set_period()</code> does not suspend the target task until the
-first release point is reached. If a start date is specified, then
-<code>rtdm_task_wait_period()</code> will apply the initial delay.
+<code>rtdm_task_set_period()</code> now accepts a start date for the periodic
+timeline. Zero can be passed to emulate the previous call form,
+setting the first release point when the first period after the
+current date elapses.
 </p>
 </li>
-</ul></div>
-<div class="sidebarblock">
-<div class="content">
-<div class="title">Rationale</div>
-<div class="paragraph"><p>A periodic RTDM task has to call <code>rtdm_task_wait_period()</code> from within
-its work loop for sleeping until the next release point is
-reached. Since waiting for the initial and subsequent release points
-will most often happen at the same code location in the driver, the
-semantics of <code>rtdm_task_set_period()</code> can be simplified so that only
-<code>rtdm_task_wait_period()</code> may block the caller.</p></div>
-</div></div>
-<div class="ulist"><ul>
+<li>
+<p>
+<code>rtdm_task_wait_period()</code> now copies back the count of overruns into
+a user-provided variable if -ETIMEDOUT is returned. NULL can be passed
+to emulate the previous call form, discarding this information.
+</p>
+</li>
+<li>
+<p>
+Both <code>rtdm_task_set_period()</code> and <code>rtdm_task_wait_period()</code> may be
+  invoked over a Cobalt thread context.
+</p>
+</li>
 <li>
 <p>
 RTDM_EXECUTE_ATOMICALLY() is deprecated and will be phased out in
@@ -2332,9 +2334,15 @@ kernel Cobalt environment.</td>
 <div class="ulist"><ul>
 <li>
 <p>
+Cobalt implements the following POSIX.1-2001 services not present in
+  Xenomai 2.x: <code>sched_setscheduler(2)</code>, <code>sched_getscheduler(2)</code>.
+</p>
+</li>
+<li>
+<p>
 The <code>SCHED_FIFO</code>, <code>SCHED_RR</code>, <code>SCHED_SPORADIC</code> and <code>SCHED_TP</code>
   classes now support up to 256 priority levels, instead of 99 as
-  previously with Xenomai 2.x. However, <code>sched_get_priority_max()</code>
+  previously with Xenomai 2.x. However, <code>sched_get_priority_max(2)</code>
   still returns 99. Only the Cobalt extended call forms
   (e.g. <code>pthread_attr_setschedparam_ex()</code>, <code>pthread_create_ex()</code>)
   recognize these additional levels.
@@ -2342,14 +2350,14 @@ The <code>SCHED_FIFO</code>, <code>SCHED_RR</code>, <code>SCHED_SPORADIC</code> 
 </li>
 <li>
 <p>
-<code>sched_get_priority_min_ex()</code> and <code>sched_get_priority_max_ex()</code>
-  should be used for querying the static priority range of Cobalt
-  policies.
+The new <code>sched_get_priority_min_ex()</code> and
+  <code>sched_get_priority_max_ex()</code> services should be used for querying
+  the static priority range of Cobalt policies.
 </p>
 </li>
 <li>
 <p>
-<code>pthread_setschedparam()</code> may cause a secondary mode switch for the
+<code>pthread_setschedparam(3)</code> may cause a secondary mode switch for the
   caller, but will not cause any mode switch for the target thread
   unlike with Xenomai 2.x.
 </p>
@@ -2357,11 +2365,11 @@ The <code>SCHED_FIFO</code>, <code>SCHED_RR</code>, <code>SCHED_SPORADIC</code> 
 Xenomai scheduler in sync, with respect to thread priorities, since
 the former maintains a process-local priority cache for the threads
 it knows about. Therefore, an explicit call to the the regular
-<code>pthread_setschedparam()</code> shall be issued upon each priority change
+<code>pthread_setschedparam(3)</code> shall be issued upon each priority change
 Xenomai-wise, for maintaining consistency.</p></div>
 <div class="paragraph"><p>In the Xenomai 2.x implementation, the thread being set a new
 priority would receive a SIGSHADOW signal, triggering a call to
-<code>pthread_setschedparam()</code> immediately.</p></div>
+<code>pthread_setschedparam(3)</code> immediately.</p></div>
 </li>
 </ul></div>
 <div class="sidebarblock">
@@ -2371,10 +2379,10 @@ priority would receive a SIGSHADOW signal, triggering a call to
 only be held in primary mode, in which case switching to secondary
 mode for applying the priority change at any random location over a
 signal handler may create a pathological issue. In addition,
-<code>pthread_setschedparam()</code> is not async-safe, which makes the former
+<code>pthread_setschedparam(3)</code> is not async-safe, which makes the former
 method fragile.</p></div>
 </div></div>
-<div class="paragraph"><p>Conversely, a thread which calls <code>pthread_setschedparam()</code> does know
+<div class="paragraph"><p>Conversely, a thread which calls <code>pthread_setschedparam(3)</code> does know
 unambiguously whether the current calling context is safe for the
 incurred migration.</p></div>
 <div class="ulist"><ul>
@@ -2397,7 +2405,7 @@ extent of the regular Linux SCHED_FIFO/RR priority range.</p></div>
 class at priority level 20 in the Cobalt core, may be scheduled with
 policy SCHED_FIFO/RR at priority 20, by the Linux kernel. The code
 fragment below would set the scheduling parameters accordingly,
-assuming the Cobalt version of <code>pthread_setschedparam()</code> is invoked:</p></div>
+assuming the Cobalt version of <code>pthread_setschedparam(3)</code> is invoked:</p></div>
 </li>
 </ul></div>
 <div class="listingblock">
@@ -2435,7 +2443,7 @@ to each group, in accordance with its share.</p></div>
 </li>
 <li>
 <p>
-When called from primary mode, sched_yield() now delays the caller
+When called from primary mode, sched_yield(2) now delays the caller
   for a short while <strong>only in case</strong> no context switch happened as a
   result of the manual round-robin. The delay ends next time the
   regular Linux kernel switches tasks, or a kernel (virtual) tick has
@@ -2449,7 +2457,7 @@ delayed for a while.</p></div>
 <div class="sidebarblock">
 <div class="content">
 <div class="title">Rationale</div>
-<div class="paragraph"><p>In most case, it is unwanted that sched_yield() does not cause any
+<div class="paragraph"><p>In most case, it is unwanted that sched_yield(2) does not cause any
 context switch, since this service is commonly used for implementing a
 poor man&#8217;s cooperative scheduling. A typical use case involves a
 Xenomai thread running in primary mode which needs to yield the CPU to
@@ -2466,9 +2474,8 @@ out the delayed Xenomai thread indefinitely.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-The default POSIX thread stack size was raised to
-  <code>PTHREAD_STACK_MIN * 4</code>. The minimum stack size enforced by the
-  <code>libcobalt</code> library is <code>PTHREAD_STACK_MIN + getpagesize()</code>.
+The minimum and default stack size is set to <code>max(64k,
+  PTHREAD_STACK_MIN)</code>.
 </p>
 </li>
 <li>
@@ -2507,8 +2514,8 @@ condition variable).</td>
 <div class="ulist"><ul>
 <li>
 <p>
-With Cobalt, sem_wait(), sem_trywait(), sem_timedwait(), and
-  sem_post() have gained fast acquisition/release operations not
+With Cobalt, sem_wait(3), sem_trywait(3), sem_timedwait(3), and
+  sem_post(3) have gained fast acquisition/release operations not
   requiring any system call, unless a contention exists on the
   resource. As a consequence, those services may not systematically
   switch callers executing in relaxed mode to real-time mode, unlike
@@ -2522,8 +2529,8 @@ With Cobalt, sem_wait(), sem_trywait(), sem_timedwait(), and
 <div class="ulist"><ul>
 <li>
 <p>
-In a <code>fork()</code> &#8594; <code>exec()</code> sequence, all Cobalt API objects created
-  by the child process before it calls <code>exec()</code> are automatically
+In a <code>fork(2)</code> &#8594; <code>exec(2)</code> sequence, all Cobalt API objects created
+  by the child process before it calls <code>exec(2)</code> are automatically
   flushed by the Xenomai core.
 </p>
 </li>
@@ -2538,9 +2545,9 @@ Support for Xenomai real-time signals is available.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Cobalt replacements for <code>sigwait()</code>, <code>sigwaitinfo()</code>,
-<code>sigtimedwait()</code>, <code>sigqueue()</code> and <code>kill()</code> are
-available. <code>pthread_kill()</code> was changed to send thread-directed
+<div class="paragraph"><p>Cobalt replacements for <code>sigwait(3)</code>, <code>sigwaitinfo(2)</code>,
+<code>sigtimedwait(2)</code>, <code>sigqueue(3)</code> and <code>kill(2)</code> are
+available. <code>pthread_kill(3)</code> was changed to send thread-directed
 Xenomai signals (instead of regular Linux signals).</p></div>
 <div class="paragraph"><p>Cobalt-based signals are stricly real-time. Both the sender and
 receiver sides work exclusively from the primary domain. However, only
@@ -2557,32 +2564,32 @@ any signal.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<code>kill()</code> supports group signaling.
+Cobalt&#8217;s <code>kill(2)</code> implementation supports group signaling.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Cobalt&#8217;s implementation of kill() behaves identically to the regular
+<div class="paragraph"><p>Cobalt&#8217;s implementation of kill(2) behaves identically to the regular
 system call for non thread-directed signals (i.e. pid &#8656; 0). In this
 case, the caller switches to secondary mode.</p></div>
 <div class="paragraph"><p>Otherwise, Cobalt first attempts to deliver a thread-directed signal
 to the thread whose kernel TID matches the given process id. If this
-thread is not waiting for signals at the time of the call, kill() then
+thread is not waiting for signals at the time of the call, kill(2) then
 attempts to deliver the signal to a thread from the same process,
 which currently waits for a signal.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<code>pthread_kill()</code> is a conforming call.
+<code>pthread_kill(3)</code> is a conforming call.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>When Cobalt&#8217;s replacement for <code>pthread_kill()</code> is invoked, a
+<div class="paragraph"><p>When Cobalt&#8217;s replacement for <code>pthread_kill(3)</code> is invoked, a
 Xenomai-enabled caller is automatically switched to primary mode on
 its way to sending the signal, under the control of the real-time
 co-kernel. Otherwise, the caller keeps running under the control of
 the regular Linux kernel.</p></div>
 <div class="paragraph"><p>This behavior also applies to the new Cobalt-based replacement for the
-<code>kill()</code> system call.</p></div>
+<code>kill(2)</code> system call.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_timers">8.7. Timers</h3>
@@ -2598,13 +2605,13 @@ POSIX timers are no longer dropped when the creator thread
 If the thread signaled by a POSIX timer exits, the timer is
   automatically stopped at the first subsequent timeout which fails
   sending the notification. The timer lingers until it is deleted by a
-  call to <code>timer_delete()</code> or when the process exits, whichever comes
+  call to <code>timer_delete(2)</code> or when the process exits, whichever comes
   first.
 </p>
 </li>
 <li>
 <p>
-timer_settime() may be called from a regular thread (i.e. which is
+timer_settime(2) may be called from a regular thread (i.e. which is
   not Xenomai-enabled).
 </p>
 </li>
@@ -2616,8 +2623,8 @@ EPERM is not returned anymore by POSIX timer calls. EINVAL is
 </li>
 <li>
 <p>
-Cobalt replacements for <code>timerfd_create()</code>, <code>timerfd_settime()</code> and
-<code>timerfd_gettime()</code> have been introduced. The implementation delivers
+Cobalt replacements for <code>timerfd_create(2)</code>, <code>timerfd_settime(2)</code> and
+<code>timerfd_gettime(2)</code> have been introduced. The implementation delivers
 I/O notifications to RTDM file descriptors upon Cobalt-originated
 real-time signals.
 </p>
@@ -2635,15 +2642,15 @@ removed from the API.
 <div class="paragraph"><p>With the introduction of services to support real-time signals, those
 two non-portable calls have become redundant. Instead, Cobalt-based
 applications should set up a periodic timer using the
-<code>timer_create()</code>+<code>timer_settime()</code> call pair, then wait for release
-points via <code>sigwaitinfo()</code>. Overruns can be detected by looking at the
+<code>timer_create(2)</code>+<code>timer_settime(2)</code> call pair, then wait for release
+points via <code>sigwaitinfo(2)</code>. Overruns can be detected by looking at the
 siginfo.si_overrun field.</p></div>
 <div class="paragraph"><p>Alternatively, applications may obtain a file descriptor referring to
-a Cobalt timer via the <code>timerfd()</code> call, and <code>read()</code> from it to wait
+a Cobalt timer via the <code>timerfd_create(2)</code> call, and <code>read(2)</code> from it to wait
 for timeouts.</p></div>
 <div class="paragraph"><p>In addition, applications may include a timer in a synchronous
 multiplexing operation involving other event sources, by passing a
-file descriptor returned by the <code>timerfd()</code> service to a <code>select()</code>
+file descriptor returned by the <code>timerfd_create(2)</code> service to a <code>select(2)</code>
 call.</p></div>
 </div></div>
 <div class="admonitionblock">
@@ -2681,13 +2688,13 @@ is subject to change with ABI revisions.</td>
 <div class="ulist"><ul>
 <li>
 <p>
-<code>mq_open()</code> default attributes align on the regular kernel values,
+<code>mq_open(3)</code> default attributes align on the regular kernel values,
   i.e. 10 msg x 8192 bytes (instead of 128 x 128).
 </p>
 </li>
 <li>
 <p>
-<code>mq_send()</code> now enforces a maximum priority value for messages
+<code>mq_send(3)</code> now enforces a maximum priority value for messages
   (32768).
 </p>
 </li>
@@ -2771,11 +2778,21 @@ receipts, as explained <a href="#userirqtip">here</a>.</td>
 <div class="ulist"><ul>
 <li>
 <p>
-The RT_IOREGION API is gone. I/O memory resources should
-  be controlled from a RTDM driver instead.
+The RT_IOREGION API is gone. I/O memory resources should be
+  controlled from a RTDM driver instead.
 </p>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/tip.png" alt="Tip" />
+</td>
+<td class="content"><a href="#userirqtip">UDD</a> provides a simple way to implement mini-drivers
+exposing any kind of memory regions to applications in user-space, via
+Cobalt&#8217;s mmap(2) call.</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_timing_services">9.4. Timing services</h3>
@@ -3453,7 +3470,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-15 16:32:54 CEST
+Last updated 2015-10-07 11:08:43 CEST
 </div>
 </div>
 </body>

@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0-rc7</span>
+   &#160;<span id="projectnumber">3.0</span>
    </div>
   </td>
  </tr>
@@ -172,7 +172,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -225,7 +226,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -258,7 +260,6 @@ Functions</h2></td></tr>
 <p>If <em>evp</em> is <em>NULL</em> or the <em>sigev_notify</em> member is SIGEV_NONE, the current thread is unregistered.</p>
 <p>Only one thread may be registered at a time.</p>
 <p>If the current thread is not a Cobalt thread (created with <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>), this service fails.</p>
-<p>Note that signals sent to user-space Cobalt threads will cause them to switch to secondary mode.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">mqd</td><td>message queue descriptor;</td></tr>
@@ -279,7 +280,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -314,7 +316,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Open a message queue. </p>
-<p>This service establishes a connection between the message queue named <em>name</em> and the calling context (kernel-space as a whole, or user-space process).</p>
+<p>This service opens the message queue named <em>name</em>.</p>
 <p>One of the following values should be set in <em>oflags:</em> </p><ul>
 <li>O_RDONLY, meaning that the returned queue descriptor may only be used for receiving messages;</li>
 <li>O_WRONLY, meaning that the returned queue descriptor may only be used for sending messages;</li>
@@ -344,13 +346,14 @@ Functions</h2></td></tr>
 <li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li>
 <li>EEXIST, the bits <em>O_CREAT</em> and <em>O_EXCL</em> were set in <em>oflags</em> and the message queue already exists;</li>
 <li>ENOENT, the bit <em>O_CREAT</em> is not set in <em>oflags</em> and the message queue does not exist;</li>
-<li>ENOSPC, allocation of system memory failed, or insufficient memory exists in the system heap to create the queue, try increasing CONFIG_XENO_OPT_SYS_HEAPSZ;</li>
+<li>ENOSPC, allocation of system memory failed, or insufficient memory available from the system heap to create the queue, try increasing CONFIG_XENO_OPT_SYS_HEAPSZ;</li>
 <li>EPERM, attempting to create a message queue from an invalid context;</li>
 <li>EINVAL, the <em>attr</em> argument is invalid;</li>
 <li>EMFILE, too many descriptors are currently open.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
@@ -412,7 +415,8 @@ Functions</h2></td></tr>
 <li>EINTR, the service was interrupted by a signal.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -474,7 +478,8 @@ Functions</h2></td></tr>
 <li>EINTR, the service was interrupted by a signal.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -530,7 +535,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted</a> </dd></dl>
 
 </div>
 </div>
@@ -599,7 +605,8 @@ Functions</h2></td></tr>
 <li>ETIMEDOUT, the specified timeout expired.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -668,7 +675,8 @@ Functions</h2></td></tr>
 <li>EINTR, the service was interrupted by a signal.</li>
 </ul>
 </dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">xthread-only, switch-primary</a> </dd></dl>
 
 </div>
 </div>
@@ -706,7 +714,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">Specification.</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">Specification.</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
 
 </div>
 </div>
