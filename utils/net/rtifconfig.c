@@ -290,7 +290,7 @@ void do_display(int print_flags)
             ret = ioctl(f, IOC_RT_IFINFO, &cmd);
             if (ret == 0) {
                 if (((print_flags & PRINT_FLAG_INACTIVE) != 0) ||
-                    ((cmd.args.info.flags & IFF_RUNNING) != 0))
+                    ((cmd.args.info.flags & IFF_UP) != 0))
                     print_dev();
             } else if (errno != ENODEV) {
                 perror("ioctl");

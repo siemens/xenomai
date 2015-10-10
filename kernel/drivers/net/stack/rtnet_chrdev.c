@@ -210,6 +210,13 @@ static int rtnet_core_ioctl(struct rtnet_device *rtdev, unsigned int request,
 	    cmd.args.info.broadcast_ip = rtdev->broadcast_ip;
 	    cmd.args.info.mtu          = rtdev->mtu;
 	    cmd.args.info.flags        = rtdev->flags;
+            if ((cmd.args.info.flags & IFF_UP)
+		    && (rtdev->link_state
+			    & (RTNET_LINK_STATE_PRESENT
+				    | RTNET_LINK_STATE_NOCARRIER))
+                    == RTNET_LINK_STATE_PRESENT)
+                    cmd.args.info.flags |= IFF_RUNNING;
+
 	    memcpy(cmd.args.info.dev_addr, rtdev->dev_addr, MAX_ADDR_LEN);
 
 	    mutex_unlock(&rtdev->nrt_lock);

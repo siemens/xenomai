@@ -242,7 +242,7 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
 	for (i = 1; i <= MAX_RT_DEVICES; i++) {
 	    rtdev = rtdev_get_by_index(i);
 	    if (rtdev != NULL) {
-		if ((rtdev->flags & IFF_RUNNING) == 0) {
+		if ((rtdev->flags & IFF_UP) == 0) {
 		    rtdev_dereference(rtdev);
 		    continue;
 		}
@@ -288,6 +288,12 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
 
 	case SIOCGIFFLAGS:
 	    ifr->ifr_flags = rtdev->flags;
+            if ((ifr->ifr_flags & IFF_UP)
+		    && (rtdev->link_state
+			    & (RTNET_LINK_STATE_PRESENT
+				    | RTNET_LINK_STATE_NOCARRIER))
+                    == RTNET_LINK_STATE_PRESENT)
+                    ifr->ifr_flags |= IFF_RUNNING;
 	    break;
 
 	case SIOCGIFHWADDR:

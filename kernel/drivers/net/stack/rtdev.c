@@ -644,7 +644,7 @@ int rtdev_open(struct rtnet_device *rtdev)
 	ret = rtdev->open(rtdev);
 
     if ( !ret )  {
-	rtdev->flags |= (IFF_UP | IFF_RUNNING);
+	rtdev->flags |= IFF_UP;
 	set_bit(__RTNET_LINK_STATE_START, &rtdev->link_state);
     } else
 	rtdev_dereference(rtdev);
