@@ -200,7 +200,8 @@ static void remove_process(struct cobalt_process *process)
 		 * upon return from detach_process() for the Cobalt
 		 * personality, so don't dereference it afterwards.
 		 */
-		process->priv[xid] = NULL;
+		if (xid)
+			process->priv[xid] = NULL;
 		__clear_bit(personality->xid, &process->permap);
 		personality->ops.detach_process(priv);
 		atomic_dec(&personality->refcnt);
@@ -1006,7 +1007,7 @@ static void unregister_debugged_thread(struct xnthread *thread)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-static int handle_taskexit_event(struct task_struct *p) /* p == current */
+static void __handle_taskexit_event(struct task_struct *p)
 {
 	struct cobalt_ppd *sys_ppd;
 	struct xnthread *thread;
@@ -1036,13 +1037,18 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		if (atomic_dec_and_test(&sys_ppd->refcnt))
 			remove_process(cobalt_current_process());
 	}
+}
+
+static int handle_taskexit_event(struct task_struct *p) /* p == current */
+{
+	__handle_taskexit_event(p);
 
 	/*
 	 * __xnthread_cleanup() -> ... -> finalize_thread
 	 * handler. From that point, the TCB is dropped. Be careful of
 	 * not treading on stale memory within @thread.
 	 */
-	__xnthread_cleanup(thread);
+	__xnthread_cleanup(xnthread_current());
 
 	clear_threadinfo();
 
@@ -1198,6 +1204,8 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	old = cobalt_set_process(process);
 	sys_ppd = cobalt_ppd_get(0);
 	if (sys_ppd != &cobalt_kernel_ppd) {
+		bool running_exec;
+
 		/*
 		 * Detect a userland shadow running exec(), i.e. still
 		 * attached to the current linux task (no prior
@@ -1208,12 +1216,17 @@ static int handle_cleanup_event(struct mm_struct *mm)
 		 * notifier manually for it.
 		 */
 		thread = xnthread_current();
-		if (thread && (current->flags & PF_EXITING) == 0) {
-			handle_taskexit_event(current);
+		running_exec = thread && (current->flags & PF_EXITING) == 0;
+		if (running_exec) {
+			__handle_taskexit_event(current);
 			ipipe_disable_notifier(current);
 		}
 		if (atomic_dec_and_test(&sys_ppd->refcnt))
 			remove_process(process);
+		if (running_exec) {
+			__xnthread_cleanup(thread);
+			clear_threadinfo();
+		}
 	}
 
 	/*
