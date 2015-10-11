@@ -60,6 +60,8 @@ static pthread_mutex_t cobalt_autoinit_mutex;
 
 void cobalt_mutex_init(void)
 {
+	struct cobalt_mutex_shadow *_mutex =
+		&((union cobalt_mutex_union *)&cobalt_autoinit_mutex)->shadow_mutex;
 	pthread_mutexattr_t rt_init_mattr;
 	int err __attribute__((unused));
 
@@ -67,6 +69,7 @@ void cobalt_mutex_init(void)
 
 	pthread_mutexattr_init(&rt_init_mattr);
 	pthread_mutexattr_setprotocol(&rt_init_mattr, PTHREAD_PRIO_INHERIT);
+	_mutex->magic = ~COBALT_MUTEX_MAGIC;
 	err = __COBALT(pthread_mutex_init(&cobalt_autoinit_mutex,
 						&rt_init_mattr));
 	assert(err == 0);
