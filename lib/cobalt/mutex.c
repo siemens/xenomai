@@ -212,12 +212,19 @@ static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, type);
 	err = __COBALT(pthread_mutex_lock(&cobalt_autoinit_mutex));
-	assert(err = 0);
+	if (err) {
+		ret = err;
+		goto out;
+	}
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		ret = __COBALT(pthread_mutex_init(mutex, &mattr));
 	err = __COBALT(pthread_mutex_unlock(&cobalt_autoinit_mutex));
-	assert(err == 0);
+	if (err) {
+		if (ret == 0)
+			ret = err;
+	}
 
+  out:
 	pthread_mutexattr_destroy(&mattr);
 
 	return ret;
