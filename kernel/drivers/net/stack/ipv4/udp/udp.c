@@ -564,8 +564,10 @@ ssize_t rt_udp_sendmsg(struct rtdm_fd *fd, const struct msghdr *msg, int msg_fla
     } else {
         rtdm_lock_get_irqsave(&udp_socket_base_lock, context);
 
-        if (sock->prot.inet.state != TCP_ESTABLISHED)
+        if (sock->prot.inet.state != TCP_ESTABLISHED) {
+	    rtdm_lock_put_irqrestore(&udp_socket_base_lock, context);
             return -ENOTCONN;
+	}
 
         daddr = sock->prot.inet.daddr;
         dport = sock->prot.inet.dport;
