@@ -908,6 +908,9 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/tsc/Makefile \
 	testsuite/smokey/leaks/Makefile \
 	testsuite/smokey/fpu-stress/Makefile \
+	testsuite/smokey/net_udp/Makefile \
+	testsuite/smokey/net_packet_dgram/Makefile \
+	testsuite/smokey/net_common/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
 	utils/Makefile \
