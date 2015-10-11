@@ -322,7 +322,8 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 
 void xnsched_lock(void)
 {
-	struct xnthread *curr = xnthread_current();
+	struct xnsched *sched = xnsched_current();
+	struct xnthread *curr = sched->curr;
 
 	/*
 	 * CAUTION: The fast xnthread_current() accessor carries the
@@ -333,8 +334,16 @@ void xnsched_lock(void)
 	 * Either way, we don't need to grab the super lock.
 	 */
 	if (unlikely(curr == NULL || xnthread_test_state(curr, XNRELAX))) {
+		/*
+		 * In IRQ: scheduler already locked, and we may have
+		 * interrupted xnthread_relax() where the BUG_ON condition is
+		 * temporarily false.
+		 */
+		if (sched->lflags & XNINIRQ)
+			return;
+
 		irqoff_only();
-		curr = &xnsched_current()->rootcb;
+		curr = &sched->rootcb;
 		XENO_BUG_ON(COBALT, xnsched_current()->curr != curr);
 	}
 
@@ -344,9 +353,16 @@ EXPORT_SYMBOL_GPL(xnsched_lock);
 
 void xnsched_unlock(void)
 {
-	struct xnthread *curr = xnthread_current();
+	struct xnsched *sched = xnsched_current();
+	struct xnthread *curr = sched->curr;
 
 	if (unlikely(curr == NULL || xnthread_test_state(curr, XNRELAX))) {
+		/*
+		 * In IRQ
+		 */
+		if (sched->lflags & XNINIRQ)
+			return;
+
 		irqoff_only();
 		curr = &xnsched_current()->rootcb;
 	}
