@@ -286,12 +286,9 @@ int rtmac_vnic_add(struct rtnet_device *rtdev, vnic_xmit_handler vnic_xmit)
 int rtmac_vnic_unregister(struct rtnet_device *rtdev)
 {
     struct rtmac_priv   *mac_priv = rtdev->mac_priv;
-    int err;
 
     if (mac_priv->vnic) {
-	err = rtskb_pool_release(&mac_priv->vnic_skb_pool);
-	if (err < 0)
-	    return err;
+	rtskb_pool_release(&mac_priv->vnic_skb_pool);
 	unregister_netdev(mac_priv->vnic);
 	free_netdev(mac_priv->vnic);
 	mac_priv->vnic = NULL;

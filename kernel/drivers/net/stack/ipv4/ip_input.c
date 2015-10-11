@@ -88,6 +88,7 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
 
             if (err) {
                 kfree_rtskb(skb);
+		rt_socket_dereference(sock);
                 return;
             }
         }

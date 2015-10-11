@@ -242,7 +242,6 @@ struct rtskb_pool_lock_ops {
 struct rtskb_pool {
     struct rtskb_queue queue;
     const struct rtskb_pool_lock_ops *lock_ops;
-    unsigned lock_count;
     void *lock_cookie;
 };
 
@@ -736,7 +735,7 @@ extern unsigned int __rtskb_module_pool_init(struct rtskb_pool *pool,
 #define rtskb_module_pool_init(pool, size) \
     __rtskb_module_pool_init(pool, size, THIS_MODULE)
 
-extern int rtskb_pool_release(struct rtskb_pool *pool);
+extern void rtskb_pool_release(struct rtskb_pool *pool);
 
 extern unsigned int rtskb_pool_extend(struct rtskb_pool *pool,
 				      unsigned int add_rtskbs);

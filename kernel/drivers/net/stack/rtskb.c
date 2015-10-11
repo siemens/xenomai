@@ -156,14 +156,11 @@ static struct rtskb *__rtskb_pool_dequeue(struct rtskb_pool *pool)
     struct rtskb_queue *queue = &pool->queue;
     struct rtskb *skb;
 
-    if (pool->lock_count == 0 && !pool->lock_ops->trylock(pool->lock_cookie))
+    if (!pool->lock_ops->trylock(pool->lock_cookie))
 	    return NULL;
     skb = __rtskb_dequeue(queue);
-    if (skb == NULL) {
-	if (pool->lock_count == 0) /* This can only happen if pool has 0 packets */
+    if (skb == NULL)
 	    pool->lock_ops->unlock(pool->lock_cookie);
-    } else
-	++pool->lock_count;
 
     return skb;
 }
@@ -187,8 +184,7 @@ static void __rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb)
     struct rtskb_queue *queue = &pool->queue;
 
     __rtskb_queue_tail(queue,skb);
-    if (--pool->lock_count == 0)
-	pool->lock_ops->unlock(pool->lock_cookie);
+    pool->lock_ops->unlock(pool->lock_cookie);
 }
 
 void rtskb_pool_queue_tail(struct rtskb_pool *pool, struct rtskb *skb)
@@ -332,7 +328,6 @@ unsigned int rtskb_pool_init(struct rtskb_pool *pool,
 	rtskb_pools_max = rtskb_pools;
 
     pool->lock_ops = lock_ops ?: &rtskb_nop_pool_lock_ops;
-    pool->lock_count = 0;
     pool->lock_cookie = lock_cookie;
 
     return i;
@@ -372,12 +367,9 @@ EXPORT_SYMBOL_GPL(__rtskb_module_pool_init);
  *  __rtskb_pool_release
  *  @pool: pool to release
  */
-int rtskb_pool_release(struct rtskb_pool *pool)
+void rtskb_pool_release(struct rtskb_pool *pool)
 {
     struct rtskb *skb;
-
-    if (pool->lock_count)
-	return -EBUSY;
 
     while ((skb = rtskb_dequeue(&pool->queue)) != NULL) {
 	rtdev_unmap_rtskb(skb);
@@ -386,7 +378,6 @@ int rtskb_pool_release(struct rtskb_pool *pool)
     }
 
     rtskb_pools--;
-    return 0;
 }
 
 EXPORT_SYMBOL_GPL(rtskb_pool_release);
