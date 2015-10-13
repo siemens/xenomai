@@ -950,7 +950,8 @@ static int tulip_init_one (struct pci_dev *pdev,
 	irq = pdev->irq;
 
 	/* alloc_etherdev ensures aligned and zeroed private structures */
-	rtdev = /*RTnet*/rt_alloc_etherdev (sizeof (*tp), RX_RING_SIZE*2);
+	rtdev = /*RTnet*/rt_alloc_etherdev (sizeof (*tp),
+					RX_RING_SIZE * 2 + TX_RING_SIZE);
 	if (!rtdev) {
 		printk(KERN_ERR PFX "ether device alloc failed, aborting\n");
 		return -ENOMEM;

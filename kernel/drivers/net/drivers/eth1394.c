@@ -340,7 +340,8 @@ static void eth1394_add_host (struct hpsb_host *host)
 
 	//******RTnet******
 
-	dev = rt_alloc_etherdev(sizeof (struct eth1394_priv), RX_RING_SIZE*2);
+	dev = rt_alloc_etherdev(sizeof (struct eth1394_priv),
+				RX_RING_SIZE * 2 + TX_RING_SIZE);
 	if (dev == NULL) {
 		ETH1394_PRINT_G (KERN_ERR, "Out of memory trying to allocate "
 				 "etherdevice for IEEE 1394 device\n");

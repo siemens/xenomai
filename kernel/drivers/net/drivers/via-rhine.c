@@ -681,7 +681,8 @@ static int via_rhine_init_one (struct pci_dev *pdev,
 		pci_set_master (pdev);
 
 /*** RTnet ***/
-	dev = rt_alloc_etherdev(sizeof(struct netdev_private), RX_RING_SIZE*2);
+	dev = rt_alloc_etherdev(sizeof(struct netdev_private),
+							RX_RING_SIZE * 2 + TX_RING_SIZE);
 	if (dev == NULL) {
 		printk (KERN_ERR "init_ethernet failed for card #%d\n", card_idx);
 		goto err_out;

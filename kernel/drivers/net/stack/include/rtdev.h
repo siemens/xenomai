@@ -116,7 +116,7 @@ struct rtnet_device {
 
     unsigned int        add_rtskbs; /* additionally allocated global rtskbs */
 
-    struct rtskb_pool   rx_pool;
+    struct rtskb_pool   dev_pool;
 
     /* RTmac related fields */
     struct rtmac_disc   *mac_disc;
@@ -175,7 +175,7 @@ extern struct rtnet_device *rtnet_devices[];
 
 
 struct rtnet_device *__rt_alloc_etherdev(unsigned sizeof_priv,
-					unsigned rx_pool_size,
+					unsigned dev_pool_size,
 					struct module *module);
 #define rt_alloc_etherdev(priv_size, rx_size) \
     __rt_alloc_etherdev(priv_size, rx_size, THIS_MODULE)

@@ -309,7 +309,7 @@ static int __init at91ether_probe(struct platform_device *pdev)
 	if (!regs)
 		return -ENOENT;
 
-	dev = rt_alloc_etherdev(sizeof(struct macb), MAX_RX_DESCR * 2);
+	dev = rt_alloc_etherdev(sizeof(struct macb), MAX_RX_DESCR * 2 + 2);
 	if (!dev)
 		return -ENOMEM;
 

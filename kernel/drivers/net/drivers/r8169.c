@@ -580,7 +580,8 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 	*dev_out = NULL;
 
 	/*** RTnet ***/
-	rtdev = rt_alloc_etherdev(sizeof(struct rtl8169_private), RX_RING_SIZE*2);
+	rtdev = rt_alloc_etherdev(sizeof(struct rtl8169_private),
+				RX_RING_SIZE * 2 + TX_RING_SIZE);
 	if (rtdev == NULL) {
 		printk (KERN_ERR PFX "unable to alloc new ethernet\n");
 		return -ENOMEM;

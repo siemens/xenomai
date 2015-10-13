@@ -1075,7 +1075,8 @@ static int e1000_probe(struct pci_dev *pdev,
 							(sizeof(struct net_device_subqueue) *
 								E1000_MAX_TX_QUEUES), 16);
 #else
-	netdev = rt_alloc_etherdev(sizeof(struct e1000_adapter), 16);
+	netdev = rt_alloc_etherdev(sizeof(struct e1000_adapter),
+				2 * E1000_DEFAULT_RXD + E1000_DEFAULT_TXD);
 #endif
 	if (!netdev)
 		goto err_alloc_etherdev;

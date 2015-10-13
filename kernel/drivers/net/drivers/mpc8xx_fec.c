@@ -1869,7 +1869,7 @@ int __init fec_enet_init(void)
 		rx_pool_size = RX_RING_SIZE * 2;
 
 	rtdev = rtdev_root = rt_alloc_etherdev(sizeof(struct fec_enet_private),
-					rx_pool_size);
+					rx_pool_size + TX_RING_SIZE);
 	if (rtdev == NULL) {
 		printk(KERN_ERR "enet: Could not allocate ethernet device.\n");
 		return -1;

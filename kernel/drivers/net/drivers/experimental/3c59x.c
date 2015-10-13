@@ -974,7 +974,7 @@ static int vortex_probe1(struct pci_dev *pdev,
 	print_name = pdev ? pci_name(pdev) : "3c59x";
 
 	// *** RTnet ***
-	rtdev = rt_alloc_etherdev(sizeof(*vp), RX_RING_SIZE*2);
+	rtdev = rt_alloc_etherdev(sizeof(*vp), RX_RING_SIZE * 2 + TX_RING_SIZE);
 	retval = -ENOMEM;
 	if (!rtdev) {
 		printk (KERN_ERR PFX "unable to allocate etherdev, aborting\n");

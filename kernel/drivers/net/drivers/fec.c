@@ -1632,7 +1632,8 @@ static int fec_probe(struct platform_device *pdev)
 		return -EBUSY;
 
 	/* Init network device */
-	ndev = rt_alloc_etherdev(sizeof(struct fec_enet_private), rx_pool_size);
+	ndev = rt_alloc_etherdev(sizeof(struct fec_enet_private),
+				rx_pool_size + TX_RING_SIZE);
 	if (!ndev) {
 		ret = -ENOMEM;
 		goto failed_alloc_etherdev;

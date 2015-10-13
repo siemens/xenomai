@@ -670,7 +670,8 @@ static int speedo_found1(struct pci_dev *pdev,
 		return -1;
 
 	// *** RTnet ***
-	rtdev = rt_alloc_etherdev(sizeof(struct speedo_private), RX_RING_SIZE*2);
+	rtdev = rt_alloc_etherdev(sizeof(struct speedo_private),
+				RX_RING_SIZE * 2 + TX_RING_SIZE);
 	if (rtdev == NULL) {
 		printk(KERN_ERR "eepro100: Could not allocate ethernet device.\n");
 		pci_free_consistent(pdev, size, tx_ring_space, tx_ring_dma);

@@ -65,7 +65,7 @@ EXPORT_SYMBOL_GPL(rtdev_reference);
 
 struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *rtdev, unsigned int size)
 {
-    struct rtskb *rtskb = alloc_rtskb(size, &rtdev->rx_pool);
+    struct rtskb *rtskb = alloc_rtskb(size, &rtdev->dev_pool);
     if (rtskb)
 	rtskb->rtdev = rtdev;
     return rtskb;
@@ -235,19 +235,19 @@ void rtdev_alloc_name(struct rtnet_device *rtdev, const char *mask)
     }
 }
 
-static int rtdev_rx_pool_trylock(void *cookie)
+static int rtdev_pool_trylock(void *cookie)
 {
     return rtdev_reference(cookie);
 }
 
-static void rtdev_rx_pool_unlock(void *cookie)
+static void rtdev_pool_unlock(void *cookie)
 {
     rtdev_dereference(cookie);
 }
 
 static const struct rtskb_pool_lock_ops rtdev_ops = {
-    .trylock = rtdev_rx_pool_trylock,
-    .unlock = rtdev_rx_pool_unlock,
+    .trylock = rtdev_pool_trylock,
+    .unlock = rtdev_pool_unlock,
 };
 
 /***
@@ -256,7 +256,7 @@ static const struct rtskb_pool_lock_ops rtdev_ops = {
  *
  *  allocate memory for a new rt-network-adapter
  */
-struct rtnet_device *rtdev_alloc(unsigned sizeof_priv, unsigned rx_pool_size)
+struct rtnet_device *rtdev_alloc(unsigned sizeof_priv, unsigned dev_pool_size)
 {
     struct rtnet_device *rtdev;
     unsigned            alloc_size;
@@ -274,10 +274,10 @@ struct rtnet_device *rtdev_alloc(unsigned sizeof_priv, unsigned rx_pool_size)
 
     memset(rtdev, 0, alloc_size);
 
-    ret = rtskb_pool_init(&rtdev->rx_pool, rx_pool_size, &rtdev_ops, rtdev);
-    if (ret < rx_pool_size) {
-	printk(KERN_ERR "RTnet: cannot allocate rtnet device RX pool\n");
-	rtskb_pool_release(&rtdev->rx_pool);
+    ret = rtskb_pool_init(&rtdev->dev_pool, dev_pool_size, &rtdev_ops, rtdev);
+    if (ret < dev_pool_size) {
+	printk(KERN_ERR "RTnet: cannot allocate rtnet device pool\n");
+	rtskb_pool_release(&rtdev->dev_pool);
 	kfree(rtdev);
 	return NULL;
     }
@@ -305,7 +305,7 @@ struct rtnet_device *rtdev_alloc(unsigned sizeof_priv, unsigned rx_pool_size)
 void rtdev_free (struct rtnet_device *rtdev)
 {
     if (rtdev != NULL) {
-	rtskb_pool_release(&rtdev->rx_pool);
+	rtskb_pool_release(&rtdev->dev_pool);
 	rtskb_pool_shrink(&global_pool, rtdev->add_rtskbs);
 	rtdev->stack_event = NULL;
 	rtdm_mutex_destroy(&rtdev->xmit_mutex);
@@ -319,7 +319,7 @@ void rtdev_free (struct rtnet_device *rtdev)
  * rtalloc_etherdev - Allocates and sets up an ethernet device
  * @sizeof_priv: size of additional driver-private structure to
  *               be allocated for this ethernet device
- * @rx_pool_size: size of the rx pool
+ * @dev_pool_size: size of the rx pool
  * @module: module creating the deivce
  *
  * Fill in the fields of the device structure with ethernet-generic
@@ -328,12 +328,12 @@ void rtdev_free (struct rtnet_device *rtdev)
  * A 32-byte alignment is enforced for the private data area.
  */
 struct rtnet_device *__rt_alloc_etherdev(unsigned sizeof_priv,
-					unsigned rx_pool_size,
+					unsigned dev_pool_size,
 					struct module *module)
 {
     struct rtnet_device *rtdev;
 
-    rtdev = rtdev_alloc(sizeof_priv, rx_pool_size);
+    rtdev = rtdev_alloc(sizeof_priv, dev_pool_size);
     if (!rtdev)
 	return NULL;
 
@@ -704,6 +704,12 @@ int rtdev_xmit(struct rtskb *rtskb)
     RTNET_ASSERT(rtskb != NULL, return -EINVAL;);
 
     rtdev = rtskb->rtdev;
+
+    if (rtskb_acquire(rtskb, &rtdev->dev_pool) != 0) {
+	err = -ENOBUFS;
+	kfree_rtskb(rtskb);
+	return err;
+    }
 
     RTNET_ASSERT(rtdev != NULL, return -EINVAL;);
 

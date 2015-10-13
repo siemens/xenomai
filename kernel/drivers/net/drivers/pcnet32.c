@@ -638,7 +638,7 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
     }
 
 /*** RTnet ***/
-    dev = rt_alloc_etherdev(0, RX_RING_SIZE*2);
+    dev = rt_alloc_etherdev(0, RX_RING_SIZE * 2 + TX_RING_SIZE);
     if (dev == NULL)
 	return -ENOMEM;
     rtdev_alloc_name(dev, "rteth%d");

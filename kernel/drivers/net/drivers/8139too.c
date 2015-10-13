@@ -636,7 +636,8 @@ static int rtl8139_init_board (struct pci_dev *pdev,
 	*dev_out = NULL;
 
 	/* dev and rtdev->priv zeroed in alloc_etherdev */
-	rtdev=rt_alloc_etherdev(sizeof (struct rtl8139_private), rx_pool_size);
+	rtdev=rt_alloc_etherdev(sizeof (struct rtl8139_private),
+				rx_pool_size + NUM_TX_DESC);
 	if (rtdev==NULL) {
 		rtdm_printk (KERN_ERR PFX "%s: Unable to alloc new net device\n", pci_name(pdev));
 		return -ENOMEM;

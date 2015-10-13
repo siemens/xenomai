@@ -1744,7 +1744,7 @@ int __init init_module(void)
 		printk(KERN_WARNING
 		CARDNAME": You shouldn't use auto-probing with insmod!\n" );
 
-	devSMC91111 = rt_alloc_etherdev(sizeof(struct smc_local), 4*2);
+	devSMC91111 = rt_alloc_etherdev(sizeof(struct smc_local), 4 * 2 + 1);
 	if (devSMC91111 == NULL) {
 		printk (KERN_ERR "init_ethernet failed\n");
 		return -ENODEV;

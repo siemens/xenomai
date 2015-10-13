@@ -1573,7 +1573,7 @@ static int __init macb_probe(struct platform_device *pdev)
 	}
 
 	err = -ENOMEM;
-	dev = rt_alloc_etherdev(sizeof(*bp), RX_RING_SIZE * 2);
+	dev = rt_alloc_etherdev(sizeof(*bp), RX_RING_SIZE * 2 + TX_RING_SIZE);
 	if (!dev)
 		goto err_out;
 

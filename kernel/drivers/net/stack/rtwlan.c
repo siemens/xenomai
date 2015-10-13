@@ -95,14 +95,14 @@ EXPORT_SYMBOL_GPL(rtwlan_tx);
  * A 32-byte alignment is enforced for the private data area.
  */
 
-struct rtnet_device *rtwlan_alloc_dev(unsigned sizeof_priv, unsigned rx_pool_size)
+struct rtnet_device *rtwlan_alloc_dev(unsigned sizeof_priv, unsigned dev_pool_size)
 {
     struct rtnet_device *rtnet_dev;
 
     RTWLAN_DEBUG("Start.\n");
 
     rtnet_dev = rt_alloc_etherdev(sizeof(struct rtwlan_device) + sizeof_priv,
-			    rx_pool_size);
+			    dev_pool_size);
     if (!rtnet_dev)
 	return NULL;
 

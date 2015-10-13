@@ -1894,7 +1894,7 @@ mpc5xxx_fec_init(void)
 	if (!rx_pool_size)
 		rx_pool_size = MPC5xxx_FEC_RBD_NUM * 2;
 
-	dev = rt_alloc_etherdev(sizeof(*priv), rx_pool_size);
+	dev = rt_alloc_etherdev(sizeof(*priv), rx_pool_size + MPC5xxx_FEC_TBD_NUM);
 	if (!dev)
 		return -EIO;
 	rtdev_alloc_name(dev, "rteth%d");

@@ -241,7 +241,7 @@ static inline void * rtwlan_priv(struct rtwlan_device *rtwlan_dev)
     return (void *)rtwlan_dev + sizeof(struct rtwlan_device);
 }
 
-struct rtnet_device * rtwlan_alloc_dev(unsigned sizeof_priv, unsigned rx_pool_size);
+struct rtnet_device * rtwlan_alloc_dev(unsigned sizeof_priv, unsigned dev_pool_size);
 int rtwlan_rx(struct rtskb * rtskb, struct rtnet_device * rtnet_dev);
 int rtwlan_tx(struct rtskb * rtskb, struct rtnet_device * rtnet_dev);
 

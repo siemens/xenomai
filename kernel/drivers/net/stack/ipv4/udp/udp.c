@@ -655,8 +655,6 @@ struct rtsocket *rt_udp_dest_socket(struct rtskb *skb)
     return skb->sk;
 }
 
-
-
 /***
  *  rt_udp_rcv
  */
@@ -666,7 +664,6 @@ void rt_udp_rcv (struct rtskb *skb)
     void            (*callback_func)(struct rtdm_fd *, void *);
     void            *callback_arg;
     rtdm_lockctx_t  context;
-
 
     rtskb_queue_tail(&sock->incoming, skb);
     rtdm_sem_up(&sock->pending_sem);

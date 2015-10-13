@@ -3941,7 +3941,8 @@ static int e1000_probe(struct pci_dev *pdev,
 		goto err_alloc_etherdev;
 
 	err = -ENOMEM;
-	netdev = rt_alloc_etherdev(sizeof(struct e1000_adapter), RT_E1000E_NUM_RXD);
+	netdev = rt_alloc_etherdev(sizeof(*adapter),
+				2 * RT_E1000E_NUM_RXD + 256);
 	if (!netdev)
 		goto err_alloc_etherdev;
 
