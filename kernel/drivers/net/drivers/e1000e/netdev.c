@@ -581,7 +581,7 @@ static void e1000e_update_rdt_wa(struct e1000_adapter *adapter, unsigned int i)
 		u32 rctl = er32(RCTL);
 		ew32(RCTL, rctl & ~E1000_RCTL_EN);
 		e_err("ME firmware caused invalid RDT - resetting\n");
-		schedule_work(&adapter->reset_task);
+		rtdm_schedule_nrt_work(&adapter->reset_task);
 	}
 }
 
@@ -594,7 +594,7 @@ static void e1000e_update_tdt_wa(struct e1000_adapter *adapter, unsigned int i)
 		u32 tctl = er32(TCTL);
 		ew32(TCTL, tctl & ~E1000_TCTL_EN);
 		e_err("ME firmware caused invalid TDT - resetting\n");
-		schedule_work(&adapter->reset_task);
+		rtdm_schedule_nrt_work(&adapter->reset_task);
 	}
 }
 
@@ -949,7 +949,7 @@ static int e1000_intr_msi(rtdm_irq_t *irq_handle)
 		 */
 		if ((adapter->flags & FLAG_LSC_GIG_SPEED_DROP) &&
 		    (!(er32(STATUS) & E1000_STATUS_LU)))
-			schedule_work(&adapter->downshift_task);
+			rtdm_schedule_nrt_work(&adapter->downshift_task);
 
 		/*
 		 * 80003ES2LAN workaround-- For packet buffer work-around on
@@ -2885,7 +2885,7 @@ static void e1000_update_phy_info(unsigned long data)
 	if (test_bit(__E1000_DOWN, &adapter->state))
 		return;
 
-	schedule_work(&adapter->update_phy_task);
+	rtdm_schedule_nrt_work(&adapter->update_phy_task);
 }
 
 /**
@@ -3018,7 +3018,7 @@ static void e1000e_check_82574_phy_workaround(struct e1000_adapter *adapter)
 
 	if (adapter->phy_hang_count > 1) {
 		adapter->phy_hang_count = 0;
-		schedule_work(&adapter->reset_task);
+		rtdm_schedule_nrt_work(&adapter->reset_task);
 	}
 }
 
@@ -3031,7 +3031,7 @@ static void e1000_watchdog(unsigned long data)
 	struct e1000_adapter *adapter = (struct e1000_adapter *) data;
 
 	/* Do the rest outside of interrupt context */
-	schedule_work(&adapter->watchdog_task);
+	rtdm_schedule_nrt_work(&adapter->watchdog_task);
 
 	/* TODO: make this use queue_delayed_work() */
 }
@@ -3172,7 +3172,7 @@ static void e1000_watchdog_task(struct work_struct *work)
 					  round_jiffies(jiffies + 2 * HZ));
 
 			if (adapter->flags & FLAG_RX_NEEDS_RESTART)
-				schedule_work(&adapter->reset_task);
+				rtdm_schedule_nrt_work(&adapter->reset_task);
 		}
 	}
 
@@ -3200,7 +3200,7 @@ link_up:
 		 * to get done, so reset controller to flush Tx.
 		 * (Do the reset outside of interrupt context).
 		 */
-		schedule_work(&adapter->reset_task);
+		rtdm_schedule_nrt_work(&adapter->reset_task);
 		/* return immediately since reset is imminent */
 		return;
 	}
