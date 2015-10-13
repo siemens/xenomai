@@ -1518,14 +1518,18 @@ static void lostage_schedule_work(struct ipipe_work_header *work)
  */
 void rtdm_schedule_nrt_work(struct work_struct *lostage_work)
 {
-	struct lostage_schedule_work macb_work = {
+	struct lostage_schedule_work ipipe_work = {
 		.work = {
-			.size = sizeof(macb_work),
+			.size = sizeof(ipipe_work),
 			.handler = lostage_schedule_work,
 		},
 		.lostage_work = lostage_work,
 	};
-	ipipe_post_work_root(&macb_work, work);
+
+	if (ipipe_root_p)
+		schedule_work(lostage_work);
+	else
+		ipipe_post_work_root(&ipipe_work, work);
 }
 EXPORT_SYMBOL_GPL(rtdm_schedule_nrt_work);
 
