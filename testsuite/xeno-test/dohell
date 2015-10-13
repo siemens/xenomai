@@ -59,7 +59,7 @@ if [ -n "$server" ]; then
 fi
 
 if [ -n "$mntpoint" ]; then
-    while :; do dd if=/dev/zero of=$mntpoint/bigfile bs=1024000 count=100; done &
+    while :; do dd if=/dev/zero of=$mntpoint/bigfile bs=1024000 count=100; sync; done &
     pids="$pids $!"
 fi
 
