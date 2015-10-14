@@ -442,7 +442,9 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 		p = __mptr(hcb->sba);
 		if (p)
 			goto done;
-		if (size > 0 && size != hcb->size) {
+		if (size == 0)
+			size = heapobj_size(&hcb->hobj);
+		else if (size != hcb->size) {
 			ret = -EINVAL;
 			goto done;
 		}
