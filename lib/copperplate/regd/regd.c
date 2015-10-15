@@ -538,7 +538,7 @@ int main(int argc, char *const *argv)
 
 	/* Force SCHED_OTHER. */
 	schedp.sched_priority = 0;
-	pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedp);
+	__STD(pthread_setschedparam(pthread_self(), SCHED_OTHER, &schedp));
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = SIG_IGN;
