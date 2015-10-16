@@ -52,6 +52,7 @@
 static struct rb_root protocol_devices;
 
 static DEFINE_MUTEX(register_lock);
+static DECLARE_BITMAP(protocol_devices_minor_map, RTDM_MAX_MINOR);
 
 static struct class *rtdm_class;
 
@@ -424,14 +425,21 @@ int rtdm_dev_register(struct rtdm_device *dev)
 		}
 		__set_bit(minor, drv->minor_map);
 	} else {
-		dev->minor = -1;
+		minor = find_first_zero_bit(protocol_devices_minor_map,
+					RTDM_MAX_MINOR);
+		if (minor >= RTDM_MAX_MINOR) {
+			ret = -ENXIO;
+			goto fail;
+		}
+		dev->minor = minor;
+
 		dev->name = kstrdup(dev->label, GFP_KERNEL);
 		if (dev->name == NULL) {
 			ret = -ENOMEM;
 			goto fail;
 		}
 
-		rdev = MKDEV(0, 0);
+		rdev = MKDEV(0, minor);
 		kdev = device_create(rtdm_class, NULL, rdev,
 				     dev, dev->name);
 		if (IS_ERR(kdev)) {
@@ -443,6 +451,7 @@ int rtdm_dev_register(struct rtdm_device *dev)
 		ret = xnid_enter(&protocol_devices, &dev->proto.id, id);
 		if (ret < 0)
 			goto fail;
+		__set_bit(minor, protocol_devices_minor_map);
 	}
 
 	dev->rdev = rdev;
@@ -500,8 +509,10 @@ void rtdm_dev_unregister(struct rtdm_device *dev)
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		xnregistry_remove(dev->named.handle);
 		__clear_bit(dev->minor, drv->minor_map);
-	} else
+	} else {
 		xnid_remove(&protocol_devices, &dev->proto.id);
+		__clear_bit(dev->minor, protocol_devices_minor_map);
+	}
 
 	device_destroy(rtdm_class, dev->rdev);
 
@@ -526,6 +537,8 @@ int __init rtdm_init(void)
 	}
 	rtdm_class->dev_groups = rtdm_groups;
 	rtdm_class->devnode = rtdm_devnode;
+
+	bitmap_zero(protocol_devices_minor_map, RTDM_MAX_MINOR);
 
 	return 0;
 }
