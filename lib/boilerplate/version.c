@@ -19,7 +19,9 @@
 #include "git-stamp.h"
 
 #ifndef GIT_STAMP
-#define GIT_STAMP  ""
+#define devel_suffix  ""
+#else
+#define devel_suffix  " -- " GIT_STAMP
 #endif
 
 #ifdef CONFIG_XENO_COBALT
@@ -29,7 +31,7 @@
 #endif
 
 const char *xenomai_version_string = PACKAGE_NAME \
-	core_suffix PACKAGE_VERSION " -- " GIT_STAMP;
+	core_suffix PACKAGE_VERSION devel_suffix;
 
 #ifdef __PROGRAM__
 
