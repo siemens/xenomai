@@ -481,7 +481,6 @@ static void migrate_thread(struct xnthread *thread, struct xnsched *sched)
 	 * WARNING: the scheduling class may have just changed as a
 	 * result of calling the per-class migration hook.
 	 */
-	xnsched_set_resched(thread->sched);
 	thread->sched = sched;
 }
 
@@ -491,6 +490,7 @@ static void migrate_thread(struct xnthread *thread, struct xnsched *sched)
  */
 void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 {
+	xnsched_set_resched(thread->sched);
 	migrate_thread(thread, sched);
 
 #ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
@@ -511,11 +511,14 @@ void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
  */
 void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 {
+	struct xnsched *last_sched = thread->sched;
+
 	migrate_thread(thread, sched);
 
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
 		xnsched_requeue(thread);
 		xnthread_set_state(thread, XNREADY);
+		xnsched_set_resched(last_sched);
 	}
 }
 
