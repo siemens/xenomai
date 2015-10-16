@@ -45,6 +45,8 @@ static inline atomic_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow)
 
 void cobalt_thread_init(void);
 
+int cobalt_thread_probe(pid_t pid);
+
 void cobalt_print_init(void);
 
 void cobalt_print_init_atfork(void);

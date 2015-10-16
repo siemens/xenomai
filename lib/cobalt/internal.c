@@ -117,6 +117,11 @@ int cobalt_thread_join(pthread_t thread)
 	return ret;
 }
 
+int cobalt_thread_probe(pid_t pid)
+{
+	return XENOMAI_SYSCALL2(sc_cobalt_kill, pid, 0);
+}
+
 void __cobalt_commit_memory(void *p, size_t len)
 {
 	volatile char *_p = (volatile char *)p, *end;
