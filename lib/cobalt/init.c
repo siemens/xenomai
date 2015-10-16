@@ -112,6 +112,8 @@ static void low_init(void)
 	case -ENOEXEC:
 		early_panic("ABI mismatch: required r%lu, provided r%lu",
 			    XENOMAI_ABI_REV, f->feat_abirev);
+	case -ENOSYS:
+		early_panic("Cobalt core not enabled in kernel");
 	default:
 		early_panic("binding failed: %s", strerror(-ret));
 	}
