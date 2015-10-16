@@ -99,6 +99,10 @@ COBALT_IMPL(int, kill, (pid_t pid, int sig))
 
 	ret = XENOMAI_SYSCALL2(sc_cobalt_kill, pid, sig);
 	if (ret) {
+		/* Retry with regular kill is no RT target was found. */
+		if (ret == -ESRCH)
+			return __STD(kill(pid, sig));
+
 		errno = -ret;
 		return -1;
 	}

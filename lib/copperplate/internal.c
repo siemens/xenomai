@@ -93,7 +93,7 @@ int copperplate_kill_tid(pid_t tid, int sig)
 
 int copperplate_probe_tid(pid_t tid)
 {
-	return copperplate_kill_tid(tid, 0);
+	return cobalt_thread_probe(tid);
 }
 
 void copperplate_set_current_name(const char *name)
