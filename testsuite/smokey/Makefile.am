@@ -22,6 +22,7 @@ SUBDIRS = 		\
 	sched-tp 	\
 	sigdebug	\
 	timerfd		\
+	tsc		\
 	vdso-access 	\
 	xddp
 else
@@ -65,5 +66,6 @@ DIST_SUBDIRS = 		\
 	sched-tp 	\
 	sigdebug	\
 	timerfd		\
+	tsc		\
 	vdso-access 	\
 	xddp
