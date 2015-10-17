@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-#ifndef _COBALT_ARM_ASM_FPTEST_H
-#define _COBALT_ARM_ASM_FPTEST_H
+#ifndef _COBALT_ARM64_ASM_FPTEST_H
+#define _COBALT_ARM64_ASM_FPTEST_H
 
 #include <linux/errno.h>
 #include <asm/xenomai/uapi/fptest.h>
@@ -44,4 +44,4 @@ static inline int fp_detect(void)
 	return have_fp ? __COBALT_HAVE_FPU : 0;
 }
 
-#endif /* _COBALT_ARM_ASM_FPTEST_H */
+#endif /* _COBALT_ARM64_ASM_FPTEST_H */

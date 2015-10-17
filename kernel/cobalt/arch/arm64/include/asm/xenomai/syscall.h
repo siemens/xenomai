@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-#ifndef _COBALT_ARM_ASM_SYSCALL_H
-#define _COBALT_ARM_ASM_SYSCALL_H
+#ifndef _COBALT_ARM64_ASM_SYSCALL_H
+#define _COBALT_ARM64_ASM_SYSCALL_H
 
 #include <linux/errno.h>
 #include <asm/uaccess.h>
@@ -75,4 +75,4 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 			 unsigned long a3, unsigned long a4,
 			 unsigned long a5);
 
-#endif /* !_COBALT_ARM_ASM_SYSCALL_H */
+#endif /* !_COBALT_ARM64_ASM_SYSCALL_H */

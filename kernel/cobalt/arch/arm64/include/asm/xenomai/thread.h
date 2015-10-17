@@ -16,11 +16,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-#ifndef _COBALT_ARM_ASM_THREAD_H
-#define _COBALT_ARM_ASM_THREAD_H
+#ifndef _COBALT_ARM64_ASM_THREAD_H
+#define _COBALT_ARM64_ASM_THREAD_H
 
 #include <asm-generic/xenomai/thread.h>
-
 
 struct xnarchtcb {
 	struct xntcb core;
@@ -111,4 +110,4 @@ static inline void xnarch_enable_kfpu(void) { }
 
 static inline void xnarch_disable_kfpu(void) { }
 
-#endif /* !_COBALT_ARM_ASM_THREAD_H */
+#endif /* !_COBALT_ARM64_ASM_THREAD_H */

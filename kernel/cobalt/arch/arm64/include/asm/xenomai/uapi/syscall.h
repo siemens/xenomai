@@ -18,8 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_ARM_ASM_UAPI_SYSCALL_H
-#define _COBALT_ARM_ASM_UAPI_SYSCALL_H
+#ifndef _COBALT_ARM64_ASM_UAPI_SYSCALL_H
+#define _COBALT_ARM64_ASM_UAPI_SYSCALL_H
 
 #define __xn_syscode(__nr)	(__COBALT_SYSCALL_BIT | (__nr))
 
@@ -31,4 +31,4 @@
 #define XENOMAI_SYSARCH_XCHG			3
 #define XENOMAI_SYSARCH_TSCINFO                 4
 
-#endif /* !_COBALT_ARM_ASM_UAPI_SYSCALL_H */
+#endif /* !_COBALT_ARM64_ASM_UAPI_SYSCALL_H */

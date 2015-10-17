@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_ARM_ASM_UAPI_FPTEST_H
-#define _COBALT_ARM_ASM_UAPI_FPTEST_H
+#ifndef _COBALT_ARM64_ASM_UAPI_FPTEST_H
+#define _COBALT_ARM64_ASM_UAPI_FPTEST_H
 
 #define __COBALT_HAVE_FPU  0x1
 
@@ -102,4 +102,4 @@ static inline unsigned int fp_regs_check(int features, unsigned int val,
 	return result;
 }
 
-#endif /* !_COBALT_ARM_ASM_UAPI_FPTEST_H */
+#endif /* !_COBALT_ARM64_ASM_UAPI_FPTEST_H */

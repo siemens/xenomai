@@ -18,8 +18,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_ARM_ASM_UAPI_FEATURES_H
-#define _COBALT_ARM_ASM_UAPI_FEATURES_H
+#ifndef _COBALT_ARM64_ASM_UAPI_FEATURES_H
+#define _COBALT_ARM64_ASM_UAPI_FEATURES_H
 
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   1UL
@@ -42,4 +42,4 @@ static inline const char *get_feature_label(unsigned int feature)
 	return get_generic_feature_label(feature);
 }
 
-#endif /* !_COBALT_ARM_ASM_UAPI_FEATURES_H */
+#endif /* !_COBALT_ARM64_ASM_UAPI_FEATURES_H */

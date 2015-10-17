@@ -15,11 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_ARM_ASM_UAPI_TSC_H
-#define _COBALT_ARM_ASM_UAPI_TSC_H
+#ifndef _COBALT_ARM64_ASM_UAPI_TSC_H
+#define _COBALT_ARM64_ASM_UAPI_TSC_H
 
 struct __xn_tscinfo {
 	volatile unsigned int *counter;
 };
 
-#endif /* !_COBALT_ARM_ASM_UAPI_TSC_H */
+#endif /* !_COBALT_ARM64_ASM_UAPI_TSC_H */

@@ -16,9 +16,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-#ifndef _COBALT_ARM_ASM_SYSCALL32_H
-#define _COBALT_ARM_ASM_SYSCALL32_H
+#ifndef _COBALT_ARM64_ASM_SYSCALL32_H
+#define _COBALT_ARM64_ASM_SYSCALL32_H
 
 #include <asm-generic/xenomai/syscall32.h>
 
-#endif /* !_COBALT_ARM_ASM_SYSCALL32_H */
+#endif /* !_COBALT_ARM64_ASM_SYSCALL32_H */

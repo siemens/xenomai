@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_ARM_ASM_UAPI_ARITH_H
-#define _COBALT_ARM_ASM_UAPI_ARITH_H
+#ifndef _COBALT_ARM64_ASM_UAPI_ARITH_H
+#define _COBALT_ARM64_ASM_UAPI_ARITH_H
 
 #include <asm/xenomai/uapi/features.h>
 
@@ -139,4 +139,4 @@ mach_arm_nodiv_llimd(const long long op,
 }
 #endif /* arm >= v4 */
 
-#endif /* _COBALT_ARM_ASM_UAPI_ARITH_H */
+#endif /* _COBALT_ARM64_ASM_UAPI_ARITH_H */
