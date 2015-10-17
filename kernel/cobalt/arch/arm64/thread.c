@@ -34,7 +34,7 @@
 #include <asm/hw_breakpoint.h>
 #include <asm/fpsimd.h>
 
-#if defined(CONFIG_XENO_ARCH_FPU)
+#ifdef CONFIG_XENO_ARCH_FPU
 
 #define FPSIMD_EN (0x3 << 20)
 
@@ -57,13 +57,6 @@ static void enable_fpsimd(void)
 {
 	unsigned long cpacr = get_cpacr();
 	cpacr |= FPSIMD_EN;
-	set_cpacr(cpacr);
-}
-
-static void disable_fpsimd(void)
-{
-	unsigned long cpacr = get_cpacr();
-	cpacr &= ~FPSIMD_EN;
 	set_cpacr(cpacr);
 }
 
@@ -130,55 +123,17 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 	tcb->fpup = &(tcb->core.host_task->thread.fpsimd_state);
 	xnthread_clear_state(thread, XNFPU);
 }
+
 #endif /* CONFIG_XENO_ARCH_FPU */
-
-/* Switch support functions */
-static void xnarch_tls_thread_switch(struct task_struct *next)
-{
-	unsigned long tpidr, tpidrro;
-
-	if (!is_compat_task()) {
-		asm("mrs %0, tpidr_el0" : "=r" (tpidr));
-		current->thread.tp_value = tpidr;
-	}
-
-	if (is_compat_thread(task_thread_info(next))) {
-		tpidr = 0;
-		tpidrro = next->thread.tp_value;
-	} else {
-		tpidr = next->thread.tp_value;
-		tpidrro = 0;
-	}
-
-	asm(
-	"	msr	tpidr_el0, %0\n"
-	"	msr	tpidrro_el0, %1"
-	: : "r" (tpidr), "r" (tpidrro));
-}
-
-#ifdef CONFIG_PID_IN_CONTEXTIDR
-static inline void xnarch_contextidr_thread_switch(struct task_struct *next)
-{
-	asm(
-	"	msr	contextidr_el1, %0\n"
-	"	isb"
-	:
-	: "r" (task_pid_nr(next)));
-}
-#else
-static inline void xnarch_contextidr_thread_switch(struct task_struct *next)
-{
-}
-#endif
-/* End switch support functions */
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
 	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
 	struct mm_struct *prev_mm, *next_mm;
-	struct task_struct *next;
+	struct task_struct *prev, *next;
 
 	next = in_tcb->core.host_task;
+	prev = out_tcb->core.host_task;
 	prev_mm = out_tcb->core.active_mm;
 
 	next_mm = in_tcb->core.mm;
@@ -198,18 +153,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 			enter_lazy_tlb(prev_mm, next);
 	}
 
-	xnarch_tls_thread_switch(in_tcb->core.tip->task);
-	xnarch_contextidr_thread_switch(in_tcb->core.tip->task);
-
-	/*
-	 * Complete any pending TLB or cache maintenance on this CPU in case
-	 * the thread migrates to a different CPU.
-	 */
-	dsb(ish);
-
-	disable_fpsimd();
-
-	cpu_switch_to(out_tcb->core.tip->task, in_tcb->core.tip->task);
+	__switch_to(prev, next);
 }
 
 int xnarch_escalate(void)
