@@ -28,31 +28,16 @@
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
-#ifndef __NR_SYSCALL_BASE
-#define __NR_SYSCALL_BASE 0
-#endif
-
-#ifndef __ARM_NR_ipipe
-/* Legacy pipelines do not define this. */
-#define __ARM_NR_ipipe	(__NR_SYSCALL_BASE + XENO_ARM_SYSCALL)
-#endif
-
-#define __xn_reg_sys(__regs)	((__regs)->orig_x0)
-/* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
-#ifdef CONFIG_OABI_COMPAT
-#define __xn_syscall_p(__regs)	(((__regs)->regs[8] == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
-				 ((__regs)->regs[8] == __ARM_NR_ipipe))
-#else /* !CONFIG_OABI_COMPAT */
-#define __xn_syscall_p(__regs)	((__regs)->regs[8] == __ARM_NR_ipipe)
-#endif /* !CONFIG_OABI_COMPAT */
+#define __xn_reg_sys(__regs)	((unsigned long)(__regs)->syscallno)
+#define __xn_syscall_p(regs)	((__xn_reg_sys(regs) & __COBALT_SYSCALL_BIT) != 0)
 #define __xn_syscall(__regs)	((unsigned long)(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT))
 
 #define __xn_reg_rval(__regs)	((__regs)->regs[0])
-#define __xn_reg_arg1(__regs)	((__regs)->regs[1])
-#define __xn_reg_arg2(__regs)	((__regs)->regs[2])
-#define __xn_reg_arg3(__regs)	((__regs)->regs[3])
-#define __xn_reg_arg4(__regs)	((__regs)->regs[4])
-#define __xn_reg_arg5(__regs)	((__regs)->regs[5])
+#define __xn_reg_arg1(__regs)	((__regs)->regs[0])
+#define __xn_reg_arg2(__regs)	((__regs)->regs[1])
+#define __xn_reg_arg3(__regs)	((__regs)->regs[2])
+#define __xn_reg_arg4(__regs)	((__regs)->regs[3])
+#define __xn_reg_arg5(__regs)	((__regs)->regs[4])
 #define __xn_reg_pc(__regs)	((__regs)->pc)
 #define __xn_reg_sp(__regs)	((__regs)->sp)
 

@@ -59,14 +59,6 @@ void cobalt_check_features(struct cobalt_featinfo *finfo)
 
 	page_size = sysconf(_SC_PAGESIZE);
 
-#ifndef __aarch64__
-	__xn_tscinfo.kuser_tsc_get =
-		(__xn_rdtsc_t *)(0xffff1004 -
-				((*(unsigned *)(0xffff0ffc) + 3) << 5));
-#else
-	__xn_tscinfo.kuser_tsc_get = 0;
-#endif
-
 	phys_addr = (unsigned long)__xn_tscinfo.kinfo.counter;
 
 	addr = __STD(mmap(NULL, page_size, PROT_READ, MAP_SHARED,
