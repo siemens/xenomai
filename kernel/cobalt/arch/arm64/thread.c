@@ -153,7 +153,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 			enter_lazy_tlb(prev_mm, next);
 	}
 
-	__switch_to(prev, next);
+	ipipe_switch_to(prev, next);
 }
 
 int xnarch_escalate(void)
