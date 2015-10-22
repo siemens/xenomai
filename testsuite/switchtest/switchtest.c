@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <limits.h>
 #include <sched.h>
 #include <signal.h>
@@ -279,13 +280,22 @@ static void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 	cpu->last_switches_count = switches_count;
 }
 
-static int sink(const char *fmt, ...)
+static int printout(const char *fmt, ...)
 {
+	va_list ap;
+
+	va_start(ap, fmt);
+	
+	if (quiet < 2)
+		vprintf(fmt, ap);
+
+	va_end(ap);
+
 	return 0;
 }
 
 #define check_fp_result(__expected)	\
-	fp_regs_check(fp_features, __expected, quiet < 2 ? printf : sink)
+	fp_regs_check(fp_features, __expected, printout)
 
 static void *sleeper_switcher(void *cookie)
 {
