@@ -23,6 +23,7 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/list.h>
+#include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/ancillaries.h>
 #include <asm/xenomai/wrappers.h>
 
@@ -257,11 +258,20 @@ static inline struct xnclock *xntimer_clock(struct xntimer *timer)
 	return timer->clock;
 }
 
+void xntimer_set_clock(struct xntimer *timer,
+		       struct xnclock *newclock);
+
 #else /* !CONFIG_XENO_OPT_EXTCLOCK */
 
 static inline struct xnclock *xntimer_clock(struct xntimer *timer)
 {
 	return &nkclock;
+}
+
+static inline void xntimer_set_clock(struct xntimer *timer,
+				     struct xnclock *newclock)
+{
+	XENO_BUG_ON(COBALT, newclock != &nkclock);
 }
 
 #endif /* !CONFIG_XENO_OPT_EXTCLOCK */

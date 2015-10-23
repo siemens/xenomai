@@ -391,15 +391,15 @@ void xntimer_set_gravity(struct xntimer *timer, int gravity)
 }
 EXPORT_SYMBOL_GPL(xntimer_set_gravity);
 
-#if defined(CONFIG_XENO_OPT_EXTCLOCK) && defined(CONFIG_XENO_OPT_STATS)
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
 
-void xntimer_switch_tracking(struct xntimer *timer,
-			     struct xnclock *newclock)
+#ifdef CONFIG_XENO_OPT_STATS
+
+static void __xntimer_switch_tracking(struct xntimer *timer,
+				      struct xnclock *newclock)
 {
 	struct xnclock *oldclock = timer->tracker;
-	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
 	list_del(&timer->next_stat);
 	oldclock->nrtimers--;
 	xnvfile_touch(&oldclock->timer_vfile);
@@ -407,11 +407,49 @@ void xntimer_switch_tracking(struct xntimer *timer,
 	newclock->nrtimers++;
 	xnvfile_touch(&newclock->timer_vfile);
 	timer->tracker = newclock;
+}
+
+void xntimer_switch_tracking(struct xntimer *timer,
+			     struct xnclock *newclock)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	__xntimer_switch_tracking(timer, newclock);
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xntimer_switch_tracking);
 
-#endif /* CONFIG_XENO_OPT_EXTCLOCK && CONFIG_XENO_OPT_STATS */
+#else
+
+static inline
+void __xntimer_switch_tracking(struct xntimer *timer,
+			       struct xnclock *newclock)
+{ }
+
+#endif /* CONFIG_XENO_OPT_STATS */
+
+/**
+ * @brief Set the reference clock of a timer.
+ *
+ * This service changes the reference clock pacing a timer. If the
+ * clock timers are tracked, the tracking information is updated too.
+ *
+ * @param timer The address of a valid timer descriptor.
+ *
+ * @param newclock The address of a valid clock descriptor.
+ *
+ * @coretags{unrestricted, atomic-entry}
+ */
+void xntimer_set_clock(struct xntimer *timer,
+		       struct xnclock *newclock)
+{
+	xntimer_stop(timer);
+	timer->clock = newclock;
+	__xntimer_switch_tracking(timer, newclock);
+}
+
+#endif /* CONFIG_XENO_OPT_EXTCLOCK */
 
 /**
  * @fn void xntimer_destroy(struct xntimer *timer)
