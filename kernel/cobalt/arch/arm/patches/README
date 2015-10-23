@@ -17,7 +17,7 @@ information.
 This directory only contains the most recent patches for ARM
 platforms; you may find the complete collection of I-pipe patches at
 the following locations (see note):
-http://download.gna.org/adeos/patches/v3.x/arm/
+http://xenomai.org/downloads/ipipe/v3.x/arm/
 
 NOTE:
 Xenomai 3.x requires the latest IPIPE core series (API revision >= 2).

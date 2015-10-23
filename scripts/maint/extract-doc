@@ -11,13 +11,6 @@ Extract Xenomai documentation tree for directories "dirs". Where dirs
 are taken as subdirectories of git repository root. Extracted
 documentation trees are copied as subdirectories of "installdir".
 
-For instance:
-$0 download.gna.org:/upload/xenomai/documentation xenomai-3.0
-
-extracts the prebuilt documentation from the xenomai-3.0 repository
-and copy it to
-download.gna.org:/upload/xenomai/documentation/xenomai-3.0
-
 Options:
 -q, --quiet    quiet, print only error messages, suitable for cron jobs.
 -v, --verbose  verbose, git and rsync operations print file names.

@@ -17,7 +17,7 @@ information.
 This directory only contains the most recent patches for x86 32/64bit
 platforms; you may find the complete collection of I-pipe patches at
 the following locations (see note):
-http://download.gna.org/adeos/patches/v3.x/x86/
+http://xenomai.org/downloads/ipipe/v3.x/x86/
 
 NOTE:
 Xenomai 3.x requires the latest IPIPE core series (API revision >= 2).
