@@ -326,6 +326,16 @@ char *xnthread_format_status(unsigned long status, char *buf, int size)
 	return buf;
 }
 
+void xnthread_set_clock(struct xnthread *thread, struct xnclock *newclock)
+{
+	spl_t s;
+
+	/* Change the clock the thread's periodic timer is paced by. */
+	xnlock_get_irqsave(&nklock, s);
+	xntimer_set_clock(&thread->ptimer, newclock);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t ns)
 {
 	struct xntimer *timer;

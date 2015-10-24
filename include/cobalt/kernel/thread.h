@@ -432,9 +432,14 @@ void xnthread_init_root_tcb(struct xnthread *thread);
 
 void xnthread_deregister(struct xnthread *thread);
 
-char *xnthread_format_status(unsigned long status, char *buf, int size);
+char *xnthread_format_status(unsigned long status,
+			     char *buf, int size);
 
-xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t ns);
+void xnthread_set_clock(struct xnthread *thread,
+			struct xnclock *newclock);
+
+xnticks_t xnthread_get_timeout(struct xnthread *thread,
+			       xnticks_t ns);
 
 xnticks_t xnthread_get_period(struct xnthread *thread);
 
