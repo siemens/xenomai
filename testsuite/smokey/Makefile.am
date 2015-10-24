@@ -9,6 +9,7 @@ COBALT_SUBDIRS = 	\
 	arith 		\
 	bufp		\
 	cpu-affinity	\
+	fpu-stress	\
 	iddp		\
 	leaks		\
 	net_packet_dgram\
