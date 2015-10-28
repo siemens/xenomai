@@ -238,9 +238,9 @@ fi
 # Create an empty output patch file, and initialize the temporary tree.
 if test "x$output_patch" != "x"; then
 
-    temp_tree=$TMPDIR/prepare-kernel-$$
-    if ! mkdir $temp_tree; then
-	echo Temporary directory $temp_tree already exists, aborting.
+    temp_tree=`mktemp -d prepare-kernel-XXX --tmpdir`
+    if [ $? -ne 0 ]; then
+	echo Temporary directory could not be created.
 	exit 1
     fi
 
