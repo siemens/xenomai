@@ -37,6 +37,7 @@
 #include <asm/xenomai/uapi/fptest.h>
 #include <cobalt/trace.h>
 #include <rtdm/testing.h>
+#include <sys/cobalt.h>
 
 #if CONFIG_SMP
 #define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
@@ -88,6 +89,7 @@ static pthread_mutex_t headers_lock;
 static unsigned long data_lines = 21;
 static unsigned freeze_on_error;
 static int fp_features;
+static pthread_t main_tid;
 
 static inline unsigned stack_size(unsigned size)
 {
@@ -97,7 +99,7 @@ static inline unsigned stack_size(unsigned size)
 static inline void clean_exit(int retval)
 {
 	status = retval;
-	kill(getpid(), SIGTERM);
+	__STD(pthread_kill(main_tid, SIGTERM));
 	for (;;)
 		/* Wait for cancellation. */
 		__STD(sem_wait(&sleeper_start));
@@ -417,6 +419,18 @@ static void *fpu_stress(void *cookie)
 	return NULL;
 }
 
+static void set_mode(const char *prefix, int fd, unsigned mode)
+{
+	switch (mode) {
+	case 1:
+		cobalt_thread_harden();
+		return;
+
+	case 2:
+		cobalt_thread_relax();
+	}
+}
+
 static void *rtup(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
@@ -440,12 +454,7 @@ static void *rtup(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_setmode_np(0, PTHREAD_CONFORMING, NULL))) {
-		fprintf(stderr,
-			"rtup: pthread_setmode_np: %s\n",
-			strerror(err));
-		clean_exit(EXIT_FAILURE);
-	}
+	set_mode("rtup", fd, 1);
 
 	do {
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -526,12 +535,7 @@ static void *rtus(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_setmode_np(PTHREAD_CONFORMING, 0, NULL))) {
-		fprintf(stderr,
-			"rtus: pthread_setmode_np: %s\n",
-			strerror(err));
-		clean_exit(EXIT_FAILURE);
-	}
+	set_mode("rtus", fd, 2);
 
 	do {
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -612,12 +616,8 @@ static void *rtuo(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_setmode_np(0, PTHREAD_CONFORMING, NULL))) {
-		fprintf(stderr,
-			"rtup: pthread_setmode_np: %s\n",
-			strerror(err));
-		clean_exit(EXIT_FAILURE);
-	}
+	mode = 1;
+	set_mode("rtuo", fd, mode);
 	do {
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
 	} while (err == -1 && errno == EINTR);
@@ -625,7 +625,6 @@ static void *rtuo(void *cookie)
 	if (err == -1)
 		return NULL;
 
-	mode = PTHREAD_CONFORMING;
 	for (;;) {
 		unsigned expected, fp_val;
 
@@ -670,14 +669,8 @@ static void *rtuo(void *cookie)
 
 		/* Switch mode. */
 		if (i % 3 == 2) {
-			mode = PTHREAD_CONFORMING - mode;
-			if ((err = pthread_setmode_np
-			     (PTHREAD_CONFORMING - mode, mode, NULL))) {
-				fprintf(stderr,
-					"rtuo: pthread_setmode_np: %s\n",
-					strerror(err));
-				clean_exit(EXIT_FAILURE);
-			}
+			mode = 3 - mode;
+			set_mode("rtuo", fd, mode);
 		}
 
 		if(++i == 4000000)
@@ -1123,6 +1116,7 @@ int main(int argc, const char *argv[])
 	int sig;
 
 	status = EXIT_SUCCESS;
+	main_tid = pthread_self();
 
 	/* Initializations. */
 	if (__STD(sem_init(&sleeper_start, 0, 0))) {
