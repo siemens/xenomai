@@ -435,8 +435,8 @@ void xnthread_deregister(struct xnthread *thread);
 char *xnthread_format_status(unsigned long status,
 			     char *buf, int size);
 
-void xnthread_set_clock(struct xnthread *thread,
-			struct xnclock *newclock);
+int xnthread_set_clock(struct xnthread *thread,
+		       struct xnclock *newclock);
 
 xnticks_t xnthread_get_timeout(struct xnthread *thread,
 			       xnticks_t ns);
