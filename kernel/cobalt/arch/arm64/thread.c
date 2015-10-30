@@ -6,6 +6,7 @@
  * 
  * ARM64 port
  *   Copyright (C) 2015 Dmitriy Cherkasov <dmitriy@mperpetuo.com>
+ *   Copyright (C) 2015 Gilles Chanteperdrix <gch@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -41,7 +42,7 @@
 static inline unsigned long get_cpacr(void)
 {
 	unsigned long result;
-	__asm__ __volatile__("mrs %0, cpacr_el1": "=r"(result));
+	__asm__ ("mrs %0, cpacr_el1": "=r"(result));
 	return result;
 }
 
@@ -53,34 +54,26 @@ static inline void set_cpacr(long val)
 		: /* */ : "r"(val));
 }
 
-static void enable_fpsimd(void)
+static inline void enable_fpsimd(void)
 {
-	unsigned long cpacr = get_cpacr();
-	cpacr |= FPSIMD_EN;
-	set_cpacr(cpacr);
+	set_cpacr(get_cpacr() | FPSIMD_EN);
 }
 
-int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
+static inline struct fpsimd_state *get_fpu_owner(struct xnarchtcb *rootcb)
 {
-	return (d->exception == IPIPE_TRAP_FPU_ACC);
-}
+	struct task_struct *curr = rootcb->core.host_task;
 
-static inline struct fpsimd_state *get_fpu_owner(struct xnarchtcb *tcb)
-{
-	return &(tcb->core.tsp->fpsimd_state);
+	if (test_ti_thread_flag(task_thread_info(curr), TIF_FOREIGN_FPSTATE))
+		/* Foreign fpu state, use auxiliary backup area */
+		return &rootcb->xnfpsimd_state;
+
+	return &curr->thread.fpsimd_state;
 }
 
 void xnarch_leave_root(struct xnthread *root)
 {
 	struct xnarchtcb *rootcb = xnthread_archtcb(root);
 	rootcb->fpup = get_fpu_owner(rootcb);
-}
-
-void xnarch_save_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = &(thread->tcb);
-	if (xnarch_fpu_ptr(tcb))
-		fpsimd_save_state(tcb->fpup);
 }
 
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
@@ -93,35 +86,16 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 	if (from_fpup == to_fpup)
 		return;
 
-	if (from_fpup)
-		fpsimd_save_state(from_fpup);
+	fpsimd_save_state(from_fpup);
 
 	fpsimd_load_state(to_fpup);
-}
-
-int xnarch_handle_fpu_fault(struct xnthread *from, 
-			struct xnthread *to, struct ipipe_trap_data *d)
-{
-	spl_t s;
-
-	/* FPU should already be enabled for XNFPU tasks. */
-	if (xnthread_test_state(to, XNFPU))
-		BUG();
-
-	xnlock_get_irqsave(&nklock, s);
-	xnthread_set_state(to, XNFPU);
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnarch_switch_fpu(from, to);
-
-	return 1;
+	to_fpup->cpu = ipipe_processor_id();
 }
 
 void xnarch_init_shadow_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = &(tcb->core.host_task->thread.fpsimd_state);
-	xnthread_clear_state(thread, XNFPU);
+	tcb->fpup = &tcb->core.host_task->thread.fpsimd_state;
 }
 
 #endif /* CONFIG_XENO_ARCH_FPU */
