@@ -79,6 +79,8 @@ static int do_conf_option(int option, void __user *u_buf, size_t u_bufsz)
 			val |= _CC_COBALT_DEBUG_LEGACY;
 		if (IS_ENABLED(CONFIG_XENO_OPT_DEBUG_TRACE_RELAX))
 			val |= _CC_COBALT_DEBUG_TRACE_RELAX;
+		if (IS_ENABLED(CONFIG_XENO_DRIVERS_RTNET_CHECKED))
+			val |= _CC_COBALT_DEBUG_NET;
 		break;
 	case _CC_COBALT_GET_WATCHDOG:
 #ifdef CONFIG_XENO_OPT_WATCHDOG
