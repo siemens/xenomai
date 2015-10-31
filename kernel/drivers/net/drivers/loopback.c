@@ -95,7 +95,7 @@ static int __init loopback_init(void)
 
     printk("initializing loopback...\n");
 
-    if ((rtdev = rt_alloc_etherdev(0, 0)) == NULL)
+    if ((rtdev = rt_alloc_etherdev(0, 1)) == NULL)
 	return -ENODEV;
 
     rt_rtdev_connect(rtdev, &RTDEV_manager);
