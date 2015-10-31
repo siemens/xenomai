@@ -33,6 +33,7 @@
 #include <rtskb.h>
 #include <ethernet/eth.h>
 #include <rtmac/rtmac_disc.h>
+#include <rtnet_port.h>
 
 
 static unsigned int device_rtskbs = DEFAULT_DEVICE_RTSKBS;
@@ -704,6 +705,12 @@ int rtdev_xmit(struct rtskb *rtskb)
     RTNET_ASSERT(rtskb != NULL, return -EINVAL;);
 
     rtdev = rtskb->rtdev;
+
+    if (!rtnetif_carrier_ok(rtdev)) {
+	err = -EAGAIN;
+	kfree_rtskb(rtskb);
+	return err;
+    }
 
     if (rtskb_acquire(rtskb, &rtdev->dev_pool) != 0) {
 	err = -ENOBUFS;
