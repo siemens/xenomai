@@ -84,12 +84,12 @@ int smokey_string(const char *s, struct smokey_arg *arg)
 int smokey_parse_args(struct smokey_test *t,
 		      int argc, char *const argv[])
 {
-	int matched = 0, n = 0, ac;
+	int matched = 0, n, ac;
 	struct smokey_arg *arg;
 
-	while (++n < argc) {
-		for (arg = t->args, ac = 0;
-		     arg->name && ac < t->nargs; arg++, ac++) {
+	for (arg = t->args, ac = 0;
+	     arg->name && ac < t->nargs; arg++, ac++) {
+		for (n = 1; n < argc; n++) {
 			arg->matched = !!arg->parser(argv[n], arg);
 			if (arg->matched) {
 				matched++;
