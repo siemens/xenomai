@@ -90,7 +90,7 @@ static int run_tsc(struct smokey_test *t, int argc, char *const argv[])
 				CPU_SET(i, &mask);
 
 				smp_sched_setaffinity(0, sizeof(mask), &mask);
-				smokey_trace("Pinned to cpu %d\n", i);
+				smokey_trace("Pinned to cpu %d", i);
 				break;
 			}
 #endif
@@ -116,7 +116,7 @@ static int run_tsc(struct smokey_test *t, int argc, char *const argv[])
 	} else
 		secs = 60;
 	min = secs / 60;
-	smokey_trace("Checking tsc for %u minute(s)\n", min);
+	smokey_trace("Checking tsc for %u minute(s)", min);
 
 	for(i = 0; i < secs; i++) {
 		min = ~0U;
@@ -151,7 +151,7 @@ static int run_tsc(struct smokey_test *t, int argc, char *const argv[])
 			++loops;
 		} while (tsc2 - start < one_sec_tsc);
 
-		smokey_trace("min: %u, max: %u, avg: %g\n",
+		smokey_trace("min: %u, max: %u, avg: %g",
 			min, max, (double)sum / loops);
 
 		if (min < g_min)
@@ -162,7 +162,7 @@ static int run_tsc(struct smokey_test *t, int argc, char *const argv[])
 		g_loops += loops;
 	}
 
-	smokey_trace("min: %u, max: %u, avg: %g -> %g us\n",
+	smokey_trace("min: %u, max: %u, avg: %g -> %g us",
 		g_min, g_max, (double)g_sum / g_loops,
 		(double)timer_tsc2ns(g_sum) / (1000 * g_loops));
 
