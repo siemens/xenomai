@@ -278,7 +278,8 @@ void rtnet_unregister_ioctls(struct rtnet_ioctls *ioctls)
 
 
 static struct file_operations rtnet_fops = {
-    .unlocked_ioctl= rtnet_ioctl,
+    .owner = THIS_MODULE,
+    .unlocked_ioctl = rtnet_ioctl,
 };
 
 static struct miscdevice rtnet_chr_misc_dev = {
