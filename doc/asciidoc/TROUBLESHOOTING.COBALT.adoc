@@ -170,6 +170,18 @@ NPTL-enabled glibc releases.
 
 Turn off this feature for other libc flavours.
 
+=== Cobalt core not enabled in kernel
+
+As mentioned in the message, the target kernel is lacking Cobalt
+support.  See
+link:installing-xenomai-3-x/#Installing_the_Cobalt_core[this document]
+for detailed information about installing Cobalt.
+
+=== binding failed: Function not implemented
+
+Another symptom of the previous issue, i.e. the Cobalt core is not
+enabled in the target kernel.
+
 === binding failed: Operation not permitted
 
 This is the result of an attempt to run a Xenomai application as an

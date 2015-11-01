@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0</span>
+   &#160;<span id="projectnumber">3.0.1</span>
    </div>
   </td>
  </tr>
@@ -468,153 +468,158 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2thread_8h_sou
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;</div>
 <div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;<span class="keywordtype">void</span> xnthread_deregister(<span class="keyword">struct</span> xnthread *thread);</div>
 <div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="keywordtype">char</span> *xnthread_format_status(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> status, <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;xnticks_t xnthread_get_timeout(<span class="keyword">struct</span> xnthread *thread, xnticks_t ns);</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;xnticks_t xnthread_get_period(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="keywordtype">char</span> *xnthread_format_status(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> status,</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;                             <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="keywordtype">int</span> xnthread_set_clock(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;                       <span class="keyword">struct</span> xnclock *newclock);</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="keywordtype">void</span> xnthread_prepare_wait(<span class="keyword">struct</span> xnthread_wait_context *wc);</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga75a7e56d8c8ea2c7462db4d7a35f228e">xnthread_init</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;                  <span class="keyword">const</span> <span class="keyword">struct</span> xnthread_init_attr *attr,</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                  <span class="keyword">struct</span> xnsched_class *sched_class,</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;                  <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *sched_param);</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;xnticks_t xnthread_get_timeout(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;                               xnticks_t ns);</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;xnticks_t xnthread_get_period(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="keywordtype">void</span> xnthread_prepare_wait(<span class="keyword">struct</span> xnthread_wait_context *wc);</div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032">xnthread_start</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;                   <span class="keyword">const</span> <span class="keyword">struct</span> xnthread_start_attr *attr);</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga3c57e5332785644f1dc0c95ad2ee5097">xnthread_set_mode</a>(<span class="keywordtype">int</span> clrmask,</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;                      <span class="keywordtype">int</span> setmask);</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;                      <span class="keywordtype">int</span> mask,</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;                      xnticks_t timeout,</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                      xntmode_t timeout_mode,</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;                      <span class="keyword">struct</span> xnsynch *wchan);</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;                     <span class="keywordtype">int</span> mask);</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga8fe02cbf0d0cebc0ca9d9522bc58e65a">xnthread_unblock</a>(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga75a7e56d8c8ea2c7462db4d7a35f228e">xnthread_init</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;                  <span class="keyword">const</span> <span class="keyword">struct</span> xnthread_init_attr *attr,</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;                  <span class="keyword">struct</span> xnsched_class *sched_class,</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;                  <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *sched_param);</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032">xnthread_start</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;                   <span class="keyword">const</span> <span class="keyword">struct</span> xnthread_start_attr *attr);</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga3c57e5332785644f1dc0c95ad2ee5097">xnthread_set_mode</a>(<span class="keywordtype">int</span> clrmask,</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                      <span class="keywordtype">int</span> setmask);</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;                      <span class="keywordtype">int</span> mask,</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;                      xnticks_t timeout,</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;                      xntmode_t timeout_mode,</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;                      <span class="keyword">struct</span> xnsynch *wchan);</div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;                          xnticks_t idate,</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;                          xntmode_t timeout_mode,</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;                          xnticks_t period);</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;                     <span class="keywordtype">int</span> mask);</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga8fe02cbf0d0cebc0ca9d9522bc58e65a">xnthread_unblock</a>(<span class="keyword">struct</span> xnthread *thread);</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2">xnthread_wait_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                       xnticks_t quantum);</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;                          xnticks_t idate,</div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;                          xntmode_t timeout_mode,</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                          xnticks_t period);</div>
 <div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel</a>(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2">xnthread_wait_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);</div>
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join</a>(<span class="keyword">struct</span> xnthread *thread, <span class="keywordtype">bool</span> uninterruptible);</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax</a>(<span class="keywordtype">int</span> notify, <span class="keywordtype">int</span> reason);</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;<span class="keywordtype">void</span> __xnthread_kick(<span class="keyword">struct</span> xnthread *thread);</div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;</div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="keywordtype">void</span> xnthread_kick(<span class="keyword">struct</span> xnthread *thread);</div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="keywordtype">void</span> __xnthread_demote(<span class="keyword">struct</span> xnthread *thread);</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;<span class="keywordtype">void</span> xnthread_demote(<span class="keyword">struct</span> xnthread *thread);</div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;<span class="keywordtype">void</span> xnthread_signal(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;                     <span class="keywordtype">int</span> sig, <span class="keywordtype">int</span> arg);</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;                       xnticks_t quantum);</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel</a>(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join</a>(<span class="keyword">struct</span> xnthread *thread, <span class="keywordtype">bool</span> uninterruptible);</div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;</div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<span class="keywordtype">void</span> <a class="code" href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax</a>(<span class="keywordtype">int</span> notify, <span class="keywordtype">int</span> reason);</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;<span class="keywordtype">void</span> __xnthread_kick(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;<span class="keywordtype">void</span> xnthread_kick(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;</div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;<span class="keywordtype">void</span> __xnthread_demote(<span class="keyword">struct</span> xnthread *thread);</div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;</div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;<span class="keywordtype">void</span> xnthread_pin_initial(<span class="keyword">struct</span> xnthread *thread);</div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;<span class="keywordtype">void</span> xnthread_demote(<span class="keyword">struct</span> xnthread *thread);</div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;                 <span class="keyword">struct</span> completion *done);</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keywordtype">void</span> xnthread_signal(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;                     <span class="keywordtype">int</span> sig, <span class="keywordtype">int</span> arg);</div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="keywordtype">void</span> xnthread_call_mayday(<span class="keyword">struct</span> xnthread *thread, <span class="keywordtype">int</span> reason);</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="keywordtype">void</span> xnthread_pin_initial(<span class="keyword">struct</span> xnthread *thread);</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnthread_get_resource(<span class="keyword">struct</span> xnthread *thread)</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;{</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;        <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>|<a class="code" href="group__cobalt__core__thread__states.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">XNDEBUG</a>))</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;                thread-&gt;res_count++;</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;}</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnthread_put_resource(<span class="keyword">struct</span> xnthread *thread)</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;{</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;        <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>) ||</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;            IS_ENABLED(CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP)) {</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;                <span class="keywordflow">if</span> (unlikely(thread-&gt;res_count == 0)) {</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;                        <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482">XNWARN</a>))</div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;                                xnthread_signal(thread, SIGDEBUG,</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;                                                SIGDEBUG_RESCNT_IMBALANCE);</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;                        <span class="keywordflow">return</span> -EPERM;</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;                }</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;                thread-&gt;res_count--;</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;        }</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;        <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;}</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;<span class="preprocessor">#ifdef CONFIG_SMP</span></div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate</a>(<span class="keywordtype">int</span> cpu);</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;<span class="keywordtype">void</span> xnthread_migrate_passive(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;                              <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate</a>(<span class="keywordtype">int</span> cpu)</div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;{</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;        <span class="keywordflow">return</span> cpu ? -EINVAL : 0;</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;}</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;                 <span class="keyword">struct</span> completion *done);</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;<span class="keywordtype">void</span> xnthread_call_mayday(<span class="keyword">struct</span> xnthread *thread, <span class="keywordtype">int</span> reason);</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;</div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnthread_get_resource(<span class="keyword">struct</span> xnthread *thread)</div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;{</div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;        <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>|<a class="code" href="group__cobalt__core__thread__states.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">XNDEBUG</a>))</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;                thread-&gt;res_count++;</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;}</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;</div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnthread_put_resource(<span class="keyword">struct</span> xnthread *thread)</div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;{</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;        <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>) ||</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;            IS_ENABLED(CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP)) {</div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;                <span class="keywordflow">if</span> (unlikely(thread-&gt;res_count == 0)) {</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;                        <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482">XNWARN</a>))</div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;                                xnthread_signal(thread, SIGDEBUG,</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;                                                SIGDEBUG_RESCNT_IMBALANCE);</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;                        <span class="keywordflow">return</span> -EPERM;</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;                }</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;                thread-&gt;res_count--;</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;        }</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;        <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;}</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;<span class="preprocessor">#ifdef CONFIG_SMP</span></div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate</a>(<span class="keywordtype">int</span> cpu);</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;<span class="keywordtype">void</span> xnthread_migrate_passive(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;                              <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched);</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;<span class="preprocessor">#else</span></div>
 <div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnthread_migrate_passive(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;                                            <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched)</div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;{ }</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;<span class="keywordtype">int</span> __xnthread_set_schedparam(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;                              <span class="keyword">struct</span> xnsched_class *sched_class,</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;                              <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *sched_param);</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;</div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gafb78d40c8065b8569fafe7e24960742e">xnthread_set_schedparam</a>(<span class="keyword">struct</span> xnthread *thread,</div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;                            <span class="keyword">struct</span> xnsched_class *sched_class,</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                            <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *sched_param);</div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;<span class="keywordtype">int</span> xnthread_killall(<span class="keywordtype">int</span> grace, <span class="keywordtype">int</span> mask);</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>xnthread_personality xenomai_personality;</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_THREAD_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gaa0dad9aaac79565e12343b3b27a37c83"><div class="ttname"><a href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax</a></div><div class="ttdeci">void xnthread_relax(int notify, int reason)</div><div class="ttdoc">Switch a shadow thread back to the Linux domain. </div><div class="ttdef"><b>Definition:</b> thread.c:1996</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gabcf46b2b38ac68322f354adc408c2732"><div class="ttname"><a href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel</a></div><div class="ttdeci">void xnthread_cancel(struct xnthread *thread)</div><div class="ttdoc">Cancel a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1489</div></div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate</a>(<span class="keywordtype">int</span> cpu)</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;{</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;        <span class="keywordflow">return</span> cpu ? -EINVAL : 0;</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;}</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnthread_migrate_passive(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;                                            <span class="keyword">struct</span> <a class="code" href="structxnsched.html">xnsched</a> *sched)</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;{ }</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;<span class="keywordtype">int</span> __xnthread_set_schedparam(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                              <span class="keyword">struct</span> xnsched_class *sched_class,</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;                              <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *sched_param);</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__cobalt__core__thread.html#gafb78d40c8065b8569fafe7e24960742e">xnthread_set_schedparam</a>(<span class="keyword">struct</span> xnthread *thread,</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;                            <span class="keyword">struct</span> xnsched_class *sched_class,</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                            <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *sched_param);</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;<span class="keywordtype">int</span> xnthread_killall(<span class="keywordtype">int</span> grace, <span class="keywordtype">int</span> mask);</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span>xnthread_personality xenomai_personality;</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;</div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_THREAD_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gaa0dad9aaac79565e12343b3b27a37c83"><div class="ttname"><a href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax</a></div><div class="ttdeci">void xnthread_relax(int notify, int reason)</div><div class="ttdoc">Switch a shadow thread back to the Linux domain. </div><div class="ttdef"><b>Definition:</b> thread.c:2015</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gabcf46b2b38ac68322f354adc408c2732"><div class="ttname"><a href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732">xnthread_cancel</a></div><div class="ttdeci">void xnthread_cancel(struct xnthread *thread)</div><div class="ttdoc">Cancel a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1508</div></div>
 <div class="ttc" id="group__cobalt__core__thread__info_html_gac0c8d3c13b2ea3ceb9c8b474b9e52f01"><div class="ttname"><a href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">XNCANCELD</a></div><div class="ttdeci">#define XNCANCELD</div><div class="ttdoc">Cancellation request is pending. </div><div class="ttdef"><b>Definition:</b> thread.h:72</div></div>
 <div class="ttc" id="group__cobalt__core__thread_html_gab5af31ef43f67d3124886dc5fc528753"><div class="ttname"><a href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel</a></div><div class="ttdeci">static void xnthread_test_cancel(void)</div><div class="ttdoc">Introduce a thread cancellation point. </div><div class="ttdef"><b>Definition:</b> thread.h:403</div></div>
 <div class="ttc" id="group__cobalt__core__thread__states_html_ga44a2c7ec314961aacb1934636cb33482"><div class="ttname"><a href="group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482">XNWARN</a></div><div class="ttdeci">#define XNWARN</div><div class="ttdoc">Issue SIGDEBUG on error detection. </div><div class="ttdef"><b>Definition:</b> thread.h:46</div></div>
 <div class="ttc" id="group__cobalt__core__thread__states_html_ga7ef9d2163ec49bc03fb8cd9c75f31e84"><div class="ttname"><a href="group__cobalt__core__thread__states.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84">XNDEBUG</a></div><div class="ttdeci">#define XNDEBUG</div><div class="ttdoc">User-level debugging enabled. </div><div class="ttdef"><b>Definition:</b> thread.h:53</div></div>
 <div class="ttc" id="group__cobalt__core__registry_html_ga28aefd9be7367aa495753142005e1d5a"><div class="ttname"><a href="group__cobalt__core__registry.html#ga28aefd9be7367aa495753142005e1d5a">xnregistry_enter</a></div><div class="ttdeci">int xnregistry_enter(const char *key, void *objaddr, xnhandle_t *phandle, struct xnpnode *pnode)</div><div class="ttdoc">Register a real-time object. </div><div class="ttdef"><b>Definition:</b> registry.c:627</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gaab49f7e0bb3c3ede3d52a47ee18794bc"><div class="ttname"><a href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend</a></div><div class="ttdeci">void xnthread_suspend(struct xnthread *thread, int mask, xnticks_t timeout, xntmode_t timeout_mode, struct xnsynch *wchan)</div><div class="ttdoc">Suspend a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:844</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gaab49f7e0bb3c3ede3d52a47ee18794bc"><div class="ttname"><a href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend</a></div><div class="ttdeci">void xnthread_suspend(struct xnthread *thread, int mask, xnticks_t timeout, xntmode_t timeout_mode, struct xnsynch *wchan)</div><div class="ttdoc">Suspend a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:863</div></div>
 <div class="ttc" id="group__cobalt__core__thread__states_html_gae7835ab0a2123b72a6818c6ea3923ba0"><div class="ttname"><a href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a></div><div class="ttdeci">#define XNWEAK</div><div class="ttdoc">Non real-time shadow (from the WEAK class) </div><div class="ttdef"><b>Definition:</b> thread.h:49</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga92e19fc9deb691b7851e0f9fe21a825c"><div class="ttname"><a href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice</a></div><div class="ttdeci">int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)</div><div class="ttdoc">Set thread time-slicing information. </div><div class="ttdef"><b>Definition:</b> thread.c:1430</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga92e19fc9deb691b7851e0f9fe21a825c"><div class="ttname"><a href="group__cobalt__core__thread.html#ga92e19fc9deb691b7851e0f9fe21a825c">xnthread_set_slice</a></div><div class="ttdeci">int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)</div><div class="ttdoc">Set thread time-slicing information. </div><div class="ttdef"><b>Definition:</b> thread.c:1449</div></div>
 <div class="ttc" id="group__cobalt__core__thread__states_html_ga73d7b1a4f5a25545ff21140a0598075a"><div class="ttname"><a href="group__cobalt__core__thread__states.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a></div><div class="ttdeci">#define XNROOT</div><div class="ttdoc">Root thread (that is, Linux/IDLE) </div><div class="ttdef"><b>Definition:</b> thread.h:48</div></div>
 <div class="ttc" id="group__cobalt__core__thread_html_ga277e327d3802107ed35dc768cb01509c"><div class="ttname"><a href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current</a></div><div class="ttdeci">static struct xnthread * xnthread_current(void)</div><div class="ttdoc">Retrieve the current Cobalt core TCB. </div><div class="ttdef"><b>Definition:</b> thread.h:373</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga002449afde30d3b736ac558895ff5ab2"><div class="ttname"><a href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2">xnthread_wait_period</a></div><div class="ttdeci">int xnthread_wait_period(unsigned long *overruns_r)</div><div class="ttdoc">Wait for the next periodic release point. </div><div class="ttdef"><b>Definition:</b> thread.c:1356</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga002449afde30d3b736ac558895ff5ab2"><div class="ttname"><a href="group__cobalt__core__thread.html#ga002449afde30d3b736ac558895ff5ab2">xnthread_wait_period</a></div><div class="ttdeci">int xnthread_wait_period(unsigned long *overruns_r)</div><div class="ttdoc">Wait for the next periodic release point. </div><div class="ttdef"><b>Definition:</b> thread.c:1375</div></div>
 <div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:57</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga2ff2b4720f1a104a4f26f38da3370ba4"><div class="ttname"><a href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map</a></div><div class="ttdeci">int xnthread_map(struct xnthread *thread, struct completion *done)</div><div class="ttdoc">Create a shadow thread context over a kernel task. </div><div class="ttdef"><b>Definition:</b> thread.c:2411</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga3c57e5332785644f1dc0c95ad2ee5097"><div class="ttname"><a href="group__cobalt__core__thread.html#ga3c57e5332785644f1dc0c95ad2ee5097">xnthread_set_mode</a></div><div class="ttdeci">int xnthread_set_mode(int clrmask, int setmask)</div><div class="ttdoc">Change control mode of the current thread. </div><div class="ttdef"><b>Definition:</b> thread.c:750</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga2ff2b4720f1a104a4f26f38da3370ba4"><div class="ttname"><a href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map</a></div><div class="ttdeci">int xnthread_map(struct xnthread *thread, struct completion *done)</div><div class="ttdoc">Create a shadow thread context over a kernel task. </div><div class="ttdef"><b>Definition:</b> thread.c:2430</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga3c57e5332785644f1dc0c95ad2ee5097"><div class="ttname"><a href="group__cobalt__core__thread.html#ga3c57e5332785644f1dc0c95ad2ee5097">xnthread_set_mode</a></div><div class="ttdeci">int xnthread_set_mode(int clrmask, int setmask)</div><div class="ttdoc">Change control mode of the current thread. </div><div class="ttdef"><b>Definition:</b> thread.c:769</div></div>
 <div class="ttc" id="group__cobalt__core__registry_html_ga5dd4f5bf74fe992c7f97e3472dfe756b"><div class="ttname"><a href="group__cobalt__core__registry.html#ga5dd4f5bf74fe992c7f97e3472dfe756b">xnregistry_lookup</a></div><div class="ttdeci">static void * xnregistry_lookup(xnhandle_t handle, unsigned long *cstamp_r)</div><div class="ttdoc">Find a real-time object into the registry. </div><div class="ttdef"><b>Definition:</b> registry.h:175</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga75a7e56d8c8ea2c7462db4d7a35f228e"><div class="ttname"><a href="group__cobalt__core__thread.html#ga75a7e56d8c8ea2c7462db4d7a35f228e">xnthread_init</a></div><div class="ttdeci">int xnthread_init(struct xnthread *thread, const struct xnthread_init_attr *attr, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</div><div class="ttdoc">Initialize a new thread. </div><div class="ttdef"><b>Definition:</b> thread.c:586</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gae4cb747799fc0ac47e2a209c835f524d"><div class="ttname"><a href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden</a></div><div class="ttdeci">int xnthread_harden(void)</div><div class="ttdoc">Migrate a Linux task to the Xenomai domain. </div><div class="ttdef"><b>Definition:</b> thread.c:1887</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gad0b5bb03ce22a7ef882729d24bfe2804"><div class="ttname"><a href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic</a></div><div class="ttdeci">int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)</div><div class="ttdoc">Make a thread periodic. </div><div class="ttdef"><b>Definition:</b> thread.c:1269</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gabedfb90d24b08db04e49b168d290e032"><div class="ttname"><a href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032">xnthread_start</a></div><div class="ttdeci">int xnthread_start(struct xnthread *thread, const struct xnthread_start_attr *attr)</div><div class="ttdoc">Start a newly created thread. </div><div class="ttdef"><b>Definition:</b> thread.c:667</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga75a7e56d8c8ea2c7462db4d7a35f228e"><div class="ttname"><a href="group__cobalt__core__thread.html#ga75a7e56d8c8ea2c7462db4d7a35f228e">xnthread_init</a></div><div class="ttdeci">int xnthread_init(struct xnthread *thread, const struct xnthread_init_attr *attr, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</div><div class="ttdoc">Initialize a new thread. </div><div class="ttdef"><b>Definition:</b> thread.c:605</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gae4cb747799fc0ac47e2a209c835f524d"><div class="ttname"><a href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden</a></div><div class="ttdeci">int xnthread_harden(void)</div><div class="ttdoc">Migrate a Linux task to the Xenomai domain. </div><div class="ttdef"><b>Definition:</b> thread.c:1906</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gad0b5bb03ce22a7ef882729d24bfe2804"><div class="ttname"><a href="group__cobalt__core__thread.html#gad0b5bb03ce22a7ef882729d24bfe2804">xnthread_set_periodic</a></div><div class="ttdeci">int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)</div><div class="ttdoc">Make a thread periodic. </div><div class="ttdef"><b>Definition:</b> thread.c:1288</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gabedfb90d24b08db04e49b168d290e032"><div class="ttname"><a href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032">xnthread_start</a></div><div class="ttdeci">int xnthread_start(struct xnthread *thread, const struct xnthread_start_attr *attr)</div><div class="ttdoc">Start a newly created thread. </div><div class="ttdef"><b>Definition:</b> thread.c:686</div></div>
 <div class="ttc" id="structatomic__t_html"><div class="ttname"><a href="structatomic__t.html">atomic_t</a></div><div class="ttdoc">Copyright © 2011 Gilles Chanteperdrix gilles.chanteperdrix@xenomai.org. </div><div class="ttdef"><b>Definition:</b> atomic.h:24</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga8fe02cbf0d0cebc0ca9d9522bc58e65a"><div class="ttname"><a href="group__cobalt__core__thread.html#ga8fe02cbf0d0cebc0ca9d9522bc58e65a">xnthread_unblock</a></div><div class="ttdeci">int xnthread_unblock(struct xnthread *thread)</div><div class="ttdoc">Unblock a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1178</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga8fe02cbf0d0cebc0ca9d9522bc58e65a"><div class="ttname"><a href="group__cobalt__core__thread.html#ga8fe02cbf0d0cebc0ca9d9522bc58e65a">xnthread_unblock</a></div><div class="ttdeci">int xnthread_unblock(struct xnthread *thread)</div><div class="ttdoc">Unblock a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1197</div></div>
 <div class="ttc" id="group__cobalt__core__thread_html_gabd94ae095598618f568dec7360d3a10c"><div class="ttname"><a href="group__cobalt__core__thread.html#gabd94ae095598618f568dec7360d3a10c">xnthread_from_task</a></div><div class="ttdeci">static struct xnthread * xnthread_from_task(struct task_struct *p)</div><div class="ttdoc">Retrieve the Cobalt core TCB attached to a Linux task. </div><div class="ttdef"><b>Definition:</b> thread.h:389</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gac61d70ab94c430e8d96b455221d2fea3"><div class="ttname"><a href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join</a></div><div class="ttdeci">int xnthread_join(struct xnthread *thread, bool uninterruptible)</div><div class="ttdoc">Join with a terminated thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1575</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gafb78d40c8065b8569fafe7e24960742e"><div class="ttname"><a href="group__cobalt__core__thread.html#gafb78d40c8065b8569fafe7e24960742e">xnthread_set_schedparam</a></div><div class="ttdeci">int xnthread_set_schedparam(struct xnthread *thread, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</div><div class="ttdoc">Change the base scheduling parameters of a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1785</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_ga9321320f5f883f20a4cb411ce585f115"><div class="ttname"><a href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume</a></div><div class="ttdeci">void xnthread_resume(struct xnthread *thread, int mask)</div><div class="ttdoc">Resume a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1060</div></div>
-<div class="ttc" id="group__cobalt__core__thread_html_gae78ee27f53ae4d947b271b98748c78e9"><div class="ttname"><a href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate</a></div><div class="ttdeci">int xnthread_migrate(int cpu)</div><div class="ttdoc">Migrate the current thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1660</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gac61d70ab94c430e8d96b455221d2fea3"><div class="ttname"><a href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join</a></div><div class="ttdeci">int xnthread_join(struct xnthread *thread, bool uninterruptible)</div><div class="ttdoc">Join with a terminated thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1594</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gafb78d40c8065b8569fafe7e24960742e"><div class="ttname"><a href="group__cobalt__core__thread.html#gafb78d40c8065b8569fafe7e24960742e">xnthread_set_schedparam</a></div><div class="ttdeci">int xnthread_set_schedparam(struct xnthread *thread, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</div><div class="ttdoc">Change the base scheduling parameters of a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1804</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_ga9321320f5f883f20a4cb411ce585f115"><div class="ttname"><a href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume</a></div><div class="ttdeci">void xnthread_resume(struct xnthread *thread, int mask)</div><div class="ttdoc">Resume a thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1079</div></div>
+<div class="ttc" id="group__cobalt__core__thread_html_gae78ee27f53ae4d947b271b98748c78e9"><div class="ttname"><a href="group__cobalt__core__thread.html#gae78ee27f53ae4d947b271b98748c78e9">xnthread_migrate</a></div><div class="ttdeci">int xnthread_migrate(int cpu)</div><div class="ttdoc">Migrate the current thread. </div><div class="ttdef"><b>Definition:</b> thread.c:1679</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

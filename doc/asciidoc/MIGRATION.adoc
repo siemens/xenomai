@@ -1083,11 +1083,12 @@ interfaces were changed in an attempt to simplify it.
 struct rtnet_device *rt_alloc_etherdev(unsigned sizeof_priv, unsigned rx_pool_size);
 ------------------------------------------------------------------------------------
 
-    Any explicit call to rtskb_pool_init() can be removed. In
-    addition, drivers should now use the rtnetdev_alloc_rtskb() to
-    allocate buffers from the network device receive pool; much like
-    its counterpart netdev_alloc_skb(), it takes as first argument a
-    pointer to a network device structure. It prototype is:
+  * in consequence, any explicit call to rtskb_pool_init() can be
+    removed. In addition, drivers should now use the
+    rtnetdev_alloc_rtskb() to allocate buffers from the network device
+    receive pool; much like its counterpart netdev_alloc_skb(), it takes
+    as first argument a pointer to a network device structure. Its
+    prototype is:
 
 --------------------------------------------------------------------------------
 struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *dev, unsigned int size);

@@ -969,7 +969,19 @@ NPTL-enabled glibc releases.</p></div>
 <div class="paragraph"><p>Turn off this feature for other libc flavours.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_binding_failed_operation_not_permitted">2.3. binding failed: Operation not permitted</h3>
+<h3 id="_cobalt_core_not_enabled_in_kernel">2.3. Cobalt core not enabled in kernel</h3>
+<div class="paragraph"><p>As mentioned in the message, the target kernel is lacking Cobalt
+support.  See
+<a href="installing-xenomai-3-x/#Installing_the_Cobalt_core">this document</a>
+for detailed information about installing Cobalt.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_binding_failed_function_not_implemented">2.4. binding failed: Function not implemented</h3>
+<div class="paragraph"><p>Another symptom of the previous issue, i.e. the Cobalt core is not
+enabled in the target kernel.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_binding_failed_operation_not_permitted">2.5. binding failed: Operation not permitted</h3>
 <div class="paragraph"><p>This is the result of an attempt to run a Xenomai application as an
 unprivileged user, which fails because invoking Xenomai services
 requires <code>CAP_SYS_NICE</code>. However, you may allow a specific group of
@@ -977,11 +989,11 @@ users to access Xenomai services, by following the instructions on
 <a href="running-a-Xenomai-application-as-a-regular-user">this page</a>.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_incompatible_abi_revision_level">2.4. incompatible ABI revision level</h3>
+<h3 id="_incompatible_abi_revision_level">2.6. incompatible ABI revision level</h3>
 <div class="paragraph"><p>Same as below:</p></div>
 </div>
 <div class="sect2">
-<h3 id="_abi_mismatch">2.5. ABI mismatch</h3>
+<h3 id="_abi_mismatch">2.7. ABI mismatch</h3>
 <div class="paragraph"><p>The ABI concerned by this message is the system call binary interface
 between the Xenomai libraries and the real-time kernel services it
 invokes (e.g. <code>libcobalt</code> and the Cobalt kernel with Xenomai
@@ -1015,7 +1027,7 @@ support.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_lt_program_gt_not_found">2.6. &lt;program&gt;: not found</h3>
+<h3 id="_lt_program_gt_not_found">2.8. &lt;program&gt;: not found</h3>
 <div class="paragraph"><p>Although the program in question may be present, this message may
 happen on ARM platforms when a mismatch exists between the kernel and
 user library configurations with respect to EABI support. Typically,
@@ -1026,7 +1038,7 @@ with an EABI toolchain won&#8217;t run on a kernel not enabling the
 <code>CONFIG_AEABI</code> option.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_incompatible_feature_set">2.7. incompatible feature set</h3>
+<h3 id="_incompatible_feature_set">2.9. incompatible feature set</h3>
 <div class="paragraph"><p>When a Xenomai application starts, the set of core features it
 requires is compared to the feature set the kernel provides. This
 message denotes a mismatch between both sets, which can be solved by
@@ -1034,7 +1046,7 @@ fixing the kernel and/or user build configuration.  Further details
 are available from <a href="installing-xenomai-3-x">this page</a> for Xenomai
 3, and <a href="installing-xenomai-2-x">this page</a> for Xenomai 2.</p></div>
 <div class="sect3">
-<h4 id="_feature_mismatch_missing_smp_nosmp">2.7.1. feature mismatch: missing="smp/nosmp"</h4>
+<h4 id="_feature_mismatch_missing_smp_nosmp">2.9.1. feature mismatch: missing="smp/nosmp"</h4>
 <div class="paragraph"><p>On SMP-capable architectures, both kernel and user-space components
 (i.e. Xenomai libraries) must be compiled with the same setting with
 respect to SMP support.</p></div>
@@ -1055,10 +1067,10 @@ support enabled over a single-processor kernel is fine.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_application_level_issues_specific_to_the_xenomai_2_x_series">2.8. Application-level issues specific to the Xenomai 2.x series</h3>
+<h3 id="_application_level_issues_specific_to_the_xenomai_2_x_series">2.10. Application-level issues specific to the Xenomai 2.x series</h3>
 <div class="paragraph"><p>The following feature mismatches can be detected with the 2.x series:</p></div>
 <div class="sect3">
-<h4 id="_feature_mismatch_missing_kuser_tsc">2.8.1. feature mismatch: missing="kuser_tsc"</h4>
+<h4 id="_feature_mismatch_missing_kuser_tsc">2.10.1. feature mismatch: missing="kuser_tsc"</h4>
 <div class="paragraph"><p>See the <a href="#arm-tsc">"ARM tsc emulation issues"</a> section.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -1072,7 +1084,7 @@ architecture.</td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_feature_mismatch_missing_sep">2.8.2. feature mismatch: missing="sep"</h4>
+<h4 id="_feature_mismatch_missing_sep">2.10.2. feature mismatch: missing="sep"</h4>
 <div class="paragraph"><p>This error is specific to the x86 architecture on Xenomai 2.x, for
 pre-Pentium CPUs which do not provide the <em>sysenter/sysexit</em>
 instruction pair. See <a href="#vsyscall">this section</a>.</p></div>
@@ -1087,7 +1099,7 @@ support pre-Pentium systems in the first place.</td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_feature_mismatch_missing_tsc">2.8.3. feature mismatch: missing="tsc"</h4>
+<h4 id="_feature_mismatch_missing_tsc">2.10.3. feature mismatch: missing="tsc"</h4>
 <div class="paragraph"><p>This error is specific to the x86 architecture on Xenomai 2.x, for
 pre-Pentium CPUs which do not provide the <em>rdtsc</em> instruction. In this
 particular case, <code>--enable-x86-tsc</code> cannot be mentioned in the
@@ -1112,7 +1124,7 @@ support pre-Pentium systems in the first place.</td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="arm-tsc">2.8.4. ARM tsc emulation issues</h4>
+<h4 id="arm-tsc">2.10.4. ARM tsc emulation issues</h4>
 <div class="paragraph"><p>In order to allow applications to measure short durations with as
 little overhead as possible, Xenomai uses a 64 bits high resolution
 counter. On x86, the counter used for this purpose is the time-stamp
@@ -1176,19 +1188,19 @@ should recompile Xenomai user-space support passing the
 <code>--disable-arm-tsc</code> option.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_hardware_tsc_is_not_a_fast_wrapping_one">2.8.5. hardware tsc is not a fast wrapping one</h4>
+<h4 id="_hardware_tsc_is_not_a_fast_wrapping_one">2.10.5. hardware tsc is not a fast wrapping one</h4>
 <div class="paragraph"><p>or,</p></div>
 </div>
 <div class="sect3">
-<h4 id="_kernel_user_tsc_emulation_mismatch">2.8.6. kernel/user tsc emulation mismatch</h4>
+<h4 id="_kernel_user_tsc_emulation_mismatch">2.10.6. kernel/user tsc emulation mismatch</h4>
 <div class="paragraph"><p>or,</p></div>
 </div>
 <div class="sect3">
-<h4 id="_board_configuration_does_not_allow_tsc_emulation">2.8.7. board/configuration does not allow tsc emulation</h4>
+<h4 id="_board_configuration_does_not_allow_tsc_emulation">2.10.7. board/configuration does not allow tsc emulation</h4>
 <div class="paragraph"><p>See the <a href="#arm-tsc">"ARM tsc emulation issues"</a> section.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_native_skin_or_config_xeno_opt_pervasive_disabled">2.8.8. native skin or CONFIG_XENO_OPT_PERVASIVE disabled</h4>
+<h4 id="_native_skin_or_config_xeno_opt_pervasive_disabled">2.10.8. native skin or CONFIG_XENO_OPT_PERVASIVE disabled</h4>
 <div class="paragraph"><p>Possible reasons for this error are:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -1218,7 +1230,7 @@ on an x86_64 kernel.
 </ul></div>
 </div>
 <div class="sect3">
-<h4 id="_warning_lt_service_gt_is_deprecated_while_compiling_kernel_code">2.8.9. "warning: &lt;service&gt; is deprecated" while compiling kernel code</h4>
+<h4 id="_warning_lt_service_gt_is_deprecated_while_compiling_kernel_code">2.10.9. "warning: &lt;service&gt; is deprecated" while compiling kernel code</h4>
 <div class="paragraph"><p>Where &lt;service&gt; is a thread creation service, one of:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -1263,7 +1275,7 @@ Xenomai 3.</p></div>
 configuration, but nevertheless, you have been <strong>WARNED</strong>.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_a_xenomai_system_call_fails_with_code_38_enosys">2.8.10. a Xenomai system call fails with code -38 (ENOSYS)</h4>
+<h4 id="_a_xenomai_system_call_fails_with_code_38_enosys">2.10.10. a Xenomai system call fails with code -38 (ENOSYS)</h4>
 <div class="paragraph"><p>Possible reasons for this error are:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -1294,7 +1306,7 @@ on an x86_64 kernel.
 </ul></div>
 </div>
 <div class="sect3">
-<h4 id="_the_application_overconsumes_system_memory">2.8.11. the application overconsumes system memory</h4>
+<h4 id="_the_application_overconsumes_system_memory">2.10.11. the application overconsumes system memory</h4>
 <div class="paragraph"><p>Your user-space application unexpectedly commits a lot of virtual
 memory, as reported by "<code>top</code>" or <em>/proc/&lt;pid&gt;/maps</em>. Sometimes OOM
 situations may even appear during runtime on systems with limited
@@ -1329,7 +1341,7 @@ process inherit, as illustrated below:
 </div></div>
 </div>
 <div class="sect3">
-<h4 id="_freeze_or_machine_lockup">2.8.12. freeze or machine lockup</h4>
+<h4 id="_freeze_or_machine_lockup">2.10.12. freeze or machine lockup</h4>
 <div class="paragraph"><p>Possible reasons may be:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -1467,7 +1479,7 @@ allocation requests.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-10-07 11:08:43 CEST
+Last updated 2015-11-01 18:38:48 CET
 </div>
 </div>
 </body>

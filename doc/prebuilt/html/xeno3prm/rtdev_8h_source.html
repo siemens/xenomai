@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0</span>
+   &#160;<span id="projectnumber">3.0.1</span>
    </div>
   </td>
  </tr>
@@ -212,7 +212,7 @@ $(document).ready(function(){initNavTree('rtdev_8h_source.html','');});
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>        add_rtskbs; <span class="comment">/* additionally allocated global rtskbs */</span></div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keyword">struct </span>rtskb_pool   rx_pool;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keyword">struct </span>rtskb_pool   dev_pool;</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="comment">/* RTmac related fields */</span></div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keyword">struct </span>rtmac_disc   *mac_disc;</div>
@@ -271,7 +271,7 @@ $(document).ready(function(){initNavTree('rtdev_8h_source.html','');});
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;</div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="keyword">struct </span>rtnet_device *__rt_alloc_etherdev(<span class="keywordtype">unsigned</span> sizeof_priv,</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                                        <span class="keywordtype">unsigned</span> rx_pool_size,</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                                        <span class="keywordtype">unsigned</span> dev_pool_size,</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                                        <span class="keyword">struct</span> module *module);</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="preprocessor">#define rt_alloc_etherdev(priv_size, rx_size) \</span></div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="preprocessor">    __rt_alloc_etherdev(priv_size, rx_size, THIS_MODULE)</span></div>

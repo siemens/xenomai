@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0</span>
+   &#160;<span id="projectnumber">3.0.1</span>
    </div>
   </td>
  </tr>
@@ -337,7 +337,7 @@ $(document).ready(function(){initNavTree('rtwlan_8h_source.html','');});
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keywordflow">return</span> (<span class="keywordtype">void</span> *)rtwlan_dev + <span class="keyword">sizeof</span>(<span class="keyword">struct </span>rtwlan_device);</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;}</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="keyword">struct </span>rtnet_device * rtwlan_alloc_dev(<span class="keywordtype">unsigned</span> sizeof_priv, <span class="keywordtype">unsigned</span> rx_pool_size);</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="keyword">struct </span>rtnet_device * rtwlan_alloc_dev(<span class="keywordtype">unsigned</span> sizeof_priv, <span class="keywordtype">unsigned</span> dev_pool_size);</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="keywordtype">int</span> rtwlan_rx(<span class="keyword">struct</span> rtskb * rtskb, <span class="keyword">struct</span> rtnet_device * rtnet_dev);</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="keywordtype">int</span> rtwlan_tx(<span class="keyword">struct</span> rtskb * rtskb, <span class="keyword">struct</span> rtnet_device * rtnet_dev);</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;</div>

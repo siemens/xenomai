@@ -14,3 +14,12 @@ specific
 link:troubleshooting-a-dual-kernel-configuration/[troubleshooting information here].
 
 *No entry yet.*
+
+== Application-level issues
+
+=== WARNING: [main] failed to lock memory
+
+Your application needs the CAP_SYS_NICE and CAP_IPC_LOCK capabilities
+to be granted access to Xenomai services (see
+capabilities(7)). Running the application with root privileges is a
+way to gain those capabilities.

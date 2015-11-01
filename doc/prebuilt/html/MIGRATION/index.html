@@ -1006,10 +1006,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-3.0. Functionally speaking, only the former <em>master</em> time base
+3.0.1. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 3.0 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 3.0.1 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -2187,14 +2187,18 @@ per-driver skb receive pools were removed from drivers, they are
 <div class="content">
 <pre><code>struct rtnet_device *rt_alloc_etherdev(unsigned sizeof_priv, unsigned rx_pool_size);</code></pre>
 </div></div>
-<div class="literalblock">
-<div class="content">
-<pre><code>Any explicit call to rtskb_pool_init() can be removed. In
-addition, drivers should now use the rtnetdev_alloc_rtskb() to
-allocate buffers from the network device receive pool; much like
-its counterpart netdev_alloc_skb(), it takes as first argument a
-pointer to a network device structure. It prototype is:</code></pre>
-</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+in consequence, any explicit call to rtskb_pool_init() can be
+    removed. In addition, drivers should now use the
+    rtnetdev_alloc_rtskb() to allocate buffers from the network device
+    receive pool; much like its counterpart netdev_alloc_skb(), it takes
+    as first argument a pointer to a network device structure. Its
+    prototype is:
+</p>
+</li>
+</ul></div>
 <div class="listingblock">
 <div class="content">
 <pre><code>struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *dev, unsigned int size);</code></pre>
@@ -3470,7 +3474,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-10-07 11:08:43 CEST
+Last updated 2015-11-01 18:38:48 CET
 </div>
 </div>
 </body>
