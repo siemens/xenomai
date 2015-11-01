@@ -114,7 +114,7 @@ static int run_tsc(struct smokey_test *t, int argc, char *const argv[])
 		min = (secs + 59) / 60;
 		secs = min * 60;
 	} else
-		secs = 60;
+		secs = 15;
 	min = secs / 60;
 	smokey_trace("Checking tsc for %u minute(s)", min);
 
