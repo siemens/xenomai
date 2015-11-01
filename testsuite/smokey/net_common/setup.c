@@ -251,14 +251,9 @@ static int find_peer(const char *intf, void *vpeer)
 
 	for(;;) {
 		err = fscanf(f, "%s\t%s\t%s\t%s\n", hash, dest, mac, dev);
-		if (err == 0) {
+		if (err == EOF) {
 			smokey_warning("No peer found\n");
 			err = -ENOENT;
-			goto err;
-		}
-		if (err < 0) {
-			err = -errno;
-			smokey_warning("fscanf: %s", strerror(-err));
 			goto err;
 		}
 		if (err < 4) {

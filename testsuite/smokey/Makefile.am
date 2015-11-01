@@ -11,6 +11,7 @@ COBALT_SUBDIRS = 	\
 	iddp		\
 	leaks		\
 	net_packet_dgram\
+	net_packet_raw	\
 	net_udp		\
 	net_common	\
 	posix-clock	\

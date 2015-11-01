@@ -893,6 +893,7 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/leaks/Makefile \
 	testsuite/smokey/net_udp/Makefile \
 	testsuite/smokey/net_packet_dgram/Makefile \
+	testsuite/smokey/net_packet_raw/Makefile \
 	testsuite/smokey/net_common/Makefile \
 	testsuite/clocktest/Makefile \
 	testsuite/xeno-test/Makefile \
