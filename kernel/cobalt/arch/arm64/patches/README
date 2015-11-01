@@ -1,0 +1,16 @@
+-- arch/arm64/patches
+
+Xenomai needs special kernel support to deliver fast and deterministic
+response time to external interrupts, and also to provide real-time
+services highly integrated with the standard Linux kernel.
+
+This support is provided by the interrupt pipeline (aka I-pipe) in the
+form of a kernel patch you have to apply against a vanilla kernel
+tree, before you attempt to compile the Xenomai codebase against the
+latter kernel.
+
+The Xenomai arm64 port is work in progress. The I-pipe support for
+this architecture is exclusively available from this development tree
+at the moment:
+
+git://git.xenomai.org/ipipe.git, branch devel/ipipe-3.18-linaro-arm64.
