@@ -273,7 +273,8 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
         if (rtdev == NULL)
             return -ENODEV;
         strlcpy(ifr->ifr_name, rtdev->name, IFNAMSIZ);
-        return 0;
+	ret = 0;
+	goto out;
     }
 
     rtdev = rtdev_get_by_name(ifr->ifr_name);
@@ -312,6 +313,7 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
 	    break;
     }
 
+  out:
     rtdev_dereference(rtdev);
     return ret;
 }
