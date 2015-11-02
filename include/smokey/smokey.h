@@ -18,6 +18,7 @@
 #ifndef _XENOMAI_SMOKEY_SMOKEY_H
 #define _XENOMAI_SMOKEY_SMOKEY_H
 
+#include <stdarg.h>
 #include <boilerplate/list.h>
 #include <boilerplate/libc.h>
 #include <copperplate/clockobj.h>
@@ -149,6 +150,8 @@ struct smokey_arg *smokey_lookup_arg(struct smokey_test *t,
 int smokey_parse_args(struct smokey_test *t,
 		      int argc, char *const argv[]);
 
+void smokey_vatrace(const char *fmt, va_list ap);
+  
 void smokey_trace(const char *fmt, ...);
 
 void smokey_note(const char *fmt, ...);
