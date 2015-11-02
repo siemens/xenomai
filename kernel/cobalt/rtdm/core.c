@@ -775,7 +775,7 @@ ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
+ssize_t rtdm_recvmsg(int fd, struct user_msghdr *msg, int flags);
 
 /**
  * @brief Receive message from socket
@@ -809,7 +809,7 @@ ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_sendmsg(int fd, const struct user_msghdr *msg, int flags);
 
 /**
  * @brief Transmit message to socket
@@ -1080,7 +1080,7 @@ ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
+ssize_t rtdm_recvmsg(int fd, struct user_msghdr *msg, int flags);
 
 /**
  * @brief Receive message from socket
@@ -1142,7 +1142,7 @@ ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
  *
  * @coretags{mode-unrestricted, might-switch}
  */
-ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_sendmsg(int fd, const struct user_msghdr *msg, int flags);
 
 /**
  * @brief Transmit message to socket

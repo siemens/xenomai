@@ -22,6 +22,7 @@
 
 #include <linux/compat.h>
 #include <net/compat.h>
+#include <asm/xenomai/wrappers.h>
 #include <cobalt/uapi/sched.h>
 
 struct mq_attr;
@@ -135,11 +136,11 @@ int sys32_get_sigval(union sigval *val, const union compat_sigval *u_cval);
 int sys32_put_siginfo(void __user *u_si, const struct siginfo *si,
 		      int overrun);
 
-int sys32_get_msghdr(struct msghdr *msg,
+int sys32_get_msghdr(struct user_msghdr *msg,
 		     const struct compat_msghdr __user *u_cmsg);
 
 int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
-		     const struct msghdr *msg);
+		     const struct user_msghdr *msg);
 
 int sys32_get_iovec(struct iovec *iov,
 		    const struct compat_iovec __user *ciov,

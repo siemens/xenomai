@@ -77,9 +77,9 @@ COBALT_SYSCALL(write, probing,
 }
 
 COBALT_SYSCALL(recvmsg, probing,
-	       (int fd, struct msghdr __user *umsg, int flags))
+	       (int fd, struct user_msghdr __user *umsg, int flags))
 {
-	struct msghdr m;
+	struct user_msghdr m;
 	ssize_t ret;
 
 	ret = cobalt_copy_from_user(&m, umsg, sizeof(m));
@@ -94,9 +94,9 @@ COBALT_SYSCALL(recvmsg, probing,
 }
 
 COBALT_SYSCALL(sendmsg, probing,
-	       (int fd, struct msghdr __user *umsg, int flags))
+	       (int fd, struct user_msghdr __user *umsg, int flags))
 {
-	struct msghdr m;
+	struct user_msghdr m;
 	int ret;
 
 	ret = cobalt_copy_from_user(&m, umsg, sizeof(m));

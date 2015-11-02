@@ -337,7 +337,7 @@ int sys32_put_siginfo(void __user *u_si, const struct siginfo *si,
 }
 EXPORT_SYMBOL_GPL(sys32_put_siginfo);
 
-int sys32_get_msghdr(struct msghdr *msg,
+int sys32_get_msghdr(struct user_msghdr *msg,
 		     const struct compat_msghdr __user *u_cmsg)
 {
 	compat_uptr_t tmp1, tmp2, tmp3;
@@ -365,7 +365,7 @@ int sys32_get_msghdr(struct msghdr *msg,
 EXPORT_SYMBOL_GPL(sys32_get_msghdr);
 
 int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
-		     const struct msghdr *msg)
+		     const struct user_msghdr *msg)
 {
 	if (u_cmsg == NULL ||
 	    !access_wok(u_cmsg, sizeof(*u_cmsg)) ||

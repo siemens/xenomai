@@ -47,9 +47,9 @@ struct rtipc_protocol {
 		int (*socket)(struct rtdm_fd *fd);
 		void (*close)(struct rtdm_fd *fd);
 		ssize_t (*recvmsg)(struct rtdm_fd *fd,
-				   struct msghdr *msg, int flags);
+				   struct user_msghdr *msg, int flags);
 		ssize_t (*sendmsg)(struct rtdm_fd *fd,
-				   const struct msghdr *msg, int flags);
+				   const struct user_msghdr *msg, int flags);
 		ssize_t (*read)(struct rtdm_fd *fd,
 				void *buf, size_t len);
 		ssize_t (*write)(struct rtdm_fd *fd,
@@ -85,10 +85,10 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 }
 
 int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
-		    const struct msghdr *msg);
+		    const struct user_msghdr *msg);
 
 int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
-		    const struct msghdr *msg);
+		    const struct user_msghdr *msg);
 
 int rtipc_get_sockaddr(struct rtdm_fd *fd,
 		       struct sockaddr_ipc **saddrp,

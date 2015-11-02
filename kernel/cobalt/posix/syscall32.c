@@ -770,7 +770,7 @@ COBALT_SYSCALL32emu(recvmsg, probing,
 		    (int fd, struct compat_msghdr __user *umsg,
 		     int flags))
 {
-	struct msghdr m;
+	struct user_msghdr m;
 	ssize_t ret;
 
 	ret = sys32_get_msghdr(&m, umsg);
@@ -787,7 +787,7 @@ COBALT_SYSCALL32emu(recvmsg, probing,
 COBALT_SYSCALL32emu(sendmsg, probing,
 		    (int fd, struct compat_msghdr __user *umsg, int flags))
 {
-	struct msghdr m;
+	struct user_msghdr m;
 	int ret;
 
 	ret = sys32_get_msghdr(&m, umsg);

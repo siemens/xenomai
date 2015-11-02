@@ -502,7 +502,7 @@ ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_write);
 
-ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags)
+ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;
@@ -534,7 +534,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_recvmsg);
 
-ssize_t rtdm_fd_sendmsg(int ufd, const struct msghdr *msg, int flags)
+ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
 	ssize_t err;

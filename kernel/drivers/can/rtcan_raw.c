@@ -527,7 +527,7 @@ do {									\
 } while (0)
 
 ssize_t rtcan_raw_recvmsg(struct rtdm_fd *fd,
-			  struct msghdr *msg, int flags)
+			  struct user_msghdr *msg, int flags)
 {
     struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     struct sockaddr_can scan;
@@ -763,7 +763,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_fd *fd,
 
 
 ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
-			  const struct msghdr *msg, int flags)
+			  const struct user_msghdr *msg, int flags)
 {
     struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     struct sockaddr_can *scan = (struct sockaddr_can *)msg->msg_name;

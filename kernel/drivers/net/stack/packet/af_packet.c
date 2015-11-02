@@ -281,7 +281,7 @@ static int rt_packet_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
  *  rt_packet_recvmsg
  */
 static ssize_t
-rt_packet_recvmsg(struct rtdm_fd *fd, struct msghdr *msg, int msg_flags)
+rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int msg_flags)
 {
     struct rtsocket     *sock = rtdm_fd_to_private(fd);
     size_t              len   = rt_iovec_len(msg->msg_iov, msg->msg_iovlen);
@@ -360,7 +360,7 @@ rt_packet_recvmsg(struct rtdm_fd *fd, struct msghdr *msg, int msg_flags)
  *  rt_packet_sendmsg
  */
 static ssize_t
-rt_packet_sendmsg(struct rtdm_fd *fd, const struct msghdr *msg, int msg_flags)
+rt_packet_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int msg_flags)
 {
     struct rtsocket     *sock = rtdm_fd_to_private(fd);
     size_t              len   = rt_iovec_len(msg->msg_iov, msg->msg_iovlen);

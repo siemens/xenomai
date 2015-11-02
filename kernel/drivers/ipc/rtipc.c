@@ -64,7 +64,7 @@ int rtipc_put_arg(struct rtdm_fd *fd, void *dst, const void *src, size_t len)
 }
 
 int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
-		    const struct msghdr *msg)
+		    const struct user_msghdr *msg)
 {
 	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
 
@@ -84,7 +84,7 @@ int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
 }
 
 int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
-		    const struct msghdr *msg)
+		    const struct user_msghdr *msg)
 {
 	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
 
@@ -437,14 +437,14 @@ static void rtipc_close(struct rtdm_fd *fd)
 }
 
 static ssize_t rtipc_recvmsg(struct rtdm_fd *fd,
-			     struct msghdr *msg, int flags)
+			     struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	return priv->proto->proto_ops.recvmsg(fd, msg, flags);
 }
 
 static ssize_t rtipc_sendmsg(struct rtdm_fd *fd,
-			     const struct msghdr *msg, int flags)
+			     const struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	return priv->proto->proto_ops.sendmsg(fd, msg, flags);

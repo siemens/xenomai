@@ -49,10 +49,10 @@ COBALT_SYSCALL_DECL(write,
 		    (int fd, const void __user *buf, size_t size));
 
 COBALT_SYSCALL_DECL(recvmsg,
-		    (int fd, struct msghdr __user *umsg, int flags));
+		    (int fd, struct user_msghdr __user *umsg, int flags));
 
 COBALT_SYSCALL_DECL(sendmsg,
-		    (int fd, struct msghdr __user *umsg, int flags));
+		    (int fd, struct user_msghdr __user *umsg, int flags));
 
 COBALT_SYSCALL_DECL(mmap,
 		    (int fd, struct _rtdm_mmap_request __user *u_rma,

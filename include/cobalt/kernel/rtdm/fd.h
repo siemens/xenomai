@@ -143,7 +143,7 @@ ssize_t rtdm_write_handler(struct rtdm_fd *fd, const void __user *buf, size_t si
  * @see @c recvmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-ssize_t rtdm_recvmsg_handler(struct rtdm_fd *fd, struct msghdr *msg, int flags);
+ssize_t rtdm_recvmsg_handler(struct rtdm_fd *fd, struct user_msghdr *msg, int flags);
 
 /**
  * Transmit message handler
@@ -160,7 +160,7 @@ ssize_t rtdm_recvmsg_handler(struct rtdm_fd *fd, struct msghdr *msg, int flags);
  * @see @c sendmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-ssize_t rtdm_sendmsg_handler(struct rtdm_fd *fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_sendmsg_handler(struct rtdm_fd *fd, const struct user_msghdr *msg, int flags);
 
 /**
  * Select handler
@@ -267,16 +267,16 @@ struct rtdm_fd_ops {
 			     const void __user *buf, size_t size);
 	/** See rtdm_recvmsg_handler(). */
 	ssize_t (*recvmsg_rt)(struct rtdm_fd *fd,
-			      struct msghdr *msg, int flags);
+			      struct user_msghdr *msg, int flags);
 	/** See rtdm_recvmsg_handler(). */
 	ssize_t (*recvmsg_nrt)(struct rtdm_fd *fd,
-			       struct msghdr *msg, int flags);
+			       struct user_msghdr *msg, int flags);
 	/** See rtdm_sendmsg_handler(). */
 	ssize_t (*sendmsg_rt)(struct rtdm_fd *fd,
-			      const struct msghdr *msg, int flags);
+			      const struct user_msghdr *msg, int flags);
 	/** See rtdm_sendmsg_handler(). */
 	ssize_t (*sendmsg_nrt)(struct rtdm_fd *fd,
-			       const struct msghdr *msg, int flags);
+			       const struct user_msghdr *msg, int flags);
 	/** See rtdm_select_handler(). */
 	int (*select)(struct rtdm_fd *fd,
 		      struct xnselector *selector,
@@ -363,9 +363,9 @@ ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size);
 
 int rtdm_fd_close(int ufd, unsigned int magic);
 
-ssize_t rtdm_fd_recvmsg(int ufd, struct msghdr *msg, int flags);
+ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags);
 
-ssize_t rtdm_fd_sendmsg(int ufd, const struct msghdr *msg,
+ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg,
 			int flags);
 
 int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,

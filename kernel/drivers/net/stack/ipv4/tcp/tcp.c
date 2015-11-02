@@ -2037,7 +2037,7 @@ static ssize_t rt_tcp_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
 /***
  *  rt_tcp_recvmsg
  */
-static ssize_t rt_tcp_recvmsg(struct rtdm_fd *fd, struct msghdr *msg, int msg_flags)
+static ssize_t rt_tcp_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int msg_flags)
 {
     size_t len;
     void *buf;
@@ -2059,7 +2059,7 @@ static ssize_t rt_tcp_recvmsg(struct rtdm_fd *fd, struct msghdr *msg, int msg_fl
  *  rt_tcp_sendmsg
  */
 static ssize_t rt_tcp_sendmsg(struct rtdm_fd *fd,
-			      const struct msghdr *msg, int msg_flags)
+			      const struct user_msghdr *msg, int msg_flags)
 {
     size_t len;
     void *buf;

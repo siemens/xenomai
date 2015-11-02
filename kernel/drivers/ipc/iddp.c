@@ -325,7 +325,7 @@ static ssize_t __iddp_recvmsg(struct rtdm_fd *fd,
 }
 
 static ssize_t iddp_recvmsg(struct rtdm_fd *fd,
-			    struct msghdr *msg, int flags)
+			    struct user_msghdr *msg, int flags)
 {
 	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc saddr;
@@ -466,7 +466,7 @@ fail:
 }
 
 static ssize_t iddp_sendmsg(struct rtdm_fd *fd,
-			    const struct msghdr *msg, int flags)
+			    const struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct iddp_socket *sk = priv->state;

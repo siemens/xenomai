@@ -68,12 +68,12 @@ static inline ssize_t rtdm_write(int fd, const void *buf, size_t count)
 	return rtdm_fd_write(fd, buf, count);
 }
 
-static inline ssize_t rtdm_recvmsg(int s, struct msghdr *msg, int flags)
+static inline ssize_t rtdm_recvmsg(int s, struct user_msghdr *msg, int flags)
 {
 	return rtdm_fd_recvmsg(s, msg, flags);
 }
 
-static inline ssize_t rtdm_sendmsg(int s, const struct msghdr *msg, int flags)
+static inline ssize_t rtdm_sendmsg(int s, const struct user_msghdr *msg, int flags)
 {
 	return rtdm_fd_sendmsg(s, msg, flags);
 }
@@ -83,7 +83,7 @@ ssize_t rtdm_recvfrom(int s, void *buf, size_t len, int flags,
 		      struct sockaddr *from,
 		      socklen_t *fromlen)
 {
-	struct msghdr msg;
+	struct user_msghdr msg;
 	struct iovec iov;
 	ssize_t ret;
 
@@ -115,7 +115,7 @@ static inline ssize_t rtdm_sendto(int s, const void *buf, size_t len,
 				  int flags, const struct sockaddr *to,
 				  socklen_t tolen)
 {
-	struct msghdr msg;
+	struct user_msghdr msg;
 	struct iovec iov;
 
 	iov.iov_base = (void *)buf;
