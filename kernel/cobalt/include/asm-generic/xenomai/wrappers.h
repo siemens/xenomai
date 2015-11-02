@@ -130,4 +130,8 @@ trace_seq_buffer_ptr(struct trace_seq *s)
 #define user_msghdr msghdr
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,19,0)
+#define user_msghdr msghdr
+#endif
+
 #endif /* _COBALT_ASM_GENERIC_WRAPPERS_H */
