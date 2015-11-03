@@ -92,7 +92,7 @@ DECLARE_EVENT_CLASS(syscall_exit,
 
 #define cobalt_print_sched_params(__policy, __p_ex)			\
 ({									\
-  	const char *__ret = p->buffer + p->len;				\
+	const unsigned char *__ret = trace_seq_buffer_ptr(p);		\
 	switch (__policy) {						\
 	case SCHED_QUOTA:						\
 		trace_seq_printf(p, "priority=%d, group=%d",		\

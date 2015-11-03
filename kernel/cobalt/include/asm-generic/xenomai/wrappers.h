@@ -116,6 +116,16 @@ devm_hwmon_device_register_with_groups(struct device *dev, const char *name,
 #error "Xenomai/cobalt requires Linux kernel 3.10 or above"
 #endif /* < 3.10 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+#include <linux/trace_seq.h>
+ 
+static inline unsigned char *
+trace_seq_buffer_ptr(struct trace_seq *s)
+{
+	return s->buffer + s->len;
+}
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,19,0)
 #define user_msghdr msghdr
 #endif
