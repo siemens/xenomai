@@ -19,6 +19,40 @@
 #include <linux/hwmon.h>
 #include <asm/xenomai/wrappers.h>
 
+/*
+ * Same rules as kernel/cobalt/include/asm-generic/xenomai/wrappers.h
+ * apply to reduce #ifdefery.
+ */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
+#ifdef CONFIG_PCI_MSI
+int pci_enable_msix_range(struct pci_dev *dev,
+			struct msix_entry *entries,
+			int minvec, int maxvec)
+{
+	int nvec = maxvec;
+	int rc;
+
+	if (maxvec < minvec)
+		return -ERANGE;
+
+	do {
+		rc = pci_enable_msix(dev, entries, nvec);
+		if (rc < 0) {
+			return rc;
+		} else if (rc > 0) {
+			if (rc < minvec)
+				return -ENOSPC;
+			nvec = rc;
+		}
+	} while (rc);
+
+	return nvec;
+}
+EXPORT_SYMBOL(pci_enable_msix_range);
+#endif
+#endif /* < 3.14 */
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
 #ifdef CONFIG_HWMON
 struct device*
@@ -70,32 +104,3 @@ error:
 EXPORT_SYMBOL_GPL(devm_hwmon_device_register_with_groups);
 #endif
 #endif /* < 3.13 */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
-#ifdef CONFIG_PCI_MSI
-int pci_enable_msix_range(struct pci_dev *dev,
-			struct msix_entry *entries,
-			int minvec, int maxvec)
-{
-	int nvec = maxvec;
-	int rc;
-
-	if (maxvec < minvec)
-		return -ERANGE;
-
-	do {
-		rc = pci_enable_msix(dev, entries, nvec);
-		if (rc < 0) {
-			return rc;
-		} else if (rc > 0) {
-			if (rc < minvec)
-				return -ENOSPC;
-			nvec = rc;
-		}
-	} while (rc);
-
-	return nvec;
-}
-EXPORT_SYMBOL(pci_enable_msix_range);
-#endif
-#endif /* < 3.14 */
