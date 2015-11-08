@@ -299,9 +299,11 @@ static int e1000_subqueue_xmit_frame(struct sk_buff *skb,
 				     struct net_device *netdev, int queue);
 #endif
 static void e1000_phy_read_status(struct e1000_adapter *adapter);
+#if 0
 static struct net_device_stats * e1000_get_stats(struct net_device *netdev);
 static int e1000_change_mtu(struct net_device *netdev, int new_mtu);
 static int e1000_set_mac(struct net_device *netdev, void *p);
+#endif
 static int  e1000_intr(rtdm_irq_t *irq_handle);
 static int e1000_intr_msi(rtdm_irq_t *irq_handle);
 static bool e1000_clean_tx_irq(struct e1000_adapter *adapter,
@@ -334,14 +336,16 @@ static void e1000_alloc_rx_buffers(struct e1000_adapter *adapter,
 static void e1000_alloc_rx_buffers_ps(struct e1000_adapter *adapter,
 				      struct e1000_rx_ring *rx_ring,
 				      int cleaned_count);
+#if 0
 static int e1000_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd);
 #ifdef SIOCGMIIPHY
 static int e1000_mii_ioctl(struct net_device *netdev, struct ifreq *ifr,
 			   int cmd);
-#endif
 static void e1000_enter_82542_rst(struct e1000_adapter *adapter);
 static void e1000_leave_82542_rst(struct e1000_adapter *adapter);
 static void e1000_tx_timeout(struct net_device *dev);
+#endif
+#endif
 static void e1000_reset_task(struct work_struct *work);
 static void e1000_smartspeed(struct e1000_adapter *adapter);
 static int e1000_82547_fifo_workaround(struct e1000_adapter *adapter,
@@ -2795,6 +2799,7 @@ static void e1000_clean_all_rx_rings(struct e1000_adapter *adapter)
 /* The 82542 2.0 (revision 2) needs to have the receive unit in reset
  * and memory write and invalidate disabled for certain operations
  */
+#if 0
 static void e1000_enter_82542_rst(struct e1000_adapter *adapter)
 {
 	struct net_device *netdev = adapter->netdev;
@@ -2891,6 +2896,7 @@ static int e1000_set_mac(struct net_device *netdev, void *p)
 
 	return 0;
 }
+#endif
 
 /**
  * e1000_set_multi - Multicast and Promiscuous mode set
@@ -3253,6 +3259,7 @@ enum latency_range {
  *      this functionality is controlled by the InterruptThrottleRate module
  *      parameter (see e1000_param.c)
  **/
+#if 0
 static unsigned int e1000_update_itr(struct e1000_adapter *adapter,
 				     u16 itr_setting, int packets,
 				     int bytes)
@@ -3304,6 +3311,7 @@ static unsigned int e1000_update_itr(struct e1000_adapter *adapter,
 update_itr_done:
 	return retval;
 }
+#endif
 
 static void e1000_set_itr(struct e1000_adapter *adapter)
 {
@@ -3955,6 +3963,7 @@ static int e1000_subqueue_xmit_frame(struct sk_buff *skb,
  * e1000_tx_timeout - Respond to a Tx Hang
  * @netdev: network interface device structure
  **/
+#if 0
 static void e1000_tx_timeout(struct net_device *netdev)
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
@@ -3963,6 +3972,7 @@ static void e1000_tx_timeout(struct net_device *netdev)
 	adapter->tx_timeout_count++;
 	schedule_work(&adapter->reset_task);
 }
+#endif
 
 static void e1000_reset_task(struct work_struct *work)
 {
@@ -3972,6 +3982,7 @@ static void e1000_reset_task(struct work_struct *work)
 	e1000_reinit_locked(adapter);
 }
 
+#if 0
 /**
  * e1000_get_stats - Get System Network Statistics
  * @netdev: network interface device structure
@@ -4107,6 +4118,7 @@ static int e1000_change_mtu(struct net_device *netdev, int new_mtu)
 
 	return 0;
 }
+#endif
 
 /**
  * e1000_update_stats - Update the board statistics counters
@@ -5508,6 +5520,7 @@ static void e1000_smartspeed(struct e1000_adapter *adapter)
  * @ifreq:
  * @cmd:
  **/
+#if 0
 static int e1000_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd)
 {
 	switch (cmd) {
@@ -5590,6 +5603,7 @@ static int e1000_mii_ioctl(struct net_device *netdev, struct ifreq *ifr,
 	}
 	return E1000_SUCCESS;
 }
+#endif
 #endif
 
 void e1000_pci_set_mwi(struct e1000_hw *hw)

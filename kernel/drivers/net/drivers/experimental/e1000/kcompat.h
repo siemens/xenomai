@@ -125,13 +125,7 @@
 #ifdef DISABLE_PCI_MSI
 #undef CONFIG_PCI_MSI
 #endif
-#ifndef CONFIG_PCI_MSI
-#define pci_enable_msi(a) -ENOTSUPP
-#define pci_disable_msi(a) do {} while (0)
-#define pci_enable_msix(a, b, c) -ENOTSUPP
-#define pci_disable_msix(a) do {} while (0)
-#define msi_remove_pci_irq_vectors(a) do {} while (0)
-#endif /* CONFIG_PCI_MSI */
+
 #ifdef DISABLE_PM
 #undef CONFIG_PM
 #endif
