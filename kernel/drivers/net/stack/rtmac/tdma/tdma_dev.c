@@ -47,30 +47,33 @@ static int tdma_dev_open(struct rtdm_fd *fd, int oflags)
 static void tdma_dev_close(struct rtdm_fd *fd)
 {
     struct tdma_dev_ctx *ctx = rtdm_fd_to_private(fd);
+    rtdm_lockctx_t lock_ctx;
 
 
-    RTDM_EXECUTE_ATOMICALLY(
-	if (ctx->cycle_waiter)
-	    rtdm_task_unblock(ctx->cycle_waiter);
-			    );
+    cobalt_atomic_enter(lock_ctx);
+    if (ctx->cycle_waiter)
+	rtdm_task_unblock(ctx->cycle_waiter);
+    cobalt_atomic_leave(lock_ctx);
 }
 
 
 static int wait_on_sync(struct tdma_dev_ctx *tdma_ctx,
 			rtdm_event_t *sync_event)
 {
+    rtdm_lockctx_t lock_ctx;
     int ret;
 
 
-    RTDM_EXECUTE_ATOMICALLY(
-	/* keep it simple: only one waiter per device instance allowed */
-	if (!tdma_ctx->cycle_waiter) {
-	    tdma_ctx->cycle_waiter = rtdm_task_current();
-	    ret = rtdm_event_wait(sync_event);
-	    tdma_ctx->cycle_waiter = NULL;
-	} else
-	    ret = -EBUSY;
-			    );
+    cobalt_atomic_enter(lock_ctx);
+    /* keep it simple: only one waiter per device instance allowed */
+    if (!tdma_ctx->cycle_waiter) {
+	tdma_ctx->cycle_waiter = rtdm_task_current();
+	ret = rtdm_event_wait(sync_event);
+	tdma_ctx->cycle_waiter = NULL;
+    } else
+	ret = -EBUSY;
+    cobalt_atomic_leave(lock_ctx);
+
     return ret;
 }
 
