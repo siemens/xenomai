@@ -339,10 +339,10 @@ static int __init xenomai_init(void)
 	}
 
 #ifdef CONFIG_SMP
-	cpus_clear(xnsched_realtime_cpus);
+	cpumask_clear(&xnsched_realtime_cpus);
 	for_each_online_cpu(cpu) {
 		if (supported_cpus_arg & (1UL << cpu))
-			cpu_set(cpu, xnsched_realtime_cpus);
+			cpumask_set_cpu(cpu, &xnsched_realtime_cpus);
 	}
 	if (cpumask_empty(&xnsched_realtime_cpus)) {
 		printk(XENO_WARNING "disabled via empty real-time CPU mask\n");

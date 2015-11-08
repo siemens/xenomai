@@ -492,10 +492,10 @@ static int rtswitch_create_ktask(struct rtswitch_context *ctx,
 	iattr.name = name;
 	iattr.flags = init_flags;
 	iattr.personality = &xenomai_personality;
-	iattr.affinity = cpumask_of_cpu(ctx->cpu);
+	iattr.affinity = *cpumask_of(ctx->cpu);
 	param.rt.prio = 1;
 
-	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
+	set_cpus_allowed(current, *cpumask_of(ctx->cpu));
 
 	err = xnthread_init(&task->ktask,
 			    &iattr, &xnsched_class_rt, &param);
@@ -550,7 +550,7 @@ static void rtswitch_close(struct rtdm_fd *fd)
 	unsigned int i;
 
 	if (ctx->tasks) {
-		set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
+		set_cpus_allowed(current, *cpumask_of(ctx->cpu));
 
 		for (i = 0; i < ctx->next_index; i++) {
 			struct rtswitch_task *task = &ctx->tasks[i];

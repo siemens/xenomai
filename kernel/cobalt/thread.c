@@ -175,7 +175,7 @@ int __xnthread_init(struct xnthread *thread,
 		flags |= XNDEBUG;
 
 	thread->personality = attr->personality;
-	cpus_and(thread->affinity, attr->affinity, cobalt_cpu_affinity);
+	cpumask_and(&thread->affinity, &attr->affinity, &cobalt_cpu_affinity);
 	thread->sched = sched;
 	thread->state = flags;
 	thread->info = 0;
@@ -620,11 +620,11 @@ int xnthread_init(struct xnthread *thread,
 	 * affinity mask, and therefore also part of the supported
 	 * CPUs. This CPU may change in pin_to_initial_cpu().
 	 */
-	cpus_and(affinity, attr->affinity, cobalt_cpu_affinity);
-	if (cpus_empty(affinity))
+	cpumask_and(&affinity, &attr->affinity, &cobalt_cpu_affinity);
+	if (cpumask_empty(&affinity))
 		return -EINVAL;
 
-	sched = xnsched_struct(first_cpu(affinity));
+	sched = xnsched_struct(cpumask_first(&affinity));
 
 	ret = __xnthread_init(thread, attr, sched, sched_class, sched_param);
 	if (ret)
@@ -1691,7 +1691,7 @@ int xnthread_migrate(int cpu)
 		goto unlock_and_exit;
 	}
 
-	if (!cpu_isset(cpu, curr->affinity)) {
+	if (!cpumask_test_cpu(cpu, &curr->affinity)) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
@@ -2087,7 +2087,7 @@ void xnthread_relax(int notify, int reason)
 	if (xnthread_test_localinfo(thread, XNMOVED)) {
 		xnthread_clear_localinfo(thread, XNMOVED);
 		cpu = xnsched_cpu(thread->sched);
-		set_cpus_allowed(p, cpumask_of_cpu(cpu));
+		set_cpus_allowed(p, *cpumask_of(cpu));
 	}
 #endif
 
@@ -2332,10 +2332,10 @@ void xnthread_pin_initial(struct xnthread *thread)
 	 * to the first CPU of that mask.
 	 */
 	cpu = task_cpu(p);
-	if (!cpu_isset(cpu, thread->affinity))
-		cpu = first_cpu(thread->affinity);
+	if (!cpumask_test_cpu(cpu, &thread->affinity))
+		cpu = cpumask_first(&thread->affinity);
 
-	set_cpus_allowed(p, cpumask_of_cpu(cpu));
+	set_cpus_allowed(p, *cpumask_of(cpu));
 	/*
 	 * @thread is still unstarted Xenomai-wise, we are precisely
 	 * in the process of mapping the current kernel task to

@@ -188,8 +188,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 #ifdef CONFIG_SMP
 void xnclock_core_remote_shot(struct xnsched *sched)
 {
-	cpumask_t mask = cpumask_of_cpu(xnsched_cpu(sched));
-	ipipe_send_ipi(IPIPE_HRTIMER_IPI, mask);
+	ipipe_send_ipi(IPIPE_HRTIMER_IPI, *cpumask_of(xnsched_cpu(sched)));
 }
 #endif
 

@@ -359,7 +359,7 @@ void __xntimer_init(struct xntimer *timer,
 	else {
 		cpu = ipipe_processor_id();
 		if (!xnsched_supported_cpu(cpu))
-			cpu = first_cpu(xnsched_realtime_cpus);
+			cpu = cpumask_first(&xnsched_realtime_cpus);
 
 		timer->sched = xnsched_struct(cpu);
 	}

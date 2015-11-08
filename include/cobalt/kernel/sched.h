@@ -221,7 +221,7 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 	if (current_sched == sched)
 		current_sched->status |= XNRESCHED;
 	else if (!xnsched_resched_p(sched)) {
-		cpu_set(xnsched_cpu(sched), current_sched->resched);
+		cpumask_set_cpu(xnsched_cpu(sched), &current_sched->resched);
 		sched->status |= XNRESCHED;
 		current_sched->status |= XNRESCHED;
 	}
@@ -231,7 +231,7 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 
 static inline int xnsched_supported_cpu(int cpu)
 {
-	return cpu_isset(cpu, xnsched_realtime_cpus);
+	return cpumask_test_cpu(cpu, &xnsched_realtime_cpus);
 }
 
 #else /* !CONFIG_SMP */

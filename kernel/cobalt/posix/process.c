@@ -841,7 +841,7 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 	 * affinity mask accordingly.
 	 */
 	xnlock_get_irqsave(&nklock, s);
-	cpus_and(thread->affinity, p->cpus_allowed, cobalt_cpu_affinity);
+	cpumask_and(&thread->affinity, &p->cpus_allowed, &cobalt_cpu_affinity);
 	xnthread_run_handler_stack(thread, move_thread, d->dest_cpu);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -857,7 +857,7 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 	 * (i.e. fully cleared) affinity mask until it leaves primary
 	 * mode then switches back to it, in SMP configurations.
 	 */
-	if (cpus_empty(thread->affinity))
+	if (cpumask_empty(&thread->affinity))
 		printk(XENO_WARNING "thread %s[%d] changed CPU affinity inconsistently\n",
 		       thread->name, xnthread_host_pid(thread));
 	else {
@@ -917,8 +917,8 @@ static inline void check_affinity(struct task_struct *p) /* nklocked, IRQs off *
 	 * which is not part of its original affinity mask
 	 * though. Assume user wants to extend this mask.
 	 */
-	if (!cpu_isset(cpu, thread->affinity))
-		cpu_set(cpu, thread->affinity);
+	if (!cpumask_test_cpu(cpu, &thread->affinity))
+		cpumask_set_cpu(cpu, &thread->affinity);
 
 	xnthread_migrate_passive(thread, sched);
 }

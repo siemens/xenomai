@@ -162,7 +162,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	ksformat(htimer_name, sizeof(htimer_name), "[host-timer/%u]", cpu);
 	ksformat(rrbtimer_name, sizeof(rrbtimer_name), "[rrb-timer/%u]", cpu);
 	ksformat(root_name, sizeof(root_name), "ROOT/%u", cpu);
-	cpus_clear(sched->resched);
+	cpumask_clear(&sched->resched);
 #else
 	strcpy(htimer_name, "[host-timer]");
 	strcpy(rrbtimer_name, "[rrb-timer]");
@@ -181,7 +181,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	attr.flags = XNROOT | XNFPU;
 	attr.name = root_name;
 	attr.personality = &xenomai_personality;
-	attr.affinity = cpumask_of_cpu(cpu);
+	attr.affinity = *cpumask_of(cpu);
 	param.idle.prio = XNSCHED_IDLE_PRIO;
 
 	__xnthread_init(&sched->rootcb, &attr,
@@ -772,10 +772,10 @@ static inline int test_resched(struct xnsched *sched)
 	int resched = xnsched_resched_p(sched);
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
-	if (unlikely(!cpus_empty(sched->resched))) {
+	if (unlikely(!cpumask_empty(&sched->resched))) {
 		smp_mb();
 		ipipe_send_ipi(IPIPE_RESCHEDULE_IPI, sched->resched);
-		cpus_clear(sched->resched);
+		cpumask_clear(&sched->resched);
 	}
 #endif
 	sched->status &= ~XNRESCHED;
@@ -1304,7 +1304,7 @@ static int affinity_vfile_show(struct xnvfile_regular_iterator *it,
 	int cpu;
 
 	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
-		if (cpu_isset(cpu, cobalt_cpu_affinity))
+		if (cpumask_test_cpu(cpu, &cobalt_cpu_affinity))
 			val |= (1UL << cpu);
 
 	xnvfile_printf(it, "%08lx\n", val);
@@ -1327,23 +1327,23 @@ static ssize_t affinity_vfile_store(struct xnvfile_input *input)
 	if (val == 0)
 		affinity = xnsched_realtime_cpus; /* Reset to default. */
 	else {
-		cpus_clear(affinity);
+		cpumask_clear(&affinity);
 		for (cpu = 0; cpu < BITS_PER_LONG; cpu++, val >>= 1) {
 			if (val & 1)
-				cpu_set(cpu, affinity);
+				cpumask_set_cpu(cpu, &affinity);
 		}
 	}
 
-	cpus_and(set, affinity, *cpu_online_mask);
-	if (cpus_empty(set))
+	cpumask_and(&set, &affinity, cpu_online_mask);
+	if (cpumask_empty(&set))
 		return -EINVAL;
 
 	/*
 	 * The new dynamic affinity must be a strict subset of the
 	 * static set of supported CPUs.
 	 */
-	cpus_or(set, affinity, xnsched_realtime_cpus);
-	if (!cpus_equal(set, xnsched_realtime_cpus))
+	cpumask_or(&set, &affinity, &xnsched_realtime_cpus);
+	if (!cpumask_equal(&set, &xnsched_realtime_cpus))
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
