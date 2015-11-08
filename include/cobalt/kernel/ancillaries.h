@@ -21,6 +21,7 @@
 
 #include <linux/kernel.h>
 #include <linux/string.h>
+#include <linux/uidgid.h>
 #include <cobalt/uapi/kernel/limits.h>
 
 #define ksformat(__dst, __len, __fmt, __args...)			\
@@ -61,5 +62,7 @@ void __knamecpy_requires_character_array_as_destination(void);
 		__dst[sizeof(__dst) - 1] = '\0';			\
 		__dst;							\
 	 })
-	
+
+#define get_current_uuid() from_kuid_munged(current_user_ns(), current_uid())
+
 #endif /* !_COBALT_KERNEL_ANCILLARIES_H */

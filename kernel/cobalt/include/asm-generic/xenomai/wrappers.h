@@ -59,10 +59,9 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
 #include <linux/pci.h>
 
-#define get_current_uuid() current_uid()
-
 #ifdef CONFIG_PCI
-#define pci_enable_msix_range XENO_BACKPORT(pci_enable_msix_range)
+#define pci_enable_msix_range \
+	XENO_BACKPORT(pci_enable_msix_range)
 #ifdef CONFIG_PCI_MSI
 int pci_enable_msix_range(struct pci_dev *dev,
 			struct msix_entry *entries,
@@ -74,9 +73,7 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
 { return -ENOSYS; }
 #endif /* not pci msi */
 #endif /* pci */
-#else /* >= 3.14 */
-#define get_current_uuid() from_kuid_munged(current_user_ns(), current_uid())
-#endif /* >= 3.14 */
+#endif /* < 3.14 */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0)
 #include <linux/dma-mapping.h>
