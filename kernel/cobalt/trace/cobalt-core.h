@@ -18,7 +18,9 @@
  * 02111-1307, USA.
  */
 #undef TRACE_SYSTEM
-#define TRACE_SYSTEM cobalt-core
+#define TRACE_SYSTEM cobalt_core
+#undef TRACE_INCLUDE_FILE
+#define TRACE_INCLUDE_FILE cobalt-core
 
 #if !defined(_TRACE_COBALT_CORE_H) || defined(TRACE_HEADER_MULTI_READ)
 #define _TRACE_COBALT_CORE_H
