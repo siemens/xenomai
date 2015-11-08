@@ -729,7 +729,7 @@ static void smc_hardware_send_packet( struct rtnet_device * dev )
 	struct rtskb *	skb = lp->saved_skb;
 	word			length;
 	unsigned short		ioaddr;
-	byte			* buf;
+	void			* buf;
 	rtdm_lockctx_t		context;
 
 	PRINTK3("%s:smc_hardware_send_packet\n", dev->name);
@@ -799,7 +799,7 @@ static void smc_hardware_send_packet( struct rtnet_device * dev )
 	if ( (length & 1) == 0 ) {
 		outw( 0, ioaddr + DATA_REG );
 	} else {
-		outb( buf[length -1 ], ioaddr + DATA_REG );
+		outb( ((char *)buf)[length -1 ], ioaddr + DATA_REG );
 		outb( 0x20, ioaddr + DATA_REG); // Set odd bit in CONTROL BYTE
 	}
 
@@ -1366,7 +1366,7 @@ static inline void smc_rcv(struct rtnet_device *dev)
 	if ( !(status & RS_ERRORS ) ){
 		/* do stuff to make a new packet */
 		struct rtskb  * skb;
-		byte		* data;
+		void		* data;
 
 		/* set multicast stats */
 		if ( status & RS_MULTICAST )
