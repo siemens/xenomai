@@ -427,10 +427,8 @@ static void igb_dump(struct igb_adapter *adapter)
 		struct igb_tx_buffer *buffer_info;
 		tx_ring = adapter->tx_ring[n];
 		buffer_info = &tx_ring->tx_buffer_info[tx_ring->next_to_clean];
-		pr_info(" %5d %5X %5X %016llX %04X %p %016llX\n",
+		pr_info(" %5d %5X %5X %p %016llX\n",
 			n, tx_ring->next_to_use, tx_ring->next_to_clean,
-			(u64)dma_unmap_addr(buffer_info, dma),
-			dma_unmap_len(buffer_info, len),
 			buffer_info->next_to_watch,
 			(u64)buffer_info->time_stamp);
 	}
@@ -473,12 +471,10 @@ static void igb_dump(struct igb_adapter *adapter)
 			else
 				next_desc = "";
 
-			pr_info("T [0x%03X]    %016llX %016llX %016llX"
-				" %04X  %p %016llX %p%s\n", i,
+			pr_info("T [0x%03X]    %016llX %016llX"
+				"  %p %016llX %p%s\n", i,
 				le64_to_cpu(u0->a),
 				le64_to_cpu(u0->b),
-				(u64)dma_unmap_addr(buffer_info, dma),
-				dma_unmap_len(buffer_info, len),
 				buffer_info->next_to_watch,
 				(u64)buffer_info->time_stamp,
 				buffer_info->skb, next_desc);
@@ -487,7 +483,7 @@ static void igb_dump(struct igb_adapter *adapter)
 				print_hex_dump(KERN_INFO, "",
 					DUMP_PREFIX_ADDRESS,
 					16, 1, buffer_info->skb->data,
-					dma_unmap_len(buffer_info, len),
+					14,
 					true);
 		}
 	}
@@ -4102,10 +4098,6 @@ static void igb_tx_map(struct igb_ring *tx_ring,
 
 	tx_buffer = first;
 
-	/* record length, and DMA address */
-	tx_buffer->len = size;
-	tx_buffer->dma = dma;
-
 	tx_desc->read.buffer_addr = cpu_to_le64(dma);
 	tx_desc->read.cmd_type_len = cpu_to_le32(cmd_type ^ size);
 
@@ -4646,7 +4638,6 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector)
 
 		/* clear tx_buffer data */
 		tx_buffer->skb = NULL;
-		tx_buffer->len = 0;
 
 		/* clear last DMA location and unmap remaining buffers */
 		while (tx_desc != eop_desc) {

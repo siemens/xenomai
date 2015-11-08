@@ -195,8 +195,6 @@ struct igb_tx_buffer {
 	u16 gso_segs;
 	__be16 protocol;
 
-	DEFINE_DMA_UNMAP_ADDR(dma);
-	DEFINE_DMA_UNMAP_LEN(len);
 	u32 tx_flags;
 };
 
