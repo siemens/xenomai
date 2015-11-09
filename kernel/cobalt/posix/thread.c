@@ -468,7 +468,7 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
 	thread = thread_lookup(&hkey);
 	if (thread == NULL) {
 		if (u_winoff == NULL)
-			return -ESRCH;
+			return -EINVAL;
 			
 		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
 		if (IS_ERR(thread))
