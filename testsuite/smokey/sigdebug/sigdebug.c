@@ -182,12 +182,11 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 	pthread_attr_t attr;
 	pthread_mutexattr_t mutex_attr;
 	struct timespec delay = {.tv_sec = 0, .tv_nsec = 20000000ULL};
-	int err, debug, tmp_fd;
+	int err, wdog_delay, tmp_fd;
 	struct sigaction sa;
-	int old_wd_value;
 
-	err = cobalt_corectl(_CC_COBALT_GET_DEBUG, &debug, sizeof(debug));
-	if (err || (debug & _CC_COBALT_DEBUG_USER) == 0)
+	err = cobalt_corectl(_CC_COBALT_GET_WATCHDOG, &wdog_delay, sizeof(wdog_delay));
+	if (err || wdog_delay == 0)
 		return -ENOSYS;
 
 	smokey_parse_args(t, argc, argv);
@@ -196,8 +195,6 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 		wd = fopen("/sys/module/xenomai/parameters/watchdog_timeout",
 			   "w+");
 		if (wd) {
-			err = fscanf(wd, "%d", &old_wd_value);
-			check("get watchdog", err, 1);
 			err = fprintf(wd, "2");
 			check("set watchdog", err, 1);
 			fflush(wd);
@@ -282,7 +279,7 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 	check_no_error("sem_destroy", err);
 
 	if (wd) {
-		fprintf(wd, "%d", old_wd_value);
+		fprintf(wd, "%d", wdog_delay);
 		fclose(wd);
 	}
 
