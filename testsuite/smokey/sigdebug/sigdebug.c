@@ -217,7 +217,7 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 	check_no_error("mkstemp", -errno);
 	unlink(tempname);
 	check_no_error("unlink", -errno);
-	mem = mmap(NULL, 1, PROT_READ, MAP_SHARED, tmp_fd, 0);
+	mem = mmap(NULL, 1, PROT_READ, MAP_PRIVATE, tmp_fd, 0);
 	check_no_error("mmap", -errno);
 	err = write(tmp_fd, "X", 1);
 	check("write", err, 1);
