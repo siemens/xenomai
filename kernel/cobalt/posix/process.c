@@ -590,11 +590,28 @@ static inline int disable_ondemand_memory(void)
 	return __ipipe_disable_ondemand_mappings(p);
 }
 
+static inline int get_mayday_prot(void)
+{
+	return PROT_READ|PROT_EXEC;
+}
+
 #else /* !CONFIG_MMU */
 
 static inline int disable_ondemand_memory(void)
 {
 	return 0;
+}
+
+static inline int get_mayday_prot(void)
+{
+	/*
+	 * Until we stop backing /dev/mem with the mayday page, we
+	 * can't ask for PROT_EXEC since the former does not define
+	 * mmap capabilities, and default ones won't allow an
+	 * executable mapping with MAP_SHARED. In the NOMMU case, this
+	 * is (currently) not an issue.
+	 */
+	return PROT_READ;
 }
 
 #endif /* !CONFIG_MMU */
@@ -1277,7 +1294,7 @@ static inline unsigned long map_mayday_page(void)
 
 	mayday_page = xnarch_get_mayday_page();
 	ret = rtdm_mmap_to_user(NULL, mayday_page, PAGE_SIZE,
-				PROT_READ|PROT_EXEC, &u_addr, NULL, NULL);
+				get_mayday_prot(), &u_addr, NULL, NULL);
 	if (ret)
 		return 0UL;
 
