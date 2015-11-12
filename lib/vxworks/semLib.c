@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <boilerplate/ancillaries.h>
 #include <copperplate/heapobj.h>
 #include <vxworks/errnoLib.h>
 #include "reference.h"

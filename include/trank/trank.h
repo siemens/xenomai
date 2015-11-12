@@ -20,6 +20,8 @@
 
 #ifdef __XENO_COMPAT__
 
+void warning(const char *fmt, ...);
+
 #define trank_warning(__fmt, __args...)	\
 	warning("%s: " __fmt, __func__, ##__args)
 

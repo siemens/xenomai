@@ -24,6 +24,7 @@
 #include <pthread.h>
 #include <malloc.h>
 #include <errno.h>
+#include "boilerplate/ancillaries.h"
 #include "boilerplate/wrappers.h"
 #include "boilerplate/lock.h"
 #include "boilerplate/debug.h"

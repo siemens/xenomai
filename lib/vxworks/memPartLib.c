@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <boilerplate/lock.h>
+#include <boilerplate/ancillaries.h>
 #include <copperplate/heapobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/memPartLib.h>

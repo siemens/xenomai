@@ -18,6 +18,7 @@
 
 #include <pthread.h>
 #include <string.h>
+#include <boilerplate/ancillaries.h>
 #include <copperplate/threadobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskInfo.h>

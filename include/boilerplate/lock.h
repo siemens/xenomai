@@ -22,7 +22,6 @@
 #include <pthread.h>
 #include <boilerplate/atomic.h>
 #include <boilerplate/wrappers.h>
-#include <boilerplate/ancillaries.h>
 #include <boilerplate/debug.h>
 
 /*

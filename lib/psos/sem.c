@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <boilerplate/ancillaries.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/cluster.h>
 #include <copperplate/clockobj.h>
