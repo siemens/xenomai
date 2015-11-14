@@ -56,12 +56,14 @@
  */
 
 static pthread_mutexattr_t cobalt_default_mutexattr;
-static pthread_mutex_t cobalt_autoinit_mutex;
+static union cobalt_mutex_union cobalt_autoinit_mutex_union;
+static pthread_mutex_t *const cobalt_autoinit_mutex =
+	&cobalt_autoinit_mutex_union.native_mutex;
 
 void cobalt_mutex_init(void)
 {
 	struct cobalt_mutex_shadow *_mutex =
-		&((union cobalt_mutex_union *)&cobalt_autoinit_mutex)->shadow_mutex;
+		&cobalt_autoinit_mutex_union.shadow_mutex;
 	pthread_mutexattr_t rt_init_mattr;
 	int err __attribute__((unused));
 
@@ -70,7 +72,7 @@ void cobalt_mutex_init(void)
 	pthread_mutexattr_init(&rt_init_mattr);
 	pthread_mutexattr_setprotocol(&rt_init_mattr, PTHREAD_PRIO_INHERIT);
 	_mutex->magic = ~COBALT_MUTEX_MAGIC;
-	err = __COBALT(pthread_mutex_init(&cobalt_autoinit_mutex,
+	err = __COBALT(pthread_mutex_init(cobalt_autoinit_mutex,
 						&rt_init_mattr));
 	assert(err == 0);
 	pthread_mutexattr_destroy(&rt_init_mattr);
@@ -211,14 +213,14 @@ static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
 
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, type);
-	err = __COBALT(pthread_mutex_lock(&cobalt_autoinit_mutex));
+	err = __COBALT(pthread_mutex_lock(cobalt_autoinit_mutex));
 	if (err) {
 		ret = err;
 		goto out;
 	}
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		ret = __COBALT(pthread_mutex_init(mutex, &mattr));
-	err = __COBALT(pthread_mutex_unlock(&cobalt_autoinit_mutex));
+	err = __COBALT(pthread_mutex_unlock(cobalt_autoinit_mutex));
 	if (err) {
 		if (ret == 0)
 			ret = err;
