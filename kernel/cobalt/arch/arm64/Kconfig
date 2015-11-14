@@ -1,9 +1,6 @@
 source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"
 
-config XENO_ARCH_UNLOCKED_SWITCH
-       def_bool IPIPE_WANT_PREEMPTIBLE_SWITCH
-
 config XENO_ARCH_FPU
 	def_bool y
 
