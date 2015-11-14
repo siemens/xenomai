@@ -10,6 +10,3 @@ config XENO_ARCH_FPU
 
 config XENO_ARCH_SYS3264
         def_bool n
-
-config XENO_ARCH_UNLOCKED_SWITCH
-	def_bool n
