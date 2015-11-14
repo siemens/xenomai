@@ -23,9 +23,6 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	default y if XENO_ARCH_UNLOCKED_SWITCH
 	default n if !XENO_ARCH_UNLOCKED_SWITCH
 
-config IPIPE_WANT_ACTIVE_MM
-       def_bool y
-
 config XENO_ARCH_FPU
 	def_bool VFP
 
