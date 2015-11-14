@@ -248,9 +248,7 @@ void xnthread_init_shadow_tcb(struct xnthread *thread)
 	tcb->core.tsp = &p->thread;
 	tcb->core.mm = p->mm;
 	tcb->core.active_mm = p->mm;
-#ifdef CONFIG_XENO_ARCH_WANT_TIP
 	tcb->core.tip = task_thread_info(p);
-#endif
 #ifdef CONFIG_XENO_ARCH_FPU
 	tcb->core.user_fpu_owner = p;
 #endif /* CONFIG_XENO_ARCH_FPU */
@@ -265,9 +263,7 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 	tcb->core.host_task = p;
 	tcb->core.tsp = &tcb->core.ts;
 	tcb->core.mm = p->mm;
-#ifdef CONFIG_XENO_ARCH_WANT_TIP
 	tcb->core.tip = NULL;
-#endif
 	xnarch_init_root_tcb(thread);
 }
 

@@ -26,9 +26,6 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 config IPIPE_WANT_ACTIVE_MM
        def_bool y
 
-config XENO_ARCH_WANT_TIP
-       def_bool y
-
 config XENO_ARCH_FPU
 	def_bool VFP
 
