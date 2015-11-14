@@ -293,7 +293,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 #endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
 }
 
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 {
@@ -319,7 +319,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	return sched;
 }
 
-#endif /* CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
+#endif /* CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 
 void xnsched_lock(void)
 {
@@ -477,16 +477,16 @@ void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 	xnsched_set_resched(thread->sched);
 	migrate_thread(thread, sched);
 
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	/*
 	 * Mark the thread in flight, xnsched_finish_unlocked_switch()
 	 * will put the thread on the remote runqueue.
 	 */
 	xnthread_set_state(thread, XNMIGRATE);
-#else /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
+#else
 	/* Move thread to the remote runnable queue. */
 	xnsched_putback(thread);
-#endif /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
+#endif
 }
 
 /*
@@ -692,11 +692,11 @@ struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 static inline void switch_context(struct xnsched *sched,
 				  struct xnthread *prev, struct xnthread *next)
 {
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	sched->last = prev;
 	sched->status |= XNINSW;
 	xnlock_clear_irqon(&nklock);
-#endif /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
+#endif
 
 	xnarch_switch_to(prev, next);
 }
@@ -771,7 +771,7 @@ static inline void enter_root(struct xnthread *root)
 {
 	struct xnarchtcb *rootcb __maybe_unused = xnthread_archtcb(root);
 
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	if (rootcb->core.mm == NULL)
 		set_ti_thread_flag(rootcb->core.tip, TIF_MMSWITCH_INT);
 #endif

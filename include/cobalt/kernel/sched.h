@@ -94,7 +94,7 @@ struct xnsched {
 	struct xntimer rrbtimer;
 	/*!< Root thread control block. */
 	struct xnthread rootcb;
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	struct xnthread *last;
 #endif
 #ifdef CONFIG_XENO_ARCH_FPU
@@ -330,7 +330,7 @@ static inline int xnsched_primary_p(void)
 	return !xnsched_unblockable_p();
 }
 
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 
@@ -342,7 +342,7 @@ int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 	return sched->status & XNRESCHED;
 }
 
-#else /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
+#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 
 static inline struct xnsched *
 xnsched_finish_unlocked_switch(struct xnsched *sched)
@@ -359,7 +359,7 @@ xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 	return 0;
 }
 
-#endif /* !CONFIG_XENO_ARCH_UNLOCKED_SWITCH */
+#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 static inline void xnsched_reset_watchdog(struct xnsched *sched)

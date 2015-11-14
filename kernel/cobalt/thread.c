@@ -394,7 +394,7 @@ EXPORT_SYMBOL_GPL(xnthread_prepare_wait);
 static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 {
 	int ret = 0;
-#ifdef CONFIG_XENO_ARCH_UNLOCKED_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	/*
 	 * When deleting a thread in the course of a context switch or
 	 * in flight to another CPU with nklock unlocked on a distant
