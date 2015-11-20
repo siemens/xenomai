@@ -283,9 +283,9 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 		return 0;
 #endif
 
-	xnlock_get_irqsave(&nklock, s);
+	xnlock_get(&nklock);
 	xnthread_set_state(to, XNFPU);
-	xnlock_put_irqrestore(&nklock, s);
+	xnlock_put(&nklock);
 
 	xnarch_switch_fpu(from, to);
 
