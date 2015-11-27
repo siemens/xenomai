@@ -24,7 +24,7 @@
 #error "CONFIG_IPIPE_LEGACY must be switched off"
 #endif
 
-#define XENO_BACKPORT(__sym) xeno_backport_ ##__sym
+#define COBALT_BACKPORT(__sym) __cobalt_backport_ ##__sym
 
 /*
  * To keep the #ifdefery as readable as possible, please:
@@ -61,7 +61,7 @@
 
 #ifdef CONFIG_PCI
 #define pci_enable_msix_range \
-	XENO_BACKPORT(pci_enable_msix_range)
+	COBALT_BACKPORT(pci_enable_msix_range)
 #ifdef CONFIG_PCI_MSI
 int pci_enable_msix_range(struct pci_dev *dev,
 			struct msix_entry *entries,
@@ -80,7 +80,7 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
 #include <linux/hwmon.h>
 
 #define dma_set_mask_and_coherent \
-	XENO_BACKPORT(dma_set_mask_and_coherent)
+	COBALT_BACKPORT(dma_set_mask_and_coherent)
 static inline int dma_set_mask_and_coherent(struct device *dev, u64 mask)
 {
 	int rc = dma_set_mask(dev, mask);
@@ -91,14 +91,14 @@ static inline int dma_set_mask_and_coherent(struct device *dev, u64 mask)
 
 #ifdef CONFIG_HWMON
 #define hwmon_device_register_with_groups \
-	XENO_BACKPORT(hwmon_device_register_with_groups)
+	COBALT_BACKPORT(hwmon_device_register_with_groups)
 struct device *
 hwmon_device_register_with_groups(struct device *dev, const char *name,
 				void *drvdata,
 				const struct attribute_group **groups);
 
 #define devm_hwmon_device_register_with_groups \
-	XENO_BACKPORT(devm_hwmon_device_register_with_groups)
+	COBALT_BACKPORT(devm_hwmon_device_register_with_groups)
 struct device *
 devm_hwmon_device_register_with_groups(struct device *dev, const char *name,
 				void *drvdata,
