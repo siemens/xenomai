@@ -63,6 +63,19 @@ int xntimer_heading_p(struct xntimer *timer)
 	return 0;
 }
 
+void xntimer_enqueue_and_program(struct xntimer *timer, xntimerq_t *q)
+{
+	xntimer_enqueue(timer, q);
+	if (xntimer_heading_p(timer)) {
+		struct xnsched *sched = xntimer_sched(timer);
+		struct xnclock *clock = xntimer_clock(timer);
+		if (sched != xnsched_current())
+			xnclock_remote_shot(clock, sched);
+		else
+			xnclock_program_shot(clock, sched);
+	}
+}
+
 /**
  * Arm a timer.
  *
@@ -105,7 +118,6 @@ int xntimer_start(struct xntimer *timer,
 	xntimerq_t *q = xntimer_percpu_queue(timer);
 	xnticks_t date, now, delay, period;
 	unsigned long gravity;
-	struct xnsched *sched;
 	int ret = 0;
 
 	trace_cobalt_timer_start(timer, value, interval, mode);
@@ -168,15 +180,8 @@ int xntimer_start(struct xntimer *timer,
 		timer->status |= XNTIMER_PERIODIC;
 	}
 
-	xntimer_enqueue(timer, q);
 	timer->status |= XNTIMER_RUNNING;
-	if (xntimer_heading_p(timer)) {
-		sched = xntimer_sched(timer);
-		if (sched != xnsched_current())
-			xnclock_remote_shot(clock, sched);
-		else
-			xnclock_program_shot(clock, sched);
-	}
+	xntimer_enqueue_and_program(timer, q);
 
 	return ret;
 }
@@ -591,10 +596,20 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 
 	delta = now - xntimer_pexpect(timer);
 	if (unlikely(delta >= (xnsticks_t) period)) {
+		xntimerq_t *q;
+
 		period = timer->interval_ns;
 		delta = xnclock_ticks_to_ns(xntimer_clock(timer), delta);
 		overruns = xnarch_div64(delta, period);
 		timer->pexpect_ticks += overruns;
+
+		q = xntimer_percpu_queue(timer);
+		xntimer_dequeue(timer, q);
+		while (xntimerh_date(&timer->aplink) < now) {
+			timer->periodic_ticks++;
+			xntimer_update_date(timer);
+		}
+		xntimer_enqueue_and_program(timer, q);
 	}
 
 	timer->pexpect_ticks++;
