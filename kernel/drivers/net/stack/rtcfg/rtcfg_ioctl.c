@@ -304,7 +304,7 @@ int rtcfg_ioctl_add(struct rtnet_device *rtdev, struct rtcfg_cmd *cmd)
             goto err;
         }
 
-        file->size = filp->f_dentry->d_inode->i_size;
+        file->size = filp->f_path.dentry->d_inode->i_size;
 
         /* allocate buffer even for empty files */
         file->buffer = vmalloc((file->size)? file->size : 1);
