@@ -68,7 +68,7 @@ struct print_buffer {
 	off_t read_pos;
 };
 
-int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
+__weak int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
 
 int __cobalt_print_bufcount = RT_PRINT_DEFAULT_BUFFERS_COUNT;
 
