@@ -337,7 +337,7 @@ static void xnintr_vec_handler(unsigned int irq, void *cookie)
 
 	xnlock_put(&vec->lock);
 
-	if (unlikely(s & XN_IRQ_NONE)) {
+	if (unlikely(!(s & XN_IRQ_HANDLED))) {
 		if (++vec->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
@@ -423,7 +423,7 @@ static void xnintr_edge_vec_handler(unsigned int irq, void *cookie)
 		printk(XENO_ERR "%s: failed to get the IRQ%d line free\n",
 		       __FUNCTION__, irq);
 
-	if (unlikely(s & XN_IRQ_NONE)) {
+	if (unlikely(!(s & XN_IRQ_HANDLED))) {
 		if (++vec->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
@@ -612,7 +612,7 @@ static void xnintr_irq_handler(unsigned int irq, void *cookie)
 
 	s = intr->isr(intr);
 	XENO_WARN_ON_ONCE(USER, (s & XN_IRQ_STATMASK) == 0);
-	if (unlikely(s & XN_IRQ_NONE)) {
+	if (unlikely(!(s & XN_IRQ_HANDLED))) {
 		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
 			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
