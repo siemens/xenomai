@@ -41,6 +41,21 @@
 	WARN_ON(XENO_DEBUG(__subsys) && (__cond))
 #define XENO_WARN_ON_ONCE(__subsys, __cond)		\
 	WARN_ON_ONCE(XENO_DEBUG(__subsys) && (__cond))
+#ifdef CONFIG_SMP
+#define XENO_BUG_ON_SMP(__subsys, __cond)		\
+	XENO_BUG_ON(__subsys, __cond)
+#define XENO_WARN_ON_SMP(__subsys, __cond)		\
+	XENO_WARN_ON(__subsys, __cond)
+#define XENO_WARN_ON_ONCE_SMP(__subsys, __cond)		\
+	XENO_WARN_ON_ONCE(__subsys, __cond)
+#else
+#define XENO_BUG_ON_SMP(__subsys, __cond)		\
+	do { } while (0)
+#define XENO_WARN_ON_SMP(__subsys, __cond)		\
+	do { } while (0)
+#define XENO_WARN_ON_ONCE_SMP(__subsys, __cond)		\
+	do { } while (0)
+#endif
 
 #define primary_mode_only()	XENO_BUG_ON(CONTEXT, ipipe_root_p)
 #define secondary_mode_only()	XENO_BUG_ON(CONTEXT, !ipipe_root_p)
