@@ -20,6 +20,7 @@
 
 #include <linux/types.h>
 #include <linux/time.h>
+#include <linux/cpumask.h>
 #include <cobalt/uapi/time.h>
 #include <xenomai/posix/syscall.h>
 
@@ -112,6 +113,7 @@ COBALT_SYSCALL_DECL(clock_nanosleep,
 		     struct timespec __user *u_rmt));
 
 int cobalt_clock_register(struct xnclock *clock,
+			  const cpumask_t *affinity,
 			  clockid_t *clk_id);
 
 void cobalt_clock_deregister(struct xnclock *clock);

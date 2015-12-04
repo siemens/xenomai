@@ -39,12 +39,13 @@ struct xnclock_gravity {
 };
 
 struct xnclock {
-	/** ns */
+	/** (ns) */
 	xnticks_t wallclock_offset;
-	/** ns */
+	/** (ns) */
 	xnticks_t resolution;
-	/** raw clock ticks. */
+	/** (raw clock ticks). */
 	struct xnclock_gravity gravity;
+	/** Clock name. */
 	const char *name;
 	struct {
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
@@ -74,6 +75,10 @@ struct xnclock {
 	/* Private section. */
 	struct xntimerdata *timerdata;
 	int id;
+#ifdef CONFIG_SMP
+	/** Possible CPU affinity of clock beat. */
+	cpumask_t affinity;
+#endif
 #ifdef CONFIG_XENO_OPT_STATS
 	struct xnvfile_snapshot timer_vfile;
 	struct xnvfile_rev_tag timer_revtag;
@@ -91,7 +96,8 @@ extern unsigned long nktimerlat;
 
 extern unsigned int nkclock_lock;
 
-int xnclock_register(struct xnclock *clock);
+int xnclock_register(struct xnclock *clock,
+		     const cpumask_t *affinity);
 
 void xnclock_deregister(struct xnclock *clock);
 
@@ -247,6 +253,15 @@ static inline int xnclock_set_time(struct xnclock *clock,
 }
 
 #endif /* !CONFIG_XENO_OPT_EXTCLOCK */
+
+#ifdef CONFIG_SMP
+int xnclock_get_default_cpu(struct xnclock *clock, int cpu);
+#else
+static inline int xnclock_get_default_cpu(struct xnclock *clock, int cpu)
+{
+	return cpu;
+}
+#endif
 
 static inline xnticks_t xnclock_get_offset(struct xnclock *clock)
 {

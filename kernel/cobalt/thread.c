@@ -58,6 +58,23 @@ static void timeout_handler(struct xntimer *timer)
 	xnthread_resume(thread, XNDELAY);
 }
 
+static inline void fixup_ptimer_affinity(struct xnthread *thread)
+{
+#ifdef CONFIG_SMP
+	struct xntimer *timer = &thread->ptimer;
+	int cpu;
+	/*
+	 * The thread a periodic timer is affine to might have been
+	 * migrated to another CPU while passive. Fix this up.
+	 */
+	if (thread->sched != timer->sched) {
+		cpu = xnclock_get_default_cpu(xntimer_clock(timer),
+					      xnsched_cpu(thread->sched));
+		xntimer_set_sched(timer, xnsched_struct(cpu));
+	}
+#endif
+}
+
 static void periodic_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, struct xnthread, ptimer);
@@ -67,11 +84,8 @@ static void periodic_handler(struct xntimer *timer)
 	 */
 	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnthread_resume(thread, XNDELAY);
-	/*
-	 * The thread a periodic timer is affine to might have been
-	 * migrated to another CPU while passive. Fix this up.
-	 */
-	xntimer_set_sched(timer, thread->sched);
+
+	fixup_ptimer_affinity(thread);
 }
 
 struct kthread_arg {
@@ -1288,7 +1302,7 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
 int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 			  xntmode_t timeout_mode, xnticks_t period)
 {
-	int ret = 0;
+	int ret = 0, cpu;
 	spl_t s;
 
 	if (thread == NULL) {
@@ -1319,7 +1333,16 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 		goto unlock_and_exit;
 	}
 
-	xntimer_set_sched(&thread->ptimer, thread->sched);
+	/*
+	 * Pin the periodic timer to a proper CPU, by order of
+	 * preference: the CPU the timed thread runs on if possible,
+	 * or the first CPU by logical number which can receive events
+	 * from the clock device backing the timer, among the dynamic
+	 * set of real-time CPUs currently enabled.
+	 */
+	cpu = xnclock_get_default_cpu(xntimer_clock(&thread->ptimer),
+				      xnsched_cpu(thread->sched));
+	xntimer_set_sched(&thread->ptimer, xnsched_struct(cpu));
 
 	if (idate == XN_INFINITE)
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);

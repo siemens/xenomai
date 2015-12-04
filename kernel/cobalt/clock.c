@@ -322,6 +322,28 @@ xnticks_t xnclock_core_read_monotonic(void)
 }
 EXPORT_SYMBOL_GPL(xnclock_core_read_monotonic);
 
+#ifdef CONFIG_SMP
+
+int xnclock_get_default_cpu(struct xnclock *clock, int cpu)
+{
+	cpumask_t set;
+	/*
+	 * Check a CPU number against the possible set of CPUs
+	 * receiving events from the underlying clock device. If the
+	 * suggested CPU does not receive events from this device,
+	 * return the first one which does.  We also account for the
+	 * dynamic set of real-time CPUs.
+	 */
+	cpumask_and(&set, &clock->affinity, &cobalt_cpu_affinity);
+	if (!cpumask_empty(&set) && !cpumask_test_cpu(cpu, &set))
+		cpu = cpumask_first(&set);
+
+	return cpu;
+}
+EXPORT_SYMBOL_GPL(xnclock_get_default_cpu);
+
+#endif /* !CONFIG_SMP */
+
 #ifdef CONFIG_XENO_OPT_STATS
 
 static struct xnvfile_directory timerlist_vfroot;
@@ -587,7 +609,6 @@ static inline void cleanup_clock_proc(struct xnclock *clock) { }
 #endif	/* !CONFIG_XENO_OPT_VFILE */
 
 /**
- * @fn void xnclock_register(struct xnclock *clock)
  * @brief Register a Xenomai clock.
  *
  * This service installs a new clock which may be used to drive
@@ -595,20 +616,40 @@ static inline void cleanup_clock_proc(struct xnclock *clock) { }
  *
  * @param clock The new clock to register.
  *
+ * @param affinity The set of CPUs we may expect the backing clock
+ * device to tick on.
+ *
  * @coretags{secondary-only}
  */
-int xnclock_register(struct xnclock *clock)
+int xnclock_register(struct xnclock *clock, const cpumask_t *affinity)
 {
 	struct xntimerdata *tmd;
 	int cpu;
 
 	secondary_mode_only();
 
+#ifdef CONFIG_SMP
+	/*
+	 * A CPU affinity set is defined for each clock, enumerating
+	 * the CPUs which can receive ticks from the backing clock
+	 * device.  This set must be a subset of the real-time CPU
+	 * set.
+	 */
+	cpumask_and(&clock->affinity, affinity, &xnsched_realtime_cpus);
+	if (cpumask_empty(&clock->affinity))
+		return -EINVAL;
+#endif
+
 	/* Allocate the percpu timer queue slot. */
 	clock->timerdata = alloc_percpu(struct xntimerdata);
 	if (clock->timerdata == NULL)
 		return -ENOMEM;
 
+	/*
+	 * POLA: init all timer slots for the new clock, although some
+	 * of them might remain unused depending on the CPU affinity
+	 * of the event source(s).
+	 */
 	for_each_online_cpu(cpu) {
 		tmd = xnclock_percpu_timerdata(clock, cpu);
 		xntimerq_init(&tmd->q);
@@ -829,7 +870,7 @@ int __init xnclock_init(unsigned long long freq)
 #endif
 	nktimerlat = xnarch_timer_calibrate();
 	xnclock_reset_gravity(&nkclock);
-	xnclock_register(&nkclock);
+	xnclock_register(&nkclock, &xnsched_realtime_cpus);
 
 	return 0;
 }

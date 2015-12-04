@@ -303,7 +303,8 @@ COBALT_SYSCALL(clock_nanosleep, nonrestartable,
 	return ret;
 }
 
-int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
+int cobalt_clock_register(struct xnclock *clock, const cpumask_t *affinity,
+			  clockid_t *clk_id)
 {
 	int ret, nr;
 	spl_t s;
@@ -326,7 +327,7 @@ int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = xnclock_register(clock);
+	ret = xnclock_register(clock, affinity);
 	if (ret)
 		return ret;
 
