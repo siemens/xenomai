@@ -66,6 +66,8 @@ config XENO_DRIVERS_NET_DRV_VIA_RHINE
 
 
 config XENO_DRIVERS_NET_DRV_IGB
+    select I2C
+    select I2C_ALGOBIT
     depends on XENO_DRIVERS_NET && PCI
     tristate "Intel(R) 82575 (Gigabit)"
 
