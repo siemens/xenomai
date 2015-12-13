@@ -2,6 +2,7 @@ menuconfig XENOMAI
 	depends on X86_TSC || !X86
 	bool "Xenomai/cobalt"
 	select IPIPE
+	select IPIPE_WANT_APIREV_2
 	default y
 	help
 	  Xenomai's Cobalt core is a real-time extension to the Linux
