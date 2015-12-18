@@ -104,7 +104,10 @@ do {									   \
 long strncpy_from_user_nocheck(char *dst, const char __user *src, long count)
 {
 	long res;
+
+	stac();
 	__do_strncpy_from_user(dst, src, count, res);
+	clac();
 	return res;
 }
 EXPORT_SYMBOL_GPL(strncpy_from_user_nocheck);
