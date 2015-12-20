@@ -24,4 +24,23 @@
 #define __get_user_inatomic __get_user
 #define __put_user_inatomic __put_user
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+#include <asm/i387.h>
+#include <asm/fpu-internal.h>
+
+static inline void kernel_fpu_disable(void)
+{
+	__thread_clear_has_fpu(current);
+}
+
+static inline void kernel_fpu_enable(void)
+{
+}
+
+static inline bool kernel_fpu_disabled(void)
+{
+	return __thread_has_fpu(current) == 0 && (read_cr0() & X86_CR0_TS) == 0;
+}
+#endif /* linux < 4.1.0 */
+
 #endif /* _COBALT_X86_ASM_WRAPPERS_H */

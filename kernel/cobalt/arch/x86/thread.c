@@ -317,8 +317,8 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 	return 1;
 }
 
-#define current_task_used_kfpu(p) \
-	(__thread_has_fpu(p) == 0 && (read_cr0() & X86_CR0_TS) == 0)
+#define current_task_used_kfpu() kernel_fpu_disabled()
+
 #define tcb_used_kfpu(t) ((t)->root_kfpu)
 
 void xnarch_leave_root(struct xnthread *root)
@@ -331,7 +331,7 @@ void xnarch_leave_root(struct xnthread *root)
 	rootcb->spp = &p->thread.sp;
 	rootcb->ipp = &p->thread.rip;
 #endif
-	if (current_task_used_kfpu(p) == 0) {
+	if (current_task_used_kfpu() == 0) {
 		rootcb->root_kfpu = 0;
 		rootcb->fpup = __thread_has_fpu(p) ? current_task_fpup : NULL;
 		return;
@@ -343,6 +343,7 @@ void xnarch_leave_root(struct xnthread *root)
 	x86_fpustate_ptr(&p->thread) = &rootcb->i387;
 	__thread_set_has_fpu(p);
 	set_stopped_child_used_math(p);
+	kernel_fpu_enable();
 }
 
 void xnarch_save_fpu(struct xnthread *thread)
@@ -387,11 +388,13 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 		__thread_set_has_fpu(p);
 		return;
 	}
+	kernel_fpu_disable();
 
 	x86_fpustate_ptr(&p->thread) = to->tcb.fpup;
-	__thread_clear_has_fpu(p);
-	if (tcb->root_used_math == 0)
+	if (tcb->root_used_math == 0) {
+		__thread_clear_has_fpu(p);
 		clear_stopped_child_used_math(p);
+	}
 }
 
 void xnarch_init_root_tcb(struct xnthread *thread)
