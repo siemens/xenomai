@@ -557,29 +557,22 @@ int main(int argc, char *argv[])
 	char **new_argv;
 	int rc, maxfd;
 	unsigned i;
+	int j, k;
 
-	if (argc < 2) {
-		usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	if (!strcmp(argv[1], "-h")
-	    || !strcmp(argv[1], "--help")) {
-		usage(argv[0]);
-		exit(EXIT_SUCCESS);
-	}
-
-	if (argc >= 3) {
-		if (!strcmp(argv[2], "-l")) {
-			if (argc == 3) {
+	for (j = 0; j < argc; j++) {
+		if (!strcmp(argv[j], "-l")) {
+			if (j == argc -1) {
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
 			}
 
-			loadcmd = argv[3];
+			loadcmd = argv[j + 1];
+			for (k = j - 1; k >= 0; k--)
+				argv[k + 2] = argv[k];
 
-			argv[3] = argv[1];
 			argv += 2;
+			j -= 2;
+			argc -= 2;
 		}
 	}
 	scriptname = argv[1];
