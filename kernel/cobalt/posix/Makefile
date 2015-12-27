@@ -6,6 +6,7 @@ obj-$(CONFIG_XENOMAI) += xenomai.o
 xenomai-y :=		\
 	clock.o		\
 	cond.o		\
+	corectl.o	\
 	event.o		\
 	io.o		\
 	memory.o	\
