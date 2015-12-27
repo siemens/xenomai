@@ -18,10 +18,21 @@
 #ifndef _COBALT_POSIX_CORECTL_H
 #define _COBALT_POSIX_CORECTL_H
 
+#include <linux/types.h>
+#include <linux/notifier.h>
 #include <xenomai/posix/syscall.h>
 #include <cobalt/uapi/corectl.h>
 
+struct cobalt_config_vector {
+	void __user *u_buf;
+	size_t u_bufsz;
+};
+
 COBALT_SYSCALL_DECL(corectl,
 		    (int request, void __user *u_buf, size_t u_bufsz));
+
+void cobalt_add_config_chain(struct notifier_block *nb);
+
+void cobalt_remove_config_chain(struct notifier_block *nb);
 
 #endif /* !_COBALT_POSIX_CORECTL_H */

@@ -104,23 +104,23 @@ EXPORT_SYMBOL_GPL(cobalt_kernel_ppd);
 			"[STOPPED]" : "";				\
 	})
 
-void cobalt_add_notifier_chain(struct notifier_block *nb)
+void cobalt_add_state_chain(struct notifier_block *nb)
 {
 	blocking_notifier_chain_register(&state_notifier_list, nb);
 }
-EXPORT_SYMBOL_GPL(cobalt_add_notifier_chain);
+EXPORT_SYMBOL_GPL(cobalt_add_state_chain);
 
-void cobalt_remove_notifier_chain(struct notifier_block *nb)
+void cobalt_remove_state_chain(struct notifier_block *nb)
 {
 	blocking_notifier_chain_unregister(&state_notifier_list, nb);
 }
-EXPORT_SYMBOL_GPL(cobalt_remove_notifier_chain);
+EXPORT_SYMBOL_GPL(cobalt_remove_state_chain);
 
-void cobalt_call_notifier_chain(enum cobalt_run_states newstate)
+void cobalt_call_state_chain(enum cobalt_run_states newstate)
 {
 	blocking_notifier_call_chain(&state_notifier_list, newstate, NULL);
 }
-EXPORT_SYMBOL_GPL(cobalt_call_notifier_chain);
+EXPORT_SYMBOL_GPL(cobalt_call_state_chain);
 
 static void sys_shutdown(void)
 {

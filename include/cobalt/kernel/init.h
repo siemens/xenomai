@@ -45,10 +45,10 @@ static inline void set_realtime_core_state(enum cobalt_run_states state)
 	atomic_set(&cobalt_runstate, state);
 }
 
-void cobalt_add_notifier_chain(struct notifier_block *nb);
+void cobalt_add_state_chain(struct notifier_block *nb);
 
-void cobalt_remove_notifier_chain(struct notifier_block *nb);
+void cobalt_remove_state_chain(struct notifier_block *nb);
 
-void cobalt_call_notifier_chain(enum cobalt_run_states newstate);
+void cobalt_call_state_chain(enum cobalt_run_states newstate);
 
 #endif /* !_COBALT_KERNEL_INIT_H_ */

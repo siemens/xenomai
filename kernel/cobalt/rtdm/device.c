@@ -309,7 +309,7 @@ static int register_driver(struct rtdm_driver *drv)
 done:
 	drv->nb_statechange.notifier_call = state_change_notifier;
 	drv->nb_statechange.priority = 0;
-	cobalt_add_notifier_chain(&drv->nb_statechange);
+	cobalt_add_state_chain(&drv->nb_statechange);
 	drv->profile_info.magic = RTDM_CLASS_MAGIC;
 
 	return 0;
@@ -324,7 +324,7 @@ static void unregister_driver(struct rtdm_driver *drv)
 {
 	XENO_BUG_ON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
 
-	cobalt_remove_notifier_chain(&drv->nb_statechange);
+	cobalt_remove_state_chain(&drv->nb_statechange);
 	
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		cdev_del(&drv->named.cdev);

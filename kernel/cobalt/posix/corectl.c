@@ -27,11 +27,14 @@
 #include <asm/xenomai/syscall.h>
 #include "corectl.h"
 
-static int get_conf_option(int option, void __user *u_buf, size_t u_bufsz)
+static BLOCKING_NOTIFIER_HEAD(config_notifier_list);
+
+static int do_conf_option(int option, void __user *u_buf, size_t u_bufsz)
 {
+	struct cobalt_config_vector vec;
 	int ret, val = 0;
 
-	if (u_bufsz < sizeof(val))
+	if (option <= _CC_COBALT_GET_CORE_STATUS && u_bufsz < sizeof(val))
 		return -EINVAL;
 
 	switch (option) {
@@ -86,7 +89,16 @@ static int get_conf_option(int option, void __user *u_buf, size_t u_bufsz)
 		val = realtime_core_state();
 		break;
 	default:
-		return -EINVAL;
+		if (!ipipe_root_p)
+			/* Switch to secondary mode first. */
+			return -ENOSYS;
+		vec.u_buf = u_buf;
+		vec.u_bufsz = u_bufsz;
+		ret = blocking_notifier_call_chain(&config_notifier_list,
+						   option, &vec);
+		if (ret == NOTIFY_DONE)
+			return -EINVAL; /* Nobody cared. */
+		return notifier_to_errno(ret);
 	}
 
 	ret = cobalt_copy_to_user(u_buf, &val, sizeof(val));
@@ -129,7 +141,7 @@ static int stop_services(const void __user *u_buf, size_t u_bufsz)
 			set_realtime_core_state(state);
 			return ret;
 		}
-		cobalt_call_notifier_chain(COBALT_STATE_TEARDOWN);
+		cobalt_call_state_chain(COBALT_STATE_TEARDOWN);
 		/* Kill lingering RTDM tasks. */
 		ret = xnthread_killall(final_grace_period, 0);
 		if (ret == -EAGAIN)
@@ -158,7 +170,7 @@ static int start_services(void)
 		break;
 	case COBALT_STATE_STOPPED:
 		xntimer_grab_hardware();
-		cobalt_call_notifier_chain(COBALT_STATE_WARMUP);
+		cobalt_call_state_chain(COBALT_STATE_WARMUP);
 		set_realtime_core_state(COBALT_STATE_RUNNING);
 		printk(XENO_INFO "services started\n");
 		break;
@@ -182,8 +194,20 @@ COBALT_SYSCALL(corectl, probing,
 		ret = start_services();
 		break;
 	default:
-		ret = get_conf_option(request, u_buf, u_bufsz);
+		ret = do_conf_option(request, u_buf, u_bufsz);
 	}
 	
 	return ret;
 }
+
+void cobalt_add_config_chain(struct notifier_block *nb)
+{
+	blocking_notifier_chain_register(&config_notifier_list, nb);
+}
+EXPORT_SYMBOL_GPL(cobalt_add_config_chain);
+
+void cobalt_remove_config_chain(struct notifier_block *nb)
+{
+	blocking_notifier_chain_unregister(&config_notifier_list, nb);
+}
+EXPORT_SYMBOL_GPL(cobalt_remove_config_chain);
