@@ -119,12 +119,16 @@ int open_threads(struct fsobj *fsobj, void *priv)
 		p->pid = thobj->pid;
 		p->priority = threadobj_get_priority(thobj);
 		p->policy = threadobj_get_policy(thobj);
-		threadobj_stat(thobj, &statbuf);
+		ret = threadobj_stat(thobj, &statbuf);
 		threadobj_unlock(thobj);
-		p->status = statbuf.status;
-		p->cpu = statbuf.cpu;
-		p->timeout = statbuf.timeout;
-		p->schedlock = statbuf.schedlock;
+		if (ret)
+			p->cpu = -1;
+		else {
+			p->status = statbuf.status;
+			p->cpu = statbuf.cpu;
+			p->timeout = statbuf.timeout;
+			p->schedlock = statbuf.schedlock;
+		}
 		p++;
 	}
 
@@ -142,8 +146,13 @@ int open_threads(struct fsobj *fsobj, void *priv)
 		if (kill(p->pid, 0))
 			continue;
 		snprintf(pbuf, sizeof(pbuf), "%3d", p->priority);
-		format_time(p->timeout, tbuf, sizeof(tbuf));
-		format_thread_status(p, sbuf, sizeof(sbuf));
+		if (p->cpu < 0) {
+			strcpy(tbuf, "????");
+			strcpy(sbuf, "??");
+		} else {
+			format_time(p->timeout, tbuf, sizeof(tbuf));
+			format_thread_status(p, sbuf, sizeof(sbuf));
+		}
 		switch (p->policy) {
 		case SCHED_FIFO:
 			sched_class = "fifo";
@@ -176,7 +185,7 @@ int open_threads(struct fsobj *fsobj, void *priv)
 			break;
 		}
 		len += fsobstack_grow_format(o,
-					     "%3u  %-6d %-5s  %-8s %-8s  %-10s %s\n",
+					     "%3d  %-6d %-5s  %-8s %-8s  %-10s %s\n",
 					     p->cpu, p->pid, sched_class, pbuf,
 					     tbuf, sbuf, p->name);
 		p++;
