@@ -1623,11 +1623,14 @@ int threadobj_set_periodic(struct threadobj *thobj,
 
 int threadobj_wait_period(unsigned long *overruns_r)
 {
+	struct threadobj *current = threadobj_current();
 	siginfo_t si;
 	int sig;
 
 	for (;;) {
+		current->run_state = __THREAD_S_DELAYED;
 		sig = __RT(sigwaitinfo(&sigperiod_set, &si));
+		current->run_state = __THREAD_S_RUNNING;
 		if (sig == SIGPERIOD)
 			break;
 		if (errno == EINTR)
