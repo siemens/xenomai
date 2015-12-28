@@ -22,6 +22,8 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include <fcntl.h>
@@ -851,14 +853,33 @@ static void disable_rr_corespec(struct threadobj *thobj) /* thobj->lock held */
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat) /* thobj->lock held */
 {
+	char procstat[64], buf[BUFSIZ], *p;
 	struct timespec now, delta;
+	FILE *fp;
+	int n;
 
 	__threadobj_check_locked(thobj);
 
-	stat->cpu = sched_getcpu();
-	if (stat->cpu < 0)
-		stat->cpu = 0;	/* assume uniprocessor on ENOSYS */
+	snprintf(procstat, sizeof(procstat), "/proc/%d/stat", thobj->pid);
+	fp = fopen(procstat, "r");
+	if (fp == NULL)
+		return -EINVAL;
 
+	p = fgets(buf, sizeof(buf), fp);
+	fclose(fp);
+
+	if (p == NULL)
+		return -EIO;
+
+	p += strlen(buf);
+	for (n = 0; n < 14; n++) {
+		while (*--p != ' ') {
+			if (p <= buf)
+				return -EINVAL;
+		}
+	}
+
+	stat->cpu = atoi(++p);
 	stat->status = threadobj_get_status(thobj);
 
 	if (thobj->run_state & (__THREAD_S_TIMEDWAIT|__THREAD_S_DELAYED)) {
