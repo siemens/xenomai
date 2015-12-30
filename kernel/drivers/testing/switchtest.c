@@ -549,6 +549,9 @@ static void rtswitch_close(struct rtdm_fd *fd)
 	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
 	unsigned int i;
 
+	rtdm_timer_destroy(&ctx->wake_up_delay);
+	rtdm_nrtsig_destroy(&ctx->wake_utask);
+
 	if (ctx->tasks) {
 		set_cpus_allowed(current, *cpumask_of(ctx->cpu));
 
@@ -563,8 +566,6 @@ static void rtswitch_close(struct rtdm_fd *fd)
 		}
 		vfree(ctx->tasks);
 	}
-	rtdm_timer_destroy(&ctx->wake_up_delay);
-	rtdm_nrtsig_destroy(&ctx->wake_utask);
 }
 
 static int rtswitch_ioctl_nrt(struct rtdm_fd *fd,
