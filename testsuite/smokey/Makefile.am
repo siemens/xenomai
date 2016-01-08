@@ -5,9 +5,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 smokey_SOURCES = main.c
 
-if XENO_COBALT
-wrappers = $(XENO_POSIX_WRAPPERS)
-SUBDIRS = 		\
+COBALT_SUBDIRS = 	\
 	arith 		\
 	bufp		\
 	iddp		\
@@ -25,8 +23,16 @@ SUBDIRS = 		\
 	tsc		\
 	vdso-access 	\
 	xddp
+
+MERCURY_SUBDIRS =
+
+DIST_SUBDIRS = $(COBALT_SUBDIRS) $(MERCURY_SUBDIRS)
+
+if XENO_COBALT
+wrappers = $(XENO_POSIX_WRAPPERS)
+SUBDIRS = $(COBALT_SUBDIRS)
 else
-SUBDIRS =
+SUBDIRS = $(MERCURY_SUBDIRS)
 wrappers =
 endif
 
@@ -50,22 +56,3 @@ smokey_LDADD = 					\
 	../../lib/@XENO_CORE_LIB@		\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt
-
-DIST_SUBDIRS = 		\
-	arith 		\
-	bufp		\
-	iddp		\
-	leaks		\
-	posix-clock	\
-	posix-cond 	\
-	posix-fork	\
-	posix-mutex 	\
-	posix-select 	\
-	rtdm 		\
-	sched-quota 	\
-	sched-tp 	\
-	sigdebug	\
-	timerfd		\
-	tsc		\
-	vdso-access 	\
-	xddp
