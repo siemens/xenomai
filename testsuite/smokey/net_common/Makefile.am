@@ -1,7 +1,9 @@
 bin_PROGRAMS = smokey_net_server
 
 noinst_LIBRARIES = libnet_common.a
-noinst_HEADERS = smokey_net.h
+noinst_HEADERS = \
+	smokey_net.h \
+	smokey_net_server.h
 
 AM_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
