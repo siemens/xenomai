@@ -625,7 +625,9 @@ static void xnintr_irq_handler(unsigned int irq, void *cookie)
 
 	if (s & XN_IRQ_DISABLE)
 		set_bit(XN_IRQSTAT_DISABLED, &intr->status);
-
+#ifdef CONFIG_SMP
+done:
+#endif
 	xnlock_put(&vec->lock);
 
 	if (s & XN_IRQ_DISABLE)
