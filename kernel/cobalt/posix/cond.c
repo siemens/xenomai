@@ -117,6 +117,8 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 
 	cobalt_cond_reclaim(&cond->resnode, s); /* drops lock */
 
+	cobalt_mark_deleted(cnd);
+
 	return 0;
 }
 
