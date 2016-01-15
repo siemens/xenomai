@@ -31,13 +31,13 @@
 #include <errno.h>
 #include <boilerplate/compiler.h>
 
-#if defined(__UCLIBC__) && !defined(UCLIBC_HAS_THREADS_NATIVE)
+#if !HAVE_DECL_PTHREAD_PRIO_NONE
 enum {
 	PTHREAD_PRIO_NONE,
 	PTHREAD_PRIO_INHERIT,
 	PTHREAD_PRIO_PROTECT
 };
-#endif /* __UCLIBC__  && !UCLIBC_HAS_THREADS_NATIVE */
+#endif /* !HAVE_DECL_PTHREAD_PRIO_NONE */
 
 #ifndef HAVE_FORK
 static inline int fork(void)

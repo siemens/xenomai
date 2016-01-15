@@ -519,6 +519,11 @@ AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
 		shm_unlink])
 LIBS="$save_LIBS"
 
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
+AC_CHECK_DECLS([PTHREAD_PRIO_NONE], [], [], [#include <pthread.h>])
+CPPFLAGS=$save_CPPFLAGS
+
 dnl If we can't set the clock for condvar timeouts, then
 dnl we have to restrict the Copperplate clock to CLOCK_REALTIME over
 dnl Mercury unconditionally. Cobalt is different: although we may not
