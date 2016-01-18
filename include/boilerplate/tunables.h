@@ -99,14 +99,24 @@ static inline read_config_tunable(no_sanity, int)
 	return __base_setup_data.no_sanity;
 }
 
-static inline define_runtime_tunable(verbosity_level, int, mode)
+static inline define_runtime_tunable(verbosity_level, int, level)
 {
-	__base_setup_data.verbosity_level = mode;
+	__base_setup_data.verbosity_level = level;
 }
 
 static inline read_runtime_tunable(verbosity_level, int)
 {
 	return __base_setup_data.verbosity_level;
+}
+
+static inline define_runtime_tunable(trace_level, int, level)
+{
+	__base_setup_data.trace_level = level;
+}
+
+static inline read_runtime_tunable(trace_level, int)
+{
+	return __base_setup_data.trace_level;
 }
 
 #ifdef __cplusplus

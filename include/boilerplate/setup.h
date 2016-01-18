@@ -28,6 +28,7 @@ struct base_setup_data {
 	int no_mlock;
 	int no_sanity;
 	int verbosity_level;
+	int trace_level;
 	const char *arg0;
 };
 
@@ -105,6 +106,14 @@ static inline const char *get_program_name(void)
 {
 	return basename(__base_setup_data.arg0 ?: "program");
 }
+
+void __trace_me(const char *fmt, ...);
+
+#define trace_me(__fmt, __args...)			\
+	do {						\
+		if (__base_setup_data.trace_level > 0)	\
+			__trace_me(__fmt, ##__args);	\
+	} while (0)
 
 #ifdef __cplusplus
 }

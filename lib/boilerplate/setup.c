@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <memory.h>
 #include <malloc.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
 #include <xeno_config.h>
@@ -36,6 +37,7 @@
 struct base_setup_data __base_setup_data = {
 	.no_sanity = !CONFIG_XENO_SANITY,
 	.verbosity_level = 1,
+	.trace_level = 0,
 	.arg0 = NULL,
 	.no_mlock = 0,
 };
@@ -101,7 +103,12 @@ static const struct option base_options[] = {
 		.flag = &__base_setup_data.no_sanity,
 	},
 	{
-#define no_mlock_opt	9
+#define trace_opt	9
+		.name = "trace",
+		.has_arg = optional_argument,
+	},
+	{
+#define no_mlock_opt	10
 #ifdef CONFIG_XENO_MERCURY
 		.name = "no-mlock",
 		.has_arg = no_argument,
@@ -310,8 +317,9 @@ void xenomai_usage(void)
 
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
         fprintf(stderr, "--[no-]sanity			disable/enable sanity checks\n");
-        fprintf(stderr, "--verbose[=level] 		set verbosity to desired level\n");
+        fprintf(stderr, "--verbose[=level] 		set verbosity to desired level [=1]\n");
         fprintf(stderr, "--silent, --quiet 		same as --verbose=0\n");
+        fprintf(stderr, "--trace[=level] 		set tracing to desired level [=1]\n");
         fprintf(stderr, "--version			get version information\n");
         fprintf(stderr, "--dump-config			dump configuration settings\n");
 #ifdef CONFIG_XENO_MERCURY
@@ -368,6 +376,11 @@ static int parse_base_options(int *argcp, char *const **argvp,
 			__base_setup_data.verbosity_level = 1;
 			if (optarg)
 				__base_setup_data.verbosity_level = atoi(optarg);
+			break;
+		case trace_opt:
+			__base_setup_data.trace_level = 1;
+			if (optarg)
+				__base_setup_data.trace_level = atoi(optarg);
 			break;
 		case silent_opt:
 		case quiet_opt:
@@ -436,6 +449,7 @@ static int parse_setup_options(int *argcp, int largc, char **uargv,
 			    lindex >= setup->__reserved.opt_end)
 				continue;
 			lindex -= setup->__reserved.opt_start;
+			trace_me("%s->parse_options()", setup->name);
 			ret = setup->parse_option(lindex, optarg);
 			if (ret == 0)
 				break;
@@ -496,6 +510,8 @@ void xenomai_init(int *argcp, char *const **argvp)
 	if (ret)
 		goto fail;
 
+	trace_me("%s() running", __func__);
+
 #ifndef CONFIG_SMP
 	if (__base_setup_data.no_sanity == 0) {
 		ret = get_static_cpu_count();
@@ -514,6 +530,7 @@ void xenomai_init(int *argcp, char *const **argvp)
 			goto fail;
 		}
 	}
+	trace_me("memory locked");
 #endif
 
 	/*
@@ -527,6 +544,7 @@ void xenomai_init(int *argcp, char *const **argvp)
 
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
 			if (setup->tune) {
+				trace_me("%s->tune()", setup->name);
 				ret = setup->tune();
 				if (ret)
 					break;
@@ -545,6 +563,7 @@ void xenomai_init(int *argcp, char *const **argvp)
 	
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
 			if (setup->init) {
+				trace_me("%s->init()", setup->name);
 				ret = setup->init();
 				if (ret)
 					break;
@@ -583,10 +602,23 @@ void xenomai_init(int *argcp, char *const **argvp)
 	 */
 	*argvp = uargv;
 	init_done = 1;
+	trace_me("initialization complete");
 
 	return;
 fail:
 	early_panic("initialization failed, %s", symerror(ret));
+}
+
+void __trace_me(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	fprintf(stderr, "--  ");
+	vfprintf(stderr, fmt, ap);
+	fputc('\n', stderr);
+	fflush(stderr);
+	va_end(ap);
 }
 
 void __register_setup_call(struct setup_descriptor *p, int id)
