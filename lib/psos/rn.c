@@ -265,7 +265,7 @@ starve:
 		timespec = NULL;
 
 	wait = threadobj_prepare_wait(struct psos_rn_wait);
-	wait->ptr = __moff(NULL);
+	wait->ptr = __moff_nullable(NULL);
 	wait->size = size;
 
 	ret = syncobj_wait_grant(&rn->sobj, timespec, &syns);
