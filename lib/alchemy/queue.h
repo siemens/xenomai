@@ -49,9 +49,9 @@ struct alchemy_queue_msg {
 };
 
 struct alchemy_queue_wait {
-	struct alchemy_queue_msg *msg;
-	dref_type(void *) userbuf;
-	size_t usersz;
+	dref_type(struct alchemy_queue_msg *) msg;
+	void *local_buf;
+	size_t local_bufsz;
 };
 
 extern struct syncluster alchemy_queue_table;

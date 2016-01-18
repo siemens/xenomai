@@ -540,7 +540,7 @@ int rt_queue_send(RT_QUEUE *queue,
 		if (waiter == NULL)
 			break;
 		wait = threadobj_get_wait(waiter);
-		wait->msg = msg;
+		wait->msg = __moff(msg);
 		msg->refcount++;
 		ret++;
 	} while (mode & Q_BROADCAST);
@@ -606,8 +606,8 @@ out:
  * message has been enqueued. Upon error, one of the following error
  * codes is returned:
  *
- * - -EINVAL is returned if @a mode is invalid, or @a q is not a
- * essage queue descriptor.
+ * - -EINVAL is returned if @a mode is invalid, @a buf is NULL with a
+ * non-zero @a size, or @a q is not a essage queue descriptor.
  *
  * - -ENOMEM is returned if queuing the message would exceed the limit
  * defined for the queue at creation, or if no memory can be obtained
@@ -625,13 +625,16 @@ int rt_queue_write(RT_QUEUE *queue,
 	struct syncstate syns;
 	int ret = 0, nwaiters;
 	struct service svc;
-	size_t usersz;
+	size_t bufsz;
 
 	if (mode & ~(Q_URGENT|Q_BROADCAST))
 		return -EINVAL;
 
 	if (size == 0)
 		return 0;
+
+	if (buf == NULL)
+		return -EINVAL;
 
 	CANCEL_DEFER(svc);
 
@@ -647,15 +650,15 @@ int rt_queue_write(RT_QUEUE *queue,
 		 * reader's buffer.
 		 */
 		wait = threadobj_get_wait(waiter);
-		usersz = wait->usersz;
-		if (usersz == 0)
+		bufsz = wait->local_bufsz;
+		if (bufsz == 0)
 			/* no buffer provided, enqueue normally. */
 			goto enqueue;
-		if (size > usersz)
-			size = usersz;
+		if (size > bufsz)
+			size = bufsz;
 		if (size > 0)
-			memcpy(__mptr(wait->userbuf), buf, size);
-		wait->usersz = size;
+			memcpy(wait->local_buf, buf, size);
+		wait->local_bufsz = size;
 		syncobj_grant_to(&qcb->sobj, waiter);
 		ret = 1;
 		goto done;
@@ -693,7 +696,7 @@ enqueue:
 		if (waiter == NULL)
 			break;
 		wait = threadobj_get_wait(waiter);
-		wait->msg = msg;
+		wait->msg = __moff(msg);
 		msg->refcount++;
 		ret++;
 	} while (mode & Q_BROADCAST);
@@ -827,7 +830,7 @@ wait:
 	}
 
 	wait = threadobj_prepare_wait(struct alchemy_queue_wait);
-	wait->usersz = 0;
+	wait->local_bufsz = 0;
 
 	ret = syncobj_wait_grant(&qcb->sobj, abs_timeout, &syns);
 	if (ret) {
@@ -836,7 +839,7 @@ wait:
 			goto out;
 		}
 	} else {
-		msg = wait->msg;
+		msg = __mptr(wait->msg);
 		*bufp = msg + 1;
 		ret = (ssize_t)msg->size;
 	}
@@ -901,7 +904,10 @@ out:
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the received message payload. The internal message
- * buffer conveying the data is automatically freed by this call.
+ * buffer conveying the data is automatically freed by this call.  If
+ * --enable-pshared is enabled in the configuration, @a buf must have
+ * been obtained from the Xenomai memory allocator via xnmalloc() or
+ * any service based on it, such as rt_heap_alloc().
  *
  * @param size The length in bytes of the memory area pointed to by @a
  * buf. Messages larger than @a size are truncated appropriately.
@@ -981,9 +987,9 @@ wait:
 	}
 
 	wait = threadobj_prepare_wait(struct alchemy_queue_wait);
-	wait->userbuf = __moff(buf);
-	wait->usersz = size;
-	wait->msg = NULL;
+	wait->local_buf = buf;
+	wait->local_bufsz = size;
+	wait->msg = __moff_nullable(NULL);
 
 	ret = syncobj_wait_grant(&qcb->sobj, abs_timeout, &syns);
 	if (ret) {
@@ -991,15 +997,15 @@ wait:
 			threadobj_finish_wait();
 			goto out;
 		}
-	} else if (wait->msg) {
-		msg = wait->msg;
+	} else if (__mptr_nullable(wait->msg)) {
+		msg = __mptr(wait->msg);
 	transfer:
 		ret = (ssize_t)(msg->size > size ? size : msg->size);
 		if (ret > 0) 
 			memcpy(buf, msg + 1, ret);
 		heapobj_free(&qcb->hobj, msg);
 	} else	/* A direct copy took place. */
-		ret = (ssize_t)wait->usersz;
+		ret = (ssize_t)wait->local_bufsz;
 
 	threadobj_finish_wait();
 done:
