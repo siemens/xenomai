@@ -594,11 +594,11 @@ out:
  * ensuring a FIFO ordering.
  *
  * - Q_BROADCAST causes the message to be sent to all tasks currently
- * waiting for messages. The message is not copied; a reference count
- * is maintained instead so that the message will remain valid until
- * the last receiver releases its own reference using rt_queue_free(),
- * after which the message space will be returned to the queue's
- * internal pool.
+ * waiting for messages. The message is not copied multiple times; a
+ * reference count is maintained instead so that the message will
+ * remain valid until the last receiver releases its own reference
+ * using rt_queue_free(), after which the message space will be
+ * returned to the queue's internal pool.
  *
  * @return Upon success, this service returns the number of receivers
  * which got awaken as a result of the operation. If zero is returned,
@@ -641,6 +641,10 @@ int rt_queue_write(RT_QUEUE *queue,
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
 		goto out;
+
+	if (mode & Q_BROADCAST)
+		/* No buffer-to-buffer copy in broadcast mode. */
+		goto enqueue;
 
 	waiter = syncobj_peek_grant(&qcb->sobj);
 	if (waiter && threadobj_local_p(waiter)) {
