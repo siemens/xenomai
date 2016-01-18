@@ -14,6 +14,10 @@
 
 #include <smokey/smokey.h>
 
+#ifndef ETH_P_802_EX1
+#define ETH_P_802_EX1	0x88B5		/* 802.1 Local Experimental 1.  */
+#endif
+
 struct smokey_net_payload {
 	struct timespec ts;
 	unsigned seq;
