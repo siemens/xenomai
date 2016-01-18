@@ -245,7 +245,7 @@ int rt_heap_create(RT_HEAP *heap,
 	generate_name(hcb->name, name, &heap_namegen);
 	hcb->mode = mode;
 	hcb->size = heapsz;
-	hcb->sba = __moff(NULL);
+	hcb->sba = __moff_nullable(NULL);
 
 	if (mode & H_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
@@ -439,7 +439,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 		goto out;
 
 	if (hcb->mode & H_SINGLE) {
-		p = __mptr(hcb->sba);
+		p = __mptr_nullable(hcb->sba);
 		if (p)
 			goto done;
 		if (size == 0)
