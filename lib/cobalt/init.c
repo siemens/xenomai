@@ -118,11 +118,15 @@ static void low_init(void)
 		early_panic("binding failed: %s", strerror(-ret));
 	}
 
+	trace_me("connected to Cobalt");
+
 	if (mlockall(MCL_CURRENT | MCL_FUTURE))
 		early_panic("mlockall: %s", strerror(errno));
 
+	trace_me("memory locked");
 	cobalt_check_features(f);
 	cobalt_init_umm(f->vdso_offset);
+	trace_me("memory heaps mapped");
 	cobalt_init_current_keys();
 	cobalt_ticks_init(f->clock_freq);
 }
