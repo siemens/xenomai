@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <asm/xenomai/syscall.h>
-#include "corectl.h"
+#include <xenomai/posix/corectl.h>
 
 static int
 rtnet_corectl_call(struct notifier_block *self, unsigned long arg, void *cookie)

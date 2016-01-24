@@ -1,4 +1,6 @@
-ccflags-y += -Idrivers/xenomai/net/stack/include
+ccflags-y += -Idrivers/xenomai/net/stack/include -Ikernel/
+
+obj-y += corectl.o
 
 obj-$(CONFIG_XENO_DRIVERS_NET_RTIPV4) += ipv4/
 

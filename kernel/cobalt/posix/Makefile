@@ -15,7 +15,6 @@ xenomai-y :=		\
 	mutex.o		\
 	nsem.o		\
 	process.o	\
-	rtnet_corectl.o \
 	sched.o		\
 	sem.o		\
 	signal.o	\
