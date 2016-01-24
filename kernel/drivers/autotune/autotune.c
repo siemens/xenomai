@@ -571,8 +571,11 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 			goto fail;
 
 		if (step < WARMUP_STEPS) {
-			if (step == WARMUP_STEPS - 1 && state->min_lat >= 0)
+			if (step == WARMUP_STEPS - 1 && state->min_lat >= 0) {
 				gravity_limit = state->min_lat;
+				progress(tuner, "gravity limit set to %Lu ns",
+					 xnclock_ticks_to_ns(&nkclock, gravity_limit));
+			}
 			continue;
 		}
 
@@ -599,8 +602,12 @@ static int tune_gravity(struct gravity_tuner *tuner, int period)
 		 * at warmup would make no sense: cap the gravity we
 		 * may try.
 		 */
-		if (tuner->adjust_gravity(tuner, adjust) > gravity_limit)
+		if (tuner->adjust_gravity(tuner, adjust) > gravity_limit) {
+			progress(tuner, "gravity limit reached at %Lu ns",
+				 xnclock_ticks_to_ns(&nkclock,
+						     tuner->get_gravity(tuner)));
 			break;
+		}
 	}
 
 	progress(tuner, "calibration scores");
