@@ -24,6 +24,7 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/arith.h>
 #include <cobalt/kernel/vdso.h>
+#include <cobalt/uapi/time.h>
 #include <asm/xenomai/calibration.h>
 #include <trace/events/cobalt-core.h>
 /**
@@ -509,7 +510,7 @@ static int clock_show(struct xnvfile_regular_iterator *it, void *data)
 	struct xnclock *clock = xnvfile_priv(it->vfile);
 
 	if (clock->id >= 0)	/* External clock, print id. */
-		xnvfile_printf(it, "%7s: %d\n", "id", clock->id);
+		xnvfile_printf(it, "%7s: %d\n", "id", __COBALT_CLOCK_EXT(clock->id));
 		
 	xnvfile_printf(it, "%7s: irq=%Ld kernel=%Ld user=%Ld\n", "gravity",
 		       xnclock_ticks_to_ns(clock, xnclock_get_gravity(clock, irq)),
