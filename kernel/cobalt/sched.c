@@ -972,6 +972,7 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	struct vfile_schedlist_data *p = data;
 	xnticks_t timeout, period;
 	struct xnthread *thread;
+	xnticks_t base_time;
 
 	if (priv->curr == NULL)
 		return 0;	/* All done. */
@@ -992,7 +993,10 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	knamecpy(p->sched_class, thread->sched_class->name);
 	knamecpy(p->personality, thread->personality->name);
 	period = xnthread_get_period(thread);
-	timeout = xnthread_get_timeout(thread, priv->start_time);
+	base_time = priv->start_time;
+	if (xntimer_clock(&thread->ptimer) != &nkclock)
+		base_time = xnclock_read_monotonic(xntimer_clock(&thread->ptimer));
+	timeout = xnthread_get_timeout(thread, base_time);
 	/*
 	 * Here we cheat: thread is periodic and the sampling rate may
 	 * be high, so it is indeed possible that the next tick date
