@@ -273,6 +273,12 @@ static inline xnticks_t xnclock_get_resolution(struct xnclock *clock)
 	return clock->resolution; /* ns */
 }
 
+static inline void xnclock_set_resolution(struct xnclock *clock,
+					  xnticks_t resolution)
+{
+	clock->resolution = resolution; /* ns */
+}
+
 static inline int xnclock_set_gravity(struct xnclock *clock,
 				      const struct xnclock_gravity *gravity)
 {
