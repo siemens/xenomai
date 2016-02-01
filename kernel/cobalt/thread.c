@@ -1320,15 +1320,13 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 		goto unlock_and_exit;
 	}
 
+	/*
+	 * LART: detect periods which are shorter than the core clock
+	 * gravity for kernel thread timers. This can't work, caller
+	 * must have messed up arguments.
+	 */
 	if (period < xnclock_ticks_to_ns(&nkclock,
-					 xnclock_get_gravity(&nkclock,
-							     kernel))) {
-		/*
-		 * LART: detect periods which are shorter than the
-		 * core clock gravity for kernel thread timers. This
-		 * can't work, caller must have messed up with
-		 * arguments.
-		 */
+			 xnclock_get_gravity(&nkclock, kernel))) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
@@ -1348,7 +1346,7 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
 	else {
 		if (timeout_mode == XN_REALTIME)
-			idate -= xnclock_get_offset(&nkclock);
+			idate -= xnclock_get_offset(xntimer_clock(&thread->ptimer));
 		else if (timeout_mode != XN_ABSOLUTE) {
 			ret = -EINVAL;
 			goto unlock_and_exit;
@@ -1399,6 +1397,7 @@ int xnthread_wait_period(unsigned long *overruns_r)
 {
 	unsigned long overruns = 0;
 	struct xnthread *thread;
+	struct xnclock *clock;
 	xnticks_t now;
 	int ret = 0;
 	spl_t s;
@@ -1414,7 +1413,8 @@ int xnthread_wait_period(unsigned long *overruns_r)
 
 	trace_cobalt_thread_wait_period(thread);
 
-	now = xnclock_read_raw(&nkclock);
+	clock = xntimer_clock(&thread->ptimer);
+	now = xnclock_read_raw(clock);
 	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
 		xnthread_suspend(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
@@ -1422,7 +1422,7 @@ int xnthread_wait_period(unsigned long *overruns_r)
 			goto out;
 		}
 
-		now = xnclock_read_raw(&nkclock);
+		now = xnclock_read_raw(clock);
 	}
 
 	overruns = xntimer_get_overruns(&thread->ptimer, now);
