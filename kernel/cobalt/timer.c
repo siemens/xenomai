@@ -141,9 +141,8 @@ int xntimer_start(struct xntimer *timer,
 	default: /* XN_ABSOLUTE || XN_REALTIME */
 		date = xnclock_ns_to_ticks(clock, value);
 		if ((xnsticks_t)(date - now) <= 0) {
-			ret = -ETIMEDOUT;
 			if (interval == XN_INFINITE)
-				return ret;
+				return -ETIMEDOUT;
 			/*
 			 * We are late on arrival for the first
 			 * delivery, wait for the next shot on the
