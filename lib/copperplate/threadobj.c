@@ -1600,7 +1600,7 @@ int threadobj_sleep(const struct timespec *ts)
 		 */
 		if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
 			sigemptyset(&set);
-			ret = __RT(sigwaitinfo(&set, NULL)) ? -errno : 0;
+			ret = __RT(sigwaitinfo(&set, NULL)) ? errno : 0;
 		} else
 			ret = __RT(clock_nanosleep(CLOCK_COPPERPLATE,
 						   TIMER_ABSTIME, ts, NULL));
