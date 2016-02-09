@@ -453,14 +453,55 @@ struct threadobj *syncobj_peek_drain(struct syncobj *sobj)
 
 static int wait_epilogue(struct syncobj *sobj,
 			 struct syncstate *syns,
-			 struct threadobj *current)
+			 struct threadobj *current,
+			 int ret)
 {
 	current->run_state = __THREAD_S_RUNNING;
+
+	/*
+	 * Fixup a potential race upon return from grant/drain_wait
+	 * operations, e.g. given two threads A and B:
+	 *
+	 * A:enqueue_waiter(self)
+	 * A:monitor_wait
+	 *    A:monitor_unlock
+	 *    A:[timed] sleep
+	 *    A:wakeup on timeout/interrupt
+	 *       B:monitor_lock
+	 *       B:look_for_queued_waiter
+	 *          (found A, update A's state)
+	 *       B:monitor_unlock
+	 *    A:dequeue_waiter(self)
+	 *    A:return -ETIMEDOUT/-EINTR
+	 *
+	 * The race may happen anytime between the timeout/interrupt
+	 * event is received by A, and the moment it grabs back the
+	 * monitor lock before unqueuing. When the race happens, B can
+	 * squeeze in a signal before A unqueues after resumption on
+	 * error.
+	 *
+	 * Problem: A's internal state has been updated (e.g. some
+	 * data transferred to it), but it will receive
+	 * -ETIMEDOUT/-EINTR, causing it to miss the update
+	 * eventually.
+	 *
+	 * Solution: fixup the status code upon return from
+	 * wait_grant/drain operations, so that -ETIMEDOUT/-EINTR is
+	 * never returned to the caller if the syncobj was actually
+	 * signaled. We still allow the SYNCOBJ_FLUSHED condition to
+	 * override that success code though.
+	 *
+	 * Whether a condition should be deemed satisfied if it is
+	 * signaled during the race window described above is
+	 * debatable, but this is a simple and straightforward way to
+	 * handle such grey area.
+	 */
 
 	if (current->wait_sobj) {
 		dequeue_waiter(sobj, current);
 		current->wait_sobj = NULL;
-	}
+	} else if (ret == -ETIMEDOUT || ret == -EINTR)
+		ret = 0;
 
 	sobj->wait_count--;
 	assert(sobj->wait_count >= 0);
@@ -477,7 +518,7 @@ static int wait_epilogue(struct syncobj *sobj,
 	if (current->wait_status & SYNCOBJ_FLUSHED)
 		return -EINTR;
 
-	return 0;
+	return ret;
 }
 
 int syncobj_wait_grant(struct syncobj *sobj, const struct timespec *timeout,
@@ -515,7 +556,7 @@ int syncobj_wait_grant(struct syncobj *sobj, const struct timespec *timeout,
 
 	pthread_setcancelstate(state, NULL);
 
-	return wait_epilogue(sobj, syns, current) ?: ret;
+	return wait_epilogue(sobj, syns, current, ret);
 }
 
 int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
@@ -553,7 +594,7 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 
 	pthread_setcancelstate(state, NULL);
 
-	return wait_epilogue(sobj, syns, current) ?: ret;
+	return wait_epilogue(sobj, syns, current, ret);
 }
 
 int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
