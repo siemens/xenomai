@@ -222,8 +222,7 @@ void __traceobj_check_abort(struct traceobj *trobj,
 {
 	dump_marks_on_error(trobj);
 	panic("wrong return status:\n              %s:%d => %s (want %s)", file, line,
-	      symerror(received > 0 ? -received : received),
-	      symerror(expected > 0 ? -expected : expected));
+	      symerror(received), symerror(expected));
 }
 
 void __traceobj_check_warn(struct traceobj *trobj,
@@ -232,8 +231,7 @@ void __traceobj_check_warn(struct traceobj *trobj,
 {
 	dump_marks_on_error(trobj);
 	warning("wrong return status:\n              %s:%d => %s (want %s)", file, line,
-		symerror(received > 0 ? -received : received),
-		symerror(expected > 0 ? -expected : expected));
+		symerror(received), symerror(expected));
 }
 
 void __traceobj_mark(struct traceobj *trobj,
