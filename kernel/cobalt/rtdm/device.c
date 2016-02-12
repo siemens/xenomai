@@ -352,6 +352,9 @@ static void unregister_driver(struct rtdm_driver *drv)
  * - -ENOMEM is returned if a memory allocation failed in the process
  * of registering the device.
  *
+ * - -EAGAIN is returned if no registry slot is available (check/raise
+ * CONFIG_XENO_OPT_REGISTRY_NRSLOTS).
+ *
  * @coretags{secondary-only}
  */
 int rtdm_dev_register(struct rtdm_device *dev)

@@ -98,6 +98,7 @@ void cobalt_mutex_init(void)
  * - EAGAIN, insufficient memory available to initialize the
  *   mutex, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared
  *   mutex, or CONFIG_XENO_OPT_PRIVATE_HEAPSZ for a process-private mutex.
+ * - EAGAIN, no registry slot available, check/raise CONFIG_XENO_OPT_REGISTRY_NRSLOTS.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">

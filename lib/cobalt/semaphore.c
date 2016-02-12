@@ -75,6 +75,7 @@ struct cobalt_sem_state *sem_get_state(struct cobalt_sem_shadow *shadow)
  * - EAGAIN, insufficient memory available to initialize the
  *   semaphore, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared
  *   semaphore, or CONFIG_XENO_OPT_PRIVATE_HEAPSZ for a process-private semaphore.
+ * - EAGAIN, no registry slot available, check/raise CONFIG_XENO_OPT_REGISTRY_NRSLOTS.
  * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
  *
  * @see

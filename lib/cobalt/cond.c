@@ -103,6 +103,7 @@ void cobalt_default_condattr_init(void)
  * - EBUSY, the condition variable @a cond was already initialized;
  * - ENOMEM, insufficient memory available from the system heap to initialize the
  *   condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
+ * - EAGAIN, no registry slot available, check/raise CONFIG_XENO_OPT_REGISTRY_NRSLOTS.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">

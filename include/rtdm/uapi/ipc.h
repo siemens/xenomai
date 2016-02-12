@@ -174,7 +174,8 @@ int close__AF_RTIPC(int sockfd);
  *   - -ENOMEM (Not enough memory)
  *   - -EINVAL (Invalid parameter)
  *   - -EADDRINUSE (Socket already bound to a port, or no port available)
- *   .
+ *   - -EAGAIN (no registry slot available, check/raise
+ *     CONFIG_XENO_OPT_REGISTRY_NRSLOTS) .
  *
  * @par Calling context:
  * non-RT

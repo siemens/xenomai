@@ -637,7 +637,7 @@ int xnregistry_enter(const char *key, void *objaddr,
 	xnlock_get_irqsave(&nklock, s);
 
 	if (list_empty(&free_object_list)) {
-		ret = -ENOMEM;
+		ret = -EAGAIN;
 		goto unlock_and_exit;
 	}
 

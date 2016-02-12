@@ -93,6 +93,7 @@
  * - EPERM, attempting to create a message queue from an invalid context;
  * - EINVAL, the @a attr argument is invalid;
  * - EMFILE, too many descriptors are currently open.
+ * - EAGAIN, no registry slot available, check/raise CONFIG_XENO_OPT_REGISTRY_NRSLOTS.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">
