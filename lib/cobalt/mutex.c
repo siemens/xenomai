@@ -99,6 +99,9 @@ void cobalt_mutex_init(void)
  *   mutex, increase CONFIG_XENO_OPT_SHARED_HEAPSZ for a process-shared
  *   mutex, or CONFIG_XENO_OPT_PRIVATE_HEAPSZ for a process-private mutex.
  * - EAGAIN, no registry slot available, check/raise CONFIG_XENO_OPT_REGISTRY_NRSLOTS.
+ * - ENOSYS, @a attr mentions priority protection
+ *  (PTHREAD_PRIO_PROTECT), but the C library does not provide
+ *  pthread_mutexattr_get/setprioceiling().
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
@@ -117,7 +120,6 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
 		err = -XENOMAI_SYSCALL1(sc_cobalt_mutex_check_init, _mutex);
-
 		if (err)
 			return err;
 	}
@@ -138,11 +140,18 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	err = pthread_mutexattr_getprotocol(attr, &tmp);
 	if (err)
 		return err;
-	if (tmp == PTHREAD_PRIO_PROTECT) { /* Prio ceiling unsupported */
-		err = EINVAL;
-		return err;
-	}
 	kmattr.protocol = tmp;
+
+	if (kmattr.protocol == PTHREAD_PRIO_PROTECT) {
+		err = pthread_mutexattr_getprioceiling(attr, &tmp);
+		if (err)
+			return err;
+		if (tmp == 0 ||	/* Could not cope with null minpri. */
+		    tmp < __cobalt_std_fifo_minpri ||
+		    tmp > __cobalt_std_fifo_maxpri)
+			return EINVAL;
+		kmattr.ceiling = tmp - 1;
+	}
 
 	err = -XENOMAI_SYSCALL2(sc_cobalt_mutex_init, _mutex, &kmattr);
 	if (err)
@@ -260,7 +269,7 @@ static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
  *
  * @return 0 on success
  * @return an error number if:
- * - EPERM, the caller context is invalid;
+ * - EPERM, the caller is not allowed to perform the operation;
  * - EINVAL, the mutex @a mx is invalid;
  * - EPERM, the mutex is not process-shared and does not belong to the current
  *   process;
@@ -279,7 +288,8 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	int status, ret;
+	struct xnthread_user_window *u_window;
+	int status, ret, lazy_protect = 0;
 	xnhandle_t cur;
 
 	cur = cobalt_get_current();
@@ -294,21 +304,28 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 	 * shadows and some debug features, so we must always obtain
 	 * them via a syscall.
 	 */
-  cont:
+start:
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK|XNDEBUG)) == 0) {
+		if (_mutex->attr.protocol == PTHREAD_PRIO_PROTECT)
+			goto protect;
+fast_path:
 		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (ret == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
 	} else {
+slow_path:
 		ret = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
 		if (ret == 0)
 			ret = -EBUSY;
 	}
 
-	if (ret == -EBUSY)
+	if (ret == -EBUSY) {
+		if (lazy_protect)
+			u_window->pp_pending = XN_NO_HANDLE;
+
 		switch(_mutex->attr.type) {
 		case PTHREAD_MUTEX_NORMAL:
 			break;
@@ -322,6 +339,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 			++_mutex->lockcnt;
 			return 0;
 		}
+	}
 
 	do
 		ret = XENOMAI_SYSCALL1(sc_cobalt_mutex_lock, _mutex);
@@ -331,12 +349,22 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 		_mutex->lockcnt = 1;
 
 	return -ret;
-
-  autoinit:
+protect:	
+	u_window = cobalt_get_current_window();
+	/*
+	 * Can't nest lazy ceiling requests, have to take the slow
+	 * path when this happens.
+	 */
+	if (u_window->pp_pending != XN_NO_HANDLE)
+		goto slow_path;
+	u_window->pp_pending = _mutex->handle;
+	lazy_protect = 1;
+	goto fast_path;
+autoinit:
 	ret = cobalt_mutex_autoinit(mutex);
 	if (ret)
 		return ret;
-	goto cont;
+	goto start;
 }
 
 /**
@@ -353,7 +381,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
  *
  * @return 0 on success;
  * @return an error number if:
- * - EPERM, the caller context is invalid;
+ * - EPERM, the caller is not allowed to perform the operation;
  * - EINVAL, the mutex @a mx is invalid;
  * - EPERM, the mutex is not process-shared and does not belong to the current
  *   process;
@@ -375,7 +403,8 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	int status, ret;
+	struct xnthread_user_window *u_window;
+	int status, ret, lazy_protect = 0;
 	xnhandle_t cur;
 
 	cur = cobalt_get_current();
@@ -386,21 +415,28 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 		goto autoinit;
 
 	/* See __cobalt_pthread_mutex_lock() */
-  cont:
+start:
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK|XNDEBUG)) == 0) {
+		if (_mutex->attr.protocol == PTHREAD_PRIO_PROTECT)
+			goto protect;
+fast_path:
 		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (ret == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
 	} else {
+slow_path:
 		ret = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
 		if (ret == 0)
 			ret = -EBUSY;
 	}
 
-	if (ret == -EBUSY)
+	if (ret == -EBUSY) {
+		if (lazy_protect)
+			u_window->pp_pending = XN_NO_HANDLE;
+			
 		switch(_mutex->attr.type) {
 		case PTHREAD_MUTEX_NORMAL:
 			break;
@@ -415,6 +451,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 			++_mutex->lockcnt;
 			return 0;
 		}
+	}
 
 	do {
 		ret = XENOMAI_SYSCALL2(sc_cobalt_mutex_timedlock, _mutex, to);
@@ -423,12 +460,22 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 	if (ret == 0)
 		_mutex->lockcnt = 1;
 	return -ret;
-
-  autoinit:
+protect:	
+	u_window = cobalt_get_current_window();
+	/*
+	 * Can't nest lazy ceiling requests, have to take the slow
+	 * path when this happens.
+	 */
+	if (u_window->pp_pending != XN_NO_HANDLE)
+		goto slow_path;
+	u_window->pp_pending = _mutex->handle;
+	lazy_protect = 1;
+	goto fast_path;
+autoinit:
 	ret = cobalt_mutex_autoinit(mutex);
 	if (ret)
 		return ret;
-	goto cont;
+	goto start;
 }
 
 /**
@@ -442,7 +489,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
  *
  * @return 0 on success;
  * @return an error number if:
- * - EPERM, the caller context is invalid;
+ * - EPERM, the caller is not allowed to perform the operation;
  * - EINVAL, the mutex is invalid;
  * - EPERM, the mutex is not process-shared and does not belong to the current
  *   process;
@@ -460,7 +507,8 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
-	int status, err;
+	struct xnthread_user_window *u_window;
+	int status, ret, lazy_protect = 0;
 	xnhandle_t cur;
 
 	cur = cobalt_get_current();
@@ -469,24 +517,30 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		goto autoinit;
-
-  cont:
+start:
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK|XNDEBUG)) == 0) {
-		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
-		if (err == 0) {
+		if (_mutex->attr.protocol == PTHREAD_PRIO_PROTECT)
+			goto protect;
+fast_path:
+		ret = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
+		if (ret == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
 	} else {
-		err = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
-		if (err < 0)
+slow_path:
+		ret = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
+		if (ret < 0)
 			goto do_syscall;
 
-		err = -EBUSY;
+		ret = -EBUSY;
 	}
 
-	if (err == -EBUSY) {
+	if (ret == -EBUSY) {
+		if (lazy_protect)
+			u_window->pp_pending = XN_NO_HANDLE;
+
 		if (_mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
 			if (_mutex->lockcnt == UINT32_MAX)
 				return EAGAIN;
@@ -494,34 +548,44 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 			++_mutex->lockcnt;
 			return 0;
 		}
+
 		return EBUSY;
 	}
 
 do_syscall:
-
 	do {
-		err = XENOMAI_SYSCALL1(sc_cobalt_mutex_trylock, _mutex);
-	} while (err == -EINTR);
+		ret = XENOMAI_SYSCALL1(sc_cobalt_mutex_trylock, _mutex);
+	} while (ret == -EINTR);
 
-	if (!err)
+	if (ret == 0)
 		_mutex->lockcnt = 1;
 
-	return -err;
-
-  autoinit:
-	err = cobalt_mutex_autoinit(mutex);
-	if (err)
-		return err;
-	goto cont;
+	return -ret;
+autoinit:
+	ret = cobalt_mutex_autoinit(mutex);
+	if (ret)
+		return ret;
+	goto start;
+protect:	
+	u_window = cobalt_get_current_window();
+	/*
+	 * Can't nest lazy ceiling requests, have to take the slow
+	 * path when this happens.
+	 */
+	if (u_window->pp_pending != XN_NO_HANDLE)
+		goto slow_path;
+	u_window->pp_pending = _mutex->handle;
+	lazy_protect = 1;
+	goto fast_path;
 }
 
 /**
  * Unlock a mutex.
  *
- * This service unlocks the mutex @a mx. If the mutex is of the @a
- * PTHREAD_MUTEX_RECURSIVE @a type and the locking recursion count is greater
- * than one, the lock recursion count is decremented and the mutex remains
- * locked.
+ * This service unlocks the @a mutex. If @a mutex is of the @a
+ * PTHREAD_MUTEX_RECURSIVE and the locking recursion count is greater
+ * than one, the lock recursion count is decremented and the mutex
+ * remains locked.
  *
  * Attempting to unlock a mutex which is not locked or which is locked by
  * another thread than the current one yields the EPERM error, whatever the
@@ -531,8 +595,8 @@ do_syscall:
  *
  * @return 0 on success;
  * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the caller is not allowed to perform the operation;
+ * - EINVAL, the mutex @a mutex is invalid;
  * - EPERM, the mutex was not locked by the current thread.
  *
  * @see
@@ -545,14 +609,14 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
+	struct xnthread_user_window *u_window;
 	struct cobalt_mutex_state *state;
 	xnhandle_t cur;
 	int err;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		goto autoinit;
-
-  cont:
+start:
 	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
@@ -572,21 +636,135 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	if (cobalt_get_current_mode() & (XNWEAK|XNDEBUG))
 		goto do_syscall;
 
-	if (xnsynch_fast_release(&state->owner, cur))
+	if (xnsynch_fast_release(&state->owner, cur)) {
+		if (_mutex->attr.protocol == PTHREAD_PRIO_PROTECT)
+			goto unprotect;
 		return 0;
+	}
 do_syscall:
-
 	do {
 		err = XENOMAI_SYSCALL1(sc_cobalt_mutex_unlock, _mutex);
 	} while (err == -EINTR);
 
 	return -err;
 
-  autoinit:
+autoinit:
 	err = cobalt_mutex_autoinit(mutex);
 	if (err)
 		return err;
-	goto cont;
+	goto start;
+unprotect:
+	u_window = cobalt_get_current_window();
+	u_window->pp_pending = XN_NO_HANDLE;
+
+	return 0;
+}
+
+/**
+ * Set a mutex's priority ceiling.
+ *
+ * This routine acquires the specified mutex, then changes the
+ * associated priority ceiling value and releases it.  @a prioceiling
+ * must be between the values returned by sched_get_priority_min() and
+ * sched_get_priority_max(), inclusive.
+ *
+ * The Cobalt implementation applies the priority ceiling protocol
+ * using the previous ceiling value during this operation. The new
+ * priority ceiling will apply next time the @a mutex transitions from
+ * the unlocked to locked state.
+ *
+ * @param mutex the target mutex.
+ *
+ * @param prioceiling the new ceiling value.
+ *
+ * @param old_ceiling on success and if this parameter is non-NULL,
+ * the previous ceiling value is copied to this address.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EPERM, the caller is not allowed to perform the operation;
+ * - EINVAL, @a mutex is invalid;
+ * - EINVAL, @a mutex is not of type PTHREAD_PRIO_PROTECT;
+ * - EINVAL, @a prioceiling is out of range;
+ *
+ * @see
+ * <a href="http://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_setprioceiling.html">
+ * Specification.</a>
+ *
+ * @apitags{xthread-only, switch-primary}
+ *
+ * @note If the calling thread's priority is higher than the mutex's
+ * new priority ceiling, the operation will nevertheless succeed; the
+ * Cobalt core never decreases the effective priority of a thread
+ * which locks a priority-protected mutex.
+ */
+COBALT_IMPL(int, pthread_mutex_setprioceiling,
+	    (pthread_mutex_t *__restrict mutex,
+	     int prioceiling, int *__restrict old_ceiling))
+{
+	struct cobalt_mutex_shadow *_mutex =
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
+	struct cobalt_mutex_state *state;
+	int ret;
+
+	if (_mutex->magic != COBALT_MUTEX_MAGIC ||
+	    _mutex->attr.protocol != PTHREAD_PRIO_PROTECT)
+		return EINVAL;
+	
+	if (prioceiling < __cobalt_std_fifo_minpri ||
+	    prioceiling > __cobalt_std_fifo_maxpri)
+		return EINVAL;
+
+	ret = __COBALT(pthread_mutex_lock(mutex));
+	if (ret)
+		return ret;
+
+	state = mutex_get_state(_mutex);
+	if (old_ceiling)
+		*old_ceiling = state->ceiling;
+
+	state->ceiling = prioceiling;
+
+	return __COBALT(pthread_mutex_unlock(mutex));
+}
+
+/**
+ * Get a mutex's priority ceiling.
+ *
+ * This routine retrieves the priority ceiling value of the specified
+ * mutex.
+ *
+ * @param mutex the target mutex.
+ *
+ * @param prioceiling on success, the current ceiling value is copied
+ * to this address.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a mutex is invalid;
+ * - EINVAL, @a mutex is not of type PTHREAD_PRIO_PROTECT;
+ *
+ * @see
+ * <a href="http://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_getprioceiling.html">
+ * Specification.</a>
+ *
+ * @apitags{thread-unrestricted}
+ */
+COBALT_IMPL(int, pthread_mutex_getprioceiling,
+	    (pthread_mutex_t *__restrict mutex, int *__restrict prioceiling))
+{
+	struct cobalt_mutex_shadow *_mutex =
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
+	struct cobalt_mutex_state *state;
+
+	if (_mutex->magic != COBALT_MUTEX_MAGIC ||
+	    _mutex->attr.protocol != PTHREAD_PRIO_PROTECT)
+		return EINVAL;
+	
+	state = mutex_get_state(_mutex);
+	*prioceiling = state->ceiling;
+
+	return 0;
 }
 
 /**
@@ -702,9 +880,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type);
  * This service stores, at the address @a proto, the value of the @a protocol
  * attribute in the mutex attributes object @a attr.
  *
- * The @a protcol attribute may only be one of @a PTHREAD_PRIO_NONE or @a
- * PTHREAD_PRIO_INHERIT. See pthread_mutexattr_setprotocol() for the meaning of
- * these two constants.
+ * The @a protcol attribute may be one of @a PTHREAD_PRIO_NONE, @a
+ * PTHREAD_PRIO_INHERIT or @a PTHREAD_PRIO_PROTECT. See
+ * pthread_mutexattr_setprotocol() for the meaning of these constants.
  *
  * @param attr an initialized mutex attributes object;
  *
@@ -737,8 +915,8 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto);
  *   @a attr will not follow any priority protocol;
  * - PTHREAD_PRIO_INHERIT, meaning that a mutex created with the attributes
  *   object @a attr, will follow the priority inheritance protocol.
- *
- * The value PTHREAD_PRIO_PROTECT (priority ceiling protocol) is unsupported.
+ * - PTHREAD_PRIO_PROTECT, meaning that a mutex created with the attributes
+ *   object @a attr, will follow the priority protect protocol.
  *
  * @return 0 on success,
  * @return an error number if:

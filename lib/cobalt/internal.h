@@ -57,6 +57,8 @@ void cobalt_thread_init(void);
 
 int cobalt_thread_probe(pid_t pid);
 
+void cobalt_sched_init(void);
+
 void cobalt_print_init(void);
 
 void cobalt_print_init_atfork(void);
@@ -77,5 +79,11 @@ struct cobalt_featinfo;
 void cobalt_check_features(struct cobalt_featinfo *finfo);
 
 extern struct sigaction __cobalt_orig_sigdebug;
+
+extern int __cobalt_std_fifo_minpri,
+	   __cobalt_std_fifo_maxpri;
+
+extern int __cobalt_std_rr_minpri,
+	   __cobalt_std_rr_maxpri;
 
 #endif /* _LIB_COBALT_INTERNAL_H */

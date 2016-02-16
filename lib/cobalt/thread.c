@@ -50,7 +50,7 @@ int cobalt_xlate_schedparam(int policy,
 			    const struct sched_param_ex *param_ex,
 			    struct sched_param *param)
 {
-	int std_policy, priority, std_maxpri;
+	int std_policy, priority;
 
 	/*
 	 * Translates Cobalt scheduling parameters to native ones,
@@ -77,9 +77,8 @@ int cobalt_xlate_schedparam(int policy,
 		 * "weak" (negative) priorities - which are only
 		 * meaningful for the Cobalt core - to regular values.
 		 */
-		std_maxpri = __STD(sched_get_priority_max(SCHED_FIFO));
-		if (priority > std_maxpri)
-			priority = std_maxpri;
+		if (priority > __cobalt_std_fifo_maxpri)
+			priority = __cobalt_std_fifo_maxpri;
 	}
 
 	if (priority < 0)

@@ -227,6 +227,7 @@ static void __cobalt_init(void)
 			    sizeof(struct cobalt_sem_shadow));
 
 	cobalt_mutex_init();
+	cobalt_sched_init();
 	cobalt_thread_init();
 	cobalt_print_init();
 }

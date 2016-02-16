@@ -108,6 +108,25 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *
 }
 #endif /* !HAVE_PTHREAD_MUTEXATTR_GETPROTOCOL */
 
+#ifndef HAVE_PTHREAD_MUTEXATTR_SETPRIOCEILING
+static inline
+int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
+				     int prioceiling)
+{
+	return ENOSYS;
+}
+#endif /* !HAVE_PTHREAD_MUTEXATTR_SETPRIOCEILING */
+
+#ifndef HAVE_PTHREAD_MUTEXATTR_GETPRIOCEILING
+static inline
+int pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *
+				      __restrict attr,
+				     int *__restrict prioceiling)
+{
+	return ENOSYS;
+}
+#endif /* !HAVE_PTHREAD_MUTEXATTR_GETPRIOCEILING */
+
 #ifndef HAVE_PTHREAD_ATTR_SETAFFINITY_NP
 #include <sched.h>
 static inline

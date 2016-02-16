@@ -32,6 +32,8 @@
 --wrap pthread_mutex_trylock
 --wrap pthread_mutex_timedlock
 --wrap pthread_mutex_unlock
+--wrap pthread_mutex_setprioceiling
+--wrap pthread_mutex_getprioceiling
 --wrap pthread_cond_init
 --wrap pthread_cond_destroy
 --wrap pthread_cond_wait

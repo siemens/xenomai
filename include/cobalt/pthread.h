@@ -67,6 +67,13 @@ COBALT_DECL(int, pthread_mutex_trylock(pthread_mutex_t *mutex));
 
 COBALT_DECL(int, pthread_mutex_unlock(pthread_mutex_t *mutex));
 
+COBALT_DECL(int, pthread_mutex_setprioceiling(pthread_mutex_t *__restrict mutex,
+					      int prioceiling,
+					      int *__restrict old_ceiling));
+  
+COBALT_DECL(int, pthread_mutex_getprioceiling(pthread_mutex_t *__restrict mutex,
+					      int *__restrict old_ceiling));
+
 COBALT_DECL(int, pthread_cond_init (pthread_cond_t *cond,
 				    const pthread_condattr_t *attr));
 

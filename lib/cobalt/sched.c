@@ -80,7 +80,11 @@ COBALT_IMPL(int, sched_yield, (void))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
  * Specification.</a>
  *
- * @apitags{thread-unrestricted}
+ * @apitags{thread-unrestricted, switch-secondary}
+ *
+ * @note Fetching the minimum priority level of SCHED_FIFO, SCHED_RR
+ * or any Xenomai-specific policy never leads to a mode switch. Any
+ * other value of @a policy may switch the caller to secondary mode.
  */
 COBALT_IMPL(int, sched_get_priority_min, (int policy))
 {
@@ -88,8 +92,9 @@ COBALT_IMPL(int, sched_get_priority_min, (int policy))
 
 	switch (policy) {
 	case SCHED_FIFO:
+		return __cobalt_std_fifo_minpri;
 	case SCHED_RR:
-		break;
+		return __cobalt_std_rr_minpri;
 	default:
 		ret = XENOMAI_SYSCALL1(sc_cobalt_sched_minprio, policy);
 		if (ret >= 0)
@@ -152,7 +157,11 @@ int sched_get_priority_min_ex(int policy)
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_max.html">
  * Specification.</a>
  *
- * @apitags{thread-unrestricted}
+ * @apitags{thread-unrestricted, switch-secondary}
+ *
+ * @note Fetching the maximum priority level of SCHED_FIFO, SCHED_RR
+ * or any Xenomai-specific policy never leads to a mode switch. Any
+ * other value of @a policy may switch the caller to secondary mode.
  */
 COBALT_IMPL(int, sched_get_priority_max, (int policy))
 {
@@ -160,8 +169,9 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
 
 	switch (policy) {
 	case SCHED_FIFO:
+		return __cobalt_std_fifo_maxpri;
 	case SCHED_RR:
-		break;
+		return __cobalt_std_rr_maxpri;
 	default:
 		ret = XENOMAI_SYSCALL1(sc_cobalt_sched_maxprio, policy);
 		if (ret >= 0)
@@ -611,3 +621,18 @@ ssize_t sched_getconfig_np(int cpu, int policy,
 }
 
 /** @} */
+
+int __cobalt_std_fifo_minpri,
+    __cobalt_std_fifo_maxpri;
+
+int __cobalt_std_rr_minpri,
+    __cobalt_std_rr_maxpri;
+
+void cobalt_sched_init(void)
+{
+	/* Fill in the standard priority limit cache. */
+	__cobalt_std_fifo_minpri = __STD(sched_get_priority_min(SCHED_FIFO));
+	__cobalt_std_fifo_maxpri = __STD(sched_get_priority_max(SCHED_FIFO));
+	__cobalt_std_rr_minpri = __STD(sched_get_priority_min(SCHED_RR));
+	__cobalt_std_rr_maxpri = __STD(sched_get_priority_max(SCHED_RR));
+}
