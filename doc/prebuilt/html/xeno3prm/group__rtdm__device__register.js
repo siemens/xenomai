@@ -9,11 +9,11 @@ var group__rtdm__device__register =
       [ "open", "structrtdm__fd__ops.html#a6fc7655a17c3b416e2cd4d287db9e418", null ],
       [ "read_nrt", "structrtdm__fd__ops.html#a7e4576d158a134a23f72ca4cf616e84c", null ],
       [ "read_rt", "structrtdm__fd__ops.html#a9570acb1ebeae76f65a93f17aa322e56", null ],
-      [ "recvmsg_nrt", "structrtdm__fd__ops.html#ab2d6d6693254ea76cd34b92e4a455c81", null ],
-      [ "recvmsg_rt", "structrtdm__fd__ops.html#a8f7270da7e56f0e088ece331c156f2d5", null ],
+      [ "recvmsg_nrt", "structrtdm__fd__ops.html#a84ff632255185eec076355f4999fd24f", null ],
+      [ "recvmsg_rt", "structrtdm__fd__ops.html#a1e0fd1b80c64b196530a03e2acd11e39", null ],
       [ "select", "structrtdm__fd__ops.html#aafb61715931f01ea60d1aff161af2ca6", null ],
-      [ "sendmsg_nrt", "structrtdm__fd__ops.html#a7fe765ccd637e7e3dabfece1497ef70b", null ],
-      [ "sendmsg_rt", "structrtdm__fd__ops.html#ac5e2af7a2b7470ae45142a717553b7cf", null ],
+      [ "sendmsg_nrt", "structrtdm__fd__ops.html#af3118639fe3c704955dd8087e8ca26a6", null ],
+      [ "sendmsg_rt", "structrtdm__fd__ops.html#a31771a52aa3117c79729668e52a81d7a", null ],
       [ "socket", "structrtdm__fd__ops.html#acc62d859887b28820c2fcbd32be67c76", null ],
       [ "write_nrt", "structrtdm__fd__ops.html#af7d629ac93ee289b0e3b60730cc87ff9", null ],
       [ "write_rt", "structrtdm__fd__ops.html#aed4985eb386a97c4db48bf757d1f019c", null ]
@@ -33,9 +33,9 @@ var group__rtdm__device__register =
     [ "rtdm_mmap_handler", "group__rtdm__device__register.html#ga4d376f88ed220a34961d8390edb20c0e", null ],
     [ "rtdm_open_handler", "group__rtdm__device__register.html#ga0ef51b797df99c754eed7581f7868d44", null ],
     [ "rtdm_read_handler", "group__rtdm__device__register.html#ga5a444bfce838ce7eb0a44b328b935682", null ],
-    [ "rtdm_recvmsg_handler", "group__rtdm__device__register.html#ga178b1bdc29395a7530abaf7df052cdf2", null ],
+    [ "rtdm_recvmsg_handler", "group__rtdm__device__register.html#ga83917e0943966353f589f2790db889ea", null ],
     [ "rtdm_select_handler", "group__rtdm__device__register.html#ga4a225724822b506bb2ed036ef141e428", null ],
-    [ "rtdm_sendmsg_handler", "group__rtdm__device__register.html#ga53afc70c849817555a0b7bedeaed4f12", null ],
+    [ "rtdm_sendmsg_handler", "group__rtdm__device__register.html#gad49a937098c7f39e2c34ad926a619382", null ],
     [ "rtdm_socket_handler", "group__rtdm__device__register.html#ga15ae98f00745983239ee64b95f6cabfe", null ],
     [ "rtdm_write_handler", "group__rtdm__device__register.html#ga9814f54c9195aa50fc4a5da4b0524138", null ]
 ];

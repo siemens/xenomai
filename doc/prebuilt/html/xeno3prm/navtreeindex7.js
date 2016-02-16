@@ -1,5 +1,10 @@
 var NAVTREEINDEX7 =
 {
+"kernel_2cobalt_2rtdm_2internal_8h_source.html":[4,0,1,0,3,0],
+"kernel_2drivers_2ipc_2internal_8h_source.html":[4,0,1,1,2,0],
+"kernel_2rtdm_2cobalt_8h_source.html":[4,0,0,2,1,0,3],
+"kernel_2select_8h_source.html":[4,0,0,2,1,27],
+"kernel_2synch_8h_source.html":[4,0,0,2,1,29],
 "kernel_2vdso_8h_source.html":[4,0,0,2,1,34],
 "lib_2alchemy_2alarm_8h_source.html":[4,0,2,0,0],
 "lib_2alchemy_2buffer_8h_source.html":[4,0,2,0,1],
@@ -51,7 +56,7 @@ var NAVTREEINDEX7 =
 "lstLib_8h_source.html":[4,0,0,9,3],
 "map_8h_source.html":[4,0,0,2,1,14],
 "mayday_8h_source.html":[4,0,1,0,1,0,0,1],
-"memory_8h_source.html":[4,0,1,0,2,6],
+"memory_8h_source.html":[4,0,1,0,2,7],
 "mercury_2boilerplate_2limits_8h_source.html":[4,0,0,4,0,0],
 "mercury_2boilerplate_2trace_8h_source.html":[4,0,0,4,0,3],
 "mercury_2pthread_8h_source.html":[4,0,0,4,1],
@@ -70,13 +75,13 @@ var NAVTREEINDEX7 =
 "obstack_8h_source.html":[4,0,0,1,8],
 "pages.html":[],
 "pci__ids_8h_source.html":[4,0,1,0,1,0,0,2],
-"posix_2syscall32_8h_source.html":[4,0,1,0,2,15],
+"posix_2syscall32_8h_source.html":[4,0,1,0,2,16],
 "powerpc_2include_2asm_2xenomai_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,3],
 "powerpc_2include_2asm_2xenomai_2uapi_2fptest_8h_source.html":[4,0,1,0,0,2,0,0,0,0,2],
 "ppd_8h_source.html":[4,0,0,2,1,16],
 "private-list_8h_source.html":[4,0,0,1,9],
 "proc_8h_source.html":[4,0,1,1,0,2],
-"process_8h_source.html":[4,0,1,0,2,10],
+"process_8h_source.html":[4,0,1,0,2,11],
 "procfs_8h_source.html":[4,0,1,0,6],
 "protocol_8h_source.html":[4,0,1,1,3,1,0,1,7],
 "psos_8h_source.html":[4,0,0,5,0],
@@ -244,10 +249,5 @@ var NAVTREEINDEX7 =
 "structRT__SEM__INFO.html":[2,3,8,0],
 "structRT__SEM__INFO.html#a0b0e81f66b4e936c603f18bf9641a24b":[2,3,8,0,0],
 "structRT__SEM__INFO.html#a456c1a4a5b4c2e192e74b23b79993e71":[2,3,8,0,2],
-"structRT__SEM__INFO.html#a661011cc10b4fabf562b8ddd92d5dd46":[2,3,8,0,1],
-"structRT__TASK__INFO.html":[2,3,9,0],
-"structRT__TASK__INFO.html#a3e5d47277ecea23aa3a5730e0b6b2d13":[2,3,9,0,0],
-"structRT__TASK__INFO.html#a632e09c1d8dabc29c020c828abf62ac6":[2,3,9,0,2],
-"structRT__TASK__INFO.html#a70c731ca5877ff4a6235fa81caa77798":[2,3,9,0,1],
-"structRT__TASK__INFO.html#ae327f3dca3f2ae89c8aa5bd0033ed4b0":[2,3,9,0,3]
+"structRT__SEM__INFO.html#a661011cc10b4fabf562b8ddd92d5dd46":[2,3,8,0,1]
 };

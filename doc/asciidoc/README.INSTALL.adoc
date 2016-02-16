@@ -5,24 +5,22 @@ Introduction
 ------------
 
 Xenomai 3 is the new architecture of the Xenomai real-time framework,
-which can run seamlessly side-by-side Linux as a co-kernel system like
-Xenomai 2, or natively over mainline Linux kernels.  In the latter
-case, the mainline kernel can be supplemented by the
+which can run seamlessly side-by-side Linux as a co-kernel system, or
+natively over mainline Linux kernels.  In the latter case, the
+mainline kernel can be supplemented by the
 https://www.kernel.org/pub/linux/kernel/projects/rt/[PREEMPT-RT patch]
 to meet stricter response time requirements than standard kernel
 preemption would bring.
 
-This new architecture therefore exhibits two real-time cores, selected
-at build time. The dual kernel core nicknamed _Cobalt_, is a
-significant rework of the Xenomai 2.x system. The native linux
-version, an enhanced implementation of the experimental
-http://www.osadl.org/Migration-Portability.migration-portability.0.html[Xenomai/SOLO]
-work, is called _Mercury_.
+One of the two available real-time cores is selected at build
+time. The dual kernel core is codenamed _Cobalt_, the native Linux
+implementation is called _Mercury_.
 
-This magic works with the introduction of the _Copperplate_ interface,
-which mediates between the real-time API/emulator your application
-uses, and the underlying real-time core. This way, applications are
-able to run in either environments without visible code change.
+[NOTE]
+If you are looking for detailed information about installing a legacy
+Xenomai 2.x release, please refer to link:installing-xenomai-2.x[this
+document] instead. Please note that Xenomai 2.x has reached EOL status
+and is no more actively maintained.
 
 Installation steps
 ------------------

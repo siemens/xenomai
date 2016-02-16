@@ -1,5 +1,10 @@
 var NAVTREEINDEX9 =
 {
+"sync_8c.html":[4,0,2,1,7],
+"syncobj_8h_source.html":[4,0,0,3,9],
+"sysLib_8h_source.html":[4,0,0,9,8],
+"sys_2cobalt_8h_source.html":[4,0,0,2,2,0],
+"sys_2select_8h_source.html":[4,0,0,2,2,3],
 "sys_8c.html":[4,0,2,1,8],
 "syscall32-table_8h_source.html":[4,0,1,0,0,3,0,0,0,8],
 "syslog_8h_source.html":[4,0,0,2,13],

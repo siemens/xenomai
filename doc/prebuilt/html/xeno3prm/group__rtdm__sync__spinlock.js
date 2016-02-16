@@ -1,7 +1,8 @@
 var group__rtdm__sync__spinlock =
 [
-    [ "rtdm_lock_irqrestore", "group__rtdm__sync__spinlock.html#gae03c387fcae8a55105dd31d7c008bbb4", null ],
-    [ "rtdm_lock_irqsave", "group__rtdm__sync__spinlock.html#ga3d563fc5def018f743c55c452e061758", null ],
+    [ "rtdm_lock_get_irqsave", "group__rtdm__sync__spinlock.html#ga24e0b97e35b976fbabd52f4213dc222a", null ],
+    [ "rtdm_lock_irqrestore", "group__rtdm__sync__spinlock.html#gaf995dd108afa1c4a41a121ea025533fd", null ],
+    [ "rtdm_lock_irqsave", "group__rtdm__sync__spinlock.html#ga98e6422dc6f0e11d4a1fc9c6b0142059", null ],
     [ "RTDM_LOCK_UNLOCKED", "group__rtdm__sync__spinlock.html#gad122b937f723fade24e729dcf1374ac6", null ],
     [ "rtdm_lock_t", "group__rtdm__sync__spinlock.html#gacbc89e880b42154cb65aa8317195dc03", null ],
     [ "rtdm_lockctx_t", "group__rtdm__sync__spinlock.html#ga7584217487c323356414e21200a57e63", null ],

@@ -2,6 +2,7 @@ var dir_c9b9c8a550607d591cba196f9c4b2d49 =
 [
     [ "clock.h", "kernel_2cobalt_2posix_2clock_8h_source.html", null ],
     [ "cond.h", "kernel_2cobalt_2posix_2cond_8h_source.html", null ],
+    [ "corectl.h", "kernel_2cobalt_2posix_2corectl_8h_source.html", null ],
     [ "event.h", "kernel_2cobalt_2posix_2event_8h_source.html", null ],
     [ "extension.h", "extension_8h_source.html", null ],
     [ "internal.h", "kernel_2cobalt_2posix_2internal_8h_source.html", null ],

@@ -1410,13 +1410,20 @@ make sure that you carefully followed the <a href="#kconf">"Kernel configuration
 </li>
 <li>
 <p>
-make sure that you do not have an issue with SMIs, see the <a href="#SMI">section about SMIs</a>.
+if running on a Raspberry Pi SBC, make sure you don&#8217;t hit a firmware
+issue, see <a href="https://github.com/raspberrypi/firmware/issues/497">https://github.com/raspberrypi/firmware/issues/497</a>.
 </p>
 </li>
 <li>
 <p>
-if you have some legacy USB switch at BIOS configuration level, try
-disabling it.
+if running on a x86 platform, make sure that you do not have an
+issue with SMIs, see the <a href="#SMI">section about SMIs</a>.
+</p>
+</li>
+<li>
+<p>
+if running on a x86 platform with a <em>legacy USB</em> switch available
+from the BIOS configuration, try disabling it.
 </p>
 </li>
 <li>
@@ -1479,7 +1486,7 @@ allocation requests.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-11-01 18:38:48 CET
+Last updated 2016-02-16 15:07:51 CET
 </div>
 </div>
 </body>

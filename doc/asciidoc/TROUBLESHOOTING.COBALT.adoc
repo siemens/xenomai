@@ -529,11 +529,14 @@ The _latency_ test runs, but you are seeing high latencies.
 * make sure that you carefully followed the <<kconf,"Kernel
 configuration" section>>.
 
-* make sure that you do not have an issue with SMIs, see the <<SMI,
-section about SMIs>>.
+* if running on a Raspberry Pi SBC, make sure you don't hit a firmware
+issue, see https://github.com/raspberrypi/firmware/issues/497.
 
-* if you have some legacy USB switch at BIOS configuration level, try
-disabling it.
+* if running on a x86 platform, make sure that you do not have an
+issue with SMIs, see the <<SMI, section about SMIs>>.
+
+* if running on a x86 platform with a _legacy USB_ switch available
+from the BIOS configuration, try disabling it.
 
 * if you do not have this option at BIOS configuration level, it does
 not necessarily mean that there is no support for it, thus no

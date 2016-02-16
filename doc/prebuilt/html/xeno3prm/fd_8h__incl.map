@@ -1,10 +1,10 @@
 <map id="include/cobalt/kernel/rtdm/fd.h" name="include/cobalt/kernel/rtdm/fd.h">
 <area shape="rect" id="node5" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="968,95,1101,121"/>
-<area shape="rect" id="node17" href="$kernel_2cobalt_2include_2asm-generic_2xenomai_2syscall_8h_source.html" title="asm&#45;generic/xenomai\l/syscall.h" alt="" coords="534,169,681,211"/>
+<area shape="rect" id="node18" href="$kernel_2cobalt_2include_2asm-generic_2xenomai_2syscall_8h_source.html" title="asm&#45;generic/xenomai\l/syscall.h" alt="" coords="534,169,681,211"/>
 <area shape="rect" id="node8" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="961,177,1108,203"/>
 <area shape="rect" id="node10" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="964,266,1104,293"/>
-<area shape="rect" id="node13" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="1315,266,1484,293"/>
+<area shape="rect" id="node13" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="1356,266,1526,293"/>
 <area shape="rect" id="node12" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="972,348,1096,389"/>
-<area shape="rect" id="node16" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1392,348,1516,389"/>
-<area shape="rect" id="node22" href="$include_2cobalt_2uapi_2asm-generic_2syscall_8h_source.html" title="cobalt/uapi/asm&#45;generic\l/syscall.h" alt="" coords="645,259,805,300"/>
+<area shape="rect" id="node17" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1515,348,1639,389"/>
+<area shape="rect" id="node23" href="$include_2cobalt_2uapi_2asm-generic_2syscall_8h_source.html" title="cobalt/uapi/asm&#45;generic\l/syscall.h" alt="" coords="645,259,805,300"/>
 </map>

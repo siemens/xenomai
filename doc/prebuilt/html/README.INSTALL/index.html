@@ -742,22 +742,26 @@ asciidoc.install(3);
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Xenomai 3 is the new architecture of the Xenomai real-time framework,
-which can run seamlessly side-by-side Linux as a co-kernel system like
-Xenomai 2, or natively over mainline Linux kernels.  In the latter
-case, the mainline kernel can be supplemented by the
+which can run seamlessly side-by-side Linux as a co-kernel system, or
+natively over mainline Linux kernels.  In the latter case, the
+mainline kernel can be supplemented by the
 <a href="https://www.kernel.org/pub/linux/kernel/projects/rt/">PREEMPT-RT patch</a>
 to meet stricter response time requirements than standard kernel
 preemption would bring.</p></div>
-<div class="paragraph"><p>This new architecture therefore exhibits two real-time cores, selected
-at build time. The dual kernel core nicknamed <em>Cobalt</em>, is a
-significant rework of the Xenomai 2.x system. The native linux
-version, an enhanced implementation of the experimental
-<a href="http://www.osadl.org/Migration-Portability.migration-portability.0.html">Xenomai/SOLO</a>
-work, is called <em>Mercury</em>.</p></div>
-<div class="paragraph"><p>This magic works with the introduction of the <em>Copperplate</em> interface,
-which mediates between the real-time API/emulator your application
-uses, and the underlying real-time core. This way, applications are
-able to run in either environments without visible code change.</p></div>
+<div class="paragraph"><p>One of the two available real-time cores is selected at build
+time. The dual kernel core is codenamed <em>Cobalt</em>, the native Linux
+implementation is called <em>Mercury</em>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">If you are looking for detailed information about installing a legacy
+Xenomai 2.x release, please refer to <a href="installing-xenomai-2.x">this
+document</a> instead. Please note that Xenomai 2.x has reached EOL status
+and is no more actively maintained.</td>
+</tr></table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -2023,7 +2027,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-11-01 18:38:48 CET
+Last updated 2016-02-16 15:07:51 CET
 </div>
 </div>
 </body>
