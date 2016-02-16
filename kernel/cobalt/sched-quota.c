@@ -235,14 +235,15 @@ static void xnsched_quota_init(struct xnsched *sched)
 	xntimer_set_name(&qs->limit_timer, limiter_name);
 }
 
-static void xnsched_quota_setparam(struct xnthread *thread,
+static bool xnsched_quota_setparam(struct xnthread *thread,
 				   const union xnsched_policy_param *p)
 {
 	struct xnsched_quota_group *tg;
 	struct xnsched_quota *qs;
+	bool effective;
 
 	xnthread_clear_state(thread, XNWEAK);
-	thread->cprio = p->quota.prio;
+	effective = xnsched_set_effective_priority(thread, p->quota.prio);
 
 	qs = &thread->sched->quota;
 	list_for_each_entry(tg, &qs->groups, next) {
@@ -256,10 +257,12 @@ static void xnsched_quota_setparam(struct xnthread *thread,
 		thread->quota = tg;
 		list_add(&thread->quota_next, &tg->members);
 		tg->nr_threads++;
-		return;
+		return effective;
 	}
 
 	XENO_BUG(COBALT);
+
+	return false;
 }
 
 static void xnsched_quota_getparam(struct xnthread *thread,
@@ -273,13 +276,21 @@ static void xnsched_quota_trackprio(struct xnthread *thread,
 				    const union xnsched_policy_param *p)
 {
 	if (p) {
-		/* We should not cross groups during PIP boost. */
+		/* We should not cross groups during PI boost. */
 		XENO_WARN_ON(COBALT,
 			     thread->base_class == &xnsched_class_quota &&
 			     thread->quota->tgid != p->quota.tgid);
 		thread->cprio = p->quota.prio;
 	} else
 		thread->cprio = thread->bprio;
+}
+
+static void xnsched_quota_protectprio(struct xnthread *thread, int prio)
+{
+	if (prio > XNSCHED_QUOTA_MAX_PRIO)
+		prio = XNSCHED_QUOTA_MAX_PRIO;
+
+	thread->cprio = prio;
 }
 
 static int xnsched_quota_declare(struct xnthread *thread,
@@ -467,7 +478,7 @@ static void xnsched_quota_migrate(struct xnthread *thread, struct xnsched *sched
 	 * the target thread to the plain RT class.
 	 */
 	param.rt.prio = thread->cprio;
-	xnsched_set_policy(thread, &xnsched_class_rt, &param);
+	__xnthread_set_schedparam(thread, &xnsched_class_rt, &param);
 }
 
 /**
@@ -540,7 +551,7 @@ int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
 		/* Move group members to the rt class. */
 		list_for_each_entry_safe(thread, tmp, &tg->members, quota_next) {
 			param.rt.prio = thread->cprio;
-			xnsched_set_policy(thread, &xnsched_class_rt, &param);
+			__xnthread_set_schedparam(thread, &xnsched_class_rt, &param);
 		}
 	}
 
@@ -756,6 +767,7 @@ struct xnsched_class xnsched_class_quota = {
 	.sched_setparam		=	xnsched_quota_setparam,
 	.sched_getparam		=	xnsched_quota_getparam,
 	.sched_trackprio	=	xnsched_quota_trackprio,
+	.sched_protectprio	=	xnsched_quota_protectprio,
 	.sched_declare		=	xnsched_quota_declare,
 	.sched_forget		=	xnsched_quota_forget,
 	.sched_kick		=	xnsched_quota_kick,

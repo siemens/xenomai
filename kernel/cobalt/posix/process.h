@@ -54,6 +54,7 @@ struct cobalt_process {
 	DECLARE_BITMAP(timers_map, CONFIG_XENO_OPT_NRTIMERS);
 	struct cobalt_timer *timers[CONFIG_XENO_OPT_NRTIMERS];
 	void *priv[NR_PERSONALITIES];
+	int ufeatures;
 };
 
 struct cobalt_resnode {
@@ -71,7 +72,7 @@ struct xnthread_personality *cobalt_push_personality(int xid);
 
 void cobalt_pop_personality(struct xnthread_personality *prev);
 
-int cobalt_bind_core(void);
+int cobalt_bind_core(int ufeatures);
 
 int cobalt_bind_personality(unsigned int magic);
 

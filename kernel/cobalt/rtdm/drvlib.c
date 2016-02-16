@@ -1245,7 +1245,7 @@ void rtdm_mutex_init(rtdm_mutex_t *mutex)
 
 	/* Make atomic for re-initialisation support */
 	xnlock_get_irqsave(&nklock, s);
-	xnsynch_init(&mutex->synch_base, XNSYNCH_PIP, &mutex->fastlock);
+	xnsynch_init(&mutex->synch_base, XNSYNCH_PI, &mutex->fastlock);
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(rtdm_mutex_init);

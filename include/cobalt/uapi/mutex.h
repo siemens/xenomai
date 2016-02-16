@@ -27,6 +27,7 @@ struct cobalt_mutex_state {
 	__u32 flags;
 #define COBALT_MUTEX_COND_SIGNAL 0x00000001
 #define COBALT_MUTEX_ERRORCHECK  0x00000002
+	__u32 ceiling;
 };
 
 union cobalt_mutex_union {

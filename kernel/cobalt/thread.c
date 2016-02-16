@@ -152,7 +152,7 @@ int __xnthread_init(struct xnthread *thread,
 {
 	int flags = attr->flags, ret, gravity;
 
-	flags &= ~XNSUSP;
+	flags &= ~(XNSUSP|XNBOOST);
 #ifndef CONFIG_XENO_ARCH_FPU
 	flags &= ~XNFPU;
 #endif
@@ -180,6 +180,9 @@ int __xnthread_init(struct xnthread *thread,
 	thread->state = flags;
 	thread->info = 0;
 	thread->local_info = 0;
+	thread->wprio = XNSCHED_IDLE_PRIO;
+	thread->cprio = XNSCHED_IDLE_PRIO;
+	thread->bprio = XNSCHED_IDLE_PRIO;
 	thread->lock_count = 0;
 	thread->rrperiod = XN_INFINITE;
 	thread->wchan = NULL;
@@ -189,8 +192,8 @@ int __xnthread_init(struct xnthread *thread,
 	thread->handle = XN_NO_HANDLE;
 	memset(&thread->stat, 0, sizeof(thread->stat));
 	thread->selector = NULL;
-	INIT_LIST_HEAD(&thread->claimq);
 	INIT_LIST_HEAD(&thread->glink);
+	INIT_LIST_HEAD(&thread->boosters);
 	/* These will be filled by xnthread_start() */
 	thread->entry = NULL;
 	thread->cookie = NULL;
@@ -436,39 +439,55 @@ static inline void giveup_fpu(struct xnsched *sched,
 
 #endif /* !CONFIG_XENO_ARCH_FPU */
 
-static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off */
+static inline void release_all_ownerships(struct xnthread *curr)
 {
-	struct xnsched *sched = thread->sched;
+	struct xnsynch *synch, *tmp;
 
-	list_del(&thread->glink);
+	/*
+	 * Release all the ownerships obtained by a thread on
+	 * synchronization objects. This routine must be entered
+	 * interrupts off.
+	 */
+	xnthread_for_each_booster_safe(synch, tmp, curr) {
+		xnsynch_release(synch, curr);
+		if (synch->cleanup)
+			synch->cleanup(synch);
+	}
+}
+
+static inline void cleanup_tcb(struct xnthread *curr) /* nklock held, irqs off */
+{
+	struct xnsched *sched = curr->sched;
+
+	list_del(&curr->glink);
 	cobalt_nrthreads--;
 	xnvfile_touch_tag(&nkthreadlist_tag);
 
-	if (xnthread_test_state(thread, XNREADY)) {
-		XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
-		xnsched_dequeue(thread);
-		xnthread_clear_state(thread, XNREADY);
+	if (xnthread_test_state(curr, XNREADY)) {
+		XENO_BUG_ON(COBALT, xnthread_test_state(curr, XNTHREAD_BLOCK_BITS));
+		xnsched_dequeue(curr);
+		xnthread_clear_state(curr, XNREADY);
 	}
 
-	if (xnthread_test_state(thread, XNPEND))
-		xnsynch_forget_sleeper(thread);
+	if (xnthread_test_state(curr, XNPEND))
+		xnsynch_forget_sleeper(curr);
 
-	xnthread_set_state(thread, XNZOMBIE);
+	xnthread_set_state(curr, XNZOMBIE);
 	/*
-	 * NOTE: we must be running over the root thread, or @thread
+	 * NOTE: we must be running over the root thread, or @curr
 	 * is dormant, which means that we don't risk sched->curr to
 	 * disappear due to voluntary rescheduling while holding the
-	 * nklock, despite @thread bears the zombie bit.
+	 * nklock, despite @curr bears the zombie bit.
 	 */
-	xnsynch_release_all_ownerships(thread);
+	release_all_ownerships(curr);
 
-	giveup_fpu(sched, thread);
+	giveup_fpu(sched, curr);
 
-	if (moving_target(sched, thread))
+	if (moving_target(sched, curr))
 		return;
 
-	xnsched_forget(thread);
-	xnthread_deregister(thread);
+	xnsched_forget(curr);
+	xnthread_deregister(curr);
 }
 
 void __xnthread_cleanup(struct xnthread *curr)
@@ -1782,12 +1801,12 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  * @sideeffect
  *
  * - This service does not call the rescheduling procedure but may
- * affect the state of the runnable queue for the previous and new
+ * affect the state of the run queue for the previous and new
  * scheduling classes.
  *
  * - Assigning the same scheduling class and parameters to a running
- * or ready thread moves it to the end of the runnable queue, thus
- * causing a manual round-robin.
+ * or ready thread moves it to the end of the run queue, thus causing
+ * a manual round-robin, except if a priority boost is undergoing.
  *
  * @coretags{task-unregistred}
  *
@@ -1817,21 +1836,6 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 {
 	int old_wprio, new_wprio, ret;
 
-	/*
-	 * NOTE: we do not prevent the caller from altering the
-	 * scheduling parameters of a thread that currently undergoes
-	 * a PIP boost.
-	 *
-	 * Rationale: Calling xnthread_set_schedparam() carelessly
-	 * with no consideration for resource management is a bug in
-	 * essence, and xnthread_set_schedparam() does not have to
-	 * paper over it, especially at the cost of more complexity
-	 * when dealing with multiple scheduling classes.
-	 *
-	 * In short, callers have to make sure that lowering a thread
-	 * priority is safe with respect to what their application
-	 * currently does.
-	 */
 	old_wprio = thread->wprio;
 
 	ret = xnsched_set_policy(thread, sched_class, sched_param);
@@ -1841,25 +1845,28 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 	new_wprio = thread->wprio;
 
 	/*
-	 * Update the pending order of the thread inside its wait
-	 * queue, unless this behaviour has been explicitly disabled
-	 * for the pended synchronization object, or the requested
-	 * (weighted) priority has not changed, thus preventing
-	 * spurious round-robin effects.
+	 * If the thread is waiting on a synchronization object,
+	 * update its position in the corresponding wait queue, unless
+	 * 1) reordering is explicitly disabled, or 2) the (weighted)
+	 * priority has not changed (to prevent spurious round-robin
+	 * effects).
 	 */
-	if (old_wprio != new_wprio && thread->wchan != NULL &&
-	    (thread->wchan->status & XNSYNCH_DREORD) == 0)
+	if (old_wprio != new_wprio && thread->wchan &&
+	    (thread->wchan->status & (XNSYNCH_DREORD|XNSYNCH_PRIO))
+	    == XNSYNCH_PRIO)
 		xnsynch_requeue_sleeper(thread);
 	/*
-	 * We don't need/want to move the thread at the end of its
-	 * priority group whenever:
-	 * - it is blocked and thus not runnable;
-	 * - it bears the ready bit in which case xnsched_set_policy()
-	 * already reordered the runnable queue;
-	 * - we currently hold the scheduler lock, so we don't want
-	 * any round-robin effect to take place.
+	 * We should not move the thread at the end of its priority
+	 * group, if any of these conditions is true:
+	 *
+	 * - thread is not runnable;
+	 * - thread bears the ready bit which means that xnsched_set_policy()
+	 * already reordered the run queue;
+	 * - thread currently holds the scheduler lock, so we don't want
+	 * any round-robin effect to take place;
+	 * - a priority boost is undergoing for this thread.
 	 */
-	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY) &&
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNBOOST) &&
 	    thread->lock_count == 0)
 		xnsched_putback(thread);
 
@@ -2069,7 +2076,7 @@ void xnthread_relax(int notify, int reason)
 			si.si_int = reason | sigdebug_marker;
 			send_sig_info(SIGDEBUG, &si, p);
 		}
-		xnsynch_detect_claimed_relax(thread);
+		xnsynch_detect_boosted_relax(thread);
 	}
 
 	/*
@@ -2190,7 +2197,7 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 	 * running by the scheduling policy module it belongs
 	 * to. Typically, policies enforcing a runtime budget do not
 	 * block threads with no budget, but rather keep them out of
-	 * their runnable queue, so that ->sched_pick() won't elect
+	 * their run queue, so that ->sched_pick() won't elect
 	 * them. We tell the policy handler about the fact that we do
 	 * want such thread to run until it relaxes, whatever this
 	 * means internally for the implementation.

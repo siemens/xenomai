@@ -24,10 +24,10 @@
 /* Creation flags */
 #define XNSYNCH_FIFO    0x0
 #define XNSYNCH_PRIO    0x1
-#define XNSYNCH_NOPIP   0x0
-#define XNSYNCH_PIP     0x2
+#define XNSYNCH_PI      0x2
 #define XNSYNCH_DREORD  0x4
 #define XNSYNCH_OWNER   0x8
+#define XNSYNCH_PP      0x10
 
 /* Fast lock API */
 static inline int xnsynch_fast_is_claimed(xnhandle_t handle)
@@ -40,9 +40,9 @@ static inline xnhandle_t xnsynch_fast_claimed(xnhandle_t handle)
 	return handle | XNSYNCH_FLCLAIM;
 }
 
-static inline xnhandle_t xnsynch_fast_not_claimed(xnhandle_t handle)
+static inline xnhandle_t xnsynch_fast_ceiling(xnhandle_t handle)
 {
-	return handle & ~XNSYNCH_FLCLAIM;
+	return handle | XNSYNCH_FLCEIL;
 }
 
 static inline int

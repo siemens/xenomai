@@ -84,7 +84,7 @@ COBALT_SYSCALL(monitor_init, current,
 	}
 
 	mon->state = state;
-	xnsynch_init(&mon->gate, XNSYNCH_PIP, &state->owner);
+	xnsynch_init(&mon->gate, XNSYNCH_PI, &state->owner);
 	xnsynch_init(&mon->drain, XNSYNCH_PRIO, NULL);
 	mon->flags = flags;
 	mon->tmode = tmode;
@@ -109,33 +109,16 @@ COBALT_SYSCALL(monitor_init, current,
 static int monitor_enter(xnhandle_t handle, struct xnthread *curr)
 {
 	struct cobalt_monitor *mon;
-	int ret = 0, info;
+	int info;
 
 	mon = xnregistry_lookup(handle, NULL); /* (Re)validate. */
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		return -EINVAL;
 
-	/*
-	 * The monitor might have been exited while we were jumping
-	 * there for waiting at the gate, lock atomically and return
-	 * if so.
-	 *
-	 * NOTE: monitors do not support recursive entries.
-	 */
-	ret = xnsynch_fast_acquire(mon->gate.fastlock, curr->handle);
-	switch(ret) {
-	case 0:
-		xnthread_get_resource(curr);
-		break;
-	default:
-		/* Nah, we really have to wait. */
-		info = xnsynch_acquire(&mon->gate, XN_INFINITE, XN_RELATIVE);
-		if (info & XNBREAK)
-			return -EINTR;
-		if (info)	/* No timeout possible. */
-			return -EINVAL;
-		break;
-	}
+	info = xnsynch_acquire(&mon->gate, XN_INFINITE, XN_RELATIVE);
+	if (info)
+		/* Break or error, no timeout possible. */
+		return info & XNBREAK ? -EINTR : -EINVAL;
 
 	mon->state->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
 

@@ -110,9 +110,11 @@ struct xnthread {
 #endif
 	cpumask_t affinity;	/* Processor affinity. */
 
-	int bprio;		/* Base priority (before PIP boost) */
+	/** Base priority (before PI/PP boost) */
+	int bprio;
 
-	int cprio;		/* Current priority */
+	/** Current (effective) priority */
+	int cprio;
 
 	/**
 	 * Weighted priority (cprio + scheduling class weight).
@@ -122,7 +124,7 @@ struct xnthread {
 	int lock_count;	/** Scheduler lock count. */
 
 	/**
-	 * Thread holder in xnsched runnable queue. Prioritized by
+	 * Thread holder in xnsched run queue. Ordered by
 	 * thread->cprio.
 	 */
 	struct list_head rlink;
@@ -137,10 +139,18 @@ struct xnthread {
 	struct list_head glink;
 
 	/**
-	 * List of xnsynch owned by this thread _and_ claimed by
-	 * others (PIP).
+	 * List of xnsynch owned by this thread which cause a priority
+	 * boost due to one of the following reasons:
+	 *
+	 * - they are currently claimed by other thread(s) when
+	 * enforcing the priority inheritance protocol (XNSYNCH_PI).
+	 *
+	 * - they require immediate priority ceiling (XNSYNCH_PP).
+	 *
+	 * This list is ordered by decreasing (weighted) thread
+	 * priorities.
 	 */
-	struct list_head claimq;
+	struct list_head boosters;
 
 	struct xnsynch *wchan;		/* Resource the thread pends on */
 
@@ -268,11 +278,11 @@ static inline pid_t xnthread_host_pid(struct xnthread *thread)
 	return task_pid_nr(xnthread_host_task(thread));
 }
 
-#define xnthread_for_each_claimed(__pos, __thread)		\
-	list_for_each_entry(__pos, &(__thread)->claimq, link)
+#define xnthread_for_each_booster(__pos, __thread)		\
+	list_for_each_entry(__pos, &(__thread)->boosters, next)
 
-#define xnthread_for_each_claimed_safe(__pos, __tmp, __thread)	\
-	list_for_each_entry_safe(__pos, __tmp, &(__thread)->claimq, link)
+#define xnthread_for_each_booster_safe(__pos, __tmp, __thread)	\
+	list_for_each_entry_safe(__pos, __tmp, &(__thread)->boosters, next)
 
 #define xnthread_run_handler(__t, __h, __a...)				\
 	do {								\
@@ -501,26 +511,32 @@ int xnthread_map(struct xnthread *thread,
 
 void xnthread_call_mayday(struct xnthread *thread, int reason);
 
-static inline void xnthread_get_resource(struct xnthread *thread)
+static inline void xnthread_get_resource(struct xnthread *curr)
 {
-	if (xnthread_test_state(thread, XNWEAK|XNDEBUG))
-		thread->res_count++;
+	if (xnthread_test_state(curr, XNWEAK|XNDEBUG))
+		curr->res_count++;
 }
 
-static inline int xnthread_put_resource(struct xnthread *thread)
+static inline int xnthread_put_resource(struct xnthread *curr)
 {
-	if (xnthread_test_state(thread, XNWEAK) ||
+	if (xnthread_test_state(curr, XNWEAK) ||
 	    IS_ENABLED(CONFIG_XENO_OPT_DEBUG_MUTEX_SLEEP)) {
-		if (unlikely(thread->res_count == 0)) {
-			if (xnthread_test_state(thread, XNWARN))
-				xnthread_signal(thread, SIGDEBUG,
+		if (unlikely(curr->res_count == 0)) {
+			if (xnthread_test_state(curr, XNWARN))
+				xnthread_signal(curr, SIGDEBUG,
 						SIGDEBUG_RESCNT_IMBALANCE);
 			return -EPERM;
 		}
-		thread->res_count--;
+		curr->res_count--;
 	}
 
 	return 0;
+}
+
+static inline void xnthread_commit_ceiling(struct xnthread *curr)
+{
+	if (curr->u_window->pp_pending)
+		xnsynch_commit_ceiling(curr);
 }
 
 #ifdef CONFIG_SMP

@@ -32,6 +32,12 @@ void *cobalt_umm_alloc(struct cobalt_umm *umm, __u32 size)
 }
 
 static inline
+void *cobalt_umm_zalloc(struct cobalt_umm *umm, __u32 size)
+{
+	return xnheap_zalloc(&umm->heap, size);
+}
+
+static inline
 void cobalt_umm_free(struct cobalt_umm *umm, void *p)
 {
 	xnheap_free(&umm->heap, p);

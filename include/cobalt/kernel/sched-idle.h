@@ -33,11 +33,11 @@
 
 extern struct xnsched_class xnsched_class_idle;
 
-static inline void __xnsched_idle_setparam(struct xnthread *thread,
+static inline bool __xnsched_idle_setparam(struct xnthread *thread,
 					   const union xnsched_policy_param *p)
 {
 	xnthread_clear_state(thread, XNWEAK);
-	thread->cprio = p->idle.prio;
+	return xnsched_set_effective_priority(thread, p->idle.prio);
 }
 
 static inline void __xnsched_idle_getparam(struct xnthread *thread,
@@ -50,9 +50,15 @@ static inline void __xnsched_idle_trackprio(struct xnthread *thread,
 					    const union xnsched_policy_param *p)
 {
 	if (p)
-		__xnsched_idle_setparam(thread, p);
+		/* Inheriting a priority-less class makes no sense. */
+		XENO_WARN_ON_ONCE(COBALT, 1);
 	else
 		thread->cprio = XNSCHED_IDLE_PRIO;
+}
+
+static inline void __xnsched_idle_protectprio(struct xnthread *thread, int prio)
+{
+	XENO_WARN_ON_ONCE(COBALT, 1);
 }
 
 static inline int xnsched_idle_init_thread(struct xnthread *thread)

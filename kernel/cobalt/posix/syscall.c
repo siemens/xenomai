@@ -318,6 +318,10 @@ static COBALT_SYSCALL(bind, lostage,
 	if (!realtime_core_running() && (featreq & __xn_feat_control) == 0)
 		return -EPERM;
 
+	/*
+	 * Calculate the missing feature set:
+	 * kernel_unavailable_set & user_mandatory_set.
+	 */
 	featmis = (~XENOMAI_FEAT_DEP & (featreq & XENOMAI_FEAT_MAN));
 	abirev = breq.abi_rev;
 
@@ -356,7 +360,7 @@ static COBALT_SYSCALL(bind, lostage,
 	if (!check_abi_revision(abirev))
 		return -ENOEXEC;
 
-	return cobalt_bind_core();
+	return cobalt_bind_core(featreq);
 }
 
 static COBALT_SYSCALL(extend, lostage, (unsigned int magic))

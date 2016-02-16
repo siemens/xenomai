@@ -140,12 +140,38 @@ struct xnsched_class {
 			     const union xnsched_policy_param *p);
 	void (*sched_migrate)(struct xnthread *thread,
 			      struct xnsched *sched);
-	void (*sched_setparam)(struct xnthread *thread,
+	/**
+	 * Set base scheduling parameters. This routine is indirectly
+	 * called upon a change of base scheduling settings through
+	 * __xnthread_set_schedparam() -> xnsched_set_policy(),
+	 * exclusively.
+	 *
+	 * The scheduling class implementation should do the necessary
+	 * housekeeping to comply with the new settings.
+	 * thread->base_class is up to date before the call is made,
+	 * and should be considered for the new weighted priority
+	 * calculation. On the contrary, thread->sched_class should
+	 * NOT be referred to by this handler.
+	 *
+	 * sched_setparam() is NEVER involved in PI or PP
+	 * management. However it must deny a priority update if it
+	 * contradicts an ongoing boost for @a thread. This is
+	 * typically what the xnsched_set_effective_priority() helper
+	 * does for such handler.
+	 *
+	 * @param thread Affected thread.
+	 * @param p New base policy settings.
+	 *
+	 * @return True if the effective priority was updated
+	 * (thread->cprio).
+	 */
+	bool (*sched_setparam)(struct xnthread *thread,
 			       const union xnsched_policy_param *p);
 	void (*sched_getparam)(struct xnthread *thread,
 			       union xnsched_policy_param *p);
 	void (*sched_trackprio)(struct xnthread *thread,
 				const union xnsched_policy_param *p);
+	void (*sched_protectprio)(struct xnthread *thread, int prio);
 	int (*sched_declare)(struct xnthread *thread,
 			     const union xnsched_policy_param *p);
 	void (*sched_forget)(struct xnthread *thread);
@@ -372,6 +398,9 @@ static inline void xnsched_reset_watchdog(struct xnsched *sched)
 }
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
+bool xnsched_set_effective_priority(struct xnthread *thread,
+				    int prio);
+
 #include <cobalt/kernel/sched-idle.h>
 #include <cobalt/kernel/sched-rt.h>
 
@@ -395,6 +424,9 @@ int xnsched_set_policy(struct xnthread *thread,
 
 void xnsched_track_policy(struct xnthread *thread,
 			  struct xnthread *target);
+
+void xnsched_protect_priority(struct xnthread *thread,
+			      int prio);
 
 void xnsched_migrate(struct xnthread *thread,
 		     struct xnsched *sched);
@@ -474,7 +506,7 @@ static inline void xnsched_tick(struct xnsched *sched)
 	/*
 	 * A thread that undergoes round-robin scheduling only
 	 * consumes its time slice when it runs within its own
-	 * scheduling class, which excludes temporary PIP boosts, and
+	 * scheduling class, which excludes temporary PI boosts, and
 	 * does not hold the scheduler lock.
 	 */
 	if (sched_class == curr->base_class &&
@@ -499,6 +531,12 @@ static inline int xnsched_declare(struct xnsched_class *sched_class,
 		sched_class->nthreads++;
 
 	return 0;
+}
+
+static inline int xnsched_calc_wprio(struct xnsched_class *sched_class,
+				     int prio)
+{
+	return prio + sched_class->weight;
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_CLASSES
@@ -527,11 +565,11 @@ static inline void xnsched_requeue(struct xnthread *thread)
 		sched_class->sched_requeue(thread);
 }
 
-static inline void xnsched_setparam(struct xnthread *thread,
-				    const union xnsched_policy_param *p)
+static inline
+bool xnsched_setparam(struct xnthread *thread,
+		      const union xnsched_policy_param *p)
 {
-	thread->sched_class->sched_setparam(thread, p);
-	thread->wprio = thread->cprio + thread->sched_class->weight;
+	return thread->base_class->sched_setparam(thread, p);
 }
 
 static inline void xnsched_getparam(struct xnthread *thread,
@@ -544,7 +582,13 @@ static inline void xnsched_trackprio(struct xnthread *thread,
 				     const union xnsched_policy_param *p)
 {
 	thread->sched_class->sched_trackprio(thread, p);
-	thread->wprio = thread->cprio + thread->sched_class->weight;
+	thread->wprio = xnsched_calc_wprio(thread->sched_class, thread->cprio);
+}
+
+static inline void xnsched_protectprio(struct xnthread *thread, int prio)
+{
+	thread->sched_class->sched_protectprio(thread, prio);
+	thread->wprio = xnsched_calc_wprio(thread->sched_class, thread->cprio);
 }
 
 static inline void xnsched_forget(struct xnthread *thread)
@@ -600,17 +644,15 @@ static inline void xnsched_requeue(struct xnthread *thread)
 		__xnsched_rt_requeue(thread);
 }
 
-static inline void xnsched_setparam(struct xnthread *thread,
+static inline bool xnsched_setparam(struct xnthread *thread,
 				    const union xnsched_policy_param *p)
 {
-	struct xnsched_class *sched_class = thread->sched_class;
+	struct xnsched_class *sched_class = thread->base_class;
 
-	if (sched_class != &xnsched_class_idle)
-		__xnsched_rt_setparam(thread, p);
-	else
-		__xnsched_idle_setparam(thread, p);
+	if (sched_class == &xnsched_class_idle)
+		return __xnsched_idle_setparam(thread, p);
 
-	thread->wprio = thread->cprio + sched_class->weight;
+	return __xnsched_rt_setparam(thread, p);
 }
 
 static inline void xnsched_getparam(struct xnthread *thread,
@@ -618,10 +660,10 @@ static inline void xnsched_getparam(struct xnthread *thread,
 {
 	struct xnsched_class *sched_class = thread->sched_class;
 
-	if (sched_class != &xnsched_class_idle)
-		__xnsched_rt_getparam(thread, p);
-	else
+	if (sched_class == &xnsched_class_idle)
 		__xnsched_idle_getparam(thread, p);
+	else
+		__xnsched_rt_getparam(thread, p);
 }
 
 static inline void xnsched_trackprio(struct xnthread *thread,
@@ -629,12 +671,24 @@ static inline void xnsched_trackprio(struct xnthread *thread,
 {
 	struct xnsched_class *sched_class = thread->sched_class;
 
-	if (sched_class != &xnsched_class_idle)
-		__xnsched_rt_trackprio(thread, p);
-	else
+	if (sched_class == &xnsched_class_idle)
 		__xnsched_idle_trackprio(thread, p);
+	else
+		__xnsched_rt_trackprio(thread, p);
 
-	thread->wprio = thread->cprio + sched_class->weight;
+	thread->wprio = xnsched_calc_wprio(sched_class, thread->cprio);
+}
+
+static inline void xnsched_protectprio(struct xnthread *thread, int prio)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (sched_class == &xnsched_class_idle)
+		__xnsched_idle_protectprio(thread, prio);
+	else
+		__xnsched_rt_protectprio(thread, prio);
+
+	thread->wprio = xnsched_calc_wprio(sched_class, thread->cprio);
 }
 
 static inline void xnsched_forget(struct xnthread *thread)

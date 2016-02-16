@@ -30,11 +30,11 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct cobalt_umm *umm;
 	spl_t s;
-	int err;
+	int ret;
 
-	err = xnregistry_enter_anon(mutex, &mutex->resnode.handle);
-	if (err < 0)
-		return err;
+	ret = xnregistry_enter_anon(mutex, &mutex->resnode.handle);
+	if (ret < 0)
+		return ret;
 
 	umm = &cobalt_ppd_get(attr->pshared)->umm;
 	shadow->handle = mutex->resnode.handle;
@@ -43,11 +43,19 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	shadow->attr = *attr;
 	shadow->state_offset = cobalt_umm_offset(umm, state);
 
-	if (attr->protocol == PTHREAD_PRIO_INHERIT)
-		synch_flags |= XNSYNCH_PIP;
-
 	mutex->magic = COBALT_MUTEX_MAGIC;
-	xnsynch_init(&mutex->synchbase, synch_flags, &state->owner);
+
+	if (attr->protocol == PTHREAD_PRIO_PROTECT) {
+		state->ceiling = attr->ceiling + 1;
+		xnsynch_init_protect(&mutex->synchbase, synch_flags,
+				     &state->owner, &state->ceiling);
+	} else {
+		state->ceiling = 0;
+		if (attr->protocol == PTHREAD_PRIO_INHERIT)
+			synch_flags |= XNSYNCH_PI;
+		xnsynch_init(&mutex->synchbase, synch_flags, &state->owner);
+	}
+
 	state->flags = (attr->type == PTHREAD_MUTEX_ERRORCHECK
 			? COBALT_MUTEX_ERRORCHECK : 0);
 	mutex->attr = *attr;
@@ -85,9 +93,9 @@ int __cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 	return 0;
 }
 
-int cobalt_mutex_release(struct xnthread *cur,
+int cobalt_mutex_release(struct xnthread *curr,
 			 struct cobalt_mutex *mutex)
-{
+{	/* nklock held, irqs off */
 	struct cobalt_mutex_state *state;
 	struct cobalt_cond *cond;
 	unsigned long flags;
@@ -101,6 +109,14 @@ int cobalt_mutex_release(struct xnthread *cur,
 	    cobalt_current_resources(mutex->attr.pshared))
 		return -EPERM;
 
+	/*
+	 * We are about to release a mutex which is still pending PP
+	 * (i.e. we never got scheduled out while holding it). Clear
+	 * the lazy handle.
+	 */
+	if (mutex->resnode.handle == curr->u_window->pp_pending)
+		curr->u_window->pp_pending = XN_NO_HANDLE;
+
 	state = container_of(mutex->synchbase.fastlock, struct cobalt_mutex_state, owner);
 	flags = state->flags;
 	need_resched = 0;
@@ -112,7 +128,7 @@ int cobalt_mutex_release(struct xnthread *cur,
 				cobalt_cond_deferred_signals(cond);
 		}
 	}
-	need_resched |= xnsynch_release(&mutex->synchbase, cur) != NULL;
+	need_resched |= xnsynch_release(&mutex->synchbase, curr) != NULL;
 
 	return need_resched;
 }
@@ -138,7 +154,6 @@ redo:
 	xnlock_get_irqsave(&nklock, s);
 
 	mutex = xnregistry_lookup(handle, NULL);
-
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex)) {
 		ret = -EINVAL;
 		goto out;
@@ -150,6 +165,8 @@ redo:
 		ret = -EPERM;
 		goto out;
 	}
+
+	xnthread_commit_ceiling(curr);
 
 	if (xnsynch_owner_check(&mutex->synchbase, curr)) {
 		if (fetch_timeout) {
@@ -223,10 +240,10 @@ COBALT_SYSCALL(mutex_init, current,
 		const struct cobalt_mutexattr __user *u_attr))
 {
 	struct cobalt_mutex_state *state;
-	struct cobalt_mutexattr attr;
 	struct cobalt_mutex_shadow mx;
+	struct cobalt_mutexattr attr;
 	struct cobalt_mutex *mutex;
-	int err;
+	int ret;
 
 	if (cobalt_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
@@ -245,11 +262,11 @@ COBALT_SYSCALL(mutex_init, current,
 		return -EAGAIN;
 	}
 
-	err = cobalt_mutex_init_inner(&mx, mutex, state, &attr);
-	if (err) {
+	ret = cobalt_mutex_init_inner(&mx, mutex, state, &attr);
+	if (ret) {
 		xnfree(mutex);
 		cobalt_umm_free(&cobalt_ppd_get(attr.pshared)->umm, state);
-		return err;
+		return ret;
 	}
 
 	return cobalt_copy_to_user(u_mx, &mx, sizeof(*u_mx));
@@ -303,19 +320,22 @@ COBALT_SYSCALL(mutex_trylock, primary,
 	struct cobalt_mutex *mutex;
 	xnhandle_t handle;
 	spl_t s;
-	int err;
+	int ret;
 
 	handle = cobalt_get_handle_from_user(&u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
+
 	mutex = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
-		err = -EINVAL;
-		goto err_unlock;
+		ret = -EINVAL;
+		goto out;
 	}
 
-	err = xnsynch_fast_acquire(mutex->synchbase.fastlock, curr->handle);
-	switch(err) {
+	xnthread_commit_ceiling(curr);
+
+	ret = xnsynch_fast_acquire(mutex->synchbase.fastlock, curr->handle);
+	switch(ret) {
 	case 0:
 		xnthread_get_resource(curr);
 		break;
@@ -323,17 +343,17 @@ COBALT_SYSCALL(mutex_trylock, primary,
 /* This should not happen, as recursive mutexes are handled in
    user-space */
 	case -EBUSY:
-		err = -EINVAL;
+		ret = -EINVAL;
 		break;
 
 	case -EAGAIN:
-		err = -EBUSY;
+		ret = -EBUSY;
 		break;
 	}
-  err_unlock:
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 COBALT_SYSCALL(mutex_lock, primary,
@@ -362,26 +382,24 @@ COBALT_SYSCALL(mutex_unlock, nonrestartable,
 	struct cobalt_mutex *mutex;
 	struct xnthread *curr;
 	xnhandle_t handle;
-	int err;
+	int ret;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mx->handle);
 	curr = xnthread_current();
 
 	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_lookup(handle, NULL);
-	err = cobalt_mutex_release(curr, mutex);
-	if (err < 0)
-		goto out;
 
-	if (err) {
+	mutex = xnregistry_lookup(handle, NULL);
+	ret = cobalt_mutex_release(curr, mutex);
+	if (ret > 0) {
 		xnsched_run();
-		err = 0;
+		ret = 0;
 	}
- out:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 void cobalt_mutex_reclaim(struct cobalt_resnode *node, spl_t s)
@@ -401,4 +419,19 @@ void cobalt_mutex_reclaim(struct cobalt_resnode *node, spl_t s)
 
 	cobalt_umm_free(&cobalt_ppd_get(pshared)->umm, state);
 	xnfree(mutex);
+}
+
+struct xnsynch *lookup_lazy_pp(xnhandle_t handle)
+{				/* nklock held, irqs off */
+	struct cobalt_mutex *mutex;
+
+	/* Only mutexes may be PP-enabled. */
+	
+	mutex = xnregistry_lookup(handle, NULL);
+	if (mutex == NULL ||
+	    !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex) ||
+	    mutex->attr.protocol != PTHREAD_PRIO_PROTECT)
+		return NULL;
+
+	return &mutex->synchbase;
 }

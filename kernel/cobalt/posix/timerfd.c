@@ -193,7 +193,7 @@ COBALT_SYSCALL(timerfd_create, lostage, (int clockid, int flags))
 	curr = xnthread_current();
 	xntimer_init(&tfd->timer, clock, timerfd_handler,
 		     curr ? curr->sched : NULL, XNTIMER_UGRAVITY);
-	xnsynch_init(&tfd->readers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
+	xnsynch_init(&tfd->readers, XNSYNCH_PRIO, NULL);
 	xnselect_init(&tfd->read_select);
 	tfd->target = NULL;
 

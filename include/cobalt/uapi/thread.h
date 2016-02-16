@@ -30,6 +30,7 @@ struct cobalt_mutexattr {
 	int protocol : 3;
 	int pshared : 1;
 	int __pad : 1;
+	int ceiling : 8;  /* prio-1, (XN)SCHED_FIFO range. */
 };
 
 struct cobalt_condattr {

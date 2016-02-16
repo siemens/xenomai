@@ -50,6 +50,7 @@ struct cobalt_featinfo {
 #define __xn_feat_fastsynch   0x20000000
 #define __xn_feat_nofastsynch 0x10000000
 #define __xn_feat_control     0x08000000
+#define __xn_feat_prioceiling 0x04000000
 
 #ifdef CONFIG_SMP
 #define __xn_feat_smp_mask __xn_feat_smp
@@ -57,18 +58,32 @@ struct cobalt_featinfo {
 #define __xn_feat_smp_mask __xn_feat_nosmp
 #endif
 
+/*
+ * Revisit: all archs currently support fast locking, and there is no
+ * reason for any future port not to provide this. This will be
+ * written in stone at the next ABI update, when fastsynch support is
+ * dropped from the optional feature set.
+ */
 #define __xn_feat_fastsynch_mask __xn_feat_fastsynch
 
 /* List of generic features kernel or userland may support */
-#define __xn_feat_generic_mask \
-	(__xn_feat_smp_mask | __xn_feat_fastsynch_mask)
+#define __xn_feat_generic_mask			\
+	(__xn_feat_smp_mask		|	\
+	 __xn_feat_fastsynch_mask 	|	\
+	 __xn_feat_prioceiling)
 
 /*
  * List of features both sides have to agree on: If userland supports
- * it, the kernel has to provide it, too.
+ * it, the kernel has to provide it, too. This means backward
+ * compatibility between older userland and newer kernel may be
+ * supported for those features, but forward compatibility between
+ * newer userland and older kernel cannot.
  */
-#define __xn_feat_generic_man_mask \
-	(__xn_feat_fastsynch | __xn_feat_nofastsynch | __xn_feat_nosmp)
+#define __xn_feat_generic_man_mask		\
+	(__xn_feat_fastsynch		|	\
+	 __xn_feat_nofastsynch		|	\
+	 __xn_feat_nosmp		|	\
+	 __xn_feat_prioceiling)
 
 static inline
 const char *get_generic_feature_label(unsigned int feature)
@@ -84,6 +99,8 @@ const char *get_generic_feature_label(unsigned int feature)
 		return "nofastsynch";
 	case __xn_feat_control:
 		return "control";
+	case __xn_feat_prioceiling:
+		return "prioceiling";
 	default:
 		return 0;
 	}

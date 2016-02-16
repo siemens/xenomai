@@ -147,6 +147,17 @@ void xnheap_free(struct xnheap *heap, void *block);
 
 int xnheap_check_block(struct xnheap *heap, void *block);
 
+static inline void *xnheap_zalloc(struct xnheap *heap, u32 size)
+{
+	void *p;
+
+	p = xnheap_alloc(heap, size);
+	if (p)
+		memset(p, 0, size);
+
+	return p;
+}
+
 static inline char *xnstrdup(const char *s)
 {
 	char *p;

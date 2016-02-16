@@ -67,20 +67,33 @@ static inline void __xnsched_rt_dequeue(struct xnthread *thread)
 	xnsched_delq(&thread->sched->rt.runnable, thread);
 }
 
-static inline void __xnsched_rt_setparam(struct xnthread *thread,
+static inline void __xnsched_rt_track_weakness(struct xnthread *thread)
+{
+	/*
+	 * We have to track threads exiting weak scheduling, i.e. any
+	 * thread leaving the WEAK class code if compiled in, or
+	 * assigned a zero priority if weak threads are hosted by the
+	 * RT class.
+	 *
+	 * CAUTION: since we need to check the effective priority
+	 * level for determining the weakness state, this can only
+	 * apply to non-boosted threads.
+	 */
+	if (IS_ENABLED(CONFIG_XENO_OPT_SCHED_WEAK) || thread->cprio)
+		xnthread_clear_state(thread, XNWEAK);
+	else
+		xnthread_set_state(thread, XNWEAK);
+}
+
+static inline bool __xnsched_rt_setparam(struct xnthread *thread,
 					 const union xnsched_policy_param *p)
 {
-	thread->cprio = p->rt.prio;
-	if (!xnthread_test_state(thread, XNBOOST)) {
-#ifdef CONFIG_XENO_OPT_SCHED_WEAK
-		xnthread_clear_state(thread, XNWEAK);
-#else
-		if (thread->cprio)
-			xnthread_clear_state(thread, XNWEAK);
-		else
-			xnthread_set_state(thread, XNWEAK);
-#endif
-	}
+	bool ret = xnsched_set_effective_priority(thread, p->rt.prio);
+	
+	if (!xnthread_test_state(thread, XNBOOST))
+		__xnsched_rt_track_weakness(thread);
+
+	return ret;
 }
 
 static inline void __xnsched_rt_getparam(struct xnthread *thread,
@@ -93,9 +106,23 @@ static inline void __xnsched_rt_trackprio(struct xnthread *thread,
 					  const union xnsched_policy_param *p)
 {
 	if (p)
-		__xnsched_rt_setparam(thread, p);
-	else
+		thread->cprio = p->rt.prio; /* Force update. */
+	else {
 		thread->cprio = thread->bprio;
+		/* Leaving PI/PP, so non-boosted by definition. */
+		__xnsched_rt_track_weakness(thread);
+	}
+}
+
+static inline void __xnsched_rt_protectprio(struct xnthread *thread, int prio)
+{
+	/*
+	 * The RT class supports the widest priority range from
+	 * XNSCHED_CORE_MIN_PRIO to XNSCHED_CORE_MAX_PRIO inclusive,
+	 * no need to cap the input value which is guaranteed to be in
+	 * the range [1..XNSCHED_CORE_MAX_PRIO].
+	 */
+	thread->cprio = prio;
 }
 
 static inline void __xnsched_rt_forget(struct xnthread *thread)

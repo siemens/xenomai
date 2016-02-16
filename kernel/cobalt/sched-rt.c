@@ -69,7 +69,7 @@ static void xnsched_rt_rotate(struct xnsched *sched,
 
 	/*
 	 * In case we picked the current thread, we have to make sure
-	 * not to move it back to the runnable queue if it was blocked
+	 * not to move it back to the run queue if it was blocked
 	 * before we were called. The same goes if the current thread
 	 * holds the scheduler lock.
 	 */
@@ -86,15 +86,15 @@ void xnsched_rt_tick(struct xnsched *sched)
 	 * thread that neither holds the scheduler lock nor was
 	 * blocked before entering this callback. As the time slice is
 	 * exhausted for the running thread, move it back to the
-	 * runnable queue at the end of its priority group.
+	 * run queue at the end of its priority group.
 	 */
 	xnsched_putback(sched->curr);
 }
 
-void xnsched_rt_setparam(struct xnthread *thread,
+bool xnsched_rt_setparam(struct xnthread *thread,
 			 const union xnsched_policy_param *p)
 {
-	__xnsched_rt_setparam(thread, p);
+	return __xnsched_rt_setparam(thread, p);
 }
 
 void xnsched_rt_getparam(struct xnthread *thread,
@@ -107,6 +107,11 @@ void xnsched_rt_trackprio(struct xnthread *thread,
 			  const union xnsched_policy_param *p)
 {
 	__xnsched_rt_trackprio(thread, p);
+}
+
+void xnsched_rt_protectprio(struct xnthread *thread, int prio)
+{
+	__xnsched_rt_protectprio(thread, prio);
 }
 
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -239,6 +244,7 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_declare		=	NULL,
 	.sched_setparam		=	xnsched_rt_setparam,
 	.sched_trackprio	=	xnsched_rt_trackprio,
+	.sched_protectprio	=	xnsched_rt_protectprio,
 	.sched_getparam		=	xnsched_rt_getparam,
 #ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_rt_init_vfile,

@@ -34,9 +34,10 @@ typedef __u32 xnhandle_t;
 #define XNSYNCH_PSHARED		((xnhandle_t)0x40000000)
 
 /* Transient bits (expressing a status) */
-#define XNSYNCH_FLCLAIM		((xnhandle_t)0x80000000)
+#define XNSYNCH_FLCLAIM		((xnhandle_t)0x80000000) /* Contended. */
+#define XNSYNCH_FLCEIL		((xnhandle_t)0x20000000) /* Ceiling active. */
 
-#define XN_HANDLE_TRANSIENT_MASK	XNSYNCH_FLCLAIM
+#define XN_HANDLE_TRANSIENT_MASK	(XNSYNCH_FLCLAIM|XNSYNCH_FLCEIL)
 
 /*
  * Strip all special bits from the handle, only retaining the object

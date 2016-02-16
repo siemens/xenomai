@@ -26,7 +26,7 @@
 static inline int
 pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *attr)
 {
-	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, ret;
+	int synch_flags = XNSYNCH_PRIO, ret;
 	struct cobalt_cond *cond, *old_cond;
 	struct cobalt_cond_state *state;
 	struct cobalt_ppd *sys_ppd;

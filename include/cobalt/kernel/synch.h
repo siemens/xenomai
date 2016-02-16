@@ -23,12 +23,14 @@
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/uapi/kernel/synch.h>
+#include <cobalt/uapi/kernel/thread.h>
 
 /**
  * @addtogroup cobalt_core_synch
  * @{
  */
-#define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
+#define XNSYNCH_CLAIMED  0x100	/* Claimed by other thread(s) (PI) */
+#define XNSYNCH_CEILING  0x200	/* Actively boosting (PP) */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
@@ -49,13 +51,25 @@ struct xnthread;
 struct xnsynch;
 
 struct xnsynch {
-	struct list_head link;	/** thread->claimq */
-	int wprio;		/** wait prio in claimq */
-	unsigned long status;	 /** Status word */
-	struct list_head pendq;	 /** Pending threads */
-	struct xnthread *owner;	/** Thread which owns the resource */
-	atomic_t *fastlock; /** Pointer to fast lock word */
-	void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
+	/** wait (weighted) prio in thread->boosters */
+	int wprio;
+	/** thread->boosters */
+	struct list_head next;
+	/**
+	 *  &variable holding the current priority ceiling value
+	 *  (xnsched_class_rt-based, [1..255], XNSYNCH_PP).
+	 */
+	u32 *ceiling_ref;
+	/** Status word */
+	unsigned long status;
+	/** Pending threads */
+	struct list_head pendq;
+	/** Thread which owns the resource */
+	struct xnthread *owner;
+	 /** Pointer to fast lock word */
+	atomic_t *fastlock;
+	/* Cleanup handler */
+	void (*cleanup)(struct xnsynch *synch);
 };
 
 #define XNSYNCH_WAITQUEUE_INITIALIZER(__name) {		\
@@ -106,31 +120,26 @@ static inline struct xnthread *xnsynch_owner(struct xnsynch *synch)
 void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
 				  struct xnthread *sleeper);
 
-void xnsynch_detect_claimed_relax(struct xnthread *owner);
+void xnsynch_detect_boosted_relax(struct xnthread *owner);
 
 #else /* !XENO_DEBUG(MUTEX_RELAXED) */
 
 static inline void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
-				  struct xnthread *sleeper)
-{
-}
+				  struct xnthread *sleeper) { }
 
-static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
-{
-}
+static inline void xnsynch_detect_boosted_relax(struct xnthread *owner) { }
 
 #endif /* !XENO_DEBUG(MUTEX_RELAXED) */
 
 void xnsynch_init(struct xnsynch *synch, int flags,
 		  atomic_t *fastlock);
 
+void xnsynch_init_protect(struct xnsynch *synch, int flags,
+			  atomic_t *fastlock, u32 *ceiling_ref);
+
 int xnsynch_destroy(struct xnsynch *synch);
 
-static inline void xnsynch_set_owner(struct xnsynch *synch,
-				     struct xnthread *thread)
-{
-	synch->owner = thread;
-}
+void xnsynch_commit_ceiling(struct xnthread *curr);
 
 static inline void xnsynch_register_cleanup(struct xnsynch *synch,
 					    void (*handler)(struct xnsynch *))
@@ -161,8 +170,6 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
 
 int xnsynch_flush(struct xnsynch *synch, int reason);
-
-void xnsynch_release_all_ownerships(struct xnthread *thread);
 
 void xnsynch_requeue_sleeper(struct xnthread *thread);
 

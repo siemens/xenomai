@@ -134,8 +134,8 @@ static inline int mq_init(struct cobalt_mq *mq, const struct mq_attr *attr)
 	mq->memsize = memsize;
 	INIT_LIST_HEAD(&mq->queued);
 	mq->nrqueued = 0;
-	xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
-	xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
+	xnsynch_init(&mq->receivers, XNSYNCH_PRIO, NULL);
+	xnsynch_init(&mq->senders, XNSYNCH_PRIO, NULL);
 	mq->mem = mem;
 
 	/* Fill the pool. */

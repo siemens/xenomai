@@ -106,14 +106,15 @@ static void xnsched_tp_init(struct xnsched *sched)
 	xntimer_set_name(&tp->tf_timer, timer_name);
 }
 
-static void xnsched_tp_setparam(struct xnthread *thread,
+static bool xnsched_tp_setparam(struct xnthread *thread,
 				const union xnsched_policy_param *p)
 {
 	struct xnsched *sched = thread->sched;
 
-	xnthread_clear_state(thread, XNWEAK);
 	thread->tps = &sched->tp.partitions[p->tp.ptid];
-	thread->cprio = p->tp.prio;
+	xnthread_clear_state(thread, XNWEAK);
+
+	return xnsched_set_effective_priority(thread, p->tp.prio);
 }
 
 static void xnsched_tp_getparam(struct xnthread *thread,
@@ -127,22 +128,22 @@ static void xnsched_tp_trackprio(struct xnthread *thread,
 				 const union xnsched_policy_param *p)
 {
 	/*
-	 * The assigned partition never changes internally due to PIP
+	 * The assigned partition never changes internally due to PI
 	 * (see xnsched_track_policy), since this would be pretty
 	 * wrong with respect to TP scheduling: i.e. we may not allow
 	 * a thread from another partition to consume CPU time from
-	 * the current one, despite this would help enforcing PIP
-	 * (*). In any case, introducing resource contention between
+	 * the current one, despite this would help enforcing PI (see
+	 * note). In any case, introducing resource contention between
 	 * threads that belong to different partitions is utterly
 	 * wrong in the first place.  Only an explicit call to
 	 * xnsched_set_policy() may change the partition assigned to a
 	 * thread. For that reason, a policy reset action only boils
 	 * down to reinstating the base priority.
 	 *
-	 * (*) However, we do allow threads from lower scheduling
-	 * classes to consume CPU time from the current window as a
-	 * result of a PIP boost, since this is aimed at speeding up
-	 * the release of a synchronization object a TP thread needs.
+	 * NOTE: we do allow threads from lower scheduling classes to
+	 * consume CPU time from the current window as a result of a
+	 * PI boost, since this is aimed at speeding up the release of
+	 * a synchronization object a TP thread needs.
 	 */
 	if (p) {
 		/* We should never cross partition boundaries. */
@@ -152,6 +153,14 @@ static void xnsched_tp_trackprio(struct xnthread *thread,
 		thread->cprio = p->tp.prio;
 	} else
 		thread->cprio = thread->bprio;
+}
+
+static void xnsched_tp_protectprio(struct xnthread *thread, int prio)
+{
+  	if (prio > XNSCHED_TP_MAX_PRIO)
+		prio = XNSCHED_TP_MAX_PRIO;
+
+	thread->cprio = prio;
 }
 
 static int xnsched_tp_declare(struct xnthread *thread,
@@ -208,12 +217,12 @@ static void xnsched_tp_migrate(struct xnthread *thread, struct xnsched *sched)
 	 * it cannot apply to a thread that moves to another CPU
 	 * anymore. So we upgrade that thread to the RT class when a
 	 * CPU migration occurs. A subsequent call to
-	 * xnsched_set_policy() may move it back to TP scheduling,
-	 * with a partition assignment that fits the remote CPU's
-	 * partition schedule.
+	 * __xnthread_set_schedparam() may move it back to TP
+	 * scheduling, with a partition assignment that fits the
+	 * remote CPU's partition schedule.
 	 */
 	param.rt.prio = thread->cprio;
-	xnsched_set_policy(thread, &xnsched_class_rt, &param);
+	__xnthread_set_schedparam(thread, &xnsched_class_rt, &param);
 }
 
 void xnsched_tp_start_schedule(struct xnsched *sched)
@@ -254,14 +263,14 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 
 	/*
 	 * Move all TP threads on this scheduler to the RT class,
-	 * until we call xnsched_set_policy() for them again.
+	 * until we call __xnthread_set_schedparam() for them again.
 	 */
 	if (list_empty(&tp->threads))
 		goto done;
 
 	list_for_each_entry_safe(thread, tmp, &tp->threads, tp_link) {
 		param.rt.prio = thread->cprio;
-		xnsched_set_policy(thread, &xnsched_class_rt, &param);
+		__xnthread_set_schedparam(thread, &xnsched_class_rt, &param);
 	}
 done:
 	old_gps = tp->gps;
@@ -428,6 +437,7 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_setparam		=	xnsched_tp_setparam,
 	.sched_getparam		=	xnsched_tp_getparam,
 	.sched_trackprio	=	xnsched_tp_trackprio,
+	.sched_protectprio	=	xnsched_tp_protectprio,
 	.sched_declare		=	xnsched_tp_declare,
 	.sched_forget		=	xnsched_tp_forget,
 	.sched_kick		=	NULL,

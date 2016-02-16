@@ -258,8 +258,8 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 			return curr;
 		}
 		/*
-		 * Push the current thread back to the runnable queue
-		 * of the scheduling class it belongs to, if not yet
+		 * Push the current thread back to the run queue of
+		 * the scheduling class it belongs to, if not yet
 		 * linked to it (XNREADY tells us if it is).
 		 */
 		if (!xnthread_test_state(curr, XNREADY)) {
@@ -361,7 +361,7 @@ void xnsched_unlock(void)
 }
 EXPORT_SYMBOL_GPL(xnsched_unlock);
 
-/* Must be called with nklock locked, interrupts off. */
+/* nklock locked, interrupts off. */
 void xnsched_putback(struct xnthread *thread)
 {
 	if (xnthread_test_state(thread, XNREADY))
@@ -373,11 +373,13 @@ void xnsched_putback(struct xnthread *thread)
 	xnsched_set_resched(thread->sched);
 }
 
-/* Must be called with nklock locked, interrupts off. */
+/* nklock locked, interrupts off. */
 int xnsched_set_policy(struct xnthread *thread,
 		       struct xnsched_class *sched_class,
 		       const union xnsched_policy_param *p)
 {
+	struct xnsched_class *orig_effective_class __maybe_unused;
+	bool effective;
 	int ret;
 
 	/*
@@ -406,11 +408,32 @@ int xnsched_set_policy(struct xnthread *thread,
 			xnsched_forget(thread);
 	}
 
-	thread->sched_class = sched_class;
+	/*
+	 * Set the base and effective scheduling parameters. However,
+	 * xnsched_setparam() will deny lowering the effective
+	 * priority if a boost is undergoing, only recording the
+	 * change into the base priority field in such situation.
+	 */
 	thread->base_class = sched_class;
-	xnsched_setparam(thread, p);
-	thread->bprio = thread->cprio;
-	thread->wprio = thread->cprio + sched_class->weight;
+	/*
+	 * Referring to the effective class from a setparam() handler
+	 * is wrong: make sure to break if so.
+	 */
+	if (XENO_DEBUG(COBALT)) {
+		orig_effective_class = thread->sched_class;
+		thread->sched_class = NULL;
+	}
+
+	/*
+	 * This is the ONLY place where calling xnsched_setparam() is
+	 * legit, sane and safe.
+	 */
+	effective = xnsched_setparam(thread, p);
+	if (effective) {
+		thread->sched_class = sched_class;
+		thread->wprio = xnsched_calc_wprio(sched_class, thread->cprio);
+	} else if (XENO_DEBUG(COBALT))
+		thread->sched_class = orig_effective_class;
 
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);
@@ -422,27 +445,90 @@ int xnsched_set_policy(struct xnthread *thread,
 }
 EXPORT_SYMBOL_GPL(xnsched_set_policy);
 
-/* Must be called with nklock locked, interrupts off. */
+/* nklock locked, interrupts off. */
+bool xnsched_set_effective_priority(struct xnthread *thread, int prio)
+{
+	int wprio = xnsched_calc_wprio(thread->base_class, prio);
+
+	thread->bprio = prio;
+	if (wprio == thread->wprio)
+		return true;
+
+	/*
+	 * We may not lower the effective/current priority of a
+	 * boosted thread when changing the base scheduling
+	 * parameters. Only xnsched_track_policy() and
+	 * xnsched_protect_priority() may do so when dealing with PI
+	 * and PP synchs resp.
+	 */
+	if (wprio < thread->wprio && xnthread_test_state(thread, XNBOOST))
+		return false;
+
+	thread->cprio = prio;
+
+	return true;
+}
+
+/* nklock locked, interrupts off. */
 void xnsched_track_policy(struct xnthread *thread,
 			  struct xnthread *target)
 {
 	union xnsched_policy_param param;
 
+	/*
+	 * Inherit (or reset) the effective scheduling class and
+	 * priority of a thread. Unlike xnsched_set_policy(), this
+	 * routine is allowed to lower the weighted priority with no
+	 * restriction, even if a boost is undergoing.
+	 */
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_dequeue(thread);
 	/*
 	 * Self-targeting means to reset the scheduling policy and
-	 * parameters to the base ones. Otherwise, make thread inherit
-	 * the scheduling data from target.
+	 * parameters to the base settings. Otherwise, make thread
+	 * inherit the scheduling parameters from target.
 	 */
 	if (target == thread) {
 		thread->sched_class = thread->base_class;
 		xnsched_trackprio(thread, NULL);
+		/*
+		 * Per SuSv2, resetting the base scheduling parameters
+		 * should not move the thread to the tail of its
+		 * priority group.
+		 */
+		if (xnthread_test_state(thread, XNREADY))
+			xnsched_requeue(thread);
+
 	} else {
 		xnsched_getparam(target, &param);
 		thread->sched_class = target->sched_class;
 		xnsched_trackprio(thread, &param);
+		if (xnthread_test_state(thread, XNREADY))
+			xnsched_enqueue(thread);
 	}
+
+	xnsched_set_resched(thread->sched);
+}
+
+/* nklock locked, interrupts off. */
+void xnsched_protect_priority(struct xnthread *thread, int prio)
+{
+	/*
+	 * Apply a PP boost by changing the effective priority of a
+	 * thread, forcing it to the RT class. Like
+	 * xnsched_track_policy(), this routine is allowed to lower
+	 * the weighted priority with no restriction, even if a boost
+	 * is undergoing.
+	 *
+	 * This routine only deals with active boosts, resetting the
+	 * base priority when leaving a PP boost is obtained by a call
+	 * to xnsched_track_policy().
+	 */
+	if (xnthread_test_state(thread, XNREADY))
+		xnsched_dequeue(thread);
+
+	thread->sched_class = &xnsched_class_rt;
+	xnsched_protectprio(thread, prio);
 
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);
@@ -469,8 +555,7 @@ static void migrate_thread(struct xnthread *thread, struct xnsched *sched)
 }
 
 /*
- * Must be called with nklock locked, interrupts off. thread must be
- * runnable.
+ * nklock locked, interrupts off. thread must be runnable.
  */
 void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 {
@@ -484,14 +569,13 @@ void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 	 */
 	xnthread_set_state(thread, XNMIGRATE);
 #else
-	/* Move thread to the remote runnable queue. */
+	/* Move thread to the remote run queue. */
 	xnsched_putback(thread);
 #endif
 }
 
 /*
- * Must be called with nklock locked, interrupts off. Thread may be
- * blocked.
+ * nklock locked, interrupts off. Thread may be blocked.
  */
 void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 {
@@ -635,7 +719,7 @@ struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 	/*
 	 * The active class (i.e. ->sched_class) is the one currently
 	 * queuing the thread, reflecting any priority boost due to
-	 * PIP.
+	 * PI.
 	 */
 	thread = list_first_entry(head, struct xnthread, rlink);
 	if (unlikely(thread->sched_class != &xnsched_class_rt))
@@ -799,6 +883,11 @@ void __xnsched_run_handler(void) /* hw interrupts off. */
 	xnsched_run();
 }
 
+static inline void do_lazy_user_work(struct xnthread *curr)
+{
+	xnthread_commit_ceiling(curr);
+}
+
 int ___xnsched_run(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr;
@@ -821,6 +910,9 @@ int ___xnsched_run(struct xnsched *sched)
 	 */
 	xntrace_pid(task_pid_nr(current), xnthread_current_priority(curr));
 reschedule:
+	if (xnthread_test_state(curr, XNUSER))
+		do_lazy_user_work(curr);
+
 	switched = 0;
 	if (!test_resched(sched))
 		goto out;

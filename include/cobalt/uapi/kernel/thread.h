@@ -39,7 +39,7 @@
 #define XNRELAX   0x00000080 /**< Relaxed shadow thread (blocking bit) */
 #define XNMIGRATE 0x00000100 /**< Thread is currently migrating to another CPU. */
 #define XNHELD    0x00000200 /**< Thread is held to process emergency. */
-#define XNBOOST   0x00000400 /**< Undergoes a PIP boost */
+#define XNBOOST   0x00000400 /**< PI/PP boost undergoing */
 #define XNSSTEP   0x00000800 /**< Single-stepped by debugger */
 #define XNLOCK    0x00001000 /**< Scheduler lock control (pseudo-bit, not in ->state) */
 #define XNRRB     0x00002000 /**< Undergoes a round-robin scheduling */
@@ -105,6 +105,7 @@ struct xnthread_user_window {
 	__u32 state;
 	__u32 info;
 	__u32 grant_value;
+	__u32 pp_pending;
 };
 
 #endif /* !_COBALT_UAPI_KERNEL_THREAD_H */

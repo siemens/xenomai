@@ -151,13 +151,7 @@ retry:
 
 	if (pss->budget == 0)
 		return;
-	/*
-	 * XXX: if moving to foreground priority downgrades an
-	 * undergoing PIP boost, too bad, but the design flaw is in
-	 * the application which should not make a sporadic thread
-	 * compete for resources with higher priority classes in the
-	 * first place.
-	 */
+
 	if (xnthread_test_state(thread, XNHELD))
 		xnthread_resume(thread, XNHELD);
 	else if (thread->cprio < pss->param.normal_prio) {
@@ -231,7 +225,7 @@ static void xnsched_sporadic_init(struct xnsched *sched)
 {
 	/*
 	 * We litterally stack the sporadic scheduler on top of the RT
-	 * one, reusing its runnable queue directly. This way, RT and
+	 * one, reusing its run queue directly. This way, RT and
 	 * sporadic threads are merged into the same runqueue and thus
 	 * share the same priority scale, with the addition of budget
 	 * management for the sporadic ones.
@@ -241,16 +235,21 @@ static void xnsched_sporadic_init(struct xnsched *sched)
 #endif
 }
 
-static void xnsched_sporadic_setparam(struct xnthread *thread,
+static bool xnsched_sporadic_setparam(struct xnthread *thread,
 				      const union xnsched_policy_param *p)
 {
 	struct xnsched_sporadic_data *pss = thread->pss;
+	bool effective;
+
+	xnthread_clear_state(thread, XNWEAK);
+	effective = xnsched_set_effective_priority(thread, p->pss.current_prio);
+
 	/*
 	 * We use the budget information to determine whether we got
 	 * here from one of our internal calls to
 	 * xnthread_set_schedparam(), in which case we don't want to
-	 * update the sporadic scheduling parameters, but only set the
-	 * dynamic priority of the thread.
+	 * update the scheduling parameters, but only set the
+	 * effective priority.
 	 */
 	if (p->pss.init_budget > 0) {
 		pss->param = p->pss;
@@ -258,14 +257,13 @@ static void xnsched_sporadic_setparam(struct xnthread *thread,
 		pss->repl_in = 0;
 		pss->repl_out = 0;
 		pss->repl_pending = 0;
-		if (thread == thread->sched->curr) {
+		if (effective && thread == thread->sched->curr) {
 			xntimer_stop(&pss->drop_timer);
 			sporadic_schedule_drop(thread);
 		}
 	}
 
-	xnthread_clear_state(thread, XNWEAK);
-	thread->cprio = p->pss.current_prio;
+	return effective;
 }
 
 static void xnsched_sporadic_getparam(struct xnthread *thread,
@@ -282,6 +280,14 @@ static void xnsched_sporadic_trackprio(struct xnthread *thread,
 		thread->cprio = p->pss.current_prio;
 	else
 		thread->cprio = thread->bprio;
+}
+
+static void xnsched_sporadic_protectprio(struct xnthread *thread, int prio)
+{
+	if (prio > XNSCHED_SPORADIC_MAX_PRIO)
+		prio = XNSCHED_SPORADIC_MAX_PRIO;
+
+	thread->cprio = prio;
 }
 
 static int xnsched_sporadic_declare(struct xnthread *thread,
@@ -532,6 +538,7 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_setparam		=	xnsched_sporadic_setparam,
 	.sched_getparam		=	xnsched_sporadic_getparam,
 	.sched_trackprio	=	xnsched_sporadic_trackprio,
+	.sched_protectprio	=	xnsched_sporadic_protectprio,
 	.sched_declare		=	xnsched_sporadic_declare,
 	.sched_forget		=	xnsched_sporadic_forget,
 	.sched_kick		=	NULL,
