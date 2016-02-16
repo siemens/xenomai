@@ -419,9 +419,9 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  * respect to all interrupt handlers (including for real-time IRQs)
  * and Xenomai threads running on all CPUs.
  *
- * @param context name of local variable to store the context in. This
- * variable updated by the real-time core will hold the information
- * required to leave the atomic section properly.
+ * @param __context name of local variable to store the context
+ * in. This variable updated by the real-time core will hold the
+ * information required to leave the atomic section properly.
  *
  * @note Atomic sections may be nested. The caller is allowed to sleep
  * on a blocking Xenomai service from primary mode within an atomic
@@ -437,10 +437,10 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  * purpose of porting existing dual-kernel drivers which still depend
  * on the obsolete RTDM_EXECUTE_ATOMICALLY() construct.
  */
-#define cobalt_atomic_enter(context)			\
-	do {						\
-		xnlock_get_irqsave(&nklock, (context));	\
-		xnsched_lock();			\
+#define cobalt_atomic_enter(__context)				\
+	do {							\
+		xnlock_get_irqsave(&nklock, (__context));	\
+		xnsched_lock();					\
 	} while (0)
 
 /**
@@ -450,15 +450,15 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  * cobalt_atomic_enter(), restoring the preemption and interrupt state
  * which prevailed prior to entering the exited section.
  *
- * @param context name of local variable which stored the context.
+ * @param __context name of local variable which stored the context.
  *
  * @warning This service is not portable to the Mercury core, and
  * should be restricted to Cobalt-specific use cases.
  */
-#define cobalt_atomic_leave(context)				\
+#define cobalt_atomic_leave(__context)				\
 	do {							\
 		xnsched_unlock();				\
-		xnlock_put_irqrestore(&nklock, (context));	\
+		xnlock_put_irqrestore(&nklock, (__context));	\
 	} while (0)
 
 /**
@@ -574,14 +574,16 @@ static inline void rtdm_lock_put(rtdm_lock_t *lock)
 }
 
 /**
- * @fn void rtdm_lock_get_irqsave(rtdm_lock_t *lock, rtdm_lockctx_t context)
  * Acquire lock and disable preemption, by stalling the head domain.
  *
- * @param lock Address of lock variable
- * @param context name of local variable to store the context in
+ * @param __lock Address of lock variable
+ * @param __context name of local variable to store the context in
  *
  * @coretags{unrestricted}
  */
+#define rtdm_lock_get_irqsave(__lock, __context)	\
+	((__context) = __rtdm_lock_get_irqsave(__lock))
+
 static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 {
 	rtdm_lockctx_t context;
@@ -592,8 +594,6 @@ static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 
 	return context;
 }
-#define rtdm_lock_get_irqsave(__lock, __context)	\
-	((__context) = __rtdm_lock_get_irqsave(__lock))
 
 /**
  * Release lock and restore preemption state
@@ -614,22 +614,22 @@ void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t context)
 /**
  * Disable preemption locally
  *
- * @param context name of local variable to store the context in
+ * @param __context name of local variable to store the context in
  *
  * @coretags{unrestricted}
  */
-#define rtdm_lock_irqsave(context)	\
-	splhigh(context)
+#define rtdm_lock_irqsave(__context)	\
+	splhigh(__context)
 
 /**
  * Restore preemption state
  *
- * @param context name of local variable which stored the context
+ * @param __context name of local variable which stored the context
  *
  * @coretags{unrestricted}
  */
-#define rtdm_lock_irqrestore(context)	\
-	splexit(context)
+#define rtdm_lock_irqrestore(__context)	\
+	splexit(__context)
 
 /** @} Spinlock with Preemption Deactivation */
 
