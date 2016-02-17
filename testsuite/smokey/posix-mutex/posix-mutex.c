@@ -133,14 +133,14 @@ static void __check_current_mode(const char *file, int line,
 	__check_current_mode(__FILE__, __LINE__, (mask), (expected_value))
 
 static int dispatch(const char *service_name,
-		      int service_type, int check, int expected, ...)
+		    int service_type, int check, int expected, ...)
 {
 	unsigned long long timeout;
 	pthread_t *thread;
 	pthread_cond_t *cond;
 	void *handler;
 	va_list ap;
-	int status;
+	int status, protocol, type;
 	pthread_mutex_t *mutex;
 	struct sched_param param;
 	pthread_attr_t threadattr;
@@ -152,14 +152,11 @@ static int dispatch(const char *service_name,
 	case MUTEX_CREATE:
 		mutex = va_arg(ap, pthread_mutex_t *);
 		pthread_mutexattr_init(&mutexattr);
-#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
-		if (va_arg(ap, int) != 0)
-			pthread_mutexattr_setprotocol(&mutexattr,
-						      PTHREAD_PRIO_INHERIT);
-#else
-		status = va_arg(ap, int);
-#endif
-		pthread_mutexattr_settype(&mutexattr, va_arg(ap, int));
+		protocol = va_arg(ap, int);
+		/* May fail if unsupported, that's ok. */
+		pthread_mutexattr_setprotocol(&mutexattr, protocol);
+		type = va_arg(ap, int);
+		pthread_mutexattr_settype(&mutexattr, type);
 		status = pthread_mutex_init(mutex, &mutexattr);
 		break;
 
@@ -310,7 +307,8 @@ static void simple_wait(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("simple mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0, 0);
+	dispatch("simple mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_NONE, PTHREAD_MUTEX_NORMAL);
 	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("simple thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
@@ -371,8 +369,8 @@ static void recursive_wait(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("rec mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
-		 PTHREAD_MUTEX_RECURSIVE);
+	dispatch("rec mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_NONE, PTHREAD_MUTEX_RECURSIVE);
 	dispatch("rec mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("rec mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
 
@@ -448,8 +446,8 @@ static void errorcheck_wait(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("errorcheck mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
-		 PTHREAD_MUTEX_ERRORCHECK);
+	dispatch("errorcheck mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_NONE, PTHREAD_MUTEX_ERRORCHECK);
 	dispatch("errorcheck mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	err = pthread_mutex_lock(&mutex);
@@ -510,7 +508,8 @@ static void timed_mutex(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("timed_mutex mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("timed_mutex mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_INHERIT, PTHREAD_MUTEX_NORMAL);
 	dispatch("timed_mutex mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("timed_mutex thread_create", THREAD_CREATE, 1, 0, &waiter_tid,
 		 2, timed_waiter, &mutex);
@@ -530,7 +529,8 @@ static void mode_switch(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_INHERIT, PTHREAD_MUTEX_NORMAL);
 
 	check_current_mode(XNRELAX, XNRELAX);
 
@@ -554,7 +554,8 @@ static void pi_wait(void)
 #endif
 	smokey_trace("%s", __func__);
 
-	dispatch("pi mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("pi mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_INHERIT, PTHREAD_MUTEX_NORMAL);
 	dispatch("pi mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	check_current_prio(2);
@@ -594,7 +595,8 @@ static void lock_stealing(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("lock_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("lock_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_INHERIT, PTHREAD_MUTEX_NORMAL);
 	dispatch("lock_stealing mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	/* Main thread should have higher priority */
@@ -674,7 +676,8 @@ static void deny_stealing(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("deny_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("deny_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_INHERIT, PTHREAD_MUTEX_NORMAL);
 	dispatch("deny_stealing mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	/* Main thread should have higher priority */
@@ -763,7 +766,8 @@ static void simple_condwait(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("simple_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex);
+	dispatch("simple_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_NONE, PTHREAD_MUTEX_NORMAL);
 	dispatch("simple_condwait cond_init", COND_CREATE, 1, 0, &cond);
 	dispatch("simple_condwait mutex_lock", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("simple_condwait thread_create", THREAD_CREATE, 1, 0,
@@ -801,8 +805,8 @@ static void recursive_condwait(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("rec_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
-		 PTHREAD_MUTEX_RECURSIVE);
+	dispatch("rec_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_NONE, PTHREAD_MUTEX_RECURSIVE);
 	dispatch("rec_condwait cond_init", COND_CREATE, 1, 0, &cond);
 	dispatch("rec_condwait mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("rec_condwait mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
@@ -861,8 +865,8 @@ static void auto_switchback(void)
 
 	smokey_trace("%s", __func__);
 
-	dispatch("auto_switchback mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1,
-		 PTHREAD_MUTEX_RECURSIVE);
+	dispatch("auto_switchback mutex_init", MUTEX_CREATE, 1, 0, &mutex,
+		 PTHREAD_PRIO_INHERIT, PTHREAD_MUTEX_RECURSIVE);
 	dispatch("auto_switchback nrt thread_create", THREAD_CREATE, 1, 0,
 		 &nrt_lock_tid, 0, nrt_lock, &mutex);
 	ms_sleep(11);
@@ -902,5 +906,6 @@ int run_posix_mutex(struct smokey_test *t, int argc, char *const argv[])
 	simple_condwait();
 	recursive_condwait();
 	auto_switchback();
+
 	return 0;
 }
