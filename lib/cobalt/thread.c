@@ -225,8 +225,10 @@ int pthread_create_ex(pthread_t *ptid_r,
 	__STD(sem_init(&iargs.sync, 0, 0));
 
 	ret = __STD(pthread_create(&lptid, &attr, cobalt_thread_trampoline, &iargs));
-	if (ret)
-		goto out;
+	if (ret) {
+		__STD(sem_destroy(&iargs.sync));
+		return ret;
+	}
 
 	__STD(clock_gettime(CLOCK_REALTIME, &timeout));
 	timeout.tv_sec += 5;
@@ -249,9 +251,9 @@ int pthread_create_ex(pthread_t *ptid_r,
 		panic("regular sem_wait() failed with %s", symerror(ret));
 	}
 
-	cobalt_thread_harden(); /* May fail if regular thread. */
-out:
 	__STD(sem_destroy(&iargs.sync));
+
+	cobalt_thread_harden(); /* May fail if regular thread. */
 
 	return ret;
 }
