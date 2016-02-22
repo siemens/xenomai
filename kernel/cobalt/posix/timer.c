@@ -286,6 +286,10 @@ timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 {
 	int ret = 0;
 
+	if (cobalt_call_extension(timer_gettime, &timer->extref,
+				  ret, value) && ret != 0)
+		return;
+
 	if (!xntimer_running_p(&timer->timerbase)) {
 		value->it_value.tv_sec = 0;
 		value->it_value.tv_nsec = 0;
@@ -294,9 +298,7 @@ timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 		return;
 	}
 
-	if (!cobalt_call_extension(timer_gettime, &timer->extref,
-				   ret, value) || ret == 0)
-		__cobalt_timer_getval(&timer->timerbase, value);
+	__cobalt_timer_getval(&timer->timerbase, value);
 }
 
 int __cobalt_timer_setval(struct xntimer *__restrict__ timer, int clock_flag,
