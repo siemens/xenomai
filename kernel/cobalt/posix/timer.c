@@ -290,14 +290,6 @@ timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 				  ret, value) && ret != 0)
 		return;
 
-	if (!xntimer_running_p(&timer->timerbase)) {
-		value->it_value.tv_sec = 0;
-		value->it_value.tv_nsec = 0;
-		value->it_interval.tv_sec = 0;
-		value->it_interval.tv_nsec = 0;
-		return;
-	}
-
 	__cobalt_timer_getval(&timer->timerbase, value);
 }
 
