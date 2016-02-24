@@ -602,13 +602,15 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 		overruns = xnarch_div64(delta, period);
 		timer->pexpect_ticks += overruns;
 
-		q = xntimer_percpu_queue(timer);
-		xntimer_dequeue(timer, q);
-		while (xntimerh_date(&timer->aplink) < now) {
-			timer->periodic_ticks++;
-			xntimer_update_date(timer);
+		if (xntimer_running_p(timer)) {
+			q = xntimer_percpu_queue(timer);
+			xntimer_dequeue(timer, q);
+			while (xntimerh_date(&timer->aplink) < now) {
+				timer->periodic_ticks++;
+				xntimer_update_date(timer);
+			}
+			xntimer_enqueue_and_program(timer, q);
 		}
-		xntimer_enqueue_and_program(timer, q);
 	}
 
 	timer->pexpect_ticks++;
