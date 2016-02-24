@@ -19,6 +19,7 @@
 #define _XENOMAI_SMOKEY_SMOKEY_H
 
 #include <stdarg.h>
+#include <pthread.h>
 #include <boilerplate/list.h>
 #include <boilerplate/libc.h>
 #include <copperplate/clockobj.h>
@@ -132,6 +133,12 @@ struct smokey_test {
 #define smokey_warning(__fmt, __args...)	\
 	__smokey_warning(__FILE__, __LINE__, __fmt, ##__args)
 
+struct smokey_barrier {
+	pthread_mutex_t lock;
+	pthread_cond_t barrier;
+	int signaled;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -159,6 +166,14 @@ void smokey_note(const char *fmt, ...);
 void __smokey_warning(const char *file, int lineno,
 		      const char *fmt, ...);
 
+int smokey_barrier_init(struct smokey_barrier *b);
+
+void smokey_barrier_destroy(struct smokey_barrier *b);
+
+int smokey_barrier_wait(struct smokey_barrier *b);
+
+void smokey_barrier_release(struct smokey_barrier *b);
+	
 #ifdef __cplusplus
 }
 #endif

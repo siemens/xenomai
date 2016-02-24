@@ -164,3 +164,60 @@ void __smokey_warning(const char *file, int lineno,
 
 	va_end(ap);
 }
+
+int smokey_barrier_init(struct smokey_barrier *b)
+{
+	pthread_mutexattr_t mattr;
+	pthread_condattr_t cattr;
+	int ret;
+
+	b->signaled = 0;
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_NONE);
+	ret = __RT(pthread_mutex_init(&b->lock, &mattr));
+	pthread_mutexattr_destroy(&mattr);
+	if (ret)
+		return ret;
+
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
+	ret = __RT(pthread_cond_init(&b->barrier, &cattr));
+	pthread_condattr_destroy(&cattr);
+	if (ret)
+		__RT(pthread_mutex_destroy(&b->lock));
+
+	return ret;
+}
+
+void smokey_barrier_destroy(struct smokey_barrier *b)
+{
+	__RT(pthread_cond_destroy(&b->barrier));
+	__RT(pthread_mutex_destroy(&b->lock));
+}
+
+int smokey_barrier_wait(struct smokey_barrier *b)
+{
+	int ret;
+	
+	__RT(pthread_mutex_lock(&b->lock));
+
+	while (!b->signaled) {
+		ret = __RT(pthread_cond_wait(&b->barrier, &b->lock));
+		if (ret)
+			break;
+	}
+
+	__RT(pthread_mutex_unlock(&b->lock));
+
+	return ret;
+}
+
+void smokey_barrier_release(struct smokey_barrier *b)
+{
+	__RT(pthread_mutex_lock(&b->lock));
+	b->signaled = 1;
+	__RT(pthread_cond_broadcast(&b->barrier));
+	__RT(pthread_mutex_unlock(&b->lock));
+}
