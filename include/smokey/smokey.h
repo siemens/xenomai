@@ -133,6 +133,60 @@ struct smokey_test {
 #define smokey_warning(__fmt, __args...)	\
 	__smokey_warning(__FILE__, __LINE__, __fmt, ##__args)
 
+#define __T(__ret, __action)					\
+	({							\
+		(__ret) = (__action);				\
+		if (__ret) {					\
+			if ((__ret) > 0)			\
+				(__ret) = -(__ret);		\
+			smokey_warning("FAILED: %s (=%s)",	\
+				       __stringify(__action),	\
+				       symerror(__ret));	\
+		}						\
+		(__ret) == 0;					\
+	})
+
+#define __F(__ret, __action)					\
+	({							\
+		(__ret) = (__action);				\
+		if ((__ret) == 0)				\
+			smokey_warning("FAILED: %s (=0)",	\
+				       __stringify(__action));	\
+		else if ((__ret) > 0)				\
+			(__ret) = -(__ret);			\
+		(__ret) != 0;					\
+	})
+
+#define __Terrno(__ret, __action)				\
+	({							\
+		(__ret) = (__action);				\
+		if (__ret) {					\
+			(__ret) = -errno;			\
+			smokey_warning("FAILED: %s (=%s)",	\
+				       __stringify(__action),	\
+				       symerror(__ret));	\
+		}						\
+		(__ret) == 0;					\
+	})
+
+#define __Tassert(__expr)					\
+	({							\
+		int __ret = !!(__expr);				\
+		if (!__ret)					\
+			smokey_warning("FAILED: %s (=false)",	\
+				       __stringify(__expr));	\
+		__ret;						\
+	})
+
+#define __Fassert(__expr)					\
+	({							\
+		int __ret = (__expr);				\
+		if (__ret)					\
+			smokey_warning("FAILED: %s (=true)",	\
+				       __stringify(__expr));	\
+		!__ret;						\
+	})
+
 struct smokey_barrier {
 	pthread_mutex_t lock;
 	pthread_cond_t barrier;
