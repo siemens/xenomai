@@ -623,7 +623,10 @@ static int protect_raise(void)
 
 	if (!__Tassert(get_effective_prio() == THREAD_PRIO_MEDIUM))
 		return -EINVAL;
-	
+
+	if (!__T(ret, pthread_mutex_destroy(&mutex)))
+		return ret;
+
 	return 0;
 }
 
@@ -651,7 +654,10 @@ static int protect_lower(void)
 
 	if (!__Tassert(get_effective_prio() == THREAD_PRIO_MEDIUM))
 		return -EINVAL;
-	
+
+	if (!__T(ret, pthread_mutex_destroy(&mutex)))
+		return ret;
+
 	return 0;
 }
 
@@ -699,7 +705,10 @@ static int protect_weak(void)
 	if (!__T(ret, pthread_setschedparam(pthread_self(),
 					    old_policy, &old_param)))
 		return ret;
-	
+
+	if (!__T(ret, pthread_mutex_destroy(&mutex)))
+		return ret;
+
 	return 0;
 }
 
@@ -745,7 +754,11 @@ static int protect_nesting_protect(void)
 
 	if (!__Tassert(get_effective_prio() == THREAD_PRIO_MEDIUM))
 		return -EINVAL;
-	
+
+	if (!__T(ret, pthread_mutex_destroy(&mutex_high)) ||
+	    !__T(ret, pthread_mutex_destroy(&mutex_very_high)))
+		return ret;
+
 	return 0;
 }
 
@@ -782,7 +795,10 @@ static int protect_nesting_pi(void)
 	/* PP boost just dropped: HIGH -> MEDIUM. */
 	if (!__Tassert(get_effective_prio() == THREAD_PRIO_MEDIUM))
 		return -EINVAL;
-	
+
+	if (!__T(ret, pthread_mutex_destroy(&mutex_pp)))
+		return ret;
+
 	return 0;
 }
 
