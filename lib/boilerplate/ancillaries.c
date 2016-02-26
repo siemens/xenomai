@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <sched.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
@@ -292,6 +293,143 @@ int get_static_cpu_count(void)
 
 	return count;
 }
+
+static int __get_online_cpus_from_proc(cpu_set_t *cpuset)
+{
+	char buf[BUFSIZ];
+	FILE *fp;
+	int cpu;
+
+	/* If no hotplug support, fall back to reading /proc/stat. */
+
+	fp = fopen("/proc/stat", "r");
+	if (fp == NULL)
+		return -ENOENT;
+
+	while (fgets(buf, sizeof(buf), fp)) {
+		/*
+		 * Like the glibc, assume cpu* entries are at the
+		 * front of /proc/stat and will stay this way.
+		 */
+		if (strncmp(buf, "cpu", 3))
+			break;
+		if (!isdigit(buf[3]))
+			continue;
+		cpu = atoi(buf + 3);
+		if (cpu >= 0 && cpu < CPU_SETSIZE)
+			CPU_SET(cpu, cpuset);
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+
+int get_online_cpu_set(cpu_set_t *cpuset)
+{
+	char buf[BUFSIZ], *range, *save_range, *save_bound,
+		*lo_bound, *hi_bound, *p;
+	int cpu_lo, cpu_hi;
+	FILE *fp;
+
+	CPU_ZERO(cpuset);
+
+	fp = fopen("/sys/devices/system/cpu/online", "r");
+	if (fp == NULL)
+		return __get_online_cpus_from_proc(cpuset);
+
+	if (fgets(buf, sizeof(buf), fp) == NULL) {
+		fclose(fp);
+		return -EBADF;
+	}
+
+	p = buf;
+	for (;;) {
+		range = strtok_r(p, " \t", &save_range);
+		if (range == NULL)
+			break;
+		lo_bound = strtok_r(range, "-", &save_bound);
+		if (lo_bound) {
+			cpu_lo = atoi(lo_bound);
+			hi_bound = strtok_r(NULL, "-", &save_bound);
+			if (hi_bound) {
+				cpu_hi = atoi(hi_bound);
+				do {
+					CPU_SET(cpu_lo, cpuset);
+				} while (cpu_lo++ < cpu_hi);
+			} else 
+				CPU_SET(cpu_lo, cpuset);
+		}
+		p = NULL;
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+
+#ifdef CONFIG_XENO_COBALT
+
+#include <sys/cobalt.h>
+
+int get_realtime_cpu_set(cpu_set_t *cpuset)
+{
+	unsigned long long cpumask;
+	char buf[BUFSIZ], *p;
+	FILE *fp;
+	int cpu;
+
+	fp = fopen("/sys/module/xenomai/parameters/supported_cpus", "r");
+	if (fp == NULL)
+		return -ENOENT;
+
+	p = fgets(buf, sizeof(buf), fp);
+	fclose(fp);
+	if (p == NULL)
+		return -EBADF;
+
+	errno = 0;
+	cpumask = strtoll(p, NULL, 10);
+	if (cpumask == LLONG_MAX && errno == ERANGE)
+		cpumask = ULLONG_MAX;
+	for (cpu = 0; cpumask != 0; cpu++, cpumask >>= 1) {
+		if (cpumask & 1ULL)
+			CPU_SET(cpu, cpuset);
+	}
+
+	return 0;
+}
+
+int get_current_cpu(void) /* No mode migration */
+{
+	struct cobalt_threadstat stat;
+	int ret;
+
+	ret = cobalt_thread_stat(0, &stat);
+	if (ret)
+		return ret;
+
+	return stat.cpu;
+}
+
+#else  /* CONFIG_XENO_MERCURY */
+
+int get_realtime_cpu_set(cpu_set_t *cpuset)
+{
+	return get_online_cpu_set(cpuset);
+}
+
+int get_current_cpu(void) 
+{
+	int cpu = sched_getcpu();
+
+	if (cpu < 0)
+		return -errno;
+
+	return cpu;
+}
+
+#endif  /* CONFIG_XENO_MERCURY */
 
 pid_t get_thread_pid(void)
 {

@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <pthread.h>
+#include <sched.h>
 #include <string.h>
 #include <boilerplate/signal.h>
 #include <boilerplate/compiler.h>
@@ -108,6 +109,12 @@ void error_hook(struct error_frame *ef);
 
 int get_static_cpu_count(void);
 
+int get_online_cpu_set(cpu_set_t *cpuset);
+  
+int get_realtime_cpu_set(cpu_set_t *cpuset);
+
+int get_current_cpu(void);
+	
 pid_t get_thread_pid(void);
 
 char *lookup_command(const char *cmd);
