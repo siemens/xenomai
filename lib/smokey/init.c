@@ -158,7 +158,8 @@
  *   host program.  The test driver code (e.g. implementing a test
  *   harness program on top of Smokey) may then iterate over the @a
  *   smokey_test_list for accessing each active test individually, in
- *   the enumeration order specified by the user.
+ *   the enumeration order specified by the user (Use
+ *   for_each_smokey_test() for that).
  *
  *   If no argument is passed to --run, Smokey assumes that all tests
  *   detected in the current program should be picked, filling @a
@@ -178,6 +179,10 @@
  *   - 0,1,foo- picks tests #0, #1, and any test from foo up to the
  *     last test defined
  *   - fo* picks any test with a name starting by "fo"
+ *
+ * - --exclude=<id[,id...]> excludes the given tests from the test
+ *   list. The format of the argument is identical to the one accepted
+ *   by the --run option.
  *
  * - --keep-going sets the boolean flag @a smokey_keep_going to a
  *   non-zero value, indicating to the test driver that receiving a
@@ -262,9 +267,17 @@ int smokey_on_vm = 0;
 
 static DEFINE_PRIVATE_LIST(register_list);
 
+static DEFINE_PRIVATE_LIST(exclude_list);
+
+static char *include_arg;
+
+static char *exclude_arg;
+
 static int test_count;
 
 static int do_list;
+
+static int do_run;
 
 static const struct option smokey_options[] = {
 	{
@@ -278,6 +291,8 @@ static const struct option smokey_options[] = {
 #define run_opt		1
 		.name = "run",
 		.has_arg = optional_argument,
+		.flag = &do_run,
+		.val = 1,
 	},
 	{
 #define list_opt	2
@@ -293,6 +308,11 @@ static const struct option smokey_options[] = {
 		.flag = &smokey_on_vm,
 		.val = 1,
 	},
+	{
+#define exclude_opt	4
+		.name = "exclude",
+		.has_arg = required_argument,
+	},
 	{ /* Sentinel */ }
 };
 
@@ -301,10 +321,11 @@ static void smokey_help(void)
         fprintf(stderr, "--keep-going			don't stop upon test error\n");
 	fprintf(stderr, "--list				list all tests\n");
 	fprintf(stderr, "--run[=<id[,id...]>]]		run [portion of] the test list\n");
+	fprintf(stderr, "--exclude=<id[,id...]>]	exclude test(s) from the run list\n");
 	fprintf(stderr, "--vm				hint about running in a virtual environment\n");
 }
 
-static inline void pick_test_range(int start, int end)
+static void pick_test_range(int start, int end)
 {
 	struct smokey_test *t, *tmp;
 
@@ -327,6 +348,24 @@ static inline void pick_test_range(int start, int end)
 			}
 		}
 	} 
+}
+
+static void drop_test_range(int start, int end)
+{
+	struct smokey_test *t, *tmp;
+
+	/*
+	 * Drop tests from the register list so that we won't find
+	 * them when applying the inclusion filter next, order is not
+	 * significant.
+	 */
+	pvlist_for_each_entry_safe(t, tmp, &register_list, __reserved.next) {
+		if (t->__reserved.id >= start &&
+		    t->__reserved.id <= end) {
+			pvlist_remove(&t->__reserved.next);
+			pvlist_append(&t->__reserved.next, &exclude_list);
+		}
+	}
 }
 
 static int resolve_id(const char *s)
@@ -353,7 +392,7 @@ static int resolve_id(const char *s)
 	return -1;
 }
 
-static int glob_match(const char *s)
+static int do_glob_match(const char *s, struct pvlistobj *list)
 {
 	struct smokey_test *t, *tmp;
 	int matches = 0;
@@ -364,7 +403,7 @@ static int glob_match(const char *s)
 	pvlist_for_each_entry_safe(t, tmp, &register_list, __reserved.next) {
 		if (!fnmatch(s, t->name, FNM_PATHNAME)) {
 			pvlist_remove(&t->__reserved.next);
-			pvlist_append(&t->__reserved.next, &smokey_test_list);
+			pvlist_append(&t->__reserved.next, list);
 			matches++;
 		}
 	}
@@ -372,7 +411,19 @@ static int glob_match(const char *s)
 	return matches;
 }
 
-static int build_test_list(const char *test_enum)
+static int glob_match_include(const char *s)
+{
+	return do_glob_match(s, &smokey_test_list);
+}
+
+static int glob_match_exclude(const char *s)
+{
+	return do_glob_match(s, &exclude_list);
+}
+
+static int apply_test_filter(const char *test_enum,
+			     void (*filter_action)(int start, int end),
+			     int (*glob_match)(const char *s))
 {
 	char *s = strdup(test_enum), *n, *range, *range_p = NULL, *id, *id_r;
 	int start, end;
@@ -409,7 +460,7 @@ static int build_test_list(const char *test_enum)
 			start = 0;
 			end = test_count - 1;
 		}
-		pick_test_range(start, end);
+		filter_action(start, end);
 		n = NULL;
 	}
 
@@ -421,6 +472,18 @@ fail:
 	free(s);
 
 	return -EINVAL;
+}
+
+static int run_include_filter(const char *include_enum)
+{
+	return apply_test_filter(include_enum,
+				 pick_test_range, glob_match_include);
+}
+
+static int run_exclude_filter(const char *exclude_enum)
+{
+	return apply_test_filter(exclude_enum,
+				 drop_test_range, glob_match_exclude);
 }
 
 static void list_all_tests(void)
@@ -443,44 +506,60 @@ void smokey_register_plugin(struct smokey_test *t)
 
 static int smokey_parse_option(int optnum, const char *optarg)
 {
-	int ret = 0;
-
 	switch (optnum) {
+	case run_opt:
+		include_arg = strdup(optarg);
+		break;
+	case exclude_opt:
+		exclude_arg = strdup(optarg);
+		break;
+	case list_opt:
 	case keep_going_opt:
 	case vm_opt:
 		break;
-	case run_opt:
-		if (pvlist_empty(&register_list)) {
-			warning("no test registered");
-			return -EINVAL;
-		}
-		if (optarg)
-			ret = build_test_list(optarg);
-		else
-			pick_test_range(0, test_count);
-		if (pvlist_empty(&smokey_test_list)) {
-			warning("no test selected");
-			return -EINVAL;
-		}
-		break;
-	case list_opt:
-		list_all_tests();
-		break;
 	default:
-		ret = -EINVAL;
+		return -EINVAL;
 	}
 
-	return ret;
+	return 0;
 }
 
 static int smokey_init(void)
 {
+	int ret = 0;
+
+	if (do_list)
+		list_all_tests();
+
+	if (do_run) {
+		if (pvlist_empty(&register_list)) {
+			warning("no test registered");
+			return -EINVAL;
+		}
+
+		if (exclude_arg) {
+			run_exclude_filter(exclude_arg);
+			free(exclude_arg);
+		}
+
+		if (include_arg) {
+			ret = run_include_filter(include_arg);
+			free(include_arg);
+		} else
+			pick_test_range(0, test_count);
+	
+		if (pvlist_empty(&smokey_test_list)) {
+			warning("no test selected");
+			ret = -EINVAL;
+		}
+	}
+
 	if (pvlist_empty(&smokey_test_list))
 		set_runtime_tunable(verbosity_level, 0);
 	else
 		smokey_verbose_mode = get_runtime_tunable(verbosity_level);
 
-	return 0;
+	return ret;
 }
 
 static struct setup_descriptor smokey_interface = {
