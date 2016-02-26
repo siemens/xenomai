@@ -8,6 +8,7 @@ smokey_SOURCES = main.c
 COBALT_SUBDIRS = 	\
 	arith 		\
 	bufp		\
+	cpu-affinity	\
 	iddp		\
 	leaks		\
 	net_packet_dgram\
