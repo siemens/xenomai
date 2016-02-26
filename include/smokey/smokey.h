@@ -226,6 +226,9 @@ void smokey_barrier_destroy(struct smokey_barrier *b);
 
 int smokey_barrier_wait(struct smokey_barrier *b);
 
+int smokey_barrier_timedwait(struct smokey_barrier *b,
+			     struct timespec *ts);
+  
 void smokey_barrier_release(struct smokey_barrier *b);
 	
 #ifdef __cplusplus

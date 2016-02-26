@@ -199,12 +199,30 @@ void smokey_barrier_destroy(struct smokey_barrier *b)
 
 int smokey_barrier_wait(struct smokey_barrier *b)
 {
-	int ret;
+	int ret = 0;
 	
 	__RT(pthread_mutex_lock(&b->lock));
 
 	while (!b->signaled) {
 		ret = __RT(pthread_cond_wait(&b->barrier, &b->lock));
+		if (ret)
+			break;
+	}
+
+	__RT(pthread_mutex_unlock(&b->lock));
+
+	return ret;
+}
+
+int smokey_barrier_timedwait(struct smokey_barrier *b, struct timespec *ts)
+{
+	int ret = 0;
+	
+	__RT(pthread_mutex_lock(&b->lock));
+
+	while (!b->signaled) {
+		ret = __RT(pthread_cond_timedwait(&b->barrier,
+						  &b->lock, ts));
 		if (ret)
 			break;
 	}
