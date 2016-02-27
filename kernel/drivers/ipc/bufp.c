@@ -423,7 +423,7 @@ static ssize_t __bufp_writebuf(struct bufp_socket *rsk,
 
 	len = bufd->b_len;
 
-	rtdm_toseq_init(&toseq, sk->rx_timeout);
+	rtdm_toseq_init(&toseq, sk->tx_timeout);
 
 	cobalt_atomic_enter(s);
 redo:
