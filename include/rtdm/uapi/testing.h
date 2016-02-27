@@ -83,6 +83,7 @@ struct rttst_swtest_error {
 
 #define RTTST_RTDM_NORMAL_CLOSE		0
 #define RTTST_RTDM_DEFER_CLOSE_CONTEXT	1
+#define RTTST_RTDM_START_STOP_TASK	2
 
 #define RTIOC_TYPE_TESTING		RTDM_CLASS_TESTING
 
@@ -141,6 +142,10 @@ struct rttst_swtest_error {
 
 #define RTTST_RTIOC_RTDM_DEFER_CLOSE \
 	_IOW(RTIOC_TYPE_TESTING, 0x40, __u32)
+
+#define RTTST_RTIOC_RTDM_ACTOR_GET_CPU \
+	_IOR(RTIOC_TYPE_TESTING, 0x41, __u32)
+  
 /** @} */
 
 #endif /* !_RTDM_UAPI_TESTING_H */
