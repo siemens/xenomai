@@ -20,7 +20,6 @@
 #include <linux/module.h>
 #include <linux/list.h>
 #include <linux/kernel.h>
-#include <linux/vmalloc.h>
 #include <linux/slab.h>
 #include <linux/poll.h>
 #include <cobalt/kernel/heap.h>
@@ -209,7 +208,7 @@ static void iddp_close(struct rtdm_fd *fd)
 		poolmem = xnheap_get_membase(&sk->privpool);
 		poolsz = xnheap_get_size(&sk->privpool);
 		xnheap_destroy(&sk->privpool);
-		free_pages_exact(poolmem, poolsz);
+		xnheap_vfree(poolmem);
 		return;
 	}
 
@@ -567,7 +566,7 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 	poolsz = sk->poolsz;
 	if (poolsz > 0) {
 		poolsz = xnheap_rounded_size(poolsz);
-		poolmem = alloc_pages_exact(poolsz, GFP_KERNEL);
+		poolmem = xnheap_vmalloc(poolsz);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
 			goto fail;
@@ -575,7 +574,7 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 
 		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
 		if (ret) {
-			free_pages_exact(poolmem, poolsz);
+			xnheap_vfree(poolmem);
 			goto fail;
 		}
 		xnheap_set_name(&sk->privpool, "iddp-pool@%d", port);
@@ -594,7 +593,7 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 		if (ret) {
 			if (poolsz > 0) {
 				xnheap_destroy(&sk->privpool);
-				free_pages_exact(poolmem, poolsz);
+				xnheap_vfree(poolmem);
 			}
 			goto fail;
 		}
