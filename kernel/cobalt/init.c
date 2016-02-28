@@ -18,6 +18,7 @@
  */
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/vmalloc.h>
 #include <linux/ipipe_tickdev.h>
 #include <xenomai/version.h>
 #include <cobalt/kernel/sched.h>
@@ -127,7 +128,6 @@ static void sys_shutdown(void)
 	struct xnthread *thread, *tmp;
 	struct xnsched *sched;
 	void *membase;
-	u32 memsize;
 	int cpu;
 	spl_t s;
 
@@ -155,9 +155,8 @@ static void sys_shutdown(void)
 
 	xnregistry_cleanup();
 	membase = xnheap_get_membase(&cobalt_heap);
-	memsize = xnheap_get_size(&cobalt_heap);
 	xnheap_destroy(&cobalt_heap);
-	free_pages_exact(membase, memsize);
+	vfree(membase);
 }
 
 static int __init mach_setup(void)
@@ -290,7 +289,7 @@ static __init int sys_init(void)
 	if (sysheap_size_arg == 0)
 		sysheap_size_arg = CONFIG_XENO_OPT_SYS_HEAPSZ;
 
-	heapaddr = alloc_pages_exact(sysheap_size_arg * 1024, GFP_KERNEL);
+	heapaddr = vmalloc(sysheap_size_arg * 1024);
 	if (heapaddr == NULL ||
 	    xnheap_init(&cobalt_heap, heapaddr, sysheap_size_arg * 1024)) {
 		return -ENOMEM;

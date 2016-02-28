@@ -21,6 +21,8 @@
 #include <linux/slab.h>
 #include <linux/kernel.h>
 #include <linux/log2.h>
+#include <linux/kconfig.h>
+#include <asm/pgtable.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/vfile.h>
@@ -654,5 +656,31 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xnheap_check_block);
+
+void *xnheap_vmalloc(size_t size)
+{
+	/*
+	 * We want memory used in real-time context to be pulled from
+	 * ZONE_NORMAL, however we don't need it to be physically
+	 * contiguous.
+	 *
+	 * 32bit systems which would need HIGHMEM for running a Cobalt
+	 * configuration would also be required to support PTE
+	 * pinning, which not all architectures provide.  Moreover,
+	 * pinning PTEs eagerly for a potentially (very) large amount
+	 * of memory may quickly degrade performance.
+	 *
+	 * If using a different kernel/user memory split cannot be the
+	 * answer for those configs, it's likely that basing such
+	 * software on a 32bit system had to be wrong in the first
+	 * place anyway.
+	 */
+	return __vmalloc(size, GFP_KERNEL, PAGE_KERNEL);
+}
+
+void xnheap_vfree(void *p)
+{
+	vfree(p);
+}
 
 /** @} */

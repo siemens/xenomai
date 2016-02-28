@@ -130,6 +130,10 @@ static inline void xnheap_cleanup_proc(void) { }
 
 /* Public interface. */
 
+void *xnheap_vmalloc(size_t size);
+
+void xnheap_vfree(void *p);
+
 int xnheap_init(struct xnheap *heap, void *membase, u32 size);
 
 void xnheap_set_name(struct xnheap *heap,
