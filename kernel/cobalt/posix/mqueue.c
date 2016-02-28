@@ -126,7 +126,7 @@ static inline int mq_init(struct cobalt_mq *mq, const struct mq_attr *attr)
 	if (get_order(memsize) > MAX_ORDER)
 		return -ENOSPC;
 
-	mem = alloc_pages_exact(memsize, GFP_KERNEL);
+	mem = xnheap_vmalloc(memsize);
 	if (mem == NULL)
 		return -ENOSPC;
 
@@ -167,7 +167,7 @@ static inline void mq_destroy(struct cobalt_mq *mq)
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
 	xnregistry_remove(mq->handle);
-	free_pages_exact(mq->mem, mq->memsize);
+	xnheap_vfree(mq->mem);
 	kfree(mq);
 
 	if (resched)
