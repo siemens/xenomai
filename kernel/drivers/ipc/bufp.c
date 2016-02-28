@@ -20,12 +20,11 @@
 #include <linux/module.h>
 #include <linux/list.h>
 #include <linux/kernel.h>
-#include <linux/vmalloc.h>
 #include <linux/slab.h>
+#include <linux/poll.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/map.h>
 #include <cobalt/kernel/bufd.h>
-#include <linux/poll.h>
 #include <rtdm/ipc.h>
 #include "internal.h"
 
@@ -149,7 +148,7 @@ static void bufp_close(struct rtdm_fd *fd)
 		xnregistry_remove(sk->handle);
 
 	if (sk->bufmem)
-		free_pages_exact(sk->bufmem, sk->bufsz);
+		xnheap_vfree(sk->bufmem);
 
 	kfree(sk);
 }
@@ -704,7 +703,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	if (sk->bufsz == 0)
 		return -ENOBUFS;
 
-	sk->bufmem = alloc_pages_exact(sk->bufsz, GFP_KERNEL);
+	sk->bufmem = xnheap_vmalloc(sk->bufsz);
 	if (sk->bufmem == NULL) {
 		ret = -ENOMEM;
 		goto fail;
@@ -719,7 +718,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 		ret = xnregistry_enter(sk->label, sk,
 				       &sk->handle, &__bufp_pnode.node);
 		if (ret) {
-			free_pages_exact(sk->bufmem, sk->bufsz);
+			xnheap_vfree(sk->bufmem);
 			goto fail;
 		}
 	}
