@@ -88,8 +88,11 @@ static int load_test_module(void)
 
 static void unload_test_module(int fd)
 {
+	int status;
+	
 	close(fd);
-	system("rmmod xeno_rtdmtest");
+	status = system("rmmod xeno_rtdmtest");
+	(void)status;
 }
 
 static void *__run_cpu_affinity(void *arg)
