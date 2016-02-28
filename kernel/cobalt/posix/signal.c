@@ -593,7 +593,7 @@ __init int cobalt_signal_init(void)
 {
 	struct cobalt_sigpending *sigp;
 
-	sigpending_mem = alloc_pages_exact(__SIGPOOL_SIZE, GFP_KERNEL);
+	sigpending_mem = xnheap_vmalloc(__SIGPOOL_SIZE);
 	if (sigpending_mem == NULL)
 		return -ENOMEM;
 
