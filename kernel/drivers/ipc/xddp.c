@@ -19,11 +19,11 @@
  */
 #include <linux/module.h>
 #include <linux/string.h>
+#include <linux/poll.h>
 #include <linux/slab.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/bufd.h>
 #include <cobalt/kernel/pipe.h>
-#include <linux/poll.h>
 #include <rtdm/ipc.h>
 #include "internal.h"
 
@@ -206,7 +206,7 @@ static void __xddp_release_handler(void *skarg) /* nklock free */
 		poolmem = xnheap_get_membase(&sk->privpool);
 		poolsz = xnheap_get_size(&sk->privpool);
 		xnheap_destroy(&sk->privpool);
-		free_pages_exact(poolmem, poolsz);
+		xnheap_vfree(poolmem);
 	} else if (sk->buffer)
 		xnfree(sk->buffer);
 
@@ -691,7 +691,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	if (poolsz > 0) {
 		poolsz = xnheap_rounded_size(poolsz);
 		poolsz += xnheap_rounded_size(sk->reqbufsz);
-		poolmem = alloc_pages_exact(poolsz, GFP_KERNEL);
+		poolmem = xnheap_vmalloc(poolsz);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
 			goto fail;
@@ -699,7 +699,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 
 		ret = xnheap_init(&sk->privpool, poolmem, poolsz);
 		if (ret) {
-			free_pages_exact(poolmem, poolsz);
+			xnheap_vfree(poolmem);
 			goto fail;
 		}
 
@@ -732,7 +732,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	fail_freeheap:
 		if (poolsz > 0) {
 			xnheap_destroy(&sk->privpool);
-			free_pages_exact(poolmem, poolsz);
+			xnheap_vfree(poolmem);
 		}
 	fail:
 		clear_bit(_XDDP_BINDING, &sk->status);
