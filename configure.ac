@@ -882,6 +882,7 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/arith/Makefile \
 	testsuite/smokey/sched-quota/Makefile \
 	testsuite/smokey/sched-tp/Makefile \
+	testsuite/smokey/setsched/Makefile \
 	testsuite/smokey/rtdm/Makefile \
 	testsuite/smokey/vdso-access/Makefile \
 	testsuite/smokey/posix-cond/Makefile \

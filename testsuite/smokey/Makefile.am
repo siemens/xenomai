@@ -23,6 +23,7 @@ COBALT_SUBDIRS = 	\
 	rtdm 		\
 	sched-quota 	\
 	sched-tp 	\
+	setsched	\
 	sigdebug	\
 	timerfd		\
 	tsc		\
