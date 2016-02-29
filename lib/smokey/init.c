@@ -508,7 +508,8 @@ static int smokey_parse_option(int optnum, const char *optarg)
 {
 	switch (optnum) {
 	case run_opt:
-		include_arg = strdup(optarg);
+		if (optarg)
+			include_arg = strdup(optarg);
 		break;
 	case exclude_opt:
 		exclude_arg = strdup(optarg);
