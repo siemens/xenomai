@@ -19,6 +19,7 @@
 #ifndef _COBALT_KERNEL_THREAD_H
 #define _COBALT_KERNEL_THREAD_H
 
+#include <linux/wait.h>
 #include <linux/sched.h>
 #include <linux/sched/rt.h>
 #include <cobalt/kernel/list.h>
@@ -107,9 +108,6 @@ struct xnthread {
 	struct list_head quota_expired;
 	struct list_head quota_next;
 #endif
-
-	unsigned int idtag;	/* Unique ID tag */
-
 	cpumask_t affinity;	/* Processor affinity. */
 
 	int bprio;		/* Base priority (before PIP boost) */
@@ -183,6 +181,8 @@ struct xnthread {
 	struct xnthread_user_window *u_window;
 
 	struct xnthread_personality *personality;
+
+	struct completion exited;
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */

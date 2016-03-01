@@ -23,6 +23,7 @@
 #include <linux/kthread.h>
 #include <linux/wait.h>
 #include <linux/signal.h>
+#include <linux/pid.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/synch.h>
@@ -40,15 +41,13 @@
 #include <asm-generic/xenomai/mayday.h>
 #include "debug.h"
 
+static DECLARE_WAIT_QUEUE_HEAD(join_all);
+
 /**
  * @ingroup cobalt_core
  * @defgroup cobalt_core_thread Thread services
  * @{
  */
-
-static DECLARE_WAIT_QUEUE_HEAD(nkjoinq);
-
-static unsigned int idtags;
 
 static void timeout_handler(struct xntimer *timer)
 {
@@ -158,20 +157,13 @@ int __xnthread_init(struct xnthread *thread,
 		    const union xnsched_policy_param *sched_param)
 {
 	int flags = attr->flags, ret, gravity;
-	spl_t s;
 
 	flags &= ~XNSUSP;
 #ifndef CONFIG_XENO_ARCH_FPU
 	flags &= ~XNFPU;
 #endif
-	if (flags & XNROOT)
-		thread->idtag = 0;
-	else {
-		xnlock_get_irqsave(&nklock, s);
-		thread->idtag = ++idtags ?: 1;
-		xnlock_put_irqrestore(&nklock, s);
+	if ((flags & XNROOT) == 0)
 		flags |= XNDORMANT;
-	}
 
 	if (attr->name)
 		ksformat(thread->name,
@@ -207,6 +199,7 @@ int __xnthread_init(struct xnthread *thread,
 	/* These will be filled by xnthread_start() */
 	thread->entry = NULL;
 	thread->cookie = NULL;
+	init_completion(&thread->exited);
 
 	gravity = flags & XNUSER ? XNTIMER_UGRAVITY : XNTIMER_KGRAVITY;
 	xntimer_init(&thread->rtimer, &nkclock, timeout_handler,
@@ -484,8 +477,6 @@ static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off
 		xnthread_clear_state(thread, XNREADY);
 	}
 
-	thread->idtag = 0;
-
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);
 
@@ -525,10 +516,15 @@ void __xnthread_cleanup(struct xnthread *curr)
 	cleanup_tcb(curr);
 	xnlock_put_irqrestore(&nklock, s);
 
+	/* Wake up the joiner if any (we can't have more than one). */
+	complete(&curr->exited);
+
+	/* Notify our exit to xnthread_killall() if need be. */
+	if (waitqueue_active(&join_all))
+		wake_up(&join_all);
+
 	/* Finalize last since this incurs releasing the TCB. */
 	xnthread_run_handler_stack(curr, finalize_thread);
-
-	wake_up(&nkjoinq);
 }
 
 /*
@@ -1587,6 +1583,40 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnthread_cancel);
 
+struct wait_grace_struct {
+	struct completion done;
+	struct rcu_head rcu;
+};
+
+static void grace_elapsed(struct rcu_head *head)
+{
+	struct wait_grace_struct *wgs;
+
+	wgs = container_of(head, struct wait_grace_struct, rcu);
+	complete(&wgs->done);
+}
+
+static void wait_grace_period(struct pid *pid)
+{
+	struct wait_grace_struct wait = {
+		.done = COMPLETION_INITIALIZER_ONSTACK(wait.done),
+	};
+	struct task_struct *p;
+
+	init_rcu_head_on_stack(&wait.rcu);
+	
+	for (;;) {
+		call_rcu(&wait.rcu, grace_elapsed);
+		wait_for_completion(&wait.done);
+		rcu_read_lock();
+		p = pid_task(pid, PIDTYPE_PID);
+		rcu_read_unlock();
+		if (p == NULL)
+			break;
+		reinit_completion(&wait.done);
+	}
+}
+
 /**
  * @fn void xnthread_join(struct xnthread *thread, bool uninterruptible)
  * @brief Join with a terminated thread.
@@ -1604,7 +1634,7 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  * @param thread The descriptor address of the thread to join with.
  *
  * @param uninterruptible Boolean telling whether the service should
- * wait for completion uninterruptible if called from secondary mode.
+ * wait for completion uninterruptible.
  *
  * @return 0 is returned on success. Otherwise, the following error
  * codes indicate the cause of the failure:
@@ -1624,7 +1654,8 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 {
 	struct xnthread *curr = xnthread_current();
 	int ret = 0, switched = 0;
-	unsigned int tag;
+	struct pid *pid;
+	pid_t tpid;
 	spl_t s;
 
 	XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNROOT));
@@ -1639,13 +1670,13 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 		goto out;
 	}
 
-	tag = thread->idtag;
-	if (xnthread_test_info(thread, XNDORMANT) || tag == 0)
+	if (xnthread_test_info(thread, XNDORMANT))
 		goto out;
 
 	trace_cobalt_thread_join(thread);
 
 	xnthread_set_state(thread, XNJOINED);
+	tpid = xnthread_host_pid(thread);
 	
 	if (!xnthread_test_state(curr, XNRELAX|XNROOT)) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -1654,12 +1685,65 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 	} else
 		xnlock_put_irqrestore(&nklock, s);
 
-	if (uninterruptible)
-		wait_event(nkjoinq, thread->idtag != tag);
-	else if (wait_event_interruptible(nkjoinq,
-					  thread->idtag != tag))
-		return -EINTR;
+	/*
+	 * Since in theory, we might be sleeping there for a long
+	 * time, we get a reference on the pid struct holding our
+	 * target, then we check for its existence upon wake up.
+	 */
+	pid = find_get_pid(tpid);
+	if (pid == NULL)
+		goto done;
 
+	/*
+	 * We have a tricky issue to deal with, which involves code
+	 * relying on the assumption that a destroyed thread will have
+	 * scheduled away from do_exit() before xnthread_join()
+	 * returns. A typical example is illustrated by the following
+	 * sequence, with a RTDM kernel task implemented in a
+	 * dynamically loaded module:
+	 *
+	 * CPU0:  rtdm_task_destroy(ktask)
+	 *           xnthread_cancel(ktask)
+	 *           xnthread_join(ktask)
+	 *        ...<back to user>..
+	 *        rmmod(module)
+	 *
+	 * CPU1:  in ktask()
+	 *        ...
+	 *        ...
+	 *          __xnthread_test_cancel()
+	 *             do_exit()
+         *                schedule()
+	 *
+	 * In such a sequence, the code on CPU0 would expect the RTDM
+	 * task to have scheduled away upon return from
+	 * rtdm_task_destroy(), so that unmapping the destroyed task
+	 * code and data memory when unloading the module is always
+	 * safe.
+	 *
+	 * To address this, the joiner first waits for the joinee to
+	 * signal completion from the Cobalt thread cleanup handler
+	 * (__xnthread_cleanup), then waits for a full RCU grace
+	 * period to have elapsed. Since the completion signal is sent
+	 * on behalf of do_exit(), we may assume that the joinee has
+	 * scheduled away before the grace period ends.
+	 */
+	if (uninterruptible)
+		wait_for_completion(&thread->exited);
+	else {
+		ret = wait_for_completion_interruptible(&thread->exited);
+		if (ret < 0) {
+			put_pid(pid);
+			return -EINTR;
+		}
+	}
+
+	/* Make sure the joinee has scheduled away ultimately. */
+	wait_grace_period(pid);
+
+	put_pid(pid);
+done:
+	ret = 0;
 	if (switched)
 		ret = xnthread_harden();
 
@@ -2561,13 +2645,13 @@ int xnthread_killall(int grace, int mask)
 		       nrkilled);
 
 	if (grace > 0) {
-		ret = wait_event_interruptible_timeout(nkjoinq,
+		ret = wait_event_interruptible_timeout(join_all,
 						       cobalt_nrthreads == count,
 						       grace * HZ);
 		if (ret == 0)
 			return -EAGAIN;
 	} else
-		ret = wait_event_interruptible(nkjoinq,
+		ret = wait_event_interruptible(join_all,
 					       cobalt_nrthreads == count);
 
 	if (XENO_DEBUG(COBALT))
