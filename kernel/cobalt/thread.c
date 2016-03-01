@@ -204,7 +204,6 @@ int __xnthread_init(struct xnthread *thread,
 	memset(&thread->stat, 0, sizeof(thread->stat));
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
-	xnsynch_init(&thread->join_synch, XNSYNCH_FIFO, NULL);
 	/* These will be filled by xnthread_start() */
 	thread->entry = NULL;
 	thread->cookie = NULL;
@@ -1598,7 +1597,9 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  * immediately.
  *
  * xnthread_join() adapts to the calling context (primary or
- * secondary).
+ * secondary), switching to secondary mode if needed for the duration
+ * of the wait. Upon return, the original runtime mode is restored,
+ * unless a Linux signal is pending.
  *
  * @param thread The descriptor address of the thread to join with.
  *
@@ -1621,62 +1622,48 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  */
 int xnthread_join(struct xnthread *thread, bool uninterruptible)
 {
+	struct xnthread *curr = xnthread_current();
+	int ret = 0, switched = 0;
 	unsigned int tag;
 	spl_t s;
-	int ret;
 
 	XENO_BUG_ON(COBALT, xnthread_test_state(thread, XNROOT));
 
+	if (thread == curr)
+		return -EDEADLK;
+
 	xnlock_get_irqsave(&nklock, s);
 
-	tag = thread->idtag;
-	if (xnthread_test_info(thread, XNDORMANT) || tag == 0) {
-		xnlock_put_irqrestore(&nklock, s);
-		return 0;
+	if (xnthread_test_state(thread, XNJOINED)) {
+		ret = -EBUSY;
+		goto out;
 	}
+
+	tag = thread->idtag;
+	if (xnthread_test_info(thread, XNDORMANT) || tag == 0)
+		goto out;
 
 	trace_cobalt_thread_join(thread);
 
-	if (ipipe_root_p) {
-		if (xnthread_test_state(thread, XNJOINED)) {
-			ret = -EBUSY;
-			goto out;
-		}
-		xnthread_set_state(thread, XNJOINED);
+	xnthread_set_state(thread, XNJOINED);
+	
+	if (!xnthread_test_state(curr, XNRELAX|XNROOT)) {
 		xnlock_put_irqrestore(&nklock, s);
-		/*
-		 * Only a very few threads are likely to terminate within a
-		 * short time frame at any point in time, so experiencing a
-		 * thundering herd effect due to synchronizing on a single
-		 * wait queue is quite unlikely. In any case, we run in
-		 * secondary mode.
-		 */
-		if (uninterruptible)
-			wait_event(nkjoinq, thread->idtag != tag);
-		else if (wait_event_interruptible(nkjoinq,
-						  thread->idtag != tag)) {
-			xnlock_get_irqsave(&nklock, s);
-			if (thread->idtag == tag)
-				xnthread_clear_state(thread, XNJOINED);
-			ret = -EINTR;
-			goto out;
-		}
+		xnthread_relax(0, 0);
+		switched = 1;
+	} else
+		xnlock_put_irqrestore(&nklock, s);
 
-		return 0;
-	}
+	if (uninterruptible)
+		wait_event(nkjoinq, thread->idtag != tag);
+	else if (wait_event_interruptible(nkjoinq,
+					  thread->idtag != tag))
+		return -EINTR;
 
-	if (thread == xnthread_current())
-		ret = -EDEADLK;
-	else if (xnsynch_pended_p(&thread->join_synch))
-		ret = -EBUSY;
-	else {
-		xnthread_set_state(thread, XNJOINED);
-		ret = xnsynch_sleep_on(&thread->join_synch,
-				       XN_INFINITE, XN_RELATIVE);
-		if ((ret & XNRMID) == 0 && thread->idtag == tag)
-			xnthread_clear_state(thread, XNJOINED);
-		ret = ret & XNBREAK ? -EINTR : 0;
-	}
+	if (switched)
+		ret = xnthread_harden();
+
+	return ret;
 out:
 	xnlock_put_irqrestore(&nklock, s);
 

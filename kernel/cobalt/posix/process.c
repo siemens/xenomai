@@ -1048,8 +1048,6 @@ static void __handle_taskexit_event(struct task_struct *p)
 		unregister_debugged_thread(thread);
 
 	xnthread_run_handler_stack(thread, exit_thread);
-	/* Waiters will receive EIDRM */
-	xnsynch_destroy(&thread->join_synch);
 	xnsched_run();
 
 	if (xnthread_test_state(thread, XNUSER)) {

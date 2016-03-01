@@ -188,8 +188,6 @@ struct xnthread {
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
 #endif
-	/** Exit event for joining the thread. */
-	struct xnsynch join_synch;
 };
 
 static inline int xnthread_get_state(const struct xnthread *thread)
