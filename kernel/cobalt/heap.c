@@ -677,10 +677,12 @@ void *xnheap_vmalloc(size_t size)
 	 */
 	return __vmalloc(size, GFP_KERNEL, PAGE_KERNEL);
 }
+EXPORT_SYMBOL_GPL(xnheap_vmalloc);
 
 void xnheap_vfree(void *p)
 {
 	vfree(p);
 }
+EXPORT_SYMBOL_GPL(xnheap_vfree);
 
 /** @} */
