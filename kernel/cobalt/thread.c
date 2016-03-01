@@ -1566,16 +1566,21 @@ check_self_cancel:
 		return;
 	}
 
-	__xnthread_demote(thread);
-
 	/*
-	 * A userland thread undergoing the weak scheduling policy is
-	 * unlikely to issue Cobalt syscalls frequently, which may
-	 * defer cancellation significantly: send it a regular
-	 * termination signal too.
+	 * Force the non-current thread to exit:
+	 *
+	 * - unblock a user thread, switch it to weak scheduling,
+	 * then send it SIGTERM.
+	 *
+	 * - just unblock a kernel thread, it is expected to reach a
+	 * cancellation point soon after
+	 * (i.e. xnthread_test_cancel()).
 	 */
-	if (xnthread_test_state(thread, XNWEAK|XNUSER) == (XNWEAK|XNUSER))
+	if (xnthread_test_state(thread, XNUSER)) {
+		__xnthread_demote(thread);
 		xnthread_signal(thread, SIGTERM, 0);
+	} else
+		__xnthread_kick(thread);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
