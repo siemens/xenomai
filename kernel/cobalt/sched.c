@@ -193,11 +193,11 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	 * exit code.
 	 */
 	xntimer_init(&sched->htimer, &nkclock, NULL,
-		     sched, XNTIMER_IGRAVITY);
+		     sched, XNTIMER_IGRAVITY|__XNTIMER_CORE);
 	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_init(&sched->rrbtimer, &nkclock, roundrobin_handler,
-		     sched, XNTIMER_IGRAVITY);
+		     sched, XNTIMER_IGRAVITY|__XNTIMER_CORE);
 	xntimer_set_name(&sched->rrbtimer, rrbtimer_name);
 	xntimer_set_priority(&sched->rrbtimer, XNTIMER_LOPRIO);
 
@@ -212,7 +212,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_init(&sched->wdtimer, &nkclock, watchdog_handler,
-		     sched, XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
+		     sched, XNTIMER_NOBLCK|XNTIMER_IGRAVITY|__XNTIMER_CORE);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */

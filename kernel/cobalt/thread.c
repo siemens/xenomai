@@ -202,6 +202,8 @@ int __xnthread_init(struct xnthread *thread,
 	init_completion(&thread->exited);
 
 	gravity = flags & XNUSER ? XNTIMER_UGRAVITY : XNTIMER_KGRAVITY;
+	if (flags & XNROOT)
+		gravity |= __XNTIMER_CORE;
 	xntimer_init(&thread->rtimer, &nkclock, timeout_handler,
 		     sched, gravity);
 	xntimer_set_name(&thread->rtimer, thread->name);

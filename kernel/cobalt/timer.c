@@ -363,10 +363,13 @@ void __xntimer_init(struct xntimer *timer,
 		 * clock device on the CPU served by the specified
 		 * scheduler slot. This reveals a CPU affinity
 		 * mismatch between the clock hardware and the client
-		 * code initializing the timer.
+		 * code initializing the timer. This check excludes
+		 * core timers which may have their own reason to bind
+		 * to a passive CPU (e.g. host timer).
 		 */
-		XENO_WARN_ON_SMP(COBALT, !cpumask_test_cpu(xnsched_cpu(sched),
-					       &clock->affinity));
+		XENO_WARN_ON_SMP(COBALT, !(flags & __XNTIMER_CORE) &&
+				 !cpumask_test_cpu(xnsched_cpu(sched),
+						   &clock->affinity));
 		timer->sched = sched;
 	} else {
 		cpu = xnclock_get_default_cpu(clock, 0);
