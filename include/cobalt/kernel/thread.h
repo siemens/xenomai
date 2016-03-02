@@ -265,7 +265,7 @@ static inline pid_t xnthread_host_pid(struct xnthread *thread)
 	if (xnthread_test_state(thread, XNROOT))
 		return 0;
 
-	return xnthread_host_task(thread)->pid;
+	return task_pid_nr(xnthread_host_task(thread));
 }
 
 #define xnthread_for_each_claimed(__pos, __thread)		\

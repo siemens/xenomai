@@ -44,7 +44,7 @@ struct local_thread_hash {
 	struct local_thread_hash *next;
 };
 
-/* System-wide index on task_struct->pid. */
+/* System-wide index on task_pid_nr(). */
 struct global_thread_hash {
 	pid_t pid;
 	struct cobalt_thread *thread;

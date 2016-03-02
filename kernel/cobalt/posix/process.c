@@ -33,6 +33,7 @@
 #include <linux/cred.h>
 #include <linux/file.h>
 #include <linux/ptrace.h>
+#include <linux/sched.h>
 #include <linux/vmalloc.h>
 #include <linux/signal.h>
 #include <linux/kallsyms.h>
@@ -1138,17 +1139,20 @@ no_ptrace:
 	if (!XENO_WARN(COBALT, !xnthread_test_state(next, XNRELAX),
 		       "hardened thread %s[%d] running in Linux domain?! "
 		       "(status=0x%x, sig=%d, prev=%s[%d])",
-		       next->name, next_task->pid, xnthread_get_state(next),
-		       signal_pending(next_task), prev_task->comm, prev_task->pid))
+		       next->name, task_pid_nr(next_task),
+		       xnthread_get_state(next),
+		       signal_pending(next_task),
+		       prev_task->comm, task_pid_nr(prev_task)))
 		XENO_WARN(COBALT,
 			  !(next_task->ptrace & PT_PTRACED) &&
 			   !xnthread_test_state(next, XNDORMANT)
 			  && xnthread_test_state(next, XNPEND),
 			  "blocked thread %s[%d] rescheduled?! "
 			  "(status=0x%x, sig=%d, prev=%s[%d])",
-			  next->name, next_task->pid, xnthread_get_state(next),
+			  next->name, task_pid_nr(next_task),
+			  xnthread_get_state(next),
 			  signal_pending(next_task), prev_task->comm,
-			  prev_task->pid);
+			  task_pid_nr(prev_task));
 out:
 	return KEVENT_PROPAGATE;
 }
@@ -1315,13 +1319,13 @@ static int attach_process(struct cobalt_process *process)
 	if (ret)
 		return ret;
 
-	cobalt_umm_set_name(&p->umm, "private heap[%d]", current->pid);
+	cobalt_umm_set_name(&p->umm, "private heap[%d]", task_pid_nr(current));
 
 	p->mayday_tramp = map_mayday_page();
 	if (p->mayday_tramp == 0) {
 		printk(XENO_WARNING
 		       "%s[%d] cannot map MAYDAY page\n",
-		       current->comm, current->pid);
+		       current->comm, task_pid_nr(current));
 		ret = -ENOMEM;
 		goto fail_mayday;
 	}
@@ -1330,7 +1334,7 @@ static int attach_process(struct cobalt_process *process)
 	if (IS_ERR(exe_path)) {
 		printk(XENO_WARNING
 		       "%s[%d] can't find exe path\n",
-		       current->comm, current->pid);
+		       current->comm, task_pid_nr(current));
 		exe_path = NULL; /* Not lethal, but weird. */
 	}
 	p->exe_path = exe_path;

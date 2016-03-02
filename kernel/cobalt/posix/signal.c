@@ -15,6 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#include <linux/sched.h>
 #include <cobalt/kernel/assert.h>
 #include "internal.h"
 #include "signal.h"
@@ -499,7 +500,7 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 			sigp->si.si_signo = sig;
 			sigp->si.si_errno = 0;
 			sigp->si.si_code = SI_USER;
-			sigp->si.si_pid = current->pid;
+			sigp->si.si_pid = task_pid_nr(current);
 			sigp->si.si_uid = get_current_uuid();
 			if (cobalt_signal_send(thread, sigp, group) <= 0)
 				cobalt_signal_free(sigp);
@@ -558,7 +559,7 @@ int __cobalt_sigqueue(pid_t pid, int sig, const union sigval *value)
 			sigp->si.si_signo = sig;
 			sigp->si.si_errno = 0;
 			sigp->si.si_code = SI_QUEUE;
-			sigp->si.si_pid = current->pid;
+			sigp->si.si_pid = task_pid_nr(current);
 			sigp->si.si_uid = get_current_uuid();
 			sigp->si.si_value = *value;
 			if (cobalt_signal_send(thread, sigp, 1) <= 0)

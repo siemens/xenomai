@@ -20,6 +20,7 @@
 #include <linux/list.h>
 #include <linux/err.h>
 #include <linux/slab.h>
+#include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/poll.h>
 #include <linux/kthread.h>
@@ -736,7 +737,7 @@ static inline void warn_user(struct file *file, const char *call)
 	
 	printk(XENO_WARNING
 	       "%s[%d] called regular %s() on /dev/rtdm/%s\n",
-	       current->comm, current->pid, call + 5, dentry->d_name.name);
+	       current->comm, task_pid_nr(current), call + 5, dentry->d_name.name);
 }
 
 static ssize_t dumb_read(struct file *file, char  __user *buf,

@@ -19,6 +19,7 @@
 #include <linux/module.h>
 #include <linux/signal.h>
 #include <linux/wait.h>
+#include <linux/sched.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/timer.h>
@@ -837,7 +838,7 @@ int ___xnsched_run(struct xnsched *sched)
 	 * leave_root() may not still be the current one. Use
 	 * "current" for disambiguating.
 	 */
-	xntrace_pid(current->pid, xnthread_current_priority(curr));
+	xntrace_pid(task_pid_nr(current), xnthread_current_priority(curr));
 reschedule:
 	switched = 0;
 	if (!test_resched(sched))
@@ -897,7 +898,7 @@ reschedule:
 	 */
 	curr = sched->curr;
 	xnthread_switch_fpu(sched);
-	xntrace_pid(current->pid, xnthread_current_priority(curr));
+	xntrace_pid(task_pid_nr(current), xnthread_current_priority(curr));
 out:
 	if (switched &&
 	    xnsched_maybe_resched_after_unlocked_switch(sched))

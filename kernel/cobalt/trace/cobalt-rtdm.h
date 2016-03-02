@@ -27,6 +27,7 @@
 
 #include <linux/tracepoint.h>
 #include <linux/mman.h>
+#include <linux/sched.h>
 
 struct rtdm_fd;
 struct rtdm_event;
@@ -70,7 +71,7 @@ DECLARE_EVENT_CLASS(fd_request,
 
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
-		__entry->pid = task->pid;
+		__entry->pid = task_pid_nr(task);
 		__entry->dev = rtdm_fd_to_context(fd)->device;
 		__entry->ufd = ufd;
 		__entry->arg = arg;
@@ -95,7 +96,7 @@ DECLARE_EVENT_CLASS(fd_request_status,
 
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
-		__entry->pid = task->pid;
+		__entry->pid = task_pid_nr(task);
 		__entry->dev =
 			!IS_ERR(fd) ? rtdm_fd_to_context(fd)->device : NULL;
 		__entry->ufd = ufd;
@@ -312,7 +313,7 @@ TRACE_EVENT(cobalt_fd_mmap,
 
 	TP_fast_assign(
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
-		__entry->pid = task->pid;
+		__entry->pid = task_pid_nr(task);
 		__entry->dev = rtdm_fd_to_context(fd)->device;
 		__entry->ufd = ufd;
 		__entry->length = rma->length;

@@ -19,6 +19,7 @@
 #include <linux/types.h>
 #include <linux/err.h>
 #include <linux/ipipe.h>
+#include <linux/sched.h>
 #include <linux/kconfig.h>
 #include <cobalt/uapi/corectl.h>
 #include <cobalt/kernel/tree.h>
@@ -258,7 +259,7 @@ static COBALT_SYSCALL(mayday, current, (void))
 	if (cur == NULL) {
 		printk(XENO_WARNING
 		       "MAYDAY received from invalid context %s[%d]\n",
-		       current->comm, current->pid);
+		       current->comm, task_pid_nr(current));
 		return -EPERM;
 	}
 
@@ -521,7 +522,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		if (XENO_DEBUG(COBALT) && nr != sc_cobalt_get_current)
 			printk(XENO_WARNING
 			       "syscall <%d> denied to %s[%d]\n",
-			       nr, current->comm, current->pid);
+			       nr, current->comm, task_pid_nr(current));
 		__xn_error_return(regs, -EPERM);
 		goto ret_handled;
 	}

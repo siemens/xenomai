@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
+#include <linux/sched.h>
 #include <cobalt/kernel/select.h>
 #include <rtdm/fd.h>
 #include "internal.h"
@@ -713,7 +714,7 @@ mq_notify(struct cobalt_mqd *mqd, unsigned index, const struct sigevent *evp)
 		 * receiver's namespaces. We pass the receiver's creds
 		 * into the init namespace instead.
 		 */
-		mq->si.si_pid = current->pid;
+		mq->si.si_pid = task_pid_nr(current);
 		mq->si.si_uid = get_current_uuid();
 	}
 

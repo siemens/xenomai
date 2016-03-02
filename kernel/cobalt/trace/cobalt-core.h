@@ -26,6 +26,7 @@
 #define _TRACE_COBALT_CORE_H
 
 #include <linux/tracepoint.h>
+#include <linux/sched.h>
 
 DECLARE_EVENT_CLASS(thread_event,
 	TP_PROTO(struct xnthread *thread),
@@ -431,7 +432,7 @@ TRACE_EVENT(cobalt_lostage_request,
 
 	TP_fast_assign(
 		__entry->type = type;
-		__entry->pid = task->pid;
+		__entry->pid = task_pid_nr(task);
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 	),
 
@@ -449,7 +450,7 @@ TRACE_EVENT(cobalt_lostage_wakeup,
 	),
 
 	TP_fast_assign(
-		__entry->pid = task->pid;
+		__entry->pid = task_pid_nr(task);
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 	),
 
@@ -468,7 +469,7 @@ TRACE_EVENT(cobalt_lostage_signal,
 	),
 
 	TP_fast_assign(
-		__entry->pid = task->pid;
+		__entry->pid = task_pid_nr(task);
 		__entry->sig = sig;
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 	),

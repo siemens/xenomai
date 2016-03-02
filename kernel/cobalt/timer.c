@@ -381,7 +381,7 @@ void __xntimer_init(struct xntimer *timer,
 	timer->tracker = clock;
 #endif
 	ksformat(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
-		 current->pid, current->comm);
+		 task_pid_nr(current), current->comm);
 	xntimer_reset_stats(timer);
 	xnlock_get_irqsave(&nklock, s);
 	list_add_tail(&timer->next_stat, &clock->timerq);
