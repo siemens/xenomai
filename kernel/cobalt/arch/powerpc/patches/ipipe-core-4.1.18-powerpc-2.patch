@@ -304,7 +304,7 @@ index b59ac27..9cc1d25 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..af33819
+index 0000000..837a554
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,151 @@
@@ -349,7 +349,7 @@ index 0000000..af33819
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	2
 +
 +struct ipipe_domain;
 +
@@ -2437,7 +2437,7 @@ index 112ccf4..5dd70f7 100644
  	li	r0,0
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..d628fd56
+index 0000000..9a5702a
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
 @@ -0,0 +1,372 @@
@@ -2556,7 +2556,7 @@ index 0000000..d628fd56
 +	if (WARN_ON_ONCE(irq_get_chip(irq)->irq_set_affinity == NULL))
 +		return;
 +
-+	if (WARN_ON_ONCE(cpumask_any_and(&cpumask, &cpu_online_mask) >= nr_cpu_ids))
++	if (WARN_ON_ONCE(cpumask_any_and(&cpumask, cpu_online_mask) >= nr_cpu_ids))
 +		return;
 +
 +	irq_get_chip(irq)->irq_set_affinity(irq_get_irq_data(irq), &cpumask, true);
@@ -2581,7 +2581,7 @@ index 0000000..d628fd56
 +		goto out;
 +
 +	me = ipipe_processor_id();
-+	for_each_cpu_mask_nr(cpu, cpumask) {
++	for_each_cpu(cpu, &cpumask) {
 +		if (cpu != me)
 +			smp_ops->message_pass(cpu, PPC_MSG_IPIPE_DEMUX);
 +	}
@@ -3300,7 +3300,7 @@ index c69671c..66ac366 100644
  #endif
  
 diff --git a/arch/powerpc/kernel/smp.c b/arch/powerpc/kernel/smp.c
-index ec9ec20..ebe3c2b 100644
+index ec9ec20..a17ba31 100644
 --- a/arch/powerpc/kernel/smp.c
 +++ b/arch/powerpc/kernel/smp.c
 @@ -179,7 +179,7 @@ const char *smp_ipi_name[] = {
@@ -3334,7 +3334,7 @@ index ec9ec20..ebe3c2b 100644
 -		if (cpu != me)
 +		if (cpu != me) {
 +#ifdef CONFIG_IPIPE
-+			cpu_set(cpu, __ipipe_dbrk_pending);
++			cpumask_set_cpu(cpu, &__ipipe_dbrk_pending);
 +#endif
  			do_message_pass(cpu, PPC_MSG_DEBUGGER_BREAK);
 +		}
