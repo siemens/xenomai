@@ -110,9 +110,10 @@ static int do_conf_option(int option, void __user *u_buf, size_t u_bufsz)
 
 static int stop_services(const void __user *u_buf, size_t u_bufsz)
 {
-	const int final_grace_period = 3; /* seconds */
+	const u32 final_grace_period = 3; /* seconds */
 	enum cobalt_run_states state;
-	int ret, timeout;
+	__u32 grace_period;
+	int ret;
 
 	/*
 	 * XXX: we don't have any syscall for unbinding a thread from
@@ -123,10 +124,11 @@ static int stop_services(const void __user *u_buf, size_t u_bufsz)
 	if (xnthread_current())
 		return -EPERM;
 
-	if (u_bufsz != sizeof(int))
+	if (u_bufsz != sizeof(__u32))
 		return -EINVAL;
 
-	ret = cobalt_copy_from_user(&timeout, u_buf, sizeof(timeout));
+	ret = cobalt_copy_from_user(&grace_period,
+				    u_buf, sizeof(grace_period));
 	if (ret)
 		return ret;
 
@@ -138,7 +140,7 @@ static int stop_services(const void __user *u_buf, size_t u_bufsz)
 		break;
 	case COBALT_STATE_RUNNING:
 		/* Kill user threads. */
-		ret = xnthread_killall(timeout, XNUSER);
+		ret = xnthread_killall(grace_period, XNUSER);
 		if (ret) {
 			set_realtime_core_state(state);
 			return ret;
