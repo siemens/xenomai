@@ -62,10 +62,10 @@ void application_usage(void)
 	fprintf(stderr, "--status			query Xenomai/cobalt status\n");
 }
 
-static int core_stop(int grace_period)
+static int core_stop(__u32 grace_period)
 {
 	return cobalt_corectl(_CC_COBALT_STOP_CORE,
-			      &grace_period, sizeof(&grace_period));
+			      &grace_period, sizeof(grace_period));
 }
 
 static int core_start(void)
@@ -106,7 +106,8 @@ static int core_status(void)
 
 int main(int argc, char *const argv[])
 {
-	int lindex, c, grace_period = 0, ret;
+	__u32 grace_period = 0;
+	int lindex, c, ret;
 	
 	for (;;) {
 		c = getopt_long_only(argc, argv, "", options, &lindex);
