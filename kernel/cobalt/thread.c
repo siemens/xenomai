@@ -1598,7 +1598,7 @@ static void grace_elapsed(struct rcu_head *head)
 	complete(&wgs->done);
 }
 
-static void wait_grace_period(struct pid *pid)
+static void wait_for_rcu_grace_period(struct pid *pid)
 {
 	struct wait_grace_struct wait = {
 		.done = COMPLETION_INITIALIZER_ONSTACK(wait.done),
@@ -1610,6 +1610,8 @@ static void wait_grace_period(struct pid *pid)
 	for (;;) {
 		call_rcu(&wait.rcu, grace_elapsed);
 		wait_for_completion(&wait.done);
+		if (pid == NULL)
+			break;
 		rcu_read_lock();
 		p = pid_task(pid, PIDTYPE_PID);
 		rcu_read_unlock();
@@ -1728,7 +1730,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 	 * (__xnthread_cleanup), then waits for a full RCU grace
 	 * period to have elapsed. Since the completion signal is sent
 	 * on behalf of do_exit(), we may assume that the joinee has
-	 * scheduled away before the grace period ends.
+	 * scheduled away before the RCU grace period ends.
 	 */
 	if (uninterruptible)
 		wait_for_completion(&thread->exited);
@@ -1741,7 +1743,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 	}
 
 	/* Make sure the joinee has scheduled away ultimately. */
-	wait_grace_period(pid);
+	wait_for_rcu_grace_period(pid);
 
 	put_pid(pid);
 done:
@@ -2636,10 +2638,10 @@ int xnthread_killall(int grace, int mask)
 	xnlock_put_irqrestore(&nklock, s);
 
 	/*
-	 * Cancel then join all existing user threads during the grace
+	 * Cancel then join all existing threads during the grace
 	 * period. It is the caller's responsibility to prevent more
-	 * user threads to bind to the system if required, we won't
-	 * make any provision for this here.
+	 * threads to bind to the system if required, we won't make
+	 * any provision for this here.
 	 */
 	count = nrthreads - nrkilled;
 	if (XENO_DEBUG(COBALT))
@@ -2655,6 +2657,9 @@ int xnthread_killall(int grace, int mask)
 	} else
 		ret = wait_event_interruptible(join_all,
 					       cobalt_nrthreads == count);
+
+	/* Wait for a full RCU grace period to expire. */
+	wait_for_rcu_grace_period(NULL);
 
 	if (XENO_DEBUG(COBALT))
 		printk(XENO_INFO "joined %d threads\n",
