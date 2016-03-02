@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.1</span>
+   &#160;<span id="projectnumber">3.0.2</span>
    </div>
   </td>
  </tr>
@@ -207,7 +207,7 @@ Functions</h2></td></tr>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>In addition to the common actions taken upon cancellation, a thread which belongs to the SCHED_WEAK class is sent a regular SIGTERM signal. </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">XNCANCELD</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a">xnsched_run()</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">XNUSER</a>, and <a class="el" href="group__cobalt__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0">XNWEAK</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread__info.html#gac0c8d3c13b2ea3ceb9c8b474b9e52f01">XNCANCELD</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a">xnsched_run()</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>, and <a class="el" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">XNUSER</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__task.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
 
@@ -292,7 +292,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__cobalt__core__thread__states.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__cobalt__core__thread__states.html#gaa44db9c525cd4e87eaced36ea47a6cf3">XNSSTEP</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax()</a>, and <a class="el" href="group__cobalt__core__thread.html#gab5af31ef43f67d3124886dc5fc528753">xnthread_test_cancel()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join()</a>, and <a class="el" href="group__cobalt__core__thread.html#ga2ff2b4720f1a104a4f26f38da3370ba4">xnthread_map()</a>.</p>
 
 </div>
 </div>
@@ -402,11 +402,11 @@ Functions</h2></td></tr>
 
 <p>Join with a terminated thread. </p>
 <p>This service waits for <em>thread</em> to terminate after a call to <a class="el" href="group__cobalt__core__thread.html#gabcf46b2b38ac68322f354adc408c2732" title="Cancel a thread. ">xnthread_cancel()</a>. If that thread has already terminated or is dormant at the time of the call, then <a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3" title="Join with a terminated thread. ">xnthread_join()</a> returns immediately.</p>
-<p><a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3" title="Join with a terminated thread. ">xnthread_join()</a> adapts to the calling context (primary or secondary).</p>
+<p><a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3" title="Join with a terminated thread. ">xnthread_join()</a> adapts to the calling context (primary or secondary), switching to secondary mode if needed for the duration of the wait. Upon return, the original runtime mode is restored, unless a Linux signal is pending.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">thread</td><td>The descriptor address of the thread to join with.</td></tr>
-    <tr><td class="paramname">uninterruptible</td><td>Boolean telling whether the service should wait for completion uninterruptible if called from secondary mode.</td></tr>
+    <tr><td class="paramname">uninterruptible</td><td>Boolean telling whether the service should wait for completion uninterruptible.</td></tr>
   </table>
   </dd>
 </dl>
@@ -418,7 +418,7 @@ Functions</h2></td></tr>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread__info.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__states.html#gaaae7bc444a180ad0672bf710801d0275">XNJOINED</a>, <a class="el" href="group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, <a class="el" href="group__cobalt__core__synch.html#ga51cec970cb57608abe882c98bee72347">xnsynch_sleep_on()</a>, and <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__states.html#gaaae7bc444a180ad0672bf710801d0275">XNJOINED</a>, <a class="el" href="group__cobalt__core__thread__states.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden()</a>, and <a class="el" href="group__cobalt__core__thread.html#gaa0dad9aaac79565e12343b3b27a37c83">xnthread_relax()</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__task.html#ga3a3e4c00605861403c0ea4ec87b31a7b">rtdm_task_join()</a>.</p>
 
@@ -545,7 +545,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__cobalt__core__lock.html#gafb0162b2dfe637e5dde90ffe36245a05">splmax</a>, <a class="el" href="group__cobalt__core__lock.html#ga77d2200463adc3594dfb7f1163b7bbd8">splnone</a>, <a class="el" href="group__cobalt__core__thread__info.html#ga2cb10fa1e4e888e3e23798b42deb1608">XNMOVED</a>, <a class="el" href="group__cobalt__core__thread__states.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__cobalt__core__thread.html#ga277e327d3802107ed35dc768cb01509c">xnthread_current()</a>, <a class="el" href="group__cobalt__core__thread.html#gaab49f7e0bb3c3ede3d52a47ee18794bc">xnthread_suspend()</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">XNUSER</a>, and <a class="el" href="group__cobalt__core__thread__states.html#ga44a2c7ec314961aacb1934636cb33482">XNWARN</a>.</p>
 
-<p>Referenced by <a class="el" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__core__thread.html#gae4cb747799fc0ac47e2a209c835f524d">xnthread_harden()</a>, and <a class="el" href="group__cobalt__core__thread.html#gac61d70ab94c430e8d96b455221d2fea3">xnthread_join()</a>.</p>
 
 </div>
 </div>
