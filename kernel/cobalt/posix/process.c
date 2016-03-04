@@ -34,7 +34,6 @@
 #include <linux/file.h>
 #include <linux/ptrace.h>
 #include <linux/sched.h>
-#include <linux/vmalloc.h>
 #include <linux/signal.h>
 #include <linux/kallsyms.h>
 #include <linux/ipipe.h>
