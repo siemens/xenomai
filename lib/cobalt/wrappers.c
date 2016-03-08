@@ -60,6 +60,12 @@ int __real_pthread_getschedparam(pthread_t thread,
 }
 
 __weak
+int __real_pthread_setschedprio(pthread_t thread, int prio)
+{
+	return pthread_setschedprio(thread, prio);
+}
+
+__weak
 int __real_sched_yield(void)
 {
 	return sched_yield();

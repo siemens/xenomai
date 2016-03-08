@@ -2,6 +2,7 @@
 --wrap pthread_create
 --wrap pthread_setschedparam
 --wrap pthread_getschedparam
+--wrap pthread_setschedprio
 --wrap pthread_yield
 --wrap sched_yield
 --wrap sched_get_priority_min

@@ -650,6 +650,15 @@ int pthread_setschedparam_ex(pthread_t thread,
 	return ret;
 }
 
+COBALT_IMPL(int, pthread_setschedprio, (pthread_t thread, int prio))
+{
+	struct sched_param_ex param_ex = {
+		.sched_priority = prio,
+	};
+
+	return pthread_setschedparam_ex(thread, __SCHED_CURRENT, &param_ex);
+}
+
 /**
  * Get the scheduling policy and parameters of the specified thread.
  *

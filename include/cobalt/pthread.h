@@ -53,6 +53,8 @@ COBALT_DECL(int, pthread_setschedparam(pthread_t thread,
 				       int policy,
 				       const struct sched_param *param));
 
+COBALT_DECL(int, pthread_setschedprio(pthread_t thread, int prio));
+
 COBALT_DECL(int, pthread_mutex_init(pthread_mutex_t *mutex,
 				    const pthread_mutexattr_t *attr));
 
