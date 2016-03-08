@@ -88,7 +88,8 @@ DECLARE_EVENT_CLASS(syscall_exit,
 			 {SCHED_QUOTA, "quota"},		\
 			 {SCHED_SPORADIC, "sporadic"},		\
 			 {SCHED_COBALT, "cobalt"},		\
-			 {SCHED_WEAK, "weak"})
+			 {SCHED_WEAK, "weak"},			\
+			 {__SCHED_CURRENT, "<current>"})
 
 #define cobalt_print_sched_params(__policy, __p_ex)			\
 ({									\
