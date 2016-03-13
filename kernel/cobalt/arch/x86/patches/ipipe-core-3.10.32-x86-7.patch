@@ -1,5 +1,5 @@
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index fe120da..6882e5c 100644
+index fe120da..19c951e 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -9,6 +9,7 @@ config 64BIT
@@ -10,17 +10,18 @@ index fe120da..6882e5c 100644
  	select CLKSRC_I8253
  	select HAVE_UID16
  
-@@ -20,6 +21,9 @@ config X86_64
+@@ -20,6 +21,10 @@ config X86_64
  ### Arch settings
  config X86
  	def_bool y
 +	select IPIPE_HAVE_HOSTRT if IPIPE
 +	select IPIPE_HAVE_VM_NOTIFIER if IPIPE
 +	select IPIPE_HAVE_SAFE_THREAD_INFO if X86_64
++	select IPIPE_WANT_PTE_PINNING if IPIPE
  	select ARCH_HAS_DEBUG_STRICT_USER_COPY_CHECKS
  	select HAVE_AOUT if X86_32
  	select HAVE_UNSTABLE_SCHED_CLOCK
-@@ -106,7 +110,7 @@ config X86
+@@ -106,7 +111,7 @@ config X86
  	select GENERIC_CLOCKEVENTS
  	select ARCH_CLOCKSOURCE_DATA if X86_64
  	select GENERIC_CLOCKEVENTS_BROADCAST if X86_64 || (X86_32 && X86_LOCAL_APIC)
@@ -29,7 +30,7 @@ index fe120da..6882e5c 100644
  	select KTIME_SCALAR if X86_32
  	select GENERIC_STRNCPY_FROM_USER
  	select GENERIC_STRNLEN_USER
-@@ -605,6 +609,7 @@ if HYPERVISOR_GUEST
+@@ -605,6 +610,7 @@ if HYPERVISOR_GUEST
  
  config PARAVIRT
  	bool "Enable paravirtualization code"
@@ -37,7 +38,7 @@ index fe120da..6882e5c 100644
  	---help---
  	  This changes the kernel so it can modify itself when it is run
  	  under a hypervisor, potentially improving performance significantly
-@@ -837,6 +842,8 @@ config SCHED_MC
+@@ -837,6 +843,8 @@ config SCHED_MC
  
  source "kernel/Kconfig.preempt"
  
@@ -276,7 +277,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..9e2c783
+index 0000000..6e490b5
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,104 @@
@@ -306,7 +307,7 @@ index 0000000..9e2c783
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	6
++#define IPIPE_CORE_RELEASE	7
 +
 +struct ipipe_domain;
 +
@@ -2058,7 +2059,7 @@ index deeb48d..4c1be96 100644
  #else	/* CONFIG_X86_64 */
  
 diff --git a/arch/x86/kernel/cpu/mtrr/cyrix.c b/arch/x86/kernel/cpu/mtrr/cyrix.c
-index 68a3343..057710f 100644
+index 68a3343..057710f3 100644
 --- a/arch/x86/kernel/cpu/mtrr/cyrix.c
 +++ b/arch/x86/kernel/cpu/mtrr/cyrix.c
 @@ -18,7 +18,7 @@ cyrix_get_arr(unsigned int reg, unsigned long *base,
@@ -4710,7 +4711,7 @@ index 4f74d94..022d754 100644
  
  	do {
 diff --git a/arch/x86/mm/fault.c b/arch/x86/mm/fault.c
-index c1e9e4c..0d05419 100644
+index c1e9e4c..ee21fbd 100644
 --- a/arch/x86/mm/fault.c
 +++ b/arch/x86/mm/fault.c
 @@ -355,9 +355,9 @@ void vmalloc_sync_all(void)
@@ -4764,7 +4765,7 @@ index c1e9e4c..0d05419 100644
  }
 +
 +#ifdef CONFIG_IPIPE
-+void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
++void __ipipe_pin_mapping_globally(unsigned long start, unsigned long end)
 +{
 +#ifdef CONFIG_X86_32
 +	unsigned long next, addr = start;
@@ -5554,10 +5555,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..525f3cf
+index 0000000..4ef7e3d
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,443 @@
+@@ -0,0 +1,449 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5964,6 +5965,12 @@ index 0000000..525f3cf
 +#define __ipipe_uaccess_might_fault() might_fault()
 +#endif
 +
++#ifdef CONFIG_IPIPE_TRACE
++void __ipipe_tracer_hrclock_initialized(void);
++#else /* !CONFIG_IPIPE_TRACE */
++#define __ipipe_tracer_hrclock_initialized()	do { } while(0)
++#endif /* !CONFIG_IPIPE_TRACE */
++
 +#include <linux/ipipe_compat.h>
 +
 +#else	/* !CONFIG_IPIPE */
@@ -6003,10 +6010,10 @@ index 0000000..525f3cf
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..fc88b2e
+index 0000000..c8fed98
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,392 @@
+@@ -0,0 +1,394 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -6189,9 +6196,6 @@ index 0000000..fc88b2e
 +
 +void __ipipe_flush_printk(unsigned int irq, void *cookie);
 +
-+void __ipipe_pin_range_globally(unsigned long start,
-+				unsigned long end);
-+
 +#define hard_preempt_disable()				\
 +	({						\
 +		unsigned long __flags__;		\
@@ -6359,10 +6363,6 @@ index 0000000..fc88b2e
 +
 +static inline void __ipipe_clear_taskflags(struct task_struct *p) { }
 +
-+static inline void __ipipe_pin_range_globally(unsigned long start,
-+					      unsigned long end)
-+{ }
-+
 +#define hard_preempt_disable()		({ preempt_disable(); 0; })
 +#define hard_preempt_enable(flags)	({ preempt_enable(); (void)(flags); })
 +
@@ -6388,6 +6388,15 @@ index 0000000..fc88b2e
 +static inline void ipipe_root_only(void) { }
 +
 +#endif	/* !CONFIG_IPIPE */
++
++#ifdef CONFIG_IPIPE_WANT_PTE_PINNING
++void __ipipe_pin_mapping_globally(unsigned long start,
++				  unsigned long end);
++#else
++static inline void __ipipe_pin_mapping_globally(unsigned long start,
++						unsigned long end)
++{ }
++#endif
 +
 +static inline void ipipe_preempt_root_only(void)
 +{
@@ -8540,10 +8549,10 @@ index ff7be9d..1e80528 100644
  	trace_task_newtask(p, clone_flags);
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..da17b04
+index 0000000..218f51da
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,65 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -8562,6 +8571,9 @@ index 0000000..da17b04
 +	def_bool y if IPIPE
 +
 +config IPIPE_WANT_CLOCKSOURCE
++       bool
++
++config IPIPE_WANT_PTE_PINNING
 +       bool
 +
 +config IPIPE_CORE_APIREV
@@ -11339,10 +11351,10 @@ index 0000000..0c9b908
 +#endif /* CONFIG_IPIPE_HAVE_HOSTRT */
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..5cce0bc
+index 0000000..8388671
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1447 @@
+@@ -0,0 +1,1468 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -12090,6 +12102,9 @@ index 0000000..5cce0bc
 +	unsigned long long abs_tsc;
 +	long us;
 +
++	if (!__ipipe_hrclock_ok())
++		return 0;
++
 +	/* ipipe_tsc2us works on unsigned => handle sign separately */
 +	abs_tsc = (tsc >= 0) ? tsc : -tsc;
 +	us = ipipe_tsc2us(abs_tsc);
@@ -12292,6 +12307,11 @@ index 0000000..5cce0bc
 +
 +		__ipipe_global_path_unlock(flags);
 +
++		if (!__ipipe_hrclock_ok()) {
++			seq_printf(m, "No hrclock available, dumping traces disabled\n");
++			return NULL;
++		}
++
 +		/* does this path actually contain data? */
 +		if (print_path->end == print_path->begin)
 +			return NULL;
@@ -12461,6 +12481,11 @@ index 0000000..5cce0bc
 +
 +		if (!print_path)
 +			return NULL;
++
++		if (!__ipipe_hrclock_ok()) {
++			seq_printf(m, "No hrclock available, dumping traces disabled\n");
++			return NULL;
++		}
 +
 +		/* back- and post-tracing length, post-trace length was frozen
 +		   in __ipipe_trace, back-trace may have to be reduced due to
@@ -12711,17 +12736,37 @@ index 0000000..5cce0bc
 +
 +extern struct proc_dir_entry *ipipe_proc_root;
 +
++void __init __ipipe_tracer_hrclock_initialized(void)
++{
++	unsigned long long start, end, min = ULLONG_MAX;
++	int i;
++
++#ifdef CONFIG_IPIPE_TRACE_VMALLOC
++	if (!per_cpu(trace_path, 0))
++		return;
++#endif
++	/* Calculate minimum overhead of __ipipe_trace() */
++	hard_local_irq_disable();
++	for (i = 0; i < 100; i++) {
++		ipipe_read_tsc(start);
++		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
++			      __BUILTIN_RETURN_ADDRESS1, 0);
++		ipipe_read_tsc(end);
++
++		end -= start;
++		if (end < min)
++			min = end;
++	}
++	hard_local_irq_enable();
++	trace_overhead = ipipe_tsc2ns(min);
++}
++
 +void __init __ipipe_init_tracer(void)
 +{
 +	struct proc_dir_entry *trace_dir;
-+	unsigned long long start, end, min = ULLONG_MAX;
-+	int i;
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
-+
-+	if (!__ipipe_hrclock_ok())
-+		return;
 +
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	for_each_possible_cpu(cpu) {
@@ -12744,20 +12789,8 @@ index 0000000..5cce0bc
 +	}
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
-+	/* Calculate minimum overhead of __ipipe_trace() */
-+	hard_local_irq_disable();
-+	for (i = 0; i < 100; i++) {
-+		ipipe_read_tsc(start);
-+		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
-+			      __BUILTIN_RETURN_ADDRESS1, 0);
-+		ipipe_read_tsc(end);
-+
-+		end -= start;
-+		if (end < min)
-+			min = end;
-+	}
-+	hard_local_irq_enable();
-+	trace_overhead = ipipe_tsc2ns(min);
++	if (__ipipe_hrclock_ok() && !trace_overhead)
++		__ipipe_tracer_hrclock_initialized();
 +
 +#ifdef CONFIG_IPIPE_TRACE_ENABLE
 +	ipipe_trace_enable = 1;
@@ -12791,7 +12824,7 @@ index 0000000..5cce0bc
 +#endif /* !CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index cbd97ce..0faa00b 100644
+index cbd97ce..16ab280e 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -15,6 +15,7 @@
@@ -12840,7 +12873,7 @@ index cbd97ce..0faa00b 100644
  		desc->irq_data.chip->irq_shutdown(&desc->irq_data);
 -	else if (desc->irq_data.chip->irq_disable)
 +#ifdef CONFIG_IPIPE
-+		desc->istate |= ~IPIPE_IRQS_NEEDS_STARTUP;
++		desc->istate |= IPIPE_IRQS_NEEDS_STARTUP;
 +#endif
 +	} else if (desc->irq_data.chip->irq_disable)
  		desc->irq_data.chip->irq_disable(&desc->irq_data);
@@ -13412,7 +13445,7 @@ index 1f3186b..5b710c8 100644
  
  	if (curr->softirqs_enabled) {
 diff --git a/kernel/panic.c b/kernel/panic.c
-index 167ec09..cd078a7 100644
+index 167ec097..cd078a7 100644
 --- a/kernel/panic.c
 +++ b/kernel/panic.c
 @@ -22,6 +22,7 @@
@@ -14550,7 +14583,7 @@ index f8e0e53..02175aa3 100644
  			wake_up_klogd();
  	}
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 0c9216c..1575d3e 100644
+index 0c9216c..00a9a30 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -10,6 +10,7 @@
@@ -14569,7 +14602,7 @@ index 0c9216c..1575d3e 100644
 +	/* APEI may invoke this for temporarily remapping pages in interrupt
 +	 * context - nothing we can and need to propagate globally. */
 +	if (!in_interrupt()) {
-+		__ipipe_pin_range_globally(start, end);
++		__ipipe_pin_mapping_globally(start, end);
 +		flush_cache_vmap(start, end);
 +	}
  
@@ -14904,14 +14937,14 @@ index e9f65aa..d9a21ad 100644
  
  	return pages;
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index d456560..b50a41d 100644
+index d456560..4083177 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -191,6 +191,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
  			return err;
  	} while (pgd++, addr = next, addr != end);
  
-+ 	__ipipe_pin_range_globally(start, end);
++ 	__ipipe_pin_mapping_globally(start, end);
 + 
  	return nr;
  }
