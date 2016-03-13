@@ -1,8 +1,8 @@
 diff --git a/arch/blackfin/Kconfig b/arch/blackfin/Kconfig
-index 9ceccef..3c94fa7 100644
+index af76634..ebff376 100644
 --- a/arch/blackfin/Kconfig
 +++ b/arch/blackfin/Kconfig
-@@ -76,6 +76,8 @@ source "kernel/Kconfig.preempt"
+@@ -73,6 +73,8 @@ source "kernel/Kconfig.preempt"
  
  source "kernel/Kconfig.freezer"
  
@@ -12,7 +12,7 @@ index 9ceccef..3c94fa7 100644
  
  comment "Processor and Board Settings"
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index 17b5e92..8b74b1b 100644
+index fe1160f..f9a5b33 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
 @@ -28,7 +28,7 @@
@@ -32,7 +32,7 @@ index 17b5e92..8b74b1b 100644
 -#define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    16
 -#define IPIPE_PATCH_NUMBER    1
-+#define IPIPE_CORE_RELEASE	7
++#define IPIPE_CORE_RELEASE	5
  
  #ifdef CONFIG_SMP
  #error "I-pipe/blackfin: SMP not implemented"
@@ -154,7 +154,7 @@ index 17b5e92..8b74b1b 100644
 -}
 -
 -#define __ipipe_do_root_xirq(ipd, irq)					\
--	((ipd)->irqs[irq].handler(irq, &__raw_get_cpu_var(__ipipe_tick_regs)))
+-	((ipd)->irqs[irq].handler(irq, raw_cpu_ptr(&__ipipe_tick_regs)))
 -
 -#define __ipipe_run_irqtail(irq)  /* Must be a macro */			\
 -	do {								\
@@ -636,7 +636,7 @@ index a017359..e6ad56f 100644
  	} \
  } \
 diff --git a/arch/blackfin/kernel/ipipe.c b/arch/blackfin/kernel/ipipe.c
-index f657b38..3a7acb8 100644
+index f657b38..4f8ff6d 100644
 --- a/arch/blackfin/kernel/ipipe.c
 +++ b/arch/blackfin/kernel/ipipe.c
 @@ -32,32 +32,29 @@
@@ -685,7 +685,7 @@ index f657b38..3a7acb8 100644
  
  /*
   * __ipipe_enable_pipeline() -- We are running on the boot CPU, hw
-@@ -71,214 +68,86 @@ void __ipipe_enable_pipeline(void)
+@@ -71,214 +68,76 @@ void __ipipe_enable_pipeline(void)
  	__ipipe_freq_scale = 1000000000UL / __ipipe_core_clock;
  
  	for (irq = 0; irq < NR_IRQS; ++irq)
@@ -871,7 +871,7 @@ index f657b38..3a7acb8 100644
 -	hard_local_irq_enable();
 -
 -	return -ret;
-+	struct pt_regs *regs = __this_cpu_ptr(&ipipe_percpu.tick_regs);
++	struct pt_regs *regs = raw_cpu_ptr(&ipipe_percpu.tick_regs);
 +	asm_do_IRQ(irq, regs);
  }
  
@@ -905,10 +905,9 @@ index f657b38..3a7acb8 100644
 - * works for virtual interrupts.
 - */
 -int ipipe_trigger_irq(unsigned irq)
-+void ipipe_raise_irq(unsigned int irq)
- {
- 	unsigned long flags;
- 
+-{
+-	unsigned long flags;
+-
 -#ifdef CONFIG_IPIPE_DEBUG
 -	if (irq >= IPIPE_NR_IRQS ||
 -	    (ipipe_virtual_irq_p(irq)
@@ -916,20 +915,19 @@ index f657b38..3a7acb8 100644
 -		return -EINVAL;
 -#endif
 -
- 	flags = hard_local_irq_save();
- 	__ipipe_handle_irq(irq, NULL);
- 	hard_local_irq_restore(flags);
+-	flags = hard_local_irq_save();
+-	__ipipe_handle_irq(irq, NULL);
+-	hard_local_irq_restore(flags);
 -
 -	return 1;
- }
-+EXPORT_SYMBOL_GPL(ipipe_raise_irq);
- 
+-}
+-
 -asmlinkage void __ipipe_sync_root(void)
 +void __ipipe_sync_root(void)
  {
  	void (*irq_tail_hook)(void) = (void (*)(void))__ipipe_irq_tail_hook;
  	struct ipipe_percpu_domain_data *p;
-@@ -293,23 +162,14 @@ asmlinkage void __ipipe_sync_root(void)
+@@ -293,23 +152,14 @@ asmlinkage void __ipipe_sync_root(void)
  
  	clear_thread_flag(TIF_IRQ_SYNC);
  
@@ -956,7 +954,7 @@ index f657b38..3a7acb8 100644
  {
  	/*
  	 * This code is called by the ins{bwl} routines (see
-@@ -320,12 +180,15 @@ void __ipipe_disable_root_irqs_hw(void)
+@@ -320,12 +170,15 @@ void __ipipe_disable_root_irqs_hw(void)
  	 * the real-time domain.
  	 */
  	bfin_sti(__ipipe_irq_lvmask);
@@ -975,7 +973,7 @@ index f657b38..3a7acb8 100644
  	bfin_sti(bfin_irq_flags);
  }
  
-@@ -334,64 +197,155 @@ void __ipipe_enable_root_irqs_hw(void)
+@@ -334,64 +187,155 @@ void __ipipe_enable_root_irqs_hw(void)
   * manipulation routines, but let's prepare for SMP support in the
   * same move, preventing CPU migration as required.
   */
@@ -1481,7 +1479,7 @@ index 86b5a09..a842409 100644
  	/* Set the stack for the current process */
  	r7 = sp;
 diff --git a/arch/blackfin/mach-common/ints-priority.c b/arch/blackfin/mach-common/ints-priority.c
-index 867b7ce..fd74330 100644
+index dd2af74..20ad3c2 100644
 --- a/arch/blackfin/mach-common/ints-priority.c
 +++ b/arch/blackfin/mach-common/ints-priority.c
 @@ -18,9 +18,7 @@
@@ -1611,7 +1609,7 @@ index 867b7ce..fd74330 100644
  		}
  	}
  
-@@ -1266,14 +1296,18 @@ void do_irq(int vec, struct pt_regs *fp)
+@@ -1264,14 +1294,18 @@ void do_irq(int vec, struct pt_regs *fp)
  
  #ifdef CONFIG_IPIPE
  
@@ -1632,7 +1630,7 @@ index 867b7ce..fd74330 100644
  	if (irq >= BFIN_IRQ(0))
  		return IVG11;
  #else
-@@ -1292,31 +1326,51 @@ int __ipipe_get_irq_priority(unsigned irq)
+@@ -1290,31 +1324,51 @@ int __ipipe_get_irq_priority(unsigned irq)
  	return IVG15;
  }
  
@@ -1664,7 +1662,7 @@ index 867b7ce..fd74330 100644
  {
 -	struct ipipe_percpu_domain_data *p = ipipe_root_cpudom_ptr();
 +	struct ipipe_percpu_domain_data *p = ipipe_this_cpu_root_context();
-+	struct ipipe_percpu_data *q = __ipipe_this_cpu_ptr(&ipipe_percpu);
++	struct ipipe_percpu_data *q = __ipipe_raw_cpu_ptr(&ipipe_percpu);
  	struct ipipe_domain *this_domain = __ipipe_current_domain;
 +	struct pt_regs *tick_regs;
  	int irq, s = 0;
@@ -1679,21 +1677,21 @@ index 867b7ce..fd74330 100644
 -#endif
 +	if (irq == q->hrtimer_irq || q->hrtimer_irq == -1) {
  		/* This is basically what we need from the register frame. */
--		__raw_get_cpu_var(__ipipe_tick_regs).ipend = regs->ipend;
--		__raw_get_cpu_var(__ipipe_tick_regs).pc = regs->pc;
+-		__this_cpu_write(__ipipe_tick_regs.ipend, regs->ipend);
+-		__this_cpu_write(__ipipe_tick_regs.pc, regs->pc);
 +		tick_regs = &q->tick_regs;
 +		tick_regs->ipend = regs->ipend;
 +		tick_regs->pc = regs->pc;
  		if (this_domain != ipipe_root_domain)
--			__raw_get_cpu_var(__ipipe_tick_regs).ipend &= ~0x10;
+-			__this_cpu_and(__ipipe_tick_regs.ipend, ~0x10);
 +			tick_regs->ipend &= ~0x10;
  		else
--			__raw_get_cpu_var(__ipipe_tick_regs).ipend |= 0x10;
+-			__this_cpu_or(__ipipe_tick_regs.ipend, 0x10);
 +			tick_regs->ipend |= 0x10;
  	}
  
  	/*
-@@ -1343,27 +1397,14 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
+@@ -1341,27 +1395,14 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
  	__ipipe_handle_irq(irq, regs);
  	ipipe_trace_irq_exit(irq);
  
@@ -1726,10 +1724,10 @@ index 867b7ce..fd74330 100644
  			return !test_bit(IPIPE_STALL_FLAG, &p->status);
  		}
 diff --git a/drivers/tty/serial/bfin_uart.c b/drivers/tty/serial/bfin_uart.c
-index ac86a20..29107df 100644
+index 7da9911..c5ab0b5 100644
 --- a/drivers/tty/serial/bfin_uart.c
 +++ b/drivers/tty/serial/bfin_uart.c
-@@ -1081,6 +1081,52 @@ static void bfin_serial_console_putchar(struct uart_port *port, int ch)
+@@ -1080,6 +1080,52 @@ static void bfin_serial_console_putchar(struct uart_port *port, int ch)
  	UART_PUT_CHAR(uart, ch);
  }
  
@@ -1783,7 +1781,7 @@ index ac86a20..29107df 100644
  		 defined (CONFIG_EARLY_PRINTK) */
  
 diff --git a/drivers/cpuidle/Kconfig b/drivers/cpuidle/Kconfig
-index f04e25f..5fa6be6 100644
+index c5029c1..2d68014 100644
 --- a/drivers/cpuidle/Kconfig
 +++ b/drivers/cpuidle/Kconfig
 @@ -3,6 +3,7 @@ menu "CPU Idle"
@@ -1794,11 +1792,30 @@ index f04e25f..5fa6be6 100644
  	select CPU_IDLE_GOV_LADDER if (!NO_HZ && !NO_HZ_IDLE)
  	select CPU_IDLE_GOV_MENU if (NO_HZ || NO_HZ_IDLE)
  	help
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 74a1767..7cf4766 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -366,12 +366,12 @@ void panic_if_irq_remap(const char *msg)
+ 
+ static void ir_ack_apic_edge(struct irq_data *data)
+ {
+-	ack_APIC_irq();
++	__ack_APIC_irq();
+ }
+ 
+ static void ir_ack_apic_level(struct irq_data *data)
+ {
+-	ack_APIC_irq();
++	__ack_APIC_irq();
+ 	eoi_ioapic_irq(data->irq, data->chip_data);
+ }
+ 
 diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
-index 612dfc7..ffd8160 100644
+index e5c31ea..8dce8751 100644
 --- a/drivers/tty/serial/8250/8250_core.c
 +++ b/drivers/tty/serial/8250/8250_core.c
-@@ -3169,6 +3169,84 @@ static int serial8250_resume(struct platform_device *dev)
+@@ -3480,6 +3480,84 @@ static int serial8250_resume(struct platform_device *dev)
  	return 0;
  }
  
@@ -1884,10 +1901,10 @@ index 612dfc7..ffd8160 100644
  	.probe		= serial8250_probe,
  	.remove		= serial8250_remove,
 diff --git a/fs/exec.c b/fs/exec.c
-index ea4449d..aa73a12 100644
+index b7a5f46..0582bd6 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -822,6 +822,7 @@ static int exec_mmap(struct mm_struct *mm)
+@@ -823,6 +823,7 @@ static int exec_mmap(struct mm_struct *mm)
  {
  	struct task_struct *tsk;
  	struct mm_struct *old_mm, *active_mm;
@@ -1895,7 +1912,7 @@ index ea4449d..aa73a12 100644
  
  	/* Notify parent that we're no longer interested in the old VM */
  	tsk = current;
-@@ -845,8 +846,10 @@ static int exec_mmap(struct mm_struct *mm)
+@@ -846,8 +847,10 @@ static int exec_mmap(struct mm_struct *mm)
  	task_lock(tsk);
  	active_mm = tsk->active_mm;
  	tsk->mm = mm;
@@ -1907,51 +1924,35 @@ index ea4449d..aa73a12 100644
  	vmacache_flush(tsk);
  	task_unlock(tsk);
 diff --git a/include/asm-generic/atomic.h b/include/asm-generic/atomic.h
-index 33bd2de..f752d41 100644
+index 1973ad2..c3f2321 100644
 --- a/include/asm-generic/atomic.h
 +++ b/include/asm-generic/atomic.h
-@@ -68,11 +68,11 @@ static inline int atomic_add_return(int i, atomic_t *v)
- 	unsigned long flags;
- 	int temp;
- 
--	raw_local_irq_save(flags); /* Don't trace it in an irqsoff handler */
-+	flags = hard_local_irq_save(); /* Don't trace it in an irqsoff handler */
- 	temp = v->counter;
- 	temp += i;
- 	v->counter = temp;
--	raw_local_irq_restore(flags);
-+	hard_local_irq_restore(flags);
- 
- 	return temp;
+@@ -70,9 +70,9 @@ static inline void atomic_##op(int i, atomic_t *v)			\
+ {									\
+ 	unsigned long flags;						\
+ 									\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	v->counter = v->counter c_op i;					\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
  }
-@@ -91,11 +91,11 @@ static inline int atomic_sub_return(int i, atomic_t *v)
- 	unsigned long flags;
- 	int temp;
  
--	raw_local_irq_save(flags); /* Don't trace it in an irqsoff handler */
-+	flags = hard_local_irq_save();
- 	temp = v->counter;
- 	temp -= i;
- 	v->counter = temp;
--	raw_local_irq_restore(flags);
-+	hard_local_irq_restore(flags);
- 
- 	return temp;
+ #define ATOMIC_OP_RETURN(op, c_op)					\
+@@ -81,9 +81,9 @@ static inline int atomic_##op##_return(int i, atomic_t *v)		\
+ 	unsigned long flags;						\
+ 	int ret;							\
+ 									\
+-	raw_local_irq_save(flags);					\
++	flags = hard_local_irq_save();					\
+ 	ret = (v->counter = v->counter c_op i);				\
+-	raw_local_irq_restore(flags);					\
++	hard_local_irq_restore(flags);					\
+ 									\
+ 	return ret;							\
  }
-@@ -158,9 +158,9 @@ static inline void atomic_clear_mask(unsigned long mask, atomic_t *v)
- 	unsigned long flags;
- 
- 	mask = ~mask;
--	raw_local_irq_save(flags); /* Don't trace it in a irqsoff handler */
-+	flags = hard_local_irq_save();
- 	v->counter &= mask;
--	raw_local_irq_restore(flags);
-+	hard_local_irq_restore(flags);
- }
- #endif
- 
 diff --git a/include/asm-generic/bitops/atomic.h b/include/asm-generic/bitops/atomic.h
-index 9ae6c34..3d4535a 100644
+index 4967351..ba3d54d 100644
 --- a/include/asm-generic/bitops/atomic.h
 +++ b/include/asm-generic/bitops/atomic.h
 @@ -21,20 +21,20 @@ extern arch_spinlock_t __atomic_hash[ATOMIC_HASH_SIZE] __lock_aligned;
@@ -1980,10 +1981,10 @@ index 9ae6c34..3d4535a 100644
  
  /*
 diff --git a/include/asm-generic/cmpxchg-local.h b/include/asm-generic/cmpxchg-local.h
-index d8d4c89..6559e2d 100644
+index 70bef78..145e071 100644
 --- a/include/asm-generic/cmpxchg-local.h
 +++ b/include/asm-generic/cmpxchg-local.h
-@@ -21,7 +21,7 @@ static inline unsigned long __cmpxchg_local_generic(volatile void *ptr,
+@@ -22,7 +22,7 @@ static inline unsigned long __cmpxchg_local_generic(volatile void *ptr,
  	if (size == 8 && sizeof(unsigned long) != 8)
  		wrong_size_cmpxchg(ptr);
  
@@ -1992,7 +1993,7 @@ index d8d4c89..6559e2d 100644
  	switch (size) {
  	case 1: prev = *(u8 *)ptr;
  		if (prev == old)
-@@ -42,7 +42,7 @@ static inline unsigned long __cmpxchg_local_generic(volatile void *ptr,
+@@ -43,7 +43,7 @@ static inline unsigned long __cmpxchg_local_generic(volatile void *ptr,
  	default:
  		wrong_size_cmpxchg(ptr);
  	}
@@ -2001,7 +2002,7 @@ index d8d4c89..6559e2d 100644
  	return prev;
  }
  
-@@ -55,11 +55,11 @@ static inline u64 __cmpxchg64_local_generic(volatile void *ptr,
+@@ -56,11 +56,11 @@ static inline u64 __cmpxchg64_local_generic(volatile void *ptr,
  	u64 prev;
  	unsigned long flags;
  
@@ -2016,13 +2017,13 @@ index d8d4c89..6559e2d 100644
  }
  
 diff --git a/include/asm-generic/percpu.h b/include/asm-generic/percpu.h
-index d17784e..d8e2912 100644
+index 4d9f233..f95a36d 100644
 --- a/include/asm-generic/percpu.h
 +++ b/include/asm-generic/percpu.h
-@@ -67,6 +67,22 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
+@@ -43,11 +43,33 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
+ #define arch_raw_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
+ #endif
  
- #define __get_cpu_var(var) (*this_cpu_ptr(&(var)))
- #define __raw_get_cpu_var(var) (*__this_cpu_ptr(&(var)))
 +#ifdef CONFIG_IPIPE
 +#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +extern int __ipipe_check_percpu_access(void);
@@ -2034,22 +2035,89 @@ index d17784e..d8e2912 100644
 +#else
 +#define __ipipe_cpu_offset  __my_cpu_offset
 +#endif
-+#ifndef __ipipe_this_cpu_ptr
-+#define __ipipe_this_cpu_ptr(ptr)  SHIFT_PERCPU_PTR(ptr, __ipipe_cpu_offset)
++#ifndef __ipipe_raw_cpu_ptr
++#define __ipipe_raw_cpu_ptr(ptr)  SHIFT_PERCPU_PTR(ptr, __ipipe_cpu_offset)
 +#endif
-+#define __ipipe_this_cpu_read(var) (*__ipipe_this_cpu_ptr(&(var)))
++#define __ipipe_raw_cpu_read(var) (*__ipipe_raw_cpu_ptr(&(var)))
 +#endif /* CONFIG_IPIPE */
- 
++
  #ifdef CONFIG_HAVE_SETUP_PER_CPU_AREA
  extern void setup_per_cpu_areas(void);
-@@ -82,6 +98,8 @@ extern void setup_per_cpu_areas(void);
- #define per_cpu(var, cpu)	(*((void)(cpu), VERIFY_PERCPU_PTR(&(var))))
- #define __get_cpu_var(var)	(*VERIFY_PERCPU_PTR(&(var)))
- #define __raw_get_cpu_var(var)	(*VERIFY_PERCPU_PTR(&(var)))
-+#define __ipipe_this_cpu_ptr(ptr)  VERIFY_PERCPU_PTR(ptr)
-+#define __ipipe_this_cpu_read(var) (*__ipipe_this_cpu_ptr(&(var)))
- #define this_cpu_ptr(ptr)	per_cpu_ptr(ptr, 0)
- #define __this_cpu_ptr(ptr)	this_cpu_ptr(ptr)
+ #endif
+ 
+-#endif	/* SMP */
++#else /* !SMP */
++
++#define __ipipe_raw_cpu_ptr(ptr)  VERIFY_PERCPU_PTR(ptr)
++#define __ipipe_raw_cpu_read(var) (*__ipipe_raw_cpu_ptr(&(var)))
++
++#endif	/* !SMP */
+ 
+ #ifndef PER_CPU_BASE_SECTION
+ #ifdef CONFIG_SMP
+@@ -117,19 +139,19 @@ do {									\
+ #define this_cpu_generic_to_op(pcp, val, op)				\
+ do {									\
+ 	unsigned long __flags;						\
+-	raw_local_irq_save(__flags);					\
++	__flags = hard_local_irq_save();				\
+ 	*raw_cpu_ptr(&(pcp)) op val;					\
+-	raw_local_irq_restore(__flags);					\
++	hard_local_irq_restore(__flags);				\
+ } while (0)
+ 
+ #define this_cpu_generic_add_return(pcp, val)				\
+ ({									\
+ 	typeof(pcp) __ret;						\
+ 	unsigned long __flags;						\
+-	raw_local_irq_save(__flags);					\
++	__flags = hard_local_irq_save();				\
+ 	raw_cpu_add(pcp, val);						\
+ 	__ret = raw_cpu_read(pcp);					\
+-	raw_local_irq_restore(__flags);					\
++	hard_local_irq_restore(__flags);				\
+ 	__ret;								\
+ })
+ 
+@@ -137,10 +159,10 @@ do {									\
+ ({									\
+ 	typeof(pcp) __ret;						\
+ 	unsigned long __flags;						\
+-	raw_local_irq_save(__flags);					\
++	__flags = hard_local_irq_save();				\
+ 	__ret = raw_cpu_read(pcp);					\
+ 	raw_cpu_write(pcp, nval);					\
+-	raw_local_irq_restore(__flags);					\
++	hard_local_irq_restore(__flags);				\
+ 	__ret;								\
+ })
+ 
+@@ -148,11 +170,11 @@ do {									\
+ ({									\
+ 	typeof(pcp) __ret;						\
+ 	unsigned long __flags;						\
+-	raw_local_irq_save(__flags);					\
++	__flags = hard_local_irq_save();				\
+ 	__ret = raw_cpu_read(pcp);					\
+ 	if (__ret == (oval))						\
+ 		raw_cpu_write(pcp, nval);				\
+-	raw_local_irq_restore(__flags);					\
++	hard_local_irq_restore(__flags);				\
+ 	__ret;								\
+ })
+ 
+@@ -160,10 +182,10 @@ do {									\
+ ({									\
+ 	int __ret;							\
+ 	unsigned long __flags;						\
+-	raw_local_irq_save(__flags);					\
++	__flags = hard_local_irq_save();				\
+ 	__ret = raw_cpu_generic_cmpxchg_double(pcp1, pcp2,		\
+ 			oval1, oval2, nval1, nval2);			\
+-	raw_local_irq_restore(__flags);					\
++	hard_local_irq_restore(__flags);				\
+ 	__ret;								\
+ })
  
 diff --git a/include/asm-generic/preempt.h b/include/asm-generic/preempt.h
 index 1cd3f5d..acb3fc8 100644
@@ -2112,10 +2180,10 @@ index 0000000..1f6e9c3
 +
 +#endif /* !_IPIPE_THREAD_INFO_H */
 diff --git a/include/linux/clockchips.h b/include/linux/clockchips.h
-index 493aa02..cb59b28 100644
+index 2e4cb67..0cd8b80 100644
 --- a/include/linux/clockchips.h
 +++ b/include/linux/clockchips.h
-@@ -116,6 +116,15 @@ struct clock_event_device {
+@@ -123,6 +123,15 @@ struct clock_event_device {
  	const struct cpumask	*cpumask;
  	struct list_head	list;
  	struct module		*owner;
@@ -2132,10 +2200,10 @@ index 493aa02..cb59b28 100644
  
  /*
 diff --git a/include/linux/clocksource.h b/include/linux/clocksource.h
-index 879065d..120fd3f 100644
+index abcafaa..a8440e4 100644
 --- a/include/linux/clocksource.h
 +++ b/include/linux/clocksource.h
-@@ -198,6 +198,10 @@ struct clocksource {
+@@ -196,6 +196,10 @@ struct clocksource {
  	cycle_t wd_last;
  #endif
  	struct module *owner;
@@ -2146,23 +2214,11 @@ index 879065d..120fd3f 100644
  } ____cacheline_aligned;
  
  /*
-diff --git a/include/linux/ftrace.h b/include/linux/ftrace.h
-index 2068dff..06555f5 100644
---- a/include/linux/ftrace.h
-+++ b/include/linux/ftrace.h
-@@ -103,6 +103,7 @@ enum {
- 	FTRACE_OPS_FL_RECURSION_SAFE		= 1 << 6,
- 	FTRACE_OPS_FL_STUB			= 1 << 7,
- 	FTRACE_OPS_FL_INITIALIZED		= 1 << 8,
-+	FTRACE_OPS_FL_IPIPE_EXCLUSIVE		= 1 << 9,
- };
- 
- struct ftrace_ops {
 diff --git a/include/linux/hardirq.h b/include/linux/hardirq.h
-index 12d5f97..75ec573 100644
+index cba442e..b513a46 100644
 --- a/include/linux/hardirq.h
 +++ b/include/linux/hardirq.h
-@@ -60,6 +60,7 @@ extern void irq_exit(void);
+@@ -61,6 +61,7 @@ extern void irq_exit(void);
  
  #define nmi_enter()						\
  	do {							\
@@ -2170,7 +2226,7 @@ index 12d5f97..75ec573 100644
  		lockdep_off();					\
  		ftrace_nmi_enter();				\
  		BUG_ON(in_nmi());				\
-@@ -76,6 +77,7 @@ extern void irq_exit(void);
+@@ -77,6 +78,7 @@ extern void irq_exit(void);
  		preempt_count_sub(NMI_OFFSET + HARDIRQ_OFFSET);	\
  		ftrace_nmi_exit();				\
  		lockdep_on();					\
@@ -2201,10 +2257,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..912f689
+index 0000000..0a9b5b6
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,455 @@
+@@ -0,0 +1,461 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2335,7 +2391,7 @@ index 0000000..912f689
 +static inline void __ipipe_nmi_exit(void)
 +{
 +	ipipe_restore_context_nmi();
-+	if (!test_bit(IPIPE_STALL_FLAG, __this_cpu_ptr(&ipipe_percpu.nmi_state)))
++	if (!test_bit(IPIPE_STALL_FLAG, raw_cpu_ptr(&ipipe_percpu.nmi_state)))
 +		__clear_bit(IPIPE_STALL_FLAG, &__ipipe_root_status);
 +}
 +
@@ -2344,7 +2400,7 @@ index 0000000..912f689
 +{
 +	struct ipipe_percpu_data *p;
 +
-+	p = __this_cpu_ptr(&ipipe_percpu);
++	p = raw_cpu_ptr(&ipipe_percpu);
 +	p->vm_notifier = vmf;
 +	barrier();
 +}
@@ -2353,7 +2409,7 @@ index 0000000..912f689
 +{
 +	struct ipipe_percpu_data *p;
 +
-+	p = __this_cpu_ptr(&ipipe_percpu);
++	p = raw_cpu_ptr(&ipipe_percpu);
 +	p->vm_notifier = NULL;
 +	barrier();
 +}
@@ -2621,6 +2677,12 @@ index 0000000..912f689
 +#define __ipipe_uaccess_might_fault() might_fault()
 +#endif
 +
++#ifdef CONFIG_IPIPE_TRACE
++void __ipipe_tracer_hrclock_initialized(void);
++#else /* !CONFIG_IPIPE_TRACE */
++#define __ipipe_tracer_hrclock_initialized()	do { } while(0)
++#endif /* !CONFIG_IPIPE_TRACE */
++
 +#include <linux/ipipe_compat.h>
 +
 +#else	/* !CONFIG_IPIPE */
@@ -2662,10 +2724,10 @@ index 0000000..912f689
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..ea01dd6
+index 0000000..a37358c
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,356 @@
+@@ -0,0 +1,358 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -2847,9 +2909,6 @@ index 0000000..ea01dd6
 +
 +void __ipipe_flush_printk(unsigned int irq, void *cookie);
 +
-+void __ipipe_pin_range_globally(unsigned long start,
-+				unsigned long end);
-+
 +#define __ipipe_get_cpu(flags)	({ (flags) = hard_preempt_disable(); ipipe_processor_id(); })
 +#define __ipipe_put_cpu(flags)	hard_preempt_enable(flags)
 +
@@ -2982,10 +3041,6 @@ index 0000000..ea01dd6
 +
 +static inline void __ipipe_init_taskinfo(struct task_struct *p) { }
 +
-+static inline void __ipipe_pin_range_globally(unsigned long start,
-+					      unsigned long end)
-+{ }
-+
 +#define hard_preempt_disable()		({ preempt_disable(); 0; })
 +#define hard_preempt_enable(flags)	({ preempt_enable(); (void)(flags); })
 +
@@ -3011,6 +3066,15 @@ index 0000000..ea01dd6
 +static inline void ipipe_root_only(void) { }
 +
 +#endif	/* !CONFIG_IPIPE */
++
++#ifdef CONFIG_IPIPE_WANT_PTE_PINNING
++void __ipipe_pin_mapping_globally(unsigned long start,
++				  unsigned long end);
++#else
++static inline void __ipipe_pin_mapping_globally(unsigned long start,
++						unsigned long end)
++{ }
++#endif
 +
 +static inline void ipipe_preempt_root_only(void)
 +{
@@ -3349,7 +3413,7 @@ index 0000000..6521852
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_debug.h b/include/linux/ipipe_debug.h
 new file mode 100644
-index 0000000..577abfd
+index 0000000..5d7efef
 --- /dev/null
 +++ b/include/linux/ipipe_debug.h
 @@ -0,0 +1,100 @@
@@ -3385,7 +3449,7 @@ index 0000000..577abfd
 +
 +static inline int ipipe_disable_context_check(void)
 +{
-+	return xchg(__this_cpu_ptr(&ipipe_percpu.context_check), 0);
++	return xchg(raw_cpu_ptr(&ipipe_percpu.context_check), 0);
 +}
 +
 +static inline void ipipe_restore_context_check(int old_state)
@@ -3455,10 +3519,10 @@ index 0000000..577abfd
 +#endif /* !__LINUX_IPIPE_DEBUG_H */
 diff --git a/include/linux/ipipe_domain.h b/include/linux/ipipe_domain.h
 new file mode 100644
-index 0000000..210c7a6
+index 0000000..d00c56b
 --- /dev/null
 +++ b/include/linux/ipipe_domain.h
-@@ -0,0 +1,306 @@
+@@ -0,0 +1,309 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_domain.h
 + *
@@ -3501,6 +3565,11 @@ index 0000000..210c7a6
 +#define __IPIPE_TRAP_E	  (1 << __IPIPE_TRAP_P)
 +#define __IPIPE_KEVENT_E  (1 << __IPIPE_KEVENT_P)
 +#define __IPIPE_ALL_E	   0x7
++#define __IPIPE_SYSCALL_R (8 << __IPIPE_SYSCALL_P)
++#define __IPIPE_TRAP_R	  (8 << __IPIPE_TRAP_P)
++#define __IPIPE_KEVENT_R  (8 << __IPIPE_KEVENT_P)
++#define __IPIPE_SHIFT_R	   3
++#define __IPIPE_ALL_R	  (__IPIPE_ALL_E << __IPIPE_SHIFT_R)
 +
 +typedef void (*ipipe_irq_ackfn_t)(unsigned int irq, struct irq_desc *desc);
 +
@@ -3558,9 +3627,7 @@ index 0000000..210c7a6
 +	struct task_struct *rqlock_owner;
 +	struct ipipe_vm_notifier *vm_notifier;
 +	unsigned long nmi_state;
-+#ifdef CONFIG_IPIPE_WANT_ACTIVE_MM
 +	struct mm_struct *active_mm;
-+#endif
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +	int context_check;
 +	int context_check_saved;
@@ -3568,7 +3635,7 @@ index 0000000..210c7a6
 +};
 +
 +/*
-+ * CAREFUL: all accessors based on __ipipe_this_cpu_ptr() you may find
++ * CAREFUL: all accessors based on __ipipe_raw_cpu_ptr() you may find
 + * in this file should be used only while hw interrupts are off, to
 + * prevent from CPU migration regardless of the running domain.
 + */
@@ -3606,7 +3673,7 @@ index 0000000..210c7a6
 +static inline struct ipipe_percpu_domain_data *
 +ipipe_this_cpu_context(struct ipipe_domain *ipd)
 +{
-+	return __context_of(__ipipe_this_cpu_ptr(&ipipe_percpu), ipd);
++	return __context_of(__ipipe_raw_cpu_ptr(&ipipe_percpu), ipd);
 +}
 +
 +/**
@@ -3620,7 +3687,7 @@ index 0000000..210c7a6
 +static inline struct ipipe_percpu_domain_data *
 +ipipe_this_cpu_root_context(void)
 +{
-+	return __ipipe_this_cpu_ptr(&ipipe_percpu.root);
++	return __ipipe_raw_cpu_ptr(&ipipe_percpu.root);
 +}
 +
 +/**
@@ -3639,7 +3706,7 @@ index 0000000..210c7a6
 +static inline struct ipipe_percpu_domain_data *
 +ipipe_this_cpu_head_context(void)
 +{
-+	return __ipipe_this_cpu_ptr(&ipipe_percpu.head);
++	return __ipipe_raw_cpu_ptr(&ipipe_percpu.head);
 +}
 +
 +/**
@@ -3665,7 +3732,7 @@ index 0000000..210c7a6
 + */
 +static inline struct ipipe_percpu_domain_data *__ipipe_get_current_context(void)
 +{
-+	return __ipipe_this_cpu_read(ipipe_percpu.curr);
++	return __ipipe_raw_cpu_read(ipipe_percpu.curr);
 +}
 +
 +#define __ipipe_current_context __ipipe_get_current_context()
@@ -3681,7 +3748,7 @@ index 0000000..210c7a6
 +void __ipipe_set_current_context(struct ipipe_percpu_domain_data *pd)
 +{
 +	struct ipipe_percpu_data *p;
-+	p = __ipipe_this_cpu_ptr(&ipipe_percpu);
++	p = __ipipe_raw_cpu_ptr(&ipipe_percpu);
 +	p->curr = pd;
 +}
 +
@@ -3694,7 +3761,7 @@ index 0000000..210c7a6
 +static inline void __ipipe_set_current_domain(struct ipipe_domain *ipd)
 +{
 +	struct ipipe_percpu_data *p;
-+	p = __ipipe_this_cpu_ptr(&ipipe_percpu);
++	p = __ipipe_raw_cpu_ptr(&ipipe_percpu);
 +	p->curr = __context_of(p, ipd);
 +}
 +
@@ -4033,7 +4100,7 @@ index 0000000..f71d2f1
 +#endif /* !__LINUX_IPIPE_LOCK_H */
 diff --git a/include/linux/ipipe_tickdev.h b/include/linux/ipipe_tickdev.h
 new file mode 100644
-index 0000000..5b4adbf
+index 0000000..58a4142
 --- /dev/null
 +++ b/include/linux/ipipe_tickdev.h
 @@ -0,0 +1,145 @@
@@ -4118,7 +4185,7 @@ index 0000000..5b4adbf
 +				   struct clock_event_device *cdev);
 +};
 +
-+#define __ipipe_hrtimer_irq __ipipe_this_cpu_read(ipipe_percpu.hrtimer_irq)
++#define __ipipe_hrtimer_irq __ipipe_raw_cpu_read(ipipe_percpu.hrtimer_irq)
 +
 +extern unsigned long __ipipe_hrtimer_freq;
 +
@@ -4266,10 +4333,10 @@ index 0000000..deb0a47
 +
 +#endif	/* !__LINUX_IPIPE_TRACE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
-index ef1ac9f..0b17519 100644
+index 03f48d9..2e14475ad 100644
 --- a/include/linux/irq.h
 +++ b/include/linux/irq.h
-@@ -325,6 +325,11 @@ struct irq_chip {
+@@ -337,6 +337,11 @@ struct irq_chip {
  
  	void		(*irq_bus_lock)(struct irq_data *data);
  	void		(*irq_bus_sync_unlock)(struct irq_data *data);
@@ -4281,7 +4348,7 @@ index ef1ac9f..0b17519 100644
  
  	void		(*irq_cpu_online)(struct irq_data *data);
  	void		(*irq_cpu_offline)(struct irq_data *data);
-@@ -542,7 +547,14 @@ extern int irq_set_irq_type(unsigned int irq, unsigned int type);
+@@ -541,7 +546,14 @@ extern int irq_set_irq_type(unsigned int irq, unsigned int type);
  extern int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry);
  extern int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
  				struct msi_desc *entry);
@@ -4297,7 +4364,7 @@ index ef1ac9f..0b17519 100644
  
  static inline struct irq_chip *irq_get_chip(unsigned int irq)
  {
-@@ -701,7 +713,11 @@ struct irq_chip_type {
+@@ -714,7 +726,11 @@ struct irq_chip_type {
   * different flow mechanisms (level/edge) for it.
   */
  struct irq_chip_generic {
@@ -4309,7 +4376,7 @@ index ef1ac9f..0b17519 100644
  	void __iomem		*reg_base;
  	unsigned int		irq_base;
  	unsigned int		irq_cnt;
-@@ -792,18 +808,28 @@ static inline struct irq_chip_type *irq_data_get_chip_type(struct irq_data *d)
+@@ -807,18 +823,28 @@ static inline struct irq_chip_type *irq_data_get_chip_type(struct irq_data *d)
  #define IRQ_MSK(n) (u32)((n) < 32 ? ((1 << (n)) - 1) : UINT_MAX)
  
  #ifdef CONFIG_SMP
@@ -4344,11 +4411,27 @@ index ef1ac9f..0b17519 100644
  #endif
  
  #endif /* _LINUX_IRQ_H */
+diff --git a/include/linux/irqchip/arm-gic.h b/include/linux/irqchip/arm-gic.h
+index 13eed92..9f882a8 100644
+--- a/include/linux/irqchip/arm-gic.h
++++ b/include/linux/irqchip/arm-gic.h
+@@ -49,7 +49,11 @@
+ #define GICD_INT_EN_CLR_X32		0xffffffff
+ #define GICD_INT_EN_SET_SGI		0x0000ffff
+ #define GICD_INT_EN_CLR_PPI		0xffff0000
++#ifndef CONFIG_IPIPE
+ #define GICD_INT_DEF_PRI		0xa0
++#else
++#define GICD_INT_DEF_PRI		0x10
++#endif
+ #define GICD_INT_DEF_PRI_X4		((GICD_INT_DEF_PRI << 24) |\
+ 					(GICD_INT_DEF_PRI << 16) |\
+ 					(GICD_INT_DEF_PRI << 8) |\
 diff --git a/include/linux/irqdesc.h b/include/linux/irqdesc.h
-index 472c021..a9d6385 100644
+index faf433a..8fa0b13 100644
 --- a/include/linux/irqdesc.h
 +++ b/include/linux/irqdesc.h
-@@ -42,6 +42,12 @@ struct irq_desc;
+@@ -49,6 +49,12 @@ struct pt_regs;
  struct irq_desc {
  	struct irq_data		irq_data;
  	unsigned int __percpu	*kstat_irqs;
@@ -4361,7 +4444,7 @@ index 472c021..a9d6385 100644
  	irq_flow_handler_t	handle_irq;
  #ifdef CONFIG_IRQ_PREFLOW_FASTEOI
  	irq_preflow_handler_t	preflow_handler;
-@@ -125,6 +131,10 @@ static inline int irq_has_action(unsigned int irq)
+@@ -154,6 +160,10 @@ static inline int irq_has_action(unsigned int irq)
  	return desc->action != NULL;
  }
  
@@ -4372,7 +4455,7 @@ index 472c021..a9d6385 100644
  /* caller has locked the irq_desc and both params are valid */
  static inline void __irq_set_handler_locked(unsigned int irq,
  					    irq_flow_handler_t handler)
-@@ -132,6 +142,7 @@ static inline void __irq_set_handler_locked(unsigned int irq,
+@@ -161,6 +171,7 @@ static inline void __irq_set_handler_locked(unsigned int irq,
  	struct irq_desc *desc;
  
  	desc = irq_to_desc(irq);
@@ -4397,7 +4480,7 @@ index fdd5cc1..1310416 100644
  
  # define for_each_irq_desc(irq, desc)					\
 diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 196d1ea..72954908 100644
+index 3d770f55..0b21f46 100644
 --- a/include/linux/kernel.h
 +++ b/include/linux/kernel.h
 @@ -9,6 +9,7 @@
@@ -4424,10 +4507,10 @@ index 196d1ea..72954908 100644
  
  #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
 diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index b8e9a43..4e5e67d 100644
+index e4d8f70..22c313e 100644
 --- a/include/linux/kvm_host.h
 +++ b/include/linux/kvm_host.h
-@@ -219,6 +219,9 @@ struct kvm_vcpu {
+@@ -233,6 +233,9 @@ struct kvm_vcpu {
  #ifdef CONFIG_PREEMPT_NOTIFIERS
  	struct preempt_notifier preempt_notifier;
  #endif
@@ -4438,7 +4521,7 @@ index b8e9a43..4e5e67d 100644
  	int vcpu_id;
  	int srcu_idx;
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
-index 1841b58..021522c 100644
+index de83b4e..7fdf00b 100644
 --- a/include/linux/preempt.h
 +++ b/include/linux/preempt.h
 @@ -8,6 +8,7 @@
@@ -4449,7 +4532,7 @@ index 1841b58..021522c 100644
  
  /*
   * We use the MSB mostly because its available; see <linux/preempt_mask.h> for
-@@ -126,7 +127,27 @@ do { \
+@@ -124,7 +125,27 @@ do { \
  
  #endif /* CONFIG_PREEMPT_COUNT */
  
@@ -4478,7 +4561,7 @@ index 1841b58..021522c 100644
  /*
   * Modules have no business playing preemption tricks.
   */
-@@ -134,7 +155,7 @@ do { \
+@@ -132,7 +153,7 @@ do { \
  #undef preempt_enable_no_resched
  #undef preempt_enable_no_resched_notrace
  #undef preempt_check_resched
@@ -4529,10 +4612,10 @@ index 5b9b84b..6c8bb4d 100644
  static inline void __raw_read_lock(rwlock_t *lock)
  {
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 218b058..d579687 100644
+index 5e344bb..6d00c89 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -24,6 +24,7 @@ struct sched_param {
+@@ -26,6 +26,7 @@ struct sched_param {
  #include <linux/nodemask.h>
  #include <linux/mm_types.h>
  #include <linux/preempt_mask.h>
@@ -4540,7 +4623,7 @@ index 218b058..d579687 100644
  
  #include <asm/page.h>
  #include <asm/ptrace.h>
-@@ -215,9 +216,17 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
+@@ -214,9 +215,17 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
  #define TASK_WAKEKILL		128
  #define TASK_WAKING		256
  #define TASK_PARKED		512
@@ -4554,12 +4637,13 @@ index 218b058..d579687 100644
 +#define TASK_NOWAKEUP		0
  #define TASK_STATE_MAX		1024
 -
- #define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWP"
+-#define TASK_STATE_TO_CHAR_STR "RSDTtXZxKWP"
++#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWP"
 +#endif /* CONFIG_IPIPE */
  
  extern char ___assert_task_state[1 - 2*!!(
  		sizeof(TASK_STATE_TO_CHAR_STR)-1 != ilog2(TASK_STATE_MAX)+1)];
-@@ -329,6 +338,15 @@ extern void trap_init(void);
+@@ -332,6 +341,15 @@ extern void trap_init(void);
  extern void update_process_times(int user);
  extern void scheduler_tick(void);
  
@@ -4575,7 +4659,7 @@ index 218b058..d579687 100644
  extern void sched_show_task(struct task_struct *p);
  
  #ifdef CONFIG_LOCKUP_DETECTOR
-@@ -449,6 +467,9 @@ static inline int get_dumpable(struct mm_struct *mm)
+@@ -452,6 +470,9 @@ static inline int get_dumpable(struct mm_struct *mm)
  #define MMF_VM_MERGEABLE	16	/* KSM may merge identical pages */
  #define MMF_VM_HUGEPAGE		17	/* set when VM_HUGEPAGE is set on vma */
  #define MMF_EXE_FILE_CHANGED	18	/* see prctl_set_mm_exe_file() */
@@ -4585,7 +4669,7 @@ index 218b058..d579687 100644
  
  #define MMF_HAS_UPROBES		19	/* has uprobes */
  #define MMF_RECALC_UPROBES	20	/* MMF_HAS_UPROBES can be wrong */
-@@ -1512,6 +1533,9 @@ struct task_struct {
+@@ -1591,6 +1612,9 @@ struct task_struct {
  #endif /* CONFIG_NUMA_BALANCING */
  
  	struct rcu_head rcu;
@@ -4595,17 +4679,8 @@ index 218b058..d579687 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1695,7 +1719,7 @@ static inline pid_t task_tgid_vnr(struct task_struct *tsk)
- }
- 
- 
--static int pid_alive(const struct task_struct *p);
-+static inline int pid_alive(const struct task_struct *p);
- static inline pid_t task_ppid_nr_ns(const struct task_struct *tsk, struct pid_namespace *ns)
- {
- 	pid_t pid = 0;
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 3f2867f..336c90a 100644
+index 262ba4e..3bd24db 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -89,10 +89,12 @@
@@ -4653,7 +4728,7 @@ index 3f2867f..336c90a 100644
  
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
  # define raw_spin_lock_nested(lock, subclass) \
-@@ -203,7 +210,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
+@@ -209,7 +216,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  
  #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
  
@@ -4662,7 +4737,7 @@ index 3f2867f..336c90a 100644
  	do {						\
  		typecheck(unsigned long, flags);	\
  		flags = _raw_spin_lock_irqsave(lock);	\
-@@ -225,7 +232,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
+@@ -231,7 +238,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  
  #else
  
@@ -4671,7 +4746,7 @@ index 3f2867f..336c90a 100644
  	do {						\
  		typecheck(unsigned long, flags);	\
  		_raw_spin_lock_irqsave(lock, flags);	\
-@@ -236,34 +243,46 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
+@@ -242,34 +249,46 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  
  #endif
  
@@ -4725,7 +4800,7 @@ index 3f2867f..336c90a 100644
  
  /**
   * raw_spin_can_lock - would raw_spin_trylock() succeed?
-@@ -294,24 +313,17 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
+@@ -300,24 +319,17 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
  
  #define spin_lock_init(_lock)				\
  do {							\
@@ -4753,7 +4828,7 @@ index 3f2867f..336c90a 100644
  
  #define spin_lock_nested(lock, subclass)			\
  do {								\
-@@ -323,14 +335,11 @@ do {									\
+@@ -329,14 +341,11 @@ do {									\
  	raw_spin_lock_nest_lock(spinlock_check(lock), nest_lock);	\
  } while (0)
  
@@ -4770,7 +4845,7 @@ index 3f2867f..336c90a 100644
  } while (0)
  
  #define spin_lock_irqsave_nested(lock, flags, subclass)			\
-@@ -338,39 +347,28 @@ do {									\
+@@ -344,39 +353,28 @@ do {									\
  	raw_spin_lock_irqsave_nested(spinlock_check(lock), flags, subclass); \
  } while (0)
  
@@ -4876,29 +4951,20 @@ index 8b3ac0d..cf14140 100644
  
  #define arch_read_can_lock(lock)	(((void)(lock), 1))
 diff --git a/include/linux/timekeeper_internal.h b/include/linux/timekeeper_internal.h
-index c1825eb..93ee8d6 100644
+index 95640dc..2e026a3 100644
 --- a/include/linux/timekeeper_internal.h
 +++ b/include/linux/timekeeper_internal.h
-@@ -89,7 +89,7 @@ extern void update_vsyscall_tz(void);
+@@ -112,7 +112,7 @@ extern void update_vsyscall_tz(void);
  #elif defined(CONFIG_GENERIC_TIME_VSYSCALL_OLD)
  
  extern void update_vsyscall_old(struct timespec *ts, struct timespec *wtm,
--				struct clocksource *c, u32 mult);
-+				struct clocksource *c, u32 mult, u32 shift);
+-				struct clocksource *c, u32 mult,
++				struct clocksource *c, u32 mult, u32 shift,
+ 				cycle_t cycle_last);
  extern void update_vsyscall_tz(void);
  
- static inline void update_vsyscall(struct timekeeper *tk)
-@@ -97,7 +97,7 @@ static inline void update_vsyscall(struct timekeeper *tk)
- 	struct timespec xt;
- 
- 	xt = tk_xtime(tk);
--	update_vsyscall_old(&xt, &tk->wall_to_monotonic, tk->clock, tk->mult);
-+	update_vsyscall_old(&xt, &tk->wall_to_monotonic, tk->clock, tk->mult, tk->shift);
- }
- 
- #else
 diff --git a/include/uapi/asm-generic/mman-common.h b/include/uapi/asm-generic/mman-common.h
-index 4164529..43c8744 100644
+index ddc3b36..a9dd00a 100644
 --- a/include/uapi/asm-generic/mman-common.h
 +++ b/include/uapi/asm-generic/mman-common.h
 @@ -19,6 +19,9 @@
@@ -4912,13 +4978,14 @@ index 4164529..43c8744 100644
  # define MAP_UNINITIALIZED 0x4000000	/* For anonymous mmap, memory could be uninitialized */
  #else
 diff --git a/include/uapi/asm-generic/resource.h b/include/uapi/asm-generic/resource.h
-index f863428..7fab40c 100644
+index c6d10af..83cd38b 100644
 --- a/include/uapi/asm-generic/resource.h
 +++ b/include/uapi/asm-generic/resource.h
-@@ -58,6 +58,14 @@
+@@ -57,5 +57,13 @@
+ # define RLIM_INFINITY		(~0UL)
  #endif
  
- /*
++/*
 + * Limit the stack by to some sane default: root can always
 + * increase this limit if needed..  8MB seems reasonable.
 + */
@@ -4926,10 +4993,8 @@ index f863428..7fab40c 100644
 +# define _STK_LIM		(8*1024*1024)
 +#endif
 +
-+/*
-  * RLIMIT_STACK default maximum - some architectures override it:
-  */
- #ifndef _STK_LIM_MAX
+ 
+ #endif /* _UAPI_ASM_GENERIC_RESOURCE_H */
 diff --git a/include/uapi/linux/resource.h b/include/uapi/linux/resource.h
 index 36fb3b5..3b5e2dc6 100644
 --- a/include/uapi/linux/resource.h
@@ -4948,7 +5013,7 @@ index 36fb3b5..3b5e2dc6 100644
   * and other sensitive information are never written to disk.
   */
 diff --git a/init/Kconfig b/init/Kconfig
-index 8b9521a..687345a 100644
+index 2081a4d..24b8fc0 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -69,6 +69,7 @@ config COMPILE_TEST
@@ -4960,10 +5025,10 @@ index 8b9521a..687345a 100644
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
 diff --git a/init/main.c b/init/main.c
-index 58c132d..b6236e0 100644
+index 321d0ce..fa9d93e 100644
 --- a/init/main.c
 +++ b/init/main.c
-@@ -496,7 +496,7 @@ asmlinkage void __init start_kernel(void)
+@@ -518,7 +518,7 @@ asmlinkage __visible void __init start_kernel(void)
  
  	cgroup_init_early();
  
@@ -4972,7 +5037,7 @@ index 58c132d..b6236e0 100644
  	early_boot_irqs_disabled = true;
  
  /*
-@@ -533,6 +533,7 @@ asmlinkage void __init start_kernel(void)
+@@ -558,6 +558,7 @@ asmlinkage __visible void __init start_kernel(void)
  	pidhash_init();
  	vfs_caches_init_early();
  	sort_main_extable();
@@ -4980,7 +5045,7 @@ index 58c132d..b6236e0 100644
  	trap_init();
  	mm_init();
  
-@@ -563,6 +564,11 @@ asmlinkage void __init start_kernel(void)
+@@ -589,6 +590,11 @@ asmlinkage __visible void __init start_kernel(void)
  	softirq_init();
  	timekeeping_init();
  	time_init();
@@ -4992,7 +5057,7 @@ index 58c132d..b6236e0 100644
  	sched_clock_postinit();
  	perf_event_init();
  	profile_init();
-@@ -788,6 +794,7 @@ static void __init do_basic_setup(void)
+@@ -878,6 +884,7 @@ static void __init do_basic_setup(void)
  	shmem_init();
  	driver_init();
  	init_irq_proc();
@@ -5001,10 +5066,10 @@ index 58c132d..b6236e0 100644
  	usermodehelper_enable();
  	do_initcalls();
 diff --git a/kernel/Makefile b/kernel/Makefile
-index bc010ee..682374c 100644
+index 17ea6d4..38aa23b 100644
 --- a/kernel/Makefile
 +++ b/kernel/Makefile
-@@ -70,6 +70,7 @@ obj-$(CONFIG_DETECT_HUNG_TASK) += hung_task.o
+@@ -71,6 +71,7 @@ obj-$(CONFIG_DETECT_HUNG_TASK) += hung_task.o
  obj-$(CONFIG_LOCKUP_DETECTOR) += watchdog.o
  obj-$(CONFIG_SECCOMP) += seccomp.o
  obj-$(CONFIG_RELAY) += relay.o
@@ -5013,10 +5078,10 @@ index bc010ee..682374c 100644
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
 diff --git a/kernel/context_tracking.c b/kernel/context_tracking.c
-index 6cb20d2..a40b3ee 100644
+index 937ecdf..1627e18b 100644
 --- a/kernel/context_tracking.c
 +++ b/kernel/context_tracking.c
-@@ -67,7 +67,7 @@ void context_tracking_user_enter(void)
+@@ -68,7 +68,7 @@ void context_tracking_user_enter(void)
  	 * helpers are enough to protect RCU uses inside the exception. So
  	 * just return immediately if we detect we are in an IRQ.
  	 */
@@ -5025,7 +5090,7 @@ index 6cb20d2..a40b3ee 100644
  		return;
  
  	/* Kernel threads aren't supposed to go to userspace */
-@@ -160,7 +160,7 @@ void context_tracking_user_exit(void)
+@@ -122,7 +122,7 @@ void context_tracking_user_exit(void)
  {
  	unsigned long flags;
  
@@ -5035,7 +5100,7 @@ index 6cb20d2..a40b3ee 100644
  
  	if (in_interrupt())
 diff --git a/kernel/debug/debug_core.c b/kernel/debug/debug_core.c
-index 8865cae..9ea1c51 100644
+index 1adf62b..4f9f836 100644
 --- a/kernel/debug/debug_core.c
 +++ b/kernel/debug/debug_core.c
 @@ -115,8 +115,8 @@ static struct kgdb_bkpt		kgdb_break[KGDB_MAX_BREAKPOINTS] = {
@@ -5097,7 +5162,7 @@ index 8865cae..9ea1c51 100644
  	cpu = ks->cpu;
  	kgdb_info[cpu].debuggerinfo = regs;
 @@ -537,7 +541,7 @@ return_normal:
- 			smp_mb__before_atomic_dec();
+ 			smp_mb__before_atomic();
  			atomic_dec(&slaves_in_kgdb);
  			dbg_touch_watchdogs();
 -			local_irq_restore(flags);
@@ -5167,31 +5232,31 @@ index 19d9a57..4e99085 100644
  
  #if DBG_MAX_REG_NUM > 0
 diff --git a/kernel/exit.c b/kernel/exit.c
-index 81b3d67..b5c92de 100644
+index 2116aac..b156c25 100644
 --- a/kernel/exit.c
 +++ b/kernel/exit.c
-@@ -756,6 +756,7 @@ void do_exit(long code)
+@@ -719,6 +719,7 @@ void do_exit(long code)
  	 */
  	smp_mb();
  	raw_spin_unlock_wait(&tsk->pi_lock);
 +  	__ipipe_report_exit(tsk);
  
  	if (unlikely(in_atomic()))
- 		printk(KERN_INFO "note: %s[%d] exited with preempt_count %d\n",
+ 		pr_info("note: %s[%d] exited with preempt_count %d\n",
 diff --git a/kernel/fork.c b/kernel/fork.c
-index e2c6853..68c5ef5a 100644
+index 9b7d746..562489c 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
-@@ -315,6 +315,8 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
- 	tsk->stack = ti;
+@@ -333,6 +333,8 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
+ #endif
  
  	setup_thread_stack(tsk, orig);
 +	__ipipe_init_threadflags(ti);
 +	__ipipe_init_threadinfo(&ti->ipipe_data);
  	clear_user_return_notifier(tsk);
  	clear_tsk_need_resched(tsk);
- 	stackend = end_of_stack(tsk);
-@@ -612,6 +614,7 @@ void mmput(struct mm_struct *mm)
+ 	set_task_stack_end_magic(tsk);
+@@ -655,6 +657,7 @@ void mmput(struct mm_struct *mm)
  		exit_aio(mm);
  		ksm_exit(mm);
  		khugepaged_exit(mm); /* must run before exit_mmap */
@@ -5199,7 +5264,7 @@ index e2c6853..68c5ef5a 100644
  		exit_mmap(mm);
  		set_mm_exe_file(mm, NULL);
  		if (!list_empty(&mm->mmlist)) {
-@@ -1496,6 +1499,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+@@ -1541,6 +1544,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
  	cgroup_post_fork(p);
  	if (clone_flags & CLONE_THREAD)
  		threadgroup_change_end(current);
@@ -5209,10 +5274,10 @@ index e2c6853..68c5ef5a 100644
  	trace_task_newtask(p, clone_flags);
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..da17b04
+index 0000000..218f51da
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,65 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -5231,6 +5296,9 @@ index 0000000..da17b04
 +	def_bool y if IPIPE
 +
 +config IPIPE_WANT_CLOCKSOURCE
++       bool
++
++config IPIPE_WANT_PTE_PINNING
 +       bool
 +
 +config IPIPE_CORE_APIREV
@@ -5277,7 +5345,7 @@ index 0000000..da17b04
 +	bool
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..40c82a2
+index 0000000..3c6cac8
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
 @@ -0,0 +1,95 @@
@@ -5307,8 +5375,8 @@ index 0000000..40c82a2
 +config IPIPE_TRACE
 +	bool "Latency tracing"
 +	depends on IPIPE_DEBUG
-+	select ARCH_WANT_FRAME_POINTERS if !ARM_UNWIND
-+	select FRAME_POINTER if !ARM_UNWIND
++	select CONFIG_FTRACE
++	select CONFIG_FUNCTION_TRACER
 +	select KALLSYMS
 +	select PROC_FS
 +	---help---
@@ -5666,10 +5734,10 @@ index 0000000..797a849
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..c5b022b
+index 0000000..d7c8934
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1929 @@
+@@ -0,0 +1,1916 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -5777,33 +5845,6 @@ index 0000000..c5b022b
 +unsigned int __ipipe_printk_virq;
 +int __ipipe_printk_bypass;
 +#endif /* CONFIG_PRINTK */
-+
-+#ifdef CONFIG_IPIPE_LEGACY
-+
-+#define __IPIPE_SYSCALL_R (8 << __IPIPE_SYSCALL_P)
-+#define __IPIPE_TRAP_R	  (8 << __IPIPE_TRAP_P)
-+#define __IPIPE_KEVENT_R  (8 << __IPIPE_KEVENT_P)
-+#define __IPIPE_SHIFT_R	   3
-+#define __IPIPE_ALL_R	  (__IPIPE_ALL_E << __IPIPE_SHIFT_R)
-+
-+static inline
-+void enter_callout(struct ipipe_percpu_domain_data *p, int mask)
-+{
-+	p->coflags |= mask;
-+}
-+
-+static inline
-+void leave_callout(struct ipipe_percpu_domain_data *p, int mask)
-+{
-+	p->coflags &= ~mask;
-+}
-+
-+#else /* !CONFIG_IPIPE_LEGACY */
-+
-+#define enter_callout(__p, __mask)	do { } while (0)
-+#define leave_callout(__p, __mask)	do { } while (0)
-+
-+#endif /* !CONFIG_IPIPE_LEGACY */
 +
 +#ifdef CONFIG_PROC_FS
 +
@@ -6502,7 +6543,7 @@ index 0000000..c5b022b
 +			__ipipe_sync_stage();
 +		else {
 +			/* Switching to head. */
-+			leave_callout(p, __IPIPE_ALL_R);
++			p->coflags &= ~__IPIPE_ALL_R;
 +			__ipipe_set_current_context(p);
 +			__ipipe_sync_stage();
 +			__ipipe_set_current_domain(ipipe_root_domain);
@@ -6538,7 +6579,7 @@ index 0000000..c5b022b
 +void ipipe_free_virq(unsigned int virq)
 +{
 +	clear_bit(virq - IPIPE_VIRQ_BASE, &__ipipe_virtual_irq_map);
-+	smp_mb__after_clear_bit();
++	smp_mb__after_atomic();
 +}
 +EXPORT_SYMBOL_GPL(ipipe_free_virq);
 +
@@ -6612,8 +6653,8 @@ index 0000000..c5b022b
 +void ipipe_set_hooks(struct ipipe_domain *ipd, int enables)
 +{
 +	struct ipipe_percpu_domain_data *p;
-+	int cpu, wait __maybe_unused;
 +	unsigned long flags;
++	int cpu, wait;
 +
 +	if (ipd == ipipe_root_domain) {
 +		IPIPE_WARN(enables & __IPIPE_TRAP_E);
@@ -6631,15 +6672,6 @@ index 0000000..c5b022b
 +		p->coflags |= enables;
 +	}
 +
-+#ifdef CONFIG_IPIPE_LEGACY
-+	/*
-+	 * In legacy mode, clients may assume that ipipe_set_hooks()
-+	 * is a synchronization barrier with respect to callout
-+	 * execution on other CPUs (i.e. no callout runs on any CPU
-+	 * when the routine returns), at the expense of tracking an
-+	 * in-call bit in the callout state flags. Newer clients
-+	 * should implement this barrier instead.
-+	 */
 +	wait = (enables ^ __IPIPE_ALL_E) << __IPIPE_SHIFT_R;
 +	if (wait == 0 || !__ipipe_root_p) {
 +		ipipe_critical_exit(flags);
@@ -6663,9 +6695,6 @@ index 0000000..c5b022b
 +		while (ipipe_percpu_context(ipd, cpu)->coflags & wait)
 +			schedule_timeout_interruptible(HZ / 50);
 +	}
-+#else /* !CONFIG_IPIPE_LEGACY */
-+	ipipe_critical_exit(flags);
-+#endif /* !CONFIG_IPIPE_LEGACY */
 +}
 +EXPORT_SYMBOL_GPL(ipipe_set_hooks);
 +
@@ -6712,11 +6741,11 @@ index 0000000..c5b022b
 +	p = ipipe_this_cpu_context(ipd);
 +	if (likely(p->coflags & __IPIPE_SYSCALL_E)) {
 +		__ipipe_set_current_context(p);
-+		enter_callout(p, __IPIPE_SYSCALL_R);
++		p->coflags |= __IPIPE_SYSCALL_R;
 +		hard_local_irq_restore(flags);
 +		ret = ipipe_syscall_hook(caller_domain, regs);
 +		flags = hard_local_irq_save();
-+		leave_callout(p, __IPIPE_SYSCALL_R);
++		p->coflags &= ~__IPIPE_SYSCALL_R;
 +		if (__ipipe_current_domain != ipd)
 +			/* Account for domain migration. */
 +			this_domain = __ipipe_current_domain;
@@ -6767,13 +6796,13 @@ index 0000000..c5b022b
 +
 +	p = ipipe_this_cpu_head_context();
 +	if (likely(p->coflags & __IPIPE_TRAP_E)) {
-+		enter_callout(p, __IPIPE_TRAP_R);
++		p->coflags |= __IPIPE_TRAP_R;
 +		hard_local_irq_restore(flags);
 +		data.exception = exception;
 +		data.regs = regs;
 +		ret = ipipe_trap_hook(&data);
 +		flags = hard_local_irq_save();
-+		leave_callout(p, __IPIPE_TRAP_R);
++		p->coflags &= ~__IPIPE_TRAP_R;
 +	}
 +out:
 +	hard_local_irq_restore(flags);
@@ -6798,11 +6827,11 @@ index 0000000..c5b022b
 +
 +	p = ipipe_this_cpu_root_context();
 +	if (likely(p->coflags & __IPIPE_KEVENT_E)) {
-+		enter_callout(p, __IPIPE_KEVENT_R);
++		p->coflags |= __IPIPE_KEVENT_R;
 +		hard_local_irq_restore(flags);
 +		ret = ipipe_kevent_hook(kevent, data);
 +		flags = hard_local_irq_save();
-+		leave_callout(p, __IPIPE_KEVENT_R);
++		p->coflags &= ~__IPIPE_KEVENT_R;
 +	}
 +
 +	hard_local_irq_restore(flags);
@@ -6833,7 +6862,7 @@ index 0000000..c5b022b
 +	struct task_struct *t;
 +
 +	ipipe_root_only();
-+	pd = __this_cpu_ptr(&ipipe_percpu);
++	pd = raw_cpu_ptr(&ipipe_percpu);
 +	t = pd->task_hijacked;
 +	if (t == NULL)
 +		return;
@@ -6898,7 +6927,7 @@ index 0000000..c5b022b
 +	struct ipipe_percpu_data *p;
 +
 +	ipipe_check_irqoff();
-+	p = __ipipe_this_cpu_ptr(&ipipe_percpu);
++	p = __ipipe_raw_cpu_ptr(&ipipe_percpu);
 +	vmf = p->vm_notifier;
 +	if (unlikely(vmf))
 +		vmf->handler(vmf);
@@ -6963,7 +6992,7 @@ index 0000000..c5b022b
 +	 *   handling interrupts:
 +	 *
 +	 *   a) the root domain is alone, no registered head domain
-+	 *      => all interrupts are delivered via the fast dispatcher.
++	 *      => all interrupts go through the interrupt log
 +	 *   b) a head domain is registered
 +	 *      => head domain IRQs go through the fast dispatcher
 +	 *      => root domain IRQs go through the interrupt log
@@ -7070,6 +7099,33 @@ index 0000000..c5b022b
 +sync:
 +	__ipipe_sync_pipeline(ipipe_head_domain);
 +}
++
++void ipipe_raise_irq(unsigned int irq)
++{
++	struct ipipe_domain *ipd = ipipe_head_domain;
++	unsigned long flags, control;
++
++	flags = hard_local_irq_save();
++
++	/*
++	 * Fast path: raising a virtual IRQ handled by the head
++	 * domain.
++	 */
++	if (likely(ipipe_virtual_irq_p(irq) && ipd != ipipe_root_domain)) {
++		control = ipd->irqs[irq].control;
++		if (likely(control & IPIPE_HANDLE_MASK)) {
++			dispatch_irq_head(irq);
++			goto out;
++		}
++	}
++
++	/* Emulate regular device IRQ receipt. */
++	__ipipe_dispatch_irq(irq, IPIPE_IRQF_NOACK);
++out:
++	hard_local_irq_restore(flags);
++
++}
++EXPORT_SYMBOL_GPL(ipipe_raise_irq);
 +
 +#ifdef CONFIG_PREEMPT
 +
@@ -7337,7 +7393,7 @@ index 0000000..c5b022b
 +			cpu_relax();
 +		cpu_clear(ipipe_processor_id(), __ipipe_cpu_lock_map);
 +		clear_bit(0, &__ipipe_critical_lock);
-+		smp_mb__after_clear_bit();
++		smp_mb__after_atomic();
 +	}
 +#endif /* CONFIG_SMP */
 +
@@ -7402,7 +7458,7 @@ index 0000000..c5b022b
 +	 * Don't use __ipipe_current_domain here, this would recurse
 +	 * indefinitely.
 +	 */
-+	this_domain = __this_cpu_read(ipipe_percpu.curr)->domain;
++	this_domain = raw_cpu_read(ipipe_percpu.curr)->domain;
 +
 +	/*
 +	 * Only the root domain may implement preemptive CPU migration
@@ -7420,11 +7476,10 @@ index 0000000..c5b022b
 +	 * currently stalled, in which case preemption would be
 +	 * disabled, and no migration could occur.
 +	 */
-+	if (this_domain == ipipe_root_domain) {
-+		p = __this_cpu_ptr(&ipipe_percpu.root);
-+		if (test_bit(IPIPE_STALL_FLAG, &p->status))
-+			goto out;
-+	}
++
++	p = raw_cpu_ptr(&ipipe_percpu.root);
++	if (!preemptible())
++		goto out;
 +	/*
 +	 * Our caller may end up accessing the wrong per-cpu variable
 +	 * instance due to CPU migration; tell it to complain about
@@ -7601,10 +7656,10 @@ index 0000000..c5b022b
 +#endif
 diff --git a/kernel/ipipe/timer.c b/kernel/ipipe/timer.c
 new file mode 100644
-index 0000000..0c9b908
+index 0000000..143f9e6
 --- /dev/null
 +++ b/kernel/ipipe/timer.c
-@@ -0,0 +1,492 @@
+@@ -0,0 +1,497 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/timer.c
 + *
@@ -7746,7 +7801,7 @@ index 0000000..0c9b908
 +
 +static void ipipe_timer_request_sync(void)
 +{
-+	struct ipipe_timer *timer = __ipipe_this_cpu_read(percpu_timer);
++	struct ipipe_timer *timer = __ipipe_raw_cpu_read(percpu_timer);
 +	struct clock_event_device *evtdev;
 +	int steal;
 +
@@ -7903,7 +7958,7 @@ index 0000000..0c9b908
 +
 +static void ipipe_timer_release_sync(void)
 +{
-+	struct ipipe_timer *timer = __ipipe_this_cpu_read(percpu_timer);
++	struct ipipe_timer *timer = __ipipe_raw_cpu_read(percpu_timer);
 +
 +	if (timer)
 +		timer->release(timer);
@@ -7927,7 +7982,7 @@ index 0000000..0c9b908
 +
 +static void __ipipe_ack_hrtimer_irq(unsigned int irq, struct irq_desc *desc)
 +{
-+	struct ipipe_timer *timer = __ipipe_this_cpu_read(percpu_timer);
++	struct ipipe_timer *timer = __ipipe_raw_cpu_read(percpu_timer);
 +
 +	if (desc)
 +		desc->ipipe_ack(irq, desc);
@@ -7972,6 +8027,7 @@ index 0000000..0c9b908
 +		timer->real_set_next_event = evtdev->set_next_event;
 +		evtdev->mult = 1;
 +		evtdev->shift = 0;
++		evtdev->max_delta_ns = UINT_MAX;
 +		evtdev->set_mode = emumode;
 +		evtdev->set_next_event = emutick;
 +		evtdev->ipipe_stolen = 1;
@@ -8033,7 +8089,7 @@ index 0000000..0c9b908
 +	unsigned long tdelay;
 +	struct ipipe_timer *t;
 +
-+	t = __ipipe_this_cpu_read(percpu_timer);
++	t = __ipipe_raw_cpu_read(percpu_timer);
 +
 +	/*
 +	 * Even though some architectures may use a 64 bits delay
@@ -8080,29 +8136,33 @@ index 0000000..0c9b908
 + */
 +void ipipe_update_hostrt(struct timekeeper *tk)
 +{
++	struct tk_read_base *tkr = &tk->tkr;
++	struct clocksource *clock = tkr->clock;
 +	struct ipipe_hostrt_data data;
 +	struct timespec xt;
 +
-+	xt = tk_xtime(tk);
++	xt.tv_sec = tk->xtime_sec;
++	xt.tv_nsec = (long)(tkr->xtime_nsec >> tkr->shift);
 +	ipipe_root_only();
 +	data.live = 1;
-+	data.cycle_last = tk->clock->cycle_last;
-+	data.mask = tk->clock->mask;
-+	data.mult = tk->mult;
-+	data.shift = tk->shift;
++	data.cycle_last = tkr->cycle_last;
++	data.mask = clock->mask;
++	data.mult = tkr->mult;
++	data.shift = tkr->shift;
 +	data.wall_time_sec = xt.tv_sec;
 +	data.wall_time_nsec = xt.tv_nsec;
-+	data.wall_to_monotonic = tk->wall_to_monotonic;
++	data.wall_to_monotonic.tv_sec = tk->wall_to_monotonic.tv_sec;
++	data.wall_to_monotonic.tv_nsec = tk->wall_to_monotonic.tv_nsec;
 +	__ipipe_notify_kevent(IPIPE_KEVT_HOSTRT, &data);
 +}
 +
 +#endif /* CONFIG_IPIPE_HAVE_HOSTRT */
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..5cce0bc
+index 0000000..da272c50
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1447 @@
+@@ -0,0 +1,1468 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -8850,6 +8910,9 @@ index 0000000..5cce0bc
 +	unsigned long long abs_tsc;
 +	long us;
 +
++	if (!__ipipe_hrclock_ok())
++		return 0;
++
 +	/* ipipe_tsc2us works on unsigned => handle sign separately */
 +	abs_tsc = (tsc >= 0) ? tsc : -tsc;
 +	us = ipipe_tsc2us(abs_tsc);
@@ -9052,6 +9115,11 @@ index 0000000..5cce0bc
 +
 +		__ipipe_global_path_unlock(flags);
 +
++		if (!__ipipe_hrclock_ok()) {
++			seq_printf(m, "No hrclock available, dumping traces disabled\n");
++			return NULL;
++		}
++
 +		/* does this path actually contain data? */
 +		if (print_path->end == print_path->begin)
 +			return NULL;
@@ -9221,6 +9289,11 @@ index 0000000..5cce0bc
 +
 +		if (!print_path)
 +			return NULL;
++
++		if (!__ipipe_hrclock_ok()) {
++			seq_printf(m, "No hrclock available, dumping traces disabled\n");
++			return NULL;
++		}
 +
 +		/* back- and post-tracing length, post-trace length was frozen
 +		   in __ipipe_trace, back-trace may have to be reduced due to
@@ -9424,7 +9497,7 @@ index 0000000..5cce0bc
 +
 +static struct ftrace_ops ipipe_trace_ops = {
 +	.func = ipipe_trace_function,
-+	.flags = FTRACE_OPS_FL_IPIPE_EXCLUSIVE,
++	.flags = FTRACE_OPS_FL_RECURSION_SAFE,
 +};
 +
 +static ssize_t __ipipe_wr_enable(struct file *file, const char __user *buffer,
@@ -9471,17 +9544,37 @@ index 0000000..5cce0bc
 +
 +extern struct proc_dir_entry *ipipe_proc_root;
 +
++void __init __ipipe_tracer_hrclock_initialized(void)
++{
++	unsigned long long start, end, min = ULLONG_MAX;
++	int i;
++
++#ifdef CONFIG_IPIPE_TRACE_VMALLOC
++	if (!per_cpu(trace_path, 0))
++		return;
++#endif
++	/* Calculate minimum overhead of __ipipe_trace() */
++	hard_local_irq_disable();
++	for (i = 0; i < 100; i++) {
++		ipipe_read_tsc(start);
++		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
++			      __BUILTIN_RETURN_ADDRESS1, 0);
++		ipipe_read_tsc(end);
++
++		end -= start;
++		if (end < min)
++			min = end;
++	}
++	hard_local_irq_enable();
++	trace_overhead = ipipe_tsc2ns(min);
++}
++
 +void __init __ipipe_init_tracer(void)
 +{
 +	struct proc_dir_entry *trace_dir;
-+	unsigned long long start, end, min = ULLONG_MAX;
-+	int i;
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
-+
-+	if (!__ipipe_hrclock_ok())
-+		return;
 +
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	for_each_possible_cpu(cpu) {
@@ -9504,20 +9597,8 @@ index 0000000..5cce0bc
 +	}
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
-+	/* Calculate minimum overhead of __ipipe_trace() */
-+	hard_local_irq_disable();
-+	for (i = 0; i < 100; i++) {
-+		ipipe_read_tsc(start);
-+		__ipipe_trace(IPIPE_TRACE_FUNC, __BUILTIN_RETURN_ADDRESS0,
-+			      __BUILTIN_RETURN_ADDRESS1, 0);
-+		ipipe_read_tsc(end);
-+
-+		end -= start;
-+		if (end < min)
-+			min = end;
-+	}
-+	hard_local_irq_enable();
-+	trace_overhead = ipipe_tsc2ns(min);
++	if (__ipipe_hrclock_ok() && !trace_overhead)
++		__ipipe_tracer_hrclock_initialized();
 +
 +#ifdef CONFIG_IPIPE_TRACE_ENABLE
 +	ipipe_trace_enable = 1;
@@ -9551,7 +9632,7 @@ index 0000000..5cce0bc
 +#endif /* !CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index dc04c16..2296ca9 100644
+index e5202f0..524c2e5 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -15,6 +15,7 @@
@@ -9562,7 +9643,7 @@ index dc04c16..2296ca9 100644
  
  #include <trace/events/irq.h>
  
-@@ -144,14 +145,6 @@ int irq_set_chip_data(unsigned int irq, void *data)
+@@ -143,14 +144,6 @@ int irq_set_chip_data(unsigned int irq, void *data)
  }
  EXPORT_SYMBOL(irq_set_chip_data);
  
@@ -9577,7 +9658,7 @@ index dc04c16..2296ca9 100644
  static void irq_state_clr_disabled(struct irq_desc *desc)
  {
  	irqd_clear(&desc->irq_data, IRQD_IRQ_DISABLED);
-@@ -180,8 +173,13 @@ int irq_startup(struct irq_desc *desc, bool resend)
+@@ -179,8 +172,13 @@ int irq_startup(struct irq_desc *desc, bool resend)
  	desc->depth = 0;
  
  	if (desc->irq_data.chip->irq_startup) {
@@ -9591,7 +9672,7 @@ index dc04c16..2296ca9 100644
  	} else {
  		irq_enable(desc);
  	}
-@@ -194,9 +192,12 @@ void irq_shutdown(struct irq_desc *desc)
+@@ -193,9 +191,12 @@ void irq_shutdown(struct irq_desc *desc)
  {
  	irq_state_set_disabled(desc);
  	desc->depth = 1;
@@ -9600,13 +9681,13 @@ index dc04c16..2296ca9 100644
  		desc->irq_data.chip->irq_shutdown(&desc->irq_data);
 -	else if (desc->irq_data.chip->irq_disable)
 +#ifdef CONFIG_IPIPE
-+		desc->istate |= ~IPIPE_IRQS_NEEDS_STARTUP;
++		desc->istate |= IPIPE_IRQS_NEEDS_STARTUP;
 +#endif
 +	} else if (desc->irq_data.chip->irq_disable)
  		desc->irq_data.chip->irq_disable(&desc->irq_data);
  	else
  		desc->irq_data.chip->irq_mask(&desc->irq_data);
-@@ -205,12 +206,14 @@ void irq_shutdown(struct irq_desc *desc)
+@@ -204,12 +205,14 @@ void irq_shutdown(struct irq_desc *desc)
  
  void irq_enable(struct irq_desc *desc)
  {
@@ -9621,7 +9702,7 @@ index dc04c16..2296ca9 100644
  }
  
  /**
-@@ -237,11 +240,13 @@ void irq_disable(struct irq_desc *desc)
+@@ -236,11 +239,13 @@ void irq_disable(struct irq_desc *desc)
  
  void irq_percpu_enable(struct irq_desc *desc, unsigned int cpu)
  {
@@ -9635,7 +9716,7 @@ index dc04c16..2296ca9 100644
  }
  
  void irq_percpu_disable(struct irq_desc *desc, unsigned int cpu)
-@@ -275,9 +280,13 @@ void mask_irq(struct irq_desc *desc)
+@@ -274,9 +279,13 @@ void mask_irq(struct irq_desc *desc)
  
  void unmask_irq(struct irq_desc *desc)
  {
@@ -9649,7 +9730,7 @@ index dc04c16..2296ca9 100644
  	}
  }
  
-@@ -398,7 +407,9 @@ void
+@@ -434,7 +443,9 @@ void
  handle_level_irq(unsigned int irq, struct irq_desc *desc)
  {
  	raw_spin_lock(&desc->lock);
@@ -9657,25 +9738,28 @@ index dc04c16..2296ca9 100644
  	mask_ack_irq(desc);
 +#endif
  
- 	if (unlikely(irqd_irq_inprogress(&desc->irq_data)))
- 		if (!irq_check_poll(desc))
-@@ -435,6 +446,15 @@ static inline void preflow_handler(struct irq_desc *desc)
+ 	if (!irq_may_run(desc))
+ 		goto out_unlock;
+@@ -470,7 +481,17 @@ static inline void preflow_handler(struct irq_desc *desc)
  static inline void preflow_handler(struct irq_desc *desc) { }
  #endif
  
+-static void cond_unmask_eoi_irq(struct irq_desc *desc, struct irq_chip *chip)
 +#ifdef CONFIG_IPIPE
-+static void cond_release_fasteoi_irq(struct irq_desc *desc)
++static void cond_release_fasteoi_irq(struct irq_desc *desc,
++				     struct irq_chip *chip)
 +{
-+	if (desc->irq_data.chip->irq_release &&
++	if (chip->irq_release && 
 +	    !irqd_irq_disabled(&desc->irq_data) && !desc->threads_oneshot)
-+		desc->irq_data.chip->irq_release(&desc->irq_data);
++		chip->irq_release(&desc->irq_data);
 +}
 +#endif /* CONFIG_IPIPE */
 +
- /**
-  *	handle_fasteoi_irq - irq handler for transparent controllers
-  *	@irq:	the interrupt number
-@@ -467,17 +487,26 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
++static inline void cond_unmask_eoi_irq(struct irq_desc *desc, struct irq_chip *chip)
+ {
+ 	if (!(desc->istate & IRQS_ONESHOT)) {
+ 		chip->irq_eoi(&desc->irq_data);
+@@ -524,14 +545,23 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
  		goto out;
  	}
  
@@ -9688,21 +9772,19 @@ index dc04c16..2296ca9 100644
  	handle_irq_event(desc);
  
 +#ifdef CONFIG_IPIPE
-+	/* IRQCHIP_EOI_IF_HANDLED is ignored as I-pipe ends it early on
-+	 * acceptance. */
-+	cond_release_fasteoi_irq(desc);
-+out_eoi:
++	/*
++	 * IRQCHIP_EOI_IF_HANDLED is ignored as the I-pipe always
++	 * sends EOI.
++	 */
++	cond_release_fasteoi_irq(desc, chip);
 +#else  /* !CONFIG_IPIPE */
- 	if (desc->istate & IRQS_ONESHOT)
- 		cond_unmask_irq(desc);
- 
- out_eoi:
- 	desc->irq_data.chip->irq_eoi(&desc->irq_data);
+ 	cond_unmask_eoi_irq(desc, chip);
+-
 +#endif	/* !CONFIG_IPIPE */
- out_unlock:
  	raw_spin_unlock(&desc->lock);
  	return;
-@@ -525,7 +554,9 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
+ out:
+@@ -583,7 +613,9 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
  	kstat_incr_irqs_this_cpu(irq, desc);
  
  	/* Start handling the irq */
@@ -9712,7 +9794,7 @@ index dc04c16..2296ca9 100644
  
  	do {
  		if (unlikely(!desc->action)) {
-@@ -613,6 +644,18 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -674,6 +706,18 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_incr_irqs_this_cpu(irq, desc);
  
@@ -9731,7 +9813,7 @@ index dc04c16..2296ca9 100644
  	if (chip->irq_ack)
  		chip->irq_ack(&desc->irq_data);
  
-@@ -620,6 +663,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -681,6 +725,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	if (chip->irq_eoi)
  		chip->irq_eoi(&desc->irq_data);
@@ -9739,7 +9821,7 @@ index dc04c16..2296ca9 100644
  }
  
  /**
-@@ -643,17 +687,180 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
+@@ -704,17 +749,180 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_incr_irqs_this_cpu(irq, desc);
  
@@ -9920,7 +10002,7 @@ index dc04c16..2296ca9 100644
  void
  __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		  const char *name)
-@@ -671,6 +878,8 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -732,6 +940,8 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  			goto out;
  	}
  
@@ -9930,7 +10012,7 @@ index dc04c16..2296ca9 100644
  	if (handle == handle_bad_irq) {
  		if (desc->irq_data.chip != &no_irq_chip)
 diff --git a/kernel/irq/generic-chip.c b/kernel/irq/generic-chip.c
-index 452d6f2..7f20d7c 100644
+index cf80e7b..acbf7ae 100644
 --- a/kernel/irq/generic-chip.c
 +++ b/kernel/irq/generic-chip.c
 @@ -36,12 +36,13 @@ void irq_gc_mask_disable_reg(struct irq_data *d)
@@ -10080,10 +10162,10 @@ index 452d6f2..7f20d7c 100644
  }
  
 diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index 8a160e8..8a62f8b 100644
+index df553b0..065468d 100644
 --- a/kernel/irq/internals.h
 +++ b/kernel/irq/internals.h
-@@ -53,6 +53,9 @@ enum {
+@@ -54,6 +54,9 @@ enum {
  	IRQS_WAITING		= 0x00000080,
  	IRQS_PENDING		= 0x00000200,
  	IRQS_SUSPENDED		= 0x00000800,
@@ -10094,10 +10176,10 @@ index 8a160e8..8a62f8b 100644
  
  #include "debug.h"
 diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 07d4551..dc0af3d 100644
+index 99793b9..16cda25 100644
 --- a/kernel/irq/irqdesc.c
 +++ b/kernel/irq/irqdesc.c
-@@ -91,6 +91,9 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
+@@ -92,6 +92,9 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
  	for_each_possible_cpu(cpu)
  		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
  	desc_smp_init(desc, node);
@@ -10107,7 +10189,7 @@ index 07d4551..dc0af3d 100644
  }
  
  int nr_irqs = NR_IRQS;
-@@ -286,11 +289,13 @@ int __init early_irq_init(void)
+@@ -287,11 +290,13 @@ int __init early_irq_init(void)
  	return arch_early_irq_init();
  }
  
@@ -10122,17 +10204,17 @@ index 07d4551..dc0af3d 100644
  static void free_desc(unsigned int irq)
  {
 diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index ebb8a9e..aeeefa9 100644
+index 0a9104b..eeec493 100644
 --- a/kernel/irq/manage.c
 +++ b/kernel/irq/manage.c
-@@ -711,9 +711,14 @@ again:
+@@ -723,9 +723,14 @@ again:
  
  	desc->threads_oneshot &= ~action->thread_mask;
  
 +#ifndef CONFIG_IPIPE
  	if (!desc->threads_oneshot && !irqd_irq_disabled(&desc->irq_data) &&
  	    irqd_irq_masked(&desc->irq_data))
- 		unmask_irq(desc);
+ 		unmask_threaded_irq(desc);
 +#else /* CONFIG_IPIPE */
 +	if (!desc->threads_oneshot && !irqd_irq_disabled(&desc->irq_data))
 +		desc->ipipe_end(desc->irq_data.irq, desc);
@@ -10141,20 +10223,10 @@ index ebb8a9e..aeeefa9 100644
  out_unlock:
  	raw_spin_unlock_irq(&desc->lock);
 diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index eb8a547..2ffcbfd 100644
+index 88d0d44..237481e 100644
 --- a/kernel/locking/lockdep.c
 +++ b/kernel/locking/lockdep.c
-@@ -2559,6 +2559,9 @@ static void __trace_hardirqs_on_caller(unsigned long ip)
- 
- void trace_hardirqs_on_caller(unsigned long ip)
- {
-+	if (!ipipe_root_p)
-+		return;
-+
- 	time_hardirqs_on(CALLER_ADDR0, ip);
- 
- 	if (unlikely(!debug_locks || current->lockdep_recursion))
-@@ -2579,7 +2582,7 @@ void trace_hardirqs_on_caller(unsigned long ip)
+@@ -2581,7 +2581,7 @@ __visible void trace_hardirqs_on_caller(unsigned long ip)
  	 * already enabled, yet we find the hardware thinks they are in fact
  	 * enabled.. someone messed up their IRQ state tracing.
  	 */
@@ -10163,21 +10235,7 @@ index eb8a547..2ffcbfd 100644
  		return;
  
  	/*
-@@ -2612,7 +2615,12 @@ EXPORT_SYMBOL(trace_hardirqs_on);
-  */
- void trace_hardirqs_off_caller(unsigned long ip)
- {
--	struct task_struct *curr = current;
-+	struct task_struct *curr;
-+
-+	if (!ipipe_root_p)
-+		return;
-+
-+	curr = current;
- 
- 	time_hardirqs_off(CALLER_ADDR0, ip);
- 
-@@ -2623,7 +2631,7 @@ void trace_hardirqs_off_caller(unsigned long ip)
+@@ -2625,7 +2625,7 @@ __visible void trace_hardirqs_off_caller(unsigned long ip)
  	 * So we're supposed to get called after you mask local IRQs, but for
  	 * some reason the hardware doesn't quite think you did a proper job.
  	 */
@@ -10186,7 +10244,7 @@ index eb8a547..2ffcbfd 100644
  		return;
  
  	if (curr->hardirqs_enabled) {
-@@ -2659,7 +2667,7 @@ void trace_softirqs_on(unsigned long ip)
+@@ -2661,7 +2661,7 @@ void trace_softirqs_on(unsigned long ip)
  	 * We fancy IRQs being disabled here, see softirq.c, avoids
  	 * funny state and nesting things.
  	 */
@@ -10195,7 +10253,7 @@ index eb8a547..2ffcbfd 100644
  		return;
  
  	if (curr->softirqs_enabled) {
-@@ -2698,7 +2706,7 @@ void trace_softirqs_off(unsigned long ip)
+@@ -2700,7 +2700,7 @@ void trace_softirqs_off(unsigned long ip)
  	/*
  	 * We fancy IRQs being disabled here, see softirq.c
  	 */
@@ -10220,10 +10278,10 @@ index 4b082b5..67447fc 100644
   * The __lock_function inlines are taken from
   * include/linux/spinlock_api_smp.h
 diff --git a/kernel/module.c b/kernel/module.c
-index 1d679a6..d452bce 100644
+index c353707..79b3790 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -879,7 +879,7 @@ static inline void print_unload_info(struct seq_file *m, struct module *mod)
+@@ -878,7 +878,7 @@ static inline void print_unload_info(struct seq_file *m, struct module *mod)
  	seq_printf(m, " %lu ", module_refcount(mod));
  
  	/* Always include a trailing , so userspace can differentiate
@@ -10232,7 +10290,7 @@ index 1d679a6..d452bce 100644
  	list_for_each_entry(use, &mod->source_list, source_list) {
  		printed_something = 1;
  		seq_printf(m, "%s,", use->source->name);
-@@ -948,7 +948,7 @@ bool try_module_get(struct module *module)
+@@ -947,7 +947,7 @@ bool try_module_get(struct module *module)
  	bool ret = true;
  
  	if (module) {
@@ -10241,7 +10299,7 @@ index 1d679a6..d452bce 100644
  
  		if (likely(module_is_live(module))) {
  			__this_cpu_inc(module->refptr->incs);
-@@ -956,7 +956,7 @@ bool try_module_get(struct module *module)
+@@ -955,7 +955,7 @@ bool try_module_get(struct module *module)
  		} else
  			ret = false;
  
@@ -10250,7 +10308,7 @@ index 1d679a6..d452bce 100644
  	}
  	return ret;
  }
-@@ -965,12 +965,12 @@ EXPORT_SYMBOL(try_module_get);
+@@ -964,12 +964,12 @@ EXPORT_SYMBOL(try_module_get);
  void module_put(struct module *module)
  {
  	if (module) {
@@ -10265,7 +10323,7 @@ index 1d679a6..d452bce 100644
  	}
  }
  EXPORT_SYMBOL(module_put);
-@@ -1130,7 +1130,7 @@ static unsigned long maybe_relocated(unsigned long crc,
+@@ -1131,7 +1131,7 @@ static unsigned long maybe_relocated(unsigned long crc,
  static int check_version(Elf_Shdr *sechdrs,
  			 unsigned int versindex,
  			 const char *symname,
@@ -10274,7 +10332,7 @@ index 1d679a6..d452bce 100644
  			 const unsigned long *crc,
  			 const struct module *crc_owner)
  {
-@@ -1199,7 +1199,7 @@ static inline int same_magic(const char *amagic, const char *bmagic,
+@@ -1200,7 +1200,7 @@ static inline int same_magic(const char *amagic, const char *bmagic,
  static inline int check_version(Elf_Shdr *sechdrs,
  				unsigned int versindex,
  				const char *symname,
@@ -10283,7 +10341,7 @@ index 1d679a6..d452bce 100644
  				const unsigned long *crc,
  				const struct module *crc_owner)
  {
-@@ -2254,7 +2254,7 @@ static char elf_type(const Elf_Sym *sym, const struct load_info *info)
+@@ -2259,7 +2259,7 @@ static char elf_type(const Elf_Sym *sym, const struct load_info *info)
  }
  
  static bool is_core_symbol(const Elf_Sym *src, const Elf_Shdr *sechdrs,
@@ -10292,7 +10350,7 @@ index 1d679a6..d452bce 100644
  {
  	const Elf_Shdr *sec;
  
-@@ -3037,7 +3037,7 @@ static int do_init_module(struct module *mod)
+@@ -3024,7 +3024,7 @@ static int do_init_module(struct module *mod)
  		ret = do_one_initcall(mod->init);
  	if (ret < 0) {
  		/* Init routine failed: abort.  Try to protect us from
@@ -10301,7 +10359,7 @@ index 1d679a6..d452bce 100644
  		mod->state = MODULE_STATE_GOING;
  		synchronize_sched();
  		module_put(mod);
-@@ -3172,7 +3172,7 @@ out:
+@@ -3176,7 +3176,7 @@ out:
  
  static int unknown_module_param_cb(char *param, char *val, const char *modname)
  {
@@ -10311,7 +10369,7 @@ index 1d679a6..d452bce 100644
  	if (ret != 0)
  		pr_warn("%s: unknown parameter '%s' ignored\n", modname, param);
 diff --git a/kernel/panic.c b/kernel/panic.c
-index 6d63003..2a26737 100644
+index cf80672..e85d686 100644
 --- a/kernel/panic.c
 +++ b/kernel/panic.c
 @@ -23,6 +23,7 @@
@@ -10322,7 +10380,7 @@ index 6d63003..2a26737 100644
  
  #define PANIC_TIMER_STEP 100
  #define PANIC_BLINK_SPD 18
-@@ -357,6 +358,8 @@ void oops_enter(void)
+@@ -373,6 +374,8 @@ void oops_enter(void)
  {
  	tracing_off();
  	/* can't trust the integrity of the kernel anymore: */
@@ -10332,10 +10390,10 @@ index 6d63003..2a26737 100644
  	do_oops_enter_exit();
  }
 diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index 126586a..f10614c 100644
+index 1f35a34..4b3828b 100644
 --- a/kernel/power/hibernate.c
 +++ b/kernel/power/hibernate.c
-@@ -275,6 +275,7 @@ static int create_image(int platform_mode)
+@@ -286,6 +286,7 @@ static int create_image(int platform_mode)
  		goto Enable_cpus;
  
  	local_irq_disable();
@@ -10343,7 +10401,7 @@ index 126586a..f10614c 100644
  
  	error = syscore_suspend();
  	if (error) {
-@@ -428,6 +429,7 @@ static int resume_target_kernel(bool platform_mode)
+@@ -439,6 +440,7 @@ static int resume_target_kernel(bool platform_mode)
  		goto Enable_cpus;
  
  	local_irq_disable();
@@ -10351,7 +10409,7 @@ index 126586a..f10614c 100644
  
  	error = syscore_suspend();
  	if (error)
-@@ -549,6 +551,7 @@ int hibernation_platform_enter(void)
+@@ -557,6 +559,7 @@ int hibernation_platform_enter(void)
  		goto Platform_finish;
  
  	local_irq_disable();
@@ -10360,10 +10418,10 @@ index 126586a..f10614c 100644
  	if (pm_wakeup_pending()) {
  		error = -EAGAIN;
 diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index a755ad7..c54867a 100644
+index 3b9f01b..343b6c2 100644
 --- a/kernel/printk/printk.c
 +++ b/kernel/printk/printk.c
-@@ -1650,6 +1650,43 @@ asmlinkage int printk_emit(int facility, int level,
+@@ -1804,6 +1804,43 @@ asmlinkage int printk_emit(int facility, int level,
  }
  EXPORT_SYMBOL(printk_emit);
  
@@ -10407,9 +10465,9 @@ index a755ad7..c54867a 100644
  /**
   * printk - print a kernel message
   * @fmt: format string
-@@ -1673,6 +1710,59 @@ EXPORT_SYMBOL(printk_emit);
+@@ -1827,6 +1864,59 @@ EXPORT_SYMBOL(printk_emit);
   */
- asmlinkage int printk(const char *fmt, ...)
+ asmlinkage __visible int printk(const char *fmt, ...)
  {
 +	int sprintk = 1, cs = -1;
 +	int r, fbytes, oldcount;
@@ -10467,7 +10525,7 @@ index a755ad7..c54867a 100644
  	va_list args;
  	int r;
  
-@@ -1690,6 +1780,8 @@ asmlinkage int printk(const char *fmt, ...)
+@@ -1844,6 +1934,8 @@ asmlinkage __visible int printk(const char *fmt, ...)
  
  	return r;
  }
@@ -10476,36 +10534,21 @@ index a755ad7..c54867a 100644
  EXPORT_SYMBOL(printk);
  
  #else /* CONFIG_PRINTK */
-diff --git a/kernel/sched/clock.c b/kernel/sched/clock.c
-index b30a292..27376a0 100644
---- a/kernel/sched/clock.c
-+++ b/kernel/sched/clock.c
-@@ -295,6 +295,10 @@ u64 sched_clock_cpu(int cpu)
- 	struct sched_clock_data *scd;
- 	u64 clock;
- 
-+#ifndef CONFIG_IPIPE
-+	WARN_ON_ONCE(!irqs_disabled());
-+#endif
-+
- 	if (sched_clock_stable())
- 		return sched_clock();
- 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 5e973ef..fb3a19b 100644
+index 6810e57..fdc4ae3 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -1520,7 +1520,9 @@ void scheduler_ipi(void)
+@@ -1598,7 +1598,9 @@ void scheduler_ipi(void)
  	 * however a fair share of IPIs are still resched only so this would
  	 * somewhat pessimize the simple resched case.
  	 */
 +#ifndef IPIPE_ARCH_HAVE_VIRQ_IPI
  	irq_enter();
 +#endif
- 	tick_nohz_full_check();
  	sched_ttwu_pending();
  
-@@ -1531,7 +1533,9 @@ void scheduler_ipi(void)
+ 	/*
+@@ -1608,7 +1610,9 @@ void scheduler_ipi(void)
  		this_rq()->idle_balance = 1;
  		raise_softirq_irqoff(SCHED_SOFTIRQ);
  	}
@@ -10515,7 +10558,7 @@ index 5e973ef..fb3a19b 100644
  }
  
  static void ttwu_queue_remote(struct task_struct *p, int cpu)
-@@ -1592,7 +1596,8 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
+@@ -1699,7 +1703,8 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
  	 */
  	smp_mb__before_spinlock();
  	raw_spin_lock_irqsave(&p->pi_lock, flags);
@@ -10525,7 +10568,7 @@ index 5e973ef..fb3a19b 100644
  		goto out;
  
  	success = 1; /* we're going to change ->state */
-@@ -2214,6 +2219,8 @@ asmlinkage void schedule_tail(struct task_struct *prev)
+@@ -2321,6 +2326,8 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
  {
  	struct rq *rq = this_rq();
  
@@ -10534,7 +10577,7 @@ index 5e973ef..fb3a19b 100644
  	finish_task_switch(rq, prev);
  
  	/*
-@@ -2234,7 +2241,7 @@ asmlinkage void schedule_tail(struct task_struct *prev)
+@@ -2337,7 +2344,7 @@ asmlinkage __visible void schedule_tail(struct task_struct *prev)
   * context_switch - switch to the new MM and the new
   * thread's register state.
   */
@@ -10543,7 +10586,7 @@ index 5e973ef..fb3a19b 100644
  context_switch(struct rq *rq, struct task_struct *prev,
  	       struct task_struct *next)
  {
-@@ -2277,12 +2284,18 @@ context_switch(struct rq *rq, struct task_struct *prev,
+@@ -2378,12 +2385,18 @@ context_switch(struct rq *rq, struct task_struct *prev,
  	switch_to(prev, next, prev);
  
  	barrier();
@@ -10562,31 +10605,31 @@ index 5e973ef..fb3a19b 100644
  }
  
  /*
-@@ -2499,6 +2512,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
+@@ -2597,6 +2610,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
  
- void __kprobes preempt_count_add(int val)
+ void preempt_count_add(int val)
  {
 +	ipipe_preempt_root_only();
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -2521,6 +2535,7 @@ EXPORT_SYMBOL(preempt_count_add);
+@@ -2625,6 +2639,7 @@ NOKPROBE_SYMBOL(preempt_count_add);
  
- void __kprobes preempt_count_sub(int val)
+ void preempt_count_sub(int val)
  {
 +	ipipe_preempt_root_only();
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -2567,6 +2582,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
+@@ -2679,6 +2694,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
   */
  static inline void schedule_debug(struct task_struct *prev)
  {
 +	ipipe_root_only();
- 	/*
- 	 * Test if we are atomic. Since do_exit() needs to call into
- 	 * schedule() atomically, we ignore that path. Otherwise whine
-@@ -2653,7 +2669,7 @@ pick_next_task(struct rq *rq)
+ #ifdef CONFIG_SCHED_STACK_END_CHECK
+ 	BUG_ON(unlikely(task_stack_end_corrupted(prev)));
+ #endif
+@@ -2772,7 +2788,7 @@ again:
   *          - return from syscall or exception to user-space
   *          - return from interrupt-handler to user-space
   */
@@ -10595,7 +10638,7 @@ index 5e973ef..fb3a19b 100644
  {
  	struct task_struct *prev, *next;
  	unsigned long *switch_count;
-@@ -2667,6 +2683,10 @@ need_resched:
+@@ -2786,6 +2802,10 @@ need_resched:
  	rcu_note_context_switch(cpu);
  	prev = rq->curr;
  
@@ -10606,7 +10649,7 @@ index 5e973ef..fb3a19b 100644
  	schedule_debug(prev);
  
  	if (sched_feat(HRTICK))
-@@ -2720,7 +2740,8 @@ need_resched:
+@@ -2836,7 +2856,8 @@ need_resched:
  		rq->curr = next;
  		++*switch_count;
  
@@ -10616,7 +10659,7 @@ index 5e973ef..fb3a19b 100644
  		/*
  		 * The context switch have flipped the stack from under us
  		 * and restored the local variables which were saved when
-@@ -2729,14 +2750,18 @@ need_resched:
+@@ -2845,14 +2866,18 @@ need_resched:
  		 */
  		cpu = smp_processor_id();
  		rq = cpu_rq(cpu);
@@ -10636,7 +10679,7 @@ index 5e973ef..fb3a19b 100644
  }
  
  static inline void sched_submit_work(struct task_struct *tsk)
-@@ -2799,12 +2824,13 @@ asmlinkage void __sched notrace preempt_schedule(void)
+@@ -2919,12 +2944,13 @@ asmlinkage __visible void __sched notrace preempt_schedule(void)
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task. Just return..
  	 */
@@ -10652,15 +10695,15 @@ index 5e973ef..fb3a19b 100644
  		__preempt_count_sub(PREEMPT_ACTIVE);
  
  		/*
-@@ -3493,6 +3519,7 @@ change:
- 	oldprio = p->prio;
+@@ -3628,6 +3654,7 @@ change:
+ 
  	prev_class = p->sched_class;
- 	__setscheduler(rq, p, attr);
-+  	__ipipe_report_setsched(p);
+ 	__setscheduler(rq, p, attr, true);
++	__ipipe_report_setsched(p);
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -4587,10 +4614,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+@@ -4747,10 +4774,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
  	do_set_cpus_allowed(p, new_mask);
  
  	/* Can the task run on the task's current CPU? If so, we're done */
@@ -10672,10 +10715,10 @@ index 5e973ef..fb3a19b 100644
  
  	dest_cpu = cpumask_any_and(cpu_active_mask, new_mask);
 +	__ipipe_report_setaffinity(p, dest_cpu);
- 	if (p->on_rq) {
+ 	if (task_running(rq, p) || p->state == TASK_WAKING) {
  		struct migration_arg arg = { p, dest_cpu };
  		/* Need help from migration thread: drop lock and wait. */
-@@ -8028,3 +8058,42 @@ void dump_cpu_task(int cpu)
+@@ -8269,3 +8299,42 @@ void dump_cpu_task(int cpu)
  	pr_info("Task dump for CPU %d:\n", cpu);
  	sched_show_task(cpu_curr(cpu));
  }
@@ -10719,7 +10762,7 @@ index 5e973ef..fb3a19b 100644
 +
 +#endif /* CONFIG_IPIPE */
 diff --git a/kernel/sched/wait.c b/kernel/sched/wait.c
-index 7d50f79..78cdd0f 100644
+index 4dae188..992aeaa 100644
 --- a/kernel/sched/wait.c
 +++ b/kernel/sched/wait.c
 @@ -66,6 +66,8 @@ static void __wake_up_common(wait_queue_head_t *q, unsigned int mode,
@@ -10732,10 +10775,10 @@ index 7d50f79..78cdd0f 100644
  		unsigned flags = curr->flags;
  
 diff --git a/kernel/signal.c b/kernel/signal.c
-index 52f881d..9444bce 100644
+index 8f0876f..04f0b2d 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
-@@ -687,6 +687,10 @@ int dequeue_signal(struct task_struct *tsk, sigset_t *mask, siginfo_t *info)
+@@ -690,6 +690,10 @@ int dequeue_signal(struct task_struct *tsk, sigset_t *mask, siginfo_t *info)
  void signal_wake_up_state(struct task_struct *t, unsigned int state)
  {
  	set_tsk_thread_flag(t, TIF_SIGPENDING);
@@ -10746,7 +10789,7 @@ index 52f881d..9444bce 100644
  	/*
  	 * TASK_WAKEKILL also means wake it up in the stopped/traced/killable
  	 * case. We don't check t->state here because there is a race with it
-@@ -936,8 +940,11 @@ static inline int wants_signal(int sig, struct task_struct *p)
+@@ -913,8 +917,11 @@ static inline int wants_signal(int sig, struct task_struct *p)
  		return 0;
  	if (sig == SIGKILL)
  		return 1;
@@ -10760,7 +10803,7 @@ index 52f881d..9444bce 100644
  }
  
 diff --git a/kernel/time/clockevents.c b/kernel/time/clockevents.c
-index 60ba1af..a51dd36 100644
+index 5544990..51a14f9 100644
 --- a/kernel/time/clockevents.c
 +++ b/kernel/time/clockevents.c
 @@ -17,6 +17,7 @@
@@ -10782,7 +10825,7 @@ index 60ba1af..a51dd36 100644
  		WARN_ON(num_possible_cpus() > 1);
  		dev->cpumask = cpumask_of(smp_processor_id());
 diff --git a/kernel/time/clocksource.c b/kernel/time/clocksource.c
-index ba3e502..454dc8c 100644
+index 2e949cc..c250d08 100644
 --- a/kernel/time/clocksource.c
 +++ b/kernel/time/clocksource.c
 @@ -30,6 +30,7 @@
@@ -10792,9 +10835,9 @@ index ba3e502..454dc8c 100644
 +#include <linux/kallsyms.h>
  
  #include "tick-internal.h"
- 
-@@ -252,6 +253,9 @@ static void clocksource_watchdog(unsigned long data)
- 	cycle_t csnow, wdnow;
+ #include "timekeeping_internal.h"
+@@ -253,6 +254,9 @@ static void clocksource_watchdog(unsigned long data)
+ 	cycle_t csnow, wdnow, delta;
  	int64_t wd_nsec, cs_nsec;
  	int next_cpu, reset_pending;
 +#ifdef CONFIG_IPIPE
@@ -10803,7 +10846,7 @@ index ba3e502..454dc8c 100644
  
  	spin_lock(&watchdog_lock);
  	if (!watchdog_running)
-@@ -268,11 +272,24 @@ static void clocksource_watchdog(unsigned long data)
+@@ -269,11 +273,24 @@ static void clocksource_watchdog(unsigned long data)
  			continue;
  		}
  
@@ -10828,7 +10871,7 @@ index ba3e502..454dc8c 100644
  		/* Clocksource initialized ? */
  		if (!(cs->flags & CLOCK_SOURCE_WATCHDOG) ||
  		    atomic_read(&watchdog_reset_pending)) {
-@@ -706,6 +723,95 @@ static int __init clocksource_done_booting(void)
+@@ -708,6 +725,95 @@ static int __init clocksource_done_booting(void)
  }
  fs_initcall(clocksource_done_booting);
  
@@ -10924,7 +10967,7 @@ index ba3e502..454dc8c 100644
  /*
   * Enqueue the clocksource sorted by rating
   */
-@@ -719,6 +825,8 @@ static void clocksource_enqueue(struct clocksource *cs)
+@@ -721,6 +827,8 @@ static void clocksource_enqueue(struct clocksource *cs)
  		if (tmp->rating >= cs->rating)
  			entry = &tmp->list;
  	list_add(&cs->list, entry);
@@ -10934,7 +10977,7 @@ index ba3e502..454dc8c 100644
  
  /**
 diff --git a/kernel/time/tick-common.c b/kernel/time/tick-common.c
-index 0de9d7f..7615cff 100644
+index 7efeedf..94a8c21 100644
 --- a/kernel/time/tick-common.c
 +++ b/kernel/time/tick-common.c
 @@ -88,7 +88,7 @@ static void tick_periodic(int cpu)
@@ -10947,7 +10990,7 @@ index 0de9d7f..7615cff 100644
  }
  
 diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
-index 8c08a6f..a21ec0f 100644
+index 8c30ef7..0393d10 100644
 --- a/kernel/time/tick-sched.c
 +++ b/kernel/time/tick-sched.c
 @@ -148,7 +148,7 @@ static void tick_sched_handle(struct tick_sched *ts, struct pt_regs *regs)
@@ -10959,11 +11002,24 @@ index 8c08a6f..a21ec0f 100644
  	profile_tick(CPU_PROFILING);
  }
  
-diff --git a/kernel/timer.c b/kernel/timer.c
-index 38f0d40..d00811c 100644
---- a/kernel/timer.c
-+++ b/kernel/timer.c
-@@ -1363,6 +1363,25 @@ void update_process_times(int user_tick)
+diff --git a/kernel/time/timekeeping.c b/kernel/time/timekeeping.c
+index ec1791f..e724267 100644
+--- a/kernel/time/timekeeping.c
++++ b/kernel/time/timekeeping.c
+@@ -343,7 +343,7 @@ static inline void update_vsyscall(struct timekeeper *tk)
+ 	xt = timespec64_to_timespec(tk_xtime(tk));
+ 	wm = timespec64_to_timespec(tk->wall_to_monotonic);
+ 	update_vsyscall_old(&xt, &wm, tk->tkr.clock, tk->tkr.mult,
+-			    tk->tkr.cycle_last);
++			    tk->tkr.shift, tk->tkr.cycle_last);
+ }
+ 
+ static inline void old_vsyscall_fixup(struct timekeeper *tk)
+diff --git a/kernel/time/timer.c b/kernel/time/timer.c
+index 3260ffd..76c9b92 100644
+--- a/kernel/time/timer.c
++++ b/kernel/time/timer.c
+@@ -1391,6 +1391,25 @@ void update_process_times(int user_tick)
  	run_posix_cpu_timers(p);
  }
  
@@ -10990,19 +11046,19 @@ index 38f0d40..d00811c 100644
   * This function runs timers and the timer-tq in bottom half context.
   */
 diff --git a/kernel/trace/Kconfig b/kernel/trace/Kconfig
-index 015f85a..b6d06ce 100644
+index a5da09c..6650799 100644
 --- a/kernel/trace/Kconfig
 +++ b/kernel/trace/Kconfig
-@@ -443,6 +443,7 @@ config DYNAMIC_FTRACE
+@@ -439,6 +439,7 @@ config DYNAMIC_FTRACE
  	bool "enable/disable function tracing dynamically"
  	depends on FUNCTION_TRACER
  	depends on HAVE_DYNAMIC_FTRACE
-+	depends on !IPIPE_TRACE_MCOUNT
++	depends on !IPIPE
  	default y
  	help
  	  This option will modify all the calls to function tracing
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index e3be87e..e6a7b54 100644
+index d1eff3d..2a324bc 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -32,6 +32,7 @@
@@ -11013,27 +11069,7 @@ index e3be87e..e6a7b54 100644
  
  #include <trace/events/sched.h>
  
-@@ -305,10 +306,19 @@ static inline void update_function_graph_func(void) { }
- 
- static void update_ftrace_function(void)
- {
-+	struct ftrace_ops *ops;
- 	ftrace_func_t func;
- 
- 	update_global_ops();
- 
-+	for (ops = ftrace_ops_list;
-+	     ops != &ftrace_list_end; ops = ops->next)
-+		if (ops->flags & FTRACE_OPS_FL_IPIPE_EXCLUSIVE) {
-+			function_trace_op = ops;
-+			ftrace_trace_function = ops->func;
-+			return;
-+		}
-+
- 	/*
- 	 * If we are at the end of the list and this ops is
- 	 * recursion safe and not dynamic and the arch supports passing ops,
-@@ -2063,6 +2073,9 @@ void __weak arch_ftrace_update_code(int command)
+@@ -2298,6 +2299,9 @@ void __weak arch_ftrace_update_code(int command)
  
  static void ftrace_run_update_code(int command)
  {
@@ -11043,7 +11079,7 @@ index e3be87e..e6a7b54 100644
  	int ret;
  
  	ret = ftrace_arch_code_modify_prepare();
-@@ -2081,7 +2094,13 @@ static void ftrace_run_update_code(int command)
+@@ -2311,7 +2315,13 @@ static void ftrace_run_update_code(int command)
  	 * is safe. The stop_machine() is the safest, but also
  	 * produces the most overhead.
  	 */
@@ -11055,48 +11091,68 @@ index e3be87e..e6a7b54 100644
  	arch_ftrace_update_code(command);
 +#endif /* !CONFIG_IPIPE */
  
- 	function_trace_stop--;
- 
-@@ -4250,10 +4269,10 @@ static int ftrace_process_locs(struct module *mod,
+ 	ret = ftrace_arch_code_modify_post_process();
+ 	FTRACE_WARN_ON(ret);
+@@ -4621,10 +4631,10 @@ static int ftrace_process_locs(struct module *mod,
  	 * reason to cause large interrupt latencies while we do it.
  	 */
  	if (!mod)
 -		local_irq_save(flags);
 +		flags = hard_local_irq_save();
- 	ftrace_update_code(mod);
+ 	ftrace_update_code(mod, start_pg);
  	if (!mod)
 -		local_irq_restore(flags);
 +		hard_local_irq_restore(flags);
  	ret = 0;
   out:
  	mutex_unlock(&ftrace_lock);
-@@ -4356,9 +4375,9 @@ void __init ftrace_init(void)
- 	/* Keep the ftrace pointer to the stub */
- 	addr = (unsigned long)ftrace_stub;
+@@ -4723,9 +4733,11 @@ void __init ftrace_init(void)
+ 	unsigned long count, flags;
+ 	int ret;
  
 -	local_irq_save(flags);
 +	flags = hard_local_irq_save_notrace();
- 	ftrace_dyn_arch_init(&addr);
+ 	ret = ftrace_dyn_arch_init();
 -	local_irq_restore(flags);
 +	hard_local_irq_restore_notrace(flags);
++
++	/* ftrace_dyn_arch_init places the return code in addr */
+ 	if (ret)
+ 		goto failed;
  
- 	/* ftrace_dyn_arch_init places the return code in addr */
- 	if (addr)
+@@ -4891,7 +4903,16 @@ __ftrace_ops_list_func(unsigned long ip, unsigned long parent_ip,
+ 		}
+ 	} while_for_each_ftrace_op(op);
+ out:
+-	preempt_enable_notrace();
++#ifdef CONFIG_IPIPE
++	if (hard_irqs_disabled() || !__ipipe_root_p)
++		/*
++		 * Nothing urgent to schedule here. At latest the timer tick
++		 * will pick up whatever the tracing functions kicked off.
++		 */
++		preempt_enable_no_resched_notrace();
++	else
++#endif
++		preempt_enable_notrace();
+ 	trace_clear_recursion(bit);
+ }
+ 
 diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
-index 774a080..8b2f9dd 100644
+index 0fc5cfe..33055b3 100644
 --- a/kernel/trace/ring_buffer.c
 +++ b/kernel/trace/ring_buffer.c
-@@ -2651,7 +2651,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
+@@ -2684,7 +2684,8 @@ static DEFINE_PER_CPU(unsigned int, current_context);
  
  static __always_inline int trace_recursive_lock(void)
  {
--	unsigned int val = this_cpu_read(current_context);
+-	unsigned int val = __this_cpu_read(current_context);
 +	unsigned long flags;
 +	unsigned int val;
  	int bit;
  
  	if (in_interrupt()) {
-@@ -2664,22 +2665,35 @@ static __always_inline int trace_recursive_lock(void)
+@@ -2697,21 +2698,34 @@ static __always_inline int trace_recursive_lock(void)
  	} else
  		bit = 3;
  
@@ -11110,38 +11166,34 @@ index 774a080..8b2f9dd 100644
 +	}
  
  	val |= (1 << bit);
--	this_cpu_write(current_context, val);
-+	__this_cpu_write(current_context, val);
-+
-+	hard_local_irq_restore(flags);
+ 	__this_cpu_write(current_context, val);
  
++	hard_local_irq_restore(flags);
++
  	return 0;
  }
  
  static __always_inline void trace_recursive_unlock(void)
  {
--	unsigned int val = this_cpu_read(current_context);
+-	unsigned int val = __this_cpu_read(current_context);
 +	unsigned long flags;
 +	unsigned int val;
 +
 +	flags = hard_local_irq_save();
  
 +	val = __this_cpu_read(current_context);
- 	val--;
--	val &= this_cpu_read(current_context);
--	this_cpu_write(current_context, val);
-+	val &= __this_cpu_read(current_context);
-+	__this_cpu_write(current_context, val);
+ 	val &= val & (val - 1);
+ 	__this_cpu_write(current_context, val);
 +
 +	hard_local_irq_restore(flags);
  }
  
  #else
 diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
-index 813b021..6911c85 100644
+index 72c7134..da07f49 100644
 --- a/kernel/trace/trace.c
 +++ b/kernel/trace/trace.c
-@@ -2053,8 +2053,9 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
+@@ -2092,8 +2092,9 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
  	/* Don't pollute graph traces with trace_vprintk internals */
  	pause_graph_tracing();
  
@@ -11152,7 +11204,7 @@ index 813b021..6911c85 100644
  
  	tbuffer = get_trace_buf();
  	if (!tbuffer) {
-@@ -2067,7 +2068,6 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
+@@ -2106,7 +2107,6 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
  	if (len > TRACE_BUF_SIZE/sizeof(int) || len < 0)
  		goto out;
  
@@ -11160,7 +11212,7 @@ index 813b021..6911c85 100644
  	size = sizeof(*entry) + sizeof(u32) * len;
  	buffer = tr->trace_buffer.buffer;
  	event = trace_buffer_lock_reserve(buffer, TRACE_BPRINT, size,
-@@ -2085,7 +2085,7 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
+@@ -2124,7 +2124,7 @@ int trace_vbprintk(unsigned long ip, const char *fmt, va_list args)
  	}
  
  out:
@@ -11192,10 +11244,10 @@ index 57b67b1..66334fa 100644
  	return now;
  }
 diff --git a/kernel/trace/trace_functions.c b/kernel/trace/trace_functions.c
-index 38fe148..549e5f2 100644
+index 57f0ec9..80437ac 100644
 --- a/kernel/trace/trace_functions.c
 +++ b/kernel/trace/trace_functions.c
-@@ -105,7 +105,7 @@ function_stack_trace_call(unsigned long ip, unsigned long parent_ip,
+@@ -171,7 +171,7 @@ function_stack_trace_call(unsigned long ip, unsigned long parent_ip,
  	 * Need to use raw, since this must be called before the
  	 * recursive protection is performed.
  	 */
@@ -11204,7 +11256,7 @@ index 38fe148..549e5f2 100644
  	cpu = raw_smp_processor_id();
  	data = per_cpu_ptr(tr->trace_buffer.data, cpu);
  	disabled = atomic_inc_return(&data->disabled);
-@@ -125,7 +125,7 @@ function_stack_trace_call(unsigned long ip, unsigned long parent_ip,
+@@ -191,7 +191,7 @@ function_stack_trace_call(unsigned long ip, unsigned long parent_ip,
  	}
  
  	atomic_dec(&data->disabled);
@@ -11212,12 +11264,12 @@ index 38fe148..549e5f2 100644
 +	hard_local_irq_restore(flags);
  }
  
- 
+ static struct tracer_opt func_opts[] = {
 diff --git a/kernel/trace/trace_functions_graph.c b/kernel/trace/trace_functions_graph.c
-index 0b99120..d8e64ea 100644
+index 2964333..7b15e42 100644
 --- a/kernel/trace/trace_functions_graph.c
 +++ b/kernel/trace/trace_functions_graph.c
-@@ -313,7 +313,7 @@ int trace_graph_entry(struct ftrace_graph_ent *trace)
+@@ -336,7 +336,7 @@ int trace_graph_entry(struct ftrace_graph_ent *trace)
  	if (ftrace_graph_notrace_addr(trace->func))
  		return 1;
  
@@ -11226,7 +11278,7 @@ index 0b99120..d8e64ea 100644
  	cpu = raw_smp_processor_id();
  	data = per_cpu_ptr(tr->trace_buffer.data, cpu);
  	disabled = atomic_inc_return(&data->disabled);
-@@ -325,7 +325,7 @@ int trace_graph_entry(struct ftrace_graph_ent *trace)
+@@ -348,7 +348,7 @@ int trace_graph_entry(struct ftrace_graph_ent *trace)
  	}
  
  	atomic_dec(&data->disabled);
@@ -11235,7 +11287,7 @@ index 0b99120..d8e64ea 100644
  
  	return ret;
  }
-@@ -398,7 +398,7 @@ void trace_graph_return(struct ftrace_graph_ret *trace)
+@@ -421,7 +421,7 @@ void trace_graph_return(struct ftrace_graph_ret *trace)
  	int cpu;
  	int pc;
  
@@ -11244,7 +11296,7 @@ index 0b99120..d8e64ea 100644
  	cpu = raw_smp_processor_id();
  	data = per_cpu_ptr(tr->trace_buffer.data, cpu);
  	disabled = atomic_inc_return(&data->disabled);
-@@ -407,7 +407,7 @@ void trace_graph_return(struct ftrace_graph_ret *trace)
+@@ -430,7 +430,7 @@ void trace_graph_return(struct ftrace_graph_ret *trace)
  		__trace_graph_return(tr, trace, flags, pc);
  	}
  	atomic_dec(&data->disabled);
@@ -11253,48 +11305,11 @@ index 0b99120..d8e64ea 100644
  }
  
  void set_graph_array(struct trace_array *tr)
-diff --git a/kernel/trace/trace_irqsoff.c b/kernel/trace/trace_irqsoff.c
-index 2aefbee..c3ec43f 100644
---- a/kernel/trace/trace_irqsoff.c
-+++ b/kernel/trace/trace_irqsoff.c
-@@ -486,28 +486,28 @@ inline void print_irqtrace_events(struct task_struct *curr)
-  */
- void trace_hardirqs_on(void)
- {
--	if (!preempt_trace() && irq_trace())
-+	if (ipipe_root_p && !preempt_trace() && irq_trace())
- 		stop_critical_timing(CALLER_ADDR0, CALLER_ADDR1);
- }
- EXPORT_SYMBOL(trace_hardirqs_on);
- 
- void trace_hardirqs_off(void)
- {
--	if (!preempt_trace() && irq_trace())
-+	if (ipipe_root_p && !preempt_trace() && irq_trace())
- 		start_critical_timing(CALLER_ADDR0, CALLER_ADDR1);
- }
- EXPORT_SYMBOL(trace_hardirqs_off);
- 
- void trace_hardirqs_on_caller(unsigned long caller_addr)
- {
--	if (!preempt_trace() && irq_trace())
-+	if (ipipe_root_p && !preempt_trace() && irq_trace())
- 		stop_critical_timing(CALLER_ADDR0, caller_addr);
- }
- EXPORT_SYMBOL(trace_hardirqs_on_caller);
- 
- void trace_hardirqs_off_caller(unsigned long caller_addr)
- {
--	if (!preempt_trace() && irq_trace())
-+	if (ipipe_root_p && !preempt_trace() && irq_trace())
- 		start_critical_timing(CALLER_ADDR0, caller_addr);
- }
- EXPORT_SYMBOL(trace_hardirqs_off_caller);
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index a48abea..0e8ae4a 100644
+index 4e35a5d..f40e14c 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
-@@ -312,6 +312,7 @@ config MAGIC_SYSRQ
+@@ -336,6 +336,7 @@ config MAGIC_SYSRQ
  	  keys are documented in <file:Documentation/sysrq.txt>. Don't say Y
  	  unless you really know what this hack does.
  
@@ -11302,7 +11317,7 @@ index a48abea..0e8ae4a 100644
  config MAGIC_SYSRQ_DEFAULT_ENABLE
  	hex "Enable magic SysRq key functions by default"
  	depends on MAGIC_SYSRQ
-@@ -321,6 +322,8 @@ config MAGIC_SYSRQ_DEFAULT_ENABLE
+@@ -345,6 +346,8 @@ config MAGIC_SYSRQ_DEFAULT_ENABLE
  	  This may be set to 1 or 0 to enable or disable them all, or
  	  to a bitmask as described in Documentation/sysrq.txt.
  
@@ -11311,16 +11326,16 @@ index a48abea..0e8ae4a 100644
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
-@@ -584,7 +587,7 @@ config HAVE_DEBUG_STACKOVERFLOW
+@@ -617,7 +620,7 @@ config HAVE_DEBUG_STACKOVERFLOW
  
  config DEBUG_STACKOVERFLOW
  	bool "Check for stack overflows"
 -	depends on DEBUG_KERNEL && HAVE_DEBUG_STACKOVERFLOW
-+	depends on DEBUG_KERNEL && HAVE_DEBUG_STACKOVERFLOW && !IPIPE
++	depends on DEBUG_KERNEL && HAVE_DEBUG_STACKOVERFLOW && !IPIPE_LEGACY
  	---help---
  	  Say Y here if you want to check for overflows of kernel, IRQ
  	  and exception stacks (if your archicture uses them). This
-@@ -1088,7 +1091,7 @@ menu "RCU Debugging"
+@@ -1152,7 +1155,7 @@ menu "RCU Debugging"
  
  config PROVE_RCU
  	bool "RCU debugging: prove RCU correctness"
@@ -11330,7 +11345,7 @@ index a48abea..0e8ae4a 100644
  	help
  	 This feature enables lockdep extensions that check for correct
 diff --git a/lib/atomic64.c b/lib/atomic64.c
-index 08a4f06..15810f4 100644
+index 1298c05e..6ef2528 100644
 --- a/lib/atomic64.c
 +++ b/lib/atomic64.c
 @@ -29,15 +29,15 @@
@@ -11370,43 +11385,25 @@ index 08a4f06..15810f4 100644
  
  	raw_spin_lock_irqsave(lock, flags);
  	v->counter = i;
-@@ -73,7 +73,7 @@ EXPORT_SYMBOL(atomic64_set);
- void atomic64_add(long long a, atomic64_t *v)
- {
- 	unsigned long flags;
--	raw_spinlock_t *lock = lock_addr(v);
-+	ipipe_spinlock_t *lock = lock_addr(v);
- 
- 	raw_spin_lock_irqsave(lock, flags);
- 	v->counter += a;
-@@ -84,7 +84,7 @@ EXPORT_SYMBOL(atomic64_add);
- long long atomic64_add_return(long long a, atomic64_t *v)
- {
- 	unsigned long flags;
--	raw_spinlock_t *lock = lock_addr(v);
-+	ipipe_spinlock_t *lock = lock_addr(v);
- 	long long val;
- 
- 	raw_spin_lock_irqsave(lock, flags);
-@@ -97,7 +97,7 @@ EXPORT_SYMBOL(atomic64_add_return);
- void atomic64_sub(long long a, atomic64_t *v)
- {
- 	unsigned long flags;
--	raw_spinlock_t *lock = lock_addr(v);
-+	ipipe_spinlock_t *lock = lock_addr(v);
- 
- 	raw_spin_lock_irqsave(lock, flags);
- 	v->counter -= a;
-@@ -108,7 +108,7 @@ EXPORT_SYMBOL(atomic64_sub);
- long long atomic64_sub_return(long long a, atomic64_t *v)
- {
- 	unsigned long flags;
--	raw_spinlock_t *lock = lock_addr(v);
-+	ipipe_spinlock_t *lock = lock_addr(v);
- 	long long val;
- 
- 	raw_spin_lock_irqsave(lock, flags);
-@@ -121,7 +121,7 @@ EXPORT_SYMBOL(atomic64_sub_return);
+@@ -74,7 +74,7 @@ EXPORT_SYMBOL(atomic64_set);
+ void atomic64_##op(long long a, atomic64_t *v)				\
+ {									\
+ 	unsigned long flags;						\
+-	raw_spinlock_t *lock = lock_addr(v);				\
++	ipipe_spinlock_t *lock = lock_addr(v);				\
+ 									\
+ 	raw_spin_lock_irqsave(lock, flags);				\
+ 	v->counter c_op a;						\
+@@ -86,7 +86,7 @@ EXPORT_SYMBOL(atomic64_##op);
+ long long atomic64_##op##_return(long long a, atomic64_t *v)		\
+ {									\
+ 	unsigned long flags;						\
+-	raw_spinlock_t *lock = lock_addr(v);				\
++	ipipe_spinlock_t *lock = lock_addr(v);				\
+ 	long long val;							\
+ 									\
+ 	raw_spin_lock_irqsave(lock, flags);				\
+@@ -110,7 +110,7 @@ ATOMIC64_OPS(sub, -=)
  long long atomic64_dec_if_positive(atomic64_t *v)
  {
  	unsigned long flags;
@@ -11415,7 +11412,7 @@ index 08a4f06..15810f4 100644
  	long long val;
  
  	raw_spin_lock_irqsave(lock, flags);
-@@ -136,7 +136,7 @@ EXPORT_SYMBOL(atomic64_dec_if_positive);
+@@ -125,7 +125,7 @@ EXPORT_SYMBOL(atomic64_dec_if_positive);
  long long atomic64_cmpxchg(atomic64_t *v, long long o, long long n)
  {
  	unsigned long flags;
@@ -11424,7 +11421,7 @@ index 08a4f06..15810f4 100644
  	long long val;
  
  	raw_spin_lock_irqsave(lock, flags);
-@@ -151,7 +151,7 @@ EXPORT_SYMBOL(atomic64_cmpxchg);
+@@ -140,7 +140,7 @@ EXPORT_SYMBOL(atomic64_cmpxchg);
  long long atomic64_xchg(atomic64_t *v, long long new)
  {
  	unsigned long flags;
@@ -11433,7 +11430,7 @@ index 08a4f06..15810f4 100644
  	long long val;
  
  	raw_spin_lock_irqsave(lock, flags);
-@@ -165,7 +165,7 @@ EXPORT_SYMBOL(atomic64_xchg);
+@@ -154,7 +154,7 @@ EXPORT_SYMBOL(atomic64_xchg);
  int atomic64_add_unless(atomic64_t *v, long long a, long long u)
  {
  	unsigned long flags;
@@ -11463,7 +11460,7 @@ index f8e0e53..02175aa3 100644
  			wake_up_klogd();
  	}
 diff --git a/lib/ioremap.c b/lib/ioremap.c
-index 0c9216c..1575d3e 100644
+index 0c9216c..00a9a30 100644
 --- a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -10,6 +10,7 @@
@@ -11482,17 +11479,17 @@ index 0c9216c..1575d3e 100644
 +	/* APEI may invoke this for temporarily remapping pages in interrupt
 +	 * context - nothing we can and need to propagate globally. */
 +	if (!in_interrupt()) {
-+		__ipipe_pin_range_globally(start, end);
++		__ipipe_pin_mapping_globally(start, end);
 +		flush_cache_vmap(start, end);
 +	}
  
  	return err;
  }
 diff --git a/lib/smp_processor_id.c b/lib/smp_processor_id.c
-index 04abe53..9b2ff41 100644
+index 1afec32..5803111 100644
 --- a/lib/smp_processor_id.c
 +++ b/lib/smp_processor_id.c
-@@ -11,10 +11,13 @@ notrace unsigned int debug_smp_processor_id(void)
+@@ -12,10 +12,13 @@ notrace static unsigned int check_preemption_disabled(const char *what1,
  {
  	int this_cpu = raw_smp_processor_id();
  
@@ -11508,10 +11505,10 @@ index 04abe53..9b2ff41 100644
  
  	/*
 diff --git a/mm/Kconfig b/mm/Kconfig
-index 0862816..aacbf2df 100644
+index 1d1ae6b..dbe4ef9 100644
 --- a/mm/Kconfig
 +++ b/mm/Kconfig
-@@ -397,6 +397,7 @@ config NOMMU_INITIAL_TRIM_EXCESS
+@@ -409,6 +409,7 @@ config NOMMU_INITIAL_TRIM_EXCESS
  config TRANSPARENT_HUGEPAGE
  	bool "Transparent Hugepage Support"
  	depends on HAVE_ARCH_TRANSPARENT_HUGEPAGE
@@ -11520,10 +11517,10 @@ index 0862816..aacbf2df 100644
  	help
  	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
-index 102af09..7d9fc91 100644
+index 90fb265..8a1fd79 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
-@@ -788,6 +788,34 @@ out:
+@@ -793,6 +793,34 @@ out:
  	return pfn_to_page(pfn);
  }
  
@@ -11558,7 +11555,7 @@ index 102af09..7d9fc91 100644
  /*
   * copy one vm_area from one task to the other. Assumes the page tables
   * already present in the new task to be cleared in the whole range
-@@ -796,8 +824,8 @@ out:
+@@ -801,8 +829,8 @@ out:
  
  static inline unsigned long
  copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
@@ -11569,7 +11566,7 @@ index 102af09..7d9fc91 100644
  {
  	unsigned long vm_flags = vma->vm_flags;
  	pte_t pte = *src_pte;
-@@ -851,6 +879,21 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -856,6 +884,21 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	 * in the parent and the child
  	 */
  	if (is_cow_mapping(vm_flags)) {
@@ -11591,7 +11588,7 @@ index 102af09..7d9fc91 100644
  		ptep_set_wrprotect(src_mm, addr, src_pte);
  		pte = pte_wrprotect(pte);
  	}
-@@ -888,13 +931,27 @@ static int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+@@ -893,13 +936,27 @@ static int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
  	int progress = 0;
  	int rss[NR_MM_COUNTERS];
  	swp_entry_t entry = (swp_entry_t){0};
@@ -11599,7 +11596,7 @@ index 102af09..7d9fc91 100644
 +	struct page *uncow_page = NULL;
 +#ifdef CONFIG_IPIPE
 +	int do_cow_break = 0;
-+again:
+ again:
 + 	if (do_cow_break) {
 + 		uncow_page = alloc_page_vma(GFP_HIGHUSER, vma, addr);
 +		if (uncow_page == NULL)
@@ -11607,7 +11604,7 @@ index 102af09..7d9fc91 100644
 +		do_cow_break = 0;
 +	}
 +#else
- again:
++again:
 +#endif
  	init_rss_vec(rss);
  
@@ -11621,7 +11618,7 @@ index 102af09..7d9fc91 100644
  	src_pte = pte_offset_map(src_pmd, addr);
  	src_ptl = pte_lockptr(src_mm, src_pmd);
  	spin_lock_nested(src_ptl, SINGLE_DEPTH_NESTING);
-@@ -917,8 +974,25 @@ again:
+@@ -922,8 +979,25 @@ again:
  			progress++;
  			continue;
  		}
@@ -11648,7 +11645,7 @@ index 102af09..7d9fc91 100644
  		if (entry.val)
  			break;
  		progress += 8;
-@@ -2563,34 +2637,6 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
+@@ -1945,34 +2019,6 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
  	return same;
  }
  
@@ -11681,9 +11678,9 @@ index 102af09..7d9fc91 100644
 -}
 -
  /*
-  * This routine handles present pages, when users try to write
-  * to a shared page. It is done by copying the page to a new address
-@@ -4269,6 +4315,41 @@ void copy_user_huge_page(struct page *dst, struct page *src,
+  * Notify the address space that the page is about to become writable so that
+  * it can prohibit this or wait for the page to get into an appropriate state.
+@@ -3791,6 +3837,41 @@ void copy_user_huge_page(struct page *dst, struct page *src,
  }
  #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
  
@@ -11726,10 +11723,10 @@ index 102af09..7d9fc91 100644
  
  static struct kmem_cache *page_ptl_cachep;
 diff --git a/mm/mlock.c b/mm/mlock.c
-index b1eb536..ca23f83 100644
+index 73cf098..6928e67 100644
 --- a/mm/mlock.c
 +++ b/mm/mlock.c
-@@ -864,3 +864,28 @@ void user_shm_unlock(size_t size, struct user_struct *user)
+@@ -871,3 +871,28 @@ void user_shm_unlock(size_t size, struct user_struct *user)
  	spin_unlock(&shmlock_user_lock);
  	free_uid(user);
  }
@@ -11759,10 +11756,10 @@ index b1eb536..ca23f83 100644
 +}
 +#endif
 diff --git a/mm/mmap.c b/mm/mmap.c
-index d4c97ba..3c42466 100644
+index f88b4f9..e9b401a 100644
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
-@@ -45,6 +45,10 @@
+@@ -49,6 +49,10 @@
  
  #include "internal.h"
  
@@ -11773,7 +11770,7 @@ index d4c97ba..3c42466 100644
  #ifndef arch_mmap_check
  #define arch_mmap_check(addr, len, flags)	(0)
  #endif
-@@ -2616,7 +2620,7 @@ static unsigned long do_brk(unsigned long addr, unsigned long len)
+@@ -2658,7 +2662,7 @@ static unsigned long do_brk(unsigned long addr, unsigned long len)
  
  	flags = VM_DATA_DEFAULT_FLAGS | VM_ACCOUNT | mm->def_flags;
  
@@ -11783,7 +11780,7 @@ index d4c97ba..3c42466 100644
  		return error;
  
 diff --git a/mm/mmu_context.c b/mm/mmu_context.c
-index 8a8cd02..81a1bf6 100644
+index f802c2d..b320432 100644
 --- a/mm/mmu_context.c
 +++ b/mm/mmu_context.c
 @@ -21,15 +21,18 @@ void use_mm(struct mm_struct *mm)
@@ -11804,22 +11801,22 @@ index 8a8cd02..81a1bf6 100644
 +	__switch_mm(active_mm, mm, tsk);
 + 	ipipe_mm_switch_unprotect(flags);
  	task_unlock(tsk);
- 
- 	if (active_mm != mm)
+ #ifdef finish_arch_post_lock_switch
+ 	finish_arch_post_lock_switch();
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index 769a67a..b67a1ab 100644
+index ace9345..6b56407 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
-@@ -43,7 +43,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+@@ -64,7 +64,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
  	struct mm_struct *mm = vma->vm_mm;
  	pte_t *pte, oldpte;
  	spinlock_t *ptl;
 -	unsigned long pages = 0;
 +	unsigned long pages = 0, flags;
  
- 	pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
- 	arch_enter_lazy_mmu_mode();
-@@ -54,6 +54,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 	pte = lock_pte_protection(vma, pmd, addr, prot_numa, &ptl);
+ 	if (!pte)
+@@ -78,6 +78,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
  			bool updated = false;
  
  			if (!prot_numa) {
@@ -11827,36 +11824,36 @@ index 769a67a..b67a1ab 100644
  				ptent = ptep_modify_prot_start(mm, addr, pte);
  				if (pte_numa(ptent))
  					ptent = pte_mknonnuma(ptent);
-@@ -65,6 +66,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
- 				if (dirty_accountable && pte_dirty(ptent))
+@@ -91,6 +92,7 @@ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 				     !(vma->vm_flags & VM_SOFTDIRTY)))
  					ptent = pte_mkwrite(ptent);
  				ptep_modify_prot_commit(mm, addr, pte, ptent);
 +				hard_local_irq_restore(flags);
  				updated = true;
  			} else {
  				struct page *page;
-@@ -209,6 +211,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
+@@ -247,6 +249,12 @@ unsigned long change_protection(struct vm_area_struct *vma, unsigned long start,
  		pages = hugetlb_change_protection(vma, start, end, newprot);
  	else
  		pages = change_protection_range(vma, start, end, newprot, dirty_accountable, prot_numa);
 +#ifdef CONFIG_IPIPE
-+	if (test_bit(MMF_VM_PINNED, &mm->flags) &&
-+	    ((vma->vm_flags | mm->def_flags) & VM_LOCKED) &&
++	if (test_bit(MMF_VM_PINNED, &vma->vm_mm->flags) &&
++	    ((vma->vm_flags | vma->vm_mm->def_flags) & VM_LOCKED) &&
 +	    (vma->vm_flags & (VM_READ | VM_WRITE | VM_EXEC)))
-+		__ipipe_pin_vma(mm, vma);
++		__ipipe_pin_vma(vma->vm_mm, vma);
 +#endif
- 	mmu_notifier_invalidate_range_end(mm, start, end);
  
  	return pages;
+ }
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index aa3891e..5c756384 100644
+index 90520af..dadc22d 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
-@@ -191,6 +191,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
+@@ -193,6 +193,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
  			return err;
  	} while (pgd++, addr = next, addr != end);
  
-+ 	__ipipe_pin_range_globally(start, end);
++ 	__ipipe_pin_mapping_globally(start, end);
 + 
  	return nr;
  }
