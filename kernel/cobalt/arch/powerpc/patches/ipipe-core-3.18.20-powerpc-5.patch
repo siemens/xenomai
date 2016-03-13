@@ -304,7 +304,7 @@ index b59ac27..9cc1d25 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..5e12457
+index 0000000..b510fd4
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,157 @@
@@ -349,7 +349,7 @@ index 0000000..5e12457
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	5
 +
 +struct ipipe_domain;
 +
@@ -1958,7 +1958,7 @@ index 5e01984..6f68eff 100644
  #ifdef CONFIG_PPC_DOORBELL
  	STD_EXCEPTION_COMMON_ASYNC(0xa00, doorbell_super, doorbell_exception)
 diff --git a/arch/powerpc/kernel/fpu.S b/arch/powerpc/kernel/fpu.S
-index 9ad236e..76482dc 100644
+index 9ad236e..3f38333 100644
 --- a/arch/powerpc/kernel/fpu.S
 +++ b/arch/powerpc/kernel/fpu.S
 @@ -195,7 +195,17 @@ END_FTR_SECTION_IFSET(CPU_FTR_VSX)
@@ -1984,7 +1984,7 @@ index 9ad236e..76482dc 100644
  	isync
  	PPC_LCMPI	0,r3,0
 -	beqlr-				/* if no previous owner, done */
-+	beq-	2f			/* if no previous owner, done */
++	beq-	3f			/* if no previous owner, done */
  	addi	r3,r3,THREAD	        /* want THREAD of task */
  	PPC_LL	r6,THREAD_FPSAVEAREA(r3)
  	PPC_LL	r5,PT_REGS(r3)
@@ -1992,7 +1992,7 @@ index 9ad236e..76482dc 100644
  	LOAD_REG_ADDRBASE(r4,last_task_used_math)
  	PPC_STL	r5,ADDROFF(last_task_used_math)(r4)
  #endif /* CONFIG_SMP */
-+2:
++3:
 +#ifdef CONFIG_IPIPE		/* restore interrupt state */
 +	andi.	r10,r10,MSR_EE
 +	beqlr
@@ -2113,7 +2113,7 @@ index 7d7d863..1c01a90 100644
  	/* Fixed Interval Timer (FIT) Exception. (from 0x1010) */
  FITException:
 diff --git a/arch/powerpc/kernel/head_44x.S b/arch/powerpc/kernel/head_44x.S
-index b5061ab..e70e553 100644
+index b5061ab..e69a9af 100644
 --- a/arch/powerpc/kernel/head_44x.S
 +++ b/arch/powerpc/kernel/head_44x.S
 @@ -262,8 +262,13 @@ interrupt_base:
@@ -2122,7 +2122,7 @@ index b5061ab..e70e553 100644
  	/* External Input Interrupt */
 +#ifdef CONFIG_IPIPE
 +	EXCEPTION(0x0500, BOOKE_INTERRUPT_EXTERNAL, ExternalInput, \
-+		  __ipipe_grab_irq, EXC_XFER_LITE)
++		  __ipipe_grab_irq, EXC_XFER_IPIPE)
 +#else /* !CONFIG_IPIPE */
  	EXCEPTION(0x0500, BOOKE_INTERRUPT_EXTERNAL, ExternalInput, \
  		  do_IRQ, EXC_XFER_LITE)
@@ -5582,8 +5582,27 @@ index c5029c1..2d68014 100644
  	select CPU_IDLE_GOV_LADDER if (!NO_HZ && !NO_HZ_IDLE)
  	select CPU_IDLE_GOV_MENU if (NO_HZ || NO_HZ_IDLE)
  	help
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 74a1767..7cf4766 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -366,12 +366,12 @@ void panic_if_irq_remap(const char *msg)
+ 
+ static void ir_ack_apic_edge(struct irq_data *data)
+ {
+-	ack_APIC_irq();
++	__ack_APIC_irq();
+ }
+ 
+ static void ir_ack_apic_level(struct irq_data *data)
+ {
+-	ack_APIC_irq();
++	__ack_APIC_irq();
+ 	eoi_ioapic_irq(data->irq, data->chip_data);
+ }
+ 
 diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
-index e5c31ea..8dce875 100644
+index e5c31ea..8dce8751 100644
 --- a/drivers/tty/serial/8250/8250_core.c
 +++ b/drivers/tty/serial/8250/8250_core.c
 @@ -3480,6 +3480,84 @@ static int serial8250_resume(struct platform_device *dev)
@@ -9505,10 +9524,10 @@ index 0000000..797a849
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..0320453
+index 0000000..d7c8934
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1917 @@
+@@ -0,0 +1,1916 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -11247,11 +11266,10 @@ index 0000000..0320453
 +	 * currently stalled, in which case preemption would be
 +	 * disabled, and no migration could occur.
 +	 */
-+	if (this_domain == ipipe_root_domain) {
-+		p = raw_cpu_ptr(&ipipe_percpu.root);
-+		if (test_bit(IPIPE_STALL_FLAG, &p->status) || preempt_count())
-+			goto out;
-+	}
++
++	p = raw_cpu_ptr(&ipipe_percpu.root);
++	if (!preemptible())
++		goto out;
 +	/*
 +	 * Our caller may end up accessing the wrong per-cpu variable
 +	 * instance due to CPU migration; tell it to complain about
@@ -11428,10 +11446,10 @@ index 0000000..0320453
 +#endif
 diff --git a/kernel/ipipe/timer.c b/kernel/ipipe/timer.c
 new file mode 100644
-index 0000000..354bf29
+index 0000000..143f9e6
 --- /dev/null
 +++ b/kernel/ipipe/timer.c
-@@ -0,0 +1,496 @@
+@@ -0,0 +1,497 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/timer.c
 + *
@@ -11799,6 +11817,7 @@ index 0000000..354bf29
 +		timer->real_set_next_event = evtdev->set_next_event;
 +		evtdev->mult = 1;
 +		evtdev->shift = 0;
++		evtdev->max_delta_ns = UINT_MAX;
 +		evtdev->set_mode = emumode;
 +		evtdev->set_next_event = emutick;
 +		evtdev->ipipe_stolen = 1;
