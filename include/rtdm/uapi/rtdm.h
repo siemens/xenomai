@@ -81,6 +81,7 @@ typedef int64_t nanosecs_rel_t;
 #define RTDM_CLASS_MEMORY		10
 #define RTDM_CLASS_GPIO			11
 #define RTDM_CLASS_SPI			12
+#define RTDM_CLASS_PWM			13
 
 #define RTDM_CLASS_MISC			223
 #define RTDM_CLASS_EXPERIMENTAL		224

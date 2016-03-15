@@ -3,6 +3,7 @@ demodir = @XENO_DEMO_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 demo_PROGRAMS = 	\
+	gpiopwm		\
 	bufp-label	\
 	bufp-readwrite	\
 	can_rtt		\
@@ -23,6 +24,11 @@ ldadd = 					\
 	 @XENO_CORE_LDADD@			\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt
+
+gpiopwm_SOURCES = gpiopwm.c
+gpiopwm_CPPFLAGS = $(cppflags) -I$(top_srcdir)/include/rtdm/uapi
+gpiopwm_LDFLAGS = $(ldflags)
+gpiopwm_LDADD = $(ldadd)
 
 bufp_label_SOURCES = bufp-label.c
 bufp_label_CPPFLAGS = $(cppflags)

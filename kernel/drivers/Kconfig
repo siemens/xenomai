@@ -29,6 +29,7 @@ source "drivers/xenomai/analogy/Kconfig"
 source "drivers/xenomai/ipc/Kconfig"
 source "drivers/xenomai/udd/Kconfig"
 source "drivers/xenomai/gpio/Kconfig"
+source "drivers/xenomai/gpiopwm/Kconfig"
 source "drivers/xenomai/spi/Kconfig"
 
 endmenu
