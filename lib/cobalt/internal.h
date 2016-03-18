@@ -27,7 +27,10 @@ extern void *cobalt_umm_private;
 
 extern void *cobalt_umm_shared;
 
-void cobalt_sigshadow_install_once(void);
+static inline int cobalt_is_relaxed(void)
+{
+	return cobalt_get_current_mode() & XNRELAX;
+}
 
 static inline
 struct cobalt_mutex_state *mutex_get_state(struct cobalt_mutex_shadow *shadow)
@@ -42,6 +45,8 @@ static inline atomic_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow)
 {
 	return &mutex_get_state(shadow)->owner;
 }
+
+void cobalt_sigshadow_install_once(void);
 
 void cobalt_thread_init(void);
 

@@ -54,9 +54,7 @@ void cobalt_thread_harden(void)
 
 void cobalt_thread_relax(void)
 {
-	int status = cobalt_get_current_mode();
-
-	if ((status & XNRELAX) == 0)
+	if (!cobalt_is_relaxed())
 		XENOMAI_SYSCALL1(sc_cobalt_migrate, COBALT_SECONDARY);
 }
 

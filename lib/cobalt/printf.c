@@ -730,8 +730,7 @@ done:
 
 COBALT_IMPL(int, vfprintf, (FILE *stream, const char *fmt, va_list args))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_vfprintf(stream, fmt, args);
 	else {
 		rt_print_flush_buffers();
@@ -770,8 +769,7 @@ COBALT_IMPL(int, printf, (const char *fmt, ...))
 
 COBALT_IMPL(int, fputs, (const char *s, FILE *stream))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_fputs(s, stream);
 	else {
 		rt_print_flush_buffers();
@@ -781,8 +779,7 @@ COBALT_IMPL(int, fputs, (const char *s, FILE *stream))
 
 COBALT_IMPL(int, puts, (const char *s))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_puts(s);
 	else {
 		rt_print_flush_buffers();
@@ -794,8 +791,7 @@ COBALT_IMPL(int, puts, (const char *s))
 
 COBALT_IMPL(int, fputc, (int c, FILE *stream))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_fputc(c, stream);
 	else {
 		rt_print_flush_buffers();
@@ -805,8 +801,7 @@ COBALT_IMPL(int, fputc, (int c, FILE *stream))
 
 COBALT_IMPL(int, putchar, (int c))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_putchar(c);
 	else {
 		rt_print_flush_buffers();
@@ -830,8 +825,7 @@ COBALT_IMPL(int, putchar, (int c))
 
 COBALT_IMPL(size_t, fwrite, (const void *ptr, size_t size, size_t nmemb, FILE *stream))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_fwrite(ptr, size, nmemb, stream);
 	else {
 		rt_print_flush_buffers();
@@ -848,8 +842,7 @@ COBALT_IMPL(int, fclose, (FILE *stream))
 
 COBALT_IMPL(void, vsyslog, (int priority, const char *fmt, va_list ap))
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return rt_vsyslog(priority, fmt, ap);
 	else {
 		rt_print_flush_buffers();
@@ -872,8 +865,7 @@ COBALT_IMPL(void, syslog, (int priority, const char *fmt, ...))
 COBALT_IMPL(int, __vfprintf_chk, (FILE *f, int flag, const char *fmt, va_list ap))
 {
 #ifdef CONFIG_XENO_FORTIFY
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-	    !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return __rt_vfprintf_chk(f, flag, fmt, ap);
 	else {
 		rt_print_flush_buffers();
@@ -916,8 +908,7 @@ COBALT_IMPL(int, __printf_chk, (int flag, const char *fmt, ...))
 COBALT_IMPL(void, __vsyslog_chk, (int pri, int flag, const char *fmt, va_list ap))
 {
 #ifdef CONFIG_XENO_FORTIFY
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-	     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		return __rt_vsyslog_chk(pri, flag, fmt, ap);
 	else {
 		rt_print_flush_buffers();

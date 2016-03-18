@@ -45,21 +45,13 @@ static void assert_nrt_inner(void)
 
 void assert_nrt(void)
 {
-	if (cobalt_get_current() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
+	if (!cobalt_is_relaxed())
 		assert_nrt_inner();
 }
 
-/*
- * Note: Works without syscalls but may not catch all errors when used inside
- * TSD destructors (as registered via pthread_key_create) when TLS support
- * (__thread) is disabled.
- */
-void assert_nrt_fast(void)
+void assert_nrt_fast(void)	/* OBSOLETE */
 {
-	if (cobalt_get_current_fast() != XN_NO_HANDLE &&
-		     !(cobalt_get_current_mode() & XNRELAX))
-		assert_nrt_inner();
+	assert_nrt();
 }
 
 /* Memory allocation services */
