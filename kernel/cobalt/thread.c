@@ -1682,7 +1682,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 	xnthread_set_state(thread, XNJOINED);
 	tpid = xnthread_host_pid(thread);
 	
-	if (!xnthread_test_state(curr, XNRELAX|XNROOT)) {
+	if (curr && !xnthread_test_state(curr, XNRELAX)) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnthread_relax(0, 0);
 		switched = 1;
