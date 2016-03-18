@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-__attribute__((__deprecated__))
+__deprecated
 static inline int rt_task_notify(RT_TASK *task, rt_sigset_t sigs)
 {
 	trank_warning("in-kernel native API is gone, rebase over RTDM");

@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-__attribute__((__deprecated__))
+__deprecated
 static inline int rt_timer_set_mode(RTIME nstick)
 {
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED

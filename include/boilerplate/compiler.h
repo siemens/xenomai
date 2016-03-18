@@ -54,4 +54,8 @@
 #define __aligned(__n)	__attribute__((aligned (__n)))
 #endif
 
+#ifndef __deprecated
+#define __deprecated	__attribute__((__deprecated__))
+#endif
+
 #endif /* _BOILERPLATE_COMPILER_H */

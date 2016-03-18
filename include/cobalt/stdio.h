@@ -114,8 +114,7 @@ void rt_print_flush_buffers(void);
 
 void assert_nrt(void);
 
-__attribute__((__deprecated__))
-void assert_nrt_fast(void);
+__deprecated void assert_nrt_fast(void);
 
 #ifdef __cplusplus
 }

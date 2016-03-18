@@ -18,6 +18,8 @@
 #ifndef _XENOMAI_TRANK_TRANK_H
 #define _XENOMAI_TRANK_TRANK_H
 
+#include <boilerplate/compiler.h>
+
 #ifdef __XENO_COMPAT__
 
 void warning(const char *fmt, ...);
@@ -31,8 +33,6 @@ void warning(const char *fmt, ...);
 #define CURRENT_DECL(T, P)	__typeof__(T) __CURRENT(P)
 
 #else /* !__XENO_COMPAT__ */
-
-#include <boilerplate/compiler.h>
 
 #define __CURRENT(call)		call
 

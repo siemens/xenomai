@@ -32,7 +32,7 @@ typedef struct rt_ioregion {
 extern "C" {
 #endif
 
-__attribute__((__deprecated__))
+__deprecated
 static inline int rt_io_get_region(RT_IOREGION *iorn,
 				   const char *name,
 				   uint64_t start,
@@ -43,7 +43,7 @@ static inline int rt_io_get_region(RT_IOREGION *iorn,
 	return -ENOSYS;
 }
 
-__attribute__((__deprecated__))
+__deprecated
 int rt_io_put_region(RT_IOREGION *iorn)
 {
 	trank_warning("service should be provided by a RTDM driver");

@@ -18,6 +18,8 @@
 #ifndef _COBALT_WRAPPERS_H
 #define _COBALT_WRAPPERS_H
 
+#include <boilerplate/compiler.h>
+
 #define __stringify_1(x...)	#x
 #define __stringify(x...)	__stringify_1(x)
 
