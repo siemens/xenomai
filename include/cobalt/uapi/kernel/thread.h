@@ -71,6 +71,7 @@
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNCANCELD 0x00000040 /**< Cancellation request is pending */
 #define XNPIALERT 0x00000080 /**< Priority inversion alert (SIGDEBUG sent) */
+#define XNSCHEDP  0x00000100 /**< schedparam propagation is pending */
 
 /* Local information flags (private to current thread) */
 

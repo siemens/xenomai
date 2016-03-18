@@ -734,6 +734,15 @@ restart:
 			goto ret_handled;
 		}
 		switched = 1;
+	} else {
+		/*
+		 * We want to run the syscall in the current Linux
+		 * domain. This is a slow path, so proceed with any
+		 * pending schedparam update on the fly.
+		 */
+		switched = 0;
+		if (thread)
+			xnthread_propagate_schedparam(thread);
 	}
 
 	ret = handler(__xn_reg_arglist(regs));

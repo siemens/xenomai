@@ -24,6 +24,7 @@
 #include <linux/wait.h>
 #include <linux/signal.h>
 #include <linux/pid.h>
+#include <linux/sched.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/synch.h>
@@ -1870,6 +1871,11 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 	    thread->lock_count == 0)
 		xnsched_putback(thread);
 
+	xnthread_set_info(thread, XNSCHEDP);
+	/* Ask the target thread to call back if relaxed. */
+	if (xnthread_test_state(thread, XNRELAX))
+		xnthread_signal(thread, SIGSHADOW, SIGSHADOW_ACTION_HOME);
+	
 	return ret;
 }
 
@@ -1991,6 +1997,40 @@ static void post_wakeup(struct task_struct *p)
 	ipipe_post_work_root(&wakework, work);
 }
 
+void __xnthread_propagate_schedparam(struct xnthread *curr)
+{
+	int kpolicy = SCHED_FIFO, kprio = curr->bprio, ret;
+	struct task_struct *p = current;
+	struct sched_param param;
+	spl_t s;
+
+	/*
+	 * Test-set race for XNSCHEDP is ok, the propagation is meant
+	 * to be done asap but not guaranteed to be carried out
+	 * immediately, and the request will remain pending until it
+	 * is eventually handled. We just have to protect against a
+	 * set-clear race.
+	 */
+	xnlock_get_irqsave(&nklock, s);
+	xnthread_clear_info(curr, XNSCHEDP);
+	xnlock_put_irqrestore(&nklock, s);
+
+	/*
+	 * Map our policies/priorities to the regular kernel's
+	 * (approximated).
+	 */
+	if (xnthread_test_state(curr, XNWEAK) && kprio == 0)
+		kpolicy = SCHED_NORMAL;
+	else if (kprio >= MAX_USER_RT_PRIO)
+		kprio = MAX_USER_RT_PRIO - 1;
+
+	if (p->policy != kpolicy || (kprio > 0 && p->rt_priority != kprio)) {
+		param.sched_priority = kprio;
+		ret = sched_setscheduler_nocheck(p, kpolicy, &param);
+		XENO_WARN_ON(COBALT, ret != 0);
+	}
+}
+
 /**
  * @internal
  * @fn void xnthread_relax(int notify, int reason);
@@ -2066,6 +2106,21 @@ void xnthread_relax(int notify, int reason)
 	/* Account for secondary mode switch. */
 	xnstat_counter_inc(&thread->stat.ssw);
 
+	/*
+	 * When relaxing, we check for propagating to the regular
+	 * kernel new Cobalt schedparams that might have been set for
+	 * us while we were running in primary mode.
+	 *
+	 * CAUTION: This obviously won't update the schedparams cached
+	 * by the glibc for the caller in user-space, but this is the
+	 * deal: we don't relax threads which issue
+	 * pthread_setschedparam[_ex]() from primary mode, but then
+	 * only the kernel side (Cobalt and the host kernel) will be
+	 * aware of the change, and glibc might cache obsolete
+	 * information.
+	 */
+	xnthread_propagate_schedparam(thread);
+	
 	if (xnthread_test_state(thread, XNUSER) && notify) {
 		xndebug_notify_relax(thread, reason);
 		if (xnthread_test_state(thread, XNWARN)) {

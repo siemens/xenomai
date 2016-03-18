@@ -561,6 +561,14 @@ int xnthread_set_schedparam(struct xnthread *thread,
 
 int xnthread_killall(int grace, int mask);
 
+void __xnthread_propagate_schedparam(struct xnthread *curr);
+
+static inline void xnthread_propagate_schedparam(struct xnthread *curr)
+{
+	if (xnthread_test_info(curr, XNSCHEDP))
+		__xnthread_propagate_schedparam(curr);
+}
+
 extern struct xnthread_personality xenomai_personality;
 
 /** @} */
