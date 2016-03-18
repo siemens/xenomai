@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <asm/xenomai/syscall.h>
-#include "current.h"
 #include "internal.h"
 
 /**
@@ -297,11 +296,13 @@ int sched_setscheduler_ex(pid_t pid,
 		return EINVAL;
 
 	/* See pthread_setschedparam_ex(). */
-	
-	std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
-	ret = __STD(sched_setscheduler(pid, std_policy, &std_param));
-	if (ret)
-		return errno;
+
+	if (cobalt_is_relaxed()) {
+		std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
+		ret = __STD(sched_setscheduler(pid, std_policy, &std_param));
+		if (ret)
+			return errno;
+	}
 
 	ret = -XENOMAI_SYSCALL5(sc_cobalt_sched_setscheduler_ex,
 				pid, policy, param_ex,

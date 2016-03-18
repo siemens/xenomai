@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <asm/xenomai/syscall.h>
-#include "current.h"
 #include "internal.h"
 
 /**
@@ -45,50 +44,6 @@
 static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
-
-int cobalt_xlate_schedparam(int policy,
-			    const struct sched_param_ex *param_ex,
-			    struct sched_param *param)
-{
-	int std_policy, priority;
-
-	/*
-	 * Translates Cobalt scheduling parameters to native ones,
-	 * based on a best approximation for Cobalt policies which are
-	 * not available from the host kernel.
-	 */
-	std_policy = policy;
-	priority = param_ex->sched_priority;
-
-	switch (policy) {
-	case SCHED_WEAK:
-		std_policy = priority ? SCHED_FIFO : SCHED_OTHER;
-		break;
-	default:
-		std_policy = SCHED_FIFO;
-		/* falldown wanted. */
-	case SCHED_OTHER:
-	case SCHED_FIFO:
-	case SCHED_RR:
-		/*
-		 * The Cobalt priority range is larger than those of
-		 * the native SCHED_FIFO/RR classes, so we have to cap
-		 * the priority value accordingly.  We also remap
-		 * "weak" (negative) priorities - which are only
-		 * meaningful for the Cobalt core - to regular values.
-		 */
-		if (priority > __cobalt_std_fifo_maxpri)
-			priority = __cobalt_std_fifo_maxpri;
-	}
-
-	if (priority < 0)
-		priority = -priority;
-	
-	memset(param, 0, sizeof(*param));
-	param->sched_priority = priority;
-
-	return std_policy;
-}
 
 struct pthread_iargs {
 	struct sched_param_ex param_ex;
@@ -125,7 +80,10 @@ static void *cobalt_thread_trampoline(void *p)
 	start = iargs->start;
 	arg = iargs->arg;
 
-	/* Set our scheduling parameters for the host kernel first. */
+	/*
+	 * We don't have any Xenomai extension yet, set our base
+	 * scheduling parameters for the host kernel first.
+	 */
 	std_policy = cobalt_xlate_schedparam(policy, &param_ex, &std_param);
 	ret = __STD(pthread_setschedparam(ptid, std_policy, &std_param));
 	if (ret)
@@ -652,13 +610,31 @@ int pthread_setschedparam_ex(pthread_t thread,
 	__u32 u_winoff;
 
 	/*
-	 * First we tell the libc and the regular kernel about the
-	 * policy/param change, then we tell Xenomai.
+	 * If we enter this call over a relaxed context, take the
+	 * opportunity to tell the host kernel via the regular libc
+	 * about the new schedparams right now, then tell Xenomai
+	 * next.  Otherwise, send the request to Xenomai only, which
+	 * will propagate the change to the host kernel asap,
+	 * i.e. almost immediately if the target thread is already
+	 * relaxed, or when it relaxes otherwise.
+	 *
+	 * CAUTION: when lazy propagation has to take place
+	 * (i.e. calling pthread_setschedparam_ex() from primary
+	 * mode), glibc's cached idea of the current schedparams of
+	 * the target thread will be out of sync. This is part of the
+	 * trade-off to keep the caller running in primary mode
+	 * throughout this service.
+	 *
+	 * Application which are sensitive to this issue with Xenomai
+	 * threads should refrain from mixing APIs for managing
+	 * scheduling parameters, and only rely on libcobalt for this.
 	 */
-	std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
-	ret = __STD(pthread_setschedparam(thread, std_policy, &std_param));
-	if (ret)
-		return ret;
+	if (cobalt_is_relaxed()) { /* True if shadow not mapped yet. */
+		std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
+		ret = __STD(pthread_setschedparam(thread, std_policy, &std_param));
+		if (ret)
+			return ret;
+	}
 
 	ret = -XENOMAI_SYSCALL5(sc_cobalt_thread_setschedparam_ex,
 				thread, policy, param_ex,

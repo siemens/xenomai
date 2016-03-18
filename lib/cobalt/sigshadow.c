@@ -57,6 +57,14 @@ int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 		skip = nr > 3 ? 3 : 0;
 		XENOMAI_SYSCALL3(sc_cobalt_backtrace, nr - skip, frames + skip, arg);
 		break;
+	case SIGSHADOW_ACTION_HOME:
+		/*
+		 * We have been asked to call home from the current
+		 * context: sending a query for retrieving our handle
+		 * will just do this.
+		 */
+		cobalt_get_current_slow();
+		break;
 	default:
 		return 0;
 	}

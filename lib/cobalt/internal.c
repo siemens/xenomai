@@ -516,6 +516,49 @@ int cobalt_sched_weighted_prio(int policy,
 	return XENOMAI_SYSCALL2(sc_cobalt_sched_weightprio, policy, param_ex);
 }
 
+int cobalt_xlate_schedparam(int policy,
+			    const struct sched_param_ex *param_ex,
+			    struct sched_param *param)
+{
+	int std_policy, priority;
+
+	/*
+	 * Translates Cobalt scheduling parameters to native ones,
+	 * based on a best approximation for Cobalt policies which are
+	 * not available from the host kernel.
+	 */
+	std_policy = policy;
+	priority = param_ex->sched_priority;
+
+	switch (policy) {
+	case SCHED_WEAK:
+		std_policy = priority ? SCHED_FIFO : SCHED_OTHER;
+		break;
+	default:
+		std_policy = SCHED_FIFO;
+		/* falldown wanted. */
+	case SCHED_OTHER:
+	case SCHED_FIFO:
+	case SCHED_RR:
+		/*
+		 * The Cobalt priority range is larger than those of
+		 * the native SCHED_FIFO/RR classes, so we have to cap
+		 * the priority value accordingly.  We also remap
+		 * "weak" (negative) priorities - which are only
+		 * meaningful for the Cobalt core - to regular values.
+		 */
+		if (priority > __cobalt_std_fifo_maxpri)
+			priority = __cobalt_std_fifo_maxpri;
+	}
+
+	if (priority < 0)
+		priority = -priority;
+	
+	memset(param, 0, sizeof(*param));
+	param->sched_priority = priority;
+
+	return std_policy;
+}
 
 /*
  * Temporary compatibility aliases which should be phased out at next
