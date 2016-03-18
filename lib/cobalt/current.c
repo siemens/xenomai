@@ -47,6 +47,7 @@ static inline void __cobalt_set_tsd(xnhandle_t current, __u32 u_winoff)
 static inline void __cobalt_clear_tsd(void)
 {
 	cobalt_current = XN_NO_HANDLE;
+	cobalt_current_window = NULL;
 }
 
 static void init_current_keys(void)
@@ -75,6 +76,7 @@ static inline void __cobalt_set_tsd(xnhandle_t current,
 static inline void __cobalt_clear_tsd(void)
 {
 	pthread_setspecific(cobalt_current_key, NULL);
+	pthread_setspecific(cobalt_current_window_key, NULL);
 }
 
 static void init_current_keys(void)

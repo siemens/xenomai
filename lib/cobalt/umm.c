@@ -88,7 +88,7 @@ void cobalt_unmap_umm(void)
 	 * On machines without an MMU, there is no such thing as fork.
 	 *
 	 * We replace former mappings with an invalid one, to detect
-	 * any spuriously late access from the fastsync code.
+	 * any spurious late access.
 	 */
 	addr = __STD(mmap(cobalt_umm_private,
 			  private_size, PROT_NONE,
