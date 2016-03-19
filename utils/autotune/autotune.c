@@ -24,6 +24,7 @@
 #include <pthread.h>
 #include <limits.h>
 #include <time.h>
+#include <signal.h>
 #include <error.h>
 #include <sys/cobalt.h>
 #include <rtdm/autotune.h>
@@ -285,6 +286,7 @@ int main(int argc, char *const argv[])
 		error(1, errno, "cannot set CPU affinity");
 
 	if (background) {
+		signal(SIGHUP, SIG_IGN);
 		ret = daemon(0, 0);
 		if (ret)
 			error(1, errno, "cannot daemonize");
