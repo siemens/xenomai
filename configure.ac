@@ -291,6 +291,25 @@ if test x$workaround_condvar_pi = xy; then
    fi
 fi
 
+dnl Lazy schedparam propagation for Cobalt (default: off)
+
+unset lazy_setsched_update
+AC_MSG_CHECKING(whether to enable lazy scheduling parameter update)
+AC_ARG_ENABLE(lazy-setsched,
+	AS_HELP_STRING([--enable-lazy-setsched], [Enable lazy scheduling parameter update]),
+	[case "$enableval" in
+	y | yes) lazy_setsched_update=y ;;
+	*) unset lazy_setsched_update ;;
+	esac])
+AC_MSG_RESULT(${lazy_setsched_update:-no})
+if test x$lazy_setsched_update = xy; then
+   if test x$rtcore_type = xcobalt; then
+	AC_DEFINE(CONFIG_XENO_LAZY_SETSCHED,1,[config])
+   else
+        AC_MSG_WARN([No lazy scheduling parameter updates over Mercury - ignoring])
+   fi
+fi
+
 dnl Enable shared multi-processing (default: off)
 
 use_pshared=

@@ -297,7 +297,7 @@ int sched_setscheduler_ex(pid_t pid,
 
 	/* See pthread_setschedparam_ex(). */
 
-	if (cobalt_is_relaxed()) {
+	if (cobalt_eager_setsched()) {
 		std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
 		ret = __STD(sched_setscheduler(pid, std_policy, &std_param));
 		if (ret)

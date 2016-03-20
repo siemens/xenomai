@@ -629,7 +629,8 @@ int pthread_setschedparam_ex(pthread_t thread,
 	 * threads should refrain from mixing APIs for managing
 	 * scheduling parameters, and only rely on libcobalt for this.
 	 */
-	if (cobalt_is_relaxed()) { /* True if shadow not mapped yet. */
+	if (cobalt_eager_setsched()) {
+		/* True if disabled or shadow not mapped yet. */
 		std_policy = cobalt_xlate_schedparam(policy, param_ex, &std_param);
 		ret = __STD(pthread_setschedparam(thread, std_policy, &std_param));
 		if (ret)
