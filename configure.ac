@@ -497,6 +497,8 @@ AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
 		pthread_mutexattr_getprioceiling \
 		pthread_mutexattr_setprioceiling \
 		pthread_mutexattr_setrobust_np	\
+		pthread_mutex_getprioceiling	\
+		pthread_mutex_setprioceiling	\
 		pthread_condattr_getclock	\
 		pthread_condattr_setclock	\
 		pthread_spin_lock fork		\
