@@ -1,4 +1,5 @@
 menuconfig XENOMAI
+	depends on !MIGRATION
 	depends on X86_TSC || !X86
 	bool "Xenomai/cobalt"
 	select IPIPE
@@ -17,6 +18,11 @@ menuconfig XENOMAI
 
 if XENOMAI
 source "arch/$SRCARCH/xenomai/Kconfig"
+endif
+
+if MIGRATION
+comment "Xenomai requires disabling page migration/memory compaction"
+comment "(Support for transparent hugepages requires memory compaction)"
 endif
 
 if APM || CPU_FREQ || ACPI_PROCESSOR || INTEL_IDLE
