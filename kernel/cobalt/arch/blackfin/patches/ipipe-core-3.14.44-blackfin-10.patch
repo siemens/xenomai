@@ -12,7 +12,7 @@ index 9ceccef..3c94fa7 100644
  
  comment "Processor and Board Settings"
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index 17b5e92..db71a80 100644
+index 17b5e92..07d4364 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
 @@ -28,7 +28,7 @@
@@ -32,7 +32,7 @@ index 17b5e92..db71a80 100644
 -#define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    16
 -#define IPIPE_PATCH_NUMBER    1
-+#define IPIPE_CORE_RELEASE	9
++#define IPIPE_CORE_RELEASE	10
  
  #ifdef CONFIG_SMP
  #error "I-pipe/blackfin: SMP not implemented"
@@ -11571,18 +11571,6 @@ index 04abe53..9b2ff41 100644
  		goto out;
  
  	/*
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 0862816..aacbf2df 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -397,6 +397,7 @@ config NOMMU_INITIAL_TRIM_EXCESS
- config TRANSPARENT_HUGEPAGE
- 	bool "Transparent Hugepage Support"
- 	depends on HAVE_ARCH_TRANSPARENT_HUGEPAGE
-+	depends on !IPIPE
- 	select COMPACTION
- 	help
- 	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
 index 749e1c6..090df7e 100644
 --- a/mm/memory.c
