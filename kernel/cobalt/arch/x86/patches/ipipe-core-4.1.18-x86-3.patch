@@ -434,7 +434,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..f01ff21
+index 0000000..b5966a6
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,112 @@
@@ -464,7 +464,7 @@ index 0000000..f01ff21
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	2
++#define IPIPE_CORE_RELEASE	3
 +
 +struct ipipe_domain;
 +struct pt_regs;
@@ -15294,18 +15294,6 @@ index 1afec32..5803111 100644
  		goto out;
  
  	/*
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 390214d..0ff2650 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -410,6 +410,7 @@ config NOMMU_INITIAL_TRIM_EXCESS
- config TRANSPARENT_HUGEPAGE
- 	bool "Transparent Hugepage Support"
- 	depends on HAVE_ARCH_TRANSPARENT_HUGEPAGE
-+	depends on !IPIPE
- 	select COMPACTION
- 	help
- 	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
 index 2a9e098..46ec4cd 100644
 --- a/mm/memory.c
