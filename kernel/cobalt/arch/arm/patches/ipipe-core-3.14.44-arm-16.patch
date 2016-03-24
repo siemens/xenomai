@@ -1592,7 +1592,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..4459611
+index 0000000..03bdbf4
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,272 @@
@@ -1640,7 +1640,7 @@ index 0000000..4459611
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	15
++#define IPIPE_CORE_RELEASE	16
 +
 +struct ipipe_domain;
 +
@@ -4232,7 +4232,7 @@ index 0000000..2829e9a
 +EXPORT_SYMBOL_GPL(cpu_architecture);
 diff --git a/arch/arm/kernel/ipipe_tsc.c b/arch/arm/kernel/ipipe_tsc.c
 new file mode 100644
-index 0000000..2e48631
+index 0000000..da8d986
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe_tsc.c
 @@ -0,0 +1,203 @@
@@ -4360,7 +4360,7 @@ index 0000000..2e48631
 +
 +	default:
 +	unimplemented:
-+		printk("I-pipel: Unimplemented tsc configuration, "
++		printk("I-pipe: Unimplemented tsc configuration, "
 +		       "type: %d, mask: 0x%08Lx\n", info->type, info->u.mask);
 +		BUG();
 +	}
@@ -4397,8 +4397,8 @@ index 0000000..2e48631
 +
 +	wrap_ms *= HZ / 2;
 +	do_div(wrap_ms, 1000);
-+	if (wrap_ms > 0xffffffff)
-+		wrap_ms = 0xffffffff;
++	if (wrap_ms > 0x7fffffff)
++		wrap_ms = 0x7fffffff;
 +	ipipe_tsc_update_timer.data = wrap_ms;
 +	ipipe_tsc_update_timer.function = __ipipe_tsc_update_fn;
 +	mod_timer(&ipipe_tsc_update_timer,
@@ -10858,7 +10858,7 @@ index 2f37e1d..7663e75 100644
  
  /*
 diff --git a/drivers/clocksource/arm_arch_timer.c b/drivers/clocksource/arm_arch_timer.c
-index 95fb944..36c1f95 100644
+index 95fb944..575b9ae 100644
 --- a/drivers/clocksource/arm_arch_timer.c
 +++ b/drivers/clocksource/arm_arch_timer.c
 @@ -21,6 +21,8 @@
@@ -10880,7 +10880,7 @@ index 95fb944..36c1f95 100644
  {
  	unsigned long ctrl;
  
-@@ -143,6 +144,49 @@ static __always_inline irqreturn_t timer_handler(const int access,
+@@ -143,6 +144,52 @@ static __always_inline irqreturn_t timer_handler(const int access,
  	if (ctrl & ARCH_TIMER_CTRL_IT_STAT) {
  		ctrl |= ARCH_TIMER_CTRL_IT_MASK;
  		arch_timer_reg_write(access, ARCH_TIMER_REG_CTRL, ctrl, evt);
@@ -10926,11 +10926,14 @@ index 95fb944..36c1f95 100644
 +			itimer->irq = irq;
 +#endif /* CONFIG_IPIPE */
 +	  stolen:
-+		__ipipe_tsc_update();
++		/*
++		 * This is a 64bit clock source, no need for TSC
++		 * update.
++		 */
  		evt->event_handler(evt);
  		return IRQ_HANDLED;
  	}
-@@ -154,28 +198,28 @@ static irqreturn_t arch_timer_handler_virt(int irq, void *dev_id)
+@@ -154,28 +201,28 @@ static irqreturn_t arch_timer_handler_virt(int irq, void *dev_id)
  {
  	struct clock_event_device *evt = dev_id;
  
@@ -10963,7 +10966,7 @@ index 95fb944..36c1f95 100644
  }
  
  static __always_inline void timer_set_mode(const int access, int mode,
-@@ -293,6 +337,18 @@ static void __arch_timer_setup(unsigned type,
+@@ -293,6 +340,18 @@ static void __arch_timer_setup(unsigned type,
  
  	clk->set_mode(CLOCK_EVT_MODE_SHUTDOWN, clk);
  
@@ -10982,7 +10985,7 @@ index 95fb944..36c1f95 100644
  	clockevents_config_and_register(clk, arch_timer_rate, 0xf, 0x7fffffff);
  }
  
-@@ -431,6 +487,11 @@ static void __init arch_counter_register(unsigned type)
+@@ -431,6 +490,11 @@ static void __init arch_counter_register(unsigned type)
  	else
  		arch_timer_read_counter = arch_counter_get_cntvct_mem;
  
@@ -22200,18 +22203,6 @@ index 04abe53..9b2ff41 100644
  		goto out;
  
  	/*
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 0862816..aacbf2df 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -397,6 +397,7 @@ config NOMMU_INITIAL_TRIM_EXCESS
- config TRANSPARENT_HUGEPAGE
- 	bool "Transparent Hugepage Support"
- 	depends on HAVE_ARCH_TRANSPARENT_HUGEPAGE
-+	depends on !IPIPE
- 	select COMPACTION
- 	help
- 	  Transparent Hugepages allows the kernel to use huge pages and
 diff --git a/mm/memory.c b/mm/memory.c
 index 749e1c6..090df7e 100644
 --- a/mm/memory.c
