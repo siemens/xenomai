@@ -1635,7 +1635,7 @@ index bb28af7..780ca50 100644
  static inline void sp804_clockevents_init(void __iomem *base, unsigned int irq, const char *name)
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..eccfbcb
+index 0000000..df05570
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,297 @@
@@ -1685,7 +1685,7 @@ index 0000000..eccfbcb
 +#include <linux/jump_label.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	4
 +
 +struct ipipe_domain;
 +struct timekeeper;
@@ -6301,7 +6301,7 @@ index 0f04e30..ab12460 100644
  int mx21_clocks_init(unsigned long lref, unsigned long fref);
  int mx27_clocks_init(unsigned long fref);
 diff --git a/arch/arm/mach-imx/gpc.c b/arch/arm/mach-imx/gpc.c
-index 78b6fd0..711177f 100644
+index 78b6fd0..e8dc2f5 100644
 --- a/arch/arm/mach-imx/gpc.c
 +++ b/arch/arm/mach-imx/gpc.c
 @@ -14,6 +14,7 @@
@@ -6391,30 +6391,29 @@ index 78b6fd0..711177f 100644
  }
  
  void imx_gpc_hwirq_unmask(unsigned int hwirq)
-@@ -159,16 +180,50 @@ void imx_gpc_hwirq_mask(unsigned int hwirq)
+@@ -159,16 +180,49 @@ void imx_gpc_hwirq_mask(unsigned int hwirq)
  
  static void imx_gpc_irq_unmask(struct irq_data *d)
  {
 +	unsigned long flags;
 +
-+	raw_spin_lock_irqsave_cond(&gpc_lock, flags);
++	raw_spin_lock_irqsave(&gpc_lock, flags);
  	imx_gpc_hwirq_unmask(d->hwirq);
-+	raw_spin_unlock(&gpc_lock);
++	__ipipe_spin_unlock_irqbegin(&gpc_lock);
  	irq_chip_unmask_parent(d);
-+	/* Parent IC will handle virtual unlocking */
-+	hard_cond_local_irq_restore(flags);
++	__ipipe_spin_unlock_irqcomplete(flags);
  }
  
  static void imx_gpc_irq_mask(struct irq_data *d)
  {
 +	unsigned long flags;
 +
-+	raw_spin_lock_irqsave_cond(&gpc_lock, flags);
++	raw_spin_lock_irqsave(&gpc_lock, flags);
 +	/* Parent IC will handle virtual locking */
  	imx_gpc_hwirq_mask(d->hwirq);
-+	raw_spin_unlock(&gpc_lock);
++	__ipipe_spin_unlock_irqbegin(&gpc_lock);
  	irq_chip_mask_parent(d);
-+	hard_cond_local_irq_restore(flags);
++	__ipipe_spin_unlock_irqcomplete(flags);
  }
  
 +#ifdef CONFIG_IPIPE
@@ -6442,7 +6441,7 @@ index 78b6fd0..711177f 100644
  static struct irq_chip imx_gpc_chip = {
  	.name			= "GPC",
  	.irq_eoi		= irq_chip_eoi_parent,
-@@ -179,6 +234,10 @@ static struct irq_chip imx_gpc_chip = {
+@@ -179,6 +233,10 @@ static struct irq_chip imx_gpc_chip = {
  #ifdef CONFIG_SMP
  	.irq_set_affinity	= irq_chip_set_affinity_parent,
  #endif
@@ -8993,15 +8992,30 @@ index 9769f1e..c3a4a6f 100644
  			set_cr(cr_no_alignment);
  	}
 diff --git a/arch/arm/mm/cache-l2x0.c b/arch/arm/mm/cache-l2x0.c
-index e309c8f..ec1f240 100644
+index e309c8f..7053f1b 100644
 --- a/arch/arm/mm/cache-l2x0.c
 +++ b/arch/arm/mm/cache-l2x0.c
-@@ -47,9 +47,15 @@ struct l2c_init_data {
+@@ -23,6 +23,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/log2.h>
+ #include <linux/io.h>
++#include <linux/kconfig.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+ 
+@@ -47,9 +48,22 @@ struct l2c_init_data {
  
  #define CACHE_LINE_SIZE		32
  
 +#ifdef CONFIG_IPIPE
 +#define CACHE_RANGE_ATOMIC_MAX	512UL
++static int l2x0_wa = -1;
++static int __init l2x0_setup_wa(char *str)
++{
++	l2x0_wa = !!simple_strtol(str, NULL, 0);
++	return 0;
++}
++early_param("l2x0_write_allocate", l2x0_setup_wa);
 +#else
 +#define CACHE_RANGE_ATOMIC_MAX	4096UL
 +#endif
@@ -9013,7 +9027,7 @@ index e309c8f..ec1f240 100644
  static u32 l2x0_way_mask;	/* Bitmask of active ways */
  static u32 l2x0_size;
  static unsigned long sync_reg_offset = L2X0_CACHE_SYNC;
-@@ -292,10 +298,10 @@ static void l2c220_op_way(void __iomem *base, unsigned reg)
+@@ -292,10 +306,10 @@ static void l2c220_op_way(void __iomem *base, unsigned reg)
  static unsigned long l2c220_op_pa_range(void __iomem *reg, unsigned long start,
  	unsigned long end, unsigned long flags)
  {
@@ -9026,7 +9040,7 @@ index e309c8f..ec1f240 100644
  
  		while (start < blk_end) {
  			l2c_wait_mask(reg, 1);
-@@ -498,13 +504,13 @@ static void l2c310_inv_range_erratum(unsigned long start, unsigned long end)
+@@ -498,13 +512,13 @@ static void l2c310_inv_range_erratum(unsigned long start, unsigned long end)
  
  static void l2c310_flush_range_erratum(unsigned long start, unsigned long end)
  {
@@ -9042,6 +9056,29 @@ index e309c8f..ec1f240 100644
  
  		l2c_set_debug(base, 0x03);
  		while (start < blk_end) {
+@@ -797,6 +811,22 @@ static int __init __l2c_init(const struct l2c_init_data *data,
+ 	if (aux_val & aux_mask)
+ 		pr_alert("L2C: platform provided aux values permit register corruption.\n");
+ 
++	if (IS_ENABLED(CONFIG_IPIPE)) {
++		switch (cache_id & L2X0_CACHE_ID_PART_MASK) {
++		case L2X0_CACHE_ID_PART_L310:
++		case L2X0_CACHE_ID_PART_L220:
++			if (l2x0_wa < 0) {
++				l2x0_wa = 0;
++				pr_alert("L2C: I-pipe: l2x0_write_allocate= not specified, defaults to 0 (disabled).\n");
++			}
++			aux_mask &= ~L220_AUX_CTRL_FWA_MASK;
++			aux_val &= ~L220_AUX_CTRL_FWA_MASK;
++			aux_val |= (!l2x0_wa) << L220_AUX_CTRL_FWA_SHIFT;
++		}
++		if (l2x0_wa)
++			pr_alert("L2C: I-pipe: write-allocate enabled, induces high latencies.\n");
++	}
++
+ 	old_aux = aux = readl_relaxed(l2x0_base + L2X0_AUX_CTRL);
+ 	aux &= aux_mask;
+ 	aux |= aux_val;
 diff --git a/arch/arm/mm/context.c b/arch/arm/mm/context.c
 index 845769e..e740196 100644
 --- a/arch/arm/mm/context.c
