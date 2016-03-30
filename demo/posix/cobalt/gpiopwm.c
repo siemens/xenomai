@@ -18,9 +18,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <linux/netdevice.h>
 
-#define MIN_DUTY_CYCLE	0
-#define MAX_DUTY_CYCLE	100
+#define MIN_DUTY_CYCLE				(0)
+#define MAX_DUTY_CYCLE				(100)
 
 typedef void *(*gpiopwm_control_thread)(void *cookie);
 #define DEVICE_NAME "/dev/rtdm/gpiopwm"
@@ -32,6 +33,11 @@ static sem_t setup;
 static int stop;
 static int step = 1;
 static int port = 66666;
+
+#define MAX_IP_INTERFACES 			(9)
+static char *ip_str[MAX_IP_INTERFACES + 1];
+static int last_ip;
+
 
 #define GPIO_PWM_SERVO_CONFIG			\
 {						\
@@ -75,7 +81,11 @@ static inline void clear_screen(void)
 
 static inline void print_config(char *str)
 {
+	int i;
+
 	printf("Config: %s\n", str);
+	for (i = 0; i < last_ip ; i++)
+		printf("%s", ip_str[i]);
 	printf(" device     : %s\n", device_name);
 	printf(" range      : [%d, %d]\n", config.range_min, config.range_max);
 	printf(" period     : %d nsec\n", config.period);
@@ -88,6 +98,51 @@ static inline void input_message(void)
 	print_config("");
 	printf("\n GPIO PWM Control\n");
 	printf( "  Enter duty_cycle [0-100] : ");
+}
+
+static void get_ip_addresses(void)
+{
+	char ip[INET_ADDRSTRLEN];
+	struct sockaddr_in *s_in;
+	struct ifconf ifconf;
+	struct ifreq ifr[10];
+	int ret;
+	int ifs;
+	int i;
+	int s;
+
+	s = socket(AF_INET, SOCK_STREAM, 0);
+	if (s < 0)
+		return;
+
+	ifconf.ifc_buf = (char *) ifr;
+	ifconf.ifc_len = sizeof(ifr);
+
+	if (ioctl(s, SIOCGIFCONF, &ifconf) == -1)
+		return;
+
+	ifs = ifconf.ifc_len / sizeof(ifr[0]);
+
+	/* we wont _display_ more than MAX_IP_INTERFACES */
+	if (ifs > MAX_IP_INTERFACES)
+		ifs = MAX_IP_INTERFACES;
+
+	last_ip = ifs + 1;
+
+	for (i = 0; i < ifs; i++) {
+		s_in = (struct sockaddr_in *) &ifr[i].ifr_addr;
+		if (!inet_ntop(AF_INET, &s_in->sin_addr, ip, sizeof(ip)))
+			return;
+		ret = asprintf(&ip_str[i]," ip      : %s\n", ip);
+		if (ret)
+			perror("asprintf");
+	}
+
+	ret = asprintf(&ip_str[i]," port    : %d\n\n", port);
+	if (ret)
+		perror("asprintf");
+
+	close(s);
 }
 
 static void setup_sched_parameters(pthread_attr_t *attr, int prio)
@@ -171,7 +226,7 @@ static void *gpiopwm_udp_ctrl_thread(void *cookie)
 	for (;;) {
 
 		clear_screen();
-		print_config("UDP server");
+		print_config("UDP Server\n");
 
 		memset(buf,'\0', blen);
 		ret = recvfrom(sockfd, buf, blen - 1, 0, &caddr, &clen);
@@ -382,6 +437,7 @@ int main(int argc, char *argv[])
 		case udp_opt:
 			handler = gpiopwm_udp_ctrl_thread;
 			port = atoi(optarg);
+			get_ip_addresses();
 			break;
 		case config_opt:
 			p = strtok(optarg,":");
