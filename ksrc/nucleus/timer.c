@@ -59,7 +59,6 @@ void xntimer_next_local_shot(xnsched_t *sched)
 {
 	struct xntimer *timer;
 	xnsticks_t delay;
-	xntimerq_it_t it;
 	xntimerh_t *h;
 
 	/*
@@ -70,7 +69,7 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	if (testbits(sched->status, XNINTCK))
 		return;
 
-	h = xntimerq_it_begin(&sched->timerqueue, &it);
+	h = xntimerq_head(&sched->timerqueue);
 	if (h == NULL)
 		return;
 
@@ -99,7 +98,7 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	if (unlikely(timer == &sched->htimer)) {
 		if (xnsched_resched_p(sched) ||
 		    !xnthread_test_state(sched->curr, XNROOT)) {
-			h = xntimerq_it_next(&sched->timerqueue, &it, h);
+			h = xntimerq_second(&sched->timerqueue, h);
 			if (h) {
 				__setbits(sched->lflags, XNHDEFER);
 				timer = aplink2timer(h);
@@ -123,15 +122,14 @@ void xntimer_next_local_shot(xnsched_t *sched)
 static inline int xntimer_heading_p(struct xntimer *timer)
 {
 	struct xnsched *sched = timer->sched;
-	xntimerq_it_t it;
 	xntimerh_t *h;
 
-	h = xntimerq_it_begin(&sched->timerqueue, &it);
+	h = xntimerq_head(&sched->timerqueue);
 	if (h == &timer->aplink)
 		return 1;
 
 	if (testbits(sched->lflags, XNHDEFER)) {
-		h = xntimerq_it_next(&sched->timerqueue, &it, h);
+		h = xntimerq_second(&sched->timerqueue, h);
 		if (h == &timer->aplink)
 			return 1;
 	}
@@ -1165,4 +1163,35 @@ void xntimer_cleanup_proc(void)
 
 #endif /* CONFIG_XENO_OPT_VFILE */
 
+#if defined(CONFIG_XENO_OPT_TIMER_RBTREE)
+static inline bool xntimerh_is_lt(xntimerh_t *left, xntimerh_t *right)
+{
+	return left->date < right->date
+		|| (left->date == right->date && left->prio > right->prio);
+}
+
+void xntimerq_insert(xntimerq_t *q, xntimerh_t *holder)
+{
+	struct rb_node **new = &q->root.rb_node, *parent = NULL;
+
+	if (!q->head)
+		q->head = holder;
+	else if (xntimerh_is_lt(holder, q->head)) {
+		parent = &q->head->link;
+		new = &parent->rb_left;
+		q->head = holder;
+	} else while (*new) {
+		xntimerh_t *i = container_of(*new, xntimerh_t, link);
+
+		parent = *new;
+		if (xntimerh_is_lt(holder, i))
+			new = &((*new)->rb_left);
+		else
+			new = &((*new)->rb_right);
+	}
+
+	rb_link_node(&holder->link, parent, new);
+	rb_insert_color(&holder->link, &q->root);
+}
+#endif
 /*@}*/

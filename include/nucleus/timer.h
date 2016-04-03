@@ -83,6 +83,8 @@ typedef struct {
 		!_h ? NULL : link2tlholder(_h);		\
 	})
 
+#define xntlist_second(q, h) xntlist_next((q),(h))
+
 static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 {
 	xnholder_t *p;
@@ -103,147 +105,59 @@ static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 
 #define xntlist_remove(q, h)  removeq((q),&(h)->link)
 
-#if defined(CONFIG_XENO_OPT_TIMER_HEAP)
+#if defined(CONFIG_XENO_OPT_TIMER_RBTREE)
 
-#include <nucleus/bheap.h>
+#include <linux/rbtree.h>
 
-typedef bheaph_t xntimerh_t;
+typedef struct {
+	unsigned long long date;
+	unsigned prio;
+	struct rb_node link;
+} xntimerh_t;
 
-#define xntimerh_date(h)          bheaph_key(h)
-#define xntimerh_prio(h)          bheaph_prio(h)
-#define xntimerh_init(h)          bheaph_init(h)
+#define xntimerh_date(h) ((h)->date)
+#define xntimerh_prio(h) ((h)->prio)
+#define xntimerh_init(h) do { } while (0)
 
-typedef DECLARE_BHEAP_CONTAINER(xntimerq_t, CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY);
-
-#define xntimerq_init(q)          bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
-#define xntimerq_destroy(q)       bheap_destroy(q)
-#define xntimerq_head(q)          bheap_gethead(q)
-#define xntimerq_insert(q, h)     bheap_insert((q),(h))
-#define xntimerq_remove(q, h)     bheap_delete((q),(h))
-
-typedef struct {} xntimerq_it_t;
-
-#define xntimerq_it_begin(q, i)   ((void) (i), bheap_gethead(q))
-#define xntimerq_it_next(q, i, h) ((void) (i), bheap_next((q),(h)))
-
-#elif defined(CONFIG_XENO_OPT_TIMER_WHEEL)
-
-typedef xntlholder_t xntimerh_t;
-
-#define xntimerh_date(h)       xntlholder_date(h)
-#define xntimerh_prio(h)       xntlholder_prio(h)
-#define xntimerh_init(h)       xntlholder_init(h)
-
-typedef struct xntimerq {
-	unsigned date_shift;
-	unsigned long long next_shot;
-	unsigned long long shot_wrap;
-	xnqueue_t bucket[XNTIMER_WHEELSIZE];
+typedef struct {
+	struct rb_root root;
+	xntimerh_t *head;
 } xntimerq_t;
 
-typedef struct xntimerq_it {
-	unsigned bucket;
-} xntimerq_it_t;
+#define xntimerq_init(q)			\
+	({					\
+		xntimerq_t *_q = (q);		\
+		_q->root = RB_ROOT;		\
+		_q->head = NULL;		\
+	})
 
-static inline void xntimerq_init(xntimerq_t *q)
+#define xntimerq_destroy(q) do { } while (0)
+#define xntimerq_empty(q) ((q)->head != NULL)
+
+#define xntimerq_head(q) ((q)->head)
+
+#define xntimerq_next(q, h)						\
+	({								\
+		struct rb_node *_node = rb_next(&(h)->link);		\
+		_node ? (container_of(_node, xntimerh_t, link)) : NULL; \
+	})
+
+#define xntimerq_second(q, h) xntimerq_next(q, h)
+
+void xntimerq_insert(xntimerq_t *q, xntimerh_t *holder);
+
+static inline void xntimerq_remove(xntimerq_t *q, xntimerh_t *holder)
 {
-	unsigned long long step_tsc;
-	unsigned i;
+	if (holder == q->head)
+		q->head = xntimerq_second(q, holder);
 
-	step_tsc = xnarch_ns_to_tsc(CONFIG_XENO_OPT_TIMER_WHEEL_STEP);
-	/* q->date_shift = fls(step_tsc); */
-	for (q->date_shift = 0; (1 << q->date_shift) < step_tsc; q->date_shift++)
-		;
-	q->next_shot = q->shot_wrap = ((~0ULL) >> q->date_shift) + 1;
-	for (i = 0; i < sizeof(q->bucket)/sizeof(xnqueue_t); i++)
-		xntlist_init(&q->bucket[i]);
+	rb_erase(&holder->link, &q->root);
 }
 
-#define xntimerq_destroy(q)    do { } while (0)
+typedef struct { } xntimerq_it_t;
 
-static inline xntlholder_t *xntimerq_head(xntimerq_t *q)
-{
-	unsigned bucket = ((unsigned) q->next_shot) & XNTIMER_WHEELMASK;
-	xntlholder_t *result;
-	unsigned i;
-
-	if (q->next_shot == q->shot_wrap)
-		return NULL;
-
-	result = xntlist_head(&q->bucket[bucket]);
-
-	if (result && (xntlholder_date(result) >> q->date_shift) == q->next_shot)
-		return result;
-
-	/* We could not find the next timer in the first bucket, iterate over
-	   the other buckets. */
-	for (i = (bucket + 1) & XNTIMER_WHEELMASK ;
-	     i != bucket; i = (i + 1) & XNTIMER_WHEELMASK) {
-		xntlholder_t *candidate = xntlist_head(&q->bucket[i]);
-
-		if(++q->next_shot == q->shot_wrap)
-			q->next_shot = 0;
-
-		if (!candidate)
-			continue;
-
-		if ((xntlholder_date(candidate) >> q->date_shift) == q->next_shot)
-			return candidate;
-
-		if (!result || (xnsticks_t) (xntlholder_date(candidate)
-					     - xntlholder_date(result)) < 0)
-			result = candidate;
-	}
-
-	if (result)
-		q->next_shot = (xntlholder_date(result) >> q->date_shift);
-	else
-		q->next_shot = q->shot_wrap;
-	return result;
-}
-
-static inline void xntimerq_insert(xntimerq_t *q, xntimerh_t *h)
-{
-	unsigned long long shifted_date = xntlholder_date(h) >> q->date_shift;
-	unsigned bucket = ((unsigned) shifted_date) & XNTIMER_WHEELMASK;
-
-	if ((long long) (shifted_date - q->next_shot) < 0)
-		q->next_shot = shifted_date;
-	xntlist_insert(&q->bucket[bucket], h);
-}
-
-static inline void xntimerq_remove(xntimerq_t *q, xntimerh_t *h)
-{
-	unsigned long long shifted_date = xntlholder_date(h) >> q->date_shift;
-	unsigned bucket = ((unsigned) shifted_date) & XNTIMER_WHEELMASK;
-
-	xntlist_remove(&q->bucket[bucket], h);
-	/* Do not attempt to update q->next_shot, xntimerq_head will recover. */
-}
-
-static inline xntimerh_t *xntimerq_it_begin(xntimerq_t *q, xntimerq_it_t *it)
-{
-	xntimerh_t *holder = NULL;
-
-	for (it->bucket = 0; it->bucket < XNTIMER_WHEELSIZE; it->bucket++)
-		if ((holder = xntlist_head(&q->bucket[it->bucket])))
-			break;
-
-	return holder;
-}
-
-static inline xntimerh_t *
-xntimerq_it_next(xntimerq_t *q, xntimerq_it_t *it, xntimerh_t *holder)
-{
-	xntimerh_t *next = xntlist_next(&q->bucket[it->bucket], holder);
-
-	if (!next)
-		for(it->bucket++; it->bucket < XNTIMER_WHEELSIZE; it->bucket++)
-			if ((next = xntlist_head(&q->bucket[it->bucket])))
-				break;
-
-	return next;
-}
+#define xntimerq_it_begin(q,i)	((void) (i), xntimerq_head(q))
+#define xntimerq_it_next(q,i,h) ((void) (i), xntimerq_next((q),(h)))
 
 #else /* CONFIG_XENO_OPT_TIMER_LIST */
 
@@ -258,6 +172,7 @@ typedef xnqueue_t xntimerq_t;
 #define xntimerq_init(q)        xntlist_init(q)
 #define xntimerq_destroy(q)     do { } while (0)
 #define xntimerq_head(q)        xntlist_head(q)
+#define xntimerq_second(q,h)	xntlist_second((q),(h))
 #define xntimerq_insert(q,h)    xntlist_insert((q),(h))
 #define xntimerq_remove(q, h)   xntlist_remove((q),(h))
 
