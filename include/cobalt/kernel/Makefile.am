@@ -4,7 +4,6 @@ noinst_HEADERS =	\
 	apc.h		\
 	arith.h		\
 	assert.h	\
-	bheap.h		\
 	bufd.h		\
 	clock.h		\
 	compat.h	\

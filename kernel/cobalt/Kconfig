@@ -177,7 +177,8 @@ config XENO_OPT_SCALABLE_SCHED
 
 choice
 	prompt "Timer indexing method"
-	default XENO_OPT_TIMER_LIST
+	default XENO_OPT_TIMER_LIST if !X86_64
+	default XENO_OPT_TIMER_RBTREE if X86_64
 	help
 	This option allows to select the underlying data structure
 	which is going to be used for ordering the outstanding
@@ -190,21 +191,14 @@ config XENO_OPT_TIMER_LIST
 	particularly efficient when only a few timers (< 10) may be
 	concurrently outstanding at any point in time.
 
-config XENO_OPT_TIMER_HEAP
+config XENO_OPT_TIMER_RBTREE
 	bool "Tree"
 	help
-	Use a binary heap. This data structure is efficient when a
+	Use a red-black tree. This data structure is efficient when a
 	high number of software timers may be concurrently
 	outstanding at any point in time.
 
 endchoice
-
-config XENO_OPT_TIMER_HEAP_CAPACITY
-	int "Binary heap capacity"
-	depends on XENO_OPT_TIMER_HEAP
-	default 256
-	help
-	Set the maximum number of timers the binary heap can index.
 
 config XENO_OPT_HOSTRT
        depends on IPIPE_HAVE_HOSTRT

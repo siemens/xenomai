@@ -167,7 +167,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	if (unlikely(timer == &sched->htimer)) {
 		if (xnsched_resched_p(sched) ||
 		    !xnthread_test_state(sched->curr, XNROOT)) {
-			h = xntimerq_second(&tmd->q);
+			h = xntimerq_second(&tmd->q, h);
 			if (h) {
 				sched->lflags |= XNHDEFER;
 				timer = container_of(h, struct xntimer, aplink);

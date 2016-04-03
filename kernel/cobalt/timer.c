@@ -55,7 +55,7 @@ int xntimer_heading_p(struct xntimer *timer)
 		return 1;
 
 	if (sched->lflags & XNHDEFER) {
-		h = xntimerq_second(q);
+		h = xntimerq_second(q, h);
 		if (h == &timer->aplink)
 			return 1;
 	}
@@ -924,5 +924,37 @@ void xntimer_release_hardware(void)
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 EXPORT_SYMBOL_GPL(xntimer_release_hardware);
+
+#if defined(CONFIG_XENO_OPT_TIMER_RBTREE)
+static inline bool xntimerh_is_lt(xntimerh_t *left, xntimerh_t *right)
+{
+	return left->date < right->date
+		|| (left->date == right->date && left->prio > right->prio);
+}
+
+void xntimerq_insert(xntimerq_t *q, xntimerh_t *holder)
+{
+	struct rb_node **new = &q->root.rb_node, *parent = NULL;
+
+	if (!q->head)
+		q->head = holder;
+	else if (xntimerh_is_lt(holder, q->head)) {
+		parent = &q->head->link;
+		new = &parent->rb_left;
+		q->head = holder;
+	} else while (*new) {
+		xntimerh_t *i = container_of(*new, xntimerh_t, link);
+
+		parent = *new;
+		if (xntimerh_is_lt(holder, i))
+			new = &((*new)->rb_left);
+		else
+			new = &((*new)->rb_right);
+	}
+
+	rb_link_node(&holder->link, parent, new);
+	rb_insert_color(&holder->link, &q->root);
+}
+#endif
 
 /** @} */
