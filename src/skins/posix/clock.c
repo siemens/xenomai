@@ -67,12 +67,12 @@ static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 	struct xnvdso_hostrt_data *hostrt_data;
 
 	if (!xnvdso_test_feature(XNVDSO_FEAT_HOST_REALTIME))
-		return -1;
+		return -ENODEV;
 
 	hostrt_data = &nkvdso->hostrt_data;
 
 	if (unlikely(!hostrt_data->live))
-		return -1;
+		return -ENODEV;
 
 	/*
 	 * The following is essentially a verbatim copy of the
@@ -111,7 +111,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 	switch (clock_id) {
 #ifdef XNARCH_HAVE_NONPRIV_TSC
 	case CLOCK_HOST_REALTIME:
-		err = __do_clock_host_realtime(tp, NULL);
+		err = -__do_clock_host_realtime(tp, NULL);
 		break;
 	case CLOCK_MONOTONIC:
 		if (__pse51_sysinfo.tickval == 1) {
