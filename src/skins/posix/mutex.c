@@ -265,6 +265,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 			}
 
 			++shadow->lockcnt;
+			err = 0;
 			goto out;
 		}
 
