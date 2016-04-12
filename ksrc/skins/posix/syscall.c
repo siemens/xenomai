@@ -1202,7 +1202,7 @@ static int __pthread_mutex_check_init(struct pt_regs *regs)
 	} else
 		attr = NULL;
 
-	return pse51_mutex_check_init(&umx->shadow_mutex, attr);
+	return pse51_mutex_check_init(&mx.shadow_mutex, attr);
 }
 
 static int __pthread_mutex_init(struct pt_regs *regs)
