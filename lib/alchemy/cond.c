@@ -98,7 +98,7 @@ static struct registry_operations registry_ops;
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Condition variables can be shared by multiple processes which
  * belong to the same Xenomai session.
@@ -191,7 +191,7 @@ out:
  * being used in a rt_cond_wait(), rt_cond_wait_timed() or
  * rt_cond_wait_until() by another task).
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_cond_delete(RT_COND *cond)
 {

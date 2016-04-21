@@ -170,7 +170,7 @@ fnref_register(libalchemy, sem_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Semaphores can be shared by multiple processes which belong
  * to the same Xenomai session.
@@ -254,7 +254,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_sem_delete(RT_SEM *sem)
 {

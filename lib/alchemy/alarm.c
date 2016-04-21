@@ -158,7 +158,7 @@ static void alarm_handler(struct timerobj *tmobj)
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Alarms are process-private objects and thus cannot be shared
  * by multiple processes, even if they belong to the same Xenomai
@@ -240,7 +240,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 #ifndef DOXYGEN_CPP
 CURRENT_IMPL(int, rt_alarm_delete, (RT_ALARM *alarm))

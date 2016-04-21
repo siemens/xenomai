@@ -1754,13 +1754,13 @@ static inline int main_overlay(void)
 
 	/*
 	 * Make the main() context a basic yet complete thread object,
-	 * so that it may use any services which require the caller to
+	 * so that it may use any service which requires the caller to
 	 * have a Copperplate TCB (e.g. all blocking services). We
 	 * allocate a wait union which should be sufficient for
 	 * calling any blocking service from any high-level API from
-	 * an unshadowed main thread. APIs might have other reasons
-	 * not to allow such call though, in which case they should
-	 * check explicitly for those conditions.
+	 * an unshadowed main thread. APIs might have reasons not to
+	 * allow such call though, in which case they should check
+	 * explicitly for those conditions.
 	 */
 	tcb = __threadobj_alloc(sizeof(*tcb),
 				sizeof(union main_wait_union),

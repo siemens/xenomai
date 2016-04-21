@@ -160,7 +160,7 @@ fnref_register(libalchemy, event_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Event flag groups can be shared by multiple processes which
  * belong to the same Xenomai session.
@@ -243,7 +243,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_event_delete(RT_EVENT *event)
 {

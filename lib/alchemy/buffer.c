@@ -205,7 +205,7 @@ fnref_register(libalchemy, buffer_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Buffers can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -303,7 +303,7 @@ fail:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_buffer_delete(RT_BUFFER *bf)
 {

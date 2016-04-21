@@ -127,7 +127,7 @@ DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 #ifndef DOXYGEN_CPP
 CURRENT_IMPL(int, rt_pipe_create,
@@ -252,7 +252,7 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_pipe_delete(RT_PIPE *pipe)
 {

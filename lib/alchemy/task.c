@@ -384,7 +384,7 @@ fail_syncinit:
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered task.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @sideeffect
  * - When running over the Cobalt core:
@@ -469,7 +469,7 @@ out:
  * when this service is called from asynchronous context, such as a
  * timer/alarm handler.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  */
@@ -525,7 +525,7 @@ int rt_task_delete(RT_TASK *task)
  * - -ESRCH is returned if @a task no longer exists or refers to task
  * created by a different process.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note After successful completion of this service, it is neither
  * required nor valid to additionally invoke rt_task_delete() on the
@@ -562,7 +562,7 @@ int rt_task_join(RT_TASK *task)
  * according to any restrictions that may be imposed by the "cpuset"
  * mechanism described in cpuset(7).
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  */
@@ -610,7 +610,7 @@ out:
  *
  * - -EINVAL is returned if @a task is not a valid task descriptor.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note Starting an already started task leads to a nop, returning a
  * success status.
@@ -800,7 +800,7 @@ undo:
  * - -ETIMEDOUT is returned if @a idate is different from TM_INFINITE
  * and represents a date in the past.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  *
@@ -1036,7 +1036,7 @@ int rt_task_sleep(RTIME delay)
  *
  * @return See rt_task_create().
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @sideeffect see rt_task_create().
  */
@@ -1114,7 +1114,7 @@ int rt_task_same(RT_TASK *task1, RT_TASK *task2)
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  *
@@ -1240,7 +1240,7 @@ RT_TASK *rt_task_self(void)
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  *
@@ -1373,7 +1373,7 @@ out:
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  *
@@ -1530,7 +1530,7 @@ out:
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * @apitags{thread-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  */

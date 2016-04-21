@@ -185,7 +185,7 @@ fnref_register(libalchemy, queue_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Queues can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -304,7 +304,7 @@ fail_cballoc:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_queue_delete(RT_QUEUE *queue)
 {

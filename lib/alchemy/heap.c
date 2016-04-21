@@ -207,7 +207,7 @@ fnref_register(libalchemy, heap_finalize);
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  *
  * @note Heaps can be shared by multiple processes which belong to the
  * same Xenomai session.
@@ -304,7 +304,7 @@ fail_cballoc:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * @apitags{thread-unrestricted, switch-secondary}
+ * @apitags{mode-unrestricted, switch-secondary}
  */
 int rt_heap_delete(RT_HEAP *heap)
 {

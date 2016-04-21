@@ -304,23 +304,26 @@ copperplate_setup_call(copperplate_interface);
  *
  * All services from the Cobalt/POSIX library, or which belong to APIs
  * based on the Copperplate library may be restricted to particular
- * calling contexts, or entail specific side-effects. Therefore, the
- * information below applies to all application-oriented APIs
- * available with Xenomai, such as the Cobalt/POSIX library, the
- * Alchemy API, and to all RTOS emulators as well. To describe this
- * information, each service documented by this section bears a set of
- * tags when applicable.
+ * calling contexts, or entail specific side-effects.
+ *
+ * In dual kernel mode, the Cobalt API underlies all other
+ * application-oriented APIs, providing POSIX real-time services over
+ * the Cobalt real-time core. Therefore, the information below applies
+ * to all application-oriented APIs available with Xenomai, such as
+ * the Cobalt/POSIX library, the Alchemy API, and to all RTOS
+ * emulators as well. To describe this information, each service
+ * documented by this section bears a set of tags when applicable.
  *
  * The table below matches the tags used throughout the documentation
  * with the description of their meaning for the caller.
  *
  * @attention By Xenomai thread, we mean any thread created by a
  * Xenomai API service, including real-time Cobalt/POSIX threads in
- * dual kernel mode. By regular POSIX thread, we mean any thread
+ * dual kernel mode. By regular/plain POSIX thread, we mean any thread
  * directly created by the standard @a glibc-based POSIX service over
- * Mercury (i.e. NPTL/linuxthreads pthread_create()), excluding such
- * threads which have been promoted to the real-time domain afterwards
- * (aka "shadowed") over Cobalt.
+ * Mercury or Cobalt (i.e. NPTL/linuxthreads __STD(pthread_create())),
+ * excluding such threads which have been promoted to the real-time
+ * domain afterwards (aka "shadowed") over Cobalt.
  *
  * @par
  * <b>Context tags</b>
@@ -343,6 +346,13 @@ copperplate_setup_call(copperplate_interface);
  * running on behalf of such handler. Therefore, calling Xenomai API
  * services from asynchronous regular signal handlers is fundamentally
  * unsafe.
+ *
+ * @note Over Cobalt, the main thread is a particular case, which
+ * starts as a regular POSIX thread, then is automatically switched to
+ * a Cobalt thread as part of the initialization process, before the
+ * main() routine is invoked, unless automatic bootstrap was disabled
+ * (see
+ * http://xenomai.org/2015/05/application-setup-and-init/#Application_entry_CC).
  *
  * @par
  * <b>Possible side-effects when running the application over the
