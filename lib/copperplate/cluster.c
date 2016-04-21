@@ -294,8 +294,9 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(&sc->d->sobj, &syns))
-		return __bt(-EINVAL);
+	ret = syncobj_lock(&sc->d->sobj, &syns);
+	if (ret)
+		return __bt(ret);
 
 	cobj->cnode = __node_id;
 
@@ -327,8 +328,9 @@ int syncluster_delobj(struct syncluster *sc,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(&sc->d->sobj, &syns))
-		return __bt(-EINVAL);
+	ret = syncobj_lock(&sc->d->sobj, &syns);
+	if (ret)
+		return ret;
 
 	ret = __bt(hash_remove(&sc->d->table, &cobj->hobj, &hash_operations));
 
@@ -347,8 +349,9 @@ int syncluster_findobj(struct syncluster *sc,
 	struct hashobj *hobj;
 	int ret = 0;
 
-	if (syncobj_lock(&sc->d->sobj, &syns))
-		return -EINVAL;
+	ret = syncobj_lock(&sc->d->sobj, &syns);
+	if (ret)
+		return ret;
 
 	for (;;) {
 		hobj = hash_search_probe(&sc->d->table, name, strlen(name),
@@ -506,8 +509,9 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(&sc->sobj, &syns))
-		return __bt(-EINVAL);
+	ret = syncobj_lock(&sc->sobj, &syns);
+	if (ret)
+		return __bt(ret);
 
 	ret = pvcluster_addobj(&sc->c, name, cobj);
 	if (ret)
@@ -536,8 +540,9 @@ int pvsyncluster_delobj(struct pvsyncluster *sc,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(&sc->sobj, &syns))
-		return __bt(-EINVAL);
+	ret = syncobj_lock(&sc->sobj, &syns);
+	if (ret)
+		return ret;
 
 	ret = __bt(pvcluster_delobj(&sc->c, cobj));
 
@@ -556,8 +561,9 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 	struct syncstate syns;
 	int ret = 0;
 
-	if (syncobj_lock(&sc->sobj, &syns))
-		return __bt(-EINVAL);
+	ret = syncobj_lock(&sc->sobj, &syns);
+	if (ret)
+		return ret;
 
 	for (;;) {
 		cobj = pvcluster_findobj(&sc->c, name);
