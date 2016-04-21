@@ -119,7 +119,8 @@ static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
 {
 	/* We hold the gate lock while destroying. */
 	int ret = cobalt_monitor_destroy(&sobj->core.monitor);
-	assert(ret == 0);
+	/* Let earlier EPERM condition propagate, don't trap. */
+	assert(ret == 0 || ret == -EPERM);
 	(void)ret;
 }
 
