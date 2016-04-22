@@ -276,18 +276,17 @@ static void unmount(const char *path)
 		fcntl(2, F_SETFD, flags | FD_CLOEXEC);
 
 	cmdpath = lookup_command("fusermount");
-	if (cmdpath == NULL)
-		return;
+	if (cmdpath) {
+		ret = asprintf(&cmd, "%s -uzq %s", cmdpath, path);
+		free(cmdpath);
+		if (ret < 0)
+			return;
 
-	ret = asprintf(&cmd, "%s -uzq %s", cmdpath, path);
-	free(cmdpath);
-	if (ret < 0)
-		return;
-
-	ret = system(cmd);
-	free(cmd);
-	if (ret != -1 && WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
-		return;
+		ret = system(cmd);
+		free(cmd);
+		if (ret != -1 && WIFEXITED(ret) && WEXITSTATUS(ret) == 0)
+			return;
+	}
 
 	cmdpath = lookup_command("umount");
 	if (cmdpath == NULL)
