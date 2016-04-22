@@ -108,6 +108,7 @@ fi
 
 do_ldflags=
 do_cflags=
+do_setinit=
 
 while test $# -gt 0; do
     case "$1" in
@@ -131,9 +132,11 @@ while test $# -gt 0; do
             echo $XENO_PREFIX
             ;;
 	--no-auto-init)
+	    do_setinit=y
 	    WRAP_MAIN=
 	    ;;
 	--auto-init)
+	    do_setinit=y
 	    WRAP_MAIN="$WRAP_MAIN_OPT"
 	    ;;
         --lib*-dir|--libdir|--user-libdir)
@@ -183,6 +186,11 @@ while test $# -gt 0; do
     esac
     shift
 done
+
+if test x$do_setinit = xy -a x$do_ldflags = x; then
+	echo "--[no-]auto-init is meaningful only with --ldflags" 1>&2
+	exit 1
+fi
 
 if test x$do_cflags = xy; then
     if test -z "$skin_list"; then
