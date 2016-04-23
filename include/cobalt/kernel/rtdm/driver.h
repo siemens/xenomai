@@ -225,6 +225,7 @@ struct rtdm_profile_info {
 	/** Reserved */
 	unsigned int magic;
 	struct module *owner;
+	struct class *kdev_class;
 };
 
 struct rtdm_driver;
@@ -314,7 +315,10 @@ struct rtdm_driver {
 	.version = (__version),					\
 	.magic = ~RTDM_CLASS_MAGIC,				\
 	.owner = THIS_MODULE,					\
+	.kdev_class = NULL,					\
 }
+
+int rtdm_drv_set_sysclass(struct rtdm_driver *drv, struct class *cls);
 
 /**
  * @brief RTDM device
@@ -368,6 +372,7 @@ struct rtdm_device {
 		};
 		dev_t rdev;
 		struct device *kdev;
+		struct class *kdev_class;
 		atomic_t refcount;
 		struct rtdm_fd_ops ops;
 		wait_queue_head_t putwq;
