@@ -343,6 +343,88 @@ int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 int rtdm_task_busy_wait(bool condition, nanosecs_rel_t spin_ns,
 			nanosecs_rel_t sleep_ns);
 
+/**
+ * @brief Register wait context
+ *
+ * rtdm_wait_prepare() registers a wait context structure for the
+ * caller, which can be later retrieved by a call to
+ * rtdm_wait_get_context(). This call is normally issued before the
+ * current task blocks on a wait object, waiting for some (producer)
+ * code to wake it up. Arbitrary data can be exchanged between both
+ * sites via the wait context structure, which is allocated by the
+ * waiter (consumer) side.
+ *
+ * @a wc is the address of an anchor object which is commonly embedded
+ * into a larger structure with arbitrary contents, which needs to be
+ * shared between the consumer (waiter) and the producer for
+ * implementing the wait code.
+ *
+ * A typical implementation pattern for the wait side is:
+ *
+ * @code
+ * struct rtdm_waitqueue wq;
+ * struct some_wait_context {
+ *    int input_value;
+ *    int output_value;
+ *    struct rtdm_wait_context wc;
+ * } wait_context;
+ *
+ * wait_context.input_value = 42;
+ * rtdm_wait_prepare(&wait_context);
+ * ret = rtdm_wait_condition(&wq, rtdm_wait_is_completed(&wait_context));
+ * if (ret)
+ *     goto wait_failed;
+ * handle_event(wait_context.output_value);
+ * @endcode
+ *
+ * On the producer side, the implementation would look like:
+ *
+ * @code
+ * struct rtdm_waitqueue wq;
+ * struct some_wait_context {
+ *    int input_value;
+ *    int output_value;
+ *    struct rtdm_wait_context wc;
+ * } *wait_context_ptr;
+ * struct rtdm_wait_context *wc;
+ * rtdm_task_t *task;
+ *
+ * rtdm_for_each_waiter(task, &wq) {
+ *    wc = rtdm_wait_get_context(task);
+ *    wait_context_ptr = container_of(wc, struct some_wait_context, wc);
+ *    wait_context_ptr->output_value = 12;
+ * }
+ * rtdm_waitqueue_broadcast(&wq);
+ * @endcode
+ *
+ * @param wc Wait context to register.
+ */
+void rtdm_wait_prepare(struct rtdm_wait_context *wc);
+
+/**
+ * @brief Mark completion for a wait context
+ *
+ * rtdm_complete_wait() marks a wait context as completed, so that
+ * rtdm_wait_is_completed() returns true for such context.
+ *
+ * @param wc Wait context to complete.
+ */
+void rtdm_wait_complete(struct rtdm_wait_context *wc);
+
+/**
+ * @brief Test completion of a wait context
+ *
+ * rtdm_wait_is_completed() returns true if rtdm_complete_wait() was
+ * called for @a wc. The completion mark is reset each time
+ * rtdm_wait_prepare() is called for a wait context.
+ *
+ * @param wc Wait context to check for completion.
+ *
+ * @return non-zero/true if rtdm_wait_complete() was called for @a wc,
+ * zero otherwise.
+ */
+int rtdm_wait_is_completed(struct rtdm_wait_context *wc);
+
 #endif /* DOXYGEN_CPP */
 
 int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)

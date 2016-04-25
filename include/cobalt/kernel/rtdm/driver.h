@@ -1114,6 +1114,31 @@ static inline int __deprecated rtdm_task_sleep_until(nanosecs_abs_t wakeup_time)
 		__ret;								\
 	})
 
+#define rtdm_wait_context	xnthread_wait_context
+
+static inline
+void rtdm_wait_complete(struct rtdm_wait_context *wc)
+{
+	xnthread_complete_wait(wc);
+}
+
+static inline
+int rtdm_wait_is_completed(struct rtdm_wait_context *wc)
+{
+	return xnthread_wait_complete_p(wc);
+}
+
+static inline void rtdm_wait_prepare(struct rtdm_wait_context *wc)
+{
+	xnthread_prepare_wait(wc);
+}
+
+static inline
+struct rtdm_wait_context *rtdm_wait_get_context(rtdm_task_t *task)
+{
+	return xnthread_get_wait_context(task);
+}
+
 #endif /* !DOXYGEN_CPP */
 
 /* --- event services --- */
