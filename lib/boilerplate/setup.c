@@ -46,6 +46,8 @@ pid_t __node_id = 0;
 
 int __config_done = 0;
 
+const int __weak xenomai_auto_bootstrap = 0;
+
 static int init_done;
 
 static DEFINE_PRIVATE_LIST(setup_list);
@@ -143,6 +145,7 @@ static inline void dump_configuration(void)
 		puts(config_strings[n]);
 
 	printf("PTHREAD_STACK_DEFAULT=%d\n", PTHREAD_STACK_DEFAULT);
+	printf("AUTOMATIC_BOOTSTRAP=%d\n", xenomai_auto_bootstrap);
 }
 
 static int collect_cpu_affinity(const char *cpu_list)

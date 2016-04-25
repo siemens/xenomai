@@ -37,6 +37,8 @@ void application_version(void);
 
 extern const char *xenomai_version_string;
 
+extern const int xenomai_auto_bootstrap;
+  
 #ifdef __cplusplus
 }
 #endif

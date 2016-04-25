@@ -26,6 +26,8 @@ static int early_argc;
 
 static char *const *early_argv;
 
+const int xenomai_auto_bootstrap = 1;
+
 int __real_main(int argc, char *const argv[]);
 
 int __wrap_main(int argc, char *const argv[])
