@@ -630,10 +630,7 @@ int rt_queue_write(RT_QUEUE *queue,
 	if (mode & ~(Q_URGENT|Q_BROADCAST))
 		return -EINVAL;
 
-	if (size == 0)
-		return 0;
-
-	if (buf == NULL)
+	if (buf == NULL && size > 0)
 		return -EINVAL;
 
 	CANCEL_DEFER(svc);
@@ -683,7 +680,8 @@ enqueue:
 
 	msg->size = size;
 	msg->refcount = 0;
-	memcpy(msg + 1, buf, size);
+	if (size > 0)
+		memcpy(msg + 1, buf, size);
 
 	ret = 0;  /* # of tasks unblocked. */
 	if (nwaiters == 0) {
