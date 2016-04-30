@@ -17,6 +17,7 @@
  */
 #include <stdio.h>
 #include <error.h>
+#include <errno.h>
 #include <smokey/smokey.h>
 
 int main(int argc, char *const argv[])
