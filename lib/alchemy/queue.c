@@ -232,7 +232,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	 */
 	if (qlimit == Q_UNLIMITED)
 		ret = heapobj_init(&qcb->hobj, qcb->name,
-				   poolsize + (poolsize / 5));
+				   poolsize + (poolsize * 5 / 100));
 	else
 		ret = heapobj_init_array(&qcb->hobj, qcb->name,
 					 (poolsize / qlimit) *
