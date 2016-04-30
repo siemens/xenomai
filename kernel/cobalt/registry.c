@@ -595,7 +595,8 @@ static inline int registry_wakeup_sleepers(const char *key)
  * that such key is stored into the registered object, it will *not*
  * be copied but only kept by reference in the registry. Pass an empty
  * or NULL string if the object shall only occupy a registry slot for
- * handle-based lookups.
+ * handle-based lookups. The slash character is not accepted in @a key
+ * if @a pnode is non-NULL.
  *
  * @param objaddr An opaque pointer to the object to index by @a
  * key.
@@ -613,8 +614,10 @@ static inline int registry_wakeup_sleepers(const char *key)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a objaddr is NULL, or if @a key is
- * non-NULL and contains an invalid '/' character.
+ * - -EINVAL is returned if @a objaddr is NULL.
+ *
+ * - -EINVAL if @a pnode is non-NULL, and @a key points to a valid
+ * string containing a '/' character.
  *
  * - -ENOMEM is returned if the system fails to get enough dynamic
  * memory from the global real-time heap in order to register the
@@ -631,7 +634,8 @@ int xnregistry_enter(const char *key, void *objaddr,
 	spl_t s;
 	int ret;
 
-	if (objaddr == NULL || (key != NULL && strchr(key, '/')))
+	if (objaddr == NULL ||
+	    (pnode != NULL && key != NULL && strchr(key, '/')))
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
