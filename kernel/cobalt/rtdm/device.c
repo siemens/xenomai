@@ -424,7 +424,7 @@ int rtdm_dev_register(struct rtdm_device *dev)
 
 		rdev = MKDEV(major, minor);
 		kdev = device_create(kdev_class, NULL, rdev,
-				     dev, dev->label, minor);
+				     dev, kbasename(dev->label), minor);
 		if (IS_ERR(kdev)) {
 			xnregistry_remove(dev->named.handle);
 			ret = PTR_ERR(kdev);
