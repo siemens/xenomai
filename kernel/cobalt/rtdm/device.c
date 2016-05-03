@@ -325,7 +325,9 @@ static void unregister_driver(struct rtdm_driver *drv)
 	XENO_BUG_ON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
 
 	cobalt_remove_state_chain(&drv->nb_statechange);
-	
+
+	drv->profile_info.magic = ~RTDM_CLASS_MAGIC;
+
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		cdev_del(&drv->named.cdev);
 		unregister_chrdev_region(MKDEV(drv->named.major, 0),
