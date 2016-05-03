@@ -258,7 +258,14 @@ struct rtdm_driver {
 	 * @anchor rtdm_driver_flags
 	 */
 	int device_flags;
-	/** Size of driver defined appendix to struct rtdm_dev_context */
+	/**
+	 * Size of the private memory area the core should
+	 * automatically allocate for each open file descriptor, which
+	 * is usable for storing the context data associated to each
+	 * connection. The allocated memory is zero-initialized. The
+	 * start of this area can be retrieved by a call to
+	 * rtdm_fd_to_private().
+	 */
 	size_t context_size;
 	/** Protocol device identification: protocol family (PF_xxx) */
 	int protocol_family;

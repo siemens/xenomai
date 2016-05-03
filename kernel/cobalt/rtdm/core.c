@@ -86,7 +86,7 @@ static int create_instance(int ufd, struct rtdm_device *dev,
 	    atomic_read(&dev->refcount) > 1)
 		return -EBUSY;
 
-	context = kmalloc(sizeof(struct rtdm_dev_context) +
+	context = kzalloc(sizeof(struct rtdm_dev_context) +
 			  drv->context_size, GFP_KERNEL);
 	if (unlikely(context == NULL))
 		return -ENOMEM;
