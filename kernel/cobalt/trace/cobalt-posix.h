@@ -129,6 +129,7 @@ DECLARE_EVENT_CLASS(syscall_exit,
 				 (__p_ex)->sched_priority);		\
 		break;							\
 	}								\
+	trace_seq_putc(p, '\0');					\
 	__ret;								\
 })
 
