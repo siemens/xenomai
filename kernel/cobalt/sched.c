@@ -466,6 +466,8 @@ bool xnsched_set_effective_priority(struct xnthread *thread, int prio)
 
 	thread->cprio = prio;
 
+	trace_cobalt_thread_set_current_prio(thread);
+
 	return true;
 }
 
@@ -507,6 +509,8 @@ void xnsched_track_policy(struct xnthread *thread,
 			xnsched_enqueue(thread);
 	}
 
+	trace_cobalt_thread_set_current_prio(thread);
+
 	xnsched_set_resched(thread->sched);
 }
 
@@ -532,6 +536,8 @@ void xnsched_protect_priority(struct xnthread *thread, int prio)
 
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);
+
+	trace_cobalt_thread_set_current_prio(thread);
 
 	xnsched_set_resched(thread->sched);
 }

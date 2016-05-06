@@ -309,6 +309,26 @@ TRACE_EVENT(cobalt_thread_fault,
 		  __entry->type)
 );
 
+TRACE_EVENT(cobalt_thread_set_current_prio,
+	TP_PROTO(struct xnthread *thread),
+	TP_ARGS(thread),
+
+	TP_STRUCT__entry(
+		__field(struct xnthread *, thread)
+		__string(name, thread->name)
+		__field(int, cprio)
+	),
+
+	TP_fast_assign(
+		__entry->thread	= thread;
+		__assign_str(name, thread->name);
+		__entry->cprio = xnthread_current_priority(thread);
+	),
+
+	TP_printk("thread=%p(%s) prio=%d",
+		  __entry->thread, __get_str(name), __entry->cprio)
+);
+
 DEFINE_EVENT(thread_event, cobalt_thread_start,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
