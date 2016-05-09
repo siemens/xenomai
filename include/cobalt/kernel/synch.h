@@ -164,8 +164,7 @@ int __must_check xnsynch_acquire(struct xnsynch *synch,
 
 int __must_check xnsynch_try_acquire(struct xnsynch *synch);
 
-struct xnthread *xnsynch_release(struct xnsynch *synch,
-				 struct xnthread *thread);
+bool xnsynch_release(struct xnsynch *synch, struct xnthread *thread);
 
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
 

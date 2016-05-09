@@ -128,7 +128,7 @@ int cobalt_mutex_release(struct xnthread *curr,
 				cobalt_cond_deferred_signals(cond);
 		}
 	}
-	need_resched |= xnsynch_release(&mutex->synchbase, curr) != NULL;
+	need_resched |= xnsynch_release(&mutex->synchbase, curr);
 
 	return need_resched;
 }

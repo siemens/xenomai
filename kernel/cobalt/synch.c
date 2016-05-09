@@ -843,8 +843,8 @@ static inline void clear_pp_boost(struct xnsynch *synch,
 	drop_booster(synch, owner);
 }
 
-static struct xnthread *transfer_ownership(struct xnsynch *synch,
-					   struct xnthread *lastowner)
+static bool transfer_ownership(struct xnsynch *synch,
+			       struct xnthread *lastowner)
 {				/* nklock held, irqs off */
 	struct xnthread *nextowner;
 	xnhandle_t nextownerh;
@@ -859,7 +859,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 	if (list_empty(&synch->pendq)) {
 		synch->owner = NULL;
 		atomic_set(lockp, XN_NO_HANDLE);
-		return NULL;
+		return false;
 	}
 
 	nextowner = list_first_entry(&synch->pendq, struct xnthread, plink);
@@ -879,11 +879,11 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 
 	atomic_set(lockp, nextownerh);
 
-	return nextowner;
+	return true;
 }
 
 /**
- * @fn struct xnthread *xnsynch_release(struct xnsynch *synch, struct xnthread *curr)
+ * @fn bool xnsynch_release(struct xnsynch *synch, struct xnthread *curr)
  * @brief Release a resource and pass it to the next waiting thread.
  *
  * This service releases the ownership of the given synchronization
@@ -900,7 +900,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
  * @param curr The descriptor address of the current thread, which
  * must own the object at the time of calling.
  *
- * @return The descriptor address of the unblocked thread.
+ * @return True if a reschedule is required.
  *
  * @sideeffect
  *
@@ -913,10 +913,9 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
  *
  * @coretags{primary-only, might-switch}
  */
-struct xnthread *xnsynch_release(struct xnsynch *synch,
-				 struct xnthread *curr)
+bool xnsynch_release(struct xnsynch *synch, struct xnthread *curr)
 {
-	struct xnthread *nextowner = NULL;
+	bool need_resched = false;
 	xnhandle_t currh, h;
 	atomic_t *lockp;
 	spl_t s;
@@ -926,7 +925,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 	trace_cobalt_synch_release(synch);
 
 	if (xnthread_put_resource(curr))
-		return NULL;
+		return false;
 
 	lockp = xnsynch_fastlock(synch);
 	currh = curr->handle;
@@ -946,7 +945,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 	h = atomic_cmpxchg(lockp, currh, XN_NO_HANDLE);
 	if ((h & ~XNSYNCH_FLCEIL) != currh)
 		/* FLCLAIM set, synch is contended. */
-		nextowner = transfer_ownership(synch, curr);
+		need_resched = transfer_ownership(synch, curr);
 	else if (h != currh)	/* FLCEIL set, FLCLAIM clear. */
 		atomic_set(lockp, XN_NO_HANDLE);
 
@@ -955,7 +954,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return nextowner;
+	return need_resched;
 }
 EXPORT_SYMBOL_GPL(xnsynch_release);
 
