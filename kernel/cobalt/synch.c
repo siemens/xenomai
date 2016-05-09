@@ -949,8 +949,10 @@ bool xnsynch_release(struct xnsynch *synch, struct xnthread *curr)
 	else if (h != currh)	/* FLCEIL set, FLCLAIM clear. */
 		atomic_set(lockp, XN_NO_HANDLE);
 
-	if (synch->status & XNSYNCH_PP)
+	if (synch->status & XNSYNCH_PP) {
 		clear_pp_boost(synch, curr);
+		need_resched = true;
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
