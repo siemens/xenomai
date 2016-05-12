@@ -266,13 +266,10 @@ EXPORT_SYMBOL_GPL(xntimer_get_date);
  *
  * @coretags{unrestricted, atomic-entry}
  */
-xnticks_t xntimer_get_timeout(struct xntimer *timer)
+xnticks_t __xntimer_get_timeout(struct xntimer *timer)
 {
 	struct xnclock *clock;
 	xnticks_t expiry, now;
-
-	if (!xntimer_running_p(timer))
-		return XN_INFINITE;
 
 	clock = xntimer_clock(timer);
 	now = xnclock_read_raw(clock);
@@ -282,7 +279,7 @@ xnticks_t xntimer_get_timeout(struct xntimer *timer)
 
 	return xnclock_ticks_to_ns(clock, expiry - now);
 }
-EXPORT_SYMBOL_GPL(xntimer_get_timeout);
+EXPORT_SYMBOL_GPL(__xntimer_get_timeout);
 
 /**
  * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnsched *sched, int flags)

@@ -474,7 +474,7 @@ void __xntimer_stop(struct xntimer *timer);
 
 xnticks_t xntimer_get_date(struct xntimer *timer);
 
-xnticks_t xntimer_get_timeout(struct xntimer *timer);
+xnticks_t __xntimer_get_timeout(struct xntimer *timer);
 
 xnticks_t xntimer_get_interval(struct xntimer *timer);
 
@@ -486,9 +486,17 @@ static inline void xntimer_stop(struct xntimer *timer)
 		__xntimer_stop(timer);
 }
 
+static inline xnticks_t xntimer_get_timeout(struct xntimer *timer)
+{
+	if (!xntimer_running_p(timer))
+		return XN_INFINITE;
+
+	return __xntimer_get_timeout(timer);
+}
+
 static inline xnticks_t xntimer_get_timeout_stopped(struct xntimer *timer)
 {
-	return xntimer_get_timeout(timer);
+	return __xntimer_get_timeout(timer);
 }
 
 static inline void xntimer_enqueue(struct xntimer *timer,
