@@ -170,7 +170,7 @@ int __cobalt_select_bind_all(struct xnselector *selector,
 }
 
 /* int select(int, fd_set *, fd_set *, fd_set *, struct timeval *) */
-COBALT_SYSCALL(select, nonrestartable,
+COBALT_SYSCALL(select, primary,
 	       (int nfds,
 		fd_set __user *u_rfds,
 		fd_set __user *u_wfds,
@@ -187,6 +187,7 @@ COBALT_SYSCALL(select, nonrestartable,
 	fd_set in_fds_storage[XNSELECT_MAX_TYPES],
 		out_fds_storage[XNSELECT_MAX_TYPES];
 	xnticks_t timeout = XN_INFINITE;
+	struct restart_block *restart;
 	xntmode_t mode = XN_RELATIVE;
 	struct xnselector *selector;
 	struct xnthread *curr;
@@ -197,14 +198,27 @@ COBALT_SYSCALL(select, nonrestartable,
 	curr = xnthread_current();
 
 	if (u_tv) {
-		if (!access_wok(u_tv, sizeof(tv))
-		    || cobalt_copy_from_user(&tv, u_tv, sizeof(tv)))
-			return -EFAULT;
+		if (xnthread_test_localinfo(curr, XNSYSRST)) {
+			xnthread_clear_localinfo(curr, XNSYSRST);
 
-		if (tv.tv_usec > 1000000)
-			return -EINVAL;
+			restart = cobalt_get_restart_block(current);
+			timeout = restart->nanosleep.expires;
 
-		timeout = clock_get_ticks(CLOCK_MONOTONIC) + tv2ns(&tv);
+			if (restart->fn != cobalt_restart_syscall_placeholder) {
+				err = -EINTR;
+				goto out;
+			}
+		} else {
+			if (!access_wok(u_tv, sizeof(tv))
+			    || cobalt_copy_from_user(&tv, u_tv, sizeof(tv)))
+				return -EFAULT;
+
+			if (tv.tv_usec > 1000000)
+				return -EINVAL;
+
+			timeout = clock_get_ticks(CLOCK_MONOTONIC) + tv2ns(&tv);
+		}
+
 		mode = XN_ABSOLUTE;
 	}
 
@@ -253,6 +267,17 @@ COBALT_SYSCALL(select, nonrestartable,
 		}
 	} while (err == -ECHRNG);
 
+	if (err == -EINTR && signal_pending(current)) {
+		xnthread_set_localinfo(curr, XNSYSRST);
+
+		restart = cobalt_get_restart_block(current);
+		restart->fn = cobalt_restart_syscall_placeholder;
+		restart->nanosleep.expires = timeout;
+
+		return -ERESTARTSYS;
+	}
+
+out:
 	if (u_tv && (err > 0 || err == -EINTR)) {
 		xnsticks_t diff = timeout - clock_get_ticks(CLOCK_MONOTONIC);
 		if (diff > 0)

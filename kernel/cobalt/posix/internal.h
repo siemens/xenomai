@@ -55,4 +55,6 @@ static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
 
 int cobalt_init(void);
 
+long cobalt_restart_syscall_placeholder(struct restart_block *param);
+
 #endif /* !_COBALT_POSIX_INTERNAL_H */

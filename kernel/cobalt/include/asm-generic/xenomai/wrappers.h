@@ -133,4 +133,10 @@ devm_hwmon_device_register_with_groups(struct device *dev, const char *name,
 #error "Xenomai/cobalt requires Linux kernel 3.10 or above"
 #endif /* < 3.10 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+#define cobalt_get_restart_block(p)	(&task_thread_info(p)->restart_block)
+#else
+#define cobalt_get_restart_block(p)	(&(p)->restart_block)
+#endif
+
 #endif /* _COBALT_ASM_GENERIC_WRAPPERS_H */

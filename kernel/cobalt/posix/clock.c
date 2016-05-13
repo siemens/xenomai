@@ -236,8 +236,9 @@ int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 			     const struct timespec *rqt,
 			     struct timespec *rmt)
 {
+	struct restart_block *restart;
 	struct xnthread *cur;
-	xnsticks_t rem;
+	xnsticks_t timeout, rem;
 	int ret = 0;
 	spl_t s;
 
@@ -259,12 +260,40 @@ int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 
 	cur = xnthread_current();
 
+	if (xnthread_test_localinfo(cur, XNSYSRST)) {
+		xnthread_clear_localinfo(cur, XNSYSRST);
+
+		restart = cobalt_get_restart_block(current);
+
+		if (restart->fn != cobalt_restart_syscall_placeholder) {
+			if (rmt)
+				ns2ts(rmt, rem > 1 ? rem : 0);
+			return -EINTR;
+		}
+
+		timeout = restart->nanosleep.expires;
+	} else
+		timeout = ts2ns(rqt);
+
 	xnlock_get_irqsave(&nklock, s);
 
-	xnthread_suspend(cur, XNDELAY, ts2ns(rqt) + 1,
+	xnthread_suspend(cur, XNDELAY, timeout + 1,
 			 clock_flag(flags, clock_id), NULL);
 
 	if (xnthread_test_info(cur, XNBREAK)) {
+		if (signal_pending(current)) {
+			restart = cobalt_get_restart_block(current);
+			restart->nanosleep.expires =
+				(flags & TIMER_ABSTIME) ? timeout :
+				    xntimer_get_timeout_stopped(&cur->rtimer);
+			xnlock_put_irqrestore(&nklock, s);
+			restart->fn = cobalt_restart_syscall_placeholder;
+
+			xnthread_set_localinfo(cur, XNSYSRST);
+
+			return -ERESTARTSYS;
+		}
+
 		if (flags == 0 && rmt) {
 			rem = xntimer_get_timeout_stopped(&cur->rtimer);
 			xnlock_put_irqrestore(&nklock, s);
@@ -280,7 +309,7 @@ int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 	return ret;
 }
 
-COBALT_SYSCALL(clock_nanosleep, nonrestartable,
+COBALT_SYSCALL(clock_nanosleep, primary,
 	       (clockid_t clock_id, int flags,
 		const struct timespec __user *u_rqt,
 		struct timespec __user *u_rmt))

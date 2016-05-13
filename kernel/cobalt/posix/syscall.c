@@ -792,3 +792,8 @@ int ipipe_fastcall_hook(struct pt_regs *regs)
 
 	return ret;
 }
+
+long cobalt_restart_syscall_placeholder(struct restart_block *param)
+{
+	return -EINVAL;
+}
