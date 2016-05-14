@@ -138,17 +138,19 @@ static void bufp_close(struct rtdm_fd *fd)
 	rtdm_event_destroy(&sk->i_event);
 	rtdm_event_destroy(&sk->o_event);
 
-	if (sk->name.sipc_port > -1) {
-		cobalt_atomic_enter(s);
-		xnmap_remove(portmap, sk->name.sipc_port);
-		cobalt_atomic_leave(s);
+	if (test_bit(_BUFP_BOUND, &sk->status)) {
+		if (sk->name.sipc_port > -1) {
+			cobalt_atomic_enter(s);
+			xnmap_remove(portmap, sk->name.sipc_port);
+			cobalt_atomic_leave(s);
+		}
+
+		if (sk->handle)
+			xnregistry_remove(sk->handle);
+
+		if (sk->bufmem)
+			xnheap_vfree(sk->bufmem);
 	}
-
-	if (sk->handle)
-		xnregistry_remove(sk->handle);
-
-	if (sk->bufmem)
-		xnheap_vfree(sk->bufmem);
 
 	kfree(sk);
 }
