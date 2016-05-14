@@ -192,24 +192,24 @@ static void iddp_close(struct rtdm_fd *fd)
 	void *poolmem;
 	u32 poolsz;
 
-	if (sk->name.sipc_port > -1) {
-		cobalt_atomic_enter(s);
-		xnmap_remove(portmap, sk->name.sipc_port);
-		cobalt_atomic_leave(s);
-	}
-
 	rtdm_sem_destroy(&sk->insem);
 	rtdm_waitqueue_destroy(&sk->privwaitq);
 
-	if (sk->handle)
-		xnregistry_remove(sk->handle);
-
-	if (sk->bufpool != &cobalt_heap) {
-		poolmem = xnheap_get_membase(&sk->privpool);
-		poolsz = xnheap_get_size(&sk->privpool);
-		xnheap_destroy(&sk->privpool);
-		xnheap_vfree(poolmem);
-		return;
+	if (test_bit(_IDDP_BOUND, &sk->status)) {
+		if (sk->handle)
+			xnregistry_remove(sk->handle);
+		if (sk->name.sipc_port > -1) {
+			cobalt_atomic_enter(s);
+			xnmap_remove(portmap, sk->name.sipc_port);
+			cobalt_atomic_leave(s);
+		}
+		if (sk->bufpool != &cobalt_heap) {
+			poolmem = xnheap_get_membase(&sk->privpool);
+			poolsz = xnheap_get_size(&sk->privpool);
+			xnheap_destroy(&sk->privpool);
+			xnheap_vfree(poolmem);
+			return;
+		}
 	}
 
 	/* Send unread datagrams back to the system heap. */
