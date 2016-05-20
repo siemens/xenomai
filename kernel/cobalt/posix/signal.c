@@ -194,7 +194,7 @@ void cobalt_signal_flush(struct cobalt_thread *thread)
 		 * detect this fact when deleting their respective
 		 * owners.
 		 */
-		list_for_each_entry_safe(tmp, sigp, sigq, next)
+		list_for_each_entry_safe(sigp, tmp, sigq, next)
 			list_del_init(&sigp->next);
 	}
 
