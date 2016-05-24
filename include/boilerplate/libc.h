@@ -169,6 +169,25 @@ int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 }
 #endif /* !HAVE_PTHREAD_SETAFFINITY_NP */
 
+#ifndef HAVE_PTHREAD_SETSCHEDPRIO
+
+static inline
+int pthread_setschedprio(pthread_t thread, int prio)
+{
+	struct sched_param param;
+	int policy, ret;
+
+	ret = pthread_getschedparam(thread, &policy, &param);
+	if (ret)
+		return ret;
+
+	param.sched_priority = prio;
+
+	return pthread_setschedparam(thread, policy, &param);
+}
+
+#endif /* !HAVE_PTHREAD_SETSCHEDPRIO */
+
 #if !defined(HAVE_CLOCK_NANOSLEEP) && defined(CONFIG_XENO_MERCURY)
 /*
  * Best effort for a Mercury setup based on an outdated libc lacking
