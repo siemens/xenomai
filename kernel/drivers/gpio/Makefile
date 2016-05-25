@@ -1,0 +1,7 @@
+
+obj-$(CONFIG_XENO_DRIVERS_GPIO) += xeno_gpio.o
+
+xeno_gpio-y := gpio-core.o
+
+xeno_gpio-$(CONFIG_XENO_DRIVERS_GPIO_BCM2708) += gpio-bcm2708.o
+xeno_gpio-$(CONFIG_XENO_DRIVERS_GPIO_MXC) += gpio-mxc.o

@@ -7,6 +7,7 @@ includesub_HEADERS +=	\
 	analogy.h	\
 	autotune.h	\
 	can.h		\
+	gpio.h		\
 	ipc.h		\
 	serial.h	\
 	testing.h	\
