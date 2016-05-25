@@ -374,7 +374,7 @@ static ssize_t __bufp_recvmsg(struct rtipc_private *priv,
 
 static ssize_t bufp_recvmsg(struct rtipc_private *priv,
 			    rtdm_user_info_t *user_info,
-			    struct msghdr *msg, int flags)
+			    struct user_msghdr *msg, int flags)
 {
 	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc saddr;
@@ -623,7 +623,7 @@ fail:
 
 static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 			    rtdm_user_info_t *user_info,
-			    const struct msghdr *msg, int flags)
+			    const struct user_msghdr *msg, int flags)
 {
 	struct bufp_socket *sk = priv->state;
 	struct iovec iov[RTIPC_IOV_MAX];

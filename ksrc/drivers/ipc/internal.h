@@ -46,10 +46,10 @@ struct rtipc_protocol {
 			     rtdm_user_info_t *user_info);
 		ssize_t (*recvmsg)(struct rtipc_private *priv,
 				   rtdm_user_info_t *user_info,
-				   struct msghdr *msg, int flags);
+				   struct user_msghdr *msg, int flags);
 		ssize_t (*sendmsg)(struct rtipc_private *priv,
 				   rtdm_user_info_t *user_info,
-				   const struct msghdr *msg, int flags);
+				   const struct user_msghdr *msg, int flags);
 		ssize_t (*read)(struct rtipc_private *priv,
 				rtdm_user_info_t *user_info,
 				void *buf, size_t len);

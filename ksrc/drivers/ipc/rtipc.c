@@ -178,7 +178,7 @@ static int rtipc_close(struct rtdm_dev_context *context,
 
 static ssize_t rtipc_recvmsg(struct rtdm_dev_context *context,
 			     rtdm_user_info_t *user_info,
-			     struct msghdr *msg, int flags)
+			     struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *p = rtdm_context_to_private(context);
 	return p->proto->proto_ops.recvmsg(p, user_info, msg, flags);
@@ -186,7 +186,7 @@ static ssize_t rtipc_recvmsg(struct rtdm_dev_context *context,
 
 static ssize_t rtipc_sendmsg(struct rtdm_dev_context *context,
 			     rtdm_user_info_t *user_info,
-			     const struct msghdr *msg, int flags)
+			     const struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *p = rtdm_context_to_private(context);
 	return p->proto->proto_ops.sendmsg(p, user_info, msg, flags);

@@ -146,7 +146,7 @@
  * It is possible to receive a high precision timestamp with every CAN
  * message. The condition is a former instruction to the socket via
  * @ref RTCAN_RTIOC_TAKE_TIMESTAMP. The timestamp will be copied to the
- * @c msg_control buffer of <TT>struct msghdr</TT> if it points to a valid
+ * @c msg_control buffer of <TT>struct user_msghdr</TT> if it points to a valid
  * memory location with size of @ref nanosecs_abs_t. If this
  * is a NULL pointer the timestamp will be discarded silently. @n
  * @n

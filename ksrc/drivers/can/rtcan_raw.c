@@ -541,7 +541,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 
 ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 			  rtdm_user_info_t *user_info,
-			  struct msghdr *msg, int flags)
+			  struct user_msghdr *msg, int flags)
 {
     struct rtcan_socket *sock =
 	(struct rtcan_socket *)&context->dev_private;
@@ -568,7 +568,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 	return -EINVAL;
 
 
-    /* Check if msghdr entries are sane */
+    /* Check if user_msghdr entries are sane */
 
     if (msg->msg_name != NULL) {
 	if (msg->msg_namelen < sizeof(struct sockaddr_can))
@@ -784,7 +784,7 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
 ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 			  rtdm_user_info_t *user_info,
-			  const struct msghdr *msg, int flags)
+			  const struct user_msghdr *msg, int flags)
 {
     struct rtcan_socket *sock =
 	(struct rtcan_socket *)&context->dev_private;

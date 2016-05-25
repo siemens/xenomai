@@ -564,7 +564,7 @@ ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
 EXPORT_SYMBOL_GPL(__rt_dev_write);
 
 ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
-			 struct msghdr *msg, int flags)
+			 struct user_msghdr *msg, int flags)
 {
 	trace_mark(xn_rtdm, recvmsg, "user_info %p fd %d msg_name %p "
 		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
@@ -578,7 +578,7 @@ ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
 EXPORT_SYMBOL_GPL(__rt_dev_recvmsg);
 
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
-			 const struct msghdr *msg, int flags)
+			 const struct user_msghdr *msg, int flags)
 {
 	trace_mark(xn_rtdm, sendmsg, "user_info %p fd %d msg_name %p "
 		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
@@ -806,7 +806,7 @@ ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
  *
  * Rescheduling: possible.
  */
-ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
+ssize_t rtdm_recvmsg(int fd, struct user_msghdr *msg, int flags);
 
 /**
  * @brief Receive message from socket
@@ -846,7 +846,7 @@ ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
  *
  * Rescheduling: possible.
  */
-ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_sendmsg(int fd, const struct user_msghdr *msg, int flags);
 
 /**
  * @brief Transmit message to socket
@@ -1144,7 +1144,7 @@ ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
  * @see @c recvmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
+ssize_t rt_dev_recvmsg(int fd, struct user_msghdr *msg, int flags);
 
 /**
  * @brief Receive message from socket
@@ -1209,7 +1209,7 @@ ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags);
  * @see @c sendmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
  */
-ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
+ssize_t rt_dev_sendmsg(int fd, const struct user_msghdr *msg, int flags);
 
 /**
  * @brief Transmit message to socket

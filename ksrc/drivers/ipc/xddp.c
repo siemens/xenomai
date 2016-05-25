@@ -332,7 +332,7 @@ out:
 
 static ssize_t xddp_recvmsg(struct rtipc_private *priv,
 			    rtdm_user_info_t *user_info,
-			    struct msghdr *msg, int flags)
+			    struct user_msghdr *msg, int flags)
 {
 	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc saddr;
@@ -590,7 +590,7 @@ nostream:
 
 static ssize_t xddp_sendmsg(struct rtipc_private *priv,
 			    rtdm_user_info_t *user_info,
-			    const struct msghdr *msg, int flags)
+			    const struct user_msghdr *msg, int flags)
 {
 	struct xddp_socket *sk = priv->state;
 	struct iovec iov[RTIPC_IOV_MAX];

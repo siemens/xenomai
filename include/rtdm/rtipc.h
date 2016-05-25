@@ -291,7 +291,7 @@ int getsockopt__AF_RTIPC(int sockfd, int level, int optname,
  * RT
  */
 #ifdef DOXYGEN_CPP
-ssize_t sendmsg__AF_RTIPC(int sockfd, const struct msghdr *msg, int flags);
+ssize_t sendmsg__AF_RTIPC(int sockfd, const struct user_msghdr *msg, int flags);
 #endif
 
 /**
@@ -321,7 +321,7 @@ ssize_t sendmsg__AF_RTIPC(int sockfd, const struct msghdr *msg, int flags);
  * RT
  */
 #ifdef DOXYGEN_CPP
-ssize_t recvmsg__AF_RTIPC(int sockfd, struct msghdr *msg, int flags);
+ssize_t recvmsg__AF_RTIPC(int sockfd, struct user_msghdr *msg, int flags);
 #endif
 
 /**

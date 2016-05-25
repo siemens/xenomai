@@ -54,6 +54,7 @@
 #include <linux/ioctl.h>
 #include <linux/sched.h>
 #include <linux/socket.h>
+#include <asm/xenomai/wrappers.h>
 
 typedef u32 socklen_t;
 typedef struct task_struct rtdm_user_info_t;
@@ -247,9 +248,9 @@ ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
 ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
 		       size_t nbyte);
 ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
-			 struct msghdr *msg, int flags);
+			 struct user_msghdr *msg, int flags);
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
-			 const struct msghdr *msg, int flags);
+			 const struct user_msghdr *msg, int flags);
 #endif /* __KERNEL__ */
 
 /* Define RTDM_NO_DEFAULT_USER_API to switch off the default rt_dev_xxx
@@ -287,7 +288,7 @@ static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
 				      socklen_t *fromlen)
 {
 	struct iovec iov;
-	struct msghdr msg;
+	struct user_msghdr msg;
 	int ret;
 
 	iov.iov_base = buf;
@@ -308,6 +309,8 @@ static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
 
 #else /* !__KERNEL__ */
 
+#define user_msghdr msghdr
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -318,8 +321,8 @@ int rt_dev_close(int fd);
 int rt_dev_ioctl(int fd, int request, ...);
 ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
 ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
-ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
-ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
+ssize_t rt_dev_recvmsg(int fd, struct user_msghdr *msg, int flags);
+ssize_t rt_dev_sendmsg(int fd, const struct user_msghdr *msg, int flags);
 
 ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
 			struct sockaddr *from, socklen_t *fromlen);
@@ -344,7 +347,7 @@ static inline ssize_t rt_dev_sendto(int fd, const void *buf, size_t len,
 				    socklen_t tolen)
 {
 	struct iovec iov;
-	struct msghdr msg;
+	struct user_msghdr msg;
 
 	iov.iov_base = (void *)buf;
 	iov.iov_len = len;

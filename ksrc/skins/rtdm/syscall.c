@@ -78,7 +78,7 @@ static int sys_rtdm_write(struct pt_regs *regs)
 static int sys_rtdm_recvmsg(struct pt_regs *regs)
 {
 	struct task_struct *p = current;
-	struct msghdr krnl_msg;
+	struct user_msghdr krnl_msg;
 	int ret;
 
 	if (unlikely(!access_wok(__xn_reg_arg2(regs),
@@ -103,7 +103,7 @@ static int sys_rtdm_recvmsg(struct pt_regs *regs)
 static int sys_rtdm_sendmsg(struct pt_regs *regs)
 {
 	struct task_struct *p = current;
-	struct msghdr krnl_msg;
+	struct user_msghdr krnl_msg;
 
 	if (unlikely(!access_rok(__xn_reg_arg2(regs),
 				 sizeof(krnl_msg)) ||

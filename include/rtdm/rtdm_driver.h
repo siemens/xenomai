@@ -305,7 +305,7 @@ typedef ssize_t (*rtdm_write_handler_t)(struct rtdm_dev_context *context,
  * http://www.opengroup.org/onlinepubs/009695399 */
 typedef ssize_t (*rtdm_recvmsg_handler_t)(struct rtdm_dev_context *context,
 					  rtdm_user_info_t *user_info,
-					  struct msghdr *msg, int flags);
+					  struct user_msghdr *msg, int flags);
 
 /**
  * Transmit message handler
@@ -325,7 +325,7 @@ typedef ssize_t (*rtdm_recvmsg_handler_t)(struct rtdm_dev_context *context,
  * http://www.opengroup.org/onlinepubs/009695399 */
 typedef ssize_t (*rtdm_sendmsg_handler_t)(struct rtdm_dev_context *context,
 					  rtdm_user_info_t *user_info,
-					  const struct msghdr *msg, int flags);
+					  const struct user_msghdr *msg, int flags);
 /** @} Operation Handler Prototypes */
 
 typedef int (*rtdm_rt_handler_t)(struct rtdm_dev_context *context,
