@@ -453,10 +453,10 @@ patch_kernelversion_specific="y"
 case $linux_VERSION.$linux_PATCHLEVEL in
 
     #
-    #  Linux v2.6 and 3.x section
+    #  Linux v2.6 and above section
     #
 
-    2.6|3.*)
+    2.6|3.*|4.*)
 
     config_file=Kconfig
 
