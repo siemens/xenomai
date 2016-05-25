@@ -807,4 +807,21 @@ proc_create(const char *name, mode_t mode, struct proc_dir_entry *parent,
 #endif /* < 2.6.25 */
 #endif /* < 3.10 */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,0,0)
+#define cpu_set(cpu, mask)		cpumask_set_cpu(cpu, &(mask))
+#define cpu_clear(cpu, mask)		cpumask_clear_cpu(cpu, &(mask))
+#define cpus_clear(mask)		cpumask_clear(&(mask))
+#define cpu_isset(cpu, mask)		cpumask_test_cpu(cpu, &(mask))
+#define cpus_and(dst, src1, src2)	cpumask_and(&(dst), &(src1), &(src2))
+#define cpus_equal(mask1, mask2)	cpumask_equal(&(mask1), &(mask2))
+#define cpus_empty(mask)		cpumask_empty(&(mask))
+#define cpu_test_and_set(cpu, mask)	cpumask_test_and_set_cpu(cpu, &(mask))
+#define first_cpu(mask)			cpumask_first(&(mask))
+#define cpumask_of_cpu(mask)		(*cpumask_of(mask))
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,19,0)
+#define user_msghdr msghdr
+#endif
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
