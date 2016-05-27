@@ -303,10 +303,10 @@ static int register_driver(struct rtdm_driver *drv)
 		goto fail_cdev;
 
 	drv->named.major = MAJOR(rdev);
-	atomic_set(&drv->refcount, 1);
 	bitmap_zero(drv->minor_map, RTDM_MAX_MINOR);
 
 done:
+	atomic_set(&drv->refcount, 1);
 	drv->nb_statechange.notifier_call = state_change_notifier;
 	drv->nb_statechange.priority = 0;
 	cobalt_add_state_chain(&drv->nb_statechange);
