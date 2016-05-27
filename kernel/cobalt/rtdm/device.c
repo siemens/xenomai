@@ -324,6 +324,9 @@ static void unregister_driver(struct rtdm_driver *drv)
 {
 	XENO_BUG_ON(COBALT, drv->profile_info.magic != RTDM_CLASS_MAGIC);
 
+	if (!atomic_dec_and_test(&drv->refcount))
+		return;
+
 	cobalt_remove_state_chain(&drv->nb_statechange);
 
 	drv->profile_info.magic = ~RTDM_CLASS_MAGIC;
@@ -477,8 +480,7 @@ fail:
 	if (kdev)
 		device_destroy(kdev_class, rdev);
 
-	if (atomic_dec_and_test(&drv->refcount))
-		unregister_driver(drv);
+	unregister_driver(drv);
 
 	mutex_unlock(&register_lock);
 
