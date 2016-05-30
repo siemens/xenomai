@@ -529,3 +529,9 @@ unsigned int __real_sleep(unsigned int seconds)
 {
 	return sleep(seconds);
 }
+
+__weak
+int __real_usleep(useconds_t usec)
+{
+	return usleep(usec);
+}

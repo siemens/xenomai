@@ -108,6 +108,7 @@
 --wrap sigqueue
 --wrap kill
 --wrap sleep
+--wrap usleep
 --wrap mmap
 --wrap mmap64
 --wrap time

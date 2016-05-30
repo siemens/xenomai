@@ -364,6 +364,20 @@ COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
 	return 0;
 }
 
+/* @apitags{thread-unrestricted, switch-primary} */
+
+COBALT_IMPL(int, usleep, (useconds_t usec))
+{
+	struct timespec rqt;
+
+	if (cobalt_get_current_fast() == XN_NO_HANDLE)
+		return __STD(usleep(usec));
+
+	rqt.tv_sec = usec / 1000000;
+	rqt.tv_nsec = (usec % 1000000) * 1000;
+	return __WRAP(clock_nanosleep(CLOCK_MONOTONIC, 0, &rqt, NULL));
+}
+
 /* @apitags{unrestricted} */
 
 COBALT_IMPL(int, gettimeofday, (struct timeval *tv, struct timezone *tz))

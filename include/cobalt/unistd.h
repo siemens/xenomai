@@ -35,6 +35,8 @@ COBALT_DECL(int, close(int fildes));
 
 COBALT_DECL(unsigned int, sleep(unsigned int seconds));
 
+COBALT_DECL(int, usleep(useconds_t usec));
+
 #ifdef __cplusplus
 }
 #endif
