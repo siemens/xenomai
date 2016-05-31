@@ -3,6 +3,7 @@ includesubdir = $(includedir)/boilerplate
 includesub_HEADERS =	\
 	ancillaries.h	\
 	atomic.h	\
+	avl.h		\
 	compiler.h	\
 	debug.h		\
 	hash.h		\
