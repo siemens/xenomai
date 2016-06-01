@@ -94,7 +94,7 @@ enum rtdm_selecttype;
 /** @} Device Flags */
 
 /** Maximum number of named devices per driver. */
-#define RTDM_MAX_MINOR	256
+#define RTDM_MAX_MINOR	1024
 
 /** @} rtdm_device_register */
 
