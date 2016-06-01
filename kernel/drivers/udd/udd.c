@@ -290,6 +290,7 @@ static inline int register_mapper(struct udd_device *udd)
 				  RTDM_SUBCLASS_GENERIC, 0);
 	drv->device_flags = RTDM_NAMED_DEVICE|RTDM_FIXED_MINOR;
 	drv->device_count = UDD_NR_MAPS;
+	drv->base_minor = 0;
 	drv->ops = (struct rtdm_fd_ops){
 		.open		=	mapper_open,
 		.close		=	mapper_close,

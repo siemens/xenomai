@@ -283,17 +283,23 @@ static int register_driver(struct rtdm_driver *drv)
 		return -EINVAL;
 	}
 
-	if (drv->device_count <= 0)
+	if (drv->device_count <= 0 ||
+	    drv->device_count >= RTDM_MAX_MINOR)
+		return -EINVAL;
+
+	if (drv->base_minor < 0 ||
+	    drv->base_minor >= RTDM_MAX_MINOR)
 		return -EINVAL;
 
 	if ((drv->device_flags & RTDM_NAMED_DEVICE) == 0)
 		goto done;
 
-	ret = alloc_chrdev_region(&rdev, 0, drv->device_count,
+	ret = alloc_chrdev_region(&rdev, drv->base_minor, drv->device_count,
 				  drv->profile_info.name);
 	if (ret) {
-		printk(XENO_WARNING "cannot allocate chrdev region %s[0..%d]\n",
-		       drv->profile_info.name, drv->device_count - 1);
+		printk(XENO_WARNING "cannot allocate chrdev region %s[%d..%d]\n",
+		       drv->profile_info.name, drv->base_minor,
+		       drv->base_minor + drv->device_count - 1);
 		return ret;
 	}
 
@@ -333,7 +339,7 @@ static void unregister_driver(struct rtdm_driver *drv)
 
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		cdev_del(&drv->named.cdev);
-		unregister_chrdev_region(MKDEV(drv->named.major, 0),
+		unregister_chrdev_region(MKDEV(drv->named.major, drv->base_minor),
 					 drv->device_count);
 	}
 }
@@ -402,7 +408,8 @@ int rtdm_dev_register(struct rtdm_device *dev)
 	if (drv->device_flags & RTDM_NAMED_DEVICE) {
 		if (drv->device_flags & RTDM_FIXED_MINOR) {
 			minor = dev->minor;
-			if (minor < 0 || minor >= drv->device_count) {
+			if (minor < 0 ||
+			    minor >= drv->base_minor + drv->device_count) {
 				ret = -ENXIO;
 				goto fail;
 			}

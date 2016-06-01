@@ -280,6 +280,8 @@ struct rtdm_driver {
 	 * allocate a chrdev region for named devices.
 	 */
 	int device_count;
+	/** Base minor for named devices. */
+	int base_minor;
 	/** Reserved area */
 	struct {
 		union {
