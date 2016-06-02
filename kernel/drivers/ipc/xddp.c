@@ -184,14 +184,18 @@ static int __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg) /
 {
 	struct xddp_socket *sk = skarg;
 
-	if (sk->monitor == NULL)
-		return retval;
+	if (sk->monitor) {
+		if (retval == 0)
+			/* Callee may alter the return value passed to userland. */
+			retval = sk->monitor(sk->fd, XDDP_EVTIN, xnpipe_m_size(mh));
+		else if (retval == -EPIPE && mh == NULL)
+			sk->monitor(sk->fd, XDDP_EVTDOWN, 0);
+	}
 
-	if (retval == 0)
-		/* Callee may alter the return value passed to userland. */
-		retval = sk->monitor(sk->fd, XDDP_EVTIN, xnpipe_m_size(mh));
-	else if (retval == -EPIPE && mh == NULL)
-		sk->monitor(sk->fd, XDDP_EVTDOWN, 0);
+	if (retval == 0 &&
+	    (__xnpipe_pollstate(sk->minor) & POLLIN) != 0 &&
+	    xnselect_signal(&sk->priv->recv_block, POLLIN))
+		xnsched_run();
 
 	return retval;
 }
@@ -577,13 +581,7 @@ nostream:
 		rtdm_fd_unlock(rfd);
 		return ret;
 	}
- done:
-	cobalt_atomic_enter(s);
-	if ((__xnpipe_pollstate(rsk->minor) & POLLIN) != 0 &&
-	    xnselect_signal(&rsk->priv->recv_block, POLLIN))
-		xnsched_run();
-	cobalt_atomic_leave(s);
-
+done:
 	rtdm_fd_unlock(rfd);
 
 	return len;
