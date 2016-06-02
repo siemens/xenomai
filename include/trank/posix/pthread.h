@@ -21,6 +21,10 @@
 #ifndef _XENOMAI_TRANK_POSIX_PTHREAD_H
 #define _XENOMAI_TRANK_POSIX_PTHREAD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Set the mode of the current thread (compatibility service)
  *
@@ -75,10 +79,6 @@ static inline int pthread_set_name_np(pthread_t thread,
 {
 	return pthread_setname_np(thread, name);
 }
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,

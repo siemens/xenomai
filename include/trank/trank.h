@@ -22,7 +22,15 @@
 
 #ifdef __XENO_COMPAT__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void warning(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #define trank_warning(__fmt, __args...)	\
 	warning("%s: " __fmt, __func__, ##__args)
