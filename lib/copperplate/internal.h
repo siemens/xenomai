@@ -38,9 +38,21 @@
 #define DEFAULT_REGISTRY_ROOT		NULL
 #endif
 
-#define HOBJ_MINLOG2    3
-#define HOBJ_MAXLOG2    22     /* Must hold pagemap::bcount objects */
-#define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
+#define HOBJ_PAGE_SHIFT	9 /* 2^9 => 512 bytes */
+#if HOBJ_PAGE_SHIFT > 21
+#error "page size is too large"
+#endif
+
+#define HOBJ_PAGE_SIZE	(1UL << HOBJ_PAGE_SHIFT)
+#define HOBJ_PAGE_MASK	(~(HOBJ_PAGE_SIZE-1))
+
+#define HOBJ_MINLOG2    4	/* 16 bytes */
+/* +1 for holding HOBJ_PAGE_SIZE < x <= HOBJ_PAGE_SIZE * 2 */
+#define HOBJ_MAXLOG2    (HOBJ_PAGE_SHIFT + 1)
+#define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 1)
+#define HOBJ_MINALIGNSZ (1U << HOBJ_MINLOG2)
+
+#define HOBJ_MAXEXTSZ   (1U << 31) /* 2Gb */
 
 /*
  * The struct below has to live in shared memory; no direct reference

@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -43,15 +44,7 @@
 #include "xenomai/init.h"
 #include "internal.h"
 
-#define HOBJ_PAGE_SHIFT	9	/* 2^9 => 512 bytes */
-#define HOBJ_PAGE_SIZE		(1U << HOBJ_PAGE_SHIFT)
-#define HOBJ_PAGE_MASK		(~(HOBJ_PAGE_SIZE-1))
-#define HOBJ_PAGE_ALIGN(addr)	(((addr)+HOBJ_PAGE_SIZE-1)&HOBJ_PAGE_MASK)
-
-#define HOBJ_MINALIGNSZ (1U << 4) /* i.e. 16 bytes */
-#define HOBJ_MAXEXTSZ   (1U << 31) /* i.e. 2Gb */
-
-enum {
+enum {				/* FIXME: page_free redundant with bitmap */
 	page_free =0,
 	page_cont =1,
 	page_list =2
@@ -66,8 +59,9 @@ struct shared_extent {
 	struct holder link;
 	memoff_t membase;	/* Base offset of page array */
 	memoff_t memlim;	/* Offset limit of page array */
-	memoff_t freelist;	/* Head of free page list */
-	struct page_entry pagemap[1]; /* Start of page map */
+	memoff_t bitmap;	/* Offset of allocation bitmap */
+	int bitwords;		/* 32bit words in bitmap */
+	struct page_entry pagemap[0]; /* Start of page map */
 };
 
 /*
@@ -117,24 +111,38 @@ static inline size_t __align_to(size_t size, size_t al)
 	return ((size+al-1)&(~(al-1)));
 }
 
-static inline size_t get_pagemap_size(size_t h)
+static inline size_t get_pagemap_size(size_t h,
+				      memoff_t *bmapoff, int *bmapwords)
 {
+	int nrpages = h >> HOBJ_PAGE_SHIFT, bitmapw;
+	size_t pagemapsz;
+
 	/*
 	 * Return the size of the meta data required to map 'h' bytes
 	 * of user memory in pages of HOBJ_PAGE_SIZE bytes. The meta
 	 * data includes the length of the extent descriptor, plus the
-	 * length of the page mapping array. 'h' must be a multiple of
-	 * HOBJ_PAGE_SIZE on entry.
+	 * length of the page mapping array followed by the allocation
+	 * bitmap. 'h' must be a multiple of HOBJ_PAGE_SIZE on entry.
 	 */
 	assert((h & ~HOBJ_PAGE_MASK) == 0);
-	return __align_to((h >> HOBJ_PAGE_SHIFT) * sizeof(struct page_entry)
-			  + sizeof(struct shared_extent), HOBJ_MINALIGNSZ);
+	pagemapsz = __align_to(nrpages * sizeof(struct page_entry),
+			       sizeof(uint32_t));
+	bitmapw =__align_to(nrpages, 32) / 32;
+	if (bmapoff)
+		*bmapoff = offsetof(struct shared_extent, pagemap) + pagemapsz;
+	if (bmapwords)
+		*bmapwords = bitmapw;
+
+	return __align_to(pagemapsz
+			  + sizeof(struct shared_extent)
+			  + bitmapw * sizeof(uint32_t),
+			  HOBJ_MINALIGNSZ);
 }
 
 static void init_extent(void *base, struct shared_extent *extent)
 {
-	caddr_t freepage;
-	int n, lastpgnum;
+	int lastpgnum;
+	uint32_t *p;
 
 	__holder_init_nocheck(base, &extent->link);
 
@@ -146,20 +154,18 @@ static void init_extent(void *base, struct shared_extent *extent)
 	 */
 	assert(lastpgnum >= 1);
 
-	/* Mark each page as free in the page map. */
-	for (n = 0, freepage = __shref(base, extent->membase);
-	     n < lastpgnum; n++, freepage += HOBJ_PAGE_SIZE) {
-		*((memoff_t *)freepage) = __shoff(base, freepage) + HOBJ_PAGE_SIZE;
-		extent->pagemap[n].type = page_free;
-		extent->pagemap[n].bcount = 0;
-	}
+	/* Mark all pages as free in the page map. */
+	memset(extent->pagemap, 0, lastpgnum * sizeof(struct page_entry));
 
-	*((memoff_t *)freepage) = 0;
-	extent->pagemap[lastpgnum].type = page_free;
-	extent->pagemap[lastpgnum].bcount = 0;
-
-	/* The first page starts the free list of a new extent. */
-	extent->freelist = extent->membase;
+	/* Clear the allocation bitmap. */
+	p = __shref(base, extent->bitmap);
+	memset(p, 0, extent->bitwords * sizeof(uint32_t));
+	/*
+	 * Mark the unused trailing bits (due to alignment) as busy,
+	 * we don't want to pick them since they don't map any actual
+	 * memory from the page pool.
+	 */
+	p[lastpgnum / 32] |= ~(-1U >> (31 - (lastpgnum & 31)));
 }
 
 static int init_heap(struct shared_heap *heap, void *base,
@@ -168,7 +174,9 @@ static int init_heap(struct shared_heap *heap, void *base,
 {
 	struct shared_extent *extent;
 	pthread_mutexattr_t mattr;
-	int ret;
+	int ret, bmapwords;
+	memoff_t bmapoff;
+	size_t metasz;
 
 	namecpy(heap->name, name);
 
@@ -203,15 +211,20 @@ static int init_heap(struct shared_heap *heap, void *base,
 	 * /...................\
 	 * \....(page map)...../
 	 * /...................\
+	 * \.....(bitmap)....../
+	 * /...................\
 	 * +-------------------+ <= extent->membase
 	 * |                   |
-	 * |  (user memory)    |
+	 * |    (page pool)    |
 	 * |                   |
 	 * +-------------------+
 	 *                       <= extent->memlim
 	 */
 	extent = mem;
-	extent->membase = __shoff(base, mem) + get_pagemap_size(size);
+	metasz = get_pagemap_size(size, &bmapoff, &bmapwords);
+	extent->bitmap = __shoff(base, mem) + bmapoff;
+	extent->bitwords = bmapwords;
+	extent->membase = __shoff(base, mem) + metasz;
 	extent->memlim = extent->membase + size;
 	init_extent(base, extent);
 	__list_append(base, &extent->link, &heap->extents);
@@ -249,91 +262,130 @@ static int init_main_heap(struct session_heap *m_heap,
 	return 0;
 }
 
+static inline void flip_page_range(uint32_t *p, int b, int nr)
+{
+	for (;;) {
+		*p ^= (1 << b);
+		if (--nr == 0)
+			return;
+		if (--b < 0) {
+			b = 31;
+			p--;
+		}
+	}
+}
+
+static int reserve_page_range(uint32_t *bitmap, int bitwords, int nrpages)
+{
+	int n, b, r, seq, beg, end;
+	uint32_t v = -1U;
+
+	/*
+	 * Look for a free contiguous range of at least nrpages
+	 * page(s) in the bitmap. Once found, flip the corresponding
+	 * bit sequence from clear to set, then return the heading
+	 * page number. Otherwise, return -1 on failure.
+	 */
+	for (n = 0, seq = 0; n < bitwords; n++) {
+		v = bitmap[n];
+		b = 0;
+		while (v != -1U) {
+			r = ctz(v);
+			if (r) {
+				seq += r;
+				if (seq >= nrpages) {
+					beg = n * 32 + b + r - seq;
+					end = beg + nrpages - 1;
+					flip_page_range(bitmap + end / 32,
+							end & 31, nrpages);
+					return beg;
+				}
+			} else {
+				seq = 0;
+				r = 1;
+			}
+			b += r;
+			v >>= r;
+			v |= -1U << (32 - r);
+		}
+	}
+	
+	return -1;
+}
+
+static inline
+caddr_t get_page_addr(void *base,
+		      struct shared_extent *extent, int pgnum)
+{
+	return __shref(base, extent->membase) + (pgnum << HOBJ_PAGE_SHIFT);
+}
+
 static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2size)
 {
-	caddr_t block, eblock, freepage, lastpage, headpage, freehead = NULL;
 	struct shared_extent *extent;
-	size_t pnum, pcont, fcont;
 	void *base = main_base;
+	caddr_t block, eblock;
+	uint32_t *bitmap;
+	size_t areasz;
+	int pstart, n;
 
+	/*
+	 * Scanning each extent, search for a range of contiguous
+	 * pages in the extent's bitmap. The range must be at least
+	 * 'bsize' long.
+	 */
+
+	areasz =__align_to(bsize, HOBJ_PAGE_SIZE) >> HOBJ_PAGE_SHIFT;
 	__list_for_each_entry(base, extent, &heap->extents, link) {
-		freepage = __shref_check(base, extent->freelist);
-		while (freepage) {
-			headpage = freepage;
-			fcont = 0;
-			/*
-			 * Search for a range of contiguous pages in
-			 * the free page list of the current
-			 * extent. The range must be 'bsize' long.
-			 */
-			do {
-				lastpage = freepage;
-				freepage = __shref_check(base, *((memoff_t *)freepage));
-				fcont += HOBJ_PAGE_SIZE;
-			} while (freepage == lastpage + HOBJ_PAGE_SIZE
-				 && fcont < bsize);
-			if (fcont >= bsize) {
-				/*
-				 * Ok, got it. Just update the free
-				 * page list, then proceed to the next
-				 * step.
-				 */
-				if (__shoff(base, headpage) == extent->freelist)
-					extent->freelist = *((memoff_t *)lastpage);
-				else
-					*((memoff_t *)freehead) = *((memoff_t *)lastpage);
-
-				goto splitpage;
-			}
-			freehead = lastpage;
-		}
+		bitmap = __shref(base, extent->bitmap);
+		pstart = reserve_page_range(bitmap, extent->bitwords, areasz);
+		if (pstart >= 0)
+			goto splitpage;
 	}
 
 	return NULL;
 
-splitpage:
-
+splitpage:	
 	/*
-	 * At this point, headpage is valid and points to the first page
-	 * of a range of contiguous free pages larger or equal than
-	 * 'bsize'.
+	 * pstart is the starting page number of a range of contiguous
+	 * free pages larger or equal than 'bsize'.
 	 */
 	if (bsize < HOBJ_PAGE_SIZE) {
 		/*
-		 * If the allocation size is smaller than the standard page
-		 * size, split the page in smaller blocks of this size,
-		 * building a free list of free blocks.
+		 * If the allocation size is smaller than the internal
+		 * page size, split the page in smaller blocks of this
+		 * size, building a free list of bucketed free blocks.
 		 */
-		for (block = headpage, eblock =
-		     headpage + HOBJ_PAGE_SIZE - bsize; block < eblock;
-		     block += bsize)
+		for (block = get_page_addr(base, extent, pstart),
+		     eblock = block + HOBJ_PAGE_SIZE - bsize;
+		     block < eblock; block += bsize)
 			*((memoff_t *)block) = __shoff(base, block) + bsize;
 
 		*((memoff_t *)eblock) = 0;
-	} else
-		*((memoff_t *)headpage) = 0;
-
-	pnum = (__shoff(base, headpage) - extent->membase) >> HOBJ_PAGE_SHIFT;
+	}
 
 	/*
 	 * Update the page map.  If log2size is non-zero (i.e. bsize
-	 * <= 2 * PAGESIZE), store it in the first page's slot to
-	 * record the exact block size (which is a power of
-	 * two). Otherwise, store the special marker page_list,
-	 * indicating the start of a block whose size is a multiple of
-	 * the standard page size, but not necessarily a power of two.
-	 * In any case, the following pages slots are marked as
-	 * 'continued' (page_cont).
+	 * <= 2 * PAGESIZE), store it in the slot heading the page
+	 * range to record the exact block size (which is a power of
+	 * two).
+	 *
+	 * Otherwise, store the special marker page_list, indicating
+	 * the start of a block which size is a multiple of the
+	 * standard page size, but not necessarily a power of two.
+	 *
+	 * Page slots following the heading one bear the page_cont
+	 * marker.
 	 */
-	extent->pagemap[pnum].type = log2size ?: page_list;
-	extent->pagemap[pnum].bcount = 1;
+	extent->pagemap[pstart].type = log2size ?: page_list;
+	extent->pagemap[pstart].bcount = 1;
 
-	for (pcont = bsize >> HOBJ_PAGE_SHIFT; pcont > 1; pcont--) {
-		extent->pagemap[pnum + pcont - 1].type = page_cont;
-		extent->pagemap[pnum + pcont - 1].bcount = 0;
+	for (n = bsize >> HOBJ_PAGE_SHIFT; n > 1; n--) {
+		extent->pagemap[pstart + n - 1].type = page_cont;
+		extent->pagemap[pstart + n - 1].bcount = 0;
 	}
 
-	return headpage;
+	return get_page_addr(base, extent, pstart);
 }
 
 static inline size_t  __attribute__ ((always_inline))
@@ -353,8 +405,8 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 {
 	struct shared_extent *extent;
 	void *base = main_base;
+	size_t pgnum, bsize;
 	int log2size, ilog;
-	size_t pnum, bsize;
 	caddr_t block;
 
 	if (size == 0)
@@ -362,22 +414,20 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 
 	size = align_alloc_size(size);
 	/*
-	 * It becomes more space efficient to directly allocate pages from
-	 * the free page list whenever the requested size is greater than
-	 * 2 times the page size. Otherwise, use the bucketed memory
-	 * blocks.
+	 * It becomes more space efficient to directly allocate pages
+	 * from the free page pool whenever the requested size is
+	 * greater than 2 times the page size. Otherwise, use the
+	 * bucketed memory blocks.
 	 */
 	if (size <= HOBJ_PAGE_SIZE * 2) {
-		/*
-		 * Find the first power of two greater or equal to the
-		 * rounded size. The log2 value of this size is also
-		 * computed.
-		 */
-		for (bsize = (1 << HOBJ_MINLOG2), log2size = HOBJ_MINLOG2;
-		     bsize < size; bsize <<= 1, log2size++)
-			;	/* Loop */
-
+		/* Find log2(size). */
+		log2size = sizeof(size) * 8 - 1 - clz(size);
+		if (size & (size - 1))
+			log2size++;
+		/* That is the actual block size we need. */
+		bsize = 1 << log2size;
 		ilog = log2size - HOBJ_MINLOG2;
+		assert(ilog < HOBJ_NBUCKETS);
 
 		write_lock_nocancel(&heap->lock);
 
@@ -400,8 +450,8 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 			}
 			assert(0);
 		found:
-			pnum = (__shoff(base, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
-			++extent->pagemap[pnum].bcount;
+			pgnum = (__shoff(base, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
+			++extent->pagemap[pgnum].bcount;
 		}
 
 		heap->buckets[ilog].freelist = *((memoff_t *)block);
@@ -425,12 +475,14 @@ done:
 
 static int free_block(struct shared_heap *heap, void *block)
 {
-	int log2size, ret = 0, nblocks, xpage, ilog, pagenr, maxpages;
-	caddr_t freepage, lastpage, nextpage, tailpage, freeptr;
-	size_t pnum, pcont, boffset, bsize;
+	int log2size, ret = 0, nblocks, xpage, ilog, pagenr,
+		maxpages, pghead, pgtail, n;
 	struct shared_extent *extent;
+	memoff_t *tailp, pgoff, boff;
+	caddr_t freep, startp, endp;
 	void *base = main_base;
-	memoff_t *tailptr;
+	uint32_t *bitmap;
+	size_t bsize;
 
 	write_lock_nocancel(&heap->lock);
 
@@ -448,11 +500,11 @@ static int free_block(struct shared_heap *heap, void *block)
 	goto out;
 found:
 	/* Compute the heading page number in the page map. */
-	pnum = (__shoff(base, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
-	boffset = (__shoff(base, block) -
-		   (extent->membase + (pnum << HOBJ_PAGE_SHIFT)));
+	pgoff = __shoff(base, block) - extent->membase;
+	pghead = pgoff >> HOBJ_PAGE_SHIFT;
+	boff = pgoff & ~HOBJ_PAGE_MASK;
 
-	switch (extent->pagemap[pnum].type) {
+	switch (extent->pagemap[pghead].type) {
 	case page_free:	/* Unallocated page? */
 	case page_cont:	/* Not a range heading page? */
 		ret = -EINVAL;
@@ -462,76 +514,73 @@ found:
 		pagenr = 1;
 		maxpages = (extent->memlim - extent->membase) >> HOBJ_PAGE_SHIFT;
 		while (pagenr < maxpages &&
-		       extent->pagemap[pnum + pagenr].type == page_cont)
+		       extent->pagemap[pghead + pagenr].type == page_cont)
 			pagenr++;
 		bsize = pagenr * HOBJ_PAGE_SIZE;
 
-	free_page_list:
-		/* Link all freed pages in a single sub-list. */
-		for (freepage = (caddr_t)block,
-		     tailpage = (caddr_t)block + bsize - HOBJ_PAGE_SIZE;
-		     freepage < tailpage; freepage += HOBJ_PAGE_SIZE)
-			*((memoff_t *)freepage) = __shoff(base, freepage) + HOBJ_PAGE_SIZE;
-
 	free_pages:
 		/* Mark the released pages as free in the extent's page map. */
-		for (pcont = 0; pcont < pagenr; pcont++)
-			extent->pagemap[pnum + pcont].type = page_free;
-		/*
-		 * Return the sub-list to the free page list, keeping
-		 * an increasing address order to favor coalescence.
-		 */
-		for (nextpage = __shref_check(base, extent->freelist), lastpage = NULL;
-		     nextpage && nextpage < (caddr_t)block;
-		     lastpage = nextpage, nextpage = __shref_check(base, *((memoff_t *)nextpage)))
-		  ;	/* Loop */
+		for (n = 0; n < pagenr; n++)
+			extent->pagemap[pghead + n].type = page_free;
 
-		*((memoff_t *)tailpage) = __shoff_check(base, nextpage);
-		if (lastpage)
-			*((memoff_t *)lastpage) = __shoff(base, block);
-		else
-			extent->freelist = __shoff(base, block);
+		/* Likewise for the allocation bitmap. */
+		bitmap = __shref(base, extent->bitmap);
+		pgtail = pghead + pagenr - 1;
+		/*
+		 * Mark the released page(s) as free in the
+		 * bitmap. Caution: this is a reverse scan from the
+		 * end of the bitfield mapping the area.
+		 */
+		flip_page_range(bitmap + pgtail / 32, pgtail & 31, pagenr);
 		break;
 
 	default:
-
-		log2size = extent->pagemap[pnum].type;
+		log2size = extent->pagemap[pghead].type;
 		bsize = (1 << log2size);
-		if ((boffset & (bsize - 1)) != 0) {	/* Not a block start? */
+		if ((boff & (bsize - 1)) != 0) { /* Not at block start? */
 			ret = -EINVAL;
 			goto out;
 		}
 		/*
-		 * Return the page to the free list if we've just
+		 * Return the page to the free pool if we've just
 		 * freed its last busy block. Pages from multi-page
-		 * blocks are always pushed to the free list (bcount
+		 * blocks are always pushed to the free pool (bcount
 		 * value for the heading page is always 1).
 		 */
 		ilog = log2size - HOBJ_MINLOG2;
-		if (--extent->pagemap[pnum].bcount > 0) {
-			/* Return the block to the bucketed memory space. */
+		if (--extent->pagemap[pghead].bcount > 0) {
+			/*
+			 * Page is still busy after release, return
+			 * the block to the free list then bail out.
+			 */
 			*((memoff_t *)block) = heap->buckets[ilog].freelist;
 			heap->buckets[ilog].freelist = __shoff(base, block);
 			++heap->buckets[ilog].fcount;
 			break;
 		}
 
+		/*
+		 * The page the block was sitting on is idle, return
+		 * it to the pool.
+		 */
 		pagenr = bsize >> HOBJ_PAGE_SHIFT;
+		/*
+		 * In the simplest case, we only have a single block
+		 * to deal with, which spans multiple consecutive
+		 * pages: release it as a range of pages.
+		 */
 		if (pagenr > 1)
-			/*
-			 * The simplest case: we only have a single
-			 * block to deal with, which spans multiple
-			 * pages. We just need to release it as a list
-			 * of pages, without caring about the
-			 * consistency of the bucket.
-			 */
-			goto free_page_list;
+			goto free_pages;
 
-		freepage = __shref(base, extent->membase) + (pnum << HOBJ_PAGE_SHIFT);
-		block = freepage;
-		tailpage = freepage;
-		nextpage = freepage + HOBJ_PAGE_SIZE;
+		pagenr = 1;
 		nblocks = HOBJ_PAGE_SIZE >> log2size;
+		/*
+		 * Decrease the free bucket count by the number of
+		 * blocks that the empty page we are returning to the
+		 * pool may contain. The block we are releasing can't
+		 * be part of the free list by definition, hence
+		 * nblocks - 1.
+		 */
 		heap->buckets[ilog].fcount -= (nblocks - 1);
 		assert(heap->buckets[ilog].fcount >= 0);
 
@@ -553,22 +602,25 @@ found:
 		 * traversed, or we hit the end of list, whichever
 		 * comes first.
 		 */
-		for (tailptr = &heap->buckets[ilog].freelist,
-			     freeptr = __shref_check(base, *tailptr), xpage = 1;
-		     freeptr && nblocks > 0;
-		     freeptr = __shref_check(base, *((memoff_t *)freeptr))) {
-			if (freeptr < freepage || freeptr >= nextpage) {
+		startp = get_page_addr(base, extent, pghead);
+		endp = startp + HOBJ_PAGE_SIZE;
+		for (tailp = &heap->buckets[ilog].freelist,
+			     freep = __shref_check(base, *tailp), xpage = 1;
+		     freep && nblocks > 0;
+		     freep = __shref_check(base, *((memoff_t *)freep))) {
+			if (freep < startp || freep >= endp) {
 				if (xpage) { /* Limit random writes */
-					*tailptr = __shoff(base, freeptr);
+					*tailp = __shoff(base, freep);
 					xpage = 0;
 				}
-				tailptr = (memoff_t *)freeptr;
+				tailp = (memoff_t *)freep;
 			} else {
 				--nblocks;
 				xpage = 1;
 			}
 		}
-		*tailptr = __shoff_check(base, freeptr);
+		*tailp = __shoff_check(base, freep);
+
 		goto free_pages;
 	}
 
@@ -581,10 +633,10 @@ out:
 
 static size_t check_block(struct shared_heap *heap, void *block)
 {
-	size_t pnum, boffset, bsize, ret = 0;
+	size_t pgnum, pgoff, boff, bsize, ret = 0;
 	struct shared_extent *extent;
+	int ptype, maxpages, pagenr;
 	void *base = main_base;
-	int ptype;
 
 	read_lock_nocancel(&heap->lock);
 
@@ -599,16 +651,25 @@ static size_t check_block(struct shared_heap *heap, void *block)
 	goto out;
 found:
 	/* Compute the heading page number in the page map. */
-	pnum = (__shoff(base, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
-	ptype = extent->pagemap[pnum].type;
+	pgoff = __shoff(base, block) - extent->membase;
+	pgnum = pgoff >> HOBJ_PAGE_SHIFT;
+	ptype = extent->pagemap[pgnum].type;
 	if (ptype == page_free || ptype == page_cont)
 		goto out;
 
-	bsize = (1 << ptype);
-	boffset = (__shoff(base, block) -
-		   (extent->membase + (pnum << HOBJ_PAGE_SHIFT)));
-	if ((boffset & (bsize - 1)) != 0) /* Not a block start? */
-		goto out;
+	if (ptype == page_list) {
+		pagenr = 1;
+		maxpages = (extent->memlim - extent->membase) >> HOBJ_PAGE_SHIFT;
+		while (pagenr < maxpages &&
+		       extent->pagemap[pgnum + pagenr].type == page_cont)
+			pagenr++;
+		bsize = pagenr * HOBJ_PAGE_SIZE;
+	} else {
+		bsize = (1 << ptype);
+		boff = pgoff & ~HOBJ_PAGE_MASK;
+		if ((boff & (bsize - 1)) != 0) /* Not at block start? */
+			goto out;
+	}
 
 	ret = bsize;
 out:
@@ -646,7 +707,7 @@ static int create_main_heap(pid_t *cnode_r)
 		size = HOBJ_PAGE_SIZE * 2;
 
 	len = size + sizeof(*m_heap);
-	len += get_pagemap_size(size);
+	len += get_pagemap_size(size, NULL, NULL);
 
 	/*
 	 * Bind to (and optionally create) the main session's heap:
@@ -885,7 +946,7 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 		size = HOBJ_PAGE_SIZE * 2;
 
 	len = size + sizeof(*heap);
-	len += get_pagemap_size(size);
+	len += get_pagemap_size(size, NULL, NULL);
 
 	/*
 	 * Create a heap nested in the main shared heap to hold data
@@ -950,18 +1011,21 @@ int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 {
 	struct shared_heap *heap = __mptr(hobj->pool_ref);
 	struct shared_extent *extent;
+	int state, bmapwords;
+	memoff_t bmapoff;
 	size_t metasz;
-	int state;
 
 	if (hobj == &main_pool)	/* Can't extend the main pool. */
 		return __bt(-EINVAL);
 
 	size = __align_to(size, HOBJ_PAGE_SIZE);
-	metasz = get_pagemap_size(size);
+	metasz = get_pagemap_size(size, &bmapoff, &bmapwords);
 	extent = alloc_block(&main_heap.heap, size + metasz);
 	if (extent == NULL)
 		return __bt(-ENOMEM);
 
+	extent->bitmap = __shoff(main_base, extent) + bmapoff;
+	extent->bitwords = bmapwords;
 	extent->membase = __shoff(main_base, extent) + metasz;
 	extent->memlim = extent->membase + size;
 	init_extent(main_base, extent);
