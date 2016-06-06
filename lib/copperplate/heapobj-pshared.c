@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -678,6 +679,19 @@ out:
 	return ret;
 }
 
+#ifndef CONFIG_XENO_REGISTRY
+static void unlink_main_heap(void)
+{
+	/*
+	 * Only the master process run this when there is no registry
+	 * support (i.e. the one which has initialized the main shared
+	 * heap for the session). When the registry is enabled,
+	 * sysregd does the housekeeping.
+	 */
+	shm_unlink(main_pool.fsname);
+}
+#endif
+
 static int create_main_heap(pid_t *cnode_r)
 {
 	const char *session = __copperplate_setup_data.session_label;
@@ -770,6 +784,10 @@ reset:
 	ret = fchown(fd, geteuid(), getegid());
 	(void)ret;
 init:
+#ifndef CONFIG_XENO_REGISTRY
+	atexit(unlink_main_heap);
+#endif
+
 	ret = ftruncate(fd, 0);  /* Clear all previous contents if any. */
 	if (__bterrno(ret))
 		goto unlink_fail;
