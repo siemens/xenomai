@@ -58,4 +58,52 @@
 #define __deprecated	__attribute__((__deprecated__))
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
+void __invalid_operand_size(void);
+
+#define ctz(__v)							\
+	({								\
+		int __ret;						\
+		if (!__v)						\
+			__ret = sizeof(__v) * 8;			\
+		else							\
+			switch (sizeof(__v)) {				\
+			case sizeof(int):				\
+				__ret = __builtin_ctz((unsigned int)__v); \
+				break;					\
+			case sizeof(long long):				\
+				__ret = __builtin_ctzll(__v);		\
+				break;					\
+			default:					\
+				__invalid_operand_size();		\
+			}						\
+		__ret;							\
+	})
+
+#define clz(__v)							\
+	({								\
+		int __ret;						\
+		if (!__v)						\
+			__ret = sizeof(__v) * 8;			\
+		else							\
+			switch (sizeof(__v)) {				\
+			case sizeof(int):				\
+				__ret = __builtin_clz((unsigned int)__v); \
+				break;					\
+			case sizeof(long long):				\
+				__ret = __builtin_clzll(__v);		\
+				break;					\
+			default:					\
+				__invalid_operand_size();		\
+			}						\
+		__ret;							\
+	})
+	
+#ifdef __cplusplus
+}
+#endif
+	
 #endif /* _BOILERPLATE_COMPILER_H */
