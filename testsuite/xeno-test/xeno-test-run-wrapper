@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 
 XENO_TEST_IN="/tmp/xeno-test-in-$$"
 XENO_TEST_OUT="/tmp/xeno-test-out-$$"
