@@ -284,7 +284,7 @@ static int register_driver(struct rtdm_driver *drv)
 	}
 
 	if (drv->device_count <= 0 ||
-	    drv->device_count >= RTDM_MAX_MINOR)
+	    drv->device_count > RTDM_MAX_MINOR)
 		return -EINVAL;
 
 	if ((drv->device_flags & RTDM_NAMED_DEVICE) == 0)
