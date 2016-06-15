@@ -287,12 +287,12 @@ static int register_driver(struct rtdm_driver *drv)
 	    drv->device_count >= RTDM_MAX_MINOR)
 		return -EINVAL;
 
+	if ((drv->device_flags & RTDM_NAMED_DEVICE) == 0)
+		goto done;
+
 	if (drv->base_minor < 0 ||
 	    drv->base_minor >= RTDM_MAX_MINOR)
 		return -EINVAL;
-
-	if ((drv->device_flags & RTDM_NAMED_DEVICE) == 0)
-		goto done;
 
 	ret = alloc_chrdev_region(&rdev, drv->base_minor, drv->device_count,
 				  drv->profile_info.name);
