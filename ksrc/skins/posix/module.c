@@ -63,6 +63,7 @@
 #include <posix/timer.h>
 #include <posix/registry.h>
 #include <posix/shm.h>
+#include <posix/once.h>
 
 MODULE_DESCRIPTION("POSIX/PSE51 interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
@@ -86,6 +87,7 @@ static void pse51_shutdown(int xtype)
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
 	pse51_timer_pkg_cleanup();
 	pse51_mq_pkg_cleanup();
+	pse51_once_pkg_cleanup();
 	pse51_cond_pkg_cleanup();
 	pse51_tsd_pkg_cleanup();
 	pse51_sem_pkg_cleanup();
@@ -129,19 +131,9 @@ int SKIN_INIT(posix)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = pse51_syscall_init();
+	if (err != 0)
+		goto fail_apc_cleanup;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-	if (err != 0) {
-#ifdef __KERNEL__
-		pse51_apc_pkg_cleanup();
-	  fail_free_tbase:
-#endif /* __KERNEL__ */
-		xntbase_free(pse51_tbase);
-	fail_shutdown_pod:
-		xnpod_shutdown(err);
-	  fail:
-		xnlogerr("POSIX skin init failed, code %d.\n", err);
-		return err;
-	}
 
 	pse51_reg_pkg_init(CONFIG_XENO_OPT_POSIX_REGISTRY_NRSLOTS, 
 			CONFIG_XENO_OPT_POSIX_REGISTRY_NRDESCS);
@@ -150,6 +142,11 @@ int SKIN_INIT(posix)
 	pse51_sem_pkg_init();
 	pse51_tsd_pkg_init();
 	pse51_cond_pkg_init();
+
+	err = pse51_once_pkg_init();
+	if (err)
+		goto fail_cond_cleanup;
+
 	pse51_mq_pkg_init();
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
 	pse51_intr_pkg_init();
@@ -162,6 +159,28 @@ int SKIN_INIT(posix)
 	pse51_thread_pkg_init(module_param_value(time_slice_arg));
 
 	return 0;
+
+  fail_cond_cleanup:
+	pse51_cond_pkg_cleanup();
+	pse51_tsd_pkg_cleanup();
+	pse51_sem_pkg_cleanup();
+	pse51_mutex_pkg_cleanup();
+	pse51_signal_pkg_cleanup();
+	pse51_reg_pkg_cleanup();
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	pse51_syscall_cleanup();
+  fail_apc_cleanup:
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#ifdef __KERNEL__
+	pse51_apc_pkg_cleanup();
+  fail_free_tbase:
+#endif /* __KERNEL__ */
+	xntbase_free(pse51_tbase);
+  fail_shutdown_pod:
+	xnpod_shutdown(err);
+  fail:
+	xnlogerr("POSIX skin init failed, code %d.\n", err);
+	return err;
 }
 
 void SKIN_EXIT(posix)

@@ -23,6 +23,9 @@
 
 #include <posix/internal.h>
 
+static pthread_mutex_t mutex;
+static pthread_cond_t cond;
+
 /**
  * Execute an initialization routine.
  *
@@ -35,34 +38,109 @@
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, the object pointed to by @a once is invalid (it must have been
- *   initialized with PTHREAD_ONCE_INIT).
+ *   initialized with PTHREAD_ONCE_INIT);
+ * - EPERM, the caller context is invalid.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_once.html">
  * Specification.</a>
  *
  */
-int pthread_once(pthread_once_t * once, void (*init_routine) (void))
-{
-	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
+static void once_cleanup(void *cookie)
+{
+	pthread_once_t *once = cookie;
+
+	pthread_mutex_lock(&mutex);
+	once->routine_called = 0;
+	pthread_cond_broadcast(&cond);
+	pthread_mutex_unlock(&mutex);
+}
+
+int pthread_once(pthread_once_t *once, void (*init_routine)(void))
+{
+	int err;
+
+	err = pthread_mutex_lock(&mutex);
+	if (err)
+		return err;
 
 	if (!pse51_obj_active(once, PSE51_ONCE_MAGIC, pthread_once_t)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
+		err = EINVAL;
+		goto out;
 	}
 
-	if (!once->routine_called) {
-		init_routine();
-		/* If the calling thread is canceled while executing init_routine,
-		   routine_called will not be set to 1. */
-		once->routine_called = 1;
+	while (once->routine_called != 2)
+		switch (once->routine_called) {
+		case 0:
+			once->routine_called = 1;
+			pthread_mutex_unlock(&mutex);
+
+			pthread_cleanup_push(once_cleanup, once);
+			init_routine();
+			pthread_cleanup_pop(0);
+
+			pthread_mutex_lock(&mutex);
+			once->routine_called = 2;
+			pthread_cond_broadcast(&cond);
+			break;
+
+		case 1:
+			err = pthread_cond_wait(&cond, &mutex);
+			if (err)
+				goto out;
+			break;
+
+		default:
+			err = EINVAL;
+			goto out;
+		}
+
+  out:
+	pthread_mutex_unlock(&mutex);
+
+	return err;
+}
+
+int pse51_once_pkg_init(void)
+{
+	pthread_mutexattr_t tattr;
+	int err;
+
+	err = pthread_mutexattr_init(&tattr);
+	if (err) {
+		printk("Posix: pthread_once/pthread_mutexattr_init: %d\n", err);
+		return err;
 	}
 
-	xnlock_put_irqrestore(&nklock, s);
+	err = pthread_mutexattr_setprotocol(&tattr, PTHREAD_PRIO_INHERIT);
+	if (err) {
+		printk("Posix: pthread_once/set_protocol: %d\n", err);
+		return err;
+	}
 
-	return 0;
+	err = pthread_mutex_init(&mutex, &tattr);
+	if (err) {
+		printk("Posix: pthread_once/mutex_init: %d\n", err);
+		return err;
+	}
+
+	err = pthread_cond_init(&cond, NULL);
+	if (err) {
+		printk("Posix: pthread_once/cond_init: %d\n", err);
+		pthread_mutex_destroy(&mutex);
+	}
+
+	return err;
+}
+
+void pse51_once_pkg_cleanup(void)
+{
+	pthread_mutex_destroy(&mutex);
+	pthread_cond_destroy(&cond);
 }
 
 /*@}*/
