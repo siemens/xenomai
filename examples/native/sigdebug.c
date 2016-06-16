@@ -34,7 +34,9 @@ static const char *reason_str[] = {
     [SIGDEBUG_MIGRATE_PRIOINV] = "affected by priority inversion",
     [SIGDEBUG_NOMLOCK] = "missing mlockall",
     [SIGDEBUG_WATCHDOG] = "runaway thread",
+    [SIGDEBUG_RESCNT_IMBALANCE] = "ressource count imbalance",
 };
+#define nr_reasons (sizeof(reason_str)/sizeof(reason_str[0]))
 
 void warn_upon_switch(int sig, siginfo_t *si, void *context)
 {
@@ -43,7 +45,7 @@ void warn_upon_switch(int sig, siginfo_t *si, void *context)
     int nentries;
 
     printf("\nSIGDEBUG received, reason %d: %s\n", reason,
-	   reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
+	   reason < nr_reasons ? reason_str[reason] : "<unknown>");
     /* Dump a backtrace of the frame which caused the switch to
        secondary mode: */
     nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));
