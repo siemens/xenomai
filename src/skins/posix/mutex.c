@@ -167,17 +167,20 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	/*
 	 * We track resource ownership for non real-time shadows in
 	 * order to handle the auto-relax feature, so we must always
-	 * obtain them via a syscall.
+	 * obtain them via a syscall. This is not necessary if the mutex
+	 * is recursive and we already own it though.
 	 */
 	status = xeno_get_current_mode();
-	if (unlikely(status & (XNRELAX|XNOTHER)))
-		goto do_syscall;
-
-	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
-	if (likely(!err)) {
-		shadow->lockcnt = 1;
-		cb_read_unlock(&shadow->lock, s);
-		return 0;
+	if ((status & (XNRELAX|XNOTHER)) == 0) {
+		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+		if (likely(!err)) {
+			shadow->lockcnt = 1;
+			goto out;
+		}
+	} else {
+		err = xnsynch_fast_owner_check(get_ownerp(shadow), cur);
+		if (err == 0)
+			err = -EBUSY;
 	}
 
 	if (err == -EBUSY)
@@ -239,14 +242,16 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 
 	/* See __wrap_pthread_mutex_lock() */
 	status = xeno_get_current_mode();
-	if (unlikely(status & (XNRELAX|XNOTHER)))
-		goto do_syscall;
-
-	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
-	if (likely(!err)) {
-		shadow->lockcnt = 1;
-		cb_read_unlock(&shadow->lock, s);
-		return 0;
+	if ((status & (XNRELAX|XNOTHER)) == 0) {
+		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+		if (likely(!err)) {
+			shadow->lockcnt = 1;
+			goto out;
+		}
+	} else {
+		err = xnsynch_fast_owner_check(get_ownerp(shadow), cur);
+		if (err == 0)
+			err = -EBUSY;
 	}
 
 	if (err == -EBUSY)
@@ -310,25 +315,18 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	}
 
 	status = xeno_get_current_mode();
-	if (unlikely(status & XNOTHER))
-		goto do_syscall;
-
-	if (unlikely(status & XNRELAX)) {
-		do {
-			err = XENOMAI_SYSCALL1(__xn_sys_migrate,
-					       XENOMAI_XENO_DOMAIN);
-		} while (err == -EINTR);
-
-		if (err < 0)
+	if ((status & (XNRELAX|XNOTHER)) == 0) {
+		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+		if (likely(!err)) {
+			shadow->lockcnt = 1;
 			goto out;
-	}
+		}
+	} else {
+		err = xnsynch_fast_owner_check(get_ownerp(shadow), cur);
+		if (err < 0)
+			goto do_syscall;
 
-	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
-
-	if (likely(!err)) {
-		shadow->lockcnt = 1;
-		cb_read_unlock(&shadow->lock, s);
-		return 0;
+		err = -EBUSY;
 	}
 
 	if (err == -EBUSY && shadow->attr.type == PTHREAD_MUTEX_RECURSIVE) {
@@ -376,7 +374,6 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 
 #ifdef CONFIG_XENO_FASTSYNCH
 	xnarch_atomic_t *ownerp;
-	unsigned long status;
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
@@ -388,29 +385,25 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 
 	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC)) {
 		err = -EINVAL;
-		goto out_err;
+		goto out;
 	}
-
-	status = xeno_get_current_mode();
-	if (unlikely(status & XNOTHER))
-		goto do_syscall;
 
 	ownerp = get_ownerp(shadow);
 
 	err = xnsynch_fast_owner_check(ownerp, cur);
 	if (unlikely(err))
-		goto out_err;
+		goto out;
 
 	if (shadow->lockcnt > 1) {
 		--shadow->lockcnt;
 		goto out;
 	}
 
-	if (likely(xnsynch_fast_release(ownerp, cur))) {
-	  out:
-		cb_read_unlock(&shadow->lock, s);
-		return 0;
-	}
+	if (unlikely(xeno_get_current_mode() & XNOTHER))
+		goto do_syscall;
+
+	if (likely(xnsynch_fast_release(ownerp, cur)))
+		goto out;
 
 do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
@@ -421,7 +414,7 @@ do_syscall:
 	} while (err == -EINTR);
 
 #ifdef CONFIG_XENO_FASTSYNCH
-  out_err:
+  out:
 	cb_read_unlock(&shadow->lock, s);
 #endif /* CONFIG_XENO_FASTSYNCH */
 
