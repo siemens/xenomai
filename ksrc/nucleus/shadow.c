@@ -1954,14 +1954,14 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 	if (pid == -1)
 		return;
 
-	read_lock(&tasklist_lock);
+	wrap_lock_tasklist();
 
 	p = wrap_find_task_by_pid(completion.pid);
 
 	if (p)
 		wake_up_process(p);
 
-	read_unlock(&tasklist_lock);
+	wrap_unlock_tasklist();
 }
 EXPORT_SYMBOL_GPL(xnshadow_signal_completion);
 

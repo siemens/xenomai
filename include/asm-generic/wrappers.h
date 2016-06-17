@@ -564,6 +564,17 @@ static inline void *kzalloc(size_t size, int flags)
 
 #include <linux/semaphore.h>
 #include <linux/pid.h>
+#include <linux/rcupdate.h>
+
+static inline void wrap_lock_tasklist(void)
+{
+	rcu_read_lock();
+}
+
+static inline void wrap_unlock_tasklist(void)
+{
+	rcu_read_unlock();
+}
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
 
@@ -584,7 +595,18 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 
 #else /* LINUX_VERSION_CODE < 2.6.27 */
 
+#include <linux/spinlock.h>
 #include <asm/semaphore.h>
+
+static inline void wrap_lock_tasklist(void)
+{
+	read_lock(&tasklist_lock);
+}
+
+static inline void wrap_unlock_tasklist(void)
+{
+	read_unlock(&tasklist_lock);
+}
 
 #define wrap_find_task_by_pid(nr)  find_task_by_pid(nr)
 
