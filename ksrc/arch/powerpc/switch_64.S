@@ -274,7 +274,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	
 #else /* Linux >= 2.6.32 */
 
-#ifndef MMU_FTR_SLB
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 #define MMU_FTR_SLB		CPU_FTR_SLB
 #define MMU_FTR_1T_SEGMENT	CPU_FTR_1T_SEGMENT
 #endif
@@ -337,7 +337,10 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	std	r6,PACACURRENT(r13)	/* Set new 'current' */
 10:
 #ifdef CONFIG_PPC_BOOK3S
+	/* Starting with Linux 3.17.0, all supported cpus have SLB */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
 BEGIN_FTR_SECTION
+#endif /* version < 3.17.0 */
   BEGIN_FTR_SECTION_NESTED(95)
 	clrrdi	r6,r8,28	/* get its ESID */
 	clrrdi	r9,r1,28	/* get current sp ESID */
@@ -345,9 +348,11 @@ BEGIN_FTR_SECTION
 	clrrdi	r6,r8,40	/* get its 1T ESID */
 	clrrdi	r9,r1,40	/* get current sp 1T ESID */
   ALT_FTR_SECTION_END_NESTED_IFCLR(MMU_FTR_1T_SEGMENT, 95)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
 FTR_SECTION_ELSE
 	b	2f
 ALT_FTR_SECTION_END_IFSET(MMU_FTR_SLB)
+#endif /* version < 3.17.0 */
 	clrldi.	r0,r6,2		/* is new ESID c00000000? */
 	cmpd	cr1,r6,r9	/* or is new ESID the same as current ESID? */
 	cror	eq,4*cr1+eq,eq

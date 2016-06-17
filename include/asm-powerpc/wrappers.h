@@ -209,4 +209,12 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
+#define wrap_mmu_has_slb() cpu_has_feature(CPU_FTR_SLB)
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+#define wrap_mmu_has_slb() mmu_has_feature(MMU_FTR_SLB)
+#else /* Version >= 3.17.0 */
+#define wrap_mmu_has_slb() (1)
+#endif /* Version >= 3.17.0 */
+
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
