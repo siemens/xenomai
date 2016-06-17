@@ -744,6 +744,18 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 	return ret;
 }
 
+static inline int vm_munmap(unsigned long start, size_t len)
+{
+	struct mm_struct *mm = current->mm;
+	int ret;
+
+	down_write(&mm->mmap_sem);
+	ret = do_munmap(mm, start, len);
+	up_write(&mm->mmap_sem);
+
+	return ret;
+}
+
 #endif /* LINUX_VERSION_CODE < 3.4.0 */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0)

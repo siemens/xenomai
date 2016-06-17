@@ -2104,9 +2104,7 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 
 	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
 
-	down_write(&user_info->mm->mmap_sem);
-	err = do_munmap(user_info->mm, (unsigned long)ptr, len);
-	up_write(&user_info->mm->mmap_sem);
+	err = vm_munmap((unsigned long)ptr, len);
 
 	return err;
 }

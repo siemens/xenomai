@@ -1412,10 +1412,11 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 * epilogue in case no more mapping exists.
 	 */
 	if (mapaddr) {
-		down_write(&current->mm->mmap_sem);
+		spin_lock(&kheapq_lock);
 		heap->archdep.release = NULL;
-		do_munmap(current->mm, (unsigned long)mapaddr, len);
-		up_write(&current->mm->mmap_sem);
+		spin_unlock(&kheapq_lock);
+
+		vm_munmap((unsigned long)mapaddr, len);
 	}
 
 	/*
