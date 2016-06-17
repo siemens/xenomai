@@ -202,7 +202,6 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 			goto out;
 		}
 
-  do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
@@ -274,7 +273,6 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 			goto out;
 		}
 
-  do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
