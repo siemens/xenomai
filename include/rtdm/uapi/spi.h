@@ -15,25 +15,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#include <linux/module.h>
-#include "gpio-core.h"
+#ifndef _RTDM_UAPI_SPI_H
+#define _RTDM_UAPI_SPI_H
 
-#define RTDM_SUBCLASS_BCM2835  1
+#include <linux/types.h>
 
-static struct rtdm_gpio_chip bcm2835_gpio_chip;
+struct rtdm_spi_config {
+	__u32 speed_hz;
+	__u16 mode;
+	__u8 bits_per_word;
+};
 
-static int __init bcm2835_gpio_init(void)
-{
-	return rtdm_gpiochip_add_by_name(&bcm2835_gpio_chip, "bcm2835_gpio",
-					 RTDM_SUBCLASS_BCM2835);
-}
+struct rtdm_spi_iobufs {
+	__u32 io_len;
+	__u32 i_offset;
+	__u32 o_offset;
+};
 
-static void __exit bcm2835_gpio_exit(void)
-{
-	rtdm_gpiochip_remove(&bcm2835_gpio_chip);
-}
+#define SPI_RTIOC_SET_CONFIG		_IOW(RTDM_CLASS_SPI, 0, struct rtdm_spi_config)
+#define SPI_RTIOC_GET_CONFIG		_IOR(RTDM_CLASS_SPI, 1, struct rtdm_spi_config)
+#define SPI_RTIOC_SET_IOBUFS		_IOR(RTDM_CLASS_SPI, 2, struct rtdm_spi_iobufs)
+#define SPI_RTIOC_TRANSFER		_IO(RTDM_CLASS_SPI, 3)
 
-module_init(bcm2835_gpio_init);
-module_exit(bcm2835_gpio_exit);
-
-MODULE_LICENSE("GPL");
+#endif /* !_RTDM_UAPI_SPI_H */

@@ -10,6 +10,7 @@ includesub_HEADERS +=	\
 	gpio.h		\
 	ipc.h		\
 	serial.h	\
+	spi.h		\
 	testing.h	\
 	udd.h
 endif
