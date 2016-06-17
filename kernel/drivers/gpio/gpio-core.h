@@ -31,6 +31,7 @@ struct rtdm_gpio_chip {
 	struct class *devclass;
 	struct list_head pins;
 	struct list_head next;
+	rtdm_lock_t lock;
 };
 
 int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,

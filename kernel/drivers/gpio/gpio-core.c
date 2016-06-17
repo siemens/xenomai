@@ -175,15 +175,21 @@ static void delete_pin_devices(struct rtdm_gpio_chip *rgc)
 	struct rtdm_gpio_pin *pin, *n;
 	struct rtdm_device *dev;
 
+	rtdm_lock_get(&rgc->lock);
+	
 	list_for_each_entry_safe(pin, n, &rgc->pins, next) {
 		list_del(&pin->next);
+		rtdm_lock_put(&rgc->lock);
 		dev = &pin->dev;
 		rtdm_dev_unregister(dev);
 		rtdm_event_destroy(&pin->event);
 		kfree(dev->label);
 		kfree(pin->name);
 		kfree(pin);
+		rtdm_lock_get(&rgc->lock);
 	}
+
+	rtdm_lock_put(&rgc->lock);
 }
 
 static int create_pin_devices(struct rtdm_gpio_chip *rgc)
@@ -217,7 +223,9 @@ static int create_pin_devices(struct rtdm_gpio_chip *rgc)
 		if (ret)
 			goto fail_register;
 		rtdm_event_init(&pin->event, 0);
+		rtdm_lock_get(&rgc->lock);
 		list_add_tail(&pin->next, &rgc->pins);
+		rtdm_lock_put(&rgc->lock);
 	}
 
 	return 0;
@@ -277,6 +285,7 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 
 	rgc->gc = gc;
 	INIT_LIST_HEAD(&rgc->pins);
+	rtdm_lock_init(&rgc->lock);
 
 	ret = create_pin_devices(rgc);
 	if (ret)
