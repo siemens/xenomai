@@ -98,7 +98,7 @@ typedef struct pse51_key *pthread_key_t;
 
 typedef struct pse51_once {
 	unsigned magic;
-	int routine_called;
+	int init_step;
 } pthread_once_t;
 
 #ifdef __KERNEL__

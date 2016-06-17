@@ -50,12 +50,18 @@ static pthread_cond_t cond;
  *
  */
 
-static void once_cleanup(void *cookie)
+enum init_step {
+	UNINIT = 0,
+	INIT_STARTED,
+	INIT_DONE,
+};
+
+static void once_rollback(void *cookie)
 {
 	pthread_once_t *once = cookie;
 
 	pthread_mutex_lock(&mutex);
-	once->routine_called = 0;
+	once->init_step = UNINIT;
 	pthread_cond_broadcast(&cond);
 	pthread_mutex_unlock(&mutex);
 }
@@ -63,6 +69,10 @@ static void once_cleanup(void *cookie)
 int pthread_once(pthread_once_t *once, void (*init_routine)(void))
 {
 	int err;
+
+	if (pse51_obj_active(once, PSE51_ONCE_MAGIC, pthread_once_t) &&
+		once->init_step == INIT_DONE)
+		return 0;
 
 	err = pthread_mutex_lock(&mutex);
 	if (err)
@@ -73,22 +83,22 @@ int pthread_once(pthread_once_t *once, void (*init_routine)(void))
 		goto out;
 	}
 
-	while (once->routine_called != 2)
-		switch (once->routine_called) {
-		case 0:
-			once->routine_called = 1;
+	while (once->init_step != INIT_DONE)
+		switch (once->init_step) {
+		case UNINIT:
+			once->init_step = INIT_STARTED;
 			pthread_mutex_unlock(&mutex);
 
-			pthread_cleanup_push(once_cleanup, once);
+			pthread_cleanup_push(once_rollback, once);
 			init_routine();
 			pthread_cleanup_pop(0);
 
 			pthread_mutex_lock(&mutex);
-			once->routine_called = 2;
+			once->init_step = INIT_DONE;
 			pthread_cond_broadcast(&cond);
 			break;
 
-		case 1:
+		case INIT_STARTED:
 			err = pthread_cond_wait(&cond, &mutex);
 			if (err)
 				goto out;
