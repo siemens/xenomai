@@ -22,7 +22,6 @@
 #include <linux/irq.h>
 #include <linux/slab.h>
 #include <linux/err.h>
-#include <linux/of_platform.h>
 #include "gpio-core.h"
 
 struct rtdm_gpio_pin {
@@ -329,13 +328,17 @@ int rtdm_gpiochip_add_by_name(struct rtdm_gpio_chip *rgc,
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_add_by_name);
 
+#ifdef CONFIG_OF
+
+#include <linux/of_platform.h>
+
 int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 			  int (*match)(struct gpio_chip *gc))
 {
 	struct device_node *np = from;
 	struct platform_device *pdev;
-	int ret = -EPROBE_DEFER;
 	struct gpio_chip *gc;
+	int ret = -ENODEV;
 
 	for (;;) {
 		np = of_find_compatible_node(np, NULL, compat);
@@ -344,7 +347,7 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 		pdev = of_find_device_by_node(np);
 		of_node_put(np);
 		if (pdev == NULL)
-			return -ENODEV;
+			break;
 		gc = find_chip_by_name(dev_name(&pdev->dev));
 		if (gc) {
 			ret = match(gc);
@@ -356,3 +359,5 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_scan_of);
+
+#endif /* CONFIG_OF */

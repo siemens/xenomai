@@ -43,7 +43,9 @@ void rtdm_gpiochip_remove(struct rtdm_gpio_chip *rgc);
 int rtdm_gpiochip_add_by_name(struct rtdm_gpio_chip *rgc,
 			      const char *label, int gpio_subclass);
 
+#ifdef CONFIG_OF
 int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 			  int (*match)(struct gpio_chip *gc));
+#endif
 
 #endif /* !_RTDM_GPIO_CORE_H */
