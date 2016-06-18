@@ -1,13 +1,13 @@
 menu "Real-time GPIO drivers"
 
 config XENO_DRIVERS_GPIO
-       bool
+       tristate
        depends on GPIOLIB
 
 config XENO_DRIVERS_GPIO_BCM2708
 	depends on MACH_BCM2708
 	select XENO_DRIVERS_GPIO
-	bool "Support for BCM2708 GPIOs"
+	tristate "Support for BCM2708 GPIOs"
 	help
 
 	Suitable for the GPIO controller present on Broadcom's BCM2708
@@ -16,7 +16,7 @@ config XENO_DRIVERS_GPIO_BCM2708
 config XENO_DRIVERS_GPIO_MXC
 	depends on GPIO_MXC
 	select XENO_DRIVERS_GPIO
-	bool "Support for MXC GPIOs"
+	tristate "Support for MXC GPIOs"
 	help
 
 	Suitable for the GPIO controller available with
