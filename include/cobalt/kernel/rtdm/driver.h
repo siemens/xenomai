@@ -398,6 +398,11 @@ void rtdm_dev_unregister(struct rtdm_device *device);
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 
+static inline struct device *rtdm_dev_to_kdev(struct rtdm_device *device)
+{
+	return device->kdev;
+}
+
 /* --- clock services --- */
 static inline nanosecs_abs_t rtdm_clock_read(void)
 {
