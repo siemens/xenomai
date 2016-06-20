@@ -283,7 +283,7 @@ void simple_condwait(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&cond_signaler_tid, 2, cond_signaler, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	start = rt_timer_tsc();
 	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
@@ -388,7 +388,7 @@ void sig_norestart_condwait(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&cond_killer_tid, 2, cond_killer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	start = rt_timer_tsc();
 	sig_seen = 0;
@@ -435,7 +435,7 @@ void sig_restart_condwait(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&cond_killer_tid, 2, cond_killer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	start = rt_timer_tsc();
 	sig_seen = 0;
@@ -498,7 +498,7 @@ void sig_norestart_condwait_mutex(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&mutex_killer_tid, 2, mutex_killer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	sig_seen = 0;
 	start = rt_timer_tsc();
@@ -538,7 +538,7 @@ void sig_restart_condwait_mutex(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&mutex_killer_tid, 2, mutex_killer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	sig_seen = 0;
 	start = rt_timer_tsc();
@@ -594,7 +594,7 @@ void sig_norestart_double(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&double_killer_tid, 2, double_killer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	sig_seen = 0;
 	start = rt_timer_tsc();
@@ -634,7 +634,7 @@ void sig_restart_double(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&double_killer_tid, 2, double_killer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	sig_seen = 0;
 	start = rt_timer_tsc();
@@ -694,7 +694,7 @@ void cond_destroy_whilewait(void)
 	check("mutex_lock", mutex_lock(&mutex), 0);
 	check("thread_spawn",
 	      thread_spawn(&cond_destroyer_tid, 2, cond_destroyer, &cm), 0);
-	thread_msleep(11);
+	thread_msleep(20);
 
 	start = rt_timer_tsc();
 
