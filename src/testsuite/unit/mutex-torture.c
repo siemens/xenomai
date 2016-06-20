@@ -369,7 +369,6 @@ void *waiter(void *cookie)
 	mutex_t *mutex = (mutex_t *) cookie;
 	unsigned long long start, diff;
 
-	dispatch("waiter pthread_detach", THREAD_DETACH, 1, 0);
 	start = rt_timer_tsc();
 	dispatch("waiter mutex_lock", MUTEX_LOCK, 1, 0, mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
@@ -410,6 +409,7 @@ void simple_wait(void)
 	}
 
 	dispatch("simple mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("simple mutex waiter join", THREAD_JOIN, 1, 0, &waiter_tid);
 	dispatch("simple mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
@@ -444,6 +444,7 @@ void recursive_wait(void)
 		exit(EXIT_FAILURE);
 	}
 	dispatch("rec mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("rec mutex waiter join", THREAD_JOIN, 1, 0, &waiter_tid);
 	dispatch("rec mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
@@ -490,6 +491,7 @@ void errorcheck_wait(void)
 		exit(EXIT_FAILURE);
 	}
 	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("errorcheck mutex waiter join", THREAD_JOIN, 1, 0, &waiter_tid);
 	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 #endif /* XENO_POSIX */
 }
@@ -498,8 +500,6 @@ void *timed_waiter(void *cookie)
 {
 	mutex_t *mutex = (mutex_t *) cookie;
 	unsigned long long start, diff;
-
-	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1, 0);
 
 	start = rt_timer_tsc();
 	dispatch("timed_waiter mutex_timed_lock", MUTEX_TIMED_LOCK, 1,
@@ -527,9 +527,8 @@ void timed_mutex(void)
 		 2, timed_waiter, &mutex);
 	ms_sleep(20);
 	dispatch("timed_mutex mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	ms_sleep(20);
+	dispatch("timed_mutex mutex waiter join", THREAD_JOIN, 1, 0, &waiter_tid);
 	dispatch("timed_mutex mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
-
 }
 
 void mode_switch(void)
@@ -655,7 +654,7 @@ void lock_stealing(void)
 	dispatch("lock_stealing mutex_unlock 4", MUTEX_UNLOCK, 1, 0, &mutex);
 
 	/* Let waiter_lowprio a chance to run */
-	ms_sleep(20);
+	dispatch("lock_stealing mutex waiter join", THREAD_JOIN, 1, 0, &lowprio_tid);
 
 	dispatch("lock_stealing mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 
@@ -669,7 +668,6 @@ void *victim(void *cookie)
 	mutex_t *mutex = (mutex_t *) cookie;
 	unsigned long long start;
 
-	dispatch("victim pthread_detach", THREAD_DETACH, 1, 0);
 	dispatch("victim mutex_lock", MUTEX_LOCK, 1, 0, mutex);
 
 	start = rt_timer_tsc();
@@ -720,7 +718,7 @@ void deny_stealing(void)
 	dispatch("deny_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
 
 	/* Let waiter_lowprio a chance to run */
-	ms_sleep(20);
+	dispatch("deny_stealing mutex waiter join", THREAD_JOIN, 1, 0, &lowprio_tid);
 
 	dispatch("deny_stealing mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
@@ -794,12 +792,11 @@ void simple_condwait(void)
 	}
 	ms_sleep(20);
 	dispatch("simple_condwait mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+
+	dispatch("simple_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 
 	dispatch("simple_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 	dispatch("simple_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
-
-	dispatch("simple_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 }
 
 void recursive_condwait(void)
