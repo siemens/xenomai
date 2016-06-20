@@ -1408,8 +1408,15 @@ int xnshadow_map(xnthread_t *curr, xncompletion_t __user *u_completion,
 	 */
 	xnthread_set_info(curr, XNPRIOSET);
 
-	xnarch_trace_pid(xnthread_current_user_pid(curr),
-			 xnthread_current_priority(curr));
+	if (ret == 0)
+		/*
+		 * Calling xnthread_current_task() via
+		 * xnthread_current_user_pid() from secondary mode causes
+		 * the assertion curr != xnpod_current_thread() to trigger, so
+		 * do not call xnarch_trace_pid() if xnshadow_harden() failed
+		 */
+		xnarch_trace_pid(xnthread_current_user_pid(curr),
+				xnthread_current_priority(curr));
 
 	return ret;
 }
