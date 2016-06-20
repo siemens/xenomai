@@ -1,5 +1,10 @@
 menu "Real-time sub-system"
 
+if MIGRATION
+comment "WARNING! Page migration (CONFIG_MIGRATION) may cause"
+comment "switches to secondary mode."
+endif
+
 if APM || CPU_FREQ || ACPI_PROCESSOR || INTEL_IDLE
 comment "WARNING! You enabled APM, CPU Frequency scaling, ACPI 'processor'"
 comment "or Intel cpuidle option. These options are known to cause troubles"
