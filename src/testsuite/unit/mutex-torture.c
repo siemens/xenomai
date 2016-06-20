@@ -378,7 +378,7 @@ void *waiter(void *cookie)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("waiter mutex_unlock", MUTEX_UNLOCK, 1, 0, mutex);
 
 	return cookie;
@@ -396,7 +396,7 @@ void simple_wait(void)
 	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("simple thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -430,7 +430,7 @@ void recursive_wait(void)
 		 waiter, &mutex);
 
 	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -471,7 +471,7 @@ void errorcheck_wait(void)
 
 	dispatch("errorcheck thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("errorcheck mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 	err = pthread_mutex_unlock(&mutex);
@@ -527,7 +527,7 @@ void timed_mutex(void)
 		 2, timed_waiter, &mutex);
 	ms_sleep(20);
 	dispatch("timed_mutex mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("timed_mutex mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 
 }
@@ -570,7 +570,7 @@ void pi_wait(void)
 	/* Give waiter a higher priority than main thread */
 	dispatch("pi thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 3, waiter,
 		 &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 
 	check_current_prio(3);
 
@@ -610,8 +610,8 @@ void lock_stealing(void)
 	dispatch("lock_stealing thread_create 1", THREAD_CREATE, 1, 0,
 		 &lowprio_tid, 1, waiter, &mutex);
 
-	/* Give lowprio thread 1 more ms to block on the mutex */
-	ms_sleep(6);
+	/* Give lowprio thread 10 more ms to block on the mutex */
+	ms_sleep(20);
 
 	dispatch("lock_stealing mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 
@@ -619,7 +619,7 @@ void lock_stealing(void)
 	trylock_result = dispatch("lock_stealing mutex_trylock",
 				  MUTEX_TRYLOCK, 0, 0, &mutex);
 	if (trylock_result == 0) {
-		ms_sleep(6);
+		ms_sleep(20);
 
 		dispatch("lock_stealing mutex_unlock 2", MUTEX_UNLOCK, 1, 0,
 			 &mutex);
@@ -633,7 +633,7 @@ void lock_stealing(void)
 		dispatch("lock_stealing thread_create 2", THREAD_CREATE, 1, 0,
 			 &lowprio_tid, 1, waiter, &mutex);
 
-		ms_sleep(6);
+		ms_sleep(20);
 
 		dispatch("lock_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
 #ifdef XENO_POSIX
@@ -650,7 +650,7 @@ void lock_stealing(void)
 	/* Stealing the lock (again) from low prio task */
 	dispatch("lock_stealing mutex_lock 4", MUTEX_LOCK, 1, 0, &mutex);
 
-	ms_sleep(6);
+	ms_sleep(20);
 
 	dispatch("lock_stealing mutex_unlock 4", MUTEX_UNLOCK, 1, 0, &mutex);
 
@@ -695,8 +695,8 @@ void deny_stealing(void)
 	dispatch("deny_stealing thread_create", THREAD_CREATE, 1, 0,
 		 &lowprio_tid, 1, victim, &mutex);
 
-	/* Give lowprio thread 1 more ms to block on the mutex */
-	ms_sleep(6);
+	/* Give lowprio thread 10 more ms to block on the mutex */
+	ms_sleep(20);
 
 	dispatch("deny_stealing mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 
@@ -705,7 +705,7 @@ void deny_stealing(void)
 	dispatch("deny_stealing mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 
 	/* Give lowprio thread a chance to run */
-	ms_sleep(6);
+	ms_sleep(20);
 
 	/* Try to reacquire the lock, but the lowprio thread should hold it */
 	start = rt_timer_tsc();
@@ -745,7 +745,7 @@ void *cond_signaler(void *cookie)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("cond_signaler cond_signal", COND_SIGNAL, 1, 0, cm->cond);
 	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, 0, cm->mutex);
 	yield();
@@ -783,7 +783,7 @@ void simple_condwait(void)
 	dispatch("simple_condwait thread_create", THREAD_CREATE, 1, 0,
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
-	ms_sleep(11);
+	ms_sleep(20);
 	start = rt_timer_tsc();
 	dispatch("simple_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
@@ -792,7 +792,7 @@ void simple_condwait(void)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("simple_condwait mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -823,7 +823,7 @@ void recursive_condwait(void)
 	dispatch("rec_condwait thread_create", THREAD_CREATE, 1, 0,
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
-	ms_sleep(11);
+	ms_sleep(20);
 	start = rt_timer_tsc();
 	dispatch("rec_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
@@ -833,7 +833,7 @@ void recursive_condwait(void)
 		exit(EXIT_FAILURE);
 	}
 	dispatch("rec_condwait mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("rec_condwait mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -862,7 +862,7 @@ void nrt_lock(void *cookie)
 	   mutexes with priority inheritance */
 	dispatch("auto_switchback mutex_lock 1", MUTEX_LOCK, 1, 0, mutex);
 	check_current_mode(XNRELAX, 0);
-	ms_sleep(11);
+	ms_sleep(20);
 	check_current_prio(2);
 	dispatch("auto_switchback mutex_unlock 1", MUTEX_UNLOCK, 1, 0, mutex);
 	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
@@ -879,7 +879,7 @@ void auto_switchback(void)
 		 PTHREAD_MUTEX_RECURSIVE);
 	dispatch("auto_switchback nrt thread_create", THREAD_CREATE, 1, 0,
 		 &nrt_lock_tid, 0, nrt_lock, &mutex);
-	ms_sleep(11);
+	ms_sleep(20);
 	dispatch("auto_switchback mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("auto_switchback mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 
