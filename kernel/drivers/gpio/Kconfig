@@ -4,14 +4,14 @@ config XENO_DRIVERS_GPIO
        tristate
        depends on GPIOLIB
 
-config XENO_DRIVERS_GPIO_BCM2708
+config XENO_DRIVERS_GPIO_BCM2835
 	depends on MACH_BCM2708
 	select XENO_DRIVERS_GPIO
-	tristate "Support for BCM2708 GPIOs"
+	tristate "Support for BCM2835 GPIOs"
 	help
 
-	Suitable for the GPIO controller present on Broadcom's BCM2708
-	chip family.
+	Enables support for the GPIO controller available from
+	Broadcom's BCM2835 SoC.
 
 config XENO_DRIVERS_GPIO_MXC
 	depends on GPIO_MXC
