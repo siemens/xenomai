@@ -5,6 +5,7 @@ if XENO_COBALT
 SUBDIRS += 		\
 	clocktest	\
 	gpiotest	\
+	spitest		\
 	switchtest	\
 	xeno-test
 endif
@@ -14,5 +15,6 @@ DIST_SUBDIRS =		\
 	gpiotest	\
 	latency		\
 	smokey		\
+	spitest		\
 	switchtest	\
 	xeno-test

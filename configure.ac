@@ -885,6 +885,7 @@ AC_CONFIG_FILES([ \
 	testsuite/latency/Makefile \
 	testsuite/switchtest/Makefile \
 	testsuite/gpiotest/Makefile \
+	testsuite/spitest/Makefile \
 	testsuite/smokey/Makefile \
 	testsuite/smokey/arith/Makefile \
 	testsuite/smokey/sched-quota/Makefile \
