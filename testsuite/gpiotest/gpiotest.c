@@ -117,6 +117,9 @@ static int run_read_value(struct smokey_test *t, int argc, char *const argv[])
 		return ret;
 	}
 
+	if (!__T(ret, ioctl(fd, GPIO_RTIOC_DIR_IN)))
+		return ret;
+
 	ret = read(fd, &value, sizeof(value));
 	close(fd);
 
@@ -149,6 +152,9 @@ static int run_write_value(struct smokey_test *t, int argc, char *const argv[])
 		return ret;
 	}
 
+	if (!__T(ret, ioctl(fd, GPIO_RTIOC_DIR_OUT)))
+		return ret;
+	
 	ret = write(fd, &value, sizeof(value));
 	close(fd);
 
