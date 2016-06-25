@@ -272,27 +272,38 @@ static int register_driver(struct rtdm_driver *drv)
 		return 0;
 	}
 
-	if (drv->profile_info.magic != ~RTDM_CLASS_MAGIC)
+	if (drv->profile_info.magic != ~RTDM_CLASS_MAGIC) {
+		XENO_WARN_ON_ONCE(COBALT, 1);
 		return -EINVAL;
+	}
 
 	switch (drv->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
 	case RTDM_PROTOCOL_DEVICE:
 		break;
 	default:
+		printk(XENO_WARNING "%s has invalid device type (%#x)\n",
+		       drv->profile_info.name,
+		       drv->device_flags & RTDM_DEVICE_TYPE_MASK);
 		return -EINVAL;
 	}
 
 	if (drv->device_count <= 0 ||
-	    drv->device_count > RTDM_MAX_MINOR)
+	    drv->device_count > RTDM_MAX_MINOR) {
+		printk(XENO_WARNING "%s has invalid device count (%d)\n",
+		       drv->profile_info.name, drv->device_count);
 		return -EINVAL;
+	}
 
 	if ((drv->device_flags & RTDM_NAMED_DEVICE) == 0)
 		goto done;
 
 	if (drv->base_minor < 0 ||
-	    drv->base_minor >= RTDM_MAX_MINOR)
+	    drv->base_minor >= RTDM_MAX_MINOR) {
+		printk(XENO_WARNING "%s has invalid base minor (%d)\n",
+		       drv->profile_info.name, drv->base_minor);
 		return -EINVAL;
+	}
 
 	ret = alloc_chrdev_region(&rdev, drv->base_minor, drv->device_count,
 				  drv->profile_info.name);
@@ -305,8 +316,11 @@ static int register_driver(struct rtdm_driver *drv)
 
 	cdev_init(&drv->named.cdev, &rtdm_dumb_fops);
 	ret = cdev_add(&drv->named.cdev, rdev, drv->device_count);
-	if (ret)
+	if (ret) {
+		printk(XENO_WARNING "cannot create cdev series for %s\n",
+		       drv->profile_info.name);
 		goto fail_cdev;
+	}
 
 	drv->named.major = MAJOR(rdev);
 	bitmap_zero(drv->minor_map, RTDM_MAX_MINOR);
