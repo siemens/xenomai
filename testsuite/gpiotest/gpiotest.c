@@ -55,8 +55,21 @@ smokey_test_plugin(write_value,
 
 static int run_interrupt(struct smokey_test *t, int argc, char *const argv[])
 {
-	const char *device = NULL;
-	int fd, ret;
+	static struct {
+		const char *name;
+		int flag;
+	} trigger_types[] = {
+		{ .name = "edge", .flag = GPIO_TRIGGER_EDGE_RISING },
+		{ .name = "edge-rising", .flag = GPIO_TRIGGER_EDGE_RISING },
+		{ .name = "edge-falling", .flag = GPIO_TRIGGER_EDGE_FALLING },
+		{ .name = "edge-both", .flag = GPIO_TRIGGER_EDGE_FALLING|GPIO_TRIGGER_EDGE_RISING },
+		{ .name = "level", .flag = GPIO_TRIGGER_LEVEL_LOW },
+		{ .name = "level-low", .flag = GPIO_TRIGGER_LEVEL_LOW },
+		{ .name = "level-high", .flag = GPIO_TRIGGER_LEVEL_HIGH },
+		{ NULL, 0 },
+	};
+	const char *device = NULL, *trigname;
+	int fd, ret, trigger, n;
 	fd_set set;
 	
 	smokey_parse_args(t, argc, argv);
@@ -75,7 +88,22 @@ static int run_interrupt(struct smokey_test *t, int argc, char *const argv[])
 		return ret;
 	}
 
-	ret = ioctl(fd, GPIO_RTIOC_IRQEN);
+	trigger = GPIO_TRIGGER_NONE;
+	if (SMOKEY_ARG_ISSET(interrupt, trigger)) {
+		trigname = SMOKEY_ARG_STRING(interrupt, trigger);
+		for (n = 0; trigger_types[n].name; n++) {
+			if (strcmp(trigger_types[n].name, trigname) == 0) {
+				trigger = trigger_types[n].flag;
+				break;
+		    }
+		}
+		if (trigger == GPIO_TRIGGER_NONE) {
+			warning("invalid trigger type %s", trigname);
+			return -EINVAL;
+		}
+	}
+
+	ret = ioctl(fd, GPIO_RTIOC_IRQEN, &trigger);
 	if (ret) {
 		ret = -errno;
 		warning("GPIO_RTIOC_IRQEN failed on %s [%s]",

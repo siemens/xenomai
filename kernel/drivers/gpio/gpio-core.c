@@ -44,10 +44,20 @@ static int gpio_pin_interrupt(rtdm_irq_t *irqh)
 	return RTDM_IRQ_HANDLED;
 }
 
-static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin)
+static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
+			    int trigger)
 {
+	static const int trigger_flags[] = {
+		IRQ_TYPE_EDGE_RISING,
+		IRQ_TYPE_EDGE_FALLING,
+		IRQ_TYPE_LEVEL_HIGH,
+		IRQ_TYPE_LEVEL_LOW,
+	};
+	int irq_trigger, ret;
 	unsigned int irq;
-	int ret;
+
+	if (trigger & ~GPIO_TRIGGER_MASK)
+		return -EINVAL;
 
 	ret = gpio_request(gpio, pin->name);
 	if (ret) {
@@ -66,6 +76,15 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin)
 
 	rtdm_event_clear(&pin->event);
 	irq = gpio_to_irq(gpio);
+	/*
+	 * Assumes GPIO_TRIGGER_xx values are forming a continuous
+	 * sequence of bits starting at bit #0.
+	 */
+	if (trigger) {
+		irq_trigger = trigger_flags[ffs(trigger) - 1];
+		irq_set_irq_type(irq, irq_trigger);
+	}
+	
 	ret = rtdm_irq_request(&pin->irqh, irq, gpio_pin_interrupt,
 			       0, pin->name, pin);
 	if (ret) {
@@ -93,8 +112,8 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 {
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	unsigned int gpio = rtdm_fd_minor(fd);
+	int ret = 0, val, trigger;
 	struct rtdm_gpio_pin *pin;
-	int ret = 0, val;
 	
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
 
@@ -109,7 +128,11 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 		ret = gpio_direction_input(gpio);
 		break;
 	case GPIO_RTIOC_IRQEN:
-		ret = request_gpio_irq(gpio, pin);
+		ret = rtdm_safe_copy_from_user(fd, &trigger,
+				       arg, sizeof(trigger));
+		if (ret)
+			return ret;
+		ret = request_gpio_irq(gpio, pin, trigger);
 		break;
 	case GPIO_RTIOC_IRQDIS:
 		release_gpio_irq(gpio, pin);
