@@ -1,4 +1,6 @@
 
+ccflags-$(CONFIG_XENO_DRIVERS_SPI_DEBUG) := -DDEBUG
+
 obj-$(CONFIG_XENO_DRIVERS_SPI) += xeno_spi.o
 
 xeno_spi-y := spi-master.o spi-device.o
