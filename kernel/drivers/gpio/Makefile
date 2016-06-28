@@ -1,4 +1,6 @@
 
+ccflags-$(CONFIG_XENO_DRIVERS_GPIO_DEBUG) := -DDEBUG
+
 obj-$(CONFIG_XENO_DRIVERS_GPIO) += xeno_gpio.o
 
 xeno_gpio-y := gpio-core.o
