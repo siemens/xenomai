@@ -30,6 +30,7 @@ struct rtdm_spi_master;
 struct rtdm_spi_remote_slave {
 	u8 chip_select;
 	int cs_gpio;
+	struct gpio_desc *cs_gpiod;
 	struct rtdm_device dev;
 	struct list_head next;
 	struct rtdm_spi_config config;

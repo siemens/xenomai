@@ -43,22 +43,14 @@ int rtdm_spi_add_remote_slave(struct rtdm_spi_remote_slave *slave,
 	slave->config.speed_hz = spi->max_speed_hz;
 	slave->config.mode = spi->mode;
 	slave->master = master;
-	mutex_init(&slave->ctl_lock);
 	
 	dev = &slave->dev;
 	dev->driver = &master->driver;
 	dev->label = kasprintf(GFP_KERNEL, "%s/slave%d.%%d",
 			       dev_name(&kmaster->dev),
 			       kmaster->bus_num);
-	if (dev->label == NULL) {
-		ret = -ENOMEM;
-		goto fail_label;
-	}
-
-	dev->device_data = master;
-	ret = rtdm_dev_register(dev);
-	if (ret)
-		goto fail_register;
+	if (dev->label == NULL)
+		return -ENOMEM;
 
 	if (gpio_is_valid(spi->cs_gpio))
 		slave->cs_gpio = spi->cs_gpio;
@@ -68,20 +60,29 @@ int rtdm_spi_add_remote_slave(struct rtdm_spi_remote_slave *slave,
 			slave->cs_gpio = kmaster->cs_gpios[spi->chip_select];
 	}
 
-	if (gpio_is_valid(slave->cs_gpio))
-		dev_dbg(slave_to_kdev(slave), "using CS GPIO%d\n",
-			slave->cs_gpio);
+	if (gpio_is_valid(slave->cs_gpio)) {
+		ret = gpio_request(slave->cs_gpio, dev->label);
+		if (ret)
+			goto fail;
+		slave->cs_gpiod = gpio_to_desc(slave->cs_gpio);
+		if (slave->cs_gpiod == NULL)
+			goto fail;
+	}
+	
+	mutex_init(&slave->ctl_lock);
+
+	dev->device_data = master;
+	ret = rtdm_dev_register(dev);
+	if (ret)
+		goto fail;
 
 	rtdm_lock_get_irqsave(&master->lock, c);
 	list_add_tail(&slave->next, &master->slaves);
 	rtdm_lock_put_irqrestore(&master->lock, c);
 
 	return 0;
-
-fail_register:
+fail:
 	kfree(dev->label);
-
-fail_label:
 
 	return ret;
 }
@@ -93,6 +94,9 @@ void rtdm_spi_remove_remote_slave(struct rtdm_spi_remote_slave *slave)
 	struct rtdm_device *dev;
 	rtdm_lockctx_t c;
 	
+	if (gpio_is_valid(slave->cs_gpio))
+		gpio_free(slave->cs_gpio);
+
 	mutex_destroy(&slave->ctl_lock);
 	rtdm_lock_get_irqsave(&master->lock, c);
 	list_del(&slave->next);

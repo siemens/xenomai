@@ -25,6 +25,7 @@
 #include <linux/mutex.h>
 #include <linux/err.h>
 #include <linux/spi/spi.h>
+#include <linux/gpio.h>
 #include "spi-master.h"
 
 static inline
@@ -105,6 +106,7 @@ static int do_chip_select(struct rtdm_spi_remote_slave *slave)
 {				/* master->bus_lock held */
 	struct rtdm_spi_master *master = slave->master;
 	rtdm_lockctx_t c;
+	int state;
 
 	if (slave->config.speed_hz == 0)
 		return -EINVAL; /* Setup is missing. */
@@ -113,7 +115,11 @@ static int do_chip_select(struct rtdm_spi_remote_slave *slave)
 	rtdm_lock_get_irqsave(&master->lock, c);
 	
 	if (master->cs != slave) {
-		master->ops->chip_select(slave, true);
+		if (gpio_is_valid(slave->cs_gpio)) {
+			state = !!(slave->config.mode & SPI_CS_HIGH);
+			gpiod_set_raw_value(slave->cs_gpiod, state);
+		} else
+			master->ops->chip_select(slave, true);
 		master->cs = slave;
 	}
 
@@ -126,10 +132,18 @@ static void do_chip_deselect(struct rtdm_spi_remote_slave *slave)
 {				/* master->bus_lock held */
 	struct rtdm_spi_master *master = slave->master;
 	rtdm_lockctx_t c;
+	int state;
 
 	rtdm_lock_get_irqsave(&master->lock, c);
-	master->ops->chip_select(slave, false);
+
+	if (gpio_is_valid(slave->cs_gpio)) {
+		state = !(slave->config.mode & SPI_CS_HIGH);
+		gpiod_set_raw_value(slave->cs_gpiod, state);
+	} else
+		master->ops->chip_select(slave, false);
+
 	master->cs = NULL;
+
 	rtdm_lock_put_irqrestore(&master->lock, c);
 }
 
