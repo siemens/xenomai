@@ -409,7 +409,7 @@ static int bcm2835_set_iobufs(struct rtdm_spi_remote_slave *slave,
 
 	p->i_offset = 0;
 	p->o_offset = bcm->io_len / 2;
-	p->io_len = bcm->io_len;
+	p->map_len = bcm->io_len;
 	
 	return 0;
 }

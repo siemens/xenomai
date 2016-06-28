@@ -385,14 +385,14 @@ static int run_spi_transfer(struct smokey_test *t, int argc, char *const argv[])
 	if (!__T(ret, ioctl(fd, SPI_RTIOC_SET_IOBUFS, &iobufs)))
 		return ret;
 
-	p = mmap(NULL, iobufs.io_len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	p = mmap(NULL, iobufs.map_len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 	if (!__Fassert(p == MAP_FAILED))
 		return -EINVAL;
 	
 	smokey_trace("input_area[%u..%u], output_area[%u..%u], mapping length=%u",
 		     iobufs.i_offset, iobufs.i_offset + TRANSFER_SIZE - 1,
 		     iobufs.o_offset, iobufs.o_offset + TRANSFER_SIZE - 1,
-		     iobufs.io_len);
+		     iobufs.map_len);
 	
 	i_area = p + iobufs.i_offset;
 	o_area = p + iobufs.o_offset;

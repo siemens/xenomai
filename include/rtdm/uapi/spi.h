@@ -30,6 +30,7 @@ struct rtdm_spi_iobufs {
 	__u32 io_len;
 	__u32 i_offset;
 	__u32 o_offset;
+	__u32 map_len;
 };
 
 #define SPI_RTIOC_SET_CONFIG		_IOW(RTDM_CLASS_SPI, 0, struct rtdm_spi_config)
