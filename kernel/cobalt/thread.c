@@ -87,6 +87,13 @@ static void periodic_handler(struct xntimer *timer)
 	fixup_ptimer_affinity(thread);
 }
 
+static inline void enlist_new_thread(struct xnthread *thread)
+{				/* nklock held, irqs off */
+	list_add_tail(&thread->glink, &nkthreadq);
+	cobalt_nrthreads++;
+	xnvfile_touch_tag(&nkthreadlist_tag);
+}
+
 struct kthread_arg {
 	struct xnthread *thread;
 	struct completion *done;
@@ -557,10 +564,10 @@ void __xnthread_discard(struct xnthread *thread)
  * Initializes a new thread. The thread is left dormant until it is
  * actually started by xnthread_start().
  *
- * @param thread The address of a thread descriptor the nucleus will
- * use to store the thread-specific data.  This descriptor must always
- * be valid while the thread is active therefore it must be allocated
- * in permanent memory. @warning Some architectures may require the
+ * @param thread The address of a thread descriptor Cobalt will use to
+ * store the thread-specific data.  This descriptor must always be
+ * valid while the thread is active therefore it must be allocated in
+ * permanent memory. @warning Some architectures may require the
  * descriptor to be properly aligned in memory; this is an additional
  * reason for descriptors not to be laid in the program stack where
  * alignement constraints might not always be satisfied.
@@ -571,14 +578,13 @@ void __xnthread_discard(struct xnthread *thread)
  *
  * - name: An ASCII string standing for the symbolic name of the
  * thread. This name is copied to a safe place into the thread
- * descriptor. This name might be used in various situations by the
- * nucleus for issuing human-readable diagnostic messages, so it is
- * usually a good idea to provide a sensible value here.  NULL is fine
- * though and means "anonymous".
+ * descriptor. This name might be used in various situations by Cobalt
+ * for issuing human-readable diagnostic messages, so it is usually a
+ * good idea to provide a sensible value here.  NULL is fine though
+ * and means "anonymous".
  *
  * - flags: A set of creation flags affecting the operation. The
- * following flags can be part of this bitmask, each of them affecting
- * the nucleus behaviour regarding the created thread:
+ * following flags can be part of this bitmask:
  *
  *   - XNSUSP creates the thread in a suspended state. In such a case,
  * the thread shall be explicitly resumed using the xnthread_resume()
@@ -590,8 +596,8 @@ void __xnthread_discard(struct xnthread *thread)
  * user-space task. Otherwise, a new kernel host task is created, then
  * paired with the new Xenomai thread.
  *
- * - XNFPU (enable FPU) tells the nucleus that the new thread may use
- * the floating-point unit. XNFPU is implicitly assumed for user-space
+ * - XNFPU (enable FPU) tells Cobalt that the new thread may use the
+ * floating-point unit. XNFPU is implicitly assumed for user-space
  * threads even if not set in @a flags.
  *
  * - affinity: The processor affinity of this thread. Passing
@@ -620,7 +626,6 @@ int xnthread_init(struct xnthread *thread,
 {
 	struct xnsched *sched;
 	cpumask_t affinity;
-	spl_t s;
 	int ret;
 
 	if (attr->flags & ~(XNFPU | XNUSER | XNSUSP))
@@ -643,12 +648,6 @@ int xnthread_init(struct xnthread *thread,
 
 	trace_cobalt_thread_init(thread, attr, sched_class);
 
-	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&thread->glink, &nkthreadq);
-	cobalt_nrthreads++;
-	xnvfile_touch_tag(&nkthreadlist_tag);
-	xnlock_put_irqrestore(&nklock, s);
-
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnthread_init);
@@ -668,9 +667,8 @@ EXPORT_SYMBOL_GPL(xnthread_init);
  * execution properties of the new thread. Members of this structure
  * are defined as follows:
  *
- * - mode: The initial thread mode. The following flags can
- * be part of this bitmask, each of them affecting the nucleus
- * behaviour regarding the started thread:
+ * - mode: The initial thread mode. The following flags can be part of
+ * this bitmask:
  *
  *   - XNLOCK causes the thread to lock the scheduler when it starts.
  * The target thread will have to call the xnsched_unlock()
@@ -685,7 +683,7 @@ EXPORT_SYMBOL_GPL(xnthread_init);
  * - entry: The address of the thread's body routine. In other words,
  * it is the thread entry point.
  *
- * - cookie: A user-defined opaque cookie the nucleus will pass to the
+ * - cookie: A user-defined opaque cookie Cobalt will pass to the
  * emerging thread as the sole argument of its entry point.
  *
  * @retval 0 if @a thread could be started ;
@@ -711,6 +709,14 @@ int xnthread_start(struct xnthread *thread,
 	thread->cookie = attr->cookie;
 	if (attr->mode & XNLOCK)
 		thread->lock_count = 1;
+
+	/*
+	 * A user-space thread starts immediately Cobalt-wise since we
+	 * already have an underlying Linux context for it, so we can
+	 * enlist it now to make it visible from the /proc interface.
+	 */
+	if (xnthread_test_state(thread, XNUSER))
+		enlist_new_thread(thread);
 
 	trace_cobalt_thread_start(thread);
 
@@ -984,20 +990,20 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	 * current thread.
 	 *
 	 *  The net effect is that we are attempting to stop the
-	 * shadow thread at the nucleus level, whilst this thread is
-	 * actually running some code under the control of the Linux
-	 * scheduler (i.e. it's relaxed).
+	 * shadow thread for Cobalt, whilst this thread is actually
+	 * running some code under the control of the Linux scheduler
+	 * (i.e. it's relaxed).
 	 *
 	 *  To make this possible, we force the target Linux task to
 	 * migrate back to the Xenomai domain by sending it a
 	 * SIGSHADOW signal the interface libraries trap for this
 	 * specific internal purpose, whose handler is expected to
-	 * call back the nucleus's migration service.
+	 * call back Cobalt's migration service.
 	 *
-	 * By forcing this migration, we make sure that the real-time
-	 * nucleus controls, hence properly stops, the target thread
-	 * according to the requested suspension condition. Otherwise,
-	 * the shadow thread in secondary mode would just keep running
+	 * By forcing this migration, we make sure that Cobalt
+	 * controls, hence properly stops, the target thread according
+	 * to the requested suspension condition. Otherwise, the
+	 * shadow thread in secondary mode would just keep running
 	 * into the Linux domain, thus breaking the most common
 	 * assumptions regarding suspended threads.
 	 *
@@ -1862,10 +1868,10 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  *
  * Changes the base scheduling policy and paramaters of a thread. If
  * the thread is currently blocked, waiting in priority-pending mode
- * (XNSYNCH_PRIO) for a synchronization object to be signaled, the
- * nucleus will attempt to reorder the object's wait queue so that it
- * reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag
- * has been set for the pended object.
+ * (XNSYNCH_PRIO) for a synchronization object to be signaled, Cobalt
+ * will attempt to reorder the object's wait queue so that it reflects
+ * the new sleeper's priority, unless the XNSYNCH_DREORD flag has been
+ * set for the pended object.
  *
  * @param thread The descriptor address of the affected thread. See
  * note.
@@ -2493,8 +2499,8 @@ static inline void init_kthread_info(struct xnthread *thread)
  * @internal
  * @brief Create a shadow thread context over a kernel task.
  *
- * This call maps a nucleus thread to the "current" Linux task running
- * in kernel space.  The priority and scheduling class of the
+ * This call maps a Cobalt core thread to the "current" Linux task
+ * running in kernel space.  The priority and scheduling class of the
  * underlying Linux task are not affected; it is assumed that the
  * caller did set them appropriately before issuing the shadow mapping
  * request.
@@ -2573,7 +2579,10 @@ int xnthread_map(struct xnthread *thread, struct completion *done)
 	xnthread_resume(thread, XNDORMANT);
 	ret = xnthread_harden();
 	wakeup_parent(done);
+
 	xnlock_get_irqsave(&nklock, s);
+
+	enlist_new_thread(thread);
 	/*
 	 * Make sure xnthread_start() did not slip in from another CPU
 	 * while we were back from wakeup_parent().
@@ -2581,6 +2590,7 @@ int xnthread_map(struct xnthread *thread, struct completion *done)
 	if (thread->entry == NULL)
 		xnthread_suspend(thread, XNDORMANT,
 				 XN_INFINITE, XN_RELATIVE, NULL);
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnthread_test_cancel();
