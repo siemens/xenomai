@@ -120,34 +120,44 @@ static inline void fp_regs_set(unsigned val)
 		vec[i][0] = val++;
 		vec[i][2] = val++;
 	}
-	if (cpu_has_avx)
+	if (cpu_has_avx) {
 		__asm__ __volatile__(
 			"vmovupd %0,%%ymm0;"
-			"vmovupd %1,%%ymm1;"
-			"vmovupd %2,%%ymm2;"
-			"vmovupd %3,%%ymm3;"
-			"vmovupd %4,%%ymm4;"
-			"vmovupd %5,%%ymm5;"
-			"vmovupd %6,%%ymm6;"
-			"vmovupd %7,%%ymm7;"
-			: : "m" (vec[0][0]), "m" (vec[1][0]),
-			  "m" (vec[2][0]), "m" (vec[3][0]),
-			  "m" (vec[4][0]), "m" (vec[5][0]),
-			  "m" (vec[6][0]), "m" (vec[7][0]));
-	else if (cpu_has_xmm2)
+			"vmovupd %4,%%ymm1;"
+			"vmovupd %8,%%ymm2;"
+			"vmovupd %12,%%ymm3;"
+			: : "m" (vec[0][0]), "m" (vec[0][1]), "m" (vec[0][2]), "m" (vec[0][3]),
+			  "m" (vec[1][0]), "m" (vec[1][1]), "m" (vec[1][2]), "m" (vec[1][3]),
+			  "m" (vec[2][0]), "m" (vec[2][1]), "m" (vec[2][2]), "m" (vec[2][3]),
+			  "m" (vec[3][0]), "m" (vec[3][1]), "m" (vec[3][2]), "m" (vec[3][3]));
+		__asm__ __volatile__(
+			"vmovupd %0,%%ymm4;"
+			"vmovupd %4,%%ymm5;"
+			"vmovupd %8,%%ymm6;"
+			"vmovupd %12,%%ymm7;"
+			: : "m" (vec[4][0]), "m" (vec[4][1]), "m" (vec[4][2]), "m" (vec[4][3]),
+			  "m" (vec[5][0]), "m" (vec[5][1]), "m" (vec[5][2]), "m" (vec[5][3]),
+			  "m" (vec[6][0]), "m" (vec[6][1]), "m" (vec[6][2]), "m" (vec[6][3]),
+			  "m" (vec[7][0]), "m" (vec[7][1]), "m" (vec[7][2]), "m" (vec[7][3]));
+
+	} else if (cpu_has_xmm2)
 		__asm__ __volatile__(
 			"movupd %0,%%xmm0;"
-			"movupd %1,%%xmm1;"
-			"movupd %2,%%xmm2;"
-			"movupd %3,%%xmm3;"
-			"movupd %4,%%xmm4;"
-			"movupd %5,%%xmm5;"
-			"movupd %6,%%xmm6;"
-			"movupd %7,%%xmm7;"
-			: : "m" (vec[0][0]), "m" (vec[1][0]),
-			  "m" (vec[2][0]), "m" (vec[3][0]),
-			  "m" (vec[4][0]), "m" (vec[5][0]),
-			  "m" (vec[6][0]), "m" (vec[7][0]));
+			"movupd %2,%%xmm1;"
+			"movupd %4,%%xmm2;"
+			"movupd %6,%%xmm3;"
+			"movupd %8,%%xmm4;"
+			"movupd %10,%%xmm5;"
+			"movupd %12,%%xmm6;"
+			"movupd %14,%%xmm7;"
+			: : "m" (vec[0][0]), "m" (vec[0][1]),
+			  "m" (vec[1][0]), "m" (vec[1][1]),
+			  "m" (vec[2][0]), "m" (vec[2][1]),
+			  "m" (vec[3][0]), "m" (vec[3][1]),
+			  "m" (vec[4][0]), "m" (vec[4][1]),
+			  "m" (vec[5][0]), "m" (vec[5][1]),
+			  "m" (vec[6][0]), "m" (vec[6][1]),
+			  "m" (vec[7][0]), "m" (vec[7][1]));
 }
 
 static inline unsigned fp_regs_check(unsigned val)
@@ -162,32 +172,41 @@ static inline unsigned fp_regs_check(unsigned val)
 	if (cpu_has_avx) {
 		__asm__ __volatile__(
 			"vmovupd %%ymm0,%0;"
-			"vmovupd %%ymm1,%1;"
-			"vmovupd %%ymm2,%2;"
-			"vmovupd %%ymm3,%3;"
-			"vmovupd %%ymm4,%4;"
-			"vmovupd %%ymm5,%5;"
-			"vmovupd %%ymm6,%6;"
-			"vmovupd %%ymm7,%7;"
-			: "=m" (vec[0][0]), "=m" (vec[1][0]),
-			  "=m" (vec[2][0]), "=m" (vec[3][0]),
-			  "=m" (vec[4][0]), "=m" (vec[5][0]),
-			  "=m" (vec[6][0]), "=m" (vec[7][0]));
-	} else if (cpu_has_xmm2) {
+			"vmovupd %%ymm1,%4;"
+			"vmovupd %%ymm2,%8;"
+			"vmovupd %%ymm3,%12;"
+			: "=m" (vec[0][0]), "=m" (vec[0][1]), "=m" (vec[0][2]), "=m" (vec[0][3]),
+			  "=m" (vec[1][0]), "=m" (vec[1][1]), "=m" (vec[1][2]), "=m" (vec[1][3]),
+			  "=m" (vec[2][0]), "=m" (vec[2][1]), "=m" (vec[2][2]), "=m" (vec[2][3]),
+			  "=m" (vec[3][0]), "=m" (vec[3][1]), "=m" (vec[3][2]), "=m" (vec[3][3]));
+		__asm__ __volatile__(
+			"vmovupd %%ymm4,%0;"
+			"vmovupd %%ymm5,%4;"
+			"vmovupd %%ymm6,%8;"
+			"vmovupd %%ymm7,%12;"
+			: "=m" (vec[4][0]), "=m" (vec[4][1]), "=m" (vec[4][2]), "=m" (vec[4][3]),
+			  "=m" (vec[5][0]), "=m" (vec[5][1]), "=m" (vec[5][2]), "=m" (vec[5][3]),
+			  "=m" (vec[6][0]), "=m" (vec[6][1]), "=m" (vec[6][2]), "=m" (vec[6][3]),
+			  "=m" (vec[7][0]), "=m" (vec[7][1]), "=m" (vec[7][2]), "=m" (vec[7][3]));
+
+	} else if (cpu_has_xmm2)
 		__asm__ __volatile__(
 			"movupd %%xmm0,%0;"
-			"movupd %%xmm1,%1;"
-			"movupd %%xmm2,%2;"
-			"movupd %%xmm3,%3;"
-			"movupd %%xmm4,%4;"
-			"movupd %%xmm5,%5;"
-			"movupd %%xmm6,%6;"
-			"movupd %%xmm7,%7;"
-			: "=m" (vec[0][0]), "=m" (vec[1][0]),
-			  "=m" (vec[2][0]), "=m" (vec[3][0]),
-			  "=m" (vec[4][0]), "=m" (vec[5][0]),
-			  "=m" (vec[6][0]), "=m" (vec[7][0]));
-	}
+			"movupd %%xmm1,%2;"
+			"movupd %%xmm2,%4;"
+			"movupd %%xmm3,%6;"
+			"movupd %%xmm4,%8;"
+			"movupd %%xmm5,%10;"
+			"movupd %%xmm6,%12;"
+			"movupd %%xmm7,%14;"
+			: "=m" (vec[0][0]), "=m" (vec[0][1]),
+			  "=m" (vec[1][0]), "=m" (vec[1][1]),
+			  "=m" (vec[2][0]), "=m" (vec[2][1]),
+			  "=m" (vec[3][0]), "=m" (vec[3][1]),
+			  "=m" (vec[4][0]), "=m" (vec[4][1]),
+			  "=m" (vec[5][0]), "=m" (vec[5][1]),
+			  "=m" (vec[6][0]), "=m" (vec[6][1]),
+			  "=m" (vec[7][0]), "=m" (vec[7][1]));
 
 	for (i = 0, val_offset = 0; i < 8; i++, val_offset++)
 		if (e[i] != val + val_offset) {
