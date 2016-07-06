@@ -266,8 +266,8 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 				goto signal_nofp;
 			}
 
-			expected = from_idx + 500 +
-				(ctx->switches_count % 4000000) * 1000;
+			expected = (from_idx + 500) * 1000 +
+				(ctx->switches_count % 4000000000U) * 1000000;
 
 			fp_regs_set(expected);
 			rtdm_event_signal(&to->rt_synch);
@@ -289,8 +289,8 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 			ctx->error.last_switch.to = to_idx;
 			if ((to->base.flags & RTSWITCH_RT) == RTSWITCH_NRT)
 				goto switch_to_nrt;
-			expected = from_idx + 500 +
-				(ctx->switches_count % 4000000) * 1000;
+			expected = (from_idx + 500) * 1000 +
+				(ctx->switches_count % 4000000000U) * 1000000;
 			barrier();
 
 			fp_linux_begin();
@@ -402,7 +402,7 @@ static void rtswitch_ktask(void *cookie)
 
 	for(;;) {
 		if (task->base.flags & RTTST_SWTEST_USE_FPU)
-			fp_regs_set(task->base.index + i * 1000);
+			fp_regs_set(task->base.index * 1000 + i * 1000000);
 
 		switch(i % 3) {
 		case 0:
@@ -425,7 +425,7 @@ static void rtswitch_ktask(void *cookie)
 		if (task->base.flags & RTTST_SWTEST_USE_FPU) {
 			unsigned fp_val, expected;
 
-			expected = task->base.index + i * 1000;
+			expected = task->base.index * 1000 + i * 1000000;
 			fp_val = fp_regs_check(expected);
 
 			if (fp_val != expected) {
@@ -435,7 +435,7 @@ static void rtswitch_ktask(void *cookie)
 			}
 		}
 
-		if (++i == 4000000)
+		if (++i == 4000000000U)
 			i = 0;
 	}
 }
