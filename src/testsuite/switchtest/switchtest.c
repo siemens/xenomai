@@ -207,18 +207,18 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 		from, task_name(buffer, sizeof(buffer), cpu, from));
 	fprintf(stderr, "to task %d(%s),\nFPU registers were set to %u ",
 		to, task_name(buffer, sizeof(buffer), cpu, to), fp_val);
-	fp_val %= 1000;
-	if (fp_val < 500)
+	fp_val %= 1000000;
+	if (fp_val < 500000)
 		fprintf(stderr, "(maybe task %s)\n",
-			task_name(buffer, sizeof(buffer), cpu, fp_val));
+			task_name(buffer, sizeof(buffer), cpu, fp_val / 1000));
 	else {
-		fp_val -= 500;
+		fp_val -= 500000;
 		if (fp_val > cpu->tasks_count)
 			fprintf(stderr, "(unidentified task)\n");
 		else
 			fprintf(stderr, "(maybe task %s, having used fpu in "
 				"kernel-space)\n",
-				task_name(buffer, sizeof(buffer), cpu, fp_val));
+				task_name(buffer, sizeof(buffer), cpu, fp_val / 1000));
 	}
 
 	clean_exit(EXIT_FAILURE);
@@ -382,7 +382,7 @@ static void *sleeper_switcher(void *cookie)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
 
-		if(++i == 4000000)
+		if(++i == 4000000000U)
 			i = 0;
 	}
 
@@ -508,7 +508,7 @@ static void *rtup(void *cookie)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
 
-		if(++i == 4000000)
+		if(++i == 4000000000U)
 			i = 0;
 	}
 
@@ -594,7 +594,7 @@ static void *rtus(void *cookie)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
 
-		if(++i == 4000000)
+		if(++i == 4000000000U)
 			i = 0;
 	}
 
@@ -683,6 +683,11 @@ static void *rtuo(void *cookie)
 
 		/* Switch mode. */
 		if (i % 3 == 2) {
+			expected += 128;
+			if ((mode && param->fp & UFPP) ||
+				(!mode && param->fp & UFPS))
+				fp_regs_set(expected);
+
 			if ((err = pthread_set_mode_np
 					(mode, PTHREAD_PRIMARY - mode))) {
 				fprintf(stderr,
@@ -691,8 +696,8 @@ static void *rtuo(void *cookie)
 				clean_exit(EXIT_FAILURE);
 			}
 
-			/* Recheck the registers after the mode switch */
-			if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS)) {
+			if ((mode && param->fp & UFPP) ||
+				(!mode && param->fp & UFPS)) {
 				fp_val = fp_regs_check(expected);
 				if (fp_val != expected)
 					handle_bad_fpreg(param->cpu, fp_val);
@@ -701,7 +706,7 @@ static void *rtuo(void *cookie)
 			mode = PTHREAD_PRIMARY - mode;
 		}
 
-		if(++i == 4000000)
+		if(++i == 4000000000U)
 			i = 0;
 	}
 
