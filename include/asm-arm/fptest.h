@@ -83,7 +83,7 @@ static inline void fp_regs_set(unsigned val)
 		unsigned i;
 
 		for (i = 0; i < 16; i++)
-			e[i] = val;
+			e[i] = val + i;
 
 		/* vldm %0!, {d0-d15},
 		   AKA fldmiax %0!, {d0-d15} */
@@ -106,9 +106,9 @@ static inline unsigned fp_regs_check(unsigned val)
 				     "=r"(i): "0"(&e[0]): "memory");
 
 		for (i = 0; i < 16; i++)
-			if (e[i] != val) {
-				printk("d%d: %llu != %u\n", i, e[i], val);
-				result = e[i];
+			if (e[i] != val + i) {
+				printk("d%d: %llu != %u\n", i, e[i], val + i);
+				result = e[i] - i;
 			}
 	}
 
