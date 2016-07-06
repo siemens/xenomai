@@ -683,13 +683,17 @@ static void *rtuo(void *cookie)
 
 		/* Switch mode. */
 		if (i % 3 == 2) {
+			unsigned next_mode;
+
+			next_mode = PTHREAD_PRIMARY - mode;
+
 			expected += 128;
+
 			if ((mode && param->fp & UFPP) ||
 				(!mode && param->fp & UFPS))
 				fp_regs_set(expected);
 
-			if ((err = pthread_set_mode_np
-					(mode, PTHREAD_PRIMARY - mode))) {
+			if ((err = pthread_set_mode_np(mode, next_mode))) {
 				fprintf(stderr,
 					"rtuo: pthread_set_mode_np: %s\n",
 					strerror(err));
@@ -703,7 +707,7 @@ static void *rtuo(void *cookie)
 					handle_bad_fpreg(param->cpu, fp_val);
 			}
 
-			mode = PTHREAD_PRIMARY - mode;
+			mode = next_mode;
 		}
 
 		if(++i == 4000000000U)
