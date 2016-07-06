@@ -44,6 +44,10 @@ void xnpod_delete_thread(struct xnthread *);
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,0,0)
+#error "Xenomai x86 FPU support broken on Linux 4.0 and later"
+#endif
+
 static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 {
 	rthal_root_preempt_notify();
