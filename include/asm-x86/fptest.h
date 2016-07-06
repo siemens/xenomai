@@ -109,38 +109,51 @@ static void fp_features_init(void)
 
 static inline void fp_regs_set(unsigned val)
 {
-	uint64_t vec[4] = { val, 0, val, 0 };
+	uint64_t vec[8][4];
 	unsigned i;
 
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 8; i++) {
 		__asm__ __volatile__("fildl %0": /* no output */ :"m"(val));
+		val++;
+	}
+	for (i = 0; i < 8; i++) {
+		vec[i][0] = val++;
+		vec[i][2] = val++;
+	}
 	if (cpu_has_avx)
 		__asm__ __volatile__(
 			"vmovupd %0,%%ymm0;"
-			"vmovupd %0,%%ymm1;"
-			"vmovupd %0,%%ymm2;"
-			"vmovupd %0,%%ymm3;"
-			"vmovupd %0,%%ymm4;"
-			"vmovupd %0,%%ymm5;"
-			"vmovupd %0,%%ymm6;"
-			"vmovupd %0,%%ymm7;"
-			: : "m" (vec[0]));
+			"vmovupd %1,%%ymm1;"
+			"vmovupd %2,%%ymm2;"
+			"vmovupd %3,%%ymm3;"
+			"vmovupd %4,%%ymm4;"
+			"vmovupd %5,%%ymm5;"
+			"vmovupd %6,%%ymm6;"
+			"vmovupd %7,%%ymm7;"
+			: : "m" (vec[0][0]), "m" (vec[1][0]),
+			  "m" (vec[2][0]), "m" (vec[3][0]),
+			  "m" (vec[4][0]), "m" (vec[5][0]),
+			  "m" (vec[6][0]), "m" (vec[7][0]));
 	else if (cpu_has_xmm2)
 		__asm__ __volatile__(
 			"movupd %0,%%xmm0;"
-			"movupd %0,%%xmm1;"
-			"movupd %0,%%xmm2;"
-			"movupd %0,%%xmm3;"
-			"movupd %0,%%xmm4;"
-			"movupd %0,%%xmm5;"
-			"movupd %0,%%xmm6;"
-			"movupd %0,%%xmm7;"
-			: : "m" (vec[0]));
+			"movupd %1,%%xmm1;"
+			"movupd %2,%%xmm2;"
+			"movupd %3,%%xmm3;"
+			"movupd %4,%%xmm4;"
+			"movupd %5,%%xmm5;"
+			"movupd %6,%%xmm6;"
+			"movupd %7,%%xmm7;"
+			: : "m" (vec[0][0]), "m" (vec[1][0]),
+			  "m" (vec[2][0]), "m" (vec[3][0]),
+			  "m" (vec[4][0]), "m" (vec[5][0]),
+			  "m" (vec[6][0]), "m" (vec[7][0]));
 }
 
 static inline unsigned fp_regs_check(unsigned val)
 {
 	unsigned i, result = val;
+	unsigned val_offset;
 	uint64_t vec[8][4];
 	unsigned e[8];
 
@@ -176,35 +189,37 @@ static inline unsigned fp_regs_check(unsigned val)
 			  "=m" (vec[6][0]), "=m" (vec[7][0]));
 	}
 
-	for (i = 0; i < 8; i++)
-		if (e[i] != val) {
-			printk("r%d: %u != %u\n", i, e[i], val);
-			result = e[i];
+	for (i = 0, val_offset = 0; i < 8; i++, val_offset++)
+		if (e[i] != val + val_offset) {
+			printk("r%d: %u != %u\n", i, e[i], val + val_offset);
+			result = e[i] - val_offset;
 		}
 
 	if (cpu_has_avx) {
 		for (i = 0; i < 8; i++) {
 			int error = 0;
-			if (vec[i][0] != val) {
-				result = vec[i][0];
+			if (vec[i][0] != val + val_offset) {
+				result = vec[i][0] - val_offset;
 				error = 1;
 			}
-			if (vec[i][2] != val) {
-				result = vec[i][2];
+			val_offset++;
+			if (vec[i][2] != val + val_offset) {
+				result = vec[i][2] - val_offset;
 				error = 1;
 			}
 			if (error)
 				printk("ymm%d: %llu/%llu != %u/%u\n",
 				       i, (unsigned long long)vec[i][0],
 				       (unsigned long long)vec[i][2],
-				       val, val);
+				       val + val_offset - 1, val + val_offset);
+			val_offset++;
 		}
 	} else if (cpu_has_xmm2) {
-		for (i = 0; i < 8; i++)
-			if (vec[i][0] != val) {
+		for (i = 0; i < 8; i++, val_offset += 2)
+			if (vec[i][0] != val + val_offset) {
 				printk("xmm%d: %llu != %u\n",
-				       i, (unsigned long long)vec[i][0], val);
-				result = vec[i][0];
+				       i, (unsigned long long)vec[i][0], val + val_offset);
+				result = vec[i][0] - val_offset;
 			}
 	}
 
