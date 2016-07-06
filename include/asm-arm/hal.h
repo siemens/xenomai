@@ -226,6 +226,9 @@ asmlinkage void rthal_thread_trampoline(void);
 
 #ifdef CONFIG_XENO_HW_FPU
 
+#ifdef CONFIG_VFP
+typedef union vfp_state rthal_fpenv_t;
+#else /* !CONFIG_VFP */
 typedef struct rthal_fpenv {
 
     /*
@@ -247,19 +250,21 @@ typedef struct rthal_fpenv {
 #endif /* Linux version >= 2.6.16 */
     union vfp_state         vfpstate;
 } rthal_fpenv_t;
+#endif /* !CONFIG_VFP */
 
 static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
 {
-    fp_init(&fpuenv->fpstate);
-#if defined(CONFIG_VFP)
+#ifdef CONFIG_VFP
     /* vfpstate has already been zeroed by xnarch_init_fpu */
-    fpuenv->vfpstate.hard.fpexc = FPEXC_EN;
-    fpuenv->vfpstate.hard.fpscr = FPSCR_ROUND_NEAREST;
+    fpuenv->hard.fpexc = FPEXC_EN;
+    fpuenv->hard.fpscr = FPSCR_ROUND_NEAREST;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) \
      || defined(CONFIG_VFP_3_2_BACKPORT)) && defined(CONFIG_SMP)
-    fpuenv->vfpstate.hard.cpu = NR_CPUS;
+    fpuenv->hard.cpu = NR_CPUS;
 #endif /* linux >= 3.2.0 */
-#endif
+#else /* !CONFIG_VFP */
+    fp_init(&fpuenv->fpstate);
+#endif /* !CONFIG_VFP */
 }
 
 #define rthal_task_fpenv(task) \
@@ -272,12 +277,12 @@ asmlinkage void rthal_vfp_load(union vfp_state *vfp, unsigned cpu);
 
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
 {
-    rthal_vfp_save(&fpuenv->vfpstate, fpexc);
+    rthal_vfp_save(fpuenv, fpexc);
 }
 
 static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 {
-    rthal_vfp_load(&fpuenv->vfpstate, rthal_processor_id());
+    rthal_vfp_load(fpuenv, rthal_processor_id());
 }
 
 #define rthal_vfp_fmrx(_vfp_) ({			\
@@ -318,7 +323,7 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 		return NULL;
 #endif /* linux >= 3.2.0 */
 
-	return container_of(vfp_owner, rthal_fpenv_t, vfpstate);
+	return vfp_owner;
 }
 
 #define rthal_disable_fpu() \
