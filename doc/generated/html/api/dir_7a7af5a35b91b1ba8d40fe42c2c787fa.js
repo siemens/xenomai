@@ -6,12 +6,12 @@ var dir_7a7af5a35b91b1ba8d40fe42c2c787fa =
     [ "event.c", "ksrc_2skins_2native_2event_8c.html", "ksrc_2skins_2native_2event_8c" ],
     [ "heap.c", "ksrc_2skins_2native_2heap_8c.html", "ksrc_2skins_2native_2heap_8c" ],
     [ "intr.c", "ksrc_2skins_2native_2intr_8c.html", "ksrc_2skins_2native_2intr_8c" ],
-    [ "module.c", "skins_2native_2module_8c.html", "skins_2native_2module_8c" ],
+    [ "module.c", "skins_2native_2module_8c.html", null ],
     [ "mutex.c", "ksrc_2skins_2native_2mutex_8c.html", "ksrc_2skins_2native_2mutex_8c" ],
     [ "pipe.c", "ksrc_2skins_2native_2pipe_8c.html", "ksrc_2skins_2native_2pipe_8c" ],
     [ "queue.c", "ksrc_2skins_2native_2queue_8c.html", "ksrc_2skins_2native_2queue_8c" ],
     [ "sem.c", "ksrc_2skins_2native_2sem_8c.html", "ksrc_2skins_2native_2sem_8c" ],
-    [ "syscall.c", "native_2syscall_8c.html", "native_2syscall_8c" ],
+    [ "syscall.c", "native_2syscall_8c.html", null ],
     [ "task.c", "ksrc_2skins_2native_2task_8c.html", "ksrc_2skins_2native_2task_8c" ],
     [ "timer.c", "ksrc_2skins_2native_2timer_8c.html", "ksrc_2skins_2native_2timer_8c" ]
 ];

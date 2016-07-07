@@ -1,8 +1,19 @@
 var group__channelrange =
 [
-    [ "a4l_channel", "structa4l__channel.html", null ],
-    [ "a4l_channels_desc", "structa4l__channels__desc.html", null ],
-    [ "a4l_range", "structa4l__range.html", null ],
+    [ "a4l_channel", "structa4l__channel.html", [
+      [ "flags", "structa4l__channel.html#a629fd5faa5d0ea2d47aed56d96edc851", null ],
+      [ "nb_bits", "structa4l__channel.html#a592787623448a2c5d4d74a53b523c90d", null ]
+    ] ],
+    [ "a4l_channels_desc", "structa4l__channels__desc.html", [
+      [ "chans", "structa4l__channels__desc.html#a64137ea7eaf47b8547fe1017e5e6909f", null ],
+      [ "length", "structa4l__channels__desc.html#a243b1f336bb8963b6bd55b7b6d202700", null ],
+      [ "mode", "structa4l__channels__desc.html#a8e19986b80e020e6c419ff0ddd87aa31", null ]
+    ] ],
+    [ "a4l_range", "structa4l__range.html", [
+      [ "flags", "structa4l__range.html#a7504ba2a31c4c0dabd67f5f7a8b660b3", null ],
+      [ "max", "structa4l__range.html#ae6ae7be4195c43f3f56b312dd46c55a1", null ],
+      [ "min", "structa4l__range.html#a81c139fc8dda69559c9a4d2e4a9a3465", null ]
+    ] ],
     [ "A4L_CHAN_AREF_COMMON", "group__channelrange.html#ga7f3e39e0773ea29526aa72497a738474", null ],
     [ "A4L_CHAN_AREF_DIFF", "group__channelrange.html#ga8e544207dc38e33b48d5cc35f8a62846", null ],
     [ "A4L_CHAN_AREF_GROUND", "group__channelrange.html#ga910bc672f6e55346643f9c69d175134f", null ],

@@ -1,7 +1,16 @@
 var group__sync1__lib =
 [
-    [ "a4l_instruction", "structa4l__instruction.html", null ],
-    [ "a4l_instruction_list", "structa4l__instruction__list.html", null ],
+    [ "a4l_instruction", "structa4l__instruction.html", [
+      [ "chan_desc", "structa4l__instruction.html#ac13c98dc1071dabdbc02035437c913d1", null ],
+      [ "data", "structa4l__instruction.html#aea22840417a04202cd0740515420d467", null ],
+      [ "data_size", "structa4l__instruction.html#a57a3362a9c56de0a3318116eda8583fe", null ],
+      [ "idx_subd", "structa4l__instruction.html#a2ce723188a437c94b474d62b690d241b", null ],
+      [ "type", "structa4l__instruction.html#a4dfe466c1efa7b13f6cb408268652e4c", null ]
+    ] ],
+    [ "a4l_instruction_list", "structa4l__instruction__list.html", [
+      [ "count", "structa4l__instruction__list.html#a0c5e7ef9613f2493698e5adda0f2dbf4", null ],
+      [ "insns", "structa4l__instruction__list.html#ae0da793580d6ad2a8a1be208a1d41b5c", null ]
+    ] ],
     [ "A4L_INSN_BITS", "group__sync1__lib.html#gad02735fca71fa7e07dad273e4cd957a8", null ],
     [ "A4L_INSN_CONFIG", "group__sync1__lib.html#gaa5e0f8dade0defa8b9c9f0788dbf6e6f", null ],
     [ "A4L_INSN_GTOD", "group__sync1__lib.html#gad342149a83edc18ca7960274b6775681", null ],

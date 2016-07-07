@@ -1,7 +1,0 @@
-<map id="include/nucleus/vdso.h" name="include/nucleus/vdso.h">
-<area shape="rect" id="node3" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="385,83,500,112"/>
-<area shape="rect" id="node14" href="$hostrt_8h.html" title="Definitions for global semaphore heap shared objects." alt="" coords="616,83,731,112"/>
-<area shape="rect" id="node9" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="304,169,435,199"/>
-<area shape="rect" id="node11" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="459,169,576,199"/>
-<area shape="rect" id="node18" href="$seqlock_8h_source.html" title="nucleus/seqlock.h" alt="" coords="771,169,896,199"/>
-</map>

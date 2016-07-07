@@ -1,8 +1,13 @@
 var group__rtipc =
 [
     [ "rtipc.h", "rtipc_8h.html", null ],
-    [ "rtipc_port_label", "structrtipc__port__label.html", null ],
-    [ "sockaddr_ipc", "structsockaddr__ipc.html", null ],
+    [ "rtipc_port_label", "structrtipc__port__label.html", [
+      [ "label", "structrtipc__port__label.html#a24cdc7d42efdcf42b76e4fbfe8b238e9", null ]
+    ] ],
+    [ "sockaddr_ipc", "structsockaddr__ipc.html", [
+      [ "sipc_family", "structsockaddr__ipc.html#a34159a73aefb7bde8064259a058599bb", null ],
+      [ "sipc_port", "structsockaddr__ipc.html#a03b5a7ead5dab3968fc543aaee649dd2", null ]
+    ] ],
     [ "BUFP_BUFSZ", "group__rtipc.html#ga5bbbae934f8a7f982e94ed310ed9a364", null ],
     [ "BUFP_LABEL", "group__rtipc.html#ga0ff681be80a29ba24d5d591ca5dd6fca", null ],
     [ "IDDP_LABEL", "group__rtipc.html#gac62cba4b02621f8536f5d4d3f9d993bd", null ],
@@ -29,8 +34,8 @@ var group__rtipc =
     [ "getpeername__AF_RTIPC", "group__rtipc.html#ga620af595b33bbc2284f86ee25b8759dd", null ],
     [ "getsockname__AF_RTIPC", "group__rtipc.html#gad24c6013d32d57b90c392993a1118385", null ],
     [ "getsockopt__AF_RTIPC", "group__rtipc.html#ga26876fedfc5b831c9d49c630650f5bc6", null ],
-    [ "recvmsg__AF_RTIPC", "group__rtipc.html#ga69ad5e9d75282d13e69ba2c472ea4ed0", null ],
-    [ "sendmsg__AF_RTIPC", "group__rtipc.html#gab77f8a835dd741535882e2e50126b0af", null ],
+    [ "recvmsg__AF_RTIPC", "group__rtipc.html#ga1c296befcebe24a43f2ae32bb015813f", null ],
+    [ "sendmsg__AF_RTIPC", "group__rtipc.html#gaf92b80c9fd7540186c198eeb6d2a78a8", null ],
     [ "setsockopt__AF_RTIPC", "group__rtipc.html#gad529c20d5d8d9660703759f0eb109a67", null ],
     [ "socket__AF_RTIPC", "group__rtipc.html#ga77d456500c719b5ac81b051cb957f581", null ]
 ];

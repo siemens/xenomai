@@ -8,6 +8,7 @@ var group__nucleus =
     [ "Lightweight key-to-object mapping service", "group__map.html", "group__map" ],
     [ "Real-time pod services.", "group__pod.html", "group__pod" ],
     [ "Registry services.", "group__registry.html", "group__registry" ],
+    [ "Real-time scheduler services.", "group__sched.html", "group__sched" ],
     [ "File descriptors events multiplexing services.", "group__select.html", "group__select" ],
     [ "Real-time shadow services.", "group__shadow.html", "group__shadow" ],
     [ "Thread synchronization services.", "group__synch.html", "group__synch" ],

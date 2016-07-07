@@ -8,7 +8,6 @@ var structrtser__config =
     [ "fifo_depth", "structrtser__config.html#a5faa8ddcdeed03f5da72fe64d825fbf0", null ],
     [ "handshake", "structrtser__config.html#af3d4c1078b145977f85ed4cec9dc5fe6", null ],
     [ "parity", "structrtser__config.html#a900d00e42d6fe7715d81caa47dd7ee25", null ],
-    [ "reserved", "structrtser__config.html#a1c7230ac5f8292ff88282267f22ebd7a", null ],
     [ "rs485", "structrtser__config.html#aba1f535034826ab136adcb578faa0d26", null ],
     [ "rx_timeout", "structrtser__config.html#aa8eb74102424c5623a38e030ff337dcd", null ],
     [ "stop_bits", "structrtser__config.html#a4981104de042014ec340337cfabdb78e", null ],

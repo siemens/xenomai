@@ -1,6 +1,0 @@
-<map id="Level 2 API" name="Level 2 API">
-<area shape="rect" id="node1" href="$group__Analogylib4Linux.html" title="Library API." alt="" coords="5,59,96,88"/>
-<area shape="rect" id="node3" href="$group__rng2__lib.html" title="Range / conversion API" alt="" coords="301,5,461,35"/>
-<area shape="rect" id="node4" href="$group__async2__lib.html" title="Asynchronous acquisition API" alt="" coords="283,59,480,88"/>
-<area shape="rect" id="node5" href="$group__sync2__lib.html" title="Synchronous acquisition API" alt="" coords="287,112,476,141"/>
-</map>

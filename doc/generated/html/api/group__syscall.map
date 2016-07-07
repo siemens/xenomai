@@ -1,6 +1,0 @@
-<map id="Level 0 API (Syscall API)" name="Level 0 API (Syscall API)">
-<area shape="rect" id="node1" href="$group__descriptor__sys.html" title="Descriptor Syscall API" alt="" coords="377,5,532,35"/>
-<area shape="rect" id="node4" href="$group__attach__sys.html" title="Attach / detach Syscall API" alt="" coords="363,59,547,88"/>
-<area shape="rect" id="node5" href="$group__basic__sys.html" title="Basic Syscall API" alt="" coords="391,112,519,141"/>
-<area shape="rect" id="node3" href="$group__Analogylib4Linux.html" title="Library API." alt="" coords="5,59,96,88"/>
-</map>

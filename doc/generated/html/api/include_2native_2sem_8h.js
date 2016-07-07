@@ -1,11 +1,5 @@
 var include_2native_2sem_8h =
 [
-    [ "S_FIFO", "include_2native_2sem_8h.html#a205d3ac121f6dfc6b2fd45d252b70482", null ],
-    [ "S_PRIO", "include_2native_2sem_8h.html#aa156922a223af72f82168d17e844488c", null ],
-    [ "S_PULSE", "include_2native_2sem_8h.html#a2118a20e3911538c352680350a1d1aab", null ],
-    [ "RT_SEM", "include_2native_2sem_8h.html#ad71acaea5ba6013459ac9c5909f6b536", null ],
-    [ "RT_SEM_INFO", "include_2native_2sem_8h.html#afb979ff1b0bb4066b2f7eb26e2468512", null ],
-    [ "RT_SEM_PLACEHOLDER", "include_2native_2sem_8h.html#a679c8991c75e222cfb1fc92f53cbf635", null ],
     [ "rt_sem_bind", "include_2native_2sem_8h.html#ga1520b55854f94b99852d24d1cbd0b29d", null ],
     [ "rt_sem_broadcast", "include_2native_2sem_8h.html#ga4a8963240e68d164a2e5bb148da44fbc", null ],
     [ "rt_sem_create", "include_2native_2sem_8h.html#gaba36e3ac8972ea74feb60640e58d1ceb", null ],

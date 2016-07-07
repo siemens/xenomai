@@ -1,18 +1,11 @@
 var rtipc_8h =
 [
-    [ "rtipc_port_label", "structrtipc__port__label.html", "structrtipc__port__label" ],
-    [ "sockaddr_ipc", "structsockaddr__ipc.html", "structsockaddr__ipc" ],
-    [ "AF_RTIPC", "rtipc_8h.html#gae08ed6e3e7cf38f1e58b1327ae4101d0", null ],
     [ "BUFP_BUFSZ", "rtipc_8h.html#ga5bbbae934f8a7f982e94ed310ed9a364", null ],
     [ "BUFP_LABEL", "rtipc_8h.html#ga0ff681be80a29ba24d5d591ca5dd6fca", null ],
     [ "IDDP_LABEL", "rtipc_8h.html#gac62cba4b02621f8536f5d4d3f9d993bd", null ],
     [ "IDDP_POOLSZ", "rtipc_8h.html#ga458014cc6cab9854202a0852a9f00c39", null ],
-    [ "PF_RTIPC", "rtipc_8h.html#ga09c57e5f4a8fc834f4d8a6e8ed581a12", null ],
     [ "SO_RCVTIMEO", "rtipc_8h.html#gaf2d1ed6a34336a6f3df80fb518325846", null ],
     [ "SO_SNDTIMEO", "rtipc_8h.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d", null ],
-    [ "SOL_BUFP", "rtipc_8h.html#gaa99d07aab259c9f8f3c303d2b614ee12", null ],
-    [ "SOL_IDDP", "rtipc_8h.html#ga287c2768fcda60d59ffdcaaebfa9698d", null ],
-    [ "SOL_XDDP", "rtipc_8h.html#ga98230805ddb6d976048fb27196ae057d", null ],
     [ "XDDP_BUFSZ", "rtipc_8h.html#ga61a2c99e1588e761aff890c27df6e5bd", null ],
     [ "XDDP_EVTDOWN", "rtipc_8h.html#ga6a7b8aa43efe65c79ec692b716202666", null ],
     [ "XDDP_EVTIN", "rtipc_8h.html#gabfefbb6b077a725dab659af9efcf3967", null ],
@@ -33,8 +26,8 @@ var rtipc_8h =
     [ "getpeername__AF_RTIPC", "rtipc_8h.html#ga620af595b33bbc2284f86ee25b8759dd", null ],
     [ "getsockname__AF_RTIPC", "rtipc_8h.html#gad24c6013d32d57b90c392993a1118385", null ],
     [ "getsockopt__AF_RTIPC", "rtipc_8h.html#ga26876fedfc5b831c9d49c630650f5bc6", null ],
-    [ "recvmsg__AF_RTIPC", "rtipc_8h.html#ga69ad5e9d75282d13e69ba2c472ea4ed0", null ],
-    [ "sendmsg__AF_RTIPC", "rtipc_8h.html#gab77f8a835dd741535882e2e50126b0af", null ],
+    [ "recvmsg__AF_RTIPC", "rtipc_8h.html#ga1c296befcebe24a43f2ae32bb015813f", null ],
+    [ "sendmsg__AF_RTIPC", "rtipc_8h.html#gaf92b80c9fd7540186c198eeb6d2a78a8", null ],
     [ "setsockopt__AF_RTIPC", "rtipc_8h.html#gad529c20d5d8d9660703759f0eb109a67", null ],
     [ "socket__AF_RTIPC", "rtipc_8h.html#ga77d456500c719b5ac81b051cb957f581", null ]
 ];

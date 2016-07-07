@@ -1,8 +1,5 @@
 var channel__range_8h =
 [
-    [ "a4l_channel", "structa4l__channel.html", "structa4l__channel" ],
-    [ "a4l_channels_desc", "structa4l__channels__desc.html", "structa4l__channels__desc" ],
-    [ "a4l_range", "structa4l__range.html", "structa4l__range" ],
     [ "A4L_CHAN_AREF_COMMON", "channel__range_8h.html#ga7f3e39e0773ea29526aa72497a738474", null ],
     [ "A4L_CHAN_AREF_DIFF", "channel__range_8h.html#ga8e544207dc38e33b48d5cc35f8a62846", null ],
     [ "A4L_CHAN_AREF_GROUND", "channel__range_8h.html#ga910bc672f6e55346643f9c69d175134f", null ],
@@ -19,24 +16,9 @@ var channel__range_8h =
     [ "A4L_RNG_PERCHAN_RNGDESC", "channel__range_8h.html#gaff4af8964f6535142618e8c9c0377791", null ],
     [ "A4L_RNG_UNIT", "channel__range_8h.html#gaf7d0075068143351a7e34a660369cec2", null ],
     [ "A4L_RNG_VOLT_UNIT", "channel__range_8h.html#gab98b3cfc59541c6af311aeb6b52ff813", null ],
-    [ "A4L_RNGDESC", "channel__range_8h.html#gaa4d299b30d05b69ce4f29a7a26a1054c", null ],
-    [ "A4L_RNGTAB", "channel__range_8h.html#ga9a28f19051447b483079bb463864071a", null ],
-    [ "GCC_ZERO_LENGTH_ARRAY", "channel__range_8h.html#aac9fc5de708fbd32b77b9e8718c64935", null ],
     [ "RANGE", "channel__range_8h.html#ga9cb4bca9f87b9fb4a34d0db84323e32d", null ],
-    [ "range_digital", "channel__range_8h.html#gaccbd8dda49cf9df1a0d6ee6befff7e3e", null ],
     [ "RANGE_ext", "channel__range_8h.html#gaf2ad48e400262267fe1b82c7bf36ed8d", null ],
     [ "RANGE_mA", "channel__range_8h.html#ga6d9b9f63e82704bf3b7d421bf81e09a5", null ],
     [ "RANGE_V", "channel__range_8h.html#ga83f988df3128b75fe9b112eb1805d528", null ],
-    [ "RNG_GLOBAL", "channel__range_8h.html#gabb8a61456a5088a58dbd7392872af4f0", null ],
-    [ "a4l_chan_t", "channel__range_8h.html#ga5ca66db22bf22ff94564c4c54b684679", null ],
-    [ "a4l_chdesc_t", "channel__range_8h.html#ga4f2a72dd6a509e45ab7a66d0384f1962", null ],
-    [ "a4l_rng_t", "channel__range_8h.html#ga40be9bdb4ecb87832aaa4d67a137f4b4", null ],
-    [ "A4L_RNGDESC", "channel__range_8h.html#ga680d214bd9b78591d4cadb510d6da7af", null ],
-    [ "A4L_RNGTAB", "channel__range_8h.html#ga9aa87fbe120c03bacc8881a40def1322", null ],
-    [ "a4l_range_bipolar10", "channel__range_8h.html#ga847191c6a58ca87355e5b89dc173ea2f", null ],
-    [ "a4l_range_bipolar5", "channel__range_8h.html#gaaafa7353386b38804b69836509debf3c", null ],
-    [ "a4l_range_fake", "channel__range_8h.html#ga6467f210dca60bc4dc6fd49285ff1090", null ],
-    [ "a4l_range_unipolar10", "channel__range_8h.html#gafd7efb888c49933664aec805517624b2", null ],
-    [ "a4l_range_unipolar5", "channel__range_8h.html#ga7288824c178c37555541507ab5c4100e", null ],
-    [ "a4l_range_unknown", "channel__range_8h.html#gacf2a7575733f34b45be6fbe101e7c290", null ]
+    [ "RNG_GLOBAL", "channel__range_8h.html#gabb8a61456a5088a58dbd7392872af4f0", null ]
 ];

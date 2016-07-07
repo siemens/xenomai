@@ -1,9 +1,0 @@
-<map id="include/analogy/descriptor.h" name="include/analogy/descriptor.h">
-<area shape="rect" id="node3" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features." alt="" coords="213,83,355,112"/>
-<area shape="rect" id="node20" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="379,83,499,112"/>
-<area shape="rect" id="node7" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="101,237,216,267"/>
-<area shape="rect" id="node9" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="276,237,401,267"/>
-<area shape="rect" id="node11" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="160,160,301,189"/>
-<area shape="rect" id="node15" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="376,160,515,189"/>
-<area shape="rect" id="node18" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="539,160,704,189"/>
-</map>

@@ -15,8 +15,8 @@ $translator = array(
   ),
   'search_matches' => "Matches:",
   'search' => "Search",
-  'split_bar' => "<div id=\"side-nav\" class=\"ui-resizable side-nav-resizable\">\n  <div id=\"nav-tree\">\n    <div id=\"nav-tree-contents\">\n      <div id=\"nav-sync\" class=\"sync\"></div>\n    </div>\n  </div>\n  <div id=\"splitbar\" style=\"-moz-user-select:none;\" \n       class=\"ui-resizable-handle\">\n  </div>\n</div>\n<script type=\"text/javascript\">\n$(document).ready(function(){initNavTree('.html','');});\n</script>\n<div id=\"doc-content\">\n",
-  'logo' => "Generated on Wed Sep 24 2014 22:53:25 for Xenomai API by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.1.2 ",
+  'split_bar' => "<div id=\"side-nav\" class=\"ui-resizable side-nav-resizable\">\n  <div id=\"nav-tree\">\n    <div id=\"nav-tree-contents\">\n      <div id=\"nav-sync\" class=\"sync\"></div>\n    </div>\n  </div>\n  <div id=\"splitbar\" style=\"-moz-user-select:none;\" \n       class=\"ui-resizable-handle\">\n  </div>\n</div>\n<script type=\"text/javascript\">\n$(document).ready(function(){initNavTree('search.html','');});\n</script>\n<div id=\"doc-content\">\n",
+  'logo' => "Generated on Thu Jul 7 2016 13:25:00 for Xenomai API by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.5 ",
 );
 
 </script>

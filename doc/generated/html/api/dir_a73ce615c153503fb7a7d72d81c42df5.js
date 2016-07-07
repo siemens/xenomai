@@ -8,11 +8,12 @@ var dir_a73ce615c153503fb7a7d72d81c42df5 =
     [ "intr.h", "ksrc_2skins_2posix_2intr_8h_source.html", null ],
     [ "mq.h", "mq_8h_source.html", null ],
     [ "mutex.h", "ksrc_2skins_2posix_2mutex_8h_source.html", null ],
+    [ "once.h", "once_8h_source.html", null ],
     [ "registry.h", "ksrc_2skins_2posix_2registry_8h_source.html", null ],
     [ "sem.h", "ksrc_2skins_2posix_2sem_8h_source.html", null ],
     [ "shm.h", "shm_8h_source.html", null ],
     [ "sig.h", "sig_8h_source.html", null ],
-    [ "syscall.c", "posix_2syscall_8c.html", "posix_2syscall_8c" ],
+    [ "syscall.c", "posix_2syscall_8c.html", null ],
     [ "thread.h", "ksrc_2skins_2posix_2thread_8h_source.html", null ],
     [ "timer.h", "ksrc_2skins_2posix_2timer_8h_source.html", null ],
     [ "tsd.h", "tsd_8h_source.html", null ]

@@ -14,11 +14,11 @@ var annotated =
     [ "can_bittime_std", "structcan__bittime__std.html", "structcan__bittime__std" ],
     [ "can_filter", "structcan__filter.html", "structcan__filter" ],
     [ "can_frame", "structcan__frame.html", "structcan__frame" ],
-    [ "rt_heap_info", "structrt__heap__info.html", "structrt__heap__info" ],
+    [ "rt_heap_info", "structrt__heap__info.html", null ],
     [ "rt_mutex_info", "structrt__mutex__info.html", "structrt__mutex__info" ],
     [ "rt_task_info", "structrt__task__info.html", "structrt__task__info" ],
     [ "rt_task_mcb", "structrt__task__mcb.html", "structrt__task__mcb" ],
-    [ "rt_timer_info", "structrt__timer__info.html", "structrt__timer__info" ],
+    [ "rt_timer_info", "structrt__timer__info.html", null ],
     [ "rtdm_dev_context", "structrtdm__dev__context.html", "structrtdm__dev__context" ],
     [ "rtdm_device", "structrtdm__device.html", "structrtdm__device" ],
     [ "rtdm_device_info", "structrtdm__device__info.html", "structrtdm__device__info" ],
@@ -36,7 +36,7 @@ var annotated =
     [ "xnvfile_regular_iterator", "structxnvfile__regular__iterator.html", "structxnvfile__regular__iterator" ],
     [ "xnvfile_regular_ops", "structxnvfile__regular__ops.html", "structxnvfile__regular__ops" ],
     [ "xnvfile_rev_tag", "structxnvfile__rev__tag.html", "structxnvfile__rev__tag" ],
-    [ "xnvfile_snapshot", "structxnvfile__snapshot.html", "structxnvfile__snapshot" ],
+    [ "xnvfile_snapshot", "structxnvfile__snapshot.html", null ],
     [ "xnvfile_snapshot_iterator", "structxnvfile__snapshot__iterator.html", "structxnvfile__snapshot__iterator" ],
     [ "xnvfile_snapshot_ops", "structxnvfile__snapshot__ops.html", "structxnvfile__snapshot__ops" ]
 ];

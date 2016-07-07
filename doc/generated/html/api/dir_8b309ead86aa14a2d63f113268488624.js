@@ -4,5 +4,5 @@ var dir_8b309ead86aa14a2d63f113268488624 =
     [ "device.c", "skins_2rtdm_2device_8c.html", "skins_2rtdm_2device_8c" ],
     [ "drvlib.c", "drvlib_8c.html", "drvlib_8c" ],
     [ "internal.h", "rtdm_2internal_8h_source.html", null ],
-    [ "module.c", "skins_2rtdm_2module_8c.html", "skins_2rtdm_2module_8c" ]
+    [ "module.c", "skins_2rtdm_2module_8c.html", null ]
 ];

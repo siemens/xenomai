@@ -1,12 +1,36 @@
 var group__rtcan =
 [
     [ "rtcan.h", "rtcan_8h.html", null ],
-    [ "can_bittime_std", "structcan__bittime__std.html", null ],
-    [ "can_bittime_btr", "structcan__bittime__btr.html", null ],
-    [ "can_bittime", "structcan__bittime.html", null ],
-    [ "can_filter", "structcan__filter.html", null ],
-    [ "sockaddr_can", "structsockaddr__can.html", null ],
-    [ "can_frame", "structcan__frame.html", null ],
+    [ "can_bittime_std", "structcan__bittime__std.html", [
+      [ "brp", "structcan__bittime__std.html#a08d6def90babb8958ec9da1f328e2bae", null ],
+      [ "phase_seg1", "structcan__bittime__std.html#a4ea4b12dc1d6cec75599f88b3c3dde3c", null ],
+      [ "phase_seg2", "structcan__bittime__std.html#a55a0d5efff79f06626177ff46101997b", null ],
+      [ "prop_seg", "structcan__bittime__std.html#a071c82fd3d0a66ce45fe51c8fedb156a", null ],
+      [ "sam", "structcan__bittime__std.html#ae6ab12fbeab86132bd178d63a1fd968f", null ],
+      [ "sjw", "structcan__bittime__std.html#a0c42abf9132d5e08196a0af51b86905f", null ]
+    ] ],
+    [ "can_bittime_btr", "structcan__bittime__btr.html", [
+      [ "btr0", "structcan__bittime__btr.html#a17d058dedc9a9339e378f2b7b352a554", null ],
+      [ "btr1", "structcan__bittime__btr.html#a6d93f9587762eb9d0a9a05612b108afe", null ]
+    ] ],
+    [ "can_bittime", "structcan__bittime.html", [
+      [ "btr", "structcan__bittime.html#a1553dfa8833111c9b6f1dc2ab4984b72", null ],
+      [ "std", "structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909", null ],
+      [ "type", "structcan__bittime.html#a7635b85b6a373e78cdbed846986e330f", null ]
+    ] ],
+    [ "can_filter", "structcan__filter.html", [
+      [ "can_id", "structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298", null ],
+      [ "can_mask", "structcan__filter.html#afa419227fe42bf1ce84a7c41600f1f90", null ]
+    ] ],
+    [ "sockaddr_can", "structsockaddr__can.html", [
+      [ "can_family", "structsockaddr__can.html#ae9d8c789193e516c282a707d5a118ebc", null ],
+      [ "can_ifindex", "structsockaddr__can.html#af1586f4d4c039a7941f07c0d746a73a7", null ]
+    ] ],
+    [ "can_frame", "structcan__frame.html", [
+      [ "__attribute__", "structcan__frame.html#af58d971323fd8fdd65fb4b1140bc0ee5", null ],
+      [ "can_dlc", "structcan__frame.html#aa055f09fd81b299201618396b7dc9314", null ],
+      [ "can_id", "structcan__frame.html#a0294f06f81a3ae0d155eb5fd14733d63", null ]
+    ] ],
     [ "AF_CAN", "group__rtcan.html#ga546620c7e758f003b24b7fdae4f97bd4", null ],
     [ "CAN_CTRLMODE_3_SAMPLES", "group__rtcan.html#ga9ac4d541a8af54f03f51e1574676dd19", null ],
     [ "CAN_CTRLMODE_LISTENONLY", "group__rtcan.html#gae4ba49824d17e7d06300cb8b4a4bff45", null ],

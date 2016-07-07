@@ -1,6 +1,5 @@
 var command_8h =
 [
-    [ "a4l_cmd_desc", "structa4l__cmd__desc.html", "structa4l__cmd__desc" ],
     [ "A4L_CMD_BULK", "command_8h.html#ga6837957c486eb249b701417ae781523d", null ],
     [ "A4L_CMD_SIMUL", "command_8h.html#ga877d13463216f33d3f74a76073cfaa15", null ],
     [ "A4L_CMD_WRITE", "command_8h.html#gaad8c331fc97e193f4accfe79f9e82877", null ],
@@ -28,6 +27,5 @@ var command_8h =
     [ "TRIG_ROUND_UP_NEXT", "command_8h.html#ga65cb9a7c636f0e3dd423171815de0ebf", null ],
     [ "TRIG_TIME", "command_8h.html#ga9ddc8d7c5e0ce1b00e62da6a673b9468", null ],
     [ "TRIG_TIMER", "command_8h.html#gaa8dfbe568cb81f66fe77d574616e378d", null ],
-    [ "TRIG_WAKE_EOS", "command_8h.html#gadd809765a503cc0180aed65543cfba42", null ],
-    [ "a4l_cmd_t", "command_8h.html#gab3de20053d43eb866beec247322d2d74", null ]
+    [ "TRIG_WAKE_EOS", "command_8h.html#gadd809765a503cc0180aed65543cfba42", null ]
 ];

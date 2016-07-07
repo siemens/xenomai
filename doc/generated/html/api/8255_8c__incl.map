@@ -1,7 +1,0 @@
-<map id="ksrc/drivers/analogy/intel/8255.c" name="ksrc/drivers/analogy/intel/8255.c">
-<area shape="rect" id="node7" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="220,179,385,208"/>
-<area shape="rect" id="node15" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="307,101,368,131"/>
-<area shape="rect" id="node9" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="67,256,216,285"/>
-<area shape="rect" id="node11" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="240,256,365,285"/>
-<area shape="rect" id="node13" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="389,256,509,285"/>
-</map>
