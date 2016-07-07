@@ -21,6 +21,13 @@
  * \ingroup sched
  */
 
+/*!
+ * \ingroup nucleus
+ * \defgroup sched Real-time scheduler services.
+ *
+ * Real-time pod services.
+ *@{*/
+
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/timer.h>
@@ -1060,3 +1067,5 @@ void xnsched_cleanup_proc(void)
 }
 
 #endif /* CONFIG_XENO_OPT_VFILE */
+
+/*@}*/
