@@ -766,7 +766,7 @@ COBALT_SYSCALL32emu(select, nonrestartable,
 	return err;
 }
 
-COBALT_SYSCALL32emu(recvmsg, probing,
+COBALT_SYSCALL32emu(recvmsg, handover,
 		    (int fd, struct compat_msghdr __user *umsg,
 		     int flags))
 {
@@ -784,7 +784,7 @@ COBALT_SYSCALL32emu(recvmsg, probing,
 	return sys32_put_msghdr(umsg, &m) ?: ret;
 }
 
-COBALT_SYSCALL32emu(sendmsg, probing,
+COBALT_SYSCALL32emu(sendmsg, handover,
 		    (int fd, struct compat_msghdr __user *umsg, int flags))
 {
 	struct user_msghdr m;

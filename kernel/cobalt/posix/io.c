@@ -58,25 +58,25 @@ COBALT_SYSCALL(fcntl, current, (int fd, int cmd, int arg))
 	return rtdm_fd_fcntl(fd, cmd, arg);
 }
 
-COBALT_SYSCALL(ioctl, probing,
+COBALT_SYSCALL(ioctl, handover,
 	       (int fd, unsigned int request, void __user *arg))
 {
 	return rtdm_fd_ioctl(fd, request, arg);
 }
 
-COBALT_SYSCALL(read, probing,
+COBALT_SYSCALL(read, handover,
 	       (int fd, void __user *buf, size_t size))
 {
 	return rtdm_fd_read(fd, buf, size);
 }
 
-COBALT_SYSCALL(write, probing,
+COBALT_SYSCALL(write, handover,
 	       (int fd, const void __user *buf, size_t size))
 {
 	return rtdm_fd_write(fd, buf, size);
 }
 
-COBALT_SYSCALL(recvmsg, probing,
+COBALT_SYSCALL(recvmsg, handover,
 	       (int fd, struct user_msghdr __user *umsg, int flags))
 {
 	struct user_msghdr m;
@@ -93,7 +93,7 @@ COBALT_SYSCALL(recvmsg, probing,
 	return cobalt_copy_to_user(umsg, &m, sizeof(*umsg)) ?: ret;
 }
 
-COBALT_SYSCALL(sendmsg, probing,
+COBALT_SYSCALL(sendmsg, handover,
 	       (int fd, struct user_msghdr __user *umsg, int flags))
 {
 	struct user_msghdr m;

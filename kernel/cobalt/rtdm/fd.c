@@ -392,6 +392,44 @@ int rtdm_fd_fcntl(int ufd, int cmd, ...)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_fcntl);
 
+static struct rtdm_fd *get_fd_fixup_mode(int ufd)
+{
+	struct xnthread *thread;
+	struct rtdm_fd *fd;
+	
+	fd = rtdm_fd_get(ufd, 0);
+	if (IS_ERR(fd))
+		return fd;
+
+	/*
+	 * Mode is selected according to the following convention:
+	 *
+	 * - Cobalt threads must try running the syscall from primary
+	 * mode as a first attempt, regardless of their scheduling
+	 * class. The driver handler may ask for demoting the caller
+	 * to secondary mode by returning -ENOSYS.
+	 *
+	 * - Regular threads (i.e. not bound to Cobalt) may only run
+	 * the syscall from secondary mode.
+	 */
+	thread = xnthread_current();
+	if (unlikely(ipipe_root_p)) {
+		if (thread == NULL ||
+		    xnthread_test_localinfo(thread, XNDESCENT))
+			return fd;
+	} else if (likely(thread))
+		return fd;
+
+	/*
+	 * We need to switch to the converse mode. Since all callers
+	 * bear the "adaptive" tag, we just pass -ENOSYS back to the
+	 * syscall dispatcher to get switched to the next mode.
+	 */
+	rtdm_fd_put(fd);
+
+	return ERR_PTR(-ENOSYS);
+}
+
 int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 {
 	struct rtdm_fd *fd;
@@ -399,15 +437,13 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 	va_list args;
 	int err, ret;
 
+	fd = get_fd_fixup_mode(ufd);
+	if (IS_ERR(fd))
+		return PTR_ERR(fd);
+
 	va_start(args, request);
 	arg = va_arg(args, void __user *);
 	va_end(args);
-
-	fd = rtdm_fd_get(ufd, 0);
-	if (IS_ERR(fd)) {
-		err = PTR_ERR(fd);
-		goto out;
-	}
 
 	set_compat_bit(fd);
 
@@ -419,7 +455,7 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 		err = fd->ops->ioctl_rt(fd, request, arg);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
-		    splnone();
+		splnone();
 
 	if (err < 0) {
 		ret = __rtdm_dev_ioctl_core(fd, request, arg);
@@ -428,7 +464,7 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 	}
 
 	rtdm_fd_put(fd);
-  out:
+
 	if (err < 0)
 		trace_cobalt_fd_ioctl_status(current, fd, ufd, err);
 
@@ -440,130 +476,120 @@ ssize_t
 rtdm_fd_read(int ufd, void __user *buf, size_t size)
 {
 	struct rtdm_fd *fd;
-	ssize_t err;
+	ssize_t ret;
 
-	fd = rtdm_fd_get(ufd, 0);
-	if (IS_ERR(fd)) {
-		err = PTR_ERR(fd);
-		goto out;
-	}
+	fd = get_fd_fixup_mode(ufd);
+	if (IS_ERR(fd))
+		return PTR_ERR(fd);
 
 	set_compat_bit(fd);
 
 	trace_cobalt_fd_read(current, fd, ufd, size);
 
 	if (ipipe_root_p)
-		err = fd->ops->read_nrt(fd, buf, size);
+		ret = fd->ops->read_nrt(fd, buf, size);
 	else
-		err = fd->ops->read_rt(fd, buf, size);
+		ret = fd->ops->read_rt(fd, buf, size);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
-		    splnone();
+		splnone();
 
 	rtdm_fd_put(fd);
 
-  out:
-	if (err < 0)
-		trace_cobalt_fd_read_status(current, fd, ufd, err);
+	if (ret < 0)
+		trace_cobalt_fd_read_status(current, fd, ufd, ret);
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_read);
 
 ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 {
 	struct rtdm_fd *fd;
-	ssize_t err;
+	ssize_t ret;
 
-	fd = rtdm_fd_get(ufd, 0);
-	if (IS_ERR(fd)) {
-		err = PTR_ERR(fd);
-		goto out;
-	}
+	fd = get_fd_fixup_mode(ufd);
+	if (IS_ERR(fd))
+		return PTR_ERR(fd);
 
 	set_compat_bit(fd);
 
 	trace_cobalt_fd_write(current, fd, ufd, size);
 
 	if (ipipe_root_p)
-		err = fd->ops->write_nrt(fd, buf, size);
+		ret = fd->ops->write_nrt(fd, buf, size);
 	else
-		err = fd->ops->write_rt(fd, buf, size);
+		ret = fd->ops->write_rt(fd, buf, size);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
-		    splnone();
+		splnone();
 
 	rtdm_fd_put(fd);
 
-  out:
-	if (err < 0)
-		trace_cobalt_fd_write_status(current, fd, ufd, err);
+	if (ret < 0)
+		trace_cobalt_fd_write_status(current, fd, ufd, ret);
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_write);
 
 ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
-	ssize_t err;
+	ssize_t ret;
 
-	fd = rtdm_fd_get(ufd, 0);
-	if (IS_ERR(fd)) {
-		err = PTR_ERR(fd);
-		goto out;
-	}
+	fd = get_fd_fixup_mode(ufd);
+	if (IS_ERR(fd))
+		return PTR_ERR(fd);
 
 	set_compat_bit(fd);
 
 	trace_cobalt_fd_recvmsg(current, fd, ufd, flags);
 
 	if (ipipe_root_p)
-		err = fd->ops->recvmsg_nrt(fd, msg, flags);
+		ret = fd->ops->recvmsg_nrt(fd, msg, flags);
 	else
-		err = fd->ops->recvmsg_rt(fd, msg, flags);
+		ret = fd->ops->recvmsg_rt(fd, msg, flags);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
 		splnone();
 
 	rtdm_fd_put(fd);
-out:
-	if (err < 0)
-		trace_cobalt_fd_recvmsg_status(current, fd, ufd, err);
 
-	return err;
+	if (ret < 0)
+		trace_cobalt_fd_recvmsg_status(current, fd, ufd, ret);
+
+	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_recvmsg);
 
 ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
-	ssize_t err;
+	ssize_t ret;
 
-	fd = rtdm_fd_get(ufd, 0);
-	if (IS_ERR(fd)) {
-		err = PTR_ERR(fd);
-		goto out;
-	}
+	fd = get_fd_fixup_mode(ufd);
+	if (IS_ERR(fd))
+		return PTR_ERR(fd);
 
 	set_compat_bit(fd);
 
 	trace_cobalt_fd_sendmsg(current, fd, ufd, flags);
 
 	if (ipipe_root_p)
-		err = fd->ops->sendmsg_nrt(fd, msg, flags);
+		ret = fd->ops->sendmsg_nrt(fd, msg, flags);
 	else
-		err = fd->ops->sendmsg_rt(fd, msg, flags);
+		ret = fd->ops->sendmsg_rt(fd, msg, flags);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
-		    splnone();
+		splnone();
 
 	rtdm_fd_put(fd);
-out:
-	if (err < 0)
-		trace_cobalt_fd_sendmsg_status(current, fd, ufd, err);
 
-	return err;
+	if (ret < 0)
+		trace_cobalt_fd_sendmsg_status(current, fd, ufd, ret);
+
+	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_sendmsg);
 
