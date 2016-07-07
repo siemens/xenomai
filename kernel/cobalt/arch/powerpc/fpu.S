@@ -23,46 +23,15 @@
 #include <asm/ppc_asm.h>
 #include <asm/asm-offsets.h>
 
-#ifdef CONFIG_PPC601_SYNC_FIX
-#define SYNC				\
-BEGIN_FTR_SECTION			\
-	sync;				\
-	isync;				\
-END_FTR_SECTION_IFSET(CPU_FTR_601)
-#else /* !CONFIG_PPC601_SYNC_FIX */
-#define	SYNC
-#endif /* CONFIG_PPC601_SYNC_FIX */
-
-#ifdef CONFIG_PPC64
-#ifndef MTMSRD
-#define MTMSRD(r)	mtmsrd	r
-#endif
-#ifndef MTFSF_L
-#define MTFSF_L(REG) \
-	.long (0xfc00058e | ((0xff) << 17) | ((REG) << 11) | (1 << 25))
-#endif
-#else /* !CONFIG_PPC64 */
-#ifndef MTMSRD
-#define MTMSRD(r)	mtmsr	r
-#endif
-#ifndef MTFSF_L
-#define MTFSF_L(REG)	mtfsf	0xff, (REG)
-#endif
-#endif /* !CONFIG_PPC64 */
-
 #ifdef THREAD_FPSTATE
-#define FIXUP_REG_FPSTATE(__reg) addi	__reg,__reg,THREAD_FPSTATE
+#define FIXUP_REG_FPSTATE(__reg)	addi	__reg, __reg, THREAD_FPSTATE
 #else
-#define FIXUP_REG_FPSTATE(__reg)
-#ifndef THREAD_FPSCR
 /*
- * The following accessor has to work with ancient kernel versions,
- * for which THREAD_FPSCR is not usable for 64bit save/restore.
+ * v3.10 -> v3.13 do not have THREAD_FPSTATE yet, but still
+ * define THREAD_FPSCR.
  */
-#define FPSTATE_FPSCR(base)	THREAD_FPR0+32*8(base)
-#else
-#define	FPSTATE_FPSCR(base)	THREAD_FPSCR(base)
-#endif
+#define FIXUP_REG_FPSTATE(__reg)
+#define	FPSTATE_FPSCR(__base)		THREAD_FPSCR(__base)
 #endif
 
 /* r3 = &thread_struct (tcb->fpup) */
@@ -98,4 +67,21 @@ _GLOBAL(__asm_restore_fpu)
 	lfd	fr0,FPSTATE_FPSCR(r3)
 	MTFSF_L(fr0)
 	REST_32FPRS(0,r3)
+	blr
+
+_GLOBAL(__asm_disable_fpu)
+	mfmsr	r5
+	li	r3,MSR_FP
+	andc	r5,r5,r3
+	SYNC
+	MTMSRD(r5)
+	isync
+	blr
+
+_GLOBAL(__asm_enable_fpu)
+	mfmsr	r5
+	ori	r5,r5,MSR_FP
+	SYNC
+	MTMSRD(r5)
+	isync
 	blr

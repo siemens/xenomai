@@ -67,6 +67,10 @@ asmlinkage void __asm_save_fpu(struct thread_struct *ts);
 
 asmlinkage void __asm_restore_fpu(struct thread_struct *ts);
 
+asmlinkage void __asm_disable_fpu(void);
+
+asmlinkage void __asm_enable_fpu(void);
+
 #ifndef CONFIG_SMP
 #define get_fpu_owner(cur) last_task_used_math
 #else /* CONFIG_SMP */
@@ -77,53 +81,15 @@ asmlinkage void __asm_restore_fpu(struct thread_struct *ts);
 })
 #endif /* CONFIG_SMP */
 
-#ifdef CONFIG_PPC64
-#define do_disable_fpu() ({				\
-    register unsigned long _msr;                        \
-    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
-    __asm__ __volatile__ ( "mtmsrd %0"                  \
-			   : /* no output */            \
-			   : "r"(_msr & ~(MSR_FP))      \
-			   : "memory" );                \
-})
-
-#define do_enable_fpu() ({				\
-    register unsigned long _msr;                        \
-    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
-    __asm__ __volatile__ ( "mtmsrd %0"                  \
-			   : /* no output */            \
-			   : "r"(_msr | MSR_FP)         \
-			   : "memory" );                \
-})
-#else /* !CONFIG_PPC64 */
-#define do_disable_fpu() ({				\
-    register unsigned long _msr;                        \
-    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
-    __asm__ __volatile__ ( "mtmsr %0"                   \
-			   : /* no output */            \
-			   : "r"(_msr & ~(MSR_FP))      \
-			   : "memory" );                \
-})
-
-#define do_enable_fpu() ({				\
-    register unsigned long _msr;                        \
-    __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
-    __asm__ __volatile__ ( "mtmsr %0"                   \
-			   : /* no output */            \
-			   : "r"(_msr | MSR_FP)         \
-			   : "memory" );                \
-})
-#endif /* CONFIG_PPC64 */
-
 static void xnarch_enable_fpu(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *task = tcb->core.host_task;
 
 	if (task && task != tcb->core.user_fpu_owner)
-		do_disable_fpu();
+		__asm_disable_fpu();
 	else
-		do_enable_fpu();
+		__asm_enable_fpu();
 }
 
 void xnarch_save_fpu(struct xnthread *thread)
@@ -164,8 +130,9 @@ static void xnarch_restore_fpu(struct xnthread *thread)
 	 * FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
 	 * whereas we could be much lazier.
 	 */
-	if (tcb->core.host_task && tcb->core.host_task != tcb->core.user_fpu_owner)
-		do_disable_fpu();
+	if (tcb->core.host_task &&
+	    tcb->core.host_task != tcb->core.user_fpu_owner)
+		__asm_disable_fpu();
 }
 
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
