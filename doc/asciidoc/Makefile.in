@@ -485,18 +485,17 @@ uninstall-am: uninstall-local
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons asciidoc-icons/callouts: FORCE
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(RM) -R asciidoc-icons
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/icons asciidoc-icons
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /etc/asciidoc/images/icons asciidoc-icons
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-css: FORCE
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/doc/asciidoc-8.6.8/stylesheets/asciidoc.css $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/doc/asciidoc-8.6.8/stylesheets/xhtml11-quirks.css $@
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-js: FORCE
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc.js $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /etc/asciidoc/javascripts/asciidoc.js $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /etc/asciidoc/javascripts/toc.js $@
 
 @CONFIG_XENO_ASCIIDOC_TRUE@.PHONY: FORCE
 @CONFIG_XENO_ASCIIDOC_FALSE@$(man1_MANS): %.1: $(MAN_DOCSDIR)/%.1

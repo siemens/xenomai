@@ -33,18 +33,17 @@ all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS)
 
 asciidoc-icons asciidoc-icons/callouts: FORCE
 	@$(RM) -R asciidoc-icons
-	@cp -a /usr/share/asciidoc/icons asciidoc-icons
+	@cp -a /etc/asciidoc/images/icons asciidoc-icons
 
 asciidoc-css: FORCE
 	@$(mkdir_p) $@
-	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
-	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
-	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
+	@cp -a /usr/doc/asciidoc-8.6.8/stylesheets/asciidoc.css $@
+	@cp -a /usr/doc/asciidoc-8.6.8/stylesheets/xhtml11-quirks.css $@
 
 asciidoc-js: FORCE
 	@$(mkdir_p) $@
-	@cp -a /usr/share/asciidoc/javascripts/asciidoc.js $@
-	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
+	@cp -a /etc/asciidoc/javascripts/asciidoc.js $@
+	@cp -a /etc/asciidoc/javascripts/toc.js $@
 
 .PHONY: FORCE
 

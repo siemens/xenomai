@@ -14,6 +14,13 @@ BEGIN {
 	next
 }
 
+/^This file/ && in_toc {
+	in_toc=0	
+	printf "-------------------------------------------------------------------------------\n\n"
+	print $0
+	next
+}
+
 (in_toc || in_lot) && /^([ \t]*[0-9]\.|$)/ {
 	if (in_toc)
 		print $0

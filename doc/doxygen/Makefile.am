@@ -15,6 +15,8 @@ PDF_DOCSDIR = ./
 # Doxygen documentation
 api: doxygen-api
 
+api/search: api
+
 all-local: $(HTML_DOCS) $(PDF_DOCS)
 
 doxygen-api: Doxyfile
