@@ -740,7 +740,6 @@ restart:
 		 * domain. This is a slow path, so proceed with any
 		 * pending schedparam update on the fly.
 		 */
-		switched = 0;
 		if (thread)
 			xnthread_propagate_schedparam(thread);
 	}
