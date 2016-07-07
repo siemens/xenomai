@@ -11,7 +11,7 @@ die()
 
 progname=`basename $0`
 
-if ! [ -f docbook/catalog -a -d "$srcdir/generated" ]; then
+if ! [ -f asciidoc/Makefile -a -d "$srcdir/generated" ]; then
     die $progname must be run from the doc sub-directory of the build \
 tree and passed a correct srcdir variable.
 fi
