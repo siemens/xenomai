@@ -70,8 +70,10 @@
 #define __xn_exec_downup    (__xn_exec_lostage|__xn_exec_switchback)
 /* Shorthand for non-restartable primary syscall. */
 #define __xn_exec_nonrestartable (__xn_exec_primary|__xn_exec_norestart)
-/* Shorthand for domain probing syscall */
+/* Domain probing syscall starting in conforming mode. */
 #define __xn_exec_probing   (__xn_exec_conforming|__xn_exec_adaptive)
+/* Hand over mode selection to syscall.  */
+#define __xn_exec_handover  (__xn_exec_current|__xn_exec_adaptive)
 
 typedef long (*cobalt_syshand)(unsigned long arg1, unsigned long arg2,
 			       unsigned long arg3, unsigned long arg4,
@@ -473,7 +475,7 @@ static inline int allowed_syscall(struct cobalt_process *process,
 	if (process == NULL)
 		return 0;
 
-	if (thread == NULL && (sysflags & __xn_exec_shadow) != 0)
+	if (thread == NULL && (sysflags & __xn_exec_shadow))
 		return 0;
 
 	return cap_raised(current_cap(), CAP_SYS_NICE);
@@ -546,12 +548,13 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 * o Whether the caller currently runs in the Linux or Xenomai
 	 * domain.
 	 */
-	switched = 0;
 restart:
 	/*
 	 * Process adaptive syscalls by restarting them in the
-	 * opposite domain.
+	 * opposite domain upon receiving -ENOSYS from the syscall
+	 * handler.
 	 */
+	switched = 0;
 	if (sysflags & __xn_exec_lostage) {
 		/*
 		 * The syscall must run from the Linux domain.
@@ -585,15 +588,22 @@ restart:
 			return KEVENT_PROPAGATE;
 	}
 
-	ret = handler(__xn_reg_arglist(regs));
-	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
-		if (switched) {
-			switched = 0;
-			ret = xnthread_harden();
-			if (ret)
-				goto done;
-		}
+	/*
+	 * 'thread' has to be valid from that point: all syscalls
+	 * regular threads may call have been pipelined to the root
+	 * handler (lostage ones), or rejected by allowed_syscall().
+	 */
 
+	ret = handler(__xn_reg_arglist(regs));
+	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive)) {
+		if (switched) {
+			ret = xnthread_harden();
+			if (ret) {
+				switched = 0;
+				goto done;
+			}
+		} else /* Mark the primary -> secondary transition. */
+			xnthread_set_localinfo(thread, XNDESCENT);
 		sysflags ^=
 		    (__xn_exec_lostage | __xn_exec_histage |
 		     __xn_exec_adaptive);
@@ -616,12 +626,14 @@ done:
 				xnthread_relax(0, 0);
 		}
 	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
-		xnthread_harden(); /* -EPERM will be trapped later if needed. */
+	if (!sigs && (sysflags & __xn_exec_switchback) && switched)
+		/* -EPERM will be trapped later if needed. */
+		xnthread_harden();
 
 ret_handled:
 	/* Update the stats and userland-visible state. */
 	if (thread) {
+		xnthread_clear_localinfo(thread, XNDESCENT);
 		xnstat_counter_inc(&thread->stat.xsc);
 		xnthread_sync_window(thread);
 	}
@@ -694,18 +706,20 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	handler = cobalt_syscalls[code];
 	sysflags = cobalt_sysmodes[nr];
 
-	if ((sysflags & __xn_exec_conforming) != 0)
-		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
+	if (thread && (sysflags & __xn_exec_conforming))
+		sysflags |= __xn_exec_histage;
 restart:
 	/*
 	 * Process adaptive syscalls by restarting them in the
-	 * opposite domain.
+	 * opposite domain upon receiving -ENOSYS from the syscall
+	 * handler.
 	 */
+	switched = 0;
 	if (sysflags & __xn_exec_histage) {
 		/*
-		 * This request originates from the Linux domain and
-		 * must be run into the Xenomai domain: harden the
-		 * caller and execute the syscall.
+		 * This request originates from the Linux domain but
+		 * should run into the Xenomai domain: harden the
+		 * caller before invoking the syscall handler.
 		 */
 		ret = xnthread_harden();
 		if (ret) {
@@ -713,22 +727,17 @@ restart:
 			goto ret_handled;
 		}
 		switched = 1;
-	} else
-		/*
-		 * We want to run the syscall in the Linux domain.
-		 */
-		switched = 0;
+	}
 
 	ret = handler(__xn_reg_arglist(regs));
-	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
+	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive)) {
+		sysflags ^= __xn_exec_histage;
 		if (switched) {
-			switched = 0;
 			xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+			sysflags &= ~__xn_exec_adaptive;
+			 /* Mark the primary -> secondary transition. */
+			xnthread_set_localinfo(thread, XNDESCENT);
 		}
-
-		sysflags ^=
-		    (__xn_exec_lostage | __xn_exec_histage |
-		     __xn_exec_adaptive);
 		goto restart;
 	}
 
@@ -749,13 +758,14 @@ restart:
 			   thread->res_count == 0)
 			sysflags |= __xn_exec_switchback;
 	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0
+	if (!sigs && (sysflags & __xn_exec_switchback)
 	    && (switched || xnsched_primary_p()))
 		xnthread_relax(0, 0);
 
 ret_handled:
 	/* Update the stats and userland-visible state. */
 	if (thread) {
+		xnthread_clear_localinfo(thread, XNDESCENT);
 		xnstat_counter_inc(&thread->stat.xsc);
 		xnthread_sync_window(thread);
 	}
