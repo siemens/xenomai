@@ -19,6 +19,9 @@
 #include <errno.h>
 #include <pthread.h>
 #include <limits.h>
+#include <assert.h>
+#include <unistd.h>
+
 #include <nucleus/synch.h>
 #include <posix/mutex.h>
 #include <posix/syscall.h>
@@ -27,10 +30,13 @@
 #include <asm-generic/sem_heap.h>
 
 extern int __pse51_muxid;
+static union __xeno_mutex autoinit_mutex_union;
+static pthread_mutex_t *const autoinit_mutex =
+	&autoinit_mutex_union.native_mutex;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 #define PSE51_MUTEX_MAGIC (0x86860303)
 
+#ifdef CONFIG_XENO_FASTSYNCH
 static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 {
 	if (likely(!shadow->attr.pshared))
@@ -39,6 +45,8 @@ static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 	return (xnarch_atomic_t *) (xeno_sem_heap[1] + shadow->owner_offset);
 }
 #endif /* CONFIG_XENO_FASTSYNCH */
+
+static int mutex_autoinit(pthread_mutex_t *mutex);
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {
@@ -103,7 +111,6 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 		goto checked;
 
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,__pse51_check_init,shadow,attr);
-
 	if (err) {
 		cb_read_unlock(&shadow->lock, s);
 		return err;
@@ -156,6 +163,10 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	if (unlikely(cur == XN_NO_HANDLE))
 		return EPERM;
 
+	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC))
+		goto autoinit;
+
+  start:
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
@@ -201,8 +212,12 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 			err = 0;
 			goto out;
 		}
+#else /* !CONFIG_XENO_FASTSYNCH */
+	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC))
+		goto autoinit;
 
-#endif /* CONFIG_XENO_FASTSYNCH */
+  start:
+#endif /* !CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,__pse51_mutex_lock,shadow);
@@ -214,6 +229,12 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
+
+  autoinit:
+	err = mutex_autoinit(mutex);
+	if (err)
+		return err;
+	goto start;
 }
 
 int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
@@ -231,6 +252,10 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	if (unlikely(cur == XN_NO_HANDLE))
 		return EPERM;
 
+	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC))
+		goto autoinit;
+
+  start:
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
@@ -273,7 +298,12 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 			goto out;
 		}
 
-#endif /* CONFIG_XENO_FASTSYNCH */
+#else /* !CONFIG_XENO_FASTSYNCH */
+	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC))
+		goto autoinit;
+
+  start:
+#endif /* !CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL2(__pse51_muxid,
@@ -286,6 +316,12 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
+
+  autoinit:
+	err = mutex_autoinit(mutex);
+	if (err)
+		return err;
+	goto start;
 }
 
 int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
@@ -304,6 +340,10 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	if (unlikely(cur == XN_NO_HANDLE))
 		return EPERM;
 
+	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC))
+		goto autoinit;
+
+  start:
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
@@ -353,7 +393,10 @@ do_syscall:
 	cb_read_unlock(&shadow->lock, s);
 
 #else /* !CONFIG_XENO_FASTSYNCH */
+	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC))
+		goto autoinit;
 
+  start:
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_trylock, shadow);
@@ -362,6 +405,12 @@ do_syscall:
 #endif /* !CONFIG_XENO_FASTSYNCH */
 
 	return -err;
+
+  autoinit:
+	err = mutex_autoinit(mutex);
+	if (err)
+		return err;
+	goto start;
 }
 
 int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
@@ -417,4 +466,61 @@ do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
+}
+
+void pse51_mutex_init(void)
+{
+	struct __shadow_mutex *_mutex = &autoinit_mutex_union.shadow_mutex;
+	pthread_mutexattr_t rt_init_mattr;
+	int err __attribute__((unused));
+
+	__wrap_pthread_mutexattr_init(&rt_init_mattr);
+	__wrap_pthread_mutexattr_setprotocol(&rt_init_mattr, PTHREAD_PRIO_INHERIT);
+	_mutex->magic = ~PSE51_MUTEX_MAGIC;
+	err = __wrap_pthread_mutex_init(autoinit_mutex, &rt_init_mattr);
+	assert(err == 0);
+	__wrap_pthread_mutexattr_destroy(&rt_init_mattr);
+}
+
+static int __attribute__((cold)) mutex_autoinit(pthread_mutex_t *mutex)
+{
+	struct __shadow_mutex *_mutex =
+		&((union __xeno_mutex *)mutex)->shadow_mutex;
+	static pthread_mutex_t uninit_normal_mutex = PTHREAD_MUTEX_INITIALIZER;
+	static pthread_mutex_t uninit_recursive_mutex =
+		PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+	static pthread_mutex_t uninit_errorcheck_mutex =
+		PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+	int err __attribute__((unused));
+	pthread_mutexattr_t mattr;
+	int ret = 0, type;
+
+	if (memcmp(mutex, &uninit_normal_mutex, sizeof(*mutex)) == 0)
+		type = PTHREAD_MUTEX_DEFAULT;
+	else if (memcmp(mutex, &uninit_recursive_mutex, sizeof(*mutex)) == 0)
+		type = PTHREAD_MUTEX_RECURSIVE_NP;
+	else if (memcmp(mutex, &uninit_errorcheck_mutex, sizeof(*mutex)) == 0)
+		type = PTHREAD_MUTEX_ERRORCHECK_NP;
+	else
+		return EINVAL;
+
+	__wrap_pthread_mutexattr_init(&mattr);
+	__wrap_pthread_mutexattr_settype(&mattr, type);
+	err = __wrap_pthread_mutex_lock(autoinit_mutex);
+	if (err) {
+		ret = err;
+		goto out;
+	}
+	if (_mutex->magic != PSE51_MUTEX_MAGIC)
+		ret = __wrap_pthread_mutex_init(mutex, &mattr);
+	err = __wrap_pthread_mutex_unlock(autoinit_mutex);
+	if (err) {
+		if (ret == 0)
+			ret = err;
+	}
+
+  out:
+	__wrap_pthread_mutexattr_destroy(&mattr);
+
+	return ret;
 }

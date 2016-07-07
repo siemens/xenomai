@@ -124,13 +124,6 @@ their vanilla names.
 
 Caveats:
 
-- Use of the static initializers PTHREAD_MUTEX_INITIALIZER and
-PTHREAD_COND_INITIALIZER in setting up mutex and condition variable
-replacements is invalid; dynamic initialization through the
-pthread_mutex_init() and pthread_cond_init() routines must be used
-instead, otherwise, mutex and condition variable-related calls would
-always return an error status (EINVAL).
-
 - Real-time signals sent to user-space threads cause migration to secondary
   mode.
 

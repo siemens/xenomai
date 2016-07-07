@@ -42,9 +42,6 @@
  * By default, Xenomai POSIX skin mutexes are of the normal type, use no
  * priority protocol and may not be shared between several processes.
  *
- * Note that only pthread_mutex_init() may be used to initialize a mutex, using
- * the static initializer @a PTHREAD_MUTEX_INITIALIZER is not supported.
- *
  *@{*/
 
 #include <nucleus/sys_ppd.h>

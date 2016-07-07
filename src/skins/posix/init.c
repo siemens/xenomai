@@ -40,6 +40,7 @@ static int fork_handler_registered;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
 void pse51_clock_init(int);
+void pse51_mutex_init(void);
 
 static __constructor__ void __init_posix_interface(void)
 {
@@ -66,6 +67,8 @@ static __constructor__ void __init_posix_interface(void)
 		__pse51_rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__pse51_rtdm_muxid,
 								 __rtdm_fdcount);
 	}
+
+	pse51_mutex_init();
 
 	noshadow = getenv("XENO_NOSHADOW");
 	if ((!noshadow || !*noshadow) && xeno_get_current() == XN_NO_HANDLE) {

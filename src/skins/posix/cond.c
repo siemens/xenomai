@@ -22,7 +22,11 @@
 #include <posix/mutex.h>
 #include <posix/cb_lock.h>
 
+#define PSE51_COND_MAGIC (0x86860505)
+
 extern int __pse51_muxid;
+
+static int cond_autoinit(pthread_cond_t *cond);
 
 int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
 {
@@ -109,6 +113,10 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	};
 	int err, oldtype;
 
+	if (unlikely(c.cond->shadow_cond.magic != PSE51_COND_MAGIC))
+		goto autoinit;
+
+  start:
 	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
 		return EINVAL;
 
@@ -137,6 +145,12 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	pthread_testcancel();
 
 	return err ?: c.err;
+
+  autoinit:
+	err = cond_autoinit(cond);
+	if (err)
+		return err;
+	goto start;
 }
 
 int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
@@ -149,6 +163,10 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 	};
 	int err, oldtype;
 
+	if (unlikely(c.cond->shadow_cond.magic != PSE51_COND_MAGIC))
+		goto autoinit;
+
+  start:
 	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
 		return EINVAL;
 
@@ -176,20 +194,53 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 	pthread_testcancel();
 
 	return err ?: c.err;
+
+  autoinit:
+	err = cond_autoinit(cond);
+	if (err)
+		return err;
+	goto start;
 }
 
 int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 {
 	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	int err;
 
+	if (unlikely(_cond->shadow_cond.magic != PSE51_COND_MAGIC))
+		goto autoinit;
+
+  start:
 	return -XENOMAI_SKINCALL1(__pse51_muxid,
 				  __pse51_cond_signal, &_cond->shadow_cond);
+
+  autoinit:
+	err = cond_autoinit(cond);
+	if (err)
+		return err;
+	goto start;
 }
 
 int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 {
 	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	int err;
 
+	if (unlikely(_cond->shadow_cond.magic != PSE51_COND_MAGIC))
+		goto autoinit;
+
+  start:
 	return -XENOMAI_SKINCALL1(__pse51_muxid,
 				  __pse51_cond_broadcast, &_cond->shadow_cond);
+
+  autoinit:
+	err = cond_autoinit(cond);
+	if (err)
+		return err;
+	goto start;
+}
+
+static int __attribute__((cold)) cond_autoinit(pthread_cond_t *cond)
+{
+	return __wrap_pthread_cond_init(cond, NULL);
 }

@@ -41,10 +41,6 @@
  * several processes (it may not be shared by default, see
  * pthread_condattr_setpshared()).
  *
- * Note that only pthread_cond_init() may be used to initialize a condition
- * variable, using the static initializer @a PTHREAD_COND_INITIALIZER is
- * not supported.
- *
  *@{*/
 
 #include <posix/mutex.h>
