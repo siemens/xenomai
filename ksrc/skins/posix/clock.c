@@ -90,21 +90,6 @@ int clock_getres(clockid_t clock_id, struct timespec *res)
 	return 0;
 }
 
-/**
- * Read the host-synchronised realtime clock.
- *
- * Obtain the current time with NTP corrections from the Linux domain
- *
- * @param tp pointer to a struct timespec
- *
- * @retval 0 on success;
- * @retval -1 if no suitable NTP-corrected clocksource is availabel
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/gettimeofday.html">
- * Specification.</a>
- *
- */
 static int do_clock_host_realtime(struct timespec *tp)
 {
 #ifdef CONFIG_XENO_OPT_HOSTRT
