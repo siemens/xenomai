@@ -472,6 +472,8 @@ uninstall-am: uninstall-local
 # Doxygen documentation
 @CONFIG_XENO_DOC_DOX_TRUE@api: doxygen-api
 
+@CONFIG_XENO_DOC_DOX_TRUE@api/search: api
+
 @CONFIG_XENO_DOC_DOX_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS)
 
 @CONFIG_XENO_DOC_DOX_TRUE@doxygen-api: Doxyfile
