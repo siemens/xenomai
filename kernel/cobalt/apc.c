@@ -55,7 +55,7 @@ void apc_dispatch(unsigned int virq, void *arg)
 	 * CPU, so that the handler is invoked on the same CPU than
 	 * the code which called xnapc_schedule().
 	 */
-	spin_lock(&apc_lock);
+	raw_spin_lock(&apc_lock);
 
 	/* This is atomic linux context (non-threaded IRQ). */
 	p = &raw_cpu_ptr(&cobalt_machine_cpudata)->apc_pending;
@@ -65,12 +65,12 @@ void apc_dispatch(unsigned int virq, void *arg)
 		handler = cobalt_pipeline.apc_table[apc].handler;
 		cookie = cobalt_pipeline.apc_table[apc].cookie;
 		raw_cpu_ptr(&cobalt_machine_cpudata)->apc_shots[apc]++;
-		spin_unlock(&apc_lock);
+		raw_spin_unlock(&apc_lock);
 		handler(cookie);
-		spin_lock(&apc_lock);
+		raw_spin_lock(&apc_lock);
 	}
 
-	spin_unlock(&apc_lock);
+	raw_spin_unlock(&apc_lock);
 }
 
 /**
@@ -118,7 +118,7 @@ int xnapc_alloc(const char *name,
 	if (handler == NULL)
 		return -EINVAL;
 
-	spin_lock_irqsave(&apc_lock, flags);
+	raw_spin_lock_irqsave(&apc_lock, flags);
 
 	if (cobalt_pipeline.apc_map == ~0) {
 		apc = -EBUSY;
@@ -131,7 +131,7 @@ int xnapc_alloc(const char *name,
 	cobalt_pipeline.apc_table[apc].cookie = cookie;
 	cobalt_pipeline.apc_table[apc].name = name;
 out:
-	spin_unlock_irqrestore(&apc_lock, flags);
+	raw_spin_unlock_irqrestore(&apc_lock, flags);
 
 	return apc;
 }

@@ -969,7 +969,7 @@ static int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
 	 *   Linux kernel and against preemption by Xenomai
 	 * - The unsynced R/W block is for lockless read-only access.
 	 */
-	spin_lock_irqsave(&__hostrtlock, flags);
+	raw_spin_lock_irqsave(&__hostrtlock, flags);
 
 	unsynced_write_block(&tmp, &nkvdso->hostrt_data.lock) {
 		nkvdso->hostrt_data.live = 1;
@@ -983,7 +983,7 @@ static int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
 		nkvdso->hostrt_data.wtom_nsec = hostrt->wall_to_monotonic.tv_nsec;
 	}
 
-	spin_unlock_irqrestore(&__hostrtlock, flags);
+	raw_spin_unlock_irqrestore(&__hostrtlock, flags);
 
 	return KEVENT_PROPAGATE;
 }

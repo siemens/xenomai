@@ -562,7 +562,7 @@ typedef unsigned long rtdm_lockctx_t;
  */
 static inline void rtdm_lock_init(rtdm_lock_t *lock)
 {
-	spin_lock_init(lock);
+	raw_spin_lock_init(lock);
 }
 
 /**
@@ -575,7 +575,7 @@ static inline void rtdm_lock_init(rtdm_lock_t *lock)
 static inline void rtdm_lock_get(rtdm_lock_t *lock)
 {
 	XENO_BUG_ON(COBALT, !spltest());
-	spin_lock(lock);
+	raw_spin_lock(lock);
 	xnsched_lock();
 }
 
@@ -588,7 +588,7 @@ static inline void rtdm_lock_get(rtdm_lock_t *lock)
  */
 static inline void rtdm_lock_put(rtdm_lock_t *lock)
 {
-	spin_unlock(lock);
+	raw_spin_unlock(lock);
 	xnsched_unlock();
 }
 
@@ -608,7 +608,7 @@ static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 	rtdm_lockctx_t context;
 
 	context = ipipe_test_and_stall_head();
-	spin_lock(lock);
+	raw_spin_lock(lock);
 	xnsched_lock();
 
 	return context;
@@ -625,7 +625,7 @@ static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 static inline
 void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t context)
 {
-	spin_unlock(lock);
+	raw_spin_unlock(lock);
 	xnsched_unlock();
 	ipipe_restore_head(context);
 }
