@@ -87,11 +87,28 @@ static void rtdm_basic_close(struct rtdm_fd *fd)
 	rtdm_timer_destroy(&ctx->close_timer);
 }
 
-static int rtdm_basic_ioctl(struct rtdm_fd *fd,
+static int rtdm_basic_ioctl_rt(struct rtdm_fd *fd,
+			    unsigned int request, void __user *arg)
+{
+	int ret, magic = RTTST_RTDM_MAGIC_PRIMARY;
+
+	switch (request) {
+	case RTTST_RTIOC_RTDM_PING_PRIMARY:
+		ret = rtdm_safe_copy_to_user(fd, arg, &magic,
+					     sizeof(magic));
+		break;
+	default:
+		ret = -ENOSYS;
+	}
+
+	return ret;
+}
+
+static int rtdm_basic_ioctl_nrt(struct rtdm_fd *fd,
 			    unsigned int request, void __user *arg)
 {
 	struct rtdm_basic_context *ctx = rtdm_fd_to_private(fd);
-	int err = 0;
+	int ret = 0, magic = RTTST_RTDM_MAGIC_SECONDARY;
 
 	switch (request) {
 	case RTTST_RTIOC_RTDM_DEFER_CLOSE:
@@ -103,11 +120,15 @@ static int rtdm_basic_ioctl(struct rtdm_fd *fd,
 					RTDM_TIMERMODE_RELATIVE);
 		}
 		break;
+	case RTTST_RTIOC_RTDM_PING_SECONDARY:
+		ret = rtdm_safe_copy_to_user(fd, arg, &magic,
+					     sizeof(magic));
+		break;
 	default:
-		err = -ENOTTY;
+		ret = -ENOTTY;
 	}
 
-	return err;
+	return ret;
 }
 
 static void actor_handler(void *arg)
@@ -209,8 +230,8 @@ static struct rtdm_driver rtdm_basic_driver = {
 	.ops = {
 		.open		= rtdm_basic_open,
 		.close		= rtdm_basic_close,
-		.ioctl_rt	= rtdm_basic_ioctl,
-		.ioctl_nrt	= rtdm_basic_ioctl,
+		.ioctl_rt	= rtdm_basic_ioctl_rt,
+		.ioctl_nrt	= rtdm_basic_ioctl_nrt,
 	},
 };
 
