@@ -80,6 +80,8 @@ static inline void xnarch_get_latencies(struct xnclock_gravity *p)
  * Check for the most generic configs at the bottom of this list, so
  * that the most specific choices available are picked first.
  */
+#elif defined(CONFIG_CORENET_GENERIC)
+#define __sched_latency 2800
 #elif defined(CONFIG_MPC85xx) || defined(CONFIG_PPC_85xx)
 #define __sched_latency 1000
 #elif defined(CONFIG_405GPR)
