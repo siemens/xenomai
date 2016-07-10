@@ -24,7 +24,7 @@ static struct rtdm_gpio_chip bcm2835_gpio_chip;
 
 static int __init bcm2835_gpio_init(void)
 {
-	return rtdm_gpiochip_add_by_name(&bcm2835_gpio_chip, "bcm2835_gpio",
+	return rtdm_gpiochip_add_by_name(&bcm2835_gpio_chip, "bcm2708_gpio",
 					 RTDM_SUBCLASS_BCM2835);
 }
 
