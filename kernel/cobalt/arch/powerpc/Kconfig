@@ -1,10 +1,6 @@
 source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"
 
-config XENO_ARCH_MATH_EMU
-        bool
-	default y if MATH_EMU || MATH_EMULATION
-
 config XENO_ARCH_FPU
 	def_bool PPC_FPU
 
