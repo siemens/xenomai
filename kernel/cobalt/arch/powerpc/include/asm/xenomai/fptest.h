@@ -35,7 +35,7 @@ static inline int fp_kernel_supported(void)
 	return 1;
 #else
 #ifdef CONFIG_MATH_EMULATION
-	printk_once(XENO_WARN "kernel-based FPU support is disabled\n");
+	printk_once(XENO_WARNING "kernel-based FPU support is disabled\n");
 #endif	/* !CONFIG_MATH_EMULATION */
 	return 0;
 #endif	/* !CONFIG_PPC_FPU */
