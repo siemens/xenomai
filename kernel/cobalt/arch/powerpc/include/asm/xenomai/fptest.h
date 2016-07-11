@@ -20,21 +20,23 @@
 #define _COBALT_POWERPC_ASM_FPTEST_H
 
 #include <linux/errno.h>
+#include <linux/printk.h>
 #include <asm/xenomai/uapi/fptest.h>
 
 static inline int fp_kernel_supported(void)
 {
+/*
+ * CAUTION: some architectures have a hardware FP unit, but a
+ * restricted set of supported FP instructions. Those may enable
+ * CONFIG_MATH_EMULATION and MATH_EMULATION_HW_UNIMPLEMENTED at the
+ * same time to provide an emulation of the missing instruction set.
+ */
 #ifdef CONFIG_PPC_FPU
 	return 1;
-#else  /* !CONFIG_PPC_FPU */
-#ifdef CONFIG_XENO_ARCH_MATH_EMU
-	static int once = 0;
-	if (!once) {
-		once = 1;
-		printk("Warning: math emulation code defined in kernel\n"
-		       "         no kernel-based FPU support for this platform\n");
-	}
-#endif	/* !CONFIG_XENO_ARCH_MATH_EMU */
+#else
+#ifdef CONFIG_MATH_EMULATION
+	printk_once(XENO_WARN "kernel-based FPU support is disabled\n");
+#endif	/* !CONFIG_MATH_EMULATION */
 	return 0;
 #endif	/* !CONFIG_PPC_FPU */
 }
