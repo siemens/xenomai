@@ -32,10 +32,13 @@
 smokey_test_plugin(interrupt,
 		   SMOKEY_ARGLIST(
 			   SMOKEY_STRING(device),
+			   SMOKEY_STRING(trigger),
 			   SMOKEY_BOOL(select),
 		   ),
    "Wait for interrupts from a GPIO pin.\n"
-   "\tdevice=<device-path>."
+   "\tdevice=<device-path>\n"
+   "\trigger={edge[-rising/falling/both], level[-low/high]}\n"
+   "\tselect, wait on select(2)."
 );
 
 smokey_test_plugin(read_value,
