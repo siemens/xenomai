@@ -32,6 +32,7 @@
 smokey_test_plugin(interrupt,
 		   SMOKEY_ARGLIST(
 			   SMOKEY_STRING(device),
+			   SMOKEY_BOOL(select),
 		   ),
    "Wait for interrupts from a GPIO pin.\n"
    "\tdevice=<device-path>."
@@ -68,8 +69,8 @@ static int run_interrupt(struct smokey_test *t, int argc, char *const argv[])
 		{ .name = "level-high", .flag = GPIO_TRIGGER_LEVEL_HIGH },
 		{ NULL, 0 },
 	};
+	int do_select = 0, fd, ret, trigger, n, value;
 	const char *device = NULL, *trigname;
-	int fd, ret, trigger, n;
 	fd_set set;
 	
 	smokey_parse_args(t, argc, argv);
@@ -87,6 +88,9 @@ static int run_interrupt(struct smokey_test *t, int argc, char *const argv[])
 			device, symerror(ret));
 		return ret;
 	}
+
+	if (SMOKEY_ARG_ISSET(interrupt, select))
+		do_select = SMOKEY_ARG_BOOL(interrupt, select);
 
 	trigger = GPIO_TRIGGER_NONE;
 	if (SMOKEY_ARG_ISSET(interrupt, trigger)) {
@@ -115,13 +119,23 @@ static int run_interrupt(struct smokey_test *t, int argc, char *const argv[])
 	FD_SET(fd, &set);
 	
 	for (;;) {
-		ret = select(fd + 1, &set, NULL, NULL, NULL);
+		if (do_select) {
+			ret = select(fd + 1, &set, NULL, NULL, NULL);
+			if (ret < 0) {
+				ret = -errno;
+				warning("failed listening to %s [%s]",
+					device, symerror(ret));
+				return ret;
+			}
+		}
+		ret = read(fd, &value, sizeof(value));
 		if (ret < 0) {
 			ret = -errno;
-			warning("failed listening to %s [%s]",
+			warning("failed reading from %s [%s]",
 				device, symerror(ret));
+			return ret;
 		}
-		printf("kick %d!\n", ret);
+		printf("received irq, GPIO state=%d\n", value);
 	}
 
 	close(fd);
@@ -142,7 +156,7 @@ static int run_read_value(struct smokey_test *t, int argc, char *const argv[])
 	}
 
 	device = SMOKEY_ARG_STRING(read_value, device);
-	fd = open(device, O_RDONLY);
+	fd = open(device, O_RDONLY|O_NONBLOCK);
 	if (fd < 0) {
 		ret = -errno;
 		warning("cannot open device %s [%s]",
