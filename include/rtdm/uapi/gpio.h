@@ -18,8 +18,6 @@
 #ifndef _RTDM_UAPI_GPIO_H
 #define _RTDM_UAPI_GPIO_H
 
-#include <linux/types.h>
-
 #define GPIO_RTIOC_DIR_OUT		_IOW(RTDM_CLASS_GPIO, 0, int)
 #define GPIO_RTIOC_DIR_IN		_IO(RTDM_CLASS_GPIO, 1)
 #define GPIO_RTIOC_IRQEN		_IOW(RTDM_CLASS_GPIO, 2, int) /* GPIO trigger */

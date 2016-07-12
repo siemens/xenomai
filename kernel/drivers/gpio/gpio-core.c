@@ -155,6 +155,13 @@ static ssize_t gpio_pin_read_rt(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
+
+	if (!(fd->oflags & O_NONBLOCK)) {
+		ret = rtdm_event_wait(&pin->event);
+		if (ret)
+			return ret;
+	}
+
 	value = gpiod_get_raw_value(pin->desc);
 	ret = rtdm_safe_copy_to_user(fd, buf, &value, sizeof(value));
 	
