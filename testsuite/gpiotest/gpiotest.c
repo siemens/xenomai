@@ -202,7 +202,8 @@ static int run_write_value(struct smokey_test *t, int argc, char *const argv[])
 		return ret;
 	}
 
-	if (!__T(ret, ioctl(fd, GPIO_RTIOC_DIR_OUT)))
+	value = 1;
+	if (!__T(ret, ioctl(fd, GPIO_RTIOC_DIR_OUT, &value)))
 		return ret;
 	
 	ret = write(fd, &value, sizeof(value));
