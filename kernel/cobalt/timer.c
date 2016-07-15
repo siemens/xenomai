@@ -604,7 +604,8 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 
 		if (xntimer_running_p(timer)) {
 			q = xntimer_percpu_queue(timer);
-			xntimer_dequeue(timer, q);
+			if ((timer->status & XNTIMER_DEQUEUED) == 0)
+				xntimer_dequeue(timer, q);
 			while (xntimerh_date(&timer->aplink) < now) {
 				timer->periodic_ticks++;
 				xntimer_update_date(timer);
