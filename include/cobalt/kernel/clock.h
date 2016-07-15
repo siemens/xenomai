@@ -328,6 +328,8 @@ static inline void xnclock_init_proc(void) { }
 static inline void xnclock_cleanup_proc(void) { }
 #endif
 
+void xnclock_update_freq(unsigned long long freq);
+
 int xnclock_init(unsigned long long freq);
 
 void xnclock_cleanup(void);

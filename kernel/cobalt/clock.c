@@ -819,6 +819,23 @@ void xnclock_tick(struct xnclock *clock)
 }
 EXPORT_SYMBOL_GPL(xnclock_tick);
 
+void xnclock_update_freq(unsigned long long freq)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	clockfreq = freq;
+#ifdef XNARCH_HAVE_LLMULSHFT
+	xnarch_init_llmulshft(1000000000, freq, &tsc_scale, &tsc_shift);
+#ifdef XNARCH_HAVE_NODIV_LLIMD
+	xnarch_init_u32frac(&tsc_frac, 1 << tsc_shift, tsc_scale);
+	xnarch_init_u32frac(&bln_frac, 1, 1000000000);
+#endif
+#endif
+	cobalt_pipeline.clock_freq = freq;
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 static int set_core_clock_gravity(struct xnclock *clock,
 				  const struct xnclock_gravity *p)
 {
@@ -861,14 +878,7 @@ void xnclock_cleanup(void)
 
 int __init xnclock_init(unsigned long long freq)
 {
-	clockfreq = freq;
-#ifdef XNARCH_HAVE_LLMULSHFT
-	xnarch_init_llmulshft(1000000000, freq, &tsc_scale, &tsc_shift);
-#ifdef XNARCH_HAVE_NODIV_LLIMD
-	xnarch_init_u32frac(&tsc_frac, 1 << tsc_shift, tsc_scale);
-	xnarch_init_u32frac(&bln_frac, 1, 1000000000);
-#endif
-#endif
+	xnclock_update_freq(freq);
 	nktimerlat = xnarch_timer_calibrate();
 	xnclock_reset_gravity(&nkclock);
 	xnclock_register(&nkclock, &xnsched_realtime_cpus);

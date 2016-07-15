@@ -1262,6 +1262,15 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	return KEVENT_PROPAGATE;
 }
 
+static int handle_clockfreq_event(unsigned int *p)
+{
+	unsigned int newfreq = *p;
+
+	xnclock_update_freq(newfreq);
+
+	return KEVENT_PROPAGATE;
+}
+
 int ipipe_kevent_hook(int kevent, void *data)
 {
 	int ret;
@@ -1285,6 +1294,11 @@ int ipipe_kevent_hook(int kevent, void *data)
 	case IPIPE_KEVT_SETAFFINITY:
 		ret = handle_setaffinity_event(data);
 		break;
+#ifdef IPIPE_KEVT_CLOCKFREQ
+	case IPIPE_KEVT_CLOCKFREQ:
+		ret = handle_clockfreq_event(data);
+		break;
+#endif
 	default:
 		ret = KEVENT_PROPAGATE;
 	}
