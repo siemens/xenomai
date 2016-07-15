@@ -312,6 +312,14 @@ static int hdlr(unsigned event, struct ipipe_domain *ipd, void *data) \
 	return RTHAL_EVENT_PROPAGATE;				      \
 }
 
+#define RTHAL_DECLARE_CLOCKFREQ_EVENT(hdlr)			      \
+static int hdlr(unsigned event, struct ipipe_domain *ipd, void *data) \
+{								      \
+	unsigned int *newfreqp = data;				      \
+	do_##hdlr(*newfreqp);					      \
+	return RTHAL_EVENT_PROPAGATE;				      \
+}
+
 #ifndef TASK_ATOMICSWITCH
 #ifdef CONFIG_PREEMPT
 /* We want this feature for preemptible kernels, or the behaviour when
@@ -381,6 +389,13 @@ static inline void rthal_enable_notifier(struct task_struct *p)
 #define rthal_return_intercept(p)	ipipe_return_notify(p)
 #else
 #define rthal_catch_return(hdlr)	do { } while(0)
+#endif
+
+#ifdef IPIPE_EVENT_CLOCKFREQ
+#define rthal_catch_clockfreq(hdlr)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_CLOCKFREQ, hdlr)
+#else
+#define rthal_catch_clockfreq(hdlr)	do { } while(0)
 #endif
 
 #define rthal_register_domain(_dom,_name,_id,_prio,_entry)	\

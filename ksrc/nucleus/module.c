@@ -153,6 +153,27 @@ void xnmod_alloc_glinks(xnqueue_t *freehq)
 }
 EXPORT_SYMBOL_GPL(xnmod_alloc_glinks);
 
+static inline void do_clockfreq_event(unsigned int newfreq)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	rthal_tunables.clock_freq = newfreq;
+	xnarch_init_timeconv(RTHAL_CLOCK_FREQ);
+	xnlock_put_irqrestore(&nklock, s);
+}
+RTHAL_DECLARE_CLOCKFREQ_EVENT(clockfreq_event);
+
+static inline void init_clockfreq(void)
+{
+	rthal_catch_clockfreq(&clockfreq_event);
+}
+
+static inline void cleanup_clockfreq(void)
+{
+	rthal_catch_clockfreq(NULL);
+}
+
 int __init __xeno_sys_init(void)
 {
 	int ret;
@@ -162,6 +183,8 @@ int __init __xeno_sys_init(void)
 	ret = xnarch_init();
 	if (ret)
 		goto fail;
+
+	init_clockfreq();
 
 #ifndef __XENO_SIM__
 	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
@@ -249,6 +272,8 @@ int __init __xeno_sys_init(void)
 	cleanup_hostrt();
 
   cleanup_arch:
+	cleanup_clockfreq();
+
 	xnarch_exit();
 
 #endif /* __KERNEL__ */
@@ -274,6 +299,7 @@ void __exit __xeno_sys_exit(void)
 	xntbase_umount();
 	xnpod_umount();
 	cleanup_hostrt();
+	cleanup_clockfreq();
 	xnarch_exit();
 
 #ifdef __KERNEL__
