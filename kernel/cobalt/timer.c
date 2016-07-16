@@ -593,6 +593,9 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 	xnsticks_t delta;
 	unsigned long long overruns = 0;
 
+	XENO_BUG_ON(COBALT, (timer->status &
+	     (XNTIMER_DEQUEUED|XNTIMER_PERIODIC)) != XNTIMER_PERIODIC);
+	
 	delta = now - xntimer_pexpect(timer);
 	if (unlikely(delta >= (xnsticks_t) period)) {
 		xntimerq_t *q;
@@ -604,8 +607,7 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 
 		if (xntimer_running_p(timer)) {
 			q = xntimer_percpu_queue(timer);
-			if ((timer->status & XNTIMER_DEQUEUED) == 0)
-				xntimer_dequeue(timer, q);
+			xntimer_dequeue(timer, q);
 			while (xntimerh_date(&timer->aplink) < now) {
 				timer->periodic_ticks++;
 				xntimer_update_date(timer);
