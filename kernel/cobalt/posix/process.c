@@ -1262,7 +1262,7 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	return KEVENT_PROPAGATE;
 }
 
-static int handle_clockfreq_event(unsigned int *p)
+static inline int handle_clockfreq_event(unsigned int *p)
 {
 	unsigned int newfreq = *p;
 
