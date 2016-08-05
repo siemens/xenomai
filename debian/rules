@@ -61,7 +61,6 @@ install: build
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
-	$(MAKE) devices DESTDIR=$(CURDIR)/debian/libxenomai1
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# xeno-config should be only in libxenomai-dev
 	rm -f $(CURDIR)/debian/xenomai-runtime/usr/bin/xeno-config
