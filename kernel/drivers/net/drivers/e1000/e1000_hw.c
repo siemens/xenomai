@@ -8804,7 +8804,7 @@ e1000_verify_write_ich8_byte(struct e1000_hw *hw, uint32_t index, uint8_t byte)
 {
     int32_t error = E1000_SUCCESS;
     int32_t program_retries;
-    uint8_t temp_byte;
+    uint8_t temp_byte = 0;
 
     e1000_write_ich8_byte(hw, index, byte);
     usec_delay(100);
