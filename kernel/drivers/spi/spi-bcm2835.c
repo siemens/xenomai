@@ -324,13 +324,10 @@ static ssize_t bcm2835_read(struct rtdm_spi_remote_slave *slave,
 	struct spi_master_bcm2835 *spim = to_master_bcm2835(slave);
 	struct spi_slave_bcm2835 *bcm = to_slave_bcm2835(slave);
 
-	if (bcm->io_len == 0)
-		return -EINVAL;	/* No I/O buffers set. */
-	
-	spim->tx_len = bcm->io_len / 2;
-	spim->rx_len = spim->tx_len;
+	spim->tx_len = len;
+	spim->rx_len = len;
 	spim->tx_buf = NULL;
-	spim->rx_buf = bcm->io_virt;
+	spim->rx_buf = rx;
 
 	return do_transfer_irq(slave) ?: len;
 }
@@ -341,12 +338,9 @@ static ssize_t bcm2835_write(struct rtdm_spi_remote_slave *slave,
 	struct spi_master_bcm2835 *spim = to_master_bcm2835(slave);
 	struct spi_slave_bcm2835 *bcm = to_slave_bcm2835(slave);
 
-	if (bcm->io_len == 0)
-		return -EINVAL;	/* No I/O buffers set. */
-	
-	spim->tx_len = bcm->io_len / 2;
-	spim->rx_len = spim->tx_len;
-	spim->tx_buf = bcm->io_virt + bcm->io_len / 2;
+	spim->tx_len = len;
+	spim->rx_len = len;
+	spim->tx_buf = tx;
 	spim->rx_buf = NULL;
 
 	return do_transfer_irq(slave) ?: len;
