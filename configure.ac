@@ -803,15 +803,15 @@ dnl in-tree executables which require POSIX symbol wrapping.
    AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$cobalt_wrappers"])
 fi
 
-XENO_AUTOINIT_LDFLAGS='$(top_builddir)/lib/boilerplate/init/bootstrap.o'" -Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
+dnl
+dnl Build the Makefiles
+dnl
+
+XENO_AUTOINIT_LDFLAGS='$(top_builddir)/lib/boilerplate/init/bootstrap-internal.o'" -Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
 AC_SUBST(XENO_AUTOINIT_LDFLAGS)
 
 XENO_CORE_LIB=$rtcore_type/lib${rtcore_type}.la
 AC_SUBST(XENO_CORE_LIB)
-
-dnl
-dnl Build the Makefiles
-dnl
 
 AC_SUBST(DOXYGEN_SHOW_INCLUDE_FILES)
 AC_SUBST(DOXYGEN_HAVE_DOT)

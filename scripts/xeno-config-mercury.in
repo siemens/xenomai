@@ -17,10 +17,8 @@ XENO_INCLUDE_DIR="${staging}${includedir}"
 XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR/mercury -I$XENO_INCLUDE_DIR @XENO_USER_APP_CFLAGS@ -D__MERCURY__"
 XENO_BASE_LDFLAGS="-L${staging}${libdir} -lmercury -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_LIBRARY_DIR="${staging}${libdir}"
-WRAP_MAIN_OPT="${staging}${libdir}/xenomai/bootstrap.o -Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
-WRAP_MAIN="$WRAP_MAIN_OPT"
 
-unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
+unset skin_list codegen
 
 usage ()
 {
@@ -35,7 +33,7 @@ Options :
         --arch
         --prefix
         --[skin=]posix|vxworks|psos|alchemy|rtdm|smokey
-        --auto-init|no-auto-init
+        --auto-init|auto-init-solib|no-auto-init
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -80,6 +78,8 @@ fi
 do_ldflags=
 do_cflags=
 do_setinit=
+do_autoinit=y
+do_autoinit_solib=
 
 while test $# -gt 0; do
     case "$1" in
@@ -101,11 +101,22 @@ while test $# -gt 0; do
             ;;
 	--no-auto-init)
 	    do_setinit=y
-	    WRAP_MAIN=
+	    do_autoinit=
+	    do_autoinit_solib=
 	    ;;
 	--auto-init)
 	    do_setinit=y
-	    WRAP_MAIN="$WRAP_MAIN_OPT"
+	    do_autoinit=y
+	    do_autoinit_solib=
+	    ;;
+	--auto-init-solib)
+	    if test \! -r ${XENO_LIBRARY_DIR}/xenomai/bootstrap-pic.o; then
+		echo "--auto-init-solib requires shared library support" 1>&2
+		exit 1
+	    fi
+	    do_setinit=y
+	    do_autoinit=y
+	    do_autoinit_solib=y
 	    ;;
         --lib*-dir|--libdir|--user-libdir)
             echo $XENO_LIBRARY_DIR
@@ -193,7 +204,12 @@ if test x$do_ldflags = xy; then
 		;;
 	esac
     done
-    echo "$ldflags $copperplate $WRAP_MAIN $XENO_BASE_LDFLAGS"
+    wrap_main=
+    if test x$do_autoinit = xy; then
+	test x$do_autoinit_solib = xy && codegen=-pic
+	wrap_main="${XENO_LIBRARY_DIR}/xenomai/bootstrap${codegen}.o -Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+    fi
+    echo "$ldflags $copperplate $wrap_main $XENO_BASE_LDFLAGS"
 fi
 
 exit 0
