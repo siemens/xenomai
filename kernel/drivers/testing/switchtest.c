@@ -495,7 +495,7 @@ static int rtswitch_create_ktask(struct rtswitch_context *ctx,
 	iattr.affinity = *cpumask_of(ctx->cpu);
 	param.rt.prio = 1;
 
-	set_cpus_allowed(current, *cpumask_of(ctx->cpu));
+	set_cpus_allowed_ptr(current, cpumask_of(ctx->cpu));
 
 	err = xnthread_init(&task->ktask,
 			    &iattr, &xnsched_class_rt, &param);
@@ -512,9 +512,9 @@ static int rtswitch_create_ktask(struct rtswitch_context *ctx,
 		task->base.flags = 0;
 	/*
 	 * Putting the argument on stack is safe, because the new
-	 * thread, thanks to the abovce call of set_cpus_allowed,
-	 * will preempt the current thread immediately, and
-	 * will suspend only once the arguments on stack are used.
+	 * thread, thanks to the above call to set_cpus_allowed_ptr(),
+	 * will preempt the current thread immediately, and will
+	 * suspend only once the arguments on stack are used.
 	 */
 
 	return err;
@@ -553,7 +553,7 @@ static void rtswitch_close(struct rtdm_fd *fd)
 	rtdm_nrtsig_destroy(&ctx->wake_utask);
 
 	if (ctx->tasks) {
-		set_cpus_allowed(current, *cpumask_of(ctx->cpu));
+		set_cpus_allowed_ptr(current, cpumask_of(ctx->cpu));
 
 		for (i = 0; i < ctx->next_index; i++) {
 			struct rtswitch_task *task = &ctx->tasks[i];

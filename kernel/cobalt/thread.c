@@ -2196,7 +2196,7 @@ void xnthread_relax(int notify, int reason)
 	if (xnthread_test_localinfo(thread, XNMOVED)) {
 		xnthread_clear_localinfo(thread, XNMOVED);
 		cpu = xnsched_cpu(thread->sched);
-		set_cpus_allowed(p, *cpumask_of(cpu));
+		set_cpus_allowed_ptr(p, cpumask_of(cpu));
 	}
 #endif
 
@@ -2444,7 +2444,7 @@ void xnthread_pin_initial(struct xnthread *thread)
 	if (!cpumask_test_cpu(cpu, &thread->affinity))
 		cpu = cpumask_first(&thread->affinity);
 
-	set_cpus_allowed(p, *cpumask_of(cpu));
+	set_cpus_allowed_ptr(p, cpumask_of(cpu));
 	/*
 	 * @thread is still unstarted Xenomai-wise, we are precisely
 	 * in the process of mapping the current kernel task to
