@@ -21,10 +21,43 @@
 #include <linux/sched.h>
 #include <linux/ipipe.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <cobalt/kernel/thread.h>
 #include <asm/mmu_context.h>
+#include <asm/processor.h>
+
+static struct kmem_cache *xstate_cache;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,2,0)
 #include <asm/i387.h>
 #include <asm/fpu-internal.h>
+#define x86_fpregs_active(t)		__thread_has_fpu(t)
+#define x86_fpregs_deactivate(t)	__thread_clear_has_fpu(t)
+#define x86_fpregs_activate(t)		__thread_set_has_fpu(t)
+#define x86_xstate_alignment		__alignof__(union thread_xstate)
+#else
+#include <asm/fpu/internal.h>
+
+static inline int x86_fpregs_active(struct task_struct *t)
+{
+	return t->thread.fpu.fpregs_active;
+}
+
+static inline void x86_fpregs_deactivate(struct task_struct *t)
+{
+	if (x86_fpregs_active(t))
+		__fpregs_deactivate(&t->thread.fpu);
+}
+
+static inline void x86_fpregs_activate(struct task_struct *t)
+{
+	if (!x86_fpregs_active(t))
+		__fpregs_activate(&t->thread.fpu);
+}
+
+#define x86_xstate_alignment		__alignof__(union fpregs_state)
+
+#endif
 
 #ifdef CONFIG_X86_32
 
@@ -138,6 +171,12 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #endif /* CONFIG_X86_64 */
 
+static inline int is_shadow(struct xnarchtcb *tcb,
+			    struct task_struct *task)
+{
+	return tcb->spp == &task->thread.sp;
+}
+
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
 	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
@@ -146,7 +185,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 	struct task_struct *prev, *next;
 
 	prev = out_tcb->core.host_task;
-	if (__thread_has_fpu(prev))
+	if (x86_fpregs_active(prev))
 		/*
 		 * __switch_to will try and use __unlazy_fpu, so we
 		 * need to clear the ts bit.
@@ -154,7 +193,9 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 		clts();
 
 	next = in_tcb->core.host_task;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,2,0)
+	next->thread.fpu.counter = 0;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0)
 	next->thread.fpu_counter = 0;
 #else
 	next->fpu_counter = 0;
@@ -189,7 +230,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 
 	do_switch_threads(out_tcb, in_tcb, prev, next);
 
-	if (xnarch_shadow_p(out_tcb, prev)) {
+	if (is_shadow(out_tcb, prev)) {
 		loadsegment(fs, fs);
 		loadsegment(gs, gs);
 		barrier();
@@ -211,7 +252,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 #define XSAVE_SUFFIX
 #endif
 
-static inline void __do_save_i387(x86_fpustate *fpup)
+static inline void __do_save_fpu_state(x86_fpustate *fpup)
 {
 #ifdef cpu_has_xsave
 	if (cpu_has_xsave) {
@@ -244,7 +285,7 @@ static inline void __do_save_i387(x86_fpustate *fpup)
 #endif /* CONFIG_X86_64 */
 }
 
-static inline void __do_restore_i387(x86_fpustate *fpup)
+static inline void __do_restore_fpu_state(x86_fpustate *fpup)
 {
 #ifdef cpu_has_xsave
 	if (cpu_has_xsave) {
@@ -282,10 +323,10 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 	struct xnarchtcb *tcb = xnthread_archtcb(to);
 	struct task_struct *p = tcb->core.host_task;
 
-	if (__thread_has_fpu(p))
+	if (x86_fpregs_active(p))
 		return 0;
 
-	if (tsk_used_math(p) == 0) {
+	if (!(p->flags & PF_USED_MATH)) {
 		/*
 		 * The faulting task is a shadow using the FPU for the first
 		 * time, initialize the FPU context and tell linux about it.
@@ -296,17 +337,17 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 			unsigned long __mxcsr = 0x1f80UL & 0xffbfUL;
 			__asm__ __volatile__("ldmxcsr %0"::"m"(__mxcsr));
 		}
-		set_stopped_child_used_math(p);
+		p->flags |= PF_USED_MATH;
 	} else {
 		/*
 		 * The faulting task already used FPU in secondary
 		 * mode.
 		 */
 		clts();
-		__do_restore_i387(tcb->fpup);
+		__do_restore_fpu_state(tcb->fpup);
 	}
 		
-	__thread_set_has_fpu(p);
+	x86_fpregs_activate(p);
 
 	xnlock_get(&nklock);
 	xnthread_set_state(to, XNFPU);
@@ -329,54 +370,60 @@ void xnarch_leave_root(struct xnthread *root)
 	rootcb->spp = &p->thread.sp;
 	rootcb->ipp = &p->thread.rip;
 #endif
-	if (current_task_used_kfpu() == 0) {
+	if (!current_task_used_kfpu()) {
 		rootcb->root_kfpu = 0;
-		rootcb->fpup = __thread_has_fpu(p) ? current_task_fpup : NULL;
+		rootcb->fpup = x86_fpregs_active(p) ? current_task_fpup : NULL;
 		return;
 	}
 
+	/*
+	 * We need to save the kernel FPU context before preempting,
+	 * store it in our root control block.
+	 */
 	rootcb->root_kfpu = 1;
 	rootcb->fpup = current_task_fpup;
-	rootcb->root_used_math = tsk_used_math(p) != 0;
-	x86_fpustate_ptr(&p->thread) = &rootcb->i387;
-	__thread_set_has_fpu(p);
-	set_stopped_child_used_math(p);
+	rootcb->root_used_math = !!(p->flags & PF_USED_MATH);
+	x86_fpustate_ptr(&p->thread) = rootcb->kfpu_state;
+	x86_fpregs_activate(p);
+	p->flags |= PF_USED_MATH;
 	kernel_fpu_enable();
 }
 
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 {
-	x86_fpustate *const from_fpup = from ? from->tcb.fpup : NULL;
+	x86_fpustate *const prev_fpup = from ? from->tcb.fpup : NULL;
 	struct xnarchtcb *const tcb = xnthread_archtcb(to);
 	struct task_struct *const p = tcb->core.host_task;
-	x86_fpustate *const current_task_fpup = x86_fpustate_ptr(&p->thread);
+	x86_fpustate *const next_task_fpup = x86_fpustate_ptr(&p->thread);
 
-	if (xnthread_test_state(to, XNROOT) && from_fpup != current_task_fpup &&
-		tcb_used_kfpu(tcb) == 0)
-		/* Only restore lazy mode if root fpu owner is not current */
+	/* Restore lazy mode only if root fpu owner is not current. */
+	if (xnthread_test_state(to, XNROOT) &&
+	    prev_fpup != next_task_fpup &&
+	    !tcb_used_kfpu(tcb))
 		return;
 
 	clts();
 	/*
 	 * The only case where we can skip restoring the FPU is:
-	 * - the fpu context of the current task is the current fpu
+	 * - the fpu context of the next task is the current fpu
 	 * context;
 	 * - root thread has not used fpu in kernel-space;
 	 * - cpu has fxsr (because if it does not, last context switch
 	 * reinitialized fpu)
 	 */
-	if (from_fpup != current_task_fpup || cpu_has_fxsr == 0)
-		__do_restore_i387(current_task_fpup);
-	if (tcb_used_kfpu(tcb) == 0) {
-		__thread_set_has_fpu(p);
+	if (prev_fpup != next_task_fpup || !cpu_has_fxsr)
+		__do_restore_fpu_state(next_task_fpup);
+
+	if (!tcb_used_kfpu(tcb)) {
+		x86_fpregs_activate(p);
 		return;
 	}
 	kernel_fpu_disable();
 
 	x86_fpustate_ptr(&p->thread) = to->tcb.fpup;
-	if (tcb->root_used_math == 0) {
-		__thread_clear_has_fpu(p);
-		clear_stopped_child_used_math(p);
+	if (!tcb->root_used_math) {
+		x86_fpregs_deactivate(p);
+		p->flags &= ~PF_USED_MATH;
 	}
 }
 
@@ -388,6 +435,7 @@ void xnarch_init_root_tcb(struct xnthread *thread)
 	tcb->ipp = &tcb->ip;
 	tcb->fpup = NULL;
 	tcb->root_kfpu = 0;
+	tcb->kfpu_state = kmem_cache_zalloc(xstate_cache, GFP_KERNEL);
 }
 
 void xnarch_init_shadow_tcb(struct xnthread *thread)
@@ -404,7 +452,25 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 #endif
 	tcb->fpup = x86_fpustate_ptr(&p->thread);
 	tcb->root_kfpu = 0;
+	tcb->kfpu_state = NULL;
 
 	/* XNFPU is set upon first FPU fault */
 	xnthread_clear_state(thread, XNFPU);
+}
+
+int mach_x86_thread_init(void)
+{
+	xstate_cache = kmem_cache_create("cobalt_x86_xstate",
+					 xstate_size,
+					 x86_xstate_alignment,
+					 SLAB_NOTRACK, NULL);
+	if (xstate_cache == NULL)
+		return -ENOMEM;
+
+	return 0;
+}
+
+void mach_x86_thread_cleanup(void)
+{
+	kmem_cache_destroy(xstate_cache);
 }

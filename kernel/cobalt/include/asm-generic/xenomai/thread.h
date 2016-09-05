@@ -41,6 +41,4 @@ struct xntcb {
 #endif
 };
 
-static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread);
-
 #endif /* !_COBALT_ASM_GENERIC_THREAD_H */

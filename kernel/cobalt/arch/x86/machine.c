@@ -17,10 +17,10 @@
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  *   02111-1307, USA.
  */
-
 #include <linux/ipipe_tickdev.h>
 #include <cobalt/kernel/arith.h>
 #include <asm/xenomai/machine.h>
+#include <asm/xenomai/thread.h>
 #include <asm/xenomai/smi.h>
 #include <asm/xenomai/c1e.h>
 
@@ -148,6 +148,12 @@ static unsigned long mach_x86_calibrate(void)
 
 static int mach_x86_init(void)
 {
+	int ret;
+
+	ret = mach_x86_thread_init();
+	if (ret)
+		return ret;
+
 	mach_x86_c1e_disable();
 	mach_x86_smi_init();
 	mach_x86_smi_disable();
@@ -158,6 +164,7 @@ static int mach_x86_init(void)
 static void mach_x86_cleanup(void)
 {
 	mach_x86_smi_restore();
+	mach_x86_thread_cleanup();
 }
 
 static const char *const fault_labels[] = {

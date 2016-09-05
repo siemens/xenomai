@@ -20,8 +20,8 @@
 #define _COBALT_X86_ASM_FPTEST_H
 
 #include <linux/errno.h>
-#include <asm/i387.h>
 #include <asm/processor.h>
+#include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/uapi/fptest.h>
 
 static inline int fp_kernel_supported(void)

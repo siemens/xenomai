@@ -24,9 +24,14 @@
 #define __get_user_inatomic __get_user
 #define __put_user_inatomic __put_user
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,2,0)
 #include <asm/i387.h>
 #include <asm/fpu-internal.h>
+#else
+#include <asm/fpu/internal.h>
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
 
 static inline void kernel_fpu_disable(void)
 {

@@ -23,11 +23,15 @@
 #include <asm-generic/xenomai/thread.h>
 #include <asm/xenomai/wrappers.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,4,0)
 typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
+#else
+typedef union fpregs_state x86_fpustate;
+#define x86_fpustate_ptr(t) ((t)->fpu.active_state)
+#endif
 
 struct xnarchtcb {
-	x86_fpustate i387;
 	struct xntcb core;
 	unsigned long sp;
 	unsigned long *spp;
@@ -36,16 +40,12 @@ struct xnarchtcb {
 	x86_fpustate *fpup;
 	unsigned int root_kfpu: 1;
 	unsigned int root_used_math: 1;
+	x86_fpustate *kfpu_state;
 	struct {
 		unsigned long ip;
 		unsigned long ax;
 	} mayday;
 };
-
-static inline int xnarch_shadow_p(struct xnarchtcb *tcb, struct task_struct *task)
-{
-	return tcb->spp == &task->thread.sp;
-}
 
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 
@@ -83,5 +83,8 @@ static inline int xnarch_escalate(void)
 
 	return 0;
 }
+
+int mach_x86_thread_init(void);
+void mach_x86_thread_cleanup(void);
 
 #endif /* !_COBALT_X86_ASM_THREAD_H */
