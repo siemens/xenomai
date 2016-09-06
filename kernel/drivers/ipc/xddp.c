@@ -1081,15 +1081,12 @@ static int xddp_ioctl(struct rtdm_fd *fd,
 	return ret;
 }
 
-static unsigned int xddp_pollstate(struct rtdm_fd *fd)
+static unsigned int xddp_pollstate(struct rtdm_fd *fd) /* atomic */
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct xddp_socket *sk = priv->state, *rsk;
 	unsigned int mask = 0, pollstate;
 	struct rtdm_fd *rfd;
-	spl_t s;
-
-	cobalt_atomic_enter(s);
 
 	pollstate = __xnpipe_pollstate(sk->minor);
 	if (test_bit(_XDDP_BOUND, &sk->status))
@@ -1109,8 +1106,6 @@ static unsigned int xddp_pollstate(struct rtdm_fd *fd)
 		}
 	} else
 		mask |= POLLOUT;
-
-	cobalt_atomic_leave(s);
 
 	return mask;
 }

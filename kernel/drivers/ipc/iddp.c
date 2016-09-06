@@ -935,15 +935,12 @@ static void iddp_exit(void)
 	xnmap_delete(portmap);
 }
 
-static unsigned int iddp_pollstate(struct rtdm_fd *fd)
+static unsigned int iddp_pollstate(struct rtdm_fd *fd) /* atomic */
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct iddp_socket *sk = priv->state;
 	unsigned int mask = 0;
 	struct rtdm_fd *rfd;
-	spl_t s;
-
-	cobalt_atomic_enter(s);
 
 	if (test_bit(_IDDP_BOUND, &sk->status) && !list_empty(&sk->inq))
 		mask |= POLLIN;
@@ -965,8 +962,6 @@ static unsigned int iddp_pollstate(struct rtdm_fd *fd)
 			mask |= POLLOUT;
 	} else
 		mask |= POLLOUT;
-
-	cobalt_atomic_leave(s);
 
 	return mask;
 }

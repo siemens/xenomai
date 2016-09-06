@@ -481,28 +481,28 @@ static int rtipc_select(struct rtdm_fd *fd, struct xnselector *selector,
 	spl_t s;
 	int ret;
 	
-	pollstate = priv->proto->proto_ops.pollstate(fd);
-
-	switch (type) {
-	case XNSELECT_READ:
-		mask = pollstate & POLLIN;
-		block = &priv->recv_block;
-		break;
-	case XNSELECT_WRITE:
-		mask = pollstate & POLLOUT;
-		block = &priv->send_block;
-		break;
-	default:
+	if (type != XNSELECT_READ && type != XNSELECT_WRITE)
 		return -EINVAL;
-	}
 
 	binding = xnmalloc(sizeof(*binding));
 	if (binding == NULL)
 		return -ENOMEM;
 
-	xnlock_get_irqsave(&nklock, s);
+	cobalt_atomic_enter(s);
+
+	pollstate = priv->proto->proto_ops.pollstate(fd);
+
+	if (type == XNSELECT_READ) {
+		mask = pollstate & POLLIN;
+		block = &priv->recv_block;
+	} else {
+		mask = pollstate & POLLOUT;
+		block = &priv->send_block;
+	}
+
 	ret = xnselect_bind(block, binding, selector, type, index, mask);
-	xnlock_put_irqrestore(&nklock, s);
+
+	cobalt_atomic_leave(s);
 
 	if (ret)
 		xnfree(binding);

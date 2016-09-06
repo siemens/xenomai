@@ -1043,15 +1043,12 @@ static int bufp_ioctl(struct rtdm_fd *fd,
 	return ret;
 }
 
-static unsigned int bufp_pollstate(struct rtdm_fd *fd)
+static unsigned int bufp_pollstate(struct rtdm_fd *fd) /* atomic */
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
 	struct bufp_socket *sk = priv->state, *rsk;
 	unsigned int mask = 0;
 	struct rtdm_fd *rfd;
-	spl_t s;
-
-	cobalt_atomic_enter(s);
 
 	if (test_bit(_BUFP_BOUND, &sk->status) && sk->fillsz > 0)
 		mask |= POLLIN;
@@ -1071,8 +1068,6 @@ static unsigned int bufp_pollstate(struct rtdm_fd *fd)
 		}
 	} else
 		mask |= POLLOUT;
-
-	cobalt_atomic_leave(s);
 
 	return mask;
 }
