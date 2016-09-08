@@ -54,7 +54,6 @@ static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
 static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
 static inline void xnarch_enter_root(struct xnthread *root) { }
 static inline void xnarch_leave_root(struct xnthread *root) { }
-static inline void xnarch_save_fpu(struct xnthread *thread) { }
 static inline void
 xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread)
 { 
