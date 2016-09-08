@@ -289,8 +289,6 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 		/*
 		 * The faulting task is a shadow using the FPU for the first
 		 * time, initialize the FPU context and tell linux about it.
-		 * The fpu usage bit is necessary for xnarch_save_fpu() to
-		 * save the FPU state at next switch.
 		 */
 		__asm__ __volatile__("clts; fninit");
 
@@ -344,21 +342,6 @@ void xnarch_leave_root(struct xnthread *root)
 	__thread_set_has_fpu(p);
 	set_stopped_child_used_math(p);
 	kernel_fpu_enable();
-}
-
-void xnarch_save_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	struct task_struct *p = tcb->core.host_task;
-
-	if (__thread_has_fpu(p) == 0)
-		/* Saved by last __switch_to */
-		return;
-	
-	clts();
-
-	__do_save_i387(x86_fpustate_ptr(&p->thread));
-	__thread_clear_has_fpu(p);
 }
 
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)

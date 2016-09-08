@@ -59,8 +59,6 @@ static inline int xnarch_shadow_p(struct xnarchtcb *tcb, struct task_struct *tas
 				 ((d)->exception == 1 || (d)->exception == 3))
 #define xnarch_fault_notify(d)	(!xnarch_fault_bp_p(d))
 
-void xnarch_save_fpu(struct xnthread *thread);
-
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to);
 
 int xnarch_handle_fpu_fault(struct xnthread *from, 
