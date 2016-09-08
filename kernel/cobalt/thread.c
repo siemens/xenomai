@@ -435,19 +435,6 @@ static inline void giveup_fpu(struct xnsched *sched,
 		sched->fpuholder = NULL;
 }
 
-static inline void release_fpu(struct xnthread *thread)
-{
-	/*
-	 * Force the FPU save, and nullify the sched->fpuholder
-	 * pointer, to avoid leaving fpuholder pointing on the backup
-	 * area of the migrated thread.
-	 */
-	if (xnthread_test_state(thread, XNFPU)) {
-		xnarch_save_fpu(thread);
-		thread->sched->fpuholder = NULL;
-	}
-}
-
 void xnthread_switch_fpu(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
@@ -463,10 +450,6 @@ void xnthread_switch_fpu(struct xnsched *sched)
 
 static inline void giveup_fpu(struct xnsched *sched,
 				      struct xnthread *thread)
-{
-}
-
-static inline void release_fpu(struct xnthread *thread)
 {
 }
 
