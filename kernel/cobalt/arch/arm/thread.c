@@ -211,13 +211,6 @@ void xnarch_leave_root(struct xnthread *root)
 	rootcb->fpup = get_fpu_owner();
 }
 
-void xnarch_save_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = &thread->tcb;
-	if (tcb->fpup)
-		__asm_vfp_save(tcb->fpup, do_enable_vfp());
-}
-
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 {
 	union vfp_state *const from_fpup = from ? from->tcb.fpup : NULL;
