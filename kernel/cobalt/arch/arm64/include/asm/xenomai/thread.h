@@ -75,8 +75,6 @@ static inline int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 
 void xnarch_leave_root(struct xnthread *root);
 
-void xnarch_save_fpu(struct xnthread *thread);
-
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread);
 
 static inline int
@@ -102,8 +100,6 @@ static inline int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 }
 
 static inline void xnarch_leave_root(struct xnthread *root) { }
-
-static inline void xnarch_save_fpu(struct xnthread *thread) { }
 
 static inline void xnarch_switch_fpu(struct xnthread *f, struct xnthread *t) { }
 
