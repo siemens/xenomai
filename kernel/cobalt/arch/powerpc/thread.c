@@ -92,7 +92,7 @@ static void xnarch_enable_fpu(struct xnthread *thread)
 		__asm_enable_fpu();
 }
 
-void xnarch_save_fpu(struct xnthread *thread)
+static void do_save_fpu(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 
@@ -145,7 +145,7 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 	}
 	
 	if (from)
-		xnarch_save_fpu(from);
+		do_save_fpu(from);
 	
 	xnarch_restore_fpu(to);
 }
@@ -154,7 +154,7 @@ void xnarch_leave_root(struct xnthread *root)
 {
 	struct xnarchtcb *rootcb = xnthread_archtcb(root);
 	rootcb->core.user_fpu_owner = get_fpu_owner(rootcb->core.host_task);
-	/* So that xnarch_save_fpu() will operate on the right FPU area. */
+	/* So that do_save_fpu() operates on the right FPU area. */
 	rootcb->fpup = rootcb->core.user_fpu_owner ?
 		&rootcb->core.user_fpu_owner->thread : NULL;
 }
