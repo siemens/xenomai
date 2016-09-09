@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -207,7 +207,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga2038cbe2350a8e2558330a3f45953865"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unbind from a task.  <a href="#ga2038cbe2350a8e2558330a3f45953865">More...</a><br /></td></tr>
 <tr class="separator:ga2038cbe2350a8e2558330a3f45953865"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga03387550693c21d0223f739570ccd992"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create</a> (RT_TASK *task, const char *name, int stksize, int prio, int mode)</td></tr>
-<tr class="memdesc:ga03387550693c21d0223f739570ccd992"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a real-time task.  <a href="#ga03387550693c21d0223f739570ccd992">More...</a><br /></td></tr>
+<tr class="memdesc:ga03387550693c21d0223f739570ccd992"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a task with Alchemy personality.  <a href="#ga03387550693c21d0223f739570ccd992">More...</a><br /></td></tr>
 <tr class="separator:ga03387550693c21d0223f739570ccd992"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gababee94264156693cd4f5b9b70d3c5a1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__alchemy__task.html#gababee94264156693cd4f5b9b70d3c5a1">rt_task_set_periodic</a> (RT_TASK *task, RTIME idate, RTIME period)</td></tr>
 <tr class="memdesc:gababee94264156693cd4f5b9b70d3c5a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a real-time task periodic.  <a href="#gababee94264156693cd4f5b9b70d3c5a1">More...</a><br /></td></tr>
@@ -302,7 +302,7 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">task</td><td>The address of a task descriptor filled in by the operation. Contents of this memory is undefined upon failure.</td></tr>
-    <tr><td class="paramname">name</td><td>A valid NULL-terminated name which identifies the task to bind to. This string should match the object name argument passed to <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>, or <a class="el" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749" title="Turn caller into a real-time task. ">rt_task_shadow()</a>.</td></tr>
+    <tr><td class="paramname">name</td><td>A valid NULL-terminated name which identifies the task to bind to. This string should match the object name argument passed to <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>, or <a class="el" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749" title="Turn caller into a real-time task. ">rt_task_shadow()</a>.</td></tr>
     <tr><td class="paramname">timeout</td><td>The number of clock ticks to wait for the registration to occur (see note). Passing TM_INFINITE causes the caller to block indefinitely until the object is registered. Passing TM_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry.</td></tr>
   </table>
   </dd>
@@ -361,8 +361,8 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create a real-time task. </p>
-<p>This service creates a task with access to the full set of Xenomai real-time services. If <em>prio</em> is non-zero, the new task belongs to Xenomai's real-time FIFO scheduling class, aka SCHED_FIFO. If <em>prio</em> is zero, the task belongs to the regular SCHED_OTHER class.</p>
+<p>Create a task with Alchemy personality. </p>
+<p>This service creates a task with access to the full set of Alchemy services. If <em>prio</em> is non-zero, the new task belongs to Xenomai's real-time FIFO scheduling class, aka SCHED_FIFO. If <em>prio</em> is zero, the task belongs to the regular SCHED_OTHER class.</p>
 <p>Creating tasks with zero priority is useful for running non real-time processes which may invoke blocking real-time services, such as pending on a semaphore, reading from a message queue or a buffer, and so on.</p>
 <p>Once created, the task is left dormant until it is actually started by <a class="el" href="group__alchemy__task.html#ga3ee3863a29497e2181d49d5b3ecfd855" title="Start a real-time task. ">rt_task_start()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -386,10 +386,10 @@ Functions</h2></td></tr>
 <li>-ENOMEM is returned if the system fails to get memory from the main heap in order to create the task.</li>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered task.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section user"><dt>Side effects</dt><dd><ul>
 <li>When running over the Cobalt core:<ul>
-<li>calling <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a> causes SCHED_FIFO tasks to switch to secondary mode.</li>
+<li>calling <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a> causes SCHED_FIFO tasks to switch to secondary mode.</li>
 <li>members of Xenomai's SCHED_FIFO class running in the primary domain have utmost priority over all Linux activities in the system, including Linux interrupt handlers.</li>
 </ul>
 </li>
@@ -420,7 +420,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Delete a real-time task. </p>
-<p>This call terminates a task previously created by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>.</p>
+<p>This call terminates a task previously created by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>.</p>
 <p>Tasks created with the T_JOINABLE flag shall be joined by a subsequent call to <a class="el" href="group__alchemy__task.html#ga8c77d57638578a126812e29429f61fe7" title="Wait on the termination of a real-time task. ">rt_task_join()</a> once successfully deleted, to reclaim all resources.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -433,7 +433,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>task</em> is not a valid task descriptor.</li>
 <li>-EPERM is returned if <em>task</em> is NULL and this service was called from an invalid context. In addition, this error is always raised when this service is called from asynchronous context, such as a timer/alarm handler.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL. </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a4">cross-link.c</a>.</dd>
 </dl>
@@ -477,7 +477,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>task</em> is not a valid task descriptor, or if <em>prio</em> is invalid.</li>
 <li>-EPERM is returned if <em>task</em> is NULL and this service was called from an invalid context.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL. </dd></dl>
 
 <p>References <a class="el" href="structRT__TASK__INFO.html#a3e5d47277ecea23aa3a5730e0b6b2d13">RT_TASK_INFO::name</a>, <a class="el" href="structRT__TASK__INFO.html#a70c731ca5877ff4a6235fa81caa77798">RT_TASK_INFO::pid</a>, <a class="el" href="structRT__TASK__INFO.html#a632e09c1d8dabc29c020c828abf62ac6">RT_TASK_INFO::prio</a>, and <a class="el" href="structRT__TASK__INFO.html#ae327f3dca3f2ae89c8aa5bd0033ed4b0">RT_TASK_INFO::stat</a>.</p>
@@ -500,7 +500,7 @@ Functions</h2></td></tr>
 
 <p>Wait on the termination of a real-time task. </p>
 <p>This service blocks the caller in non-real-time context until <em>task</em> has terminated. All resources are released after successful completion of this service.</p>
-<p>The specified task must have been created by the same process that wants to join it, and the T_JOINABLE mode flag must have been set on creation to <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>.</p>
+<p>The specified task must have been created by the same process that wants to join it, and the T_JOINABLE mode flag must have been set on creation to <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>.</p>
 <p>Tasks created with the T_JOINABLE flag shall be joined by a subsequent call to <a class="el" href="group__alchemy__task.html#ga8c77d57638578a126812e29429f61fe7" title="Wait on the termination of a real-time task. ">rt_task_join()</a> once successfully deleted, to reclaim all resources.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -515,7 +515,7 @@ Functions</h2></td></tr>
 <li>-EDEADLK is returned if <em>task</em> refers to the caller.</li>
 <li>-ESRCH is returned if <em>task</em> no longer exists or refers to task created by a different process.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>After successful completion of this service, it is neither required nor valid to additionally invoke <a class="el" href="group__alchemy__task.html#gab6e0d411830710e8cc82d77b9df19510" title="Delete a real-time task. ">rt_task_delete()</a> on the same task. </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__thread.html#ga28a15bba47cab57cbc9f5dac9af99c8b">pthread_join()</a>.</p>
@@ -1059,7 +1059,7 @@ Functions</h2></td></tr>
 <li>-EINVAL is returned if <em>task</em> is NULL but the caller is not a Xenomai task, or if <em>task</em> is non-NULL but not a valid task descriptor.</li>
 <li>-EINVAL is returned if <em>cpus</em> contains no processors that are currently physically on the system and permitted to the process according to any restrictions that may be imposed by the "cpuset" mechanism described in cpuset(7).</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL. </dd></dl>
 
 </div>
@@ -1173,7 +1173,7 @@ Forcing the task mode using the T_CONFORMING bit from user code is almost always
 <li>-EINVAL is returned if <em>task</em> is NULL but the caller is not a Xenomai task, or if <em>task</em> is non-NULL but not a valid task descriptor.</li>
 <li>-ETIMEDOUT is returned if <em>idate</em> is different from TM_INFINITE and represents a date in the past.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd>
 <dd>
 Over Cobalt, -EINVAL is returned if <em>period</em> is different from TM_INFINITE but shorter than the user scheduling latency value for the target system, as displayed by /proc/xenomai/latency.</dd>
@@ -1225,7 +1225,7 @@ The <em>idate</em> and <em>period</em> values are interpreted as a multiple of t
 <li>-EINVAL is returned if <em>task</em> is not a valid task descriptor, or if <em>prio</em> is invalid.</li>
 <li>-EPERM is returned if <em>task</em> is NULL and this service was called from an invalid context.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd>
 <dd>
 Assigning the same priority to a running or ready task moves it to the end of its priority group, thus causing a manual round-robin. </dd></dl>
@@ -1269,10 +1269,9 @@ Assigning the same priority to a running or ready task moves it to the end of it
 </div><div class="memdoc">
 
 <p>Turn caller into a real-time task. </p>
-<p>Extends the calling Linux task with Xenomai capabilities, with access to the full set of Xenomai real-time services. This service is typically used for turning the main() thread of an application process into a Xenomai-enabled task.</p>
+<p>Set the calling thread personality to the Alchemy API, enabling the full set of Alchemy services. Upon success, the caller is no more a regular POSIX thread, but a Xenomai-extended thread.</p>
 <p>If <em>prio</em> is non-zero, the new task moves to Xenomai's real-time FIFO scheduling class, aka SCHED_FIFO. If <em>prio</em> is zero, the task moves to the regular SCHED_OTHER class.</p>
 <p>Running Xenomai tasks with zero priority is useful for running non real-time processes which may invoke blocking real-time services, such as pending on a semaphore, reading from a message queue or a buffer, and so on.</p>
-<p>Once shadowed with the Xenomai extension, the calling task returns and resumes execution normally from the call site.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">task</td><td>If non-NULL, the address of a task descriptor which can be later used to identify uniquely the task, upon success of this call. If NULL, no descriptor is returned.</td></tr>
@@ -1291,11 +1290,10 @@ Assigning the same priority to a running or ready task moves it to the end of it
 <li>-EINVAL is returned if <em>prio</em> is invalid.</li>
 <li>-ENOMEM is returned if the system fails to get memory from the main heap in order to create the task extension.</li>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered task.</li>
-<li>-EBUSY is returned if the caller is already mapped to a Xenomai task context.</li>
-<li>-EPERM is returned if this service was called from an invalid context.</li>
+<li>-EBUSY is returned if the caller is not a regular POSIX thread.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">pthread-only, switch-secondary</a></dd></dl>
-<dl class="section user"><dt>Side effects</dt><dd>Over the Cobalt core, the caller always returns from this service in primary mode.</dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">pthread-only, switch-secondary, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Side effects</dt><dd>Over Cobalt, if the caller is a plain POSIX thread, it is turned into a Xenomai <em>shadow</em> thread, with full access to all Cobalt services. The caller always returns from this service in primary mode.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Tasks can be referred to from multiple processes which all belong to the same Xenomai session. </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a26">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a17">rtcansend.c</a>.</dd>
 </dl>
@@ -1406,7 +1404,7 @@ The <em>date</em> value is interpreted as a multiple of the Alchemy clock resolu
 <li>-EINVAL is returned if <em>task</em> is not a valid task descriptor, or if <em>prio</em> is invalid.</li>
 <li>-EPERM is returned if <em>task</em> is NULL and this service was called from an invalid context.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd>
 <dd>
 The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
@@ -1468,22 +1466,22 @@ The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock res
 </div><div class="memdoc">
 
 <p>Create and start a real-time task. </p>
-<p>This service spawns a task by combining calls to <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a> and <a class="el" href="group__alchemy__task.html#ga3ee3863a29497e2181d49d5b3ecfd855" title="Start a real-time task. ">rt_task_start()</a> for the new task.</p>
+<p>This service spawns a task by combining calls to <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a> and <a class="el" href="group__alchemy__task.html#ga3ee3863a29497e2181d49d5b3ecfd855" title="Start a real-time task. ">rt_task_start()</a> for the new task.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">task</td><td>The address of a task descriptor which can be later used to identify uniquely the created object, upon success of this call.</td></tr>
     <tr><td class="paramname">name</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, a copy of this string is used for indexing the created task into the object registry.</td></tr>
     <tr><td class="paramname">stksize</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a system-dependent default size will be substituted.</td></tr>
     <tr><td class="paramname">prio</td><td>The base priority of the new task. This value must be in the [0 .. 99] range, where 0 is the lowest effective priority.</td></tr>
-    <tr><td class="paramname">mode</td><td>The task creation mode. See <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>.</td></tr>
+    <tr><td class="paramname">mode</td><td>The task creation mode. See <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>.</td></tr>
     <tr><td class="paramname">entry</td><td>The address of the task entry point.</td></tr>
     <tr><td class="paramname">arg</td><td>A user-defined opaque argument <em>entry</em> will receive.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>See <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>.</dd></dl>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
-<dl class="section user"><dt>Side effects</dt><dd>see <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>See <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>.</dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section user"><dt>Side effects</dt><dd>see <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>. </dd></dl>
 
 <p>References <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>, and <a class="el" href="group__alchemy__task.html#ga3ee3863a29497e2181d49d5b3ecfd855">rt_task_start()</a>.</p>
 
@@ -1520,7 +1518,7 @@ The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock res
 </div><div class="memdoc">
 
 <p>Start a real-time task. </p>
-<p>This call starts execution of a task previously created by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a real-time task. ">rt_task_create()</a>. This service causes the started task to leave the initial dormant state.</p>
+<p>This call starts execution of a task previously created by <a class="el" href="group__alchemy__task.html#ga03387550693c21d0223f739570ccd992" title="Create a task with Alchemy personality. ">rt_task_create()</a>. This service causes the started task to leave the initial dormant state.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">task</td><td>The task descriptor.</td></tr>
@@ -1533,7 +1531,7 @@ The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock res
 <ul>
 <li>-EINVAL is returned if <em>task</em> is not a valid task descriptor.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Starting an already started task leads to a nop, returning a success status. </dd></dl>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a13">cross-link.c</a>.</dd>
 </dl>
@@ -1571,7 +1569,7 @@ The <em>quantum</em> value is interpreted as a multiple of the Alchemy clock res
 <li>-EINTR is returned if a Linux signal has been received by the caller if suspended.</li>
 <li>-EPERM is returned if <em>task</em> is NULL and this service was called from an invalid context.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-primary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-primary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The caller must be an Alchemy task if <em>task</em> is NULL.</dd>
 <dd>
 Blocked and suspended task states are cumulative. Therefore, suspending a task currently waiting on a synchronization object (e.g. semaphore, queue) holds its execution until it is resumed, despite the awaited resource may have been acquired, or a timeout has elapsed in the meantime. </dd></dl>

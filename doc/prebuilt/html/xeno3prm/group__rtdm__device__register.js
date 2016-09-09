@@ -28,6 +28,7 @@ var group__rtdm__device__register =
     [ "rtdm_close_handler", "group__rtdm__device__register.html#ga4c1849624a5c3358a3b9cbab3f6468a7", null ],
     [ "rtdm_dev_register", "group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2", null ],
     [ "rtdm_dev_unregister", "group__rtdm__device__register.html#gafbe43e78f3b5eb9c164c8b7fa3cc1aa8", null ],
+    [ "rtdm_drv_set_sysclass", "group__rtdm__device__register.html#gafc70c44c844cd4f18c988949df0db160", null ],
     [ "rtdm_get_unmapped_area_handler", "group__rtdm__device__register.html#ga7253e128ed93d99b824a36453f402476", null ],
     [ "rtdm_ioctl_handler", "group__rtdm__device__register.html#gab188dd6270100e4252ecefb9553ae659", null ],
     [ "rtdm_mmap_handler", "group__rtdm__device__register.html#ga4d376f88ed220a34961d8390edb20c0e", null ],

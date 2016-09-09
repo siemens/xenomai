@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -415,11 +415,13 @@ $(document).ready(function(){initNavTree('include_2cobalt_2kernel_2clock_8h_sour
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnclock_cleanup_proc(<span class="keywordtype">void</span>) { }</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="keywordtype">int</span> xnclock_init(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> freq);</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="keywordtype">void</span> xnclock_update_freq(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> freq);</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="keywordtype">void</span> xnclock_cleanup(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="keywordtype">int</span> xnclock_init(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> freq);</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_CLOCK_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="keywordtype">void</span> xnclock_cleanup(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_KERNEL_CLOCK_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="structxnvfile__rev__tag_html"><div class="ttname"><a href="structxnvfile__rev__tag.html">xnvfile_rev_tag</a></div><div class="ttdoc">Snapshot revision tag. </div><div class="ttdef"><b>Definition:</b> vfile.h:482</div></div>
 <div class="ttc" id="group__cobalt__core__clock_html_ga5713e6bcc079f011fcd02a7e801bec08"><div class="ttname"><a href="group__cobalt__core__clock.html#ga5713e6bcc079f011fcd02a7e801bec08">xnclock_deregister</a></div><div class="ttdeci">void xnclock_deregister(struct xnclock *clock)</div><div class="ttdoc">Deregister a Xenomai clock. </div><div class="ttdef"><b>Definition:</b> clock.c:683</div></div>
 <div class="ttc" id="structxnsched_html"><div class="ttname"><a href="structxnsched.html">xnsched</a></div><div class="ttdoc">Scheduling information structure. </div><div class="ttdef"><b>Definition:</b> sched.h:57</div></div>

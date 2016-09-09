@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -145,6 +145,15 @@ Functions</h2></td></tr>
 <tr class="memitem:gaa288d5cf336a98cace8b47eaacb4c629"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#gaa288d5cf336a98cace8b47eaacb4c629">rtdm_task_busy_wait</a> (bool condition, <a class="el" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> spin_ns, <a class="el" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> sleep_ns)</td></tr>
 <tr class="memdesc:gaa288d5cf336a98cace8b47eaacb4c629"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safe busy waiting.  <a href="#gaa288d5cf336a98cace8b47eaacb4c629">More...</a><br /></td></tr>
 <tr class="separator:gaa288d5cf336a98cace8b47eaacb4c629"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga87dd3ab9abed5417dfcc00f463fd86ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#ga87dd3ab9abed5417dfcc00f463fd86ec">rtdm_wait_prepare</a> (struct rtdm_wait_context *wc)</td></tr>
+<tr class="memdesc:ga87dd3ab9abed5417dfcc00f463fd86ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register wait context.  <a href="#ga87dd3ab9abed5417dfcc00f463fd86ec">More...</a><br /></td></tr>
+<tr class="separator:ga87dd3ab9abed5417dfcc00f463fd86ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga95c0a155cc11c7ef221262c8f9823005"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#ga95c0a155cc11c7ef221262c8f9823005">rtdm_wait_complete</a> (struct rtdm_wait_context *wc)</td></tr>
+<tr class="memdesc:ga95c0a155cc11c7ef221262c8f9823005"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark completion for a wait context.  <a href="#ga95c0a155cc11c7ef221262c8f9823005">More...</a><br /></td></tr>
+<tr class="separator:ga95c0a155cc11c7ef221262c8f9823005"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadc457f5ed51446d25d06f11e9d3b8c47"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#gadc457f5ed51446d25d06f11e9d3b8c47">rtdm_wait_is_completed</a> (struct rtdm_wait_context *wc)</td></tr>
+<tr class="memdesc:gadc457f5ed51446d25d06f11e9d3b8c47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test completion of a wait context.  <a href="#gadc457f5ed51446d25d06f11e9d3b8c47">More...</a><br /></td></tr>
+<tr class="separator:gadc457f5ed51446d25d06f11e9d3b8c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3a3e4c00605861403c0ea4ec87b31a7b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__task.html#ga3a3e4c00605861403c0ea4ec87b31a7b">rtdm_task_join</a> (rtdm_task_t *task)</td></tr>
 <tr class="memdesc:ga3a3e4c00605861403c0ea4ec87b31a7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="#ga3a3e4c00605861403c0ea4ec87b31a7b">More...</a><br /></td></tr>
 <tr class="separator:ga3a3e4c00605861403c0ea4ec87b31a7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -670,6 +679,113 @@ This service does not trigger the termination of the targeted task. The user has
 <li>-ETIMEDOUT is returned if a timer overrun occurred, which indicates that a previous release point has been missed by the calling task.</li>
 </ul>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">primary-only, might-switch</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga95c0a155cc11c7ef221262c8f9823005"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rtdm_wait_complete </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_wait_context *&#160;</td>
+          <td class="paramname"><em>wc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Mark completion for a wait context. </p>
+<p>rtdm_complete_wait() marks a wait context as completed, so that <a class="el" href="group__rtdm__task.html#gadc457f5ed51446d25d06f11e9d3b8c47" title="Test completion of a wait context. ">rtdm_wait_is_completed()</a> returns true for such context.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wc</td><td>Wait context to complete. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="gadc457f5ed51446d25d06f11e9d3b8c47"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_wait_is_completed </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_wait_context *&#160;</td>
+          <td class="paramname"><em>wc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Test completion of a wait context. </p>
+<p><a class="el" href="group__rtdm__task.html#gadc457f5ed51446d25d06f11e9d3b8c47" title="Test completion of a wait context. ">rtdm_wait_is_completed()</a> returns true if rtdm_complete_wait() was called for <em>wc</em>. The completion mark is reset each time <a class="el" href="group__rtdm__task.html#ga87dd3ab9abed5417dfcc00f463fd86ec" title="Register wait context. ">rtdm_wait_prepare()</a> is called for a wait context.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wc</td><td>Wait context to check for completion.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>non-zero/true if <a class="el" href="group__rtdm__task.html#ga95c0a155cc11c7ef221262c8f9823005" title="Mark completion for a wait context. ">rtdm_wait_complete()</a> was called for <em>wc</em>, zero otherwise. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga87dd3ab9abed5417dfcc00f463fd86ec"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rtdm_wait_prepare </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_wait_context *&#160;</td>
+          <td class="paramname"><em>wc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Register wait context. </p>
+<p><a class="el" href="group__rtdm__task.html#ga87dd3ab9abed5417dfcc00f463fd86ec" title="Register wait context. ">rtdm_wait_prepare()</a> registers a wait context structure for the caller, which can be later retrieved by a call to rtdm_wait_get_context(). This call is normally issued before the current task blocks on a wait object, waiting for some (producer) code to wake it up. Arbitrary data can be exchanged between both sites via the wait context structure, which is allocated by the waiter (consumer) side.</p>
+<p><em>wc</em> is the address of an anchor object which is commonly embedded into a larger structure with arbitrary contents, which needs to be shared between the consumer (waiter) and the producer for implementing the wait code.</p>
+<p>A typical implementation pattern for the wait side is:</p>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;struct rtdm_waitqueue wq;</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;struct some_wait_context {</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;   int input_value;</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;   int output_value;</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;   struct rtdm_wait_context wc;</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;} wait_context;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;wait_context.input_value = 42;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;rtdm_wait_prepare(&amp;wait_context);</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;ret = rtdm_wait_condition(&amp;wq, rtdm_wait_is_completed(&amp;wait_context));</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;if (ret)</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    goto wait_failed;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;handle_event(wait_context.output_value);</div>
+</div><!-- fragment --><p>On the producer side, the implementation would look like:</p>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;struct rtdm_waitqueue wq;</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;struct some_wait_context {</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;   int input_value;</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;   int output_value;</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;   struct rtdm_wait_context wc;</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;} *wait_context_ptr;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;struct rtdm_wait_context *wc;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;rtdm_task_t *task;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;rtdm_for_each_waiter(task, &amp;wq) {</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;   wc = rtdm_wait_get_context(task);</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;   wait_context_ptr = container_of(wc, struct some_wait_context, wc);</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;   wait_context_ptr-&gt;output_value = 12;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;}</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;rtdm_waitqueue_broadcast(&amp;wq);</div>
+</div><!-- fragment --><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wc</td><td>Wait context to register. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

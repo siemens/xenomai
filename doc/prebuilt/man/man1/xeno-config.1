@@ -4,10 +4,10 @@
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
 .\"      Date: 2014/08/03
 .\"    Manual: Xenomai Manual
-.\"    Source: Xenomai 3.0.2
+.\"    Source: Xenomai 3.0.3
 .\"  Language: English
 .\"
-.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 3\&.0\&.2" "Xenomai Manual"
+.TH "XENO\-CONFIG" "1" "2014/08/03" "Xenomai 3\&.0\&.3" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,7 +43,7 @@ xeno-config \- Retrieve Xenomai build flags and configuration
 .sp
 \fBxeno\-config\fR \fB\-\-version\fR
 .sp
-\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
+\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-auto\-init\-solib\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
 .SH "DESCRIPTION"
 .sp
 \fBxeno\-config\fR is a shell script which is aimed at retrieving the Xenomai build configuration data, such as the compiler and linker flags required for building applications\&. For this reason, \fBxeno\-config\fR is typically used in Makefiles\&.
@@ -160,7 +160,14 @@ routine,
 any real\-time service is invoked\&.
 .RE
 .sp
-\fBxeno\-config\fR enables the Copperplate auto\-init feature by default\&.
+This flag makes sense when passed along with \-\-ldflags only\&. \fBxeno\-config\fR enables the Copperplate auto\-init feature by default\&.
+.PP
+\fB\-\-auto\-init\-solib\fR
+.RS 4
+This switch enables the auto\-initialization feature described above for a shared library target instead of a pure executable\&. The main difference resides in a position\-independent (PIC) glue code being used for bootstrapping the initialization\&.
+.RE
+.sp
+The bootstrap code runs when the shared library is attached to a running executable, either because it appears in the static dependencies of this executable, or when loaded dynamically via the dlopen() interface\&.
 .PP
 \fB\-\-core\fR
 .RS 4

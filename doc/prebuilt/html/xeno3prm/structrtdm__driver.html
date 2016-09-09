@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -118,9 +118,8 @@ Data Fields</h2></td></tr>
 <tr class="memitem:a7dc45b4a6a5f920167d10ced91719c0a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__driver.html#a7dc45b4a6a5f920167d10ced91719c0a">device_flags</a></td></tr>
 <tr class="memdesc:a7dc45b4a6a5f920167d10ced91719c0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device flags, see <a class="el" href="group__rtdm__device__register.html#dev_flags">Device Flags</a> for details.  <a href="#a7dc45b4a6a5f920167d10ced91719c0a">More...</a><br /></td></tr>
 <tr class="separator:a7dc45b4a6a5f920167d10ced91719c0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0ccb96768a1cac30f34ccfd4ad9c1a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0ccb96768a1cac30f34ccfd4ad9c1a6"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__driver.html#aa0ccb96768a1cac30f34ccfd4ad9c1a6">context_size</a></td></tr>
-<tr class="memdesc:aa0ccb96768a1cac30f34ccfd4ad9c1a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of driver defined appendix to struct <a class="el" href="structrtdm__dev__context.html" title="Device context. ">rtdm_dev_context</a>. <br /></td></tr>
+<tr class="memitem:aa0ccb96768a1cac30f34ccfd4ad9c1a6"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__driver.html#aa0ccb96768a1cac30f34ccfd4ad9c1a6">context_size</a></td></tr>
+<tr class="memdesc:aa0ccb96768a1cac30f34ccfd4ad9c1a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of the private memory area the core should automatically allocate for each open file descriptor, which is usable for storing the context data associated to each connection.  <a href="#aa0ccb96768a1cac30f34ccfd4ad9c1a6">More...</a><br /></td></tr>
 <tr class="separator:aa0ccb96768a1cac30f34ccfd4ad9c1a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae850e1c068bd25f3eedccd58ee59a708"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae850e1c068bd25f3eedccd58ee59a708"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__driver.html#ae850e1c068bd25f3eedccd58ee59a708">protocol_family</a></td></tr>
@@ -141,6 +140,9 @@ struct <a class="el" href="structrtdm__sm__ops.html">rtdm_sm_ops</a>&#160;</td><
 <tr class="memitem:abe2ba965a22f3ea93a8a0929aed6ac8e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__driver.html#abe2ba965a22f3ea93a8a0929aed6ac8e">device_count</a></td></tr>
 <tr class="memdesc:abe2ba965a22f3ea93a8a0929aed6ac8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count of devices this driver manages.  <a href="#abe2ba965a22f3ea93a8a0929aed6ac8e">More...</a><br /></td></tr>
 <tr class="separator:abe2ba965a22f3ea93a8a0929aed6ac8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bdc1d4cf260d913247ded30f3fde092"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__driver.html#a8bdc1d4cf260d913247ded30f3fde092">base_minor</a></td></tr>
+<tr class="memdesc:a8bdc1d4cf260d913247ded30f3fde092"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base minor for named devices.  <a href="#a8bdc1d4cf260d913247ded30f3fde092">More...</a><br /></td></tr>
+<tr class="separator:a8bdc1d4cf260d913247ded30f3fde092"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3d7c390a36d1b8b230f708c73e077b9"><td class="memItemLeft" ><a class="anchor" id="af3d7c390a36d1b8b230f708c73e077b9"></a>
 struct {</td></tr>
 <tr class="memitem:af3d7c390a36d1b8b230f708c73e077b9"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
@@ -151,6 +153,39 @@ struct {</td></tr>
 <div class="textblock"><p>RTDM driver. </p>
 <p>This descriptor describes a RTDM device driver. The structure holds runtime data, therefore it must reside in writable memory. </p>
 </div><h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a8bdc1d4cf260d913247ded30f3fde092"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_driver::base_minor</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Base minor for named devices. </p>
+
+<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2">rtdm_dev_register()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aa0ccb96768a1cac30f34ccfd4ad9c1a6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t rtdm_driver::context_size</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Size of the private memory area the core should automatically allocate for each open file descriptor, which is usable for storing the context data associated to each connection. </p>
+<p>The allocated memory is zero-initialized. The start of this area can be retrieved by a call to <a class="el" href="driver_8h.html#aa1aec6568a871126146498a32549c609" title="Locate the driver private area associated to a device context structure. ">rtdm_fd_to_private()</a>. </p>
+
+<p>Referenced by <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="abe2ba965a22f3ea93a8a0929aed6ac8e"></a>
 <div class="memitem">
 <div class="memproto">
@@ -198,7 +233,7 @@ struct {</td></tr>
 <p>Class profile information. </p>
 <p>The <a class="el" href="driver_8h.html#a64e99c7bda9b3c45863cea9c11dda761" title="Initializer for class profile information. ">RTDM_PROFILE_INFO()</a> macro <b>must</b> be used for filling up this field. <a class="anchor" id="rtdm_driver_profile"></a></p>
 
-<p>Referenced by <a class="el" href="group__rtdm__udd.html#ga306a8671bd96a1ea578c5f76e646ef67">udd_get_device()</a>, and <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2">rtdm_dev_register()</a>, <a class="el" href="group__rtdm__device__register.html#gafc70c44c844cd4f18c988949df0db160">rtdm_drv_set_sysclass()</a>, <a class="el" href="group__rtdm__udd.html#ga306a8671bd96a1ea578c5f76e646ef67">udd_get_device()</a>, and <a class="el" href="group__rtdm__udd.html#gaa5bee7471396c7b182a5a2a5fb60d230">udd_register_device()</a>.</p>
 
 </div>
 </div>

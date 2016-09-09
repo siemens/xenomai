@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -336,7 +336,7 @@ Functions</h2></td></tr>
 <p>Initializes a new thread. The thread is left dormant until it is actually started by <a class="el" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032" title="Start a newly created thread. ">xnthread_start()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">thread</td><td>The address of a thread descriptor the nucleus will use to store the thread-specific data. This descriptor must always be valid while the thread is active therefore it must be allocated in permanent memory. </td></tr>
+    <tr><td class="paramname">thread</td><td>The address of a thread descriptor Cobalt will use to store the thread-specific data. This descriptor must always be valid while the thread is active therefore it must be allocated in permanent memory. </td></tr>
   </table>
   </dd>
 </dl>
@@ -348,13 +348,13 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <ul>
-<li>name: An ASCII string standing for the symbolic name of the thread. This name is copied to a safe place into the thread descriptor. This name might be used in various situations by the nucleus for issuing human-readable diagnostic messages, so it is usually a good idea to provide a sensible value here. NULL is fine though and means "anonymous".</li>
-<li>flags: A set of creation flags affecting the operation. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the created thread:<ul>
+<li>name: An ASCII string standing for the symbolic name of the thread. This name is copied to a safe place into the thread descriptor. This name might be used in various situations by Cobalt for issuing human-readable diagnostic messages, so it is usually a good idea to provide a sensible value here. NULL is fine though and means "anonymous".</li>
+<li>flags: A set of creation flags affecting the operation. The following flags can be part of this bitmask:<ul>
 <li>XNSUSP creates the thread in a suspended state. In such a case, the thread shall be explicitly resumed using the <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115" title="Resume a thread. ">xnthread_resume()</a> service for its execution to actually begin, additionally to issuing <a class="el" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032" title="Start a newly created thread. ">xnthread_start()</a> for it. This flag can also be specified when invoking <a class="el" href="group__cobalt__core__thread.html#gabedfb90d24b08db04e49b168d290e032" title="Start a newly created thread. ">xnthread_start()</a> as a starting mode.</li>
 </ul>
 </li>
 <li>XNUSER shall be set if <em>thread</em> will be mapped over an existing user-space task. Otherwise, a new kernel host task is created, then paired with the new Xenomai thread.</li>
-<li>XNFPU (enable FPU) tells the nucleus that the new thread may use the floating-point unit. XNFPU is implicitly assumed for user-space threads even if not set in <em>flags</em>.</li>
+<li>XNFPU (enable FPU) tells Cobalt that the new thread may use the floating-point unit. XNFPU is implicitly assumed for user-space threads even if not set in <em>flags</em>.</li>
 <li>affinity: The processor affinity of this thread. Passing CPU_MASK_ALL means "any cpu" from the allowed core affinity mask (cobalt_cpu_affinity). Passing an empty set is invalid.</li>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -449,7 +449,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a shadow thread context over a kernel task. </p>
-<p>This call maps a nucleus thread to the "current" Linux task running in kernel space. The priority and scheduling class of the underlying Linux task are not affected; it is assumed that the caller did set them appropriately before issuing the shadow mapping request.</p>
+<p>This call maps a Cobalt core thread to the "current" Linux task running in kernel space. The priority and scheduling class of the underlying Linux task are not affected; it is assumed that the caller did set them appropriately before issuing the shadow mapping request.</p>
 <p>This call immediately moves the calling kernel thread to the Xenomai domain.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -744,7 +744,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Change the base scheduling parameters of a thread. </p>
-<p>Changes the base scheduling policy and paramaters of a thread. If the thread is currently blocked, waiting in priority-pending mode (XNSYNCH_PRIO) for a synchronization object to be signaled, the nucleus will attempt to reorder the object's wait queue so that it reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag has been set for the pended object.</p>
+<p>Changes the base scheduling policy and paramaters of a thread. If the thread is currently blocked, waiting in priority-pending mode (XNSYNCH_PRIO) for a synchronization object to be signaled, Cobalt will attempt to reorder the object's wait queue so that it reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag has been set for the pended object.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">thread</td><td>The descriptor address of the affected thread. See note.</td></tr>
@@ -843,13 +843,13 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <ul>
-<li>mode: The initial thread mode. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the started thread:<ul>
+<li>mode: The initial thread mode. The following flags can be part of this bitmask:<ul>
 <li>XNLOCK causes the thread to lock the scheduler when it starts. The target thread will have to call the xnsched_unlock() service to unlock the scheduler. A non-preemptible thread may still block, in which case, the lock is reasserted when the thread is scheduled back in.</li>
 <li>XNSUSP makes the thread start in a suspended state. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115" title="Resume a thread. ">xnthread_resume()</a> service for its execution to actually begin.</li>
 </ul>
 </li>
 <li>entry: The address of the thread's body routine. In other words, it is the thread entry point.</li>
-<li>cookie: A user-defined opaque cookie the nucleus will pass to the emerging thread as the sole argument of its entry point.</li>
+<li>cookie: A user-defined opaque cookie Cobalt will pass to the emerging thread as the sole argument of its entry point.</li>
 </ul>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
@@ -860,7 +860,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section user"><dt>Tags</dt><dd><a class="el" href="group__cobalt__core.html">task-unrestricted, might-switch</a> </dd></dl>
 
-<p>References <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>, <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a">xnsched_run()</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, and <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>.</p>
+<p>References <a class="el" href="group__cobalt__core__thread__states.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>, <a class="el" href="group__cobalt__core__sched.html#gab51b1711cd73d890278e3998c817cc3a">xnsched_run()</a>, <a class="el" href="group__cobalt__core__thread__states.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, <a class="el" href="group__cobalt__core__thread.html#ga9321320f5f883f20a4cb411ce585f115">xnthread_resume()</a>, and <a class="el" href="group__cobalt__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06">XNUSER</a>.</p>
 
 <p>Referenced by <a class="el" href="group__rtdm__task.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
 

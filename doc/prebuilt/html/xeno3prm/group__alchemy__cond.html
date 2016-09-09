@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -271,7 +271,7 @@ Functions</h2></td></tr>
 <li>-EEXIST is returned if the <em>name</em> is conflicting with an already registered condition variable.</li>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a></dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-secondary</a></dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Condition variables can be shared by multiple processes which belong to the same Xenomai session.</dd></dl>
 <dl class="section attention"><dt>Attention</dt><dd>If the underlying threading library does not support <a class="el" href="group__cobalt__api__cond.html#ga68d1e544c6bbf3cedeee5455b14c642d" title="Set the clock selection attribute of a condition variable attributes object. ">pthread_condattr_setclock()</a>, timings with Alchemy condition variables will be based on CLOCK_REALTIME, and may therefore be affected by updates to the system date (e.g. NTP). This typically concerns legacy setups based on the linuxthreads library. In the normal case, timings are based on CLOCK_MONOTONIC. </dd></dl>
 
@@ -307,7 +307,7 @@ Functions</h2></td></tr>
 <li>-EPERM is returned if this service was called from an asynchronous context.</li>
 <li>-EBUSY is returned upon an attempt to destroy the object referenced by <em>cond</em> while it is referenced (for example, while being used in a <a class="el" href="group__alchemy__cond.html#ga3aa51073817be2ffb2a880a7393502e8" title="Wait on a condition variable (with relative scalar timeout). ">rt_cond_wait()</a>, <a class="el" href="group__alchemy__cond.html#ga4d4999ec038366ee18ddac6550371388" title="Wait on a condition variable. ">rt_cond_wait_timed()</a> or <a class="el" href="group__alchemy__cond.html#ga25e1741d8238ad7cc4206c7e4bb13d8c" title="Wait on a condition variable (with absolute scalar timeout). ">rt_cond_wait_until()</a> by another task).</li>
 </ul>
-<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">thread-unrestricted, switch-secondary</a> </dd></dl>
+<dl class="section user"><dt>Tags</dt><dd><a class="el" href="api-tags.html">mode-unrestricted, switch-secondary</a> </dd></dl>
 
 <p>References <a class="el" href="group__cobalt__api__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy()</a>.</p>
 

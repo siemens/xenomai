@@ -1,5 +1,6 @@
 var structrtdm__driver =
 [
+    [ "base_minor", "structrtdm__driver.html#a8bdc1d4cf260d913247ded30f3fde092", null ],
     [ "context_size", "structrtdm__driver.html#aa0ccb96768a1cac30f34ccfd4ad9c1a6", null ],
     [ "device_count", "structrtdm__driver.html#abe2ba965a22f3ea93a8a0929aed6ac8e", null ],
     [ "device_flags", "structrtdm__driver.html#a7dc45b4a6a5f920167d10ced91719c0a", null ],

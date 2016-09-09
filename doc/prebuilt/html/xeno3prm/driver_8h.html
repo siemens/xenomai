@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -208,7 +208,7 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:gad80a74742f48ad450107c3782030ca87"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#gad80a74742f48ad450107c3782030ca87">RTDM_MAX_MINOR</a>&#160;&#160;&#160;256</td></tr>
+<tr class="memitem:gad80a74742f48ad450107c3782030ca87"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#gad80a74742f48ad450107c3782030ca87">RTDM_MAX_MINOR</a>&#160;&#160;&#160;1024</td></tr>
 <tr class="memdesc:gad80a74742f48ad450107c3782030ca87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of named devices per driver.  <a href="group__rtdm__device__register.html#gad80a74742f48ad450107c3782030ca87">More...</a><br /></td></tr>
 <tr class="separator:gad80a74742f48ad450107c3782030ca87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga86168837a3f34f33912264b1a50ae6b1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__sync__biglock.html#ga86168837a3f34f33912264b1a50ae6b1">cobalt_atomic_enter</a>(__context)</td></tr>
@@ -258,17 +258,6 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#gadea320d3993937f37edc6fa39a29d379">RTDM_SECURE_DEVICE</a>&#160;&#160;&#160;0x80000000</td></tr>
 <tr class="memdesc:gadea320d3993937f37edc6fa39a29d379"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag indicating a secure variant of RTDM (not supported here) <br /></td></tr>
 <tr class="separator:gadea320d3993937f37edc6fa39a29d379"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">RTDM profile information descriptor</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>RTDM profile information</p>
-<p>This descriptor details the profile information associated to a RTDM class of device managed by a driver.</p>
-<p><a class="anchor" id="rtdm_profile_info"></a></p>
-</div></td></tr>
-<tr class="memitem:a3b2628296231bb3a8ba162f6502dcab8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="driver_8h.html#a3b2628296231bb3a8ba162f6502dcab8">RTDM_CLASS_MAGIC</a>&#160;&#160;&#160;0x8284636c</td></tr>
-<tr class="memdesc:a3b2628296231bb3a8ba162f6502dcab8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializer for class profile information.  <a href="#a3b2628296231bb3a8ba162f6502dcab8">More...</a><br /></td></tr>
-<tr class="separator:a3b2628296231bb3a8ba162f6502dcab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64e99c7bda9b3c45863cea9c11dda761"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="driver_8h.html#a64e99c7bda9b3c45863cea9c11dda761">RTDM_PROFILE_INFO</a>(__name,  __id,  __subid,  __version)</td></tr>
-<tr class="memdesc:a64e99c7bda9b3c45863cea9c11dda761"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializer for class profile information.  <a href="#a64e99c7bda9b3c45863cea9c11dda761">More...</a><br /></td></tr>
-<tr class="separator:a64e99c7bda9b3c45863cea9c11dda761"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">RTDM_IRQTYPE_xxx</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="RTDM_IRQTYPE_xxx"></a>Interrupt registrations flags </p>
 </div></td></tr>
@@ -466,6 +455,22 @@ Functions</h2></td></tr>
 <tr class="memitem:gab0b2db892afe1bd77a80f6b8367eb0c9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__util.html#gab0b2db892afe1bd77a80f6b8367eb0c9">rtdm_ratelimit</a> (struct rtdm_ratelimit_state *rs, const char *func)</td></tr>
 <tr class="memdesc:gab0b2db892afe1bd77a80f6b8367eb0c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enforces a rate limit.  <a href="group__rtdm__util.html#gab0b2db892afe1bd77a80f6b8367eb0c9">More...</a><br /></td></tr>
 <tr class="separator:gab0b2db892afe1bd77a80f6b8367eb0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
+RTDM profile information descriptor</h2></td></tr>
+<tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrp57208d51b346f7cf2be416488ee12167"></a>RTDM profile information</p>
+<p>This descriptor details the profile information associated to a RTDM class of device managed by a driver.</p>
+<p><a class="anchor" id="rtdm_profile_info"></a></p>
+</td></tr>
+<tr class="memitem:a3b2628296231bb3a8ba162f6502dcab8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="driver_8h.html#a3b2628296231bb3a8ba162f6502dcab8">RTDM_CLASS_MAGIC</a>&#160;&#160;&#160;0x8284636c</td></tr>
+<tr class="memdesc:a3b2628296231bb3a8ba162f6502dcab8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializer for class profile information.  <a href="#a3b2628296231bb3a8ba162f6502dcab8">More...</a><br /></td></tr>
+<tr class="separator:a3b2628296231bb3a8ba162f6502dcab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64e99c7bda9b3c45863cea9c11dda761"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="driver_8h.html#a64e99c7bda9b3c45863cea9c11dda761">RTDM_PROFILE_INFO</a>(__name,  __id,  __subid,  __version)</td></tr>
+<tr class="memdesc:a64e99c7bda9b3c45863cea9c11dda761"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializer for class profile information.  <a href="#a64e99c7bda9b3c45863cea9c11dda761">More...</a><br /></td></tr>
+<tr class="separator:a64e99c7bda9b3c45863cea9c11dda761"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafc70c44c844cd4f18c988949df0db160"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__device__register.html#gafc70c44c844cd4f18c988949df0db160">rtdm_drv_set_sysclass</a> (struct <a class="el" href="structrtdm__driver.html">rtdm_driver</a> *drv, struct class *cls)</td></tr>
+<tr class="memdesc:gafc70c44c844cd4f18c988949df0db160"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the kernel device class of a RTDM driver.  <a href="group__rtdm__device__register.html#gafc70c44c844cd4f18c988949df0db160">More...</a><br /></td></tr>
+<tr class="separator:gafc70c44c844cd4f18c988949df0db160"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Real-Time Driver Model for Xenomai, driver API header. </p>
@@ -541,8 +546,9 @@ Functions</h2></td></tr>
 <div class="line">        .version = (__version),                                 \</div>
 <div class="line">        .magic = ~<a class="code" href="driver_8h.html#a3b2628296231bb3a8ba162f6502dcab8">RTDM_CLASS_MAGIC</a>,                             \</div>
 <div class="line">        .owner = THIS_MODULE,                                   \</div>
+<div class="line">        .kdev_class = NULL,                                     \</div>
 <div class="line">}</div>
-<div class="ttc" id="driver_8h_html_a3b2628296231bb3a8ba162f6502dcab8"><div class="ttname"><a href="driver_8h.html#a3b2628296231bb3a8ba162f6502dcab8">RTDM_CLASS_MAGIC</a></div><div class="ttdeci">#define RTDM_CLASS_MAGIC</div><div class="ttdoc">Initializer for class profile information. </div><div class="ttdef"><b>Definition:</b> driver.h:289</div></div>
+<div class="ttc" id="driver_8h_html_a3b2628296231bb3a8ba162f6502dcab8"><div class="ttname"><a href="driver_8h.html#a3b2628296231bb3a8ba162f6502dcab8">RTDM_CLASS_MAGIC</a></div><div class="ttdeci">#define RTDM_CLASS_MAGIC</div><div class="ttdoc">Initializer for class profile information. </div><div class="ttdef"><b>Definition:</b> driver.h:299</div></div>
 </div><!-- fragment -->
 <p>Initializer for class profile information. </p>
 <p>This macro must be used to fill in the <a class="el" href="driver_8h.html#rtdm_profile_info">class profile information</a> field from a RTDM driver.</p>

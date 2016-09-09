@@ -5,7 +5,6 @@ var dir_ff68a88f7e0f3192bfb1e2b00b3cd1b6 =
     [ "apc.h", "apc_8h_source.html", null ],
     [ "arith.h", "include_2cobalt_2kernel_2arith_8h_source.html", null ],
     [ "assert.h", "assert_8h_source.html", null ],
-    [ "bheap.h", "bheap_8h_source.html", null ],
     [ "bufd.h", "bufd_8h_source.html", null ],
     [ "clock.h", "include_2cobalt_2kernel_2clock_8h_source.html", null ],
     [ "compat.h", "cobalt_2kernel_2compat_8h_source.html", null ],

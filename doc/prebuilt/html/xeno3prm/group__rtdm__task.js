@@ -14,5 +14,8 @@ var group__rtdm__task =
     [ "rtdm_task_sleep_abs", "group__rtdm__task.html#ga1763346568d041f9c66d68224816d15b", null ],
     [ "rtdm_task_sleep_until", "group__rtdm__task.html#ga741998821c05483db33f17d77c733d99", null ],
     [ "rtdm_task_unblock", "group__rtdm__task.html#gae52cca97ebaf78eec2e31553a4dacd5e", null ],
-    [ "rtdm_task_wait_period", "group__rtdm__task.html#ga987d8dcff4e3ec43392d1fe18481639f", null ]
+    [ "rtdm_task_wait_period", "group__rtdm__task.html#ga987d8dcff4e3ec43392d1fe18481639f", null ],
+    [ "rtdm_wait_complete", "group__rtdm__task.html#ga95c0a155cc11c7ef221262c8f9823005", null ],
+    [ "rtdm_wait_is_completed", "group__rtdm__task.html#gadc457f5ed51446d25d06f11e9d3b8c47", null ],
+    [ "rtdm_wait_prepare", "group__rtdm__task.html#ga87dd3ab9abed5417dfcc00f463fd86ec", null ]
 ];

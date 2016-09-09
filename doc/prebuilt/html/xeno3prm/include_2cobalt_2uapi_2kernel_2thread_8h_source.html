@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -154,33 +154,34 @@ $(document).ready(function(){initNavTree('include_2cobalt_2uapi_2kernel_2thread_
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
 <div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#ga2cb10fa1e4e888e3e23798b42deb1608">   77</a></span>&#160;<span class="preprocessor">#define XNMOVED   0x00000001 </span></div>
 <div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gac9a2238978202123c8f045d1529c59a2">   78</a></span>&#160;<span class="preprocessor">#define XNLBALERT 0x00000002 </span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor"></span><span class="comment">/*</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment"> * Must follow strictly the declaration order of the state flags</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment"> * defined above. Status symbols are defined as follows:</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment"> * &#39;S&#39; -&gt; Forcibly suspended.</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment"> * &#39;w&#39;/&#39;W&#39; -&gt; Waiting for a resource, with or without timeout.</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment"> * &#39;D&#39; -&gt; Delayed (without any other wait condition).</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment"> * &#39;R&#39; -&gt; Runnable.</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="comment"> * &#39;U&#39; -&gt; Unstarted or dormant.</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment"> * &#39;X&#39; -&gt; Relaxed shadow.</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment"> * &#39;H&#39; -&gt; Held in emergency.</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment"> * &#39;b&#39; -&gt; Priority boost undergoing.</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment"> * &#39;T&#39; -&gt; Ptraced and stopped.</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment"> * &#39;l&#39; -&gt; Locks scheduler.</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment"> * &#39;r&#39; -&gt; Undergoes round-robin.</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment"> * &#39;t&#39; -&gt; Runtime mode errors notified.</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment"> * &#39;L&#39; -&gt; Lock breaks trapped.</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="comment"> */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#define XNTHREAD_STATE_LABELS  &quot;SWDRU..X.HbTlrt.....L.&quot;</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keyword">struct </span>xnthread_user_window {</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        __u32 state;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        __u32 info;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        __u32 grant_value;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;};</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_UAPI_KERNEL_THREAD_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="group__cobalt__core__thread__info.html#gae94044c60457321110d1b53db4df6320">   79</a></span>&#160;<span class="preprocessor">#define XNDESCENT 0x00000004 </span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor"></span><span class="comment">/*</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment"> * Must follow strictly the declaration order of the state flags</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="comment"> * defined above. Status symbols are defined as follows:</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment"> * &#39;S&#39; -&gt; Forcibly suspended.</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment"> * &#39;w&#39;/&#39;W&#39; -&gt; Waiting for a resource, with or without timeout.</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment"> * &#39;D&#39; -&gt; Delayed (without any other wait condition).</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="comment"> * &#39;R&#39; -&gt; Runnable.</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment"> * &#39;U&#39; -&gt; Unstarted or dormant.</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment"> * &#39;X&#39; -&gt; Relaxed shadow.</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment"> * &#39;H&#39; -&gt; Held in emergency.</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment"> * &#39;b&#39; -&gt; Priority boost undergoing.</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment"> * &#39;T&#39; -&gt; Ptraced and stopped.</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment"> * &#39;l&#39; -&gt; Locks scheduler.</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment"> * &#39;r&#39; -&gt; Undergoes round-robin.</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment"> * &#39;t&#39; -&gt; Runtime mode errors notified.</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="comment"> * &#39;L&#39; -&gt; Lock breaks trapped.</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="comment"> */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">#define XNTHREAD_STATE_LABELS  &quot;SWDRU..X.HbTlrt.....L.&quot;</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="keyword">struct </span>xnthread_user_window {</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        __u32 state;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        __u32 info;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        __u32 grant_value;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;};</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_UAPI_KERNEL_THREAD_H */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

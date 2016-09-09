@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -89,9 +89,9 @@ $(document).ready(function(){initNavTree('api-tags.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>All services from the Cobalt/POSIX library, or which belong to APIs based on the Copperplate library may be restricted to particular calling contexts, or entail specific side-effects.</p>
-<p>Therefore, the information below applies to all application-oriented APIs available with Xenomai, such as the Cobalt/POSIX library, the Alchemy API, and to all RTOS emulators as well. To describe this information, each service documented by this section bears a set of tags when applicable.</p>
+<p>In dual kernel mode, the Cobalt API underlies all other application-oriented APIs, providing POSIX real-time services over the Cobalt real-time core. Therefore, the information below applies to all application-oriented APIs available with Xenomai, such as the Cobalt/POSIX library, the Alchemy API, and to all RTOS emulators as well. To describe this information, each service documented by this section bears a set of tags when applicable.</p>
 <p>The table below matches the tags used throughout the documentation with the description of their meaning for the caller.</p>
-<dl class="section attention"><dt>Attention</dt><dd>By Xenomai thread, we mean any thread created by a Xenomai API service, including real-time Cobalt/POSIX threads in dual kernel mode. By regular POSIX thread, we mean any thread directly created by the standard <em>glibc-based</em> POSIX service over Mercury (i.e. NPTL/linuxthreads <a class="el" href="group__cobalt__api__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>), excluding such threads which have been promoted to the real-time domain afterwards (aka "shadowed") over Cobalt.</dd></dl>
+<dl class="section attention"><dt>Attention</dt><dd>By Xenomai thread, we mean any thread created by a Xenomai API service, including real-time Cobalt/POSIX threads in dual kernel mode. By regular/plain POSIX thread, we mean any thread directly created by the standard <em>glibc-based</em> POSIX service over Mercury or Cobalt (i.e. NPTL/linuxthreads __STD(pthread_create())), excluding such threads which have been promoted to the real-time domain afterwards (aka "shadowed") over Cobalt.</dd></dl>
 <dl class="section user"><dt></dt><dd><b>Context tags</b> <table class="doxtable">
 <tr>
 <th>Tag </th><th>Context on entry </th></tr>
@@ -111,7 +111,9 @@ $(document).ready(function(){initNavTree('api-tags.html','');});
 <td>unrestricted </td><td>May be called from any context previously described </td></tr>
 </table>
 </dd></dl>
-<dl class="section note"><dt>Note</dt><dd>A Xenomai handler is used for callback-based notifications from Copperplate-based APIs, such as timeouts. This context is <em>NOT</em> mapped to a regular Linux signal handler, it is actually underlaid by a special thread context, so that async-unsafe POSIX services may be invoked internally by the API implementation when running on behalf of such handler. Therefore, calling Xenomai API services from asynchronous regular signal handlers is fundamentally unsafe.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>A Xenomai handler is used for callback-based notifications from Copperplate-based APIs, such as timeouts. This context is <em>NOT</em> mapped to a regular Linux signal handler, it is actually underlaid by a special thread context, so that async-unsafe POSIX services may be invoked internally by the API implementation when running on behalf of such handler. Therefore, calling Xenomai API services from asynchronous regular signal handlers is fundamentally unsafe.</dd>
+<dd>
+Over Cobalt, the main thread is a particular case, which starts as a regular POSIX thread, then is automatically switched to a Cobalt thread as part of the initialization process, before the main() routine is invoked, unless automatic bootstrap was disabled (see <a href="http://xenomai.org/2015/05/application-setup-and-init/#Application_entry_CC">http://xenomai.org/2015/05/application-setup-and-init/#Application_entry_CC</a>).</dd></dl>
 <dl class="section user"><dt></dt><dd><b>Possible side-effects when running the application over the Cobalt core (i.e. dual kernel configuration)</b></dd></dl>
 <table class="doxtable">
 <tr>

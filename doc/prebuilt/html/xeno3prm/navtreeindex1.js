@@ -1,6 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"functions_func.html":[3,1,1],
 "functions_g.html":[3,1,0,7],
 "functions_h.html":[3,1,0,8],
 "functions_i.html":[3,1,0,9],
@@ -42,8 +41,8 @@ var NAVTREEINDEX1 =
 "globals.html":[4,1,0,0],
 "globals_b.html":[4,1,0,1],
 "globals_c.html":[4,1,0,2],
-"globals_defs.html":[4,1,5,0],
 "globals_defs.html":[4,1,5],
+"globals_defs.html":[4,1,5,0],
 "globals_defs_b.html":[4,1,5,1],
 "globals_defs_c.html":[4,1,5,2],
 "globals_defs_f.html":[4,1,5,3],
@@ -233,21 +232,22 @@ var NAVTREEINDEX1 =
 "group__analogy__buffer.html#gab257a290294e0292fdab71bb60893b07":[2,1,1,0,3,11],
 "group__analogy__buffer.html#gab258ce900ea38185e72c9b7cebd77c95":[2,1,1,0,3,2],
 "group__analogy__channel__range.html":[2,1,1,0,0],
-"group__analogy__channel__range.html#ga2db9f4e0fea6bd9279f40944bc0eb8d8":[4,0,0,2,1,0,0,1,8],
 "group__analogy__channel__range.html#ga2db9f4e0fea6bd9279f40944bc0eb8d8":[2,1,1,0,0,11],
+"group__analogy__channel__range.html#ga2db9f4e0fea6bd9279f40944bc0eb8d8":[4,0,0,2,1,0,0,1,8],
 "group__analogy__channel__range.html#ga516bba6698176241370dabf67868b565":[4,0,0,2,1,0,0,1,5],
 "group__analogy__channel__range.html#ga516bba6698176241370dabf67868b565":[2,1,1,0,0,8],
 "group__analogy__channel__range.html#ga59c40f7bdf368265e66c6e9a80ffa862":[2,1,1,0,0,10],
 "group__analogy__channel__range.html#ga59c40f7bdf368265e66c6e9a80ffa862":[4,0,0,2,1,0,0,1,7],
-"group__analogy__channel__range.html#ga6d9b9f63e82704bf3b7d421bf81e09a5":[2,1,1,0,0,15],
 "group__analogy__channel__range.html#ga6d9b9f63e82704bf3b7d421bf81e09a5":[4,0,0,2,1,0,0,1,12],
+"group__analogy__channel__range.html#ga6d9b9f63e82704bf3b7d421bf81e09a5":[2,1,1,0,0,15],
 "group__analogy__channel__range.html#ga7f3e39e0773ea29526aa72497a738474":[4,0,0,2,1,0,0,1,0],
 "group__analogy__channel__range.html#ga7f3e39e0773ea29526aa72497a738474":[2,1,1,0,0,3],
-"group__analogy__channel__range.html#ga83f988df3128b75fe9b112eb1805d528":[2,1,1,0,0,16],
 "group__analogy__channel__range.html#ga83f988df3128b75fe9b112eb1805d528":[4,0,0,2,1,0,0,1,13],
+"group__analogy__channel__range.html#ga83f988df3128b75fe9b112eb1805d528":[2,1,1,0,0,16],
 "group__analogy__channel__range.html#ga8c3a61f5ed001486d244d26c60915552":[4,0,0,2,1,0,0,1,4],
 "group__analogy__channel__range.html#ga8c3a61f5ed001486d244d26c60915552":[2,1,1,0,0,7],
 "group__analogy__channel__range.html#ga8e544207dc38e33b48d5cc35f8a62846":[2,1,1,0,0,4],
 "group__analogy__channel__range.html#ga8e544207dc38e33b48d5cc35f8a62846":[4,0,0,2,1,0,0,1,1],
-"group__analogy__channel__range.html#ga910bc672f6e55346643f9c69d175134f":[2,1,1,0,0,5]
+"group__analogy__channel__range.html#ga910bc672f6e55346643f9c69d175134f":[2,1,1,0,0,5],
+"group__analogy__channel__range.html#ga910bc672f6e55346643f9c69d175134f":[4,0,0,2,1,0,0,1,2]
 };

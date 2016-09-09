@@ -1,10 +1,11 @@
 <map id="lib/analogy/internal.h" name="lib/analogy/internal.h">
-<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="473,80,562,107"/>
-<area shape="rect" id="node4" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="125,155,208,181"/>
-<area shape="rect" id="node6" href="$socket_8h_source.html" title="sys/socket.h" alt="" coords="233,155,330,181"/>
-<area shape="rect" id="node7" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="355,155,413,181"/>
-<area shape="rect" id="node11" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="707,155,775,181"/>
-<area shape="rect" id="node12" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="800,155,949,181"/>
-<area shape="rect" id="node13" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="973,155,1091,181"/>
-<area shape="rect" id="node5" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="321,229,447,256"/>
+<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="550,80,639,107"/>
+<area shape="rect" id="node4" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="504,155,587,181"/>
+<area shape="rect" id="node8" href="$socket_8h_source.html" title="sys/socket.h" alt="" coords="299,155,397,181"/>
+<area shape="rect" id="node9" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="421,155,480,181"/>
+<area shape="rect" id="node12" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="787,155,855,181"/>
+<area shape="rect" id="node13" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="125,155,275,181"/>
+<area shape="rect" id="node14" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="931,155,1048,181"/>
+<area shape="rect" id="node5" href="$include_2cobalt_2wrappers_8h_source.html" title="cobalt/wrappers.h" alt="" coords="435,229,560,256"/>
+<area shape="rect" id="node6" href="$compiler_8h_source.html" title="boilerplate/compiler.h" alt="" coords="545,304,690,331"/>
 </map>

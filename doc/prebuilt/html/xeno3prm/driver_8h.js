@@ -44,6 +44,7 @@ var driver_8h =
     ] ],
     [ "rtdm_dev_register", "group__rtdm__device__register.html#ga40005c775b8c1f0f1077ce6e50120cd2", null ],
     [ "rtdm_dev_unregister", "group__rtdm__device__register.html#gafbe43e78f3b5eb9c164c8b7fa3cc1aa8", null ],
+    [ "rtdm_drv_set_sysclass", "group__rtdm__device__register.html#gafc70c44c844cd4f18c988949df0db160", null ],
     [ "rtdm_event_clear", "group__rtdm__sync__event.html#ga732fe3cf3370df0f296f06fc4ac7f925", null ],
     [ "rtdm_event_destroy", "group__rtdm__sync__event.html#ga7b27d0206027a07958d4a09017e8a3fe", null ],
     [ "rtdm_event_init", "group__rtdm__sync__event.html#gaddf08d8ba5a44668bb360070a114fb19", null ],

@@ -755,7 +755,7 @@ XENO-CONFIG(1) Manual Page
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--info</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--core</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--version</strong></p></div>
-<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]</p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--auto-init-solib</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -924,7 +924,26 @@ service is invoked.
 </p>
 </dd>
 </dl></div>
-<div class="paragraph"><p><strong>xeno-config</strong> enables the Copperplate auto-init feature by default.</p></div>
+<div class="paragraph"><p>This flag makes sense when passed along with --ldflags
+only. <strong>xeno-config</strong> enables the Copperplate auto-init feature by
+default.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--auto-init-solib</strong>
+</dt>
+<dd>
+<p>
+This switch enables the auto-initialization feature described above
+for a shared library target instead of a pure executable. The main
+difference resides in a position-independent (PIC) glue code being
+used for bootstrapping the initialization.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>The bootstrap code runs when the shared library is attached to a
+running executable, either because it appears in the static
+dependencies of this executable, or when loaded dynamically via the
+dlopen() interface.</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 <strong>--core</strong>
@@ -1026,7 +1045,7 @@ Error.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-18 13:17:40 CET
+Last updated 2016-09-09 19:34:33 CEST
 </div>
 </div>
 </body>

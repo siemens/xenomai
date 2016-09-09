@@ -34,7 +34,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Xenomai
-   &#160;<span id="projectnumber">3.0.2</span>
+   &#160;<span id="projectnumber">3.0.3</span>
    </div>
   </td>
  </tr>
@@ -117,12 +117,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ga1f30d84a34abe93b6ab600b5842f4cbf"><td class="memItemLeft" align="right" valign="top">xnticks_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga1f30d84a34abe93b6ab600b5842f4cbf">xntimer_get_date</a> (struct xntimer *timer)</td></tr>
 <tr class="memdesc:ga1f30d84a34abe93b6ab600b5842f4cbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the absolute expiration date.  <a href="#ga1f30d84a34abe93b6ab600b5842f4cbf">More...</a><br /></td></tr>
 <tr class="separator:ga1f30d84a34abe93b6ab600b5842f4cbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gafcacfa3e2ac39463f57384fb14afa23f"><td class="memItemLeft" align="right" valign="top">xnticks_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gafcacfa3e2ac39463f57384fb14afa23f">xntimer_get_timeout</a> (struct xntimer *timer)</td></tr>
-<tr class="memdesc:gafcacfa3e2ac39463f57384fb14afa23f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the relative expiration date.  <a href="#gafcacfa3e2ac39463f57384fb14afa23f">More...</a><br /></td></tr>
-<tr class="separator:gafcacfa3e2ac39463f57384fb14afa23f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga9aaa5a0dcfeb46e0e322fa7464fdb997">xntimer_stop</a> (struct xntimer *timer)</td></tr>
 <tr class="memdesc:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disarm a timer.  <a href="#ga9aaa5a0dcfeb46e0e322fa7464fdb997">More...</a><br /></td></tr>
 <tr class="separator:ga9aaa5a0dcfeb46e0e322fa7464fdb997"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafcacfa3e2ac39463f57384fb14afa23f"><td class="memItemLeft" align="right" valign="top">static xnticks_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#gafcacfa3e2ac39463f57384fb14afa23f">xntimer_get_timeout</a> (struct xntimer *timer)</td></tr>
+<tr class="memdesc:gafcacfa3e2ac39463f57384fb14afa23f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the relative expiration date.  <a href="#gafcacfa3e2ac39463f57384fb14afa23f">More...</a><br /></td></tr>
+<tr class="separator:gafcacfa3e2ac39463f57384fb14afa23f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga189c3dfeb6047ad3eddc41c45ad176d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__core__timer.html#ga189c3dfeb6047ad3eddc41c45ad176d6">xntimer_init</a> (struct xntimer *timer, struct xnclock *clock, void(*handler)(struct xntimer *timer), struct <a class="el" href="structxnsched.html">xnsched</a> *sched, int flags)</td></tr>
 <tr class="memdesc:ga189c3dfeb6047ad3eddc41c45ad176d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a timer object.  <a href="#ga189c3dfeb6047ad3eddc41c45ad176d6">More...</a><br /></td></tr>
 <tr class="separator:ga189c3dfeb6047ad3eddc41c45ad176d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -395,6 +395,9 @@ Functions</h2></td></tr>
 <a class="anchor" id="gafcacfa3e2ac39463f57384fb14afa23f"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">xnticks_t xntimer_get_timeout </td>
@@ -404,6 +407,11 @@ Functions</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Return the relative expiration date. </p>
