@@ -35,7 +35,7 @@ SYNOPSIS
 
 *xeno-config* *--version*
 
-*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--cflags*] [*--ldflags*] [*--library-dir*|*--libdir*|*--user-libdir*]
+*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--auto-init-solib*] [*--cflags*] [*--ldflags*] [*--library-dir*|*--libdir*|*--user-libdir*]
 
 DESCRIPTION
 ------------
@@ -126,7 +126,21 @@ initialization. In such a case, the application code shall call the
 chores on behalf on the +main()+ routine, *before* any real-time
 service is invoked.
 
-*xeno-config* enables the Copperplate auto-init feature by default.
+This flag makes sense when passed along with --ldflags
+only. *xeno-config* enables the Copperplate auto-init feature by
+default.
+
+*--auto-init-solib*::
+
+This switch enables the auto-initialization feature described above
+for a shared library target instead of a pure executable. The main
+difference resides in a position-independent (PIC) glue code being
+used for bootstrapping the initialization.
+
+The bootstrap code runs when the shared library is attached to a
+running executable, either because it appears in the static
+dependencies of this executable, or when loaded dynamically via the
+dlopen() interface.
 
 *--core*::
 Output the name of the real-time core the current Xenomai installation
