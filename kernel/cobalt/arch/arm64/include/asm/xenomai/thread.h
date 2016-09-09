@@ -60,11 +60,7 @@ int xnarch_escalate(void);
 
 #if defined(CONFIG_XENO_ARCH_FPU)
 
-static inline void xnarch_init_root_tcb(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = NULL;
-}
+void xnarch_init_root_tcb(struct xnthread *thread);
 
 void xnarch_init_shadow_tcb(struct xnthread *thread);
 

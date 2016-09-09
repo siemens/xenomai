@@ -98,6 +98,12 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 	tcb->fpup = &tcb->core.host_task->thread.fpsimd_state;
 }
 
+void xnarch_init_root_tcb(struct xnthread *thread)
+{
+	struct xnarchtcb *tcb = &thread->tcb;
+	tcb->fpup = NULL;
+}
+
 #endif /* CONFIG_XENO_ARCH_FPU */
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
