@@ -52,17 +52,9 @@ static inline void xnarch_enter_root(struct xnthread *root) { }
 
 #ifdef CONFIG_XENO_ARCH_FPU
 
-static inline void xnarch_init_root_tcb(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = NULL;
-}
+void xnarch_init_root_tcb(struct xnthread *thread);
 
-static inline void xnarch_init_shadow_tcb(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = &tcb->core.host_task->thread;
-}
+void xnarch_init_shadow_tcb(struct xnthread *thread);
 
 void xnarch_leave_root(struct xnthread *root);
 
