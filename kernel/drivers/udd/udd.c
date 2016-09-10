@@ -286,7 +286,7 @@ static inline int register_mapper(struct udd_device *udd)
 		return -ENOMEM;
 
 	drv->profile_info = (struct rtdm_profile_info)
-		RTDM_PROFILE_INFO("mapper", RTDM_CLASS_MEMORY,
+		RTDM_PROFILE_INFO(mapper, RTDM_CLASS_MEMORY,
 				  RTDM_SUBCLASS_GENERIC, 0);
 	drv->device_flags = RTDM_NAMED_DEVICE|RTDM_FIXED_MINOR;
 	drv->device_count = UDD_NR_MAPS;
