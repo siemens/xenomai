@@ -231,7 +231,11 @@ char *generate_name(char *buf, const char *radix,
 		buf[len] = '\0';
 	} else {
 		tag = atomic_add_fetch(&ngen->serial, 1);
+#ifdef CONFIG_XENO_PSHARED
+		snprintf(buf, len, "%s@%d[%d]", ngen->radix, tag, __node_id);
+#else
 		snprintf(buf, len, "%s@%d", ngen->radix, tag);
+#endif
 	}
 
 	return buf;
