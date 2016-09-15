@@ -438,8 +438,10 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 	int err, ret;
 
 	fd = get_fd_fixup_mode(ufd);
-	if (IS_ERR(fd))
-		return PTR_ERR(fd);
+	if (IS_ERR(fd)) {
+		err = PTR_ERR(fd);
+		goto out;
+	}
 
 	va_start(args, request);
 	arg = va_arg(args, void __user *);
@@ -464,7 +466,7 @@ int rtdm_fd_ioctl(int ufd, unsigned int request, ...)
 	}
 
 	rtdm_fd_put(fd);
-
+  out:
 	if (err < 0)
 		trace_cobalt_fd_ioctl_status(current, fd, ufd, err);
 
@@ -479,8 +481,10 @@ rtdm_fd_read(int ufd, void __user *buf, size_t size)
 	ssize_t ret;
 
 	fd = get_fd_fixup_mode(ufd);
-	if (IS_ERR(fd))
-		return PTR_ERR(fd);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
 
 	set_compat_bit(fd);
 
@@ -492,10 +496,11 @@ rtdm_fd_read(int ufd, void __user *buf, size_t size)
 		ret = fd->ops->read_rt(fd, buf, size);
 
 	if (!XENO_ASSERT(COBALT, !spltest()))
-		splnone();
+		    splnone();
 
 	rtdm_fd_put(fd);
 
+  out:
 	if (ret < 0)
 		trace_cobalt_fd_read_status(current, fd, ufd, ret);
 
@@ -509,8 +514,10 @@ ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 	ssize_t ret;
 
 	fd = get_fd_fixup_mode(ufd);
-	if (IS_ERR(fd))
-		return PTR_ERR(fd);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
 
 	set_compat_bit(fd);
 
@@ -526,6 +533,7 @@ ssize_t rtdm_fd_write(int ufd, const void __user *buf, size_t size)
 
 	rtdm_fd_put(fd);
 
+  out:
 	if (ret < 0)
 		trace_cobalt_fd_write_status(current, fd, ufd, ret);
 
@@ -539,8 +547,10 @@ ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags)
 	ssize_t ret;
 
 	fd = get_fd_fixup_mode(ufd);
-	if (IS_ERR(fd))
-		return PTR_ERR(fd);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
 
 	set_compat_bit(fd);
 
@@ -555,7 +565,7 @@ ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags)
 		splnone();
 
 	rtdm_fd_put(fd);
-
+out:
 	if (ret < 0)
 		trace_cobalt_fd_recvmsg_status(current, fd, ufd, ret);
 
@@ -569,8 +579,10 @@ ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg, int flags)
 	ssize_t ret;
 
 	fd = get_fd_fixup_mode(ufd);
-	if (IS_ERR(fd))
-		return PTR_ERR(fd);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
 
 	set_compat_bit(fd);
 
@@ -585,7 +597,7 @@ ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg, int flags)
 		splnone();
 
 	rtdm_fd_put(fd);
-
+out:
 	if (ret < 0)
 		trace_cobalt_fd_sendmsg_status(current, fd, ufd, ret);
 
