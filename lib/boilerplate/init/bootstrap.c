@@ -28,6 +28,8 @@ static char *const *early_argv;
 
 const int xenomai_auto_bootstrap = 1;
 
+#ifndef __PIC__
+
 int __real_main(int argc, char *const argv[]);
 
 int __wrap_main(int argc, char *const argv[])
@@ -42,6 +44,8 @@ int xenomai_main(int argc, char *const argv[])
 
 	return __real_main(argc, argv);
 }
+
+#endif /* !__PIC__ */
 
 __bootstrap_ctor static void xenomai_bootstrap(void)
 {
