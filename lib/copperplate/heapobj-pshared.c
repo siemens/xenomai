@@ -437,10 +437,12 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 			block = get_free_range(heap, bsize, log2size);
 			if (block == NULL)
 				goto done;
-			if (bsize <= HOBJ_PAGE_SIZE)
+			if (bsize < HOBJ_PAGE_SIZE) {
 				heap->buckets[ilog].fcount += (HOBJ_PAGE_SIZE >> log2size) - 1;
+				heap->buckets[ilog].freelist = *((memoff_t *)block);
+			}
 		} else {
-			if (bsize <= HOBJ_PAGE_SIZE)
+			if (bsize < HOBJ_PAGE_SIZE)
 				--heap->buckets[ilog].fcount;
 
 			/* Search for the source extent of block. */
@@ -453,9 +455,9 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 		found:
 			pgnum = (__shoff(base, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 			++extent->pagemap[pgnum].bcount;
+			heap->buckets[ilog].freelist = *((memoff_t *)block);
 		}
 
-		heap->buckets[ilog].freelist = *((memoff_t *)block);
 		heap->ubytes += bsize;
 	} else {
 		if (size > heap->maxcont)
