@@ -206,10 +206,14 @@ if test x$do_ldflags = xy; then
     done
     wrap_main=
     if test x$do_autoinit = xy; then
-	test x$do_autoinit_solib = xy && codegen=-pic
-	wrap_main="${XENO_LIBRARY_DIR}/xenomai/bootstrap${codegen}.o -Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+	if test x$do_autoinit_solib = xy; then
+	    codegen=-pic
+	else
+	    wrap_main="-Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+	fi
+	bootstrap="${XENO_LIBRARY_DIR}/xenomai/bootstrap${codegen}.o"
     fi
-    echo "$ldflags $copperplate $wrap_main $XENO_BASE_LDFLAGS"
+    echo "$ldflags $copperplate $bootstrap $wrap_main $XENO_BASE_LDFLAGS"
 fi
 
 exit 0
