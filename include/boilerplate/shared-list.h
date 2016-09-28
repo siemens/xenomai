@@ -245,6 +245,30 @@ static inline int list_heading_p(const struct holder *holder,
 #define list_last_entry(list, type, member)			\
 	__list_last_entry(__main_heap, list, type, member)
 
+#define __list_prev_entry(heap, pos, list, member)			\
+	({								\
+		typeof(*pos) *__prev = NULL;				\
+		if ((list)->head.next != __hoff(heap, &(pos)->member))	\
+			__prev = list_entry(__hptr((heap),		\
+			   (pos)->member.prev), typeof(*pos), member);	\
+		__prev;							\
+	})
+
+#define list_prev_entry(pos, list, member)				\
+	__list_prev_entry(__main_heap, pos, list, member)
+
+#define __list_next_entry(heap, pos, list, member)			\
+	({								\
+		typeof(*pos) *__next = NULL;				\
+		if ((list)->head.prev != __hoff(heap, &(pos)->member))	\
+			__next = list_entry(__hptr((heap),		\
+			   (pos)->member.next), typeof(*pos), member);	\
+		__next;							\
+	})
+
+#define list_next_entry(pos, list, member)				\
+	__list_next_entry(__main_heap, pos, list, member)
+
 #define __list_pop_entry(heap, list, type, member) ({			\
 			struct holder *__holder = __list_pop((heap), list); \
 			list_entry(__holder, type, member); })

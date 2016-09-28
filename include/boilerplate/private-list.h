@@ -146,6 +146,24 @@ static inline int pvlist_heading_p(const struct pvholder *holder,
 #define pvlist_last_entry(list, type, member)			\
 	pvlist_entry((list)->head.prev, type, member)
 
+#define pvlist_prev_entry(pos, list, member)				\
+	({								\
+		typeof(*pos) *__prev = NULL;				\
+		if ((list)->head.next != &(pos)->member)		\
+			__prev = pvlist_entry((pos)->member.prev,	\
+					      typeof(*pos), member);	\
+		__prev;							\
+	})
+
+#define pvlist_next_entry(pos, list, member)				\
+	({								\
+		typeof(*pos) *__next = NULL;				\
+		if ((list)->head.prev != &(pos)->member)		\
+			__next = pvlist_entry((pos)->member.next,	\
+					      typeof(*pos), member);	\
+		__next;							\
+	})
+
 #define pvlist_pop_entry(list, type, member) ({				\
 			struct pvholder *__holder = pvlist_pop(list);	\
 			pvlist_entry(__holder, type, member); })
