@@ -20,20 +20,18 @@
 
 #define RTDM_SUBCLASS_BCM2835  1
 
-static struct rtdm_gpio_chip bcm2835_gpio_chip;
-
 static int __init bcm2835_gpio_init(void)
 {
-	return rtdm_gpiochip_add_by_name(&bcm2835_gpio_chip, "bcm2708_gpio",
-					 RTDM_SUBCLASS_BCM2835);
+	return rtdm_gpiochip_scan_of(NULL, "brcm,bcm2835-gpio",
+				     RTDM_SUBCLASS_BCM2835);
 }
+module_init(bcm2835_gpio_init);
 
 static void __exit bcm2835_gpio_exit(void)
 {
-	rtdm_gpiochip_remove(&bcm2835_gpio_chip);
+	rtdm_gpiochip_remove_of(RTDM_SUBCLASS_BCM2835);
 }
-
-module_init(bcm2835_gpio_init);
 module_exit(bcm2835_gpio_exit);
 
 MODULE_LICENSE("GPL");
+

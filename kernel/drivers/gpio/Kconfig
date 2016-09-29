@@ -1,13 +1,17 @@
 menu "Real-time GPIO drivers"
 
 config XENO_DRIVERS_GPIO
-       tristate
+       tristate "GPIO controller"
        depends on GPIOLIB
+       help
+
+       Real-time capable GPIO module.
+      
+if XENO_DRIVERS_GPIO
 
 config XENO_DRIVERS_GPIO_BCM2835
 	depends on MACH_BCM2708
-	select XENO_DRIVERS_GPIO
-	tristate "Support for BCM2835 GPIOs"
+	bool "Support for BCM2835 GPIOs"
 	help
 
 	Enables support for the GPIO controller available from
@@ -15,15 +19,15 @@ config XENO_DRIVERS_GPIO_BCM2835
 
 config XENO_DRIVERS_GPIO_MXC
 	depends on GPIO_MXC
-	select XENO_DRIVERS_GPIO
-	tristate "Support for MXC GPIOs"
+	bool "Support for MXC GPIOs"
 	help
 
 	Suitable for the GPIO controller available from
 	Freescale/NXP's MXC architecture.
 
 config XENO_DRIVERS_GPIO_DEBUG
-       depends on XENO_DRIVERS_GPIO
        bool "Enable GPIO core debugging features"
-       
+
+endif
+
 endmenu

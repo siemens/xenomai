@@ -203,22 +203,23 @@ static void delete_pin_devices(struct rtdm_gpio_chip *rgc)
 {
 	struct rtdm_gpio_pin *pin, *n;
 	struct rtdm_device *dev;
+	rtdm_lockctx_t s;
 
-	rtdm_lock_get(&rgc->lock);
+	rtdm_lock_get_irqsave(&rgc->lock, s);
 	
 	list_for_each_entry_safe(pin, n, &rgc->pins, next) {
 		list_del(&pin->next);
-		rtdm_lock_put(&rgc->lock);
+		rtdm_lock_put_irqrestore(&rgc->lock, s);
 		dev = &pin->dev;
 		rtdm_dev_unregister(dev);
 		rtdm_event_destroy(&pin->event);
 		kfree(dev->label);
 		kfree(pin->name);
 		kfree(pin);
-		rtdm_lock_get(&rgc->lock);
+		rtdm_lock_get_irqsave(&rgc->lock, s);
 	}
 
-	rtdm_lock_put(&rgc->lock);
+	rtdm_lock_put_irqrestore(&rgc->lock, s);
 }
 
 static int create_pin_devices(struct rtdm_gpio_chip *rgc)
@@ -226,6 +227,7 @@ static int create_pin_devices(struct rtdm_gpio_chip *rgc)
 	struct gpio_chip *gc = rgc->gc;
 	struct rtdm_gpio_pin *pin;
 	struct rtdm_device *dev;
+	rtdm_lockctx_t s;
 	int n, ret;
 
 	for (n = gc->base; n < gc->base + gc->ngpio - 1; n++) {
@@ -252,9 +254,9 @@ static int create_pin_devices(struct rtdm_gpio_chip *rgc)
 		if (ret)
 			goto fail_register;
 		rtdm_event_init(&pin->event, 0);
-		rtdm_lock_get(&rgc->lock);
+		rtdm_lock_get_irqsave(&rgc->lock, s);
 		list_add_tail(&pin->next, &rgc->pins);
-		rtdm_lock_put(&rgc->lock);
+		rtdm_lock_put_irqrestore(&rgc->lock, s);
 	}
 
 	return 0;
@@ -362,8 +364,41 @@ EXPORT_SYMBOL_GPL(rtdm_gpiochip_add_by_name);
 
 #include <linux/of_platform.h>
 
+LIST_HEAD(rtdm_gpio_chips);
+
+static DEFINE_MUTEX(chip_lock);
+
+static int match_gpio_chip(struct gpio_chip *gc, void *data)
+{
+	struct device *dev = data;
+
+	return gc->dev == dev;
+}
+
+static int add_gpio_chip(struct gpio_chip *gc, int type)
+{
+	struct rtdm_gpio_chip *rgc;
+	int ret;
+
+	rgc = kzalloc(sizeof(*rgc), GFP_KERNEL);
+	if (rgc == NULL)
+		return -ENOMEM;
+
+	ret = rtdm_gpiochip_add(rgc, gc, type);
+	if (ret) {
+		kfree(rgc);
+		return ret;
+	}
+
+	mutex_lock(&chip_lock);
+	list_add(&rgc->next, &rtdm_gpio_chips);
+	mutex_unlock(&chip_lock);
+
+	return 0;
+}
+
 int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
-			  int (*match)(struct gpio_chip *gc))
+			  int type)
 {
 	struct device_node *np = from;
 	struct platform_device *pdev;
@@ -378,16 +413,32 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 		of_node_put(np);
 		if (pdev == NULL)
 			break;
-		gc = find_chip_by_name(dev_name(&pdev->dev));
+		gc = gpiochip_find(&pdev->dev, match_gpio_chip);
 		if (gc) {
-			ret = match(gc);
+			ret = add_gpio_chip(gc, type);
 			if (ret)
-				break;
+				return ret;
 		}
 	}
 
 	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_scan_of);
+
+void rtdm_gpiochip_remove_of(int type)
+{
+	struct rtdm_gpio_chip *rgc, *n;
+
+	list_for_each_entry_safe(rgc, n, &rtdm_gpio_chips, next) {
+		if (rgc->driver.profile_info.subclass_id == type) {
+			mutex_lock(&chip_lock);
+			list_del(&rgc->next);
+			mutex_unlock(&chip_lock);
+			rtdm_gpiochip_remove(rgc);
+			kfree(rgc);
+		}
+	}
+}
+EXPORT_SYMBOL_GPL(rtdm_gpiochip_remove_of);
 
 #endif /* CONFIG_OF */

@@ -16,52 +16,21 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <linux/module.h>
-#include <linux/list.h>
-#include <linux/gpio.h>
-#include <linux/slab.h>
 #include "gpio-core.h"
 
 #define RTDM_SUBCLASS_MXC  2
 
-static LIST_HEAD(mxc_gpio_chips);
-
-static int match_gpio_chip(struct gpio_chip *gc)
-{
-	struct rtdm_gpio_chip *rgc;
-	int ret;
-	
-	rgc = kzalloc(sizeof(*rgc), GFP_KERNEL);
-	if (rgc == NULL)
-		return -ENOMEM;
-
-	ret = rtdm_gpiochip_add(rgc, gc, RTDM_SUBCLASS_MXC);
-	if (ret) {
-		kfree(rgc);
-		return ret;
-	}
-
-	list_add(&rgc->next, &mxc_gpio_chips);
-
-	return 0;
-}
-
 static int __init mxc_gpio_init(void)
 {
-	return rtdm_gpiochip_scan_of(NULL, "fsl,imx6q-gpio", match_gpio_chip);
+	return rtdm_gpiochip_scan_of(NULL, "fsl,imx6q-gpio",
+				     RTDM_SUBCLASS_MXC);
 }
+module_init(mxc_gpio_init);
 
 static void __exit mxc_gpio_exit(void)
 {
-	struct rtdm_gpio_chip *rgc, *n;
-
-	list_for_each_entry_safe(rgc, n, &mxc_gpio_chips, next) {
-		list_del(&rgc->next);
-		rtdm_gpiochip_remove(rgc);
-		kfree(rgc);
-	}
+	rtdm_gpiochip_remove_of(RTDM_SUBCLASS_MXC);
 }
-
-module_init(mxc_gpio_init);
 module_exit(mxc_gpio_exit);
 
 MODULE_LICENSE("GPL");
