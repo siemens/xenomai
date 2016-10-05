@@ -261,12 +261,12 @@ static int map_subdevice_buffer(a4l_desc_t *dsc, unsigned long *buf_size, void *
 
 static int cmd_read(struct arguments *arg)
 {
-	unsigned int i, scan_size = 0, cnt = 0, ret = 0, len, ofs;
+	unsigned int i, scan_size = 0, cnt = 0, len, ofs;
 	dump_function_t dump_function = dump_text;
 	a4l_desc_t dsc = { .sbdata = NULL };
 	unsigned long buf_size;
 	char **argv = arg->argv;
-	int argc = arg->argc;
+	int ret = 0, argc = arg->argc;
 	void *map = NULL;
 
 	for (;;) {
