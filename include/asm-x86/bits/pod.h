@@ -58,6 +58,10 @@ static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 	rootcb->spp = &current->thread.x86reg_sp;
 	rootcb->ipp = &current->thread.rip;
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,0,0)
+	if (kernel_fpu_disabled())
+		wrap_clear_fpu_used(current);
+#endif
 	rootcb->ts_usedfpu = !!wrap_test_fpu_used(current);
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
