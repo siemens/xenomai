@@ -197,6 +197,7 @@ enum SJA1000_PELI_FIR {
 
 /* Clock divider register */
 enum SJA1000_PELI_CDR {
+    SJA_CDR_CLKOUT_MASK  = 0x07,
     SJA_CDR_CLK_OFF      = 1<<3, /* Clock off (CLKOUT pin)              */
     SJA_CDR_CBP          = 1<<6, /* CAN input comparator bypass         */
     SJA_CDR_CAN_MODE     = 1<<7  /* CAN mode: 1 = PeliCAN               */
