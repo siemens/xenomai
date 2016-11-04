@@ -166,12 +166,14 @@ COBALT_SYSCALL(timerfd_create, lostage, (int clockid, int flags))
 {
 	struct cobalt_tfd *tfd;
 	struct xnthread *curr;
+	struct xnclock *clock;
 	int ret, ufd;
 
-	if (clockid != CLOCK_REALTIME && clockid != CLOCK_MONOTONIC)
+	if (flags & ~TFD_CREATE_FLAGS)
 		return -EINVAL;
 
-	if (flags & ~TFD_CREATE_FLAGS)
+	clock = cobalt_clock_find(clockid);
+	if (clock == NULL)
 		return -EINVAL;
 
 	tfd = xnmalloc(sizeof(*tfd));
@@ -189,7 +191,7 @@ COBALT_SYSCALL(timerfd_create, lostage, (int clockid, int flags))
 	tfd->fd.oflags = (flags & TFD_NONBLOCK) ? O_NONBLOCK : 0;
 	tfd->clockid = clockid;
 	curr = xnthread_current();
-	xntimer_init(&tfd->timer, &nkclock, timerfd_handler,
+	xntimer_init(&tfd->timer, clock, timerfd_handler,
 		     curr ? curr->sched : NULL, XNTIMER_UGRAVITY);
 	xnsynch_init(&tfd->readers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
 	xnselect_init(&tfd->read_select);
