@@ -349,3 +349,26 @@ void cobalt_clock_deregister(struct xnclock *clock)
 	xnclock_deregister(clock);
 }
 EXPORT_SYMBOL_GPL(cobalt_clock_deregister);
+
+struct xnclock *cobalt_clock_find(clockid_t clock_id)
+{
+	struct xnclock *clock = ERR_PTR(-EINVAL);
+	spl_t s;
+	int nr;
+
+	if (clock_id == CLOCK_MONOTONIC ||
+	    clock_id == CLOCK_MONOTONIC_RAW ||
+	    clock_id == CLOCK_REALTIME)
+		return &nkclock;
+	
+	if (__COBALT_CLOCK_EXT_P(clock_id)) {
+		nr = __COBALT_CLOCK_EXT_INDEX(clock_id);
+		xnlock_get_irqsave(&nklock, s);
+		if (test_bit(nr, cobalt_clock_extids))
+			clock = external_clocks[nr];
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return clock;
+}
+EXPORT_SYMBOL_GPL(cobalt_clock_find);

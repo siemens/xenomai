@@ -26,6 +26,8 @@
 
 #define ONE_BILLION             1000000000
 
+struct xnclock;
+
 static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)
 {
 	ts->tv_sec = xnclock_divrem_billion(nsecs, &ts->tv_nsec);
@@ -68,21 +70,13 @@ static inline xnticks_t clock_get_ticks(clockid_t clock_id)
 
 static inline int clock_flag(int flag, clockid_t clock_id)
 {
-	switch(flag & TIMER_ABSTIME) {
-	case 0:
+	if ((flag & TIMER_ABSTIME) == 0)
 		return XN_RELATIVE;
 
-	case TIMER_ABSTIME:
-		switch(clock_id) {
-		case CLOCK_MONOTONIC:
-		case CLOCK_MONOTONIC_RAW:
-			return XN_ABSOLUTE;
+	if (clock_id == CLOCK_REALTIME)
+		return XN_REALTIME;
 
-		case CLOCK_REALTIME:
-			return XN_REALTIME;
-		}
-	}
-	return -EINVAL;
+	return XN_ABSOLUTE;
 }
 
 int __cobalt_clock_getres(clockid_t clock_id,
@@ -117,6 +111,8 @@ int cobalt_clock_register(struct xnclock *clock,
 			  clockid_t *clk_id);
 
 void cobalt_clock_deregister(struct xnclock *clock);
+
+struct xnclock *cobalt_clock_find(clockid_t clock_id);
 
 extern DECLARE_BITMAP(cobalt_clock_extids, COBALT_MAX_EXTCLOCKS);
 
