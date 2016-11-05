@@ -137,9 +137,9 @@ int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
  * during sleep time. This is a non-issue for Cobalt, as the libcobalt
  * implementation will always be picked instead.
  */
-__weak inline int clock_nanosleep(clockid_t clock_id, int flags,
-				  const struct timespec *request,
-				  struct timespec *remain)
+__weak int clock_nanosleep(clockid_t clock_id, int flags,
+			   const struct timespec *request,
+			   struct timespec *remain)
 {
 	struct timespec now, tmp;
 
@@ -163,14 +163,14 @@ __weak inline int clock_nanosleep(clockid_t clock_id, int flags,
  * Might be declared in uClibc headers but not actually implemented,
  * so we make the placeholder a weak symbol.
  */
-__weak inline int sched_getcpu(void)
+__weak int sched_getcpu(void)
 {
 	return 0;   /* outdated uClibc: assume uniprocessor. */
 }
 #endif /* !HAVE_SCHED_GETCPU */
 
 #ifndef HAVE_SHM_OPEN
-__weak inline int shm_open(const char *name, int oflag, mode_t mode)
+__weak int shm_open(const char *name, int oflag, mode_t mode)
 {
 	errno = ENOSYS;
 	return -1;
@@ -178,7 +178,7 @@ __weak inline int shm_open(const char *name, int oflag, mode_t mode)
 #endif	/* !HAVE_SHM_OPEN */
 
 #ifndef HAVE_SHM_UNLINK
-__weak inline int shm_unlink(const char *name)
+__weak int shm_unlink(const char *name)
 {
 	errno = ENOSYS;
 	return -1;
