@@ -132,9 +132,9 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
 /* uClibc does not provide pthread_atfork() for this arch; provide it
-   here. Note: let the compiler decides whether it wants to actually
-   inline this routine, i.e. do not force always_inline. */
-inline __attribute__((weak)) int pthread_atfork(void (*prepare)(void),
+   here.
+*/
+__attribute__((weak)) int pthread_atfork(void (*prepare)(void),
 						void (*parent)(void),
 						void (*child)(void))
 {
@@ -143,7 +143,7 @@ inline __attribute__((weak)) int pthread_atfork(void (*prepare)(void),
 
 #include <errno.h>
 
-inline __attribute__((weak)) int shm_open(const char *name,
+__attribute__((weak)) int shm_open(const char *name,
 					  int oflag,
 					  mode_t mode)
 {
@@ -151,7 +151,7 @@ inline __attribute__((weak)) int shm_open(const char *name,
 	return -1;
 }
 
-inline __attribute__((weak)) int shm_unlink(const char *name)
+__attribute__((weak)) int shm_unlink(const char *name)
 {
 	errno = ENOSYS;
 	return -1;
