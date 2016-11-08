@@ -163,7 +163,7 @@ typedef struct {
 	})
 
 #define xntimerq_destroy(q) do { } while (0)
-#define xntimerq_empty(q) ((q)->head != NULL)
+#define xntimerq_empty(q) ((q)->head == NULL)
 
 #define xntimerq_head(q) ((q)->head)
 
