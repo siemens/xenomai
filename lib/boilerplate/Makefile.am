@@ -8,8 +8,7 @@ libboilerplate_la_SOURCES =	\
 	hash.c			\
 	obstack.c		\
 	setup.c			\
-	time.c			\
-	wrappers.c
+	time.c
 
 if XENO_DEBUG
 libboilerplate_la_SOURCES += debug.c
