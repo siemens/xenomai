@@ -575,7 +575,9 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
  *
  * @param[in] drv Address of the RTDM driver descriptor.
  *
- * @param[in] cls Pointer to the kernel device class.
+ * @param[in] cls Pointer to the kernel device class. NULL is allowed
+ * to clear a previous setting, switching back to the default "rtdm"
+ * device class.
  *
  * @return 0 on success, otherwise:
  *
@@ -592,7 +594,8 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
  */
 int rtdm_drv_set_sysclass(struct rtdm_driver *drv, struct class *cls)
 {
-	if (drv->profile_info.kdev_class || atomic_read(&drv->refcount))
+	if ((cls && drv->profile_info.kdev_class) ||
+	    atomic_read(&drv->refcount))
 		return -EBUSY;
 
 	drv->profile_info.kdev_class = cls;
