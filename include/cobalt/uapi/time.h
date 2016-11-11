@@ -41,7 +41,7 @@
 #define COBALT_MAX_EXTCLOCKS  64
 
 #define __COBALT_CLOCK_EXT(nr)		((clockid_t)(nr) | (1 << 6))
-#define __COBALT_CLOCK_EXT_P(id)	((int)(id) & (1 << 6))
+#define __COBALT_CLOCK_EXT_P(id)	((int)(id) >= 64 && (int)(id) < 128)
 #define __COBALT_CLOCK_EXT_INDEX(id)	((int)(id) & ~(1 << 6))
 
 /*
