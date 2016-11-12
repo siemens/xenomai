@@ -56,8 +56,6 @@ typedef enum xntmode {
 #define XNTIMER_GRAVITY_MASK	(XNTIMER_KGRAVITY|XNTIMER_UGRAVITY)
 #define XNTIMER_INIT_MASK	(XNTIMER_GRAVITY_MASK|XNTIMER_NOBLCK)
 
-#define __XNTIMER_CORE    0x10000000
-
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
 #define XNTIMER_SPARE1  0x02000000

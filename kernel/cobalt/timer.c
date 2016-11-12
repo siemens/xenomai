@@ -349,29 +349,15 @@ void __xntimer_init(struct xntimer *timer,
 	timer->handler = handler;
 	timer->interval_ns = 0;
 	/*
-	 * Timers are affine to a real-time CPU. If no affinity was
-	 * specified, assign the timer to the first possible CPU which
-	 * can receive interrupt events from the clock device attached
-	 * to the reference clock for this timer.
+	 * Unlike common IRQs, timer events are per-CPU by design. If
+	 * the CPU the caller is affine to does not receive timer
+	 * events, or no affinity was specified (i.e. sched == NULL),
+	 * assign the timer to the first possible CPU which can
+	 * receive interrupt events from the clock device backing this
+	 * timer.
 	 */
-	if (sched) {
-		/*
-		 * Complain loudly if no tick is expected from the
-		 * clock device on the CPU served by the specified
-		 * scheduler slot. This reveals a CPU affinity
-		 * mismatch between the clock hardware and the client
-		 * code initializing the timer. This check excludes
-		 * core timers which may have their own reason to bind
-		 * to a passive CPU (e.g. host timer).
-		 */
-		XENO_WARN_ON_SMP(COBALT, !(flags & __XNTIMER_CORE) &&
-				 !cpumask_test_cpu(xnsched_cpu(sched),
-						   &clock->affinity));
-		timer->sched = sched;
-	} else {
-		cpu = xnclock_get_default_cpu(clock, 0);
-		timer->sched = xnsched_struct(cpu);
-	}
+	cpu = xnclock_get_default_cpu(clock, sched ? xnsched_cpu(sched) : 0);
+	timer->sched = xnsched_struct(cpu);
 
 #ifdef CONFIG_XENO_OPT_STATS
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
