@@ -541,6 +541,23 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 }
 EXPORT_SYMBOL_GPL(__xntimer_migrate);
 
+bool xntimer_set_sched(struct xntimer *timer,
+		       struct xnsched *sched)
+{
+	/*
+	 * We may deny the request if the target CPU does not receive
+	 * any event from the clock device backing the timer.
+	 */
+	if (cpumask_test_cpu(xnsched_cpu(sched),
+			     &xntimer_clock(timer)->affinity)) {
+		xntimer_migrate(timer, sched);
+		return true;
+	}
+
+	return false;
+}
+EXPORT_SYMBOL_GPL(xntimer_set_sched);
+
 int xntimer_setup_ipi(void)
 {
 	return ipipe_request_irq(&xnsched_realtime_domain,

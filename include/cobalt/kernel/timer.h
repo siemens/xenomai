@@ -546,11 +546,8 @@ static inline void xntimer_release_ipi(void) { }
 
 #endif /* CONFIG_SMP */
 
-static inline void xntimer_set_sched(struct xntimer *timer,
-				     struct xnsched *sched)
-{
-	xntimer_migrate(timer, sched);
-}
+bool xntimer_set_sched(struct xntimer *timer,
+		       struct xnsched *sched);
 
 char *xntimer_format_time(xnticks_t ns,
 			  char *buf, size_t bufsz);
