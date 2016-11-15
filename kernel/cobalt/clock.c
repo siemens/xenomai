@@ -508,6 +508,7 @@ void print_core_clock_status(struct xnclock *clock,
 static int clock_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct xnclock *clock = xnvfile_priv(it->vfile);
+	xnticks_t now = xnclock_read_raw(clock);
 
 	if (clock->id >= 0)	/* External clock, print id. */
 		xnvfile_printf(it, "%7s: %d\n", "id", __COBALT_CLOCK_EXT(clock->id));
@@ -519,7 +520,8 @@ static int clock_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnclock_print_status(clock, it);
 
-	xnvfile_printf(it, "%7s: %Lu\n", "ticks", xnclock_read_raw(clock));
+	xnvfile_printf(it, "%7s: %Lu (%.4Lx %.4x)\n", "ticks",
+		       now, now >> 32, (u32)(now & -1U));
 
 	return 0;
 }
