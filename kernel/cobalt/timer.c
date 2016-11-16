@@ -349,12 +349,15 @@ void __xntimer_init(struct xntimer *timer,
 	timer->handler = handler;
 	timer->interval_ns = 0;
 	/*
-	 * Unlike common IRQs, timer events are per-CPU by design. If
-	 * the CPU the caller is affine to does not receive timer
+	 * If the CPU the caller is affine to does not receive timer
 	 * events, or no affinity was specified (i.e. sched == NULL),
 	 * assign the timer to the first possible CPU which can
 	 * receive interrupt events from the clock device backing this
 	 * timer.
+	 *
+	 * If the clock device has no percpu semantics,
+	 * xnclock_get_default_cpu() makes the timer always affine to
+	 * CPU0 unconditionally.
 	 */
 	cpu = xnclock_get_default_cpu(clock, sched ? xnsched_cpu(sched) : 0);
 	timer->sched = xnsched_struct(cpu);
@@ -522,11 +525,15 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 	 * This assertion triggers when the timer is migrated to a CPU
 	 * for which we do not expect any clock events/IRQs from the
 	 * associated clock device. If so, the timer would never fire
-	 * since clock ticks would never happen on that CPU (timer
-	 * queues are per-CPU constructs).
+	 * since clock ticks would never happen on that CPU.
+	 *
+	 * A clock device with an empty affinity mask has no percpu
+	 * semantics, which disables the check.
 	 */
-	XENO_WARN_ON_SMP(COBALT, !cpumask_test_cpu(xnsched_cpu(sched),
-		       &xntimer_clock(timer)->affinity));
+	XENO_WARN_ON_SMP(COBALT,
+			 !cpumask_empty(&xntimer_clock(timer)->affinity) &&
+			 !cpumask_test_cpu(xnsched_cpu(sched),
+					   &xntimer_clock(timer)->affinity));
 
 	if (timer->status & XNTIMER_RUNNING) {
 		xntimer_stop(timer);
@@ -546,7 +553,8 @@ bool xntimer_set_sched(struct xntimer *timer,
 {
 	/*
 	 * We may deny the request if the target CPU does not receive
-	 * any event from the clock device backing the timer.
+	 * any event from the clock device backing the timer, or the
+	 * clock device has no percpu semantics.
 	 */
 	if (cpumask_test_cpu(xnsched_cpu(sched),
 			     &xntimer_clock(timer)->affinity)) {

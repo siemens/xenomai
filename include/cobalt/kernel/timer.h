@@ -311,15 +311,6 @@ static inline struct xnsched *xntimer_sched(struct xntimer *timer)
 		&tmd->q;						\
 	})
 
-static inline xntimerq_t *xntimer_this_queue(struct xntimer *timer)
-{
-	struct xntimerdata *tmd;
-
-	tmd = xnclock_this_timerdata(xntimer_clock(timer));
-
-	return &tmd->q;
-}
-
 static inline unsigned long xntimer_gravity(struct xntimer *timer)
 {
 	struct xnclock *clock = xntimer_clock(timer);
