@@ -744,6 +744,7 @@ void xnclock_tick(struct xnclock *clock)
 
 	atomic_only();
 
+#ifdef CONFIG_SMP
 	/*
 	 * Some external clock devices may have no percpu semantics,
 	 * in which case all timers are queued to slot #0.
@@ -753,6 +754,7 @@ void xnclock_tick(struct xnclock *clock)
 	    !cpumask_test_cpu(xnsched_cpu(sched), &clock->affinity))
 		tmq = &xnclock_percpu_timerdata(clock, 0)->q;
 	else
+#endif
 		tmq = &xnclock_this_timerdata(clock)->q;
 	
 	/*
