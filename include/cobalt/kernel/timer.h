@@ -522,6 +522,9 @@ int xntimer_setup_ipi(void);
 
 void xntimer_release_ipi(void);
 
+bool xntimer_set_sched(struct xntimer *timer,
+		       struct xnsched *sched);
+
 #else /* ! CONFIG_SMP */
 
 static inline void xntimer_migrate(struct xntimer *timer,
@@ -535,10 +538,13 @@ static inline int xntimer_setup_ipi(void)
 
 static inline void xntimer_release_ipi(void) { }
 
-#endif /* CONFIG_SMP */
+static inline bool xntimer_set_sched(struct xntimer *timer,
+				     struct xnsched *sched)
+{
+	return true;
+}
 
-bool xntimer_set_sched(struct xntimer *timer,
-		       struct xnsched *sched);
+#endif /* CONFIG_SMP */
 
 char *xntimer_format_time(xnticks_t ns,
 			  char *buf, size_t bufsz);
