@@ -123,37 +123,44 @@ use_tls=no
 case "$build_for" in
  i*86*-*)
 	use_tls=yes
-	XENO_TARGET_ARCH=x86
+	target_cpu_arch=x86
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  ppc-*|powerpc-*|powerpc64-*|ppc64-*)
 	use_tls=yes
-	XENO_TARGET_ARCH=powerpc
+	target_cpu_arch=powerpc
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  bfin-*|bfinnommu-*|blackfin-*)
-	XENO_TARGET_ARCH=blackfin
+	target_cpu_arch=blackfin
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  arm*-*)
-	XENO_TARGET_ARCH=arm
+	target_cpu_arch=arm
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
 	;;
  x86_64-*|amd64-*)
 	use_tls=yes
-	XENO_TARGET_ARCH=x86
+	target_cpu_arch=x86
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
- *) echo ""
-   echo "*******************************************"
-   echo "Still unsupported target: $build_for -- Sorry."
-   echo "*******************************************"
-   echo ""
-   exit 1;;
+ *)
+	if test $rtcore_type = cobalt; then
+	   echo ""
+	   echo "**********************************************"
+	   echo "Cobalt not supported over $build_for."
+	   echo "**********************************************"
+	   echo ""
+	   exit 1
+	else
+	   CONFIG_XENO_DEFAULT_PERIOD=100000
+	   target_cpu_arch=`echo $build_for|cut -d- -f1`
+	fi
+	;;
 esac
 
-AC_MSG_RESULT([$XENO_TARGET_ARCH])
-AM_CONDITIONAL(XENO_TARGET_ARCH_X86,[test $XENO_TARGET_ARCH = x86])
+AC_MSG_RESULT([$target_cpu_arch])
+XENO_TARGET_ARCH=$target_cpu_arch
 AC_ENABLE_SHARED
 AC_PROG_LIBTOOL
 
@@ -211,7 +218,7 @@ fi
 
 dnl Raw monotonic clock (default: cobalt=on, mercury=off)
 
-if test x$rtcore_type = xcobalt; then
+if test $rtcore_type = cobalt; then
    raw_monotonic_clock=y
 else
    raw_monotonic_clock=
@@ -273,7 +280,7 @@ AC_ARG_ENABLE(condvar-workaround,
 	esac])
 AC_MSG_RESULT(${workaround_condvar_pi:-no})
 if test x$workaround_condvar_pi = xy; then
-   if test x$rtcore_type = xmercury; then
+   if test $rtcore_type = mercury; then
 	AC_DEFINE(CONFIG_XENO_WORKAROUND_CONDVAR_PI,1,[config])
    else
         AC_MSG_WARN([PI workaround for condvars useless over Cobalt - ignoring])
@@ -319,10 +326,10 @@ if test x$use_registry = xy; then
 fi
 AM_CONDITIONAL(XENO_REGISTRY,[test x$use_registry = xy])
 
-dnl SMP support (default: off)
+dnl SMP support (default: on for cobalt/x86, off otherwise)
 
 CONFIG_SMP=
-if test $XENO_TARGET_ARCH = x86; then
+if test $target_cpu_arch = x86 -a $rtcore_type = cobalt; then
 	CONFIG_SMP=y
 fi
 AC_MSG_CHECKING(for SMP support)
@@ -352,11 +359,10 @@ else
   AC_DEFINE(CONFIG_XENO_SANITY,0,[config])
 fi
 
-dnl VSYSCALL (default: enabled) for x86
+dnl VSYSCALL (default: enabled) for Cobalt/x86
 
-CONFIG_XENO_X86_VSYSCALL=y
-
-if test $XENO_TARGET_ARCH = x86; then
+if test $XENO_TARGET_ARCH = x86 -a $rtcore_type = cobalt; then
+  CONFIG_XENO_X86_VSYSCALL=y
   AC_MSG_CHECKING(for x86 VSYSCALL availability)
   AC_ARG_ENABLE(x86-vsyscall,
 	AS_HELP_STRING([--enable-x86-vsyscall], [Assume VSYSCALL enabled for issuing syscalls]),
@@ -597,8 +603,8 @@ dnl Allocator for Copperplate
 dnl Note: in dual kernel mode, we don't want malloc, no matter what.
 dnl We switch to malloc only over the Mercury core in debug mode, to ease
 dnl debugging with valgrind, instrumented glibc etc.
-AM_CONDITIONAL(XENO_TLSF,[test x$rtcore_type = xcobalt -o x$debug_mode = x])
-test x$rtcore_type = xcobalt -o x$debug_mode = x && AC_DEFINE(CONFIG_XENO_TLSF,1,[config])
+AM_CONDITIONAL(XENO_TLSF,[test $rtcore_type = cobalt -o x$debug_mode = x])
+test $rtcore_type = cobalt -o x$debug_mode = x && AC_DEFINE(CONFIG_XENO_TLSF,1,[config])
 
 dnl Check for atomic builtins. For now we only check for the legacy
 dnl interface, i.e. __sync_*.
@@ -779,7 +785,7 @@ dnl Now we can close the conditional section, right after all
 dnl Autoconf-generated symbols have been listed.
 AH_BOTTOM([#endif /* __IN_XENO__ */])
 
-if test x$rtcore_type = xcobalt; then
+if test $rtcore_type = cobalt; then
    XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/kernel/cobalt/arch/$XENO_TARGET_ARCH/include $XENO_USER_CFLAGS"
    XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
    case "$build_for" in
