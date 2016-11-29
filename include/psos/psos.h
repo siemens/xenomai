@@ -25,7 +25,6 @@
 #define _XENOMAI_PSOS_PSOS_H
 
 #include <sys/types.h>
-#include <boilerplate/tunables.h>
 
 #ifndef SUCCESS
 #define SUCCESS 0
@@ -369,18 +368,6 @@ u_long tm_wkwhen(u_long date,
 int psos_task_normalize_priority(u_long psos_prio);
 
 u_long psos_task_denormalize_priority(int core_prio);
-
-extern int psos_long_names;
-
-static inline define_config_tunable(long_names, int, on)
-{
-	psos_long_names = on;
-}
-
-static inline read_config_tunable(long_names, int)
-{
-	return psos_long_names;
-}
 
 #ifdef __cplusplus
 }
