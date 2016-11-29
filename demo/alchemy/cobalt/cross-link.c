@@ -89,7 +89,7 @@ static int close_file( int fd, char *name)
 			break;
 		default:
 			printf(MAIN_PREFIX "%s -> %s\n", name,
-			       strerror(-err));
+			       strerror(errno));
 			break;
 		}
 	} while (err == -EAGAIN && i < 10);
@@ -158,7 +158,7 @@ static void write_task_proc(void *arg)
 		written = write(write_fd, &write_time, sz);
 		if (written < 0 ) {
 			printf(WTASK_PREFIX "error on write, %s\n",
-			       strerror(-err));
+			       strerror(errno));
 			break;
 		} else if (written != sz) {
 			printf(WTASK_PREFIX "only %d / %zd byte transmitted\n",
@@ -201,7 +201,7 @@ static void read_task_proc(void *arg)
 		if (err) {
 			printf(RTASK_PREFIX
 			       "error on RTSER_RTIOC_WAIT_EVENT, %s\n",
-			       strerror(-err));
+			       strerror(errno));
 			if (err == -ETIMEDOUT)
 				continue;
 			break;
@@ -218,7 +218,7 @@ static void read_task_proc(void *arg)
 			nr++;
 		} else if (rd < 0 ) {
 			printf(RTASK_PREFIX "error on read, code %s\n",
-			       strerror(-err));
+			       strerror(errno));
 			break;
 		} else {
 			printf(RTASK_PREFIX "only %d / %zd byte received \n",
@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 	write_fd = open( WRITE_FILE, 0);
 	if (write_fd < 0) {
 		printf(MAIN_PREFIX "can't open %s (write), %s\n", WRITE_FILE,
-		       strerror(-write_fd));
+		       strerror(errno));
 		goto error;
 	}
 	write_state |= STATE_FILE_OPENED;
@@ -255,7 +255,7 @@ int main(int argc, char* argv[])
 	err = ioctl(write_fd, RTSER_RTIOC_SET_CONFIG, &write_config);
 	if (err) {
 		printf(MAIN_PREFIX "error while RTSER_RTIOC_SET_CONFIG, %s\n",
-		       strerror(-err));
+		       strerror(errno));
 		goto error;
 	}
 	printf(MAIN_PREFIX "write-config written\n");
@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 	read_fd = open( READ_FILE, 0 );
 	if (read_fd < 0) {
 		printf(MAIN_PREFIX "can't open %s (read), %s\n", READ_FILE,
-		       strerror(-read_fd));
+		       strerror(errno));
 		goto error;
 	}
 	read_state |= STATE_FILE_OPENED;
@@ -274,7 +274,7 @@ int main(int argc, char* argv[])
 	err = ioctl(read_fd, RTSER_RTIOC_SET_CONFIG, &read_config);
 	if (err) {
 		printf(MAIN_PREFIX "error while ioctl, %s\n",
-		       strerror(-err));
+		       strerror(errno));
 		goto error;
 	}
 	printf(MAIN_PREFIX "read-config written\n");
