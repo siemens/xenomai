@@ -102,10 +102,7 @@ extern int __config_done;
 
 extern struct base_setup_data __base_setup_data;
 
-static inline const char *get_program_name(void)
-{
-	return basename(__base_setup_data.arg0 ?: "program");
-}
+const char *get_program_name(void);
 
 void __trace_me(const char *fmt, ...);
 

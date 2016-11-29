@@ -644,3 +644,8 @@ void __register_setup_call(struct setup_descriptor *p, int id)
 	}
 	pvlist_prepend(&p->__reserved.next, &setup_list);
 }
+
+const char *get_program_name(void)
+{
+	return basename(__base_setup_data.arg0 ?: "program");
+}
