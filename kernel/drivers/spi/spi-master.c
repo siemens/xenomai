@@ -426,6 +426,7 @@ void rtdm_spi_remove_master(struct rtdm_spi_master *master)
 	
 	rtdm_mutex_destroy(&master->bus_lock);
 	spi_unregister_master(master->kmaster);
+	rtdm_drv_set_sysclass(&master->driver, NULL);
 	class_destroy(class);
 	kfree(classname);
 }
