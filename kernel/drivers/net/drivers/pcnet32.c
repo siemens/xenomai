@@ -513,7 +513,7 @@ static int pcnet32_probe_pci(struct pci_dev *pdev, const struct pci_device_id *e
 	return -ENODEV;
     }
 
-    if (!pci_dma_supported(pdev, PCNET32_DMA_MASK)) {
+    if (!dma_supported(&pdev->dev, PCNET32_DMA_MASK)) {
 	printk(KERN_ERR PFX "architecture does not support 32bit PCI busmaster DMA\n");
 	return -ENODEV;
     }
