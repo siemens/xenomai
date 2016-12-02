@@ -734,7 +734,7 @@ static inline void barrier_wait(struct thread_barrier *barrier)
 		while (barrier->count > 0)
 			pthread_cond_wait(&barrier->wait, &barrier->lock);
 	}
-	
+
 	pthread_mutex_unlock(&barrier->lock);
 }
 
@@ -832,8 +832,9 @@ void *timerthread(void *param)
 	next.tv_nsec += interval.tv_nsec;
 	tsnorm(&next);
 
+	memset(&stop, 0, sizeof(stop)); /* grrr */
+
 	if (duration) {
-		memset(&stop, 0, sizeof(stop)); /* grrr */
 		stop = now;
 		stop.tv_sec += duration;
 	}
