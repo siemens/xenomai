@@ -291,6 +291,8 @@ static int do_contend(pthread_mutex_t *mutex, int type)
 	if (!__Tassert(status == NULL))
 		return -EINVAL;
 
+	smokey_barrier_destroy(&barrier);
+
 	return 0;
 }
 
@@ -471,6 +473,8 @@ static int do_pi_contend(int prio)
 	if (!__T(ret, pthread_mutex_destroy(&mutex)))
 		return ret;
 
+	smokey_barrier_destroy(&barrier);
+
 	return 0;
 }
 
@@ -577,6 +581,8 @@ static int do_steal(int may_steal)
 
 	if (!__T(ret, pthread_mutex_destroy(&mutex)))
 		return ret;
+
+	smokey_barrier_destroy(&barrier);
 
 	return 0;
 }
