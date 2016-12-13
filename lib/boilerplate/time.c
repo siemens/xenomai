@@ -72,3 +72,14 @@ void timespec_adds(struct timespec *__restrict r,
 		r->tv_nsec -= 1000000000;
 	}
 }
+
+void timespec_sets(struct timespec *__restrict r,
+		   ticks_t ns)
+{
+	r->tv_sec = ns / 1000000000UL;
+	r->tv_nsec = ns - r->tv_sec * 1000000000UL;
+	if (r->tv_nsec >= 1000000000) {
+		r->tv_sec++;
+		r->tv_nsec -= 1000000000;
+	}
+}

@@ -44,6 +44,9 @@ void timespec_adds(struct timespec *__restrict r,
 		   const struct timespec *__restrict t1,
 		   sticks_t t2);
 
+void timespec_sets(struct timespec *__restrict r,
+		   ticks_t ns);
+
 #ifdef __cplusplus
 }
 #endif
