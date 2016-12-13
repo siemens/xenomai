@@ -6,14 +6,13 @@ SUBDIRS = 		\
 	smokey		\
 	alchemy		\
 	psos 		\
+	rtdm		\
 	trank		\
 	vxworks		\
 	xenomai
 
 if XENO_COBALT
-SUBDIRS += 		\
-	cobalt 		\
-	rtdm
+SUBDIRS += cobalt
 else
 SUBDIRS += mercury
 endif
