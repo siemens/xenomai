@@ -858,7 +858,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_wait);
  * - -EWOULDBLOCK is returned if a negative @a timeout (i.e., non-blocking
  * operation) has been specified.
  *
- * @coretags{primary-only, might-switch}
+ * @coretags{primary-timed, might-switch}
  */
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
@@ -867,7 +867,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	int err = 0, ret;
 	spl_t s;
 
-	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, timeout < 0 || !xnsched_unblockable_p()))
 		return -EPERM;
 
 	trace_cobalt_driver_event_wait(event, xnthread_current());
@@ -1091,7 +1091,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_down);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * @coretags{primary-only, might-switch}
+ * @coretags{primary-timed, might-switch}
  */
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq)
@@ -1100,7 +1100,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	int err = 0, ret;
 	spl_t s;
 
-	if (!XENO_ASSERT(COBALT, !xnsched_unblockable_p()))
+	if (!XENO_ASSERT(COBALT, timeout < 0 || !xnsched_unblockable_p()))
 		return -EPERM;
 
 	trace_cobalt_driver_sem_wait(sem, xnthread_current());

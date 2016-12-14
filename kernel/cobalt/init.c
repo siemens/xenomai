@@ -445,10 +445,11 @@ device_initcall(xenomai_init);
  * <TABLE>
  * <TR><TH>Tag</TH> <TH>Context on entry</TH></TR>
  * <TR><TD>primary-only</TD>	<TD>Must be called from a Cobalt task in primary mode</TD></TR>
+ * <TR><TD>primary-timed</TD>	<TD>Requires a Cobalt task in primary mode if timed</TD></TR>
  * <TR><TD>coreirq-only</TD>	<TD>Must be called from a Cobalt IRQ handler</TD></TR>
  * <TR><TD>secondary-only</TD>	<TD>Must be called from a Cobalt task in secondary mode or regular Linux task</TD></TR>
  * <TR><TD>rtdm-task</TD>	<TD>Must be called from a RTDM driver task</TD></TR>
- * <TR><TD>mode-unrestricted</TD>	<TD>Must be called from a Cobalt task in either primary or secondary mode</TD></TR>
+ * <TR><TD>mode-unrestricted</TD>	<TD>May be called from a Cobalt task in either primary or secondary mode</TD></TR>
  * <TR><TD>task-unrestricted</TD>	<TD>May be called from a Cobalt or regular Linux task indifferently</TD></TR>
  * <TR><TD>unrestricted</TD>	<TD>May be called from any context previously described</TD></TR>
  * <TR><TD>atomic-entry</TD>	<TD>Caller must currently hold the big Cobalt kernel lock (nklock)</TD></TR>
