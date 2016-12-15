@@ -625,6 +625,7 @@ void *tlsf_malloc(size_t size)
 	void *area;
 
 	area_size = sizeof(tlsf_t) + BHDR_OVERHEAD * 8; /* Just a safety constant */
+	area_size += size;
 	area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
 	area = get_new_area(&area_size);
 	if (area == ((void *) ~0))
@@ -709,23 +710,6 @@ void *malloc_ex(size_t size, void *mem_pool)
     /* Searching a free block, recall that this function changes the values of fl and sl,
        so they are not longer valid when the function fails */
     b = FIND_SUITABLE_BLOCK(tlsf, &fl, &sl);
-#if USE_MMAP || USE_SBRK
-    if (!b && mem_pool == mp) {	/* Don't grow private pools */
-	size_t area_size;
-	void *area;
-	/* Growing the pool size when needed */
-	area_size = size + BHDR_OVERHEAD * 8;   /* size plus enough room for the requered headers. */
-	area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
-	area = get_new_area(&area_size);        /* Call sbrk or mmap */
-	if (area == ((void *) ~0))
-	    return NULL;        /* Not enough system memory */
-	add_new_area(area, area_size, mem_pool);
-	/* Rounding up the requested size and calculating fl and sl */
-	MAPPING_SEARCH(&size, &fl, &sl);
-	/* Searching a free block */
-	b = FIND_SUITABLE_BLOCK(tlsf, &fl, &sl);
-    }
-#endif
     if (!b)
 	return NULL;            /* Not found */
 
