@@ -33,6 +33,10 @@ struct rtdm_gpio_pin {
 	struct gpio_desc *desc;
 };
 
+struct rtdm_gpio_chan {
+	bool requested;
+};
+
 static int gpio_pin_interrupt(rtdm_irq_t *irqh)
 {
 	struct rtdm_gpio_pin *pin;
@@ -45,6 +49,7 @@ static int gpio_pin_interrupt(rtdm_irq_t *irqh)
 }
 
 static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
+			    struct rtdm_gpio_chan *chan,
 			    int trigger)
 {
 	static const int trigger_flags[] = {
@@ -92,6 +97,8 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 		goto fail;
 	}
 
+	chan->requested = true;
+	
 	rtdm_irq_enable(&pin->irqh);
 
 	return 0;
@@ -101,15 +108,18 @@ fail:
 	return ret;
 }
 
-static void release_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin)
+static void release_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
+			     struct rtdm_gpio_chan *chan)
 {
 	rtdm_irq_free(&pin->irqh);
 	gpio_free(gpio);
+	chan->requested = false;
 }
 
 static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 			      unsigned int request, void *arg)
 {
+	struct rtdm_gpio_chan *chan = rtdm_fd_to_private(fd);
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	unsigned int gpio = rtdm_fd_minor(fd);
 	int ret = 0, val, trigger;
@@ -128,14 +138,16 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 		ret = gpio_direction_input(gpio);
 		break;
 	case GPIO_RTIOC_IRQEN:
+		if (chan->requested)
+			return -EBUSY;
 		ret = rtdm_safe_copy_from_user(fd, &trigger,
 				       arg, sizeof(trigger));
 		if (ret)
 			return ret;
-		ret = request_gpio_irq(gpio, pin, trigger);
+		ret = request_gpio_irq(gpio, pin, chan, trigger);
 		break;
 	case GPIO_RTIOC_IRQDIS:
-		release_gpio_irq(gpio, pin);
+		release_gpio_irq(gpio, pin, chan);
 		break;
 	default:
 		return -EINVAL;
@@ -147,12 +159,16 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 static ssize_t gpio_pin_read_rt(struct rtdm_fd *fd,
 				void __user *buf, size_t len)
 {
+	struct rtdm_gpio_chan *chan = rtdm_fd_to_private(fd);
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	struct rtdm_gpio_pin *pin;
 	int value, ret;
 
 	if (len < sizeof(value))
 		return -EINVAL;
+
+	if (!chan->requested)
+		return -EAGAIN;
 
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
 
@@ -191,12 +207,29 @@ static ssize_t gpio_pin_write_rt(struct rtdm_fd *fd,
 static int gpio_pin_select(struct rtdm_fd *fd, struct xnselector *selector,
 			   unsigned int type, unsigned int index)
 {
+	struct rtdm_gpio_chan *chan = rtdm_fd_to_private(fd);
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	struct rtdm_gpio_pin *pin;
+
+	if (!chan->requested)
+		return -EAGAIN;
 
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
 
 	return rtdm_event_select(&pin->event, selector, type, index);
+}
+
+static void gpio_pin_close(struct rtdm_fd *fd)
+{
+	struct rtdm_gpio_chan *chan = rtdm_fd_to_private(fd);
+	struct rtdm_device *dev = rtdm_fd_device(fd);
+	unsigned int gpio = rtdm_fd_minor(fd);
+	struct rtdm_gpio_pin *pin;
+
+	if (chan->requested) {
+		pin = container_of(dev, struct rtdm_gpio_pin, dev);
+		release_gpio_irq(gpio, pin, chan);
+	}
 }
 
 static void delete_pin_devices(struct rtdm_gpio_chip *rgc)
@@ -304,8 +337,9 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 	rgc->driver.device_flags = RTDM_NAMED_DEVICE|RTDM_FIXED_MINOR;
 	rgc->driver.base_minor = gc->base;
 	rgc->driver.device_count = gc->ngpio;
-	rgc->driver.context_size = 0;
+	rgc->driver.context_size = sizeof(struct rtdm_gpio_chan);
 	rgc->driver.ops = (struct rtdm_fd_ops){
+		.close		=	gpio_pin_close,
 		.ioctl_nrt	=	gpio_pin_ioctl_nrt,
 		.read_rt	=	gpio_pin_read_rt,
 		.write_rt	=	gpio_pin_write_rt,
