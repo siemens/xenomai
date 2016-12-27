@@ -541,8 +541,9 @@ int main(int argc, char *const *argv)
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = SIG_IGN;
-	sigaction(SIGCHLD, &sa, NULL);
 	sigaction(SIGPIPE, &sa, NULL);
+	sa.sa_handler = SIG_DFL;
+	sigaction(SIGCHLD, &sa, NULL);
 
 	if (daemonize) {
 		ret = daemon(1, 1);
