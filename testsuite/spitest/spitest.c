@@ -233,7 +233,7 @@ static void *display_thread(void *arg)
 			dt = now - start;
 			printf("RTT|  %.2ld:%.2ld:%.2ld  (%Ld us period)\n",
 			       dt / 3600, (dt / 60) % 60, dt % 60,
-			       period_ns / 1000);
+			       (long long)period_ns / 1000);
 			printf("RTH|%11s|%11s|%11s|%8s|%8s|%11s|%11s\n",
 			       "----lat min", "----lat avg",
 			       "----lat max", "-overrun", "-errors",
