@@ -601,23 +601,21 @@ void xntimer_release_ipi(void)
 unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 {
 	xnticks_t period = timer->interval;
-	xnsticks_t delta;
 	unsigned long long overruns = 0;
+	xnsticks_t delta;
+	xntimerq_t *q;
 
-	XENO_BUG_ON(COBALT, (timer->status &
-	     (XNTIMER_DEQUEUED|XNTIMER_PERIODIC)) != XNTIMER_PERIODIC);
-	
 	delta = now - xntimer_pexpect(timer);
 	if (unlikely(delta >= (xnsticks_t) period)) {
-		xntimerq_t *q;
-
 		period = timer->interval_ns;
 		delta = xnclock_ticks_to_ns(xntimer_clock(timer), delta);
 		overruns = xnarch_div64(delta, period);
 		timer->pexpect_ticks += overruns;
-
 		if (xntimer_running_p(timer)) {
-			q = xntimer_percpu_queue(timer);
+			XENO_BUG_ON(COBALT, (timer->status &
+				    (XNTIMER_DEQUEUED|XNTIMER_PERIODIC))
+				    != XNTIMER_PERIODIC);
+				q = xntimer_percpu_queue(timer);
 			xntimer_dequeue(timer, q);
 			while (xntimerh_date(&timer->aplink) < now) {
 				timer->periodic_ticks++;
@@ -628,6 +626,7 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 	}
 
 	timer->pexpect_ticks++;
+
 	return overruns;
 }
 EXPORT_SYMBOL_GPL(xntimer_get_overruns);
