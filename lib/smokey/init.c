@@ -91,13 +91,11 @@
  *
  * static int run_foo(struct smokey_test *t, int argc, char *const argv[])
  * {
+ *      int i_arg = 0, nargs;
  *      char *s_arg = NULL;
  *      bool b_arg = false;
- *      int i_arg = 0, ret;
  *
- * 	ret = smokey_parse_args(t, argc, argv);
- *      if (ret)
- *          return ret;
+ * 	nargs = smokey_parse_args(t, argc, argv);
  *
  *	if (SMOKEY_ARG_ISSET(foo, some_integer))
  *		i_arg = SMOKEY_ARG_INT(foo, some_integer);
@@ -124,15 +122,17 @@
  * where @a name should match one of the declarators.  Before the
  * test-specific arguments can be accessed, a call to
  * smokey_parse_args() must be issued by the test code, passing the
- * parameters received in the run handler.
+ * parameters received in the run handler. This routine returns the
+ * number of arguments found on the command line matching the
+ * an entry in SMOKEY_ARGLIST().
  *
- * Once smokey_parse_args() has returned, each argument can be checked
- * individually for presence. If a valid argument was matched on the
- * command line, SMOKEY_ARG_ISSET(test_name, arg_name) returns
- * non-zero. In the latter case, its value can be retrieved by a
- * similar call to SMOKEY_ARG_INT(test_name, arg_name),
- * SMOKEY_ARG_STRING(test_name, arg_name) or
- * SMOKEY_ARG_BOOL(test_name, arg_name).
+ * Once smokey_parse_args() has returned with a non-zero value, each
+ * argument can be checked individually for presence. If a valid
+ * argument was matched on the command line,
+ * SMOKEY_ARG_ISSET(test_name, arg_name) returns non-zero. In the
+ * latter case, its value can be retrieved by a similar call to
+ * SMOKEY_ARG_INT(test_name, arg_name), SMOKEY_ARG_STRING(test_name,
+ * arg_name) or SMOKEY_ARG_BOOL(test_name, arg_name).
  *
  * In the above example, passing "some_integer=3" on the command line of
  * any program implementing such Smokey-based test would cause the
