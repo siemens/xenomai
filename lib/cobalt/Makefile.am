@@ -46,10 +46,12 @@ libcobalt_la_CPPFLAGS =			\
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) $(srcdir)/cobalt.wrappers $(DESTDIR)$(libdir)
+	$(INSTALL_DATA) $(srcdir)/assert.wrappers $(DESTDIR)$(libdir)
 
 uninstall-local:
 	$(RM) $(DESTDIR)$(libdir)/cobalt.wrappers
+	$(RM) $(DESTDIR)$(libdir)/assert.wrappers
 
-EXTRA_DIST = cobalt.wrappers
+EXTRA_DIST = cobalt.wrappers assert.wrappers
 
 SUBDIRS = arch

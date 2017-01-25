@@ -796,17 +796,19 @@ dnl Build wrapping information. XENO_POSIX_WRAPPERS lists all wrapping
 dnl directives in a format the linker understands, for building the
 dnl in-tree executables which require POSIX symbol wrapping.
 
+   assert_wrappers="$topdir/lib/cobalt/assert.wrappers"
    cobalt_wrappers="$topdir/lib/cobalt/cobalt.wrappers"
    if [[ $ac_cv_ld_file_option = yes ]]; then
-	XENO_POSIX_WRAPPERS="-Wl,@$cobalt_wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@$assert_wrappers -Wl,@$cobalt_wrappers"
    else
-	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
-			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $cobalt_wrappers`
+	XENO_POSIX_WRAPPERS=`cat $assert_wrappers $cobalt_wrappers | \
+			while read wrap_option symbol ; do \
+				echo -n "-Wl,$wrap_option,$symbol " ; \
+			done`
    fi
 
    AC_SUBST(XENO_POSIX_WRAPPERS)
-   AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$cobalt_wrappers"])
+   AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$assert_wrappers $cobalt_wrappers"])
 fi
 
 dnl

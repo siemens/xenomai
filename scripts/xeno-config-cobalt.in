@@ -235,8 +235,8 @@ if test x$do_ldflags = xy; then
 	echo "no API specified, missing --skin before --ldflags" 1>&2
 	exit 1
     fi
-    ldflags=
-    test x$compat = xy && ldflags="-ltrank "
+    ldflags="`dump_wrappers assert.wrappers`"
+    test x$compat = xy && ldflags="-ltrank $ldflags"
     copperplate=
     for skin in $skin_list; do
 	case "$skin" in
