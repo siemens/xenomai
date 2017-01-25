@@ -43,6 +43,7 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <boilerplate/compiler.h>
+#include <internal.h>
 
 /* sched */
 __weak
@@ -531,4 +532,40 @@ __weak
 unsigned int __real_sleep(unsigned int seconds)
 {
 	return sleep(seconds);
+}
+
+__weak
+int __real___cxa_guard_acquire(__guard *g)
+{
+	return __cxa_guard_acquire(g);
+}
+
+__weak
+void __real___cxa_guard_release(__guard *g)
+{
+	return __cxa_guard_release(g);
+}
+
+__weak
+void __real___cxa_guard_abort(__guard *g)
+{
+	return __cxa_guard_abort(g);
+}
+
+__weak
+int __cxa_guard_acquire(__guard *g)
+{
+	return 0;
+}
+
+__weak
+void __cxa_guard_release(__guard *g)
+{
+	return;
+}
+
+__weak
+void __cxa_guard_abort(__guard *g)
+{
+	return;
 }

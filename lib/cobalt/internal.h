@@ -73,4 +73,16 @@ void cobalt_check_features(struct cobalt_featinfo *finfo);
 
 extern struct sigaction __cobalt_orig_sigdebug;
 
+#ifdef __ARM_EABI__
+typedef uint32_t __guard;
+#else
+typedef uint64_t __guard;
+#endif
+int __real___cxa_guard_acquire(__guard*);
+void __real___cxa_guard_release(__guard*);
+void __real___cxa_guard_abort(__guard*);
+int __cxa_guard_acquire(__guard*);
+void __cxa_guard_release(__guard*);
+void __cxa_guard_abort(__guard*);
+
 #endif /* _LIB_COBALT_INTERNAL_H */

@@ -66,3 +66,22 @@ COBALT_IMPL(void, free, (void *ptr))
 	assert_nrt();
 	__STD(free(ptr));
 }
+
+/* CXXABI 3.3.2 One-time Construction API */
+COBALT_IMPL(int, __cxa_guard_acquire, (__guard *g))
+{
+	assert_nrt();
+	return __STD(__cxa_guard_acquire(g));
+}
+
+COBALT_IMPL(void, __cxa_guard_release, (__guard *g))
+{
+	assert_nrt();
+	__STD(__cxa_guard_release(g));
+}
+
+COBALT_IMPL(void, __cxa_guard_abort, (__guard *g))
+{
+	assert_nrt();
+	__STD(__cxa_guard_abort(g));
+}
