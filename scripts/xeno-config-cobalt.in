@@ -25,7 +25,7 @@ dump_wrappers()
 {
    file=$1
    if test \! -r ${XENO_LIBRARY_DIR}/$file; then
-      echo "Xenomai: POSIX wrappers cannot be read from ${XENO_LIBRARY_DIR}/${file}" >&2
+      echo "Xenomai: wrappers cannot be read from ${XENO_LIBRARY_DIR}/${file}" >&2
       exit 1
    fi
    if test "$LD_FILE_OPTION" = "yes"; then
