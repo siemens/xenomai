@@ -28,7 +28,24 @@ static char *const *early_argv;
 
 const int xenomai_auto_bootstrap = 1;
 
-#ifndef __PIC__
+/*
+ * The bootstrap module object is built in two forms:
+ *
+ * - in static object form, to be glued to the main executable, which
+ *   should include a wrapper interposing on the main() routine for
+ *   auto-init purpose. Such wrapper is activated when symbol wrapping
+ *   is enabled at link time (--wrap).
+ *    
+ * - in dynamic object form, to be included in a shared library target
+ *   which enables the auto-init feature. This form should not include
+ *   any wrapper to a main() routine - which does not exist - but only
+ *   a constructor routine performing the inits.
+ *
+ * The dedicated macro __INTERCEPT_MAIN__ tells us whether the main()
+ * interception code should be present in the relocatable object.
+ */
+
+#ifdef __INTERCEPT_MAIN__
 
 int __real_main(int argc, char *const argv[]);
 
@@ -45,7 +62,7 @@ int xenomai_main(int argc, char *const argv[])
 	return __real_main(argc, argv);
 }
 
-#endif /* !__PIC__ */
+#endif /* !__INTERCEPT_MAIN__ */
 
 __bootstrap_ctor static void xenomai_bootstrap(void)
 {
