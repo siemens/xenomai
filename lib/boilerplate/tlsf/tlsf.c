@@ -626,6 +626,7 @@ void *tlsf_malloc(size_t size)
 
 	area_size = sizeof(tlsf_t) + BHDR_OVERHEAD * 8; /* Just a safety constant */
 	area_size += size;
+	area_size += (1 << (ms_bit(area_size) - MAX_LOG2_SLI)) - 1;
 	area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
 	area = get_new_area(&area_size);
 	if (area == ((void *) ~0))
