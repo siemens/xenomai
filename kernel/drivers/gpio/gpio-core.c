@@ -34,7 +34,9 @@ struct rtdm_gpio_pin {
 };
 
 struct rtdm_gpio_chan {
-	bool requested;
+	int requested : 1,
+	    has_direction : 1,
+	    is_output : 1 ;
 };
 
 static int gpio_pin_interrupt(rtdm_irq_t *irqh)
@@ -77,6 +79,7 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 		goto fail;
 	}
 
+	chan->has_direction = true;
 	gpio_export(gpio, true);
 
 	rtdm_event_clear(&pin->event);
@@ -133,9 +136,15 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 		if (ret)
 			return ret;
 		ret = gpio_direction_output(gpio, val);
+		if (ret == 0) {
+			chan->has_direction = true;
+			chan->is_output = true;
+		}
 		break;
 	case GPIO_RTIOC_DIR_IN:
 		ret = gpio_direction_input(gpio);
+		if (ret == 0)
+			chan->has_direction = true;
 		break;
 	case GPIO_RTIOC_IRQEN:
 		if (chan->requested)
@@ -148,6 +157,7 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 		break;
 	case GPIO_RTIOC_IRQDIS:
 		release_gpio_irq(gpio, pin, chan);
+		chan->requested = false;
 		break;
 	default:
 		return -EINVAL;
@@ -167,8 +177,11 @@ static ssize_t gpio_pin_read_rt(struct rtdm_fd *fd,
 	if (len < sizeof(value))
 		return -EINVAL;
 
-	if (!chan->requested)
+	if (!chan->has_direction)
 		return -EAGAIN;
+
+	if (chan->is_output)
+		return -EINVAL;
 
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
 
@@ -187,11 +200,18 @@ static ssize_t gpio_pin_read_rt(struct rtdm_fd *fd,
 static ssize_t gpio_pin_write_rt(struct rtdm_fd *fd,
 				 const void __user *buf, size_t len)
 {
+	struct rtdm_gpio_chan *chan = rtdm_fd_to_private(fd);
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	struct rtdm_gpio_pin *pin;
 	int value, ret;
 
 	if (len < sizeof(value))
+		return -EINVAL;
+
+	if (!chan->has_direction)
+		return -EAGAIN;
+
+	if (!chan->is_output)
 		return -EINVAL;
 
 	ret = rtdm_safe_copy_from_user(fd, &value, buf, sizeof(value));
@@ -211,8 +231,11 @@ static int gpio_pin_select(struct rtdm_fd *fd, struct xnselector *selector,
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	struct rtdm_gpio_pin *pin;
 
-	if (!chan->requested)
+	if (!chan->has_direction)
 		return -EAGAIN;
+
+	if (chan->is_output)
+		return -EINVAL;
 
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
 
