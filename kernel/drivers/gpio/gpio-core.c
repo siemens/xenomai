@@ -54,13 +54,7 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 			    struct rtdm_gpio_chan *chan,
 			    int trigger)
 {
-	static const int trigger_flags[] = {
-		IRQ_TYPE_EDGE_RISING,
-		IRQ_TYPE_EDGE_FALLING,
-		IRQ_TYPE_LEVEL_HIGH,
-		IRQ_TYPE_LEVEL_LOW,
-	};
-	int irq_trigger, ret;
+	int ret, irq_trigger;
 	unsigned int irq;
 
 	if (trigger & ~GPIO_TRIGGER_MASK)
@@ -84,14 +78,19 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 
 	rtdm_event_clear(&pin->event);
 	irq = gpio_to_irq(gpio);
-	/*
-	 * Assumes GPIO_TRIGGER_xx values are forming a continuous
-	 * sequence of bits starting at bit #0.
-	 */
-	if (trigger) {
-		irq_trigger = trigger_flags[ffs(trigger) - 1];
+
+	irq_trigger = 0;
+	if (trigger & GPIO_TRIGGER_EDGE_RISING)
+		irq_trigger |= IRQ_TYPE_EDGE_RISING;
+	if (trigger & GPIO_TRIGGER_EDGE_FALLING)
+		irq_trigger |= IRQ_TYPE_EDGE_FALLING;
+	if (trigger & GPIO_TRIGGER_LEVEL_HIGH)
+		irq_trigger |= IRQ_TYPE_LEVEL_HIGH;
+	if (trigger & GPIO_TRIGGER_LEVEL_LOW)
+		irq_trigger |= IRQ_TYPE_LEVEL_LOW;
+
+	if (irq_trigger)
 		irq_set_irq_type(irq, irq_trigger);
-	}
 	
 	ret = rtdm_irq_request(&pin->irqh, irq, gpio_pin_interrupt,
 			       0, pin->name, pin);
@@ -101,7 +100,7 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 	}
 
 	chan->requested = true;
-	
+
 	rtdm_irq_enable(&pin->irqh);
 
 	return 0;
