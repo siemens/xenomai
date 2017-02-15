@@ -758,8 +758,8 @@ implementation is called <em>Mercury</em>.</p></div>
 </td>
 <td class="content">If you are looking for detailed information about installing a legacy
 Xenomai 2.x release, please refer to <a href="installing-xenomai-2.x">this
-document</a> instead. Please note that Xenomai 2.x has reached EOL status
-and is no more actively maintained.</td>
+document</a> instead. Please note that Xenomai 2.x is discontinued and
+not maintained anymore.</td>
 </tr></table>
 </div>
 </div>
@@ -820,12 +820,12 @@ specifies the path of the target kernel source tree. Such
 <p>
 specifies the path of the interrupt pipeline (aka I-pipe)
     patch to apply against the kernel tree. Suitable patches are
-    available with <em>Xenomai/cobalt</em> under
-    <code>kernel/cobalt/arch/&lt;target-arch&gt;/patches</code>. This parameter can be
-    omitted if the I-pipe has already been patched in, or the script
-    shall suggest an appropriate one. The script will detect whether
-    the interrupt pipeline code is already present into the kernel
-    tree, and skip this operation if so.
+    available from the project&#8217;s <a href="/downloads/ipipe/">download
+    area</a>.  This parameter can be omitted if the I-pipe has already
+    been patched in, or the script shall suggest an appropriate
+    one. The script will detect whether the interrupt pipeline code is
+    already present into the kernel tree, and skip this operation if
+    so.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -989,7 +989,7 @@ typically run:</p></div>
 <div class="content">
 <pre><code>$ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86 \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make [ARCH=i386] xconfig/gconfig/menuconfig</code></pre>
 </div></div>
 <div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
@@ -1006,7 +1006,7 @@ typical steps would be as follows:</p></div>
 <div class="content">
 <pre><code>$ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make xconfig/gconfig/menuconfig</code></pre>
 </div></div>
 <div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
@@ -1021,7 +1021,7 @@ $ make xconfig/gconfig/menuconfig</code></pre>
 <div class="content">
 <pre><code>$ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make xconfig/gconfig/menuconfig</code></pre>
 </div></div>
 <div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
@@ -1045,7 +1045,7 @@ cross-compiler:</p></div>
 <div class="content">
 <pre><code>$ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/powerpc/patches/ipipe-core-3.10.32-powerpc-1.patch
+  --ipipe=ipipe-core-3.10.32-powerpc-1.patch
 $ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig</code></pre>
 </div></div>
 <div class="paragraph"><p>&#8230;select the kernel and Xenomai options, save the configuration</p></div>
@@ -1062,7 +1062,7 @@ $ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig</code></pr
 <div class="content">
 <pre><code>$ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/blackfin/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig</code></pre>
 </div></div>
 <div class="paragraph"><p>&#8230;select the kernel and Xenomai options, then compile with:</p></div>
@@ -1085,7 +1085,7 @@ will look like:</p></div>
 <div class="content">
 <pre><code>$ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/arm/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ mkdir -p $build_root/linux
 $ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
   csb637_defconfig
@@ -2027,7 +2027,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-09-10 15:51:53 CEST
+Last updated 2017-02-15 15:31:41 CET
 </div>
 </div>
 </body>

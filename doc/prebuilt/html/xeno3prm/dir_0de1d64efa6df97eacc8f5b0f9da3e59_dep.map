@@ -1,0 +1,25 @@
+<map id="kernel/drivers" name="kernel/drivers">
+<area shape="rect" id="node2" href="dir_f27ba24392e124d493884539fbf16581.html" title="analogy" alt="" coords="901,63,973,111"/>
+<area shape="rect" id="node12" href="dir_d44c64559bbebec7f509842c48db8b23.html" title="include" alt="" coords="469,159,541,207"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000084_000000.html" title="1" alt="" coords="556,180,564,194"/>
+<area shape="rect" id="node3" href="dir_72cc62c6e6a40f19765c6a13c868acdf.html" title="autotune" alt="" coords="805,63,877,111"/>
+<area shape="rect" id="edge10-headlabel" href="dir_000090_000000.html" title="1" alt="" coords="556,182,564,197"/>
+<area shape="rect" id="node4" href="dir_451a57e43f16e7c167009a49ae4fe143.html" title="can" alt="" coords="709,63,781,111"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000091_000000.html" title="39" alt="" coords="553,176,568,190"/>
+<area shape="rect" id="node5" href="dir_a1c4286f83fc0e6c89d06a9bd1df46d0.html" title="gpio" alt="" coords="613,63,685,111"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000094_000000.html" title="1" alt="" coords="558,158,566,172"/>
+<area shape="rect" id="node6" href="dir_90e507647b4148fa7250242083669883.html" title="ipc" alt="" coords="517,63,589,111"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000083_000000.html" title="2" alt="" coords="529,139,537,154"/>
+<area shape="rect" id="node7" href="dir_8faba7cfaeef8234fe60b782e3350bd8.html" title="net" alt="" coords="421,63,493,111"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000080_000000.html" title="18" alt="" coords="485,131,500,146"/>
+<area shape="rect" id="node8" href="dir_c5e274419addaec17bfa70032c2010b6.html" title="serial" alt="" coords="325,63,397,111"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000120_000000.html" title="6" alt="" coords="452,143,460,157"/>
+<area shape="rect" id="node9" href="dir_87c6aa902b124b97424ec2a134895fd8.html" title="spi" alt="" coords="229,63,301,111"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000121_000000.html" title="2" alt="" coords="448,159,456,174"/>
+<area shape="rect" id="node10" href="dir_70084f4dbb40727ab38ea76174ec68e1.html" title="testing" alt="" coords="133,63,205,111"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000122_000000.html" title="6" alt="" coords="447,165,455,180"/>
+<area shape="rect" id="node11" href="dir_e2d64875a0fc18e9f4c3f65e2800a006.html" title="udd" alt="" coords="37,63,109,111"/>
+<area shape="rect" id="edge9-headlabel" href="dir_000123_000000.html" title="1" alt="" coords="447,163,455,177"/>
+<area shape="rect" id="clust2" href="dir_0de1d64efa6df97eacc8f5b0f9da3e59.html" alt="" coords="27,52,1080,121"/>
+<area shape="rect" id="clust1" href="dir_dc43877d82dd332f9fb2071fcca799d6.html" title="kernel" alt="" coords="16,16,1091,132"/>
+</map>

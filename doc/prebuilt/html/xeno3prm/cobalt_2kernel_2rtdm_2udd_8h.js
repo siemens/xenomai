@@ -1,5 +1,6 @@
 var cobalt_2kernel_2rtdm_2udd_8h =
 [
+    [ "udd_reserved", "structudd__device_1_1udd__reserved.html", null ],
     [ "UDD_IRQ_CUSTOM", "group__rtdm__udd.html#ga2d95e2dc3d3bf9de65c0c36889668d39", null ],
     [ "UDD_IRQ_NONE", "group__rtdm__udd.html#gaa3a9780334448cdbb66d147c845806ff", null ],
     [ "UDD_MEM_LOGICAL", "group__rtdm__udd.html#gaa55c896372f69102bab1ae98e7117a2f", null ],

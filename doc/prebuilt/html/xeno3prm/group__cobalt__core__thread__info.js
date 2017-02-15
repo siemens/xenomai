@@ -9,6 +9,7 @@ var group__cobalt__core__thread__info =
     [ "XNPIALERT", "group__cobalt__core__thread__info.html#gab657db6c8e6a0444a27104bc983da285", null ],
     [ "XNRMID", "group__cobalt__core__thread__info.html#gab07d9dea73645dbba353dc2452c15b40", null ],
     [ "XNROBBED", "group__cobalt__core__thread__info.html#gad28db508d297929d6a0ec30964639d65", null ],
+    [ "XNSYSRST", "group__cobalt__core__thread__info.html#ga94d1dbd5288133810ab4d27c63f39ff1", null ],
     [ "XNTIMEO", "group__cobalt__core__thread__info.html#gaa11d7fc754db50d3a1f1e41611d324e9", null ],
     [ "XNWAKEN", "group__cobalt__core__thread__info.html#ga53e49fa49b312e5266b31d66f7465d44", null ]
 ];

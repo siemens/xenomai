@@ -1,5 +1,6 @@
 var structudd__device =
 [
+    [ "udd_reserved", "structudd__device_1_1udd__reserved.html", null ],
     [ "close", "structudd__device.html#a9e6dce382a0c7e23d26f2bb12b523e45", null ],
     [ "device_flags", "structudd__device.html#acc143e9af9f5a1a6de12a09730370e4c", null ],
     [ "device_name", "structudd__device.html#a8f5d7d94ba891771a3d5dfbc308fdcad", null ],

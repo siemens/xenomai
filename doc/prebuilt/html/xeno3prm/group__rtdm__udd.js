@@ -7,6 +7,7 @@ var group__rtdm__udd =
       [ "type", "structudd__memregion.html#a7c1588967681e23d15f040a3eee22d4e", null ]
     ] ],
     [ "udd_device", "structudd__device.html", [
+      [ "udd_reserved", "structudd__device_1_1udd__reserved.html", null ],
       [ "close", "structudd__device.html#a9e6dce382a0c7e23d26f2bb12b523e45", null ],
       [ "device_flags", "structudd__device.html#acc143e9af9f5a1a6de12a09730370e4c", null ],
       [ "device_name", "structudd__device.html#a8f5d7d94ba891771a3d5dfbc308fdcad", null ],
@@ -18,7 +19,6 @@ var group__rtdm__udd =
       [ "mmap", "structudd__device.html#af2ecac4980b9d0a946730015068a74de", null ],
       [ "open", "structudd__device.html#af516c02002866b74d68c4e000b6ab37e", null ]
     ] ],
-    [ "udd_reserved", "structudd__device_1_1udd__reserved.html", null ],
     [ "udd_signotify", "structudd__signotify.html", [
       [ "pid", "structudd__signotify.html#a5d6a5db2ec1fd071c8aefb9da3268f5e", null ],
       [ "sig", "structudd__signotify.html#a224ee47db9f20ccdd86ec931ccd63bb6", null ]

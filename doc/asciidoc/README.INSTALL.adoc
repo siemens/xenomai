@@ -19,8 +19,8 @@ implementation is called _Mercury_.
 [NOTE]
 If you are looking for detailed information about installing a legacy
 Xenomai 2.x release, please refer to link:installing-xenomai-2.x[this
-document] instead. Please note that Xenomai 2.x has reached EOL status
-and is no more actively maintained.
+document] instead. Please note that Xenomai 2.x is discontinued and
+not maintained anymore.
 
 Installation steps
 ------------------
@@ -50,22 +50,14 @@ support the selected core, either _Cobalt_ or _Mercury_.
 [[cobalt-core-install]]
 Installing the _Cobalt_ core
 ----------------------------
-
-_Xenomai/cobalt_ provides a real-time extension kernel seamlessly
-integrated to Linux.
-
-This requires special kernel support to deliver fast and deterministic
-response time to external interrupts.  Such support is provided by the
-interrupt pipeline (aka I-pipe) in the form of a kernel patch you have
-to apply against a mainline kernel tree. Then, the _Cobalt_ codebase
-implementing real-time services can be compiled in the patched kernel.
-
 Preparing the _Cobalt_ kernel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The first step is to build _Cobalt_ as part of the target kernel. To
-this end, `scripts/prepare-kernel.sh` is a shell script which sets up
-the target kernel properly. The syntax is as follows:
+_Xenomai/cobalt_ provides a real-time extension kernel seamlessly
+integrated to Linux, therefore the first step is to build it as part
+of the target kernel. To this end, `scripts/prepare-kernel.sh` is a
+shell script which sets up the target kernel properly. The syntax is
+as follows:
 
 ------------------------------------------------------------------------------
 $ scripts/prepare-kernel.sh [--linux=<linux-srctree>]
@@ -97,6 +89,14 @@ support in:
 $ cd xenomai-3
 $ scripts/prepare-kernel.sh --linux=/home/me/linux-3.10
 ------------------------------------------------------------------------------
+
+Note: The script will infer the location of the Xenomai kernel code
+from its own location within the Xenomai source tree. For instance, if
+`/home/me/xenomai-3/scripts/prepare-kernel.sh` is executing, then
+the Xenomai kernel code available from
+`/home/me/xenomai-3/kernel/cobalt` will be patched in the target
+Linux kernel.
+
 
 Configuring and compiling the _Cobalt_ kernel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -198,7 +198,7 @@ typically run:
 ------------------------------------------------------------------------------
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86 \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make [ARCH=i386] xconfig/gconfig/menuconfig
 ------------------------------------------------------------------------------
 ...configure the kernel (see also the recommended settings
@@ -216,7 +216,7 @@ typical steps would be as follows:
 ------------------------------------------------------------------------------
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make xconfig/gconfig/menuconfig
 ------------------------------------------------------------------------------
 ...configure the kernel (see also the recommended settings
@@ -232,7 +232,7 @@ Similarly, for a 64bit platform, you would use:
 ------------------------------------------------------------------------------
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make xconfig/gconfig/menuconfig
 ------------------------------------------------------------------------------
 ...configure the kernel (see also the recommended settings
@@ -259,7 +259,7 @@ cross-compiler:
 ------------------------------------------------------------------------------
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/powerpc/patches/ipipe-core-3.10.32-powerpc-1.patch
+  --ipipe=ipipe-core-3.10.32-powerpc-1.patch
 $ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig
 ------------------------------------------------------------------------------
 ...select the kernel and Xenomai options, save the configuration
@@ -277,7 +277,7 @@ The Blackfin is a MMU-less, DSP-type architecture running uClinux.
 ------------------------------------------------------------------------------
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/blackfin/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig
 ------------------------------------------------------------------------------
 ...select the kernel and Xenomai options, then compile with:
@@ -300,7 +300,7 @@ will look like:
 ------------------------------------------------------------------------------
 $ cd $linux_tree
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
-  --ipipe=$xenomai_root/kernel/cobalt/arch/arm/patches/ipipe-core-X.Y.Z-x86-NN.patch
+  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
 $ mkdir -p $build_root/linux
 $ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
   csb637_defconfig
