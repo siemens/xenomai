@@ -50,14 +50,22 @@ support the selected core, either _Cobalt_ or _Mercury_.
 [[cobalt-core-install]]
 Installing the _Cobalt_ core
 ----------------------------
+
+_Xenomai/cobalt_ provides a real-time extension kernel seamlessly
+integrated to Linux.
+
+This requires special kernel support to deliver fast and deterministic
+response time to external interrupts.  Such support is provided by the
+interrupt pipeline (aka I-pipe) in the form of a kernel patch you have
+to apply against a mainline kernel tree. Then, the _Cobalt_ codebase
+implementing real-time services can be compiled in the patched kernel.
+
 Preparing the _Cobalt_ kernel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-_Xenomai/cobalt_ provides a real-time extension kernel seamlessly
-integrated to Linux, therefore the first step is to build it as part
-of the target kernel. To this end, `scripts/prepare-kernel.sh` is a
-shell script which sets up the target kernel properly. The syntax is
-as follows:
+The first step is to build _Cobalt_ as part of the target kernel. To
+this end, `scripts/prepare-kernel.sh` is a shell script which sets up
+the target kernel properly. The syntax is as follows:
 
 ------------------------------------------------------------------------------
 $ scripts/prepare-kernel.sh [--linux=<linux-srctree>]
@@ -70,12 +78,12 @@ $ scripts/prepare-kernel.sh [--linux=<linux-srctree>]
 
 `--ipipe`:: specifies the path of the interrupt pipeline (aka I-pipe)
     patch to apply against the kernel tree. Suitable patches are
-    available with _Xenomai/cobalt_ under
-    `kernel/cobalt/arch/<target-arch>/patches`. This parameter can be
-    omitted if the I-pipe has already been patched in, or the script
-    shall suggest an appropriate one. The script will detect whether
-    the interrupt pipeline code is already present into the kernel
-    tree, and skip this operation if so.
+    available from the project's link:/downloads/ipipe/[download
+    area].  This parameter can be omitted if the I-pipe has already
+    been patched in, or the script shall suggest an appropriate
+    one. The script will detect whether the interrupt pipeline code is
+    already present into the kernel tree, and skip this operation if
+    so.
 
 `--arch`:: tells the script about the target architecture. If
     unspecified, the build host architecture suggested as a reasonable
@@ -89,14 +97,6 @@ support in:
 $ cd xenomai-3
 $ scripts/prepare-kernel.sh --linux=/home/me/linux-3.10
 ------------------------------------------------------------------------------
-
-Note: The script will infer the location of the Xenomai kernel code
-from its own location within the Xenomai source tree. For instance, if
-`/home/me/xenomai-3/scripts/prepare-kernel.sh` is executing, then
-the Xenomai kernel code available from
-`/home/me/xenomai-3/kernel/cobalt` will be patched in the target
-Linux kernel.
-
 
 Configuring and compiling the _Cobalt_ kernel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
