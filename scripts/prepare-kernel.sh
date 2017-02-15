@@ -317,31 +317,17 @@ fi
 
 if test -r $linux_tree/include/linux/ipipe.h; then
     if test x$verbose = x1; then
-    echo "I-pipe found - bypassing patch."
+       echo "I-pipe found - bypassing patch."
     fi
 else
-   if test x$ipipe_patch = x; then
-      # Pick ipipe-core-* patches based on the highest numbered
-      # sequence/release number.
-      default_ipipe_patch="`( ls $xenomai_root/kernel/cobalt/arch/$linux_arch/patches/ipipe-core-$linux_version*-$linux_arch-*|sort -r ) 2>/dev/null | head -n1`"
-   fi
-   if test x$default_ipipe_patch = x; then
-      if test x$verbose = x1; then
-         echo "$me: no default I-pipe patch found." >&2
-      fi
-      default_ipipe_patch=/dev/null
+   if test x$verbose = x1; then
+      echo "$me: no I-pipe support found." >&2
    fi
    while test x$ipipe_patch = x; do
-      if test x$usedefault = x; then
-         echo -n "I-pipe patch [default $default_ipipe_patch]: "
-         read ipipe_patch
-      fi
-      if test x$ipipe_patch = x; then
-         ipipe_patch=$default_ipipe_patch
-      fi
-      if test \! -r "$ipipe_patch" -o x$ipipe_patch = x/dev/null; then
+      echo -n "I-pipe patch: "
+      read ipipe_patch
+      if test \! -r "$ipipe_patch" -o x$ipipe_patch = x; then
          echo "$me: cannot read I-pipe patch from $ipipe_patch" >&2
-         usedefault=
          ipipe_patch=
       fi
    done
