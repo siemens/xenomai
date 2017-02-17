@@ -2,7 +2,8 @@ Source: xenomai
 Section: devel
 Priority: extra
 Maintainer: Xenomai <xenomai@xenomai.org>
-Build-Depends: debhelper (>= 8), findutils (>= 4.2.28), autotools-dev, autoconf, automake, libtool
+Build-Depends: debhelper (>= 8), findutils (>= 4.2.28), autotools-dev, autoconf, automake, libtool,
+ pkg-config
 Standards-Version: 3.9.3
 Homepage: http://www.xenomai.org/
 
