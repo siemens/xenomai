@@ -976,7 +976,7 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 	heap = alloc_block(&main_heap.heap, len);
 	if (heap == NULL) {
 		warning("%s() failed for %Zu bytes, raise --mem-pool-size?",
-			__func__);
+			__func__, len);
 		return __bt(-ENOMEM);
 	}
 
