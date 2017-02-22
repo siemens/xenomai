@@ -235,7 +235,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 				   poolsize + (poolsize * 5 / 100));
 	else
 		ret = heapobj_init_array(&qcb->hobj, qcb->name,
-					 (poolsize / qlimit) *
+					 (poolsize / qlimit) +
 					 sizeof(struct alchemy_queue_msg),
 					 qlimit);
 	if (ret)
