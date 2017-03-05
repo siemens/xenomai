@@ -308,6 +308,16 @@ static int reserve_page_range(uint32_t *bitmap, int bitwords, int nrpages)
 			b += r;
 			v >>= r;
 			v |= -1U << (32 - r);
+			/*
+			 * No more zero bits on the left, and not at
+			 * the leftmost position: any ongoing zero bit
+			 * sequence stops here in the current word,
+			 * short of free bits. Reset the sequence, and
+			 * keep searching for one which is at least
+			 * nrpages-bit long.
+			 */
+			if (v == -1U && b < 32)
+				seq = 0;
 		}
 	}
 	
