@@ -20,6 +20,7 @@
 #ifndef _RTIPC_INTERNAL_H
 #define _RTIPC_INTERNAL_H
 
+#include <linux/uio.h>
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/select.h>
@@ -27,7 +28,7 @@
 #include <rtdm/compat.h>
 #include <rtdm/driver.h>
 
-#define RTIPC_IOV_MAX  64
+#define RTIPC_IOV_FASTMAX  16
 
 struct rtipc_protocol;
 
@@ -84,11 +85,20 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 	tv->tv_usec = nsecs / 1000;
 }
 
-int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
-		    const struct user_msghdr *msg);
+int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec **iov,
+		    const struct user_msghdr *msg,
+		    struct iovec *iov_fast);
 
-int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
-		    const struct user_msghdr *msg);
+int rtipc_put_iovec(struct rtdm_fd *fd, struct iovec *iov,
+		    const struct user_msghdr *msg,
+		    struct iovec *iov_fast);
+
+static inline
+void rtipc_drop_iovec(struct iovec *iov, struct iovec *iov_fast)
+{
+	if (iov != iov_fast)
+		xnfree(iov);
+}
 
 int rtipc_get_sockaddr(struct rtdm_fd *fd,
 		       struct sockaddr_ipc **saddrp,

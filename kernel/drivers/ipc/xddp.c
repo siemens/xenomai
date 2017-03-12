@@ -337,7 +337,7 @@ out:
 static ssize_t xddp_recvmsg(struct rtdm_fd *fd,
 			    struct user_msghdr *msg, int flags)
 {
-	struct iovec iov[RTIPC_IOV_MAX];
+	struct iovec iov_fast[RTIPC_IOV_FASTMAX], *iov;
 	struct sockaddr_ipc saddr;
 	ssize_t ret;
 
@@ -350,20 +350,22 @@ static ssize_t xddp_recvmsg(struct rtdm_fd *fd,
 	} else if (msg->msg_namelen != 0)
 		return -EINVAL;
 
-	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
+	if (msg->msg_iovlen >= UIO_MAXIOV)
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	ret = rtipc_get_iovec(fd, iov, msg);
+	ret = rtipc_get_iovec(fd, &iov, msg, iov_fast);
 	if (ret)
 		return ret;
 
 	ret = __xddp_recvmsg(fd, iov, msg->msg_iovlen, flags, &saddr);
-	if (ret <= 0)
+	if (ret <= 0) {
+		rtipc_drop_iovec(iov, iov_fast);
 		return ret;
+	}
 
 	/* Copy the updated I/O vector back */
-	if (rtipc_put_iovec(fd, iov, msg))
+	if (rtipc_put_iovec(fd, iov, msg, iov_fast))
 		return -EFAULT;
 
 	/* Copy the source address if required. */
@@ -591,8 +593,8 @@ static ssize_t xddp_sendmsg(struct rtdm_fd *fd,
 			    const struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
+	struct iovec iov_fast[RTIPC_IOV_FASTMAX], *iov;
 	struct xddp_socket *sk = priv->state;
-	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc daddr;
 	ssize_t ret;
 
@@ -630,20 +632,22 @@ static ssize_t xddp_sendmsg(struct rtdm_fd *fd,
 			return -EDESTADDRREQ;
 	}
 
-	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
+	if (msg->msg_iovlen >= UIO_MAXIOV)
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	ret = rtipc_get_iovec(fd, iov, msg);
+	ret = rtipc_get_iovec(fd, &iov, msg, iov_fast);
 	if (ret)
 		return ret;
 
 	ret = __xddp_sendmsg(fd, iov, msg->msg_iovlen, flags, &daddr);
-	if (ret <= 0)
+	if (ret <= 0) {
+		rtipc_drop_iovec(iov, iov_fast);
 		return ret;
+	}
 
 	/* Copy updated I/O vector back */
-	return rtipc_put_iovec(fd, iov, msg) ?: ret;
+	return rtipc_put_iovec(fd, iov, msg, iov_fast) ?: ret;
 }
 
 static ssize_t xddp_write(struct rtdm_fd *fd,

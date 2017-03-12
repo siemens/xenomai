@@ -63,10 +63,25 @@ int rtipc_put_arg(struct rtdm_fd *fd, void *dst, const void *src, size_t len)
 	return rtdm_copy_to_user(fd, dst, src, len);
 }
 
-int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
-		    const struct user_msghdr *msg)
+int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec **iovp,
+		    const struct user_msghdr *msg,
+		    struct iovec *iov_fast)
 {
-	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
+	size_t len = sizeof(struct iovec) * msg->msg_iovlen;
+	struct iovec *iov = iov_fast;
+
+	/*
+	 * If the I/O vector doesn't fit in the fast memory, allocate
+	 * a chunk from the system heap which is large enough to hold
+	 * it.
+	 */
+	if (msg->msg_iovlen > RTIPC_IOV_FASTMAX) {
+		iov = xnmalloc(len);
+		if (iov == NULL)
+			return -ENOMEM;
+	}
+
+	*iovp = iov;
 
 	if (!rtdm_fd_is_user(fd)) {
 		memcpy(iov, msg->msg_iov, len);
@@ -83,23 +98,27 @@ int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec *iov,
 	return rtdm_copy_from_user(fd, iov, msg->msg_iov, len);
 }
 
-int rtipc_put_iovec(struct rtdm_fd *fd, const struct iovec *iov,
-		    const struct user_msghdr *msg)
+int rtipc_put_iovec(struct rtdm_fd *fd, struct iovec *iov,
+		    const struct user_msghdr *msg,
+		    struct iovec *iov_fast)
 {
 	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
+	int ret;
 
 	if (!rtdm_fd_is_user(fd)) {
 		memcpy(msg->msg_iov, iov, len);
-		return 0;
-	}
+		ret = 0;
+	} else if (IS_ENABLED(CONFIG_XENO_ARCH_SYS3264) &&
+		   rtdm_fd_is_compat(fd))
+		ret = sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
+				      iov, msg->msg_iovlen);
+	else
+		ret = rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
 
-#ifdef CONFIG_XENO_ARCH_SYS3264
-	if (rtdm_fd_is_compat(fd))
-		return sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
-				       iov, msg->msg_iovlen);
-#endif
+	if (iov != iov_fast)
+		xnfree(iov);
 
-	return rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
+	return ret;
 }
 
 int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
