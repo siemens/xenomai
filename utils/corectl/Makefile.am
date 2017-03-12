@@ -12,6 +12,6 @@ corectl_CPPFLAGS = 		\
 corectl_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 corectl_LDADD =					\
-	../../lib/cobalt/libcobalt.la		\
+	 @XENO_CORE_LDADD@			\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt

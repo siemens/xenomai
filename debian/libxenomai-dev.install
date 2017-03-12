@@ -2,6 +2,6 @@ usr/include
 usr/lib/*.la
 usr/lib/*.a
 usr/lib/*.so
-usr/lib/assert.wrappers
+usr/lib/modechk.wrappers
 usr/lib/cobalt.wrappers
 usr/lib/dynlist.ld

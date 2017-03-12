@@ -20,7 +20,7 @@ cppflags = 			\
 ldflags = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 ldadd = 					\
-	../../../lib/cobalt/libcobalt.la	\
+	 @XENO_CORE_LDADD@			\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt
 

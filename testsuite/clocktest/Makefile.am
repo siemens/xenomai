@@ -13,6 +13,6 @@ clocktest_CPPFLAGS =					\
 clocktest_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 clocktest_LDADD =			\
-	../../lib/cobalt/libcobalt.la	\
+	 @XENO_CORE_LDADD@		\
 	 @XENO_USER_LDADD@		\
 	-lpthread -lrt

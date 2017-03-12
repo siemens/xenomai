@@ -25,7 +25,7 @@ analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -34,7 +34,7 @@ analogy_calibrate.c: calibration_ni_m.h
 analogy_calibrate_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lpthread -lrt -lm
 
@@ -44,7 +44,7 @@ cmd_read_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -54,7 +54,7 @@ cmd_write_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -62,7 +62,7 @@ cmd_bits_SOURCES = cmd_bits.c
 cmd_bits_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -70,7 +70,7 @@ insn_read_SOURCES = insn_read.c
 insn_read_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -78,7 +78,7 @@ insn_write_SOURCES = insn_write.c
 insn_write_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -86,7 +86,7 @@ insn_bits_SOURCES = insn_bits.c
 insn_bits_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm
 
@@ -95,6 +95,6 @@ wf_generate_LDADD = \
 	@XENO_AUTOINIT_LDFLAGS@		\
 	 ./libwaveform.la \
 	../../lib/analogy/libanalogy.la \
-	../../lib/cobalt/libcobalt.la	\
+	@XENO_CORE_LDADD@		\
 	@XENO_USER_LDADD@		\
 	-lrt -lpthread -lm

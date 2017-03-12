@@ -59,6 +59,6 @@ smokey_LDADD = 					\
 	$(plugin_list)				\
 	../../lib/smokey/libsmokey.la		\
 	../../lib/copperplate/libcopperplate.la	\
-	../../lib/@XENO_CORE_LIB@		\
+	@XENO_CORE_LDADD@			\
 	 @XENO_USER_LDADD@			\
 	-lpthread -lrt

@@ -13,8 +13,9 @@ cppflags = 				\
 ldadd = 					\
 	../../lib/alchemy/libalchemy.la		\
 	../../lib/copperplate/libcopperplate.la	\
-	../../lib/@XENO_CORE_LIB@		\
-	 @XENO_USER_LDADD@
+	@XENO_CORE_LDADD@ 			\
+	@XENO_USER_LDADD@			\
+	-lpthread -lrt -lm
 
 altency_SOURCES = altency.c
 altency_CPPFLAGS = $(cppflags)

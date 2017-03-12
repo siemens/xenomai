@@ -15,41 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
-#include <sys/time.h>
-#include <signal.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
-#include <cobalt/uapi/thread.h>
-#include <asm/xenomai/syscall.h>
-#include "current.h"
-#include "internal.h"
 
-static void assert_nrt_inner(void)
+__weak
+void *__real_malloc(size_t size)
 {
-	struct cobalt_threadstat stat;
-	int ret;
-
-	ret = cobalt_thread_stat(0, &stat);
-	if (ret) {
-		warning("cobalt_thread_stat() failed: %s", strerror(-ret));
-		return;
-	}
-
-	if (stat.status & XNWARN)
-		pthread_kill(pthread_self(), SIGDEBUG);
+	return malloc(size);
 }
 
-void assert_nrt(void)
+__weak
+void __real_free(void *ptr)
 {
-	if (!cobalt_is_relaxed())
-		assert_nrt_inner();
-}
-
-void assert_nrt_fast(void)	/* OBSOLETE */
-{
-	assert_nrt();
+	free(ptr);
 }

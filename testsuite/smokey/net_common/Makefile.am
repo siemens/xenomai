@@ -22,6 +22,6 @@ smokey_net_server_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@
 
 smokey_net_server_LDADD = \
 	libnet_common.a \
-	$(top_builddir)/lib/@XENO_CORE_LIB@ \
+	@XENO_CORE_LDADD@ \
 	@XENO_USER_LDADD@ \
 	-lpthread -lrt

@@ -43,15 +43,33 @@ libcobalt_la_CPPFLAGS =			\
 	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include
 
+# The mode checking wrappers must reside in a static archive, so that
+# the linker will pull them on demand, dropping the requirement for
+# providing potentially conflicting placeholders for wrapped symbols
+# which may not be present in both C and C++ support libraries
+# (e.g. __cxa_guard_acquire/release/abort from the one-time C++
+# constructor API).
+
+lib_LIBRARIES = libmodechk.a
+
+libmodechk_a_SOURCES =	\
+	malloc.c	\
+	malloc-nowrap.c
+
+libmodechk_a_CPPFLAGS =			\
+	@XENO_COBALT_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include
+
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) $(srcdir)/cobalt.wrappers $(DESTDIR)$(libdir)
-	$(INSTALL_DATA) $(srcdir)/assert.wrappers $(DESTDIR)$(libdir)
+	$(INSTALL_DATA) $(srcdir)/modechk.wrappers $(DESTDIR)$(libdir)
 
 uninstall-local:
 	$(RM) $(DESTDIR)$(libdir)/cobalt.wrappers
-	$(RM) $(DESTDIR)$(libdir)/assert.wrappers
+	$(RM) $(DESTDIR)$(libdir)/modechk.wrappers
 
-EXTRA_DIST = cobalt.wrappers assert.wrappers
+EXTRA_DIST = cobalt.wrappers modechk.wrappers
 
 SUBDIRS = arch

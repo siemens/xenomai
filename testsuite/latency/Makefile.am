@@ -12,7 +12,7 @@ latency_CPPFLAGS = 		\
 
 latency_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
-latency_LDADD =				\
-	../../lib/@XENO_CORE_LIB@	\
-	 @XENO_USER_LDADD@		\
+latency_LDADD =			\
+	@XENO_CORE_LDADD@	\
+	@XENO_USER_LDADD@	\
 	-lpthread -lrt -lm

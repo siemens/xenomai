@@ -14,6 +14,6 @@ spitest_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 spitest_LDADD =			\
 	../../lib/smokey/libsmokey.la	\
-	../../lib/@XENO_CORE_LIB@	\
-	 @XENO_USER_LDADD@		\
+	@XENO_CORE_LDADD@		\
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt

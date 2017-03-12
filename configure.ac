@@ -796,19 +796,19 @@ dnl Build wrapping information. XENO_POSIX_WRAPPERS lists all wrapping
 dnl directives in a format the linker understands, for building the
 dnl in-tree executables which require POSIX symbol wrapping.
 
-   assert_wrappers="$topdir/lib/cobalt/assert.wrappers"
+   modechk_wrappers="$topdir/lib/cobalt/modechk.wrappers"
    cobalt_wrappers="$topdir/lib/cobalt/cobalt.wrappers"
    if [[ $ac_cv_ld_file_option = yes ]]; then
-	XENO_POSIX_WRAPPERS="-Wl,@$assert_wrappers -Wl,@$cobalt_wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@$modechk_wrappers -Wl,@$cobalt_wrappers"
    else
-	XENO_POSIX_WRAPPERS=`cat $assert_wrappers $cobalt_wrappers | \
+	XENO_POSIX_WRAPPERS=`cat $modechk_wrappers $cobalt_wrappers | \
 			while read wrap_option symbol ; do \
 				echo -n "-Wl,$wrap_option,$symbol " ; \
 			done`
    fi
 
    AC_SUBST(XENO_POSIX_WRAPPERS)
-   AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$assert_wrappers $cobalt_wrappers"])
+   AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$modechk_wrappers $cobalt_wrappers"])
 fi
 
 dnl
@@ -818,8 +818,11 @@ dnl
 XENO_AUTOINIT_LDFLAGS='$(top_builddir)/lib/boilerplate/init/bootstrap-internal.o'" -Wl,--wrap=main -Wl,--dynamic-list=$topdir/scripts/dynlist.ld"
 AC_SUBST(XENO_AUTOINIT_LDFLAGS)
 
-XENO_CORE_LIB=$rtcore_type/lib${rtcore_type}.la
-AC_SUBST(XENO_CORE_LIB)
+XENO_CORE_LDADD="\$(top_builddir)/lib/$rtcore_type/lib${rtcore_type}.la"
+if test $rtcore_type = cobalt; then
+   XENO_CORE_LDADD="$XENO_CORE_LDADD \$(top_builddir)/lib/cobalt/libmodechk.a"
+fi
+AC_SUBST(XENO_CORE_LDADD)
 
 AC_SUBST(DOXYGEN_SHOW_INCLUDE_FILES)
 AC_SUBST(DOXYGEN_HAVE_DOT)

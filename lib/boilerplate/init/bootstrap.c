@@ -17,7 +17,7 @@
  */
 #include <sys/types.h>
 #include <unistd.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <xenomai/init.h>
@@ -77,7 +77,7 @@ __bootstrap_ctor static void xenomai_bootstrap(void)
 		if (fd < 0)
 			return;
 
-		arglist = malloc(len);
+		arglist = __STD(malloc(len));
 		if (arglist == NULL) {
 			__STD(close(fd));
 			return;
@@ -87,14 +87,14 @@ __bootstrap_ctor static void xenomai_bootstrap(void)
 		__STD(close(fd));
 
 		if (ret < 0) {
-			free(arglist);
+			__STD(free(arglist));
 			return;
 		}
 
 		if (ret < len)
 			break;
 
-		free(arglist);
+		__STD(free(arglist));
 		len <<= 1;
 	}
 
@@ -106,9 +106,9 @@ __bootstrap_ctor static void xenomai_bootstrap(void)
 		p += strlen(p) + 1;
 	}
 
-	v = malloc((n + 1) * sizeof(char *));
+	v = __STD(malloc((n + 1) * sizeof(char *)));
 	if (v == NULL) {
-		free(arglist);
+		__STD(free(arglist));
 		return;
 	}
 

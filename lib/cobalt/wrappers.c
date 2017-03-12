@@ -473,18 +473,6 @@ void __real_vsyslog(int priority, const char *fmt, va_list ap)
 }
 
 __weak
-void *__real_malloc(size_t size)
-{
-	return malloc(size);
-}
-
-__weak
-void __real_free(void *ptr)
-{
-	free(ptr);
-}
-
-__weak
 int __real_gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 	return gettimeofday(tv, tz);

@@ -15,7 +15,7 @@ XENO_CC="@CC@"
 XENO_TARGET_ARCH="@XENO_TARGET_ARCH@"
 XENO_INCLUDE_DIR="${staging}${includedir}"
 XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR/cobalt -I$XENO_INCLUDE_DIR @XENO_USER_APP_CFLAGS@ -D__COBALT__"
-XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lcobalt -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
+XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lcobalt -lmodechk -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_LIBRARY_DIR="${staging}${libdir}"
 LD_FILE_OPTION="@LD_FILE_OPTION@"
 
@@ -235,7 +235,7 @@ if test x$do_ldflags = xy; then
 	echo "no API specified, missing --skin before --ldflags" 1>&2
 	exit 1
     fi
-    ldflags="`dump_wrappers assert.wrappers`"
+    ldflags="`dump_wrappers modechk.wrappers`"
     test x$compat = xy && ldflags="-ltrank $ldflags"
     copperplate=
     for skin in $skin_list; do
