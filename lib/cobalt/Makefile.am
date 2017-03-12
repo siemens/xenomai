@@ -53,6 +53,7 @@ libcobalt_la_CPPFLAGS =			\
 lib_LIBRARIES = libmodechk.a
 
 libmodechk_a_SOURCES =	\
+	cxaguard.c	\
 	malloc.c	\
 	malloc-nowrap.c
 

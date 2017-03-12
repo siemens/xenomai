@@ -1,2 +1,5 @@
 --wrap malloc
 --wrap free
+--wrap __cxa_guard_acquire
+--wrap __cxa_guard_release
+--wrap __cxa_guard_abort
