@@ -138,9 +138,9 @@ static inline void xnsynch_register_cleanup(struct xnsynch *synch,
 	synch->cleanup = handler;
 }
 
-int xnsynch_sleep_on(struct xnsynch *synch,
-		     xnticks_t timeout,
-		     xntmode_t timeout_mode);
+int __must_check xnsynch_sleep_on(struct xnsynch *synch,
+				  xnticks_t timeout,
+				  xntmode_t timeout_mode);
 
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
 
