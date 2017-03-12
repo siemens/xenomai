@@ -149,11 +149,11 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr);
 void xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
 				 struct xnthread *sleeper);
 
-int xnsynch_acquire(struct xnsynch *synch,
-		    xnticks_t timeout,
-		    xntmode_t timeout_mode);
+int __must_check xnsynch_acquire(struct xnsynch *synch,
+				 xnticks_t timeout,
+				 xntmode_t timeout_mode);
 
-int xnsynch_try_acquire(struct xnsynch *synch);
+int __must_check xnsynch_try_acquire(struct xnsynch *synch);
 
 struct xnthread *xnsynch_release(struct xnsynch *synch,
 				 struct xnthread *thread);
