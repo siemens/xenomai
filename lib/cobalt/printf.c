@@ -29,7 +29,7 @@
 #include <boilerplate/atomic.h>
 #include <boilerplate/compiler.h>
 #include <cobalt/tunables.h>
-#include "current.h"
+#include <cobalt/sys/cobalt.h>
 #include "internal.h"
 
 #define RT_PRINT_DEFAULT_BUFFER		16*1024
@@ -442,7 +442,7 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
   not_found:
 
 	if (!buffer) {
-		assert_nrt();
+		cobalt_assert_nrt();
 
 		buffer = malloc(sizeof(*buffer));
 		if (!buffer)
@@ -493,7 +493,7 @@ static void release_buffer(struct print_buffer *buffer)
 	unsigned long old_bitmap, bitmap;
 	unsigned int i, j;
 
-	assert_nrt();
+	cobalt_assert_nrt();
 
 	pthread_setspecific(buffer_key, NULL);
 

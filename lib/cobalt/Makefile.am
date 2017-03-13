@@ -14,7 +14,6 @@ libcobalt_la_LIBADD = \
 	../boilerplate/libboilerplate.la
 
 libcobalt_la_SOURCES =		\
-	assert_context.c	\
 	attr.c			\
 	clock.c			\
 	cond.c			\

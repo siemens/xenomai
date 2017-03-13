@@ -16,9 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 #include <stdint.h>
+#include <cobalt/sys/cobalt.h>
 #include <cobalt/wrappers.h>
-
-void assert_nrt(void);
 
 #ifdef __ARM_EABI__
 typedef uint32_t __cxa_guard_type;
@@ -32,7 +31,7 @@ int __real_cxa_guard_acquire(__cxa_guard_type *g);
 /* CXXABI 3.3.2 One-time Construction API */
 COBALT_IMPL(int, __cxa_guard_acquire, (__cxa_guard_type *g))
 {
-	assert_nrt();
+	cobalt_assert_nrt();
 	return __STD(__cxa_guard_acquire(g));
 }
 
@@ -41,7 +40,7 @@ void __real_cxa_guard_release(__cxa_guard_type *g);
 
 COBALT_IMPL(void, __cxa_guard_release, (__cxa_guard_type *g))
 {
-	assert_nrt();
+	cobalt_assert_nrt();
 	__STD(__cxa_guard_release(g));
 }
 
@@ -50,6 +49,6 @@ void __real_cxa_guard_abort(__cxa_guard_type *g);
 
 COBALT_IMPL(void, __cxa_guard_abort, (__cxa_guard_type *g))
 {
-	assert_nrt();
+	cobalt_assert_nrt();
 	__STD(__cxa_guard_abort(g));
 }

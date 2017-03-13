@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2008, 2009 Jan Kiszka <jan.kiszka@siemens.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,7 +31,7 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <asm/xenomai/syscall.h>
-#include "current.h"
+#include <cobalt/sys/cobalt.h>
 #include "internal.h"
 
 int cobalt_extend(unsigned int magic)
@@ -513,4 +514,20 @@ int cobalt_sched_weighted_prio(int policy,
 			       const struct sched_param_ex *param_ex)
 {
 	return XENOMAI_SYSCALL2(sc_cobalt_sched_weightprio, policy, param_ex);
+}
+
+
+/*
+ * Temporary compatibility aliases which should be phased out at next
+ * API revision.
+ */
+void assert_nrt(void)
+__attribute__((alias("cobalt_assert_nrt")));
+void assert_nrt_fast(void)
+__attribute__((alias("cobalt_assert_nrt")));
+
+void cobalt_assert_nrt(void)
+{
+	if (cobalt_should_warn())
+		pthread_kill(pthread_self(), SIGDEBUG);
 }

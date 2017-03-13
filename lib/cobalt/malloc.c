@@ -16,18 +16,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 #include <stdlib.h>
-
-void assert_nrt(void);
+#include <cobalt/sys/cobalt.h>
 
 /* Memory allocation services */
 COBALT_IMPL(void *, malloc, (size_t size))
 {
-	assert_nrt();
+	cobalt_assert_nrt();
 	return __STD(malloc(size));
 }
 
 COBALT_IMPL(void, free, (void *ptr))
 {
-	assert_nrt();
+	cobalt_assert_nrt();
 	__STD(free(ptr));
 }
