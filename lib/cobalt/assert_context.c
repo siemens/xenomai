@@ -28,25 +28,10 @@
 #include "current.h"
 #include "internal.h"
 
-static void assert_nrt_inner(void)
-{
-	struct cobalt_threadstat stat;
-	int ret;
-
-	ret = cobalt_thread_stat(0, &stat);
-	if (ret) {
-		warning("cobalt_thread_stat() failed: %s", strerror(-ret));
-		return;
-	}
-
-	if (stat.status & XNWARN)
-		pthread_kill(pthread_self(), SIGDEBUG);
-}
-
 void assert_nrt(void)
 {
-	if (!cobalt_is_relaxed())
-		assert_nrt_inner();
+	if (cobalt_should_warn())
+		pthread_kill(pthread_self(), SIGDEBUG);
 }
 
 void assert_nrt_fast(void)	/* OBSOLETE */

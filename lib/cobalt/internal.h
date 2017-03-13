@@ -32,6 +32,11 @@ static inline int cobalt_is_relaxed(void)
 	return cobalt_get_current_mode() & XNRELAX;
 }
 
+static inline int cobalt_should_warn(void)
+{
+	return (cobalt_get_current_mode() & (XNRELAX|XNWARN)) == XNWARN;
+}
+
 static inline
 struct cobalt_mutex_state *mutex_get_state(struct cobalt_mutex_shadow *shadow)
 {
