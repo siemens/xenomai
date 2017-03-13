@@ -35,7 +35,7 @@ SYNOPSIS
 
 *xeno-config* *--version*
 
-*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--auto-init-solib*] [*--cflags*] [*--ldflags*] [*--library-dir*|*--libdir*|*--user-libdir*]
+*xeno-config* [*--cc*] [*--ccld*] [*--arch*] [*--prefix*] [*--posix|alchemy|rtdm|psos|vxworks|smokey*] [*--compat*] [*--auto-init*|*no-auto-init*] [*--auto-init-solib*] [*--mode-check*|*no-mode-check*] [*--cflags*] [*--ldflags*] [*--library-dir*|*libdir*|*user-libdir*]
 
 DESCRIPTION
 ------------
@@ -130,6 +130,23 @@ This flag makes sense when passed along with --ldflags
 only. *xeno-config* enables the Copperplate auto-init feature by
 default.
 
+*--mode-check*::
+*--no-mode-check*::
+
+Over Cobalt, a set of standard routines which may invoke regular Linux
+system calls can trigger an assertion failure on entry, if the caller
+must leave the real-time mode (aka "secondary mode switch") to execute
+such routine.
+
+The assertion failure is triggered if the calling thread has set the
+PTHREAD_WARNSW flag by a call to +pthread_setmode_np()+.
+
+By default, the mode checking routines are substituted to the original
+ones using the symbol wrapping mechanism also used for interposing on
+POSIX services. *--no-mode-check* disables such substitution.
+
+These flags make sense when passed along with --ldflags only.
+
 *--auto-init-solib*::
 
 This switch enables the auto-initialization feature described above
@@ -140,7 +157,7 @@ used for bootstrapping the initialization.
 The bootstrap code runs when the shared library is attached to a
 running executable, either because it appears in the static
 dependencies of this executable, or when loaded dynamically via the
-dlopen() interface.
++dlopen()+ interface.
 
 *--core*::
 Output the name of the real-time core the current Xenomai installation

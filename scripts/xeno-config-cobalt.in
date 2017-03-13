@@ -52,9 +52,10 @@ Options :
         --prefix
         --[skin=]posix|vxworks|psos|alchemy|rtdm|smokey|cobalt
         --auto-init|auto-init-solib|no-auto-init
+        --mode-check|no-mode-check
         --cflags
         --ldflags
-        --lib*-dir,--libdir,--user-libdir
+        --lib*-dir|libdir|user-libdir
         --core
         --info
         --compat
@@ -109,6 +110,7 @@ do_cflags=
 do_setinit=
 do_autoinit=y
 do_autoinit_solib=
+do_mode_check=y
 
 while test $# -gt 0; do
     case "$1" in
@@ -191,6 +193,12 @@ while test $# -gt 0; do
 	--compat)
 	    compat=y
             ;;
+	--mode-check)
+	    do_mode_check=y
+	    ;;
+	--no-mode-check)
+	    do_mode_check=
+	    ;;
         *)
          usage 1 1>&2
          ;;
@@ -235,7 +243,10 @@ if test x$do_ldflags = xy; then
 	echo "no API specified, missing --skin before --ldflags" 1>&2
 	exit 1
     fi
-    ldflags="`dump_wrappers modechk.wrappers`"
+    ldflags=
+    if test x$do_mode_check = xy; then
+	ldflags="`dump_wrappers modechk.wrappers`"
+    fi
     test x$compat = xy && ldflags="-ltrank $ldflags"
     copperplate=
     for skin in $skin_list; do
@@ -244,8 +255,10 @@ if test x$do_ldflags = xy; then
 		ldflags="`dump_wrappers cobalt.wrappers` $ldflags"
 		;;
 	    cobalt)
-		# do NOT wrap POSIX symbols in application code
-		# with --cobalt. On the contrary, --posix does.
+		# do NOT wrap POSIX symbols in application code with
+		# --cobalt. On the contrary, --posix does. This switch
+		# does not affect mode checking wrappers,
+		# --[no-]mode-check does.
 		;;
 	    vxworks|psos|alchemy|smokey)
 		copperplate="-lcopperplate"
