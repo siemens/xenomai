@@ -5,7 +5,7 @@ noinst_HEADERS =	\
 	umm.h		\
 	internal.h
 
-lib_LTLIBRARIES = libcobalt.la
+lib_LTLIBRARIES = libcobalt.la libmodechk.la
 
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
@@ -42,21 +42,11 @@ libcobalt_la_CPPFLAGS =			\
 	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include
 
-# The mode checking wrappers must reside in a static archive, so that
-# the linker will pull them on demand, dropping the requirement for
-# providing potentially conflicting placeholders for wrapped symbols
-# which may not be present in both C and C++ support libraries
-# (e.g. __cxa_guard_acquire/release/abort from the one-time C++
-# constructor API).
-
-lib_LIBRARIES = libmodechk.a
-
-libmodechk_a_SOURCES =	\
-	cxaguard.c	\
+libmodechk_la_SOURCES =	\
 	malloc.c	\
 	malloc-nowrap.c
 
-libmodechk_a_CPPFLAGS =			\
+libmodechk_la_CPPFLAGS =		\
 	@XENO_COBALT_CFLAGS@		\
 	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include

@@ -820,7 +820,7 @@ AC_SUBST(XENO_AUTOINIT_LDFLAGS)
 
 XENO_CORE_LDADD="\$(top_builddir)/lib/$rtcore_type/lib${rtcore_type}.la"
 if test $rtcore_type = cobalt; then
-   XENO_CORE_LDADD="$XENO_CORE_LDADD \$(top_builddir)/lib/cobalt/libmodechk.a"
+   XENO_CORE_LDADD="$XENO_CORE_LDADD \$(top_builddir)/lib/cobalt/libmodechk.la"
 fi
 AC_SUBST(XENO_CORE_LDADD)
 
