@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <copperplate/traceobj.h>
 #include <alchemy/task.h>
 #include <alchemy/pipe.h>
@@ -9,7 +10,7 @@ static struct traceobj trobj;
 
 static RT_TASK t_real;
 
-static RT_PIPE pipe;
+static RT_PIPE mpipe;
 
 static pthread_t t_reg;
 
@@ -26,14 +27,14 @@ static void realtime_task(void *arg)
 
 	traceobj_enter(&trobj);
 
-	ret = rt_pipe_bind(&pipe, "pipe", TM_INFINITE);
+	ret = rt_pipe_bind(&mpipe, "pipe", TM_INFINITE);
 	traceobj_check(&trobj, ret, 0);
 
 	while (seq < 8192) {
-		ret = rt_pipe_read(&pipe, &m, sizeof(m), TM_INFINITE);
+		ret = rt_pipe_read(&mpipe, &m, sizeof(m), TM_INFINITE);
 		traceobj_assert(&trobj, ret == sizeof(m));
 		traceobj_assert(&trobj, m.value == seq);
-		ret = rt_pipe_write(&pipe, &m, sizeof(m),
+		ret = rt_pipe_write(&mpipe, &m, sizeof(m),
 				    (seq & 1) ? P_URGENT : P_NORMAL);
 		traceobj_assert(&trobj, ret == sizeof(m));
 		seq++;
@@ -77,10 +78,10 @@ int main(int argc, char *const argv[])
 
 	traceobj_init(&trobj, argv[0], 0);
 
-	ret = rt_pipe_create(&pipe, "pipe", P_MINOR_AUTO, 0);
+	ret = rt_pipe_create(&mpipe, "pipe", P_MINOR_AUTO, 0);
 	traceobj_assert(&trobj, ret >= 0);
 
-	ret = rt_pipe_delete(&pipe);
+	ret = rt_pipe_delete(&mpipe);
 	traceobj_check(&trobj, ret, 0);
 
 	ret = rt_task_create(&t_real, "realtime", 0,  10, 0);
@@ -89,11 +90,11 @@ int main(int argc, char *const argv[])
 	ret = rt_task_start(&t_real, realtime_task, NULL);
 	traceobj_check(&trobj, ret, 0);
 
-	ret = rt_pipe_create(&pipe, "pipe", P_MINOR_AUTO, 16384);
+	ret = rt_pipe_create(&mpipe, "pipe", P_MINOR_AUTO, 16384);
 	traceobj_assert(&trobj, ret >= 0);
 	minor = ret;
 
-	ret = rt_pipe_read(&pipe, &m, sizeof(m), TM_NONBLOCK);
+	ret = rt_pipe_read(&mpipe, &m, sizeof(m), TM_NONBLOCK);
 	traceobj_check(&trobj, ret, -EWOULDBLOCK);
 
 	ret = pthread_create(&t_reg, NULL, regular_thread, NULL);
