@@ -27,6 +27,8 @@ extern "C" {
 
 void xenomai_init(int *argcp, char *const **argvp);
 
+void xenomai_init_dso(int *argcp, char *const **argvp);
+
 int xenomai_main(int argc, char *const argv[]);
 
 void xenomai_usage(void);

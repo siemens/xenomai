@@ -46,6 +46,7 @@ struct setup_descriptor {
 		int opt_start;
 		int opt_end;
 		struct pvholder next;
+		int done;
 	} __reserved;
 };
 

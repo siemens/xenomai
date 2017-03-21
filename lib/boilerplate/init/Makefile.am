@@ -3,7 +3,6 @@ noinst_LIBRARIES = libbootstrap.a
 libbootstrap_a_SOURCES = bootstrap.c
 
 libbootstrap_a_CPPFLAGS =		\
-	-D__INTERCEPT_MAIN__		\
 	@XENO_USER_CFLAGS@		\
 	-I$(top_srcdir)/include		\
 	-I$(top_srcdir)/lib
@@ -13,6 +12,7 @@ noinst_LTLIBRARIES = libbootstrap-pic.la
 libbootstrap_pic_la_SOURCES = bootstrap.c
 
 libbootstrap_pic_la_CPPFLAGS =		\
+	-D__BOOTSTRAP_DSO__		\
 	@XENO_USER_CFLAGS@		\
 	-I$(top_srcdir)/include		\
 	-I$(top_srcdir)/lib

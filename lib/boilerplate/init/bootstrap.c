@@ -26,8 +26,6 @@ static int early_argc;
 
 static char *const *early_argv;
 
-const int xenomai_auto_bootstrap = 1;
-
 /*
  * The bootstrap module object is built in two forms:
  *
@@ -41,11 +39,22 @@ const int xenomai_auto_bootstrap = 1;
  *   any wrapper to a main() routine - which does not exist - but only
  *   a constructor routine performing the inits.
  *
- * The dedicated macro __INTERCEPT_MAIN__ tells us whether the main()
- * interception code should be present in the relocatable object.
+ * The macro __BOOTSTRAP_DSO__ tells us whether we are building the
+ * bootstrap module to be glued into a dynamic shared object. If not,
+ * the main() interception code should be present in the relocatable
+ * object.
  */
 
-#ifdef __INTERCEPT_MAIN__
+#ifdef __BOOTSTRAP_DSO__
+
+static inline void call_init(int *argcp, char *const **argvp)
+{
+	xenomai_init_dso(argcp, argvp);
+}
+
+#else
+
+const int xenomai_auto_bootstrap = 1;
 
 int __real_main(int argc, char *const argv[]);
 
@@ -62,7 +71,12 @@ int xenomai_main(int argc, char *const argv[])
 	return __real_main(argc, argv);
 }
 
-#endif /* !__INTERCEPT_MAIN__ */
+static inline void call_init(int *argcp, char *const **argvp)
+{
+	xenomai_init(argcp, argvp);
+}
+
+#endif /* !__BOOTSTRAP_DSO__ */
 
 __bootstrap_ctor static void xenomai_bootstrap(void)
 {
@@ -123,7 +137,7 @@ __bootstrap_ctor static void xenomai_bootstrap(void)
 	argv = v;
 	argc = n;
 
-	xenomai_init(&argc, &argv);
+	call_init(&argc, &argv);
 	early_argc = argc;
 	early_argv = argv;
 }

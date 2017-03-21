@@ -48,7 +48,7 @@ int __config_done = 0;
 
 const int __weak xenomai_auto_bootstrap = 0;
 
-static int init_done;
+static int base_init_done;
 
 static DEFINE_PRIVATE_LIST(setup_list);
 
@@ -331,26 +331,13 @@ void xenomai_usage(void)
         fprintf(stderr, "--help				display help\n");
 }
 
-static int parse_base_options(int *argcp, char *const **argvp,
-			      int *largcp, char ***uargvp,
+static int parse_base_options(int *argcp, int *largcp, char **uargv,
 			      const struct option *options,
 			      int base_opt_start)
 {
 	int c, lindex, ret, n;
-	char **uargv;
-
-	/*
-	 * Prepare a user argument vector we can modify, copying the
-	 * one we have been given by the application code in
-	 * xenomai_init(). This vector will be expunged from Xenomai
-	 * proper options as we discover them.
-	 */
-	uargv = prep_args(*argcp, *argvp, largcp);
-	if (uargv == NULL)
-		return -ENOMEM;
 
 	__base_setup_data.arg0 = uargv[0];
-	*uargvp = uargv;
 	opterr = 0;
 
 	/*
@@ -446,7 +433,8 @@ static int parse_setup_options(int *argcp, int largc, char **uargv,
 		if (lindex == -1)
 			continue; /* Not handled here. */
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
-			if (setup->parse_option == NULL)
+			if (setup->__reserved.done ||
+			    setup->parse_option == NULL)
 				continue;
 			if (lindex < setup->__reserved.opt_start ||
 			    lindex >= setup->__reserved.opt_end)
@@ -472,18 +460,38 @@ static int parse_setup_options(int *argcp, int largc, char **uargv,
 	return 0;
 }
 
-void xenomai_init(int *argcp, char *const **argvp)
+static void __xenomai_init(int *argcp, char *const **argvp, const char *me)
 {
 	int ret, largc, base_opt_start;
 	struct setup_descriptor *setup;
 	struct option *options;
-	char **uargv = NULL;
 	struct service svc;
+	char **uargv;
 
-	if (init_done) {
-		early_warning("duplicate call to %s() ignored", __func__);
-		early_warning("(xeno-config --no-auto-init disables implicit call)");
-		return;
+	/*
+	 * Build the global option array, merging all option sets.
+	 */
+	options = build_option_array(&base_opt_start);
+	if (options == NULL) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	/*
+	 * Prepare a user argument vector we can modify, copying the
+	 * one we have been given by the bootstrap module. This vector
+	 * will be expunged from Xenomai's base options as we discover
+	 * them.
+	 */
+	uargv = prep_args(*argcp, *argvp, &largc);
+	if (uargv == NULL) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	if (base_init_done) {
+		trace_me("warm init from %s", me);
+		goto setup;
 	}
 
 	/* Our node id. is the tid of the main thread. */
@@ -496,25 +504,16 @@ void xenomai_init(int *argcp, char *const **argvp)
 	CPU_ZERO(&__base_setup_data.cpu_affinity);
 
 	/*
-	 * Build the global option array, merging all option sets.
-	 */
-	options = build_option_array(&base_opt_start);
-	if (options == NULL) {
-		ret = -ENOMEM;
-		goto fail;
-	}
-
-	/*
 	 * Parse the base options first, to bootstrap the core with
 	 * the right config values.
 	 */
-	ret = parse_base_options(argcp, argvp, &largc, &uargv,
+	ret = parse_base_options(argcp, &largc, uargv,
 				 options, base_opt_start);
 	if (ret)
 		goto fail;
 
-	trace_me("%s() running", __func__);
-
+	trace_me("cold init from %s", me);
+	
 #ifndef CONFIG_SMP
 	if (__base_setup_data.no_sanity == 0) {
 		ret = get_static_cpu_count();
@@ -541,12 +540,13 @@ void xenomai_init(int *argcp, char *const **argvp)
 	 * setup handlers for tuning the configuration, then parsing
 	 * their own options, and eventually doing the init chores.
 	 */
+setup:
 	if (!pvlist_empty(&setup_list)) {
 
 		CANCEL_DEFER(svc);
 
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
-			if (setup->tune) {
+			if (!setup->__reserved.done && setup->tune) {
 				trace_me("%s->tune()", setup->name);
 				ret = setup->tune();
 				if (ret)
@@ -565,11 +565,14 @@ void xenomai_init(int *argcp, char *const **argvp)
 		__config_done = 1;
 	
 		pvlist_for_each_entry(setup, &setup_list, __reserved.next) {
+			if (setup->__reserved.done)
+				continue;
 			if (setup->init) {
 				trace_me("%s->init()", setup->name);
 				ret = setup->init();
 				if (ret)
 					break;
+				setup->__reserved.done = 1;
 			}
 		}
 
@@ -604,12 +607,33 @@ void xenomai_init(int *argcp, char *const **argvp)
 	 * bail out.
 	 */
 	*argvp = uargv;
-	init_done = 1;
-	trace_me("initialization complete");
+	base_init_done = 1;
 
 	return;
 fail:
 	early_panic("initialization failed, %s", symerror(ret));
+}
+
+void xenomai_init(int *argcp, char *const **argvp)
+{
+	const char *me = get_program_name();
+	static int init_done;
+
+	if (init_done) {
+		early_warning("duplicate call from main program "
+			      "to %s() ignored", __func__);
+		early_warning("(xeno-config --no-auto-init disables implicit call)");
+	}
+
+	__xenomai_init(argcp, argvp, me);
+	init_done = 1;
+	trace_me("%s bootstrap done", me);
+}
+
+void xenomai_init_dso(int *argcp, char *const **argvp)
+{
+	__xenomai_init(argcp, argvp, "DSO");
+	trace_me("DSO bootstrap done");
 }
 
 void __trace_me(const char *fmt, ...)
@@ -631,9 +655,13 @@ void __register_setup_call(struct setup_descriptor *p, int id)
 	/*
 	 * Trap late registration due to wrong constructor priorities.
 	 */
-	assert(!init_done);
+	assert(!base_init_done);
 	p->__reserved.id = id;
+	p->__reserved.done = 0;
 
+	/*
+	 * Insert the new descriptor (highest id first).
+	 */
 	if (!pvlist_empty(&setup_list)) {
 		pvlist_for_each_entry_reverse(pos, &setup_list, __reserved.next) {
 			if (id >= pos->__reserved.id) {
