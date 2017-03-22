@@ -50,6 +50,8 @@ const int __weak xenomai_auto_bootstrap = 0;
 
 static int base_init_done;
 
+static int main_init_done;
+
 static DEFINE_PRIVATE_LIST(setup_list);
 
 static const struct option base_options[] = {
@@ -617,16 +619,15 @@ fail:
 void xenomai_init(int *argcp, char *const **argvp)
 {
 	const char *me = get_program_name();
-	static int init_done;
 
-	if (init_done) {
+	if (main_init_done) {
 		early_warning("duplicate call from main program "
 			      "to %s() ignored", __func__);
 		early_warning("(xeno-config --no-auto-init disables implicit call)");
 	}
 
 	__xenomai_init(argcp, argvp, me);
-	init_done = 1;
+	main_init_done = 1;
 	trace_me("%s bootstrap done", me);
 }
 
@@ -655,7 +656,7 @@ void __register_setup_call(struct setup_descriptor *p, int id)
 	/*
 	 * Trap late registration due to wrong constructor priorities.
 	 */
-	assert(!base_init_done);
+	assert(!main_init_done);
 	p->__reserved.id = id;
 	p->__reserved.done = 0;
 
