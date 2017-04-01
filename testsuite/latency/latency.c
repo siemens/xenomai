@@ -492,6 +492,8 @@ static void cleanup(void)
 	if (test_mode == USER_TASK) {
 		pthread_cancel(latency_task);
 		pthread_join(latency_task, NULL);
+		pthread_join(display_task, NULL);
+
 		sem_close(display_sem);
 		sem_unlink(sem_name);
 		gavgjitter /= (test_loops > 1 ? test_loops : 2) - 1;
@@ -504,9 +506,8 @@ static void cleanup(void)
 		gmaxjitter = overall.result.max;
 		gavgjitter = overall.result.avg;
 		goverrun = overall.result.overruns;
+		pthread_join(display_task, NULL);
 	}
-
-	pthread_join(display_task, NULL);
 
 	if (benchdev >= 0)
 		close(benchdev);
