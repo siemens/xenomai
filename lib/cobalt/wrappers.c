@@ -428,21 +428,21 @@ int __real_fputs(const char *s, FILE *stream)
 	return fputs(s, stream);
 }
 
-#if !defined(__UCLIBC__) || !defined(__STDIO_PUTC_MACRO)
-
+#ifndef fputc
 __weak
 int __real_fputc(int c, FILE *stream)
 {
 	return fputc(c, stream);
 }
+#endif
 
+#ifndef putchar
 __weak
 int __real_putchar(int c)
 {
 	return putchar(c);
 }
-
-#endif /* !(__UCLIBC__ && __STDIO_PUTC_MACRO) */
+#endif
 
 __weak
 size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream)

@@ -34,6 +34,7 @@
 #include <malloc.h>
 #include <getopt.h>
 #include <signal.h>
+#include <cobalt/uapi/signal.h>
 
 static const struct option base_options[] = {
 	{

@@ -640,7 +640,8 @@ fi
 
 dnl Internal CFLAGS and LDFLAGS, may be enhanced per-arch below
 XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -pipe -fstrict-aliasing \
--Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+-Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long \
+-Wno-unused-parameter -Werror -D__XENO__ -D__IN_XENO__"
 if test x$want_fortify = xyes -a x$debug_mode != xfull; then
    XENO_USER_CFLAGS="$XENO_USER_CFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
 fi
@@ -665,7 +666,8 @@ if test x$use_assert = x; then
    XENO_USER_CFLAGS="-DNDEBUG $XENO_USER_CFLAGS"
 fi
 
-XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -I$topdir/include/$rtcore_type"
+XENO_USER_CFLAGS_STDLIB="$XENO_USER_CFLAGS"
+XENO_USER_CFLAGS="$XENO_USER_CFLAGS -I$topdir/include/$rtcore_type"
 
 AC_MSG_CHECKING([whether ld supports @file])
 AC_CACHE_VAL(ac_cv_ld_file_option,
@@ -834,6 +836,7 @@ AC_SUBST(XENO_HOST_STRING)
 AC_SUBST(XENO_COBALT_CFLAGS)
 AC_SUBST(XENO_LIB_LDFLAGS)
 AC_SUBST(XENO_USER_CFLAGS)
+AC_SUBST(XENO_USER_CFLAGS_STDLIB)
 AC_SUBST(XENO_USER_LDADD)
 AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)

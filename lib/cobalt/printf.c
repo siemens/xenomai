@@ -787,8 +787,7 @@ COBALT_IMPL(int, puts, (const char *s))
 	}
 }
 
-#if !defined(__UCLIBC__) || !defined(__STDIO_PUTC_MACRO)
-
+#undef fputc
 COBALT_IMPL(int, fputc, (int c, FILE *stream))
 {
 	if (!cobalt_is_relaxed())
@@ -799,6 +798,7 @@ COBALT_IMPL(int, fputc, (int c, FILE *stream))
 	}
 }
 
+#undef putchar
 COBALT_IMPL(int, putchar, (int c))
 {
 	if (!cobalt_is_relaxed())
@@ -808,20 +808,6 @@ COBALT_IMPL(int, putchar, (int c))
 		return __STD(putchar(c));
 	}
 }
-
-#else
-
-COBALT_IMPL(int, fputc, (int c, FILE *stream))
-{
-	return fputc(c, stream);
-}
-
-COBALT_IMPL(int, putchar, (int c))
-{
-	return putchar(c);
-}
-
-#endif /* !(__UCLIBC__ && __STDIO_PUTC_MACRO) */
 
 COBALT_IMPL(size_t, fwrite, (const void *ptr, size_t size, size_t nmemb, FILE *stream))
 {
