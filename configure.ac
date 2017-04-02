@@ -483,17 +483,10 @@ AC_MSG_RESULT(${CONFIG_XENO_VALGRIND_API:-no})
 
 if test \! x$CONFIG_XENO_VALGRIND_API = x ; then
    AC_MSG_CHECKING([whether GCC emits sane code for Valgrind calls])
-   AC_CACHE_VAL(ac_cv_valgrind_client,
-   AC_LANG_SAVE
-   AC_LANG_C
-   save_CFLAGS="$CFLAGS"
-   CFLAGS="-O0"
-   [AC_TRY_COMPILE([#include <valgrind/valgrind.h>],
-   [return RUNNING_ON_VALGRIND;],
-   [ac_cv_valgrind_client=yes],
-   [ac_cv_valgrind_client="no (DISABLING)"])]
-   CFLAGS="$save_CFLAGS"
-   AC_LANG_RESTORE)
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <valgrind/valgrind.h>]],
+   				      [[return RUNNING_ON_VALGRIND;]])],
+				      [ac_cv_valgrind_client=yes],
+				      [ac_cv_valgrind_client="no (DISABLING)"])
    if [[ \! "$ac_cv_valgrind_client" = yes ]]; then
       unset CONFIG_XENO_VALGRIND_API
    fi
