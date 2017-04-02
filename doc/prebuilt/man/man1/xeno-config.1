@@ -43,7 +43,7 @@ xeno-config \- Retrieve Xenomai build flags and configuration
 .sp
 \fBxeno\-config\fR \fB\-\-version\fR
 .sp
-\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-auto\-init\-solib\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
+\fBxeno\-config\fR [\fB\-\-cc\fR] [\fB\-\-ccld\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-posix|alchemy|rtdm|psos|vxworks|smokey\fR] [\fB\-\-compat\fR] [\fB\-\-auto\-init\fR|\fBno\-auto\-init\fR] [\fB\-\-auto\-init\-solib\fR] [\fB\-\-mode\-check\fR|\fBno\-mode\-check\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-library\-dir\fR|\fBlibdir\fR|\fBuser\-libdir\fR]
 .SH "DESCRIPTION"
 .sp
 \fBxeno\-config\fR is a shell script which is aimed at retrieving the Xenomai build configuration data, such as the compiler and linker flags required for building applications\&. For this reason, \fBxeno\-config\fR is typically used in Makefiles\&.
@@ -161,6 +161,17 @@ any real\-time service is invoked\&.
 .RE
 .sp
 This flag makes sense when passed along with \-\-ldflags only\&. \fBxeno\-config\fR enables the Copperplate auto\-init feature by default\&.
+.PP
+\fB\-\-mode\-check\fR, \fB\-\-no\-mode\-check\fR
+.RS 4
+Over Cobalt, a set of standard routines which may invoke regular Linux system calls can trigger an assertion failure on entry, if the caller must leave the real\-time mode (aka "secondary mode switch") to execute such routine\&.
+.RE
+.sp
+The assertion failure is triggered if the calling thread has set the PTHREAD_WARNSW flag by a call to pthread_setmode_np()\&.
+.sp
+By default, the mode checking routines are substituted to the original ones using the symbol wrapping mechanism also used for interposing on POSIX services\&. \fB\-\-no\-mode\-check\fR disables such substitution\&.
+.sp
+These flags make sense when passed along with \-\-ldflags only\&.
 .PP
 \fB\-\-auto\-init\-solib\fR
 .RS 4

@@ -755,7 +755,7 @@ XENO-CONFIG(1) Manual Page
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--info</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--core</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--version</strong></p></div>
-<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--auto-init-solib</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]</p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> [<strong>--cc</strong>] [<strong>--ccld</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--posix|alchemy|rtdm|psos|vxworks|smokey</strong>] [<strong>--compat</strong>] [<strong>--auto-init</strong>|<strong>no-auto-init</strong>] [<strong>--auto-init-solib</strong>] [<strong>--mode-check</strong>|<strong>no-mode-check</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--library-dir</strong>|<strong>libdir</strong>|<strong>user-libdir</strong>]</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -929,6 +929,28 @@ only. <strong>xeno-config</strong> enables the Copperplate auto-init feature by
 default.</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
+<strong>--mode-check</strong>
+</dt>
+<dt class="hdlist1">
+<strong>--no-mode-check</strong>
+</dt>
+<dd>
+<p>
+Over Cobalt, a set of standard routines which may invoke regular Linux
+system calls can trigger an assertion failure on entry, if the caller
+must leave the real-time mode (aka "secondary mode switch") to execute
+such routine.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>The assertion failure is triggered if the calling thread has set the
+PTHREAD_WARNSW flag by a call to <code>pthread_setmode_np()</code>.</p></div>
+<div class="paragraph"><p>By default, the mode checking routines are substituted to the original
+ones using the symbol wrapping mechanism also used for interposing on
+POSIX services. <strong>--no-mode-check</strong> disables such substitution.</p></div>
+<div class="paragraph"><p>These flags make sense when passed along with --ldflags only.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
 <strong>--auto-init-solib</strong>
 </dt>
 <dd>
@@ -943,7 +965,7 @@ used for bootstrapping the initialization.
 <div class="paragraph"><p>The bootstrap code runs when the shared library is attached to a
 running executable, either because it appears in the static
 dependencies of this executable, or when loaded dynamically via the
-dlopen() interface.</p></div>
+<code>dlopen()</code> interface.</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 <strong>--core</strong>
@@ -1045,7 +1067,7 @@ Error.
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-12-16 10:06:33 CET
+Last updated 2017-04-02 10:22:34 CEST
 </div>
 </div>
 </body>
