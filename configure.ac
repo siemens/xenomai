@@ -748,7 +748,7 @@ AC_MSG_RESULT($XENO_TEST_DIR)
 demodir='${exec_prefix}/demo'
 AC_MSG_CHECKING(location for demo programs)
 AC_ARG_WITH(demodir,
-    AS_HELP_STRING([--with-demo=<demo-program-dir>],[location for demo programs (defaults to $prefix/demo)]),
+    AS_HELP_STRING([--with-demodir=<demo-program-dir>],[location for demo programs (defaults to $prefix/demo)]),
     [
 	case "$withval" in
 	"" | y | ye | yes | n | no)
