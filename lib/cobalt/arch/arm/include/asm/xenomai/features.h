@@ -34,7 +34,8 @@
 #endif /* armv4 */
 
 #if defined(__ARM_ARCH_5__) || defined(__ARM_ARCH_5T__) \
-	|| defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__)
+	|| defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__) \
+	|| defined(__ARM_ARCH_5TEJ__)
 #define __LINUX_ARM_ARCH__ 5
 #endif /* armv5 */
 
