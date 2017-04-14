@@ -103,8 +103,12 @@ Summary:
 
 /* Don't do the contents of this file more than once.  */
 
-#ifndef _OBSTACK_H
-#define _OBSTACK_H 1
+#ifndef _BOILERPLATE_OBSTACK_H
+#define _BOILERPLATE_OBSTACK_H 1
+
+#ifdef HAVE_OBSTACK_H
+#include_next <obstack.h>
+#else
 
 #ifdef __cplusplus
 extern "C" {
@@ -506,4 +510,6 @@ __extension__								\
 }	/* C++ */
 #endif
 
-#endif /* obstack.h */
+#endif /* !HAVE_OBSTACK_H */
+
+#endif /* _BOILERPLATE_OBSTACK_H */

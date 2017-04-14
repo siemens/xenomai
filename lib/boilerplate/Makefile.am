@@ -6,9 +6,12 @@ libboilerplate_la_LIBADD = libversion.la libiniparser.la
 libboilerplate_la_SOURCES =	\
 	ancillaries.c		\
 	hash.c			\
-	obstack.c		\
 	setup.c			\
 	time.c
+
+if XENO_PRIVATE_OBSTACK
+libboilerplate_la_SOURCES += obstack.c
+endif
 
 if XENO_DEBUG
 libboilerplate_la_SOURCES += debug.c

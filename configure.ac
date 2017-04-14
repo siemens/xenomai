@@ -495,6 +495,10 @@ fi
 
 test x$CONFIG_XENO_VALGRIND_API = xy && AC_DEFINE(CONFIG_XENO_VALGRIND_API,1,[config])
 
+dnl Check for obstack support in *libc
+AC_CHECK_HEADERS(obstack.h,libc_has_obstack=y)
+AM_CONDITIONAL(XENO_PRIVATE_OBSTACK,[test x$libc_has_obstack = x])
+
 dnl Check for presence of some headers
 AC_CHECK_HEADERS(mqueue.h)
 
