@@ -20,17 +20,15 @@
 #include <asm/xenomai/syscall.h>
 #include "internal.h"
 
-#ifdef __UCLIBC__
+#if !HAVE_BACKTRACE
 static inline int backtrace(void **buffer, int size)
 {
-	/*
-	 * We have no backtrace support in uClibc.
-	 */
+	/* Not all *libcs support backtrace(). */
 	return 0;
 }
-#else /* !__UCLIBC__ */
+#else
 #include <execinfo.h>
-#endif /* !__UCLIBC__ */
+#endif
 
 static struct sigaction sigshadow_action_orig;
 

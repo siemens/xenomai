@@ -519,7 +519,8 @@ AC_CHECK_FUNCS([pthread_mutexattr_setprotocol	\
 		sched_getcpu			\
 		clock_nanosleep			\
 		shm_open			\
-		shm_unlink])
+		shm_unlink			\
+		backtrace])
 LIBS="$save_LIBS"
 
 save_CPPFLAGS="$CPPFLAGS"
