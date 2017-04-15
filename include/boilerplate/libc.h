@@ -118,7 +118,9 @@ int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 		return 0;
 	return ENOSYS;
 }
+#endif /* !HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
 
+#ifndef HAVE_PTHREAD_SETAFFINITY_NP
 static inline
 int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 			   const cpu_set_t *cpuset)
@@ -127,8 +129,7 @@ int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 		return 0;
 	return ENOSYS;
 }
-
-#endif /* !HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
+#endif /* !HAVE_PTHREAD_SETAFFINITY_NP */
 
 #if !defined(HAVE_CLOCK_NANOSLEEP) && defined(CONFIG_XENO_MERCURY)
 /*
