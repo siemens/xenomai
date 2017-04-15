@@ -163,10 +163,6 @@
 
 #define DEFAULT_AREA_SIZE (1024*10)
 
-#ifdef USE_MMAP
-#define PAGE_SIZE (getpagesize())
-#endif
-
 #ifdef USE_PRINTF
 #include <stdio.h>
 # define PRINT_MSG(fmt, args...) printf(fmt, ## args)
@@ -418,7 +414,7 @@ static __inline__ void *get_new_area(size_t * size)
 
 
 #if USE_MMAP
-    *size = ROUNDUP(*size, PAGE_SIZE);
+    *size = ROUNDUP(*size, getpagesize());
     if ((area = __STD(mmap(0, *size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0))) != MAP_FAILED)
 	return area;
 #endif
