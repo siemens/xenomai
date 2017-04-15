@@ -434,7 +434,7 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 						    bitmap,
 						    bitmap & ~(1UL << j));
 		} while (old_bitmap != bitmap && old_bitmap);
-		j += i * __WORDSIZE;
+		j += i * LONG_BIT;
 	} while (!old_bitmap);
 
 	buffer = (struct print_buffer *)(pool_start + j * pool_buf_size);
@@ -508,8 +508,8 @@ static void release_buffer(struct print_buffer *buffer)
 		goto dofree;
 
 	j = ((unsigned long)buffer - pool_start) / pool_buf_size;
-	i = j / __WORDSIZE;
-	j = j % __WORDSIZE;
+	i = j / LONG_BIT;
+	j = j % LONG_BIT;
 
 	old_bitmap = atomic_long_read(&pool_bitmap[i]);
 	do {
@@ -687,7 +687,7 @@ void cobalt_print_init(void)
 	syncdelay.tv_nsec = (__cobalt_print_syncdelay % 1000) * 1000000;
 
 	/* Fill the buffer pool */
-	pool_bitmap_len = (__cobalt_print_bufcount+__WORDSIZE-1)/__WORDSIZE;
+	pool_bitmap_len = (__cobalt_print_bufcount+LONG_BIT-1)/LONG_BIT;
 	if (!pool_bitmap_len)
 		goto done;
 
@@ -701,11 +701,11 @@ void cobalt_print_init(void)
 	if (!pool_start)
 		early_panic("error allocating print relay buffers");
 
-	for (i = 0; i < __cobalt_print_bufcount / __WORDSIZE; i++)
+	for (i = 0; i < __cobalt_print_bufcount / LONG_BIT; i++)
 		atomic_long_set(&pool_bitmap[i], ~0UL);
-	if (__cobalt_print_bufcount % __WORDSIZE)
+	if (__cobalt_print_bufcount % LONG_BIT)
 		atomic_long_set(&pool_bitmap[i],
-				(1UL << (__cobalt_print_bufcount % __WORDSIZE)) - 1);
+				(1UL << (__cobalt_print_bufcount % LONG_BIT)) - 1);
 
 	for (i = 0; i < __cobalt_print_bufcount; i++) {
 		struct print_buffer *buffer =

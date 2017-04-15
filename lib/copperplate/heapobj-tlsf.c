@@ -26,7 +26,7 @@
 #include "xenomai/init.h"
 #include "internal.h"
 
-#if __WORDSIZE == 32
+#if LONG_BIT == 32
 #define TLSF_BLOCK_ALIGN  (8 * 2)
 #else
 #define TLSF_BLOCK_ALIGN  (16 * 2)
