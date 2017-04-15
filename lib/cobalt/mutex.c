@@ -192,23 +192,32 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 
 static int __attribute__((cold)) cobalt_mutex_autoinit(pthread_mutex_t *mutex)
 {
-	static pthread_mutex_t uninit_normal_mutex = PTHREAD_MUTEX_INITIALIZER;
-	struct cobalt_mutex_shadow *_mutex =
-		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
+	static pthread_mutex_t uninit_normal_mutex =
+		PTHREAD_MUTEX_INITIALIZER;
+#if HAVE_DECL_PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 	static pthread_mutex_t uninit_recursive_mutex =
 		PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+#endif
+#if HAVE_DECL_PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 	static pthread_mutex_t uninit_errorcheck_mutex =
 		PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
+#endif
+	struct cobalt_mutex_shadow *_mutex =
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	int err __attribute__((unused));
 	pthread_mutexattr_t mattr;
 	int ret = 0, type;
 
 	if (memcmp(mutex, &uninit_normal_mutex, sizeof(*mutex)) == 0)
 		type = PTHREAD_MUTEX_DEFAULT;
+#if HAVE_DECL_PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 	else if (memcmp(mutex, &uninit_recursive_mutex, sizeof(*mutex)) == 0)
 		type = PTHREAD_MUTEX_RECURSIVE_NP;
+#endif
+#if HAVE_DECL_PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
 	else if (memcmp(mutex, &uninit_errorcheck_mutex, sizeof(*mutex)) == 0)
 		type = PTHREAD_MUTEX_ERRORCHECK_NP;
+#endif
 	else
 		return EINVAL;
 

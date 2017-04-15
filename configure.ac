@@ -525,6 +525,8 @@ LIBS="$save_LIBS"
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 AC_CHECK_DECLS([PTHREAD_PRIO_NONE], [], [], [#include <pthread.h>])
+AC_CHECK_DECLS([PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP], [], [], [#include <pthread.h>])
+AC_CHECK_DECLS([PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP], [], [], [#include <pthread.h>])
 CPPFLAGS=$save_CPPFLAGS
 
 dnl If we can't set the clock for condvar timeouts, then
