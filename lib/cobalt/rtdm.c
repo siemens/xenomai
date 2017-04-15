@@ -254,9 +254,18 @@ COBALT_IMPL(ssize_t, sendmsg, (int fd, const struct msghdr *msg, int flags))
 COBALT_IMPL(ssize_t, recvfrom, (int fd, void *buf, size_t len, int flags,
 				struct sockaddr *from, socklen_t *fromlen))
 {
-	struct iovec iov = { buf, len };
-	struct msghdr msg =
-		{ from, (from != NULL) ? *fromlen : 0, &iov, 1, NULL, 0 };
+	struct iovec iov = {
+		.iov_base = buf,
+		.iov_len = len,
+	};
+	struct msghdr msg = {
+		.msg_name = from,
+		.msg_namelen = from != NULL ? *fromlen : 0,
+		.msg_iov = &iov,
+		.msg_iovlen = 1,
+		.msg_control = NULL,
+		.msg_controllen = 0,
+	};
 	int ret;
 
 	ret = do_recvmsg(fd, &msg, flags);
@@ -269,9 +278,18 @@ COBALT_IMPL(ssize_t, recvfrom, (int fd, void *buf, size_t len, int flags,
 COBALT_IMPL(ssize_t, sendto, (int fd, const void *buf, size_t len, int flags,
 			      const struct sockaddr *to, socklen_t tolen))
 {
-	struct iovec iov = { (void *)buf, len };
-	struct msghdr msg =
-		{ (struct sockaddr *)to, tolen, &iov, 1, NULL, 0 };
+	struct iovec iov = {
+		.iov_base = (void *)buf,
+		.iov_len = len,
+	};
+	struct msghdr msg = {
+		.msg_name = (struct sockaddr *)to,
+		.msg_namelen = tolen,
+		.msg_iov = &iov,
+		.msg_iovlen = 1,
+		.msg_control = NULL,
+		.msg_controllen = 0,
+	};
 	int ret;
 
 	ret = do_sendmsg(fd, &msg, flags);
@@ -283,8 +301,18 @@ COBALT_IMPL(ssize_t, sendto, (int fd, const void *buf, size_t len, int flags,
 
 COBALT_IMPL(ssize_t, recv, (int fd, void *buf, size_t len, int flags))
 {
-	struct iovec iov = { buf, len };
-	struct msghdr msg = { NULL, 0, &iov, 1, NULL, 0 };
+	struct iovec iov = {
+		.iov_base = (void *)buf,
+		.iov_len = len,
+	};
+	struct msghdr msg = {
+		.msg_name = NULL,
+		.msg_namelen = 0,
+		.msg_iov = &iov,
+		.msg_iovlen = 1,
+		.msg_control = NULL,
+		.msg_controllen = 0,
+	};
 	int ret;
 
 	ret = do_recvmsg(fd, &msg, flags);
@@ -296,8 +324,18 @@ COBALT_IMPL(ssize_t, recv, (int fd, void *buf, size_t len, int flags))
 
 COBALT_IMPL(ssize_t, send, (int fd, const void *buf, size_t len, int flags))
 {
-	struct iovec iov = { (void *)buf, len };
-	struct msghdr msg = { NULL, 0, &iov, 1, NULL, 0 };
+	struct iovec iov = {
+		.iov_base = (void *)buf,
+		.iov_len = len,
+	};
+	struct msghdr msg = {
+		.msg_name = NULL,
+		.msg_namelen = 0,
+		.msg_iov = &iov,
+		.msg_iovlen = 1,
+		.msg_control = NULL,
+		.msg_controllen = 0,
+	};
 	int ret;
 
 	ret = do_sendmsg(fd, &msg, flags);
