@@ -480,7 +480,11 @@ COBALT_IMPL(void *, mmap64, (void *addr, size_t length, int prot, int flags,
 	}
 
 regular:
+#if mmap64 == mmap
+	return __STD(mmap(addr, length, prot, flags, fd, offset));
+#else
 	return __STD(mmap64(addr, length, prot, flags, fd, offset));
+#endif
 }
 
 COBALT_IMPL(void *, mmap, (void *addr, size_t length, int prot, int flags,

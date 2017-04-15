@@ -177,7 +177,7 @@ int __real_open(const char *path, int oflag, ...)
 	return open(path, oflag, mode);
 }
 
-/* rtdm */
+#if open64 != open
 __weak
 int __real_open64(const char *path, int oflag, ...)
 {
@@ -192,6 +192,7 @@ int __real_open64(const char *path, int oflag, ...)
 
 	return open64(path, oflag, mode);
 }
+#endif
 
 __weak
 int __real_socket(int protocol_family, int socket_type, int protocol)
@@ -353,12 +354,14 @@ void *__real_mmap(void *addr, size_t length, int prot, int flags,
 	return mmap(addr, length, prot, flags, fd, offset);
 }
 
+#if mmap64 != mmap
 __weak
 void *__real_mmap64(void *addr, size_t length, int prot, int flags,
 		  int fd, off64_t offset)
 {
 	return mmap64(addr, length, prot, flags, fd, offset);
 }
+#endif
 
 __weak
 int __real_vfprintf(FILE *stream, const char *fmt, va_list args)
