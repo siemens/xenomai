@@ -203,6 +203,7 @@ int __xnthread_init(struct xnthread *thread,
 	memset(&thread->stat, 0, sizeof(thread->stat));
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
+	INIT_LIST_HEAD(&thread->glink);
 	/* These will be filled by xnthread_start() */
 	thread->entry = NULL;
 	thread->cookie = NULL;
@@ -531,9 +532,11 @@ void __xnthread_discard(struct xnthread *thread)
 	xntimer_destroy(&thread->ptimer);
 
 	xnlock_get_irqsave(&nklock, s);
-	list_del(&thread->glink);
-	cobalt_nrthreads--;
-	xnvfile_touch_tag(&nkthreadlist_tag);
+	if (!list_empty(&thread->glink)) {
+		list_del(&thread->glink);
+		cobalt_nrthreads--;
+		xnvfile_touch_tag(&nkthreadlist_tag);
+	}
 	xnthread_deregister(thread);
 	xnlock_put_irqrestore(&nklock, s);
 }
