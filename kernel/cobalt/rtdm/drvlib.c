@@ -1837,7 +1837,7 @@ static struct file_operations driver_mmap_fops = {
 };
 
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
-			  int prot, int flags, void *__user *pptr)
+			  int prot, int flags, void **pptr)
 {
 	struct mmap_tramp_data tramp_data = {
 		.fd = fd,

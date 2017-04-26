@@ -659,6 +659,7 @@ int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 		 void * __user *u_addrp)
 {
 	struct rtdm_fd *fd;
+	void *addr;
 	int ret;
 
 	secondary_mode_only();
@@ -679,7 +680,10 @@ int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 	}
 
 	ret = __rtdm_mmap_from_fdop(fd, rma->length, rma->offset,
-				    rma->prot, rma->flags, u_addrp);
+				    rma->prot, rma->flags, &addr);
+	if (ret == 0)
+		ret = rtdm_safe_copy_to_user(fd, u_addrp,
+					     &addr,  sizeof(addr));
 unlock:
 	rtdm_fd_put(fd);
 out:

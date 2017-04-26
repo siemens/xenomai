@@ -47,7 +47,7 @@ int __rtdm_dev_ioctl_core(struct rtdm_fd *fd,
 			  unsigned int request, void __user *arg);
 
 int __rtdm_mmap_from_fdop(struct rtdm_fd *fd, size_t len, off_t offset,
-			  int prot, int flags, void *__user *pptr);
+			  int prot, int flags, void **pptr);
 
 int rtdm_init(void);
 
