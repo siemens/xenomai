@@ -656,10 +656,9 @@ ebadf:
 EXPORT_SYMBOL_GPL(rtdm_fd_close);
 
 int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
-		 void * __user *u_addrp)
+		 void **u_addrp)
 {
 	struct rtdm_fd *fd;
-	void *addr;
 	int ret;
 
 	secondary_mode_only();
@@ -680,10 +679,7 @@ int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 	}
 
 	ret = __rtdm_mmap_from_fdop(fd, rma->length, rma->offset,
-				    rma->prot, rma->flags, &addr);
-	if (ret == 0)
-		ret = rtdm_safe_copy_to_user(fd, u_addrp,
-					     &addr,  sizeof(addr));
+				    rma->prot, rma->flags, u_addrp);
 unlock:
 	rtdm_fd_put(fd);
 out:

@@ -369,7 +369,7 @@ ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg,
 			int flags);
 
 int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
-		 void * __user *u_addrp);
+		 void **u_addrp);
 
 int rtdm_fd_valid_p(int ufd);
 
