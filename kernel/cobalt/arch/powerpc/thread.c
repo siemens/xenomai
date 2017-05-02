@@ -71,7 +71,7 @@ asmlinkage void __asm_disable_fpu(void);
 
 asmlinkage void __asm_enable_fpu(void);
 
-#ifndef CONFIG_SMP
+#if !defined(CONFIG_SMP) && LINUX_VERSION_CODE < KERNEL_VERSION(4,4,0)
 #define get_fpu_owner(cur) last_task_used_math
 #else /* CONFIG_SMP */
 #define get_fpu_owner(cur) ({					\
