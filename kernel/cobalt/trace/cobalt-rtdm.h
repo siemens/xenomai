@@ -19,8 +19,6 @@
  */
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM cobalt_rtdm
-#undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_FILE cobalt-rtdm
 
 #if !defined(_TRACE_COBALT_RTDM_H) || defined(TRACE_HEADER_MULTI_READ)
 #define _TRACE_COBALT_RTDM_H
@@ -522,4 +520,7 @@ TRACE_EVENT(cobalt_driver_mutex_wait,
 #endif /* _TRACE_COBALT_RTDM_H */
 
 /* This part must be outside protection */
+#undef TRACE_INCLUDE_PATH
+#undef TRACE_INCLUDE_FILE
+#define TRACE_INCLUDE_FILE cobalt-rtdm
 #include <trace/define_trace.h>

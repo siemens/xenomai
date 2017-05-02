@@ -19,14 +19,11 @@
  */
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM cobalt_core
-#undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_FILE cobalt-core
 
 #if !defined(_TRACE_COBALT_CORE_H) || defined(TRACE_HEADER_MULTI_READ)
 #define _TRACE_COBALT_CORE_H
 
 #include <linux/tracepoint.h>
-#include <linux/sched.h>
 
 DECLARE_EVENT_CLASS(thread_event,
 	TP_PROTO(struct xnthread *thread),
@@ -635,4 +632,7 @@ DEFINE_EVENT(synch_post_event, cobalt_synch_forget,
 #endif /* _TRACE_COBALT_CORE_H */
 
 /* This part must be outside protection */
+#undef TRACE_INCLUDE_PATH
+#undef TRACE_INCLUDE_FILE
+#define TRACE_INCLUDE_FILE cobalt-core
 #include <trace/define_trace.h>

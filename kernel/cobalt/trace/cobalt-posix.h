@@ -19,8 +19,6 @@
  */
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM cobalt_posix
-#undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_FILE cobalt-posix
 
 #if !defined(_TRACE_COBALT_POSIX_H) || defined(TRACE_HEADER_MULTI_READ)
 #define _TRACE_COBALT_POSIX_H
@@ -1064,4 +1062,7 @@ DEFINE_EVENT(cobalt_event_ident, cobalt_event_inquire,
 #endif /* _TRACE_COBALT_POSIX_H */
 
 /* This part must be outside protection */
+#undef TRACE_INCLUDE_PATH
+#undef TRACE_INCLUDE_FILE
+#define TRACE_INCLUDE_FILE cobalt-posix
 #include <trace/define_trace.h>
