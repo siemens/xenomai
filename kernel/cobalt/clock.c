@@ -749,7 +749,7 @@ void xnclock_tick(struct xnclock *clock)
 	 * Some external clock devices may have no percpu semantics,
 	 * in which case all timers are queued to slot #0.
 	 */
-	if (config_enabled(CONFIG_XENO_OPT_EXTCLOCK) &&
+	if (IS_ENABLED(CONFIG_XENO_OPT_EXTCLOCK) &&
 	    clock != &nkclock &&
 	    !cpumask_test_cpu(xnsched_cpu(sched), &clock->affinity))
 		tmq = &xnclock_percpu_timerdata(clock, 0)->q;
