@@ -98,13 +98,13 @@
 #define __COBALT_SYSNR32emu(__reg)					\
 	({								\
 		long __nr = __reg;					\
-		if (current_thread_info()->status & TS_COMPAT)		\
+		if (in_ia32_syscall())					\
 			__nr += __COBALT_IA32_BASE;			\
 		__nr;							\
 	})
 
 #define __COBALT_COMPAT32emu(__reg)					\
-	((current_thread_info()->status & TS_COMPAT) ? __COBALT_COMPAT_BIT : 0)
+	(in_ia32_syscall() ? __COBALT_COMPAT_BIT : 0)
 
 #if __NR_COBALT_SYSCALLS > __COBALT_IA32_BASE
 #error "__NR_COBALT_SYSCALLS > __COBALT_IA32_BASE"

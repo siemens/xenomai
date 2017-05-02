@@ -28,6 +28,16 @@
 
 static struct kmem_cache *xstate_cache;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0)
+#define fpu_kernel_xstate_size xstate_size
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,0)
+#define cpu_has_xmm boot_cpu_has(X86_FEATURE_XMM)
+#define cpu_has_fxsr boot_cpu_has(X86_FEATURE_FXSR)
+#define cpu_has_xsave boot_cpu_has(X86_FEATURE_XSAVE)
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,2,0)
 #include <asm/i387.h>
 #include <asm/fpu-internal.h>
@@ -461,7 +471,7 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 int mach_x86_thread_init(void)
 {
 	xstate_cache = kmem_cache_create("cobalt_x86_xstate",
-					 xstate_size,
+					 fpu_kernel_xstate_size,
 					 x86_xstate_alignment,
 					 SLAB_NOTRACK, NULL);
 	if (xstate_cache == NULL)
