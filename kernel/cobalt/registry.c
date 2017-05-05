@@ -760,7 +760,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 
 	if (timeout_mode == XN_RELATIVE &&
 	    timeout != XN_INFINITE && timeout != XN_NONBLOCK) {
-		timeout_mode = XN_REALTIME;
+		timeout_mode = XN_ABSOLUTE;
 		timeout += xnclock_read_monotonic(&nkclock);
 	}
 
