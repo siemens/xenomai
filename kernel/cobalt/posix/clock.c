@@ -266,8 +266,12 @@ int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 		restart = cobalt_get_restart_block(current);
 
 		if (restart->fn != cobalt_restart_syscall_placeholder) {
-			if (rmt)
+			if (rmt) {
+				xnlock_get_irqsave(&nklock, s);
+				rem = xntimer_get_timeout_stopped(&cur->rtimer);
+				xnlock_put_irqrestore(&nklock, s);
 				ns2ts(rmt, rem > 1 ? rem : 0);
+			}
 			return -EINTR;
 		}
 
