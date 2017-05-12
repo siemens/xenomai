@@ -33,6 +33,7 @@ smokey_test_plugin(sigdebug,
 unsigned int expected_reason;
 bool sigdebug_received;
 pthread_mutex_t prio_invert;
+int corectl_debug;
 sem_t send_signal;
 char *mem;
 FILE *wd;
@@ -110,10 +111,15 @@ static void *rt_thread_body(void *cookie)
 	check_sigdebug_received("SIGDEBUG_MIGRATE_SIGNAL");
 
 	smokey_trace("relaxed mutex owner");
-	setup_checkdebug(SIGDEBUG_MIGRATE_PRIOINV);
-	err = pthread_mutex_lock(&prio_invert);
-	check_no_error("pthread_mutex_lock", err);
-	check_sigdebug_received("SIGDEBUG_MIGRATE_PRIOINV");
+	if (corectl_debug & _CC_COBALT_DEBUG_MUTEX_RELAXED) {
+		setup_checkdebug(SIGDEBUG_MIGRATE_PRIOINV);
+		err = pthread_mutex_lock(&prio_invert);
+		check_no_error("pthread_mutex_lock", err);
+		check_sigdebug_received("SIGDEBUG_MIGRATE_PRIOINV");
+	} else {
+		smokey_note("sigdebug \"SIGDEBUG_MIGRATE_PRIOINV\" skipped "
+			    "(no kernel support)");
+	}
 
 	smokey_trace("page fault");
 	setup_checkdebug(SIGDEBUG_MIGRATE_FAULT);
@@ -187,6 +193,11 @@ static int run_sigdebug(struct smokey_test *t, int argc, char *const argv[])
 
 	err = cobalt_corectl(_CC_COBALT_GET_WATCHDOG, &wdog_delay, sizeof(wdog_delay));
 	if (err || wdog_delay == 0)
+		return -ENOSYS;
+
+	err = cobalt_corectl(_CC_COBALT_GET_DEBUG, &corectl_debug,
+			     sizeof(corectl_debug));
+	if (err)
 		return -ENOSYS;
 
 	smokey_parse_args(t, argc, argv);
