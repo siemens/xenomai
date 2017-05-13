@@ -33,10 +33,12 @@ typedef union fpregs_state x86_fpustate;
 
 struct xnarchtcb {
 	struct xntcb core;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
 	unsigned long sp;
 	unsigned long *spp;
 	unsigned long ip;
 	unsigned long *ipp;
+#endif  
 	x86_fpustate *fpup;
 	unsigned int root_kfpu: 1;
 	unsigned int root_used_math: 1;

@@ -69,6 +69,11 @@ static inline void x86_fpregs_activate(struct task_struct *t)
 
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
+/*
+ * This is obsolete context switch code uselessly duplicating
+ * mainline's.
+ */
 #ifdef CONFIG_X86_32
 
 #ifdef CONFIG_CC_STACKPROTECTOR
@@ -181,18 +186,17 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #endif /* CONFIG_X86_64 */
 
-static inline int is_shadow(struct xnarchtcb *tcb,
-			    struct task_struct *task)
-{
-	return tcb->spp == &task->thread.sp;
-}
+#else /* LINUX_VERSION_CODE >= 4.8 */
+
+#include <asm/switch_to.h>
+
+#endif /* LINUX_VERSION_CODE >= 4.8 */
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
 	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
-	unsigned long __maybe_unused fs, gs;
+	struct task_struct *prev, *next, *last;
 	struct mm_struct *prev_mm, *next_mm;
-	struct task_struct *prev, *next;
 
 	prev = out_tcb->core.host_task;
 	if (x86_fpregs_active(prev))
@@ -210,7 +214,6 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 #else
 	next->fpu_counter = 0;
 #endif
-
 	prev_mm = out_tcb->core.active_mm;
 	next_mm = in_tcb->core.mm;
 	if (next_mm == NULL) {
@@ -229,27 +232,17 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 			enter_lazy_tlb(prev_mm, next);
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
 #ifdef CONFIG_X86_32
-	/*
-	 * Make sure that __switch_to() will always reload the correct
-	 * %fs and %gs registers, even if we happen to migrate the
-	 * task across domains in the meantime.
-	 */
-	asm volatile ("mov %%fs,%0":"=m" (fs));
-	asm volatile ("mov %%gs,%0":"=m" (gs));
-
 	do_switch_threads(out_tcb, in_tcb, prev, next);
-
-	if (is_shadow(out_tcb, prev)) {
-		loadsegment(fs, fs);
-		loadsegment(gs, gs);
-		barrier();
-	}
 #else /* CONFIG_X86_64 */
 	do_switch_threads(prev, next,
 			  out_tcb->spp, in_tcb->spp,
 			  out_tcb->ipp, in_tcb->ipp);
 #endif /* CONFIG_X86_64 */
+#else /* LINUX_VERSION_CODE >= 4.8 */
+	switch_to(prev, next, last);
+#endif /* LINUX_VERSION_CODE >= 4.8 */
 
 	stts();
 }
@@ -376,7 +369,7 @@ void xnarch_leave_root(struct xnthread *root)
 	struct task_struct *const p = current;
 	x86_fpustate *const current_task_fpup = x86_fpustate_ptr(&p->thread);
 
-#ifdef CONFIG_X86_64
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0) && defined(CONFIG_X86_64)
 	rootcb->spp = &p->thread.sp;
 	rootcb->ipp = &p->thread.rip;
 #endif
@@ -440,9 +433,12 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
 void xnarch_init_root_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
 	tcb->sp = 0;
 	tcb->spp = &tcb->sp;
 	tcb->ipp = &tcb->ip;
+#endif	
 	tcb->fpup = NULL;
 	tcb->root_kfpu = 0;
 	tcb->kfpu_state = kmem_cache_zalloc(xstate_cache, GFP_KERNEL);
@@ -453,12 +449,14 @@ void xnarch_init_shadow_tcb(struct xnthread *thread)
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = tcb->core.host_task;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
 	tcb->sp = 0;
 	tcb->spp = &p->thread.sp;
 #ifdef CONFIG_X86_32
 	tcb->ipp = &p->thread.ip;
 #else
 	tcb->ipp = &p->thread.rip; /* <!> raw naming intended. */
+#endif
 #endif
 	tcb->fpup = x86_fpustate_ptr(&p->thread);
 	tcb->root_kfpu = 0;
