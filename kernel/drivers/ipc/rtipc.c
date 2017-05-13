@@ -108,12 +108,14 @@ int rtipc_put_iovec(struct rtdm_fd *fd, struct iovec *iov,
 	if (!rtdm_fd_is_user(fd)) {
 		memcpy(msg->msg_iov, iov, len);
 		ret = 0;
-	} else if (IS_ENABLED(CONFIG_XENO_ARCH_SYS3264) &&
-		   rtdm_fd_is_compat(fd))
-		ret = sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
-				      iov, msg->msg_iovlen);
-	else
-		ret = rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
+	} else
+#ifdef CONFIG_XENO_ARCH_SYS3264
+		if (rtdm_fd_is_compat(fd))
+			ret = sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
+					      iov, msg->msg_iovlen);
+		else
+#endif
+			ret = rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
 
 	if (iov != iov_fast)
 		xnfree(iov);
