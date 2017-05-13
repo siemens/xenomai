@@ -225,6 +225,8 @@ int rtipc_put_sockaddr(struct rtdm_fd *fd, void *arg,
 	}
 #endif
 
+	sreq.addr = NULL;
+	sreq.addrlen = NULL;
 	ret = rtdm_safe_copy_from_user(fd, &sreq, arg, sizeof(sreq));
 	if (ret)
 		return ret;
