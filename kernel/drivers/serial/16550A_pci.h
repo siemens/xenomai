@@ -178,7 +178,7 @@ static const struct rt_16550_pci_board rt_16550_moxa_cp168u = {
 };
 #endif
 
-DEFINE_PCI_DEVICE_TABLE( rt_16550_pci_table ) = {
+const struct pci_device_id rt_16550_pci_table[] = {
 #if defined(CONFIG_XENO_DRIVERS_16550A_PCI_MOXA)
 	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_C104),
 	 .driver_data = (unsigned long)&rt_16550_moxa_c104},

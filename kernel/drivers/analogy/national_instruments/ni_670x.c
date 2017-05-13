@@ -214,7 +214,7 @@ static const struct ni_670x_board ni_670x_boards[] = {
 
 #define n_ni_670x_boards ((sizeof(ni_670x_boards)/sizeof(ni_670x_boards[0])))
 
-static DEFINE_PCI_DEVICE_TABLE(ni_670x_pci_table) = {
+static const struct pci_device_id ni_670x_pci_table[] = {
 	{PCI_DEVICE(PCI_VENDOR_ID_NI, 0x2c90)},
 	{PCI_DEVICE(PCI_VENDOR_ID_NI, 0x1920)},
 	{0}

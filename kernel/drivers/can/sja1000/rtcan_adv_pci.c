@@ -84,7 +84,7 @@ struct rtcan_adv_pci {
 #define ADV_PCI_DEVICE(device_id)\
 	{ ADV_PCI_VENDOR_ID, device_id, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }
 
-static DEFINE_PCI_DEVICE_TABLE(adv_pci_tbl) = {
+static const struct pci_device_id adv_pci_tbl[] = {
 	ADV_PCI_DEVICE(0x1680),
 	ADV_PCI_DEVICE(0x3680),
 	ADV_PCI_DEVICE(0x2052),
