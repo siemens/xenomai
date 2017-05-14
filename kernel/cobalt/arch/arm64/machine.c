@@ -35,7 +35,7 @@ static void mach_arm_prefault(struct vm_area_struct *vma)
 		flags = (vma->vm_flags & VM_MAYWRITE) ? FAULT_FLAG_WRITE : 0;
 		for (addr = vma->vm_start;
 		     addr != vma->vm_end; addr += PAGE_SIZE)
-			handle_mm_fault(vma->vm_mm, vma, addr, flags);
+			handle_mm_fault(vma, addr, flags);
 	}
 }
 
@@ -63,7 +63,6 @@ static unsigned long mach_arm_calibrate(void)
 	barrier();
 
 	for (i = 0; i < CALIBRATION_LOOPS; i++) {
-		flush_cache_all();
 		for (j = 0; j < CALIBRATION_LOOPS; j++) {
 			ipipe_read_tsc(start);
 			barrier();
