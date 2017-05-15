@@ -35,7 +35,11 @@ static void mach_arm_prefault(struct vm_area_struct *vma)
 		flags = (vma->vm_flags & VM_MAYWRITE) ? FAULT_FLAG_WRITE : 0;
 		for (addr = vma->vm_start;
 		     addr != vma->vm_end; addr += PAGE_SIZE)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
+			handle_mm_fault(vma->vm_mm, vma, addr, flags);
+#else
 			handle_mm_fault(vma, addr, flags);
+#endif
 	}
 }
 
