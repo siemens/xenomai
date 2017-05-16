@@ -239,14 +239,14 @@ static void *thread_trampoline(void *arg)
 	 * with the cleanup code the client may run whenever
 	 * copperplate_create_thread() fails.
 	 */
-	prepare_wait_corespec();
-	__RT(sem_post(&cta->__reserved.warm));
-	thread_spawn_wait(&released);
-	__RT(sem_destroy(&released));
 	ret = __bt(copperplate_renice_local_thread(pthread_self(),
 			   _cta.policy, &_cta.param_ex));
 	if (ret)
 		warning("cannot renice core thread, %s", symerror(ret));
+	prepare_wait_corespec();
+	__RT(sem_post(&cta->__reserved.warm));
+	thread_spawn_wait(&released);
+	__RT(sem_destroy(&released));
 
 	return _cta.run(_cta.arg);
 fail:
