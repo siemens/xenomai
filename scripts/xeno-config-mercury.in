@@ -213,6 +213,7 @@ if test x$do_ldflags = xy; then
 	fi
 	bootstrap="${XENO_LIBRARY_DIR}/xenomai/bootstrap${codegen}.o"
     fi
+    ldflags="-Wl,--no-as-needed $ldflags"
     echo "$ldflags $copperplate $bootstrap $wrap_main $XENO_BASE_LDFLAGS"
 fi
 
