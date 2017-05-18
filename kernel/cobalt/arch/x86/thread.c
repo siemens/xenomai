@@ -240,6 +240,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 			  out_tcb->spp, in_tcb->spp,
 			  out_tcb->ipp, in_tcb->ipp);
 #endif /* CONFIG_X86_64 */
+	(void)last;
 #else /* LINUX_VERSION_CODE >= 4.8 */
 	switch_to(prev, next, last);
 #endif /* LINUX_VERSION_CODE >= 4.8 */
