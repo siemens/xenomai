@@ -33,9 +33,10 @@
 #include <asm/fpsimd.h>
 #include <asm/processor.h>
 #include <asm/hw_breakpoint.h>
-#include <asm/fpsimd.h>
 
-#ifdef CONFIG_XENO_ARCH_FPU
+#ifdef ARM64_XENO_OLD_SWITCH
+
+#include <asm/fpsimd.h>
 
 #define FPSIMD_EN (0x3 << 20)
 
@@ -104,13 +105,13 @@ void xnarch_init_root_tcb(struct xnthread *thread)
 	tcb->fpup = NULL;
 }
 
-#endif /* CONFIG_XENO_ARCH_FPU */
+#endif /* ARM64_XENO_OLD_SWITCH */
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
 	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
+	struct task_struct *prev, *next, *last;
 	struct mm_struct *prev_mm, *next_mm;
-	struct task_struct *prev, *next;
 
 	next = in_tcb->core.host_task;
 	prev = out_tcb->core.host_task;
@@ -133,7 +134,12 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 			enter_lazy_tlb(prev_mm, next);
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
 	ipipe_switch_to(prev, next);
+	(void)last;
+#else
+	switch_to(prev, next, last);
+#endif
 }
 
 int xnarch_escalate(void)

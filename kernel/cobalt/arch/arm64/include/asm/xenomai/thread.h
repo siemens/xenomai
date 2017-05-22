@@ -19,11 +19,16 @@
 #ifndef _COBALT_ARM64_ASM_THREAD_H
 #define _COBALT_ARM64_ASM_THREAD_H
 
+#include <linux/version.h>
 #include <asm-generic/xenomai/thread.h>
+
+#if defined(CONFIG_XENO_ARCH_FPU) && LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
+#define ARM64_XENO_OLD_SWITCH
+#endif
 
 struct xnarchtcb {
 	struct xntcb core;
-#ifdef CONFIG_XENO_ARCH_FPU
+#ifdef ARM64_XENO_OLD_SWITCH
 	struct fpsimd_state xnfpsimd_state;
 	struct fpsimd_state *fpup;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
@@ -58,20 +63,29 @@ static inline void xnarch_enter_root(struct xnthread *root) { }
 
 int xnarch_escalate(void);
 
-#if defined(CONFIG_XENO_ARCH_FPU)
+#ifdef ARM64_XENO_OLD_SWITCH
 
 void xnarch_init_root_tcb(struct xnthread *thread);
 
 void xnarch_init_shadow_tcb(struct xnthread *thread);
 
+void xnarch_leave_root(struct xnthread *root);
+
+void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread);
+
+#else /* !ARM64_XENO_OLD_SWITCH */
+
+static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
+static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
+static inline void xnarch_leave_root(struct xnthread *root) { }
+static inline void xnarch_switch_fpu(struct xnthread *f, struct xnthread *t) { }
+
+#endif /*  !ARM64_XENO_OLD_SWITCH */
+
 static inline int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 {
 	return xnarch_fault_trap(d) == IPIPE_TRAP_FPU_ACC;
 }
-
-void xnarch_leave_root(struct xnthread *root);
-
-void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread);
 
 static inline int
 xnarch_handle_fpu_fault(struct xnthread *from,
@@ -79,32 +93,6 @@ xnarch_handle_fpu_fault(struct xnthread *from,
 {
 	return 0;
 }
-
-#else /* !CONFIG_XENO_ARCH_FPU */
-
-static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
-static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
-
-/*
- * Userland may raise FPU faults with FPU-enabled kernels, regardless
- * of whether real-time threads actually use FPU, so we simply ignore
- * these faults.
- */
-static inline int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
-{
-	return 0;
-}
-
-static inline void xnarch_leave_root(struct xnthread *root) { }
-
-static inline void xnarch_switch_fpu(struct xnthread *f, struct xnthread *t) { }
-
-static inline int xnarch_handle_fpu_fault(struct xnthread *from, 
-					struct xnthread *to, struct ipipe_trap_data *d)
-{
-	return 0;
-}
-#endif /*  !CONFIG_XENO_ARCH_FPU */
 
 static inline void xnarch_enable_kfpu(void) { }
 
