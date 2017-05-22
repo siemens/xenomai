@@ -303,7 +303,11 @@ out:
  * be lost. If @a size is zero, this call returns immediately with no
  * other action.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until
+ * a message is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case no message is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -327,6 +331,10 @@ out:
  * other action.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * a message is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case no message is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */

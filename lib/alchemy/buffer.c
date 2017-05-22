@@ -345,7 +345,11 @@ out:
  * @param len The length in bytes of the memory area pointed to by @a
  * ptr.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until enough
+ * data is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case not enough data is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -366,6 +370,10 @@ out:
  * ptr.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * enough data is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case not enough data is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -581,7 +589,11 @@ out:
  *
  * @param len The length in bytes of the message data.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until enough
+ * buffer space is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case of buffer space
+ * shortage.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -601,6 +613,10 @@ out:
  * @param len The length in bytes of the message data.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * enough buffer space is available. Passing TM_NONBLOCK causes the
+ * service to return immediately without blocking in case of buffer
+ * space shortage.
  *
  * @apitags{xthread-nowait, switch-primary}
  */

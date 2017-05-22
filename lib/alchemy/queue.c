@@ -722,7 +722,11 @@ out:
  * @param bufp A pointer to a memory location which will be written
  * with the address of the received message.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until
+ * a message is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case no message is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -740,6 +744,10 @@ out:
  * with the address of the received message.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * a message is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case no message is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -870,7 +878,11 @@ out:
  * @param size The length in bytes of the memory area pointed to by @a
  * buf.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until
+ * a message is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case no message is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -891,6 +903,10 @@ out:
  * buf.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * a message is available. Passing TM_NONBLOCK causes the service
+ * to return immediately without blocking in case no message is
+ * available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */

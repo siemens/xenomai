@@ -297,7 +297,11 @@ out:
  *
  * @param sem The semaphore descriptor.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until the
+ * request is satisfied. Passing TM_NONBLOCK causes the service to
+ * return without blocking in case the request cannot be satisfied
+ * immediately.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -312,6 +316,10 @@ out:
  * @param sem The semaphore descriptor.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * the request is satisfied. Passing TM_NONBLOCK causes the service
+ * to return without blocking in case the request cannot be satisfied
+ * immediately.
  *
  * @apitags{xthread-nowait, switch-primary}
  */

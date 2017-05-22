@@ -291,7 +291,9 @@ int rt_cond_broadcast(RT_COND *cond)
  * @param mutex The address of the mutex serializing the access to the
  * shared data.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely. Passing
+ * TM_NONBLOCK causes the caller to return immediately without block.
  *
  * @apitags{xthread-only, switch-primary}
  */
@@ -309,6 +311,9 @@ int rt_cond_broadcast(RT_COND *cond)
  * shared data.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely.
+ * Passing TM_NONBLOCK causes the caller to return immediately
+ * without block.
  *
  * @apitags{xthread-only, switch-primary}
  */
@@ -330,7 +335,8 @@ int rt_cond_broadcast(RT_COND *cond)
  * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the condition variable to be
  * signaled  (see note). Passing NULL causes the caller to
- * block indefinitely.
+ * block indefinitely. Passing { .tv_sec = 0, .tv_nsec = 0 } causes
+ * the caller to return immediately without block.
  *
  * @return Zero is returned upon success. Otherwise:
  *

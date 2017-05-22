@@ -337,6 +337,10 @@ out:
  *
  * This routine is a variant of rt_heap_alloc_timed() accepting a
  * relative timeout specification expressed as a scalar value.
+ * Passing TM_INFINITE in @a timeout causes the caller to block
+ * indefinitely until a block is available. Passing TM_NONBLOCK
+ * causes the service to return immediately without blocking in case
+ * a block is not available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -347,6 +351,10 @@ out:
  *
  * This routine is a variant of rt_heap_alloc_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
+ * Passing TM_INFINITE in @a timeout causes the caller to block
+ * indefinitely until a block is available. Passing TM_NONBLOCK
+ * causes the service to return immediately without blocking in case
+ * a block is not available.
  *
  * @apitags{xthread-nowait, switch-primary}
  */
@@ -374,7 +382,7 @@ out:
  * to be available from the heap (see note). Passing NULL causes the
  * caller to block indefinitely until a block is available. Passing {
  * .tv_sec = 0, .tv_nsec = 0 } causes the service to return
- * immediately without blocking in case not block is available.
+ * immediately without blocking in case a block is not available.
  *
  * @param blockp A pointer to a memory location which will be written
  * upon success with the address of the allocated block, or the start

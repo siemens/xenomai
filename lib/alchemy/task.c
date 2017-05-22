@@ -1580,7 +1580,11 @@ out:
  * @param mcb_r The address of an optional message control block
  * referring to the reply message area.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until a reply
+ * is received. Passing TM_NONBLOCK causes the service to return
+ * without blocking in case the recipient task is not waiting for
+ * messages at the time of the call.
  *
  * @apitags{xthread-only, switch-primary}
  */
@@ -1601,6 +1605,10 @@ out:
  * referring to the reply message area.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * a reply is received. Passing TM_NONBLOCK causes the service to
+ * return without blocking in case the recipient task is not waiting
+ * for messages at the time of the call.
  *
  * @apitags{xthread-only, switch-primary}
  */
@@ -1814,7 +1822,11 @@ out:
  * @param mcb_r The address of a message control block referring to
  * the receive message area.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE causes the caller to block indefinitely until a remote
+ * task eventually sends a message.Passing TM_NONBLOCK causes the
+ * service to return immediately without waiting if no remote task is
+ * currently waiting for sending a message.
  *
  * @apitags{xthread-only, switch-primary}
  */
@@ -1830,6 +1842,10 @@ out:
  * the receive message area.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE causes the caller to block indefinitely until
+ * a remote task eventually sends a message.Passing TM_NONBLOCK
+ * causes the service to return immediately without waiting if no
+ * remote task is currently waiting for sending a message.
  *
  * @apitags{xthread-only, switch-primary}
  */

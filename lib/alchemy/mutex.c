@@ -220,7 +220,10 @@ out:
  *
  * @param mutex The mutex descriptor.
  *
- * @param timeout A delay expressed in clock ticks.
+ * @param timeout A delay expressed in clock ticks. Passing
+ * TM_INFINITE the caller to block indefinitely. Passing TM_NONBLOCK
+ * causes the service to return immediately without blocking in case
+ * @a mutex is already locked by another task.
  *
  * @apitags{xthread-only, switch-primary}
  */
@@ -235,6 +238,9 @@ out:
  * @param mutex The mutex descriptor.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
+ * Passing TM_INFINITE the caller to block indefinitely. Passing
+ * TM_NONBLOCK causes the service to return immediately without
+ * blocking in case @a mutex is already locked by another task.
  *
  * @apitags{xthread-only, switch-primary}
  */
