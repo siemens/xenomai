@@ -27,7 +27,7 @@
 
 static inline int fp_kernel_supported(void)
 {
-	return 1;
+	return 0;
 }
 
 static inline int fp_linux_begin(void)
