@@ -38,6 +38,17 @@
 #include <cobalt/trace.h>
 #include <rtdm/testing.h>
 #include <sys/cobalt.h>
+#include <xenomai/init.h>
+
+static unsigned int nr_cpus;
+
+#define for_each_cpu(__cpu)				\
+	for (__cpu = 0; __cpu < CPU_SETSIZE; __cpu++)	\
+		if (CPU_ISSET(__cpu, &__base_setup_data.cpu_affinity))
+
+#define for_each_cpu_index(__cpu, __index)				\
+	for (__cpu = 0, __index = -1; __cpu < CPU_SETSIZE; __cpu++)	\
+		if (CPU_ISSET(__cpu, &__base_setup_data.cpu_affinity) && ++__index >= 0)
 
 #if CONFIG_SMP
 #define smp_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
@@ -74,7 +85,7 @@ struct task_params {
 };
 
 struct cpu_tasks {
-	unsigned index;
+	unsigned int index;
 	struct task_params *tasks;
 	unsigned tasks_count;
 	unsigned capacity;
@@ -705,6 +716,7 @@ static int parse_arg(struct task_params *param,
 	unsigned long cpu;
 	char *cpu_end;
 	unsigned i;
+	int n;
 
 	param->type = param->fp = 0;
 	param->cpu = &cpus[0];
@@ -747,7 +759,13 @@ static int parse_arg(struct task_params *param,
 	if (*cpu_end != '\0' || (cpu == ULONG_MAX && errno))
 		return -1;
 
-	param->cpu = &cpus[cpu];
+	param->cpu = &cpus[nr_cpus]; /* Invalid at first. */
+	for_each_cpu_index(i, n)
+		if (i == cpu) {
+			param->cpu = &cpus[n];
+			break;
+		}
+	
 	return 0;
 }
 
@@ -974,13 +992,7 @@ static unsigned long xatoul(const char *str)
 
 static void usage(FILE *fd, const char *progname)
 {
-	unsigned i, j, nr_cpus;
-
-#if CONFIG_SMP
-	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-#else /* !CONFIG_SMP */
-	nr_cpus = 1;
-#endif /* !CONFIG_SMP */
+	unsigned i, j;
 
 	fprintf(fd,
 		"Usage:\n"
@@ -1024,17 +1036,19 @@ static void usage(FILE *fd, const char *progname)
 		"Passing no 'threadspec' is equivalent to running:\n%s",
 		progname, progname);
 
-	for (i = 0; i < nr_cpus; i++)
+	for_each_cpu(i) {
 		for (j = 0; j < sizeof(all_fp)/sizeof(char *); j++)
 			fprintf(fd, " %s%d", all_fp[j], i);
+	}
 
 	fprintf(fd,
 		"\n\nPassing only the --nofpu or -n argument is equivalent to "
 		"running:\n%s", progname);
 
-	for (i = 0; i < nr_cpus; i++)
+	for_each_cpu(i) {
 		for (j = 0; j < sizeof(all_nofp)/sizeof(char *); j++)
 			fprintf(fd, " %s%d", all_nofp[j], i);
+	}
 	fprintf(fd, "\n\n");
 }
 
@@ -1106,7 +1120,7 @@ static int check_fpu(void)
 
 int main(int argc, const char *argv[])
 {
-	unsigned i, j, nr_cpus, use_fp = 1, stress = 0;
+	unsigned i, j, n, use_fp = 1, stress = 0;
 	pthread_attr_t rt_attr;
 	const char *progname = argv[0];
 	struct cpu_tasks *cpus;
@@ -1125,18 +1139,23 @@ int main(int argc, const char *argv[])
 	}
 
 #if CONFIG_SMP
-	nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+	nr_cpus = CPU_COUNT(&__base_setup_data.cpu_affinity);
+	if (nr_cpus == 0) {
+		nr_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+		if (nr_cpus == -1) {
+			fprintf(stderr,
+				"Error %d while getting the number of cpus (%s)\n",
+				errno,
+				strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		for (i = 0; i < nr_cpus; i++)
+			CPU_SET(i, &__base_setup_data.cpu_affinity);
+	}
 #else /* !CONFIG_SMP */
 	nr_cpus = 1;
+	CPU_SET(0, &__base_setup_data.cpu_affinity);
 #endif /* !CONFIG_SMP */
-
-	if (nr_cpus == -1) {
-		fprintf(stderr,
-			"Error %d while getting the number of cpus (%s)\n",
-			errno,
-			strerror(errno));
-		exit(EXIT_FAILURE);
-	}
 
 	fp_features = cobalt_fp_detect();
 
@@ -1234,46 +1253,46 @@ int main(int argc, const char *argv[])
 		argc = count * nr_cpus + 1;
 		argv = (const char **) malloc(argc * sizeof(char *));
 		argv[0] = progname;
-		for (i = 0; i < nr_cpus; i++)
+		for_each_cpu_index(i, n) {
 			for (j = 0; j < count; j++) {
 				snprintf(buffer,
 					 sizeof(buffer),
 					 "%s%d",
 					 all[j],
 					 i);
-				argv[i * count + j + 1] = strdup(buffer);
+				argv[n * count + j + 1] = strdup(buffer);
 			}
+		}
 
 		optind = 1;
 	}
 
-	cpus = (struct cpu_tasks *) malloc(sizeof(*cpus) * nr_cpus);
+	cpus = malloc(sizeof(*cpus) * nr_cpus);
 	if (!cpus) {
 		perror("malloc");
 		exit(EXIT_FAILURE);
 	}
 
-	for (i = 0; i < nr_cpus; i++) {
+	for_each_cpu_index(i, n) {
 		size_t size;
-		cpus[i].fd = -1;
-		cpus[i].index = i;
-		cpus[i].capacity = 2;
-		size = cpus[i].capacity * sizeof(struct task_params);
-		cpus[i].tasks_count = 1;
-		cpus[i].tasks = (struct task_params *) malloc(size);
-		cpus[i].last_switches_count = 0;
+		cpus[n].fd = -1;
+		cpus[n].index = i;
+		cpus[n].capacity = 2;
+		size = cpus[n].capacity * sizeof(struct task_params);
+		cpus[n].tasks_count = 1;
+		cpus[n].tasks = (struct task_params *) malloc(size);
+		cpus[n].last_switches_count = 0;
 
-		if (!cpus[i].tasks) {
+		if (!cpus[n].tasks) {
 			perror("malloc");
 			exit(EXIT_FAILURE);
 		}
 
-		cpus[i].tasks[0].type = stress ? SWITCHER : SLEEPER;
-		cpus[i].tasks[0].fp = use_fp ? UFPS : 0;
-		cpus[i].tasks[0].cpu = &cpus[i];
-		cpus[i].tasks[0].thread = 0;
-		cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
-
+		cpus[n].tasks[0].type = stress ? SWITCHER : SLEEPER;
+		cpus[n].tasks[0].fp = use_fp ? UFPS : 0;
+		cpus[n].tasks[0].cpu = &cpus[n];
+		cpus[n].tasks[0].thread = 0;
+		cpus[n].tasks[0].swt.index = cpus[n].tasks[0].swt.flags = 0;
 	}
 
 	/* Parse arguments and build data structures. */
@@ -1323,16 +1342,15 @@ int main(int argc, const char *argv[])
 	}
 
 	if (stress)
-		for (i = 0; i < nr_cpus; i++) {
+		for_each_cpu_index(i, n) {
 			struct task_params params;
-			struct cpu_tasks *cpu = &cpus[i];
+			struct cpu_tasks *cpu = &cpus[n];
 
-			if(cpu->tasks_count + 1> cpu->capacity) {
+			if (cpu->tasks_count + 1 > cpu->capacity) {
 				size_t size;
 				cpu->capacity += cpu->capacity / 2;
 				size = cpu->capacity * sizeof(struct task_params);
-				cpu->tasks =
-					(struct task_params *) realloc(cpu->tasks, size);
+				cpu->tasks = realloc(cpu->tasks, size);
 				if (!cpu->tasks) {
 					perror("realloc");
 					exit(EXIT_FAILURE);
@@ -1369,8 +1387,8 @@ int main(int argc, const char *argv[])
 		printf("== Threads:");
 
 	/* Create and register all tasks. */
-	for (i = 0; i < nr_cpus; i ++) {
-		struct cpu_tasks *cpu = &cpus[i];
+	for_each_cpu_index(i, n) {
+		struct cpu_tasks *cpu = &cpus[n];
 		char buffer[64];
 
 		cpu->fd = open_rttest(devname,sizeof(devname),cpu->tasks_count);
@@ -1419,8 +1437,8 @@ int main(int argc, const char *argv[])
 
 	/* Cleanup. */
   cleanup:
-	for (i = 0; i < nr_cpus; i ++) {
-		struct cpu_tasks *cpu = &cpus[i];
+	for_each_cpu_index(i, n) {
+		struct cpu_tasks *cpu = &cpus[n];
 
 		/* kill the user-space tasks. */
 		for (j = 0; j < cpu->tasks_count + !!stress; j++) {
@@ -1431,8 +1449,8 @@ int main(int argc, const char *argv[])
 		}
 	}
 
-	for (i = 0; i < nr_cpus; i ++) {
-		struct cpu_tasks *cpu = &cpus[i];
+	for_each_cpu_index(i, n) {
+		struct cpu_tasks *cpu = &cpus[n];
 
 		/* join the user-space tasks. */
 		for (j = 0; j < cpu->tasks_count + !!stress; j++) {
@@ -1442,17 +1460,17 @@ int main(int argc, const char *argv[])
 				pthread_join(param->thread, NULL);
 		}
 
-		if (cpus[i].fd != -1) {
+		if (cpu->fd != -1) {
 			struct timespec now;
 
 			clock_gettime(CLOCK_REALTIME, &now);
 
 			if (quiet == 1)
 				quiet = 0;
-			display_switches_count(&cpus[i], &now);
+			display_switches_count(cpu, &now);
 
 			/* Kill the kernel-space tasks. */
-			close(cpus[i].fd);
+			close(cpu->fd);
 		}
 		free(cpu->tasks);
 	}
