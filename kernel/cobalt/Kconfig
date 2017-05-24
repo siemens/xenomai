@@ -251,14 +251,14 @@ config XENO_OPT_REGISTRY_NRSLOTS
 
 config XENO_OPT_SYS_HEAPSZ
 	int "Size of system heap (Kb)"
-	default 512
+	default 4096
 	help
 	The system heap is used for various internal allocations by
 	the Cobalt kernel. The size is expressed in Kilobytes.
 
 config XENO_OPT_PRIVATE_HEAPSZ
 	int "Size of private heap (Kb)"
-	default 64
+	default 256
 	help
 	The Cobalt kernel implements fast IPC mechanisms within the
 	scope of a process which require a private kernel memory heap
@@ -270,7 +270,7 @@ config XENO_OPT_PRIVATE_HEAPSZ
 
 config XENO_OPT_SHARED_HEAPSZ
 	int "Size of shared heap (Kb)"
-	default 64
+	default 256
 	help
 	The Cobalt kernel implements fast IPC mechanisms between
 	processes which require a shared kernel memory heap to be
@@ -282,7 +282,7 @@ config XENO_OPT_SHARED_HEAPSZ
 
 config XENO_OPT_NRTIMERS
        int "Maximum number of POSIX timers per process"
-       default 128
+       default 256
        help
        This tunable controls how many POSIX timers can exist at any
        given time for each Cobalt process (a timer is created by a
