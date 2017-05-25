@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <memory.h>
 #include <malloc.h>
 #include <stdarg.h>
@@ -150,20 +151,56 @@ static inline void dump_configuration(void)
 	printf("AUTOMATIC_BOOTSTRAP=%d\n", xenomai_auto_bootstrap);
 }
 
+static inline int resolve_cpuid(const char *s)
+{
+	return isdigit(*s) ? atoi(s) : -1;
+}
+
 static int collect_cpu_affinity(const char *cpu_list)
 {
-	char *s = strdup(cpu_list), *p, *n;
-	int ret, cpu;
+	char *s, *n, *range, *range_p = NULL, *id, *id_r;
+	int start, end, cpu, nr_cpus, ret;
 
-	n = s;
-	while ((p = strtok(n, ",")) != NULL) {
-		cpu = atoi(p);
-		if (cpu >= CPU_SETSIZE) {
-			free(s);
-			early_warning("invalid CPU number '%d'", cpu);
-			return -EINVAL;
+	/*
+	 * We don't know which CPUs are online yet, but we may know
+	 * which CPU identifier range is valid. Ask for the number of
+	 * processors configured to find out.
+	 */
+	nr_cpus = (int)sysconf(_SC_NPROCESSORS_CONF);
+	if (nr_cpus < 0) {
+		ret = -errno;
+		warning("sysconf(_SC_NPROCESSORS_CONF) failed [%s]", symerror(ret));
+		return ret;
+	}
+
+	s = n = strdup(cpu_list);
+	while ((range = strtok_r(n, ",", &range_p)) != NULL) {
+		if (*range == '\0')
+			continue;
+		end = -1;
+		if (range[strlen(range)-1] == '-')
+			end = nr_cpus - 1;
+		id = strtok_r(range, "-", &id_r);
+		if (id) {
+			start = resolve_cpuid(id);
+			if (*range == '-') {
+				end = start;
+				start = 0;
+			}
+			id = strtok_r(NULL, "-", &id_r);
+			if (id)
+				end = resolve_cpuid(id);
+			else if (end < 0)
+				end = start;
+			if (start < 0 || start >= nr_cpus ||
+			    end < 0 || end >= nr_cpus)
+				goto fail;
+		} else {
+			start = 0;
+			end = nr_cpus - 1;
 		}
-		CPU_SET(cpu, &__base_setup_data.cpu_affinity);
+		for (cpu = start; cpu <= end; cpu++)
+			CPU_SET(cpu, &__base_setup_data.cpu_affinity);
 		n = NULL;
 	}
 
@@ -182,11 +219,17 @@ static int collect_cpu_affinity(const char *cpu_list)
 	ret = sched_setaffinity(0, sizeof(__base_setup_data.cpu_affinity),
 				&__base_setup_data.cpu_affinity);
 	if (ret) {
-		early_warning("invalid CPU in affinity list '%s'", cpu_list);
-		return -errno;
+		ret = -errno;
+		early_warning("invalid CPU in '%s'", cpu_list);
+		return ret;
 	}
 
 	return 0;
+fail:
+	warning("invalid CPU number/range in '%s'", cpu_list);
+	free(s);
+
+	return -EINVAL;
 }
 
 static inline char **prep_args(int argc, char *const argv[], int *largcp)
