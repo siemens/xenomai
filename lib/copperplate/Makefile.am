@@ -16,8 +16,7 @@ libcopperplate_la_SOURCES =	\
 	semobj.c	\
 	threadobj.c	\
 	timerobj.c	\
-	traceobj.c	\
-	wrappers.c
+	traceobj.c
 
 libcopperplate_la_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
