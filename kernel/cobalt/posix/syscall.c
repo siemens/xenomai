@@ -316,7 +316,7 @@ static COBALT_SYSCALL(bind, lostage,
 	f = &breq.feat_ret;
 	featreq = breq.feat_req;
 	if (!realtime_core_running() && (featreq & __xn_feat_control) == 0)
-		return -EPERM;
+		return -EAGAIN;
 
 	/*
 	 * Calculate the missing feature set:
