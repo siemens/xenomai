@@ -195,11 +195,13 @@ static void rtcap_signal_handler(rtdm_nrtsig_t *nrtsig, void *arg)
 	ifindex = rtskb->rtdev->ifindex;
 	active  = tap_device[ifindex].present;
 
-	if ((tap_device[ifindex].tap_dev->flags & IFF_UP) == 0)
-	    active &= ~TAP_DEV;
-	if (active & RTMAC_TAP_DEV &&
-	    !(tap_device[ifindex].rtmac_tap_dev->flags & IFF_UP))
-	    active &= ~RTMAC_TAP_DEV;
+	if (active) {
+		if ((tap_device[ifindex].tap_dev->flags & IFF_UP) == 0)
+			active &= ~TAP_DEV;
+		if (active & RTMAC_TAP_DEV &&
+		    !(tap_device[ifindex].rtmac_tap_dev->flags & IFF_UP))
+			active &= ~RTMAC_TAP_DEV;
+	}
 
 	if (active == 0) {
 	    tap_device[ifindex].tap_dev_stats.rx_dropped++;
