@@ -454,7 +454,7 @@ int rtdm_dev_register(struct rtdm_device *dev)
 		if (IS_ERR(kdev)) {
 			xnregistry_remove(dev->named.handle);
 			ret = PTR_ERR(kdev);
-			goto fail;
+			goto fail2;
 		}
 		__set_bit(minor, drv->minor_map);
 	} else {
@@ -477,7 +477,7 @@ int rtdm_dev_register(struct rtdm_device *dev)
 				     dev, dev->name);
 		if (IS_ERR(kdev)) {
 			ret = PTR_ERR(kdev);
-			goto fail;
+			goto fail2;
 		}
 
 		id = get_proto_id(drv->protocol_family, drv->socket_type);
@@ -500,7 +500,7 @@ int rtdm_dev_register(struct rtdm_device *dev)
 fail:
 	if (kdev)
 		device_destroy(kdev_class, rdev);
-
+fail2:
 	unregister_driver(drv);
 
 	mutex_unlock(&register_lock);
