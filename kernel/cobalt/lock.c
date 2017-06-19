@@ -39,7 +39,7 @@
  * @{
  */
 DEFINE_XNLOCK(nklock);
-#if defined(CONFIG_SMP) || XENO_DEBUG(LOCKING)
+#if defined(CONFIG_SMP) || defined(CONFIG_XENO_OPT_DEBUG_LOCKING)
 EXPORT_SYMBOL_GPL(nklock);
 
 #ifdef CONFIG_XENO_ARCH_OUTOFLINE_XNLOCK
@@ -57,7 +57,7 @@ EXPORT_SYMBOL_GPL(___xnlock_put);
 #endif /* out of line xnlock */
 #endif /* CONFIG_SMP || XENO_DEBUG(LOCKING) */
 
-#if XENO_DEBUG(LOCKING)
+#ifdef CONFIG_XENO_OPT_DEBUG_LOCKING
 DEFINE_PER_CPU(struct xnlockinfo, xnlock_stats);
 EXPORT_PER_CPU_SYMBOL_GPL(xnlock_stats);
 #endif
