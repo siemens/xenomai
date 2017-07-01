@@ -370,7 +370,7 @@ TRACE_EVENT(cobalt_sched_setconfig,
 		__entry->policy = policy;
 		__entry->len = len;
 	),
-	TP_printk("cpu=%d policy=%d(%s) len=%Zu",
+	TP_printk("cpu=%d policy=%d(%s) len=%zu",
 		  __entry->cpu, __entry->policy,
 		  cobalt_print_sched_policy(__entry->policy),
 		  __entry->len)
@@ -882,7 +882,7 @@ TRACE_EVENT(cobalt_mq_send,
 		__entry->len = len;
 		__entry->prio = prio;
 	),
-	TP_printk("mqd=%d buf=%p len=%Zu prio=%u",
+	TP_printk("mqd=%d buf=%p len=%zu prio=%u",
 		  __entry->mqd, __entry->u_buf, __entry->len,
 		  __entry->prio)
 );
@@ -903,7 +903,7 @@ TRACE_EVENT(cobalt_mq_timedreceive,
 		__entry->len = len;
 		__assign_timespec(timeout, timeout);
 	),
-	TP_printk("mqd=%d buf=%p len=%Zu timeout=(%ld.%09ld)",
+	TP_printk("mqd=%d buf=%p len=%zu timeout=(%ld.%09ld)",
 		  __entry->mqd, __entry->u_buf, __entry->len,
 		  __timespec_args(timeout))
 );
@@ -921,7 +921,7 @@ TRACE_EVENT(cobalt_mq_receive,
 		__entry->u_buf = u_buf;
 		__entry->len = len;
 	),
-	TP_printk("mqd=%d buf=%p len=%Zu",
+	TP_printk("mqd=%d buf=%p len=%zu",
 		  __entry->mqd, __entry->u_buf, __entry->len)
 );
 

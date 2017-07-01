@@ -320,7 +320,7 @@ TRACE_EVENT(cobalt_fd_mmap,
 		__entry->flags = rma->flags;
 	),
 
-	TP_printk("device=%p fd=%d area={ len:%Zu, off:%Lu }"
+	TP_printk("device=%p fd=%d area={ len:%zu, off:%Lu }"
 		  " prot=%#x(%s) flags=%#x(%s) pid=%d comm=%s",
 		  __entry->dev, __entry->ufd, __entry->length,
 		  (unsigned long long)__entry->offset,

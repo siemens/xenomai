@@ -114,7 +114,7 @@ static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 		xnvfile_printf(it, "%9s %9s  %s\n",
 			       "TOTAL", "FREE", "NAME");
 	else
-		xnvfile_printf(it, "%9Zu %9Zu  %s\n",
+		xnvfile_printf(it, "%9zu %9zu  %s\n",
 			       p->all_mem,
 			       p->free_mem,
 			       p->name);
