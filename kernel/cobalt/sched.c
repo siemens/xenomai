@@ -326,6 +326,8 @@ void xnsched_lock(void)
 	struct xnsched *sched = xnsched_current();
 	struct xnthread *curr = sched->curr;
 
+	if (sched->lflags & XNINIRQ)
+		return;
 	/*
 	 * CAUTION: The fast xnthread_current() accessor carries the
 	 * relevant lock nesting count only if current runs in primary
@@ -334,19 +336,8 @@ void xnsched_lock(void)
 	 * current scheduler, which must be done with IRQs off.
 	 * Either way, we don't need to grab the super lock.
 	 */
-	if (unlikely(curr == NULL || xnthread_test_state(curr, XNRELAX))) {
-		/*
-		 * In IRQ: scheduler already locked, and we may have
-		 * interrupted xnthread_relax() where the BUG_ON condition is
-		 * temporarily false.
-		 */
-		if (sched->lflags & XNINIRQ)
-			return;
-
-		irqoff_only();
-		curr = &sched->rootcb;
-		XENO_BUG_ON(COBALT, xnsched_current()->curr != curr);
-	}
+	XENO_WARN_ON_ONCE(COBALT, (curr->state & XNROOT) &&
+			  !hard_irqs_disabled());
 
 	curr->lock_count++;
 }
@@ -357,17 +348,9 @@ void xnsched_unlock(void)
 	struct xnsched *sched = xnsched_current();
 	struct xnthread *curr = sched->curr;
 
-	if (unlikely(curr == NULL || xnthread_test_state(curr, XNRELAX))) {
-		/*
-		 * In IRQ
-		 */
-		if (sched->lflags & XNINIRQ)
-			return;
-
-		irqoff_only();
-		curr = &xnsched_current()->rootcb;
-	}
-
+	if (sched->lflags & XNINIRQ)
+		return;
+	
 	if (!XENO_ASSERT(COBALT, curr->lock_count > 0))
 		return;
 	
