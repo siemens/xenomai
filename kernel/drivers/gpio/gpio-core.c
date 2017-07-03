@@ -428,7 +428,7 @@ static int match_gpio_chip(struct gpio_chip *gc, void *data)
 {
 	struct device *dev = data;
 
-	return gc->dev == dev;
+	return cobalt_gpiochip_dev(gc) == dev;
 }
 
 static int add_gpio_chip(struct gpio_chip *gc, int type)
