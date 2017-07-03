@@ -18,7 +18,7 @@
  */
 #ifndef _COBALT_ASM_GENERIC_WRAPPERS_H
 
-#include <linux/version.h>
+#include <linux/xenomai/wrappers.h>
 
 #ifdef CONFIG_IPIPE_LEGACY
 #error "CONFIG_IPIPE_LEGACY must be switched off"

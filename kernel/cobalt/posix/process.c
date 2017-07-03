@@ -1200,7 +1200,7 @@ static int handle_sigwake_event(struct task_struct *p)
 	 * we don't break any undergoing ptrace.
 	 */
 	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
-		set_task_state(p, p->state | TASK_NOWAKEUP);
+		cobalt_set_task_state(p, p->state | TASK_NOWAKEUP);
 
 	__xnthread_kick(thread);
 

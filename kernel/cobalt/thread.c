@@ -2139,7 +2139,7 @@ void xnthread_relax(int notify, int reason)
 	 * dropped by xnthread_suspend().
 	 */
 	xnlock_get(&nklock);
-	set_task_state(p, p->state & ~TASK_NOWAKEUP);
+	set_current_state(p->state & ~TASK_NOWAKEUP);
 	xnthread_run_handler_stack(thread, relax_thread);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	splnone();
