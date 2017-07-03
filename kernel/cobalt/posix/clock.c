@@ -33,7 +33,7 @@ static int do_clock_host_realtime(struct timespec *tp)
 {
 #ifdef CONFIG_XENO_OPT_HOSTRT
 	struct xnvdso_hostrt_data *hostrt_data;
-	cycle_t now, base, mask, cycle_delta;
+	u64 now, base, mask, cycle_delta;
 	__u32 mult, shift;
 	unsigned long rem;
 	urwstate_t tmp;
