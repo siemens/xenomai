@@ -1243,7 +1243,7 @@ RT_TASK *rt_task_self(void)
  * - -EPERM is returned if @a task is NULL and this service was called
  * from an invalid context.
  *
- * @apitags{mode-unrestricted, switch-primary}
+ * @apitags{mode-unrestricted, switch-primary, switch-secondary}
  *
  * @note The caller must be an Alchemy task if @a task is NULL.
  *
