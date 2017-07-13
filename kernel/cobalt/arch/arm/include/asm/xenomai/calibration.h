@@ -50,6 +50,8 @@ static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 	ulat = cpu_is_omap44xx() ? 2500 : 5000;
 #elif defined(CONFIG_ARCH_STI)
 	ulat = 6000;
+#elif defined(CONFIG_ARCH_SOCFPGA)
+	ulat = 4500;
 #else
 	ulat = 9500;	/* XXX sane? */
 #endif
