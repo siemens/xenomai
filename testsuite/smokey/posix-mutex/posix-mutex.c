@@ -853,6 +853,57 @@ static int protect_dynamic(void)
 	return 0;
 }
 
+static int protect_trylock(void)
+{
+	pthread_mutex_t mutex;
+	int ret;
+
+	ret = do_init_mutex_ceiling(&mutex, PTHREAD_MUTEX_NORMAL,
+				    THREAD_PRIO_HIGH);
+	if (ret)
+		return ret;
+
+	/* make sure we are primary to take the fast-path */
+	sleep_ms(1);
+
+	if (!__T(ret, pthread_mutex_trylock(&mutex)))
+		return ret;
+
+	if (!__Tassert(pthread_mutex_trylock(&mutex) == EBUSY))
+		return -EINVAL;
+
+	sleep_ms(1);	/* Commit the pending PP request. */
+
+	if (!__Tassert(get_effective_prio() == THREAD_PRIO_HIGH))
+		return -EINVAL;
+
+	if (!__T(ret, pthread_mutex_unlock(&mutex)))
+		return ret;
+
+	/* force to secondary to take the slow-path */
+	__real_usleep(1);
+
+	if (!__T(ret, pthread_mutex_trylock(&mutex)))
+		return ret;
+
+	/* force to secondary to take the slow-path */
+	if (!__Tassert(pthread_mutex_trylock(&mutex) == EBUSY))
+		return -EINVAL;
+
+	sleep_ms(1);	/* Commit the pending PP request. */
+
+	if (!__Tassert(get_effective_prio() == THREAD_PRIO_HIGH))
+		return -EINVAL;
+
+	if (!__T(ret, pthread_mutex_unlock(&mutex)))
+		return ret;
+
+	if (!__T(ret, pthread_mutex_destroy(&mutex)))
+		return ret;
+
+	return 0;
+}
+
 /* Detect obviously wrong execution times. */
 static int check_time_limit(const struct timespec *start,
 			    xnticks_t limit_ns)
@@ -911,6 +962,7 @@ static int run_posix_mutex(struct smokey_test *t, int argc, char *const argv[])
 	do_test(protect_nesting_pi, MAX_100_MS);
 	do_test(protect_weak, MAX_100_MS);
 	do_test(protect_dynamic, MAX_100_MS);
+	do_test(protect_trylock, MAX_100_MS);
 
 	return 0;
 }
