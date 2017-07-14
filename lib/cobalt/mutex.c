@@ -531,10 +531,8 @@ fast_path:
 	} else {
 slow_path:
 		ret = xnsynch_fast_owner_check(mutex_get_ownerp(_mutex), cur);
-		if (ret < 0)
-			goto do_syscall;
-
-		ret = -EBUSY;
+		if (ret == 0)
+			ret = -EBUSY;
 	}
 
 	if (ret == -EBUSY) {
@@ -552,7 +550,6 @@ slow_path:
 		return EBUSY;
 	}
 
-do_syscall:
 	do {
 		ret = XENOMAI_SYSCALL1(sc_cobalt_mutex_trylock, _mutex);
 	} while (ret == -EINTR);
