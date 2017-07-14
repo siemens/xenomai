@@ -486,15 +486,16 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 		err = -EBUSY;
 	}
 
-	if (err == -EBUSY && _mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
-		if (_mutex->lockcnt == UINT32_MAX)
-			return EAGAIN;
+	if (err == -EBUSY) {
+		if (_mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
+			if (_mutex->lockcnt == UINT32_MAX)
+				return EAGAIN;
 
-		++_mutex->lockcnt;
-		return 0;
+			++_mutex->lockcnt;
+			return 0;
+		}
+		return EBUSY;
 	}
-
-	return EBUSY;
 
 do_syscall:
 
