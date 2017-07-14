@@ -334,22 +334,8 @@ COBALT_SYSCALL(mutex_trylock, primary,
 
 	xnthread_commit_ceiling(curr);
 
-	ret = xnsynch_fast_acquire(mutex->synchbase.fastlock, curr->handle);
-	switch(ret) {
-	case 0:
-		xnthread_get_resource(curr);
-		break;
+	ret = xnsynch_try_acquire(&mutex->synchbase);
 
-/* This should not happen, as recursive mutexes are handled in
-   user-space */
-	case -EBUSY:
-		ret = -EINVAL;
-		break;
-
-	case -EAGAIN:
-		ret = -EBUSY;
-		break;
-	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
