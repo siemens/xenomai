@@ -108,7 +108,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	struct alchemy_mutex *mcb;
 	pthread_mutexattr_t mattr;
 	struct service svc;
-	int ret = 0;
+	int ret;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -133,7 +133,12 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
 	/* pthread_mutexattr_setrobust_np() might not be implemented. */
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
-	__RT(pthread_mutex_init(&mcb->lock, &mattr));
+	ret = __RT(pthread_mutex_init(&mcb->lock, &mattr));
+	if (ret) {
+		xnfree(mcb);
+		goto out;
+	}
+	
 	pthread_mutexattr_destroy(&mattr);
 
 	mcb->magic = mutex_magic;
