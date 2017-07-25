@@ -22,7 +22,7 @@
 
 static int __init bcm2835_gpio_init(void)
 {
-	return rtdm_gpiochip_scan_of(NULL, "brcm,bcm2835-gpio",
+ 	return rtdm_gpiochip_scan_of(NULL, "brcm,bcm2835-gpio",
 				     RTDM_SUBCLASS_BCM2835);
 }
 module_init(bcm2835_gpio_init);
