@@ -5,7 +5,7 @@ config XENO_DRIVERS_SPI
        tristate
 
 config XENO_DRIVERS_SPI_BCM2835
-	depends on ARCH_BCM2708
+	depends on ARCH_BCM2708 || ARCH_BCM2835
 	select XENO_DRIVERS_SPI
 	tristate "Support for BCM2835 SPI"
 	help
