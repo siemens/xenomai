@@ -24,7 +24,7 @@
 
 static void sporadic_post_recharge(struct xnthread *thread, xnticks_t budget);
 
-#if XENO_DEBUG(COBALT)
+#ifdef CONFIG_XENO_OPT_DEBUG_COBALT
 
 static inline void sporadic_note_late_drop(struct xnsched *sched)
 {
@@ -42,7 +42,7 @@ static inline void sporadic_note_valid_drop(struct xnsched *sched)
 	sched->pss.drop_retries = 0;
 }
 
-#else /* !XENO_DEBUG(COBALT) */
+#else /* !CONFIG_XENO_OPT_DEBUG_COBALT */
 
 static inline void sporadic_note_late_drop(struct xnsched *sched)
 {
@@ -52,7 +52,7 @@ static inline void sporadic_note_valid_drop(struct xnsched *sched)
 {
 }
 
-#endif /* !XENO_DEBUG(COBALT) */
+#endif /* !CONFIG_XENO_OPT_DEBUG_COBALT */
 
 static inline xnticks_t sporadic_diff_time(xnticks_t start, xnticks_t end)
 {
@@ -230,7 +230,7 @@ static void xnsched_sporadic_init(struct xnsched *sched)
 	 * share the same priority scale, with the addition of budget
 	 * management for the sporadic ones.
 	 */
-#if XENO_DEBUG(COBALT)
+#ifdef CONFIG_XENO_OPT_DEBUG_COBALT
 	sched->pss.drop_retries = 0;
 #endif
 }

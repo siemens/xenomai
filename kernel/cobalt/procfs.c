@@ -27,7 +27,7 @@
 #include <xenomai/version.h>
 #include "debug.h"
 
-#if XENO_DEBUG(LOCKING)
+#ifdef CONFIG_XENO_OPT_DEBUG_LOCKING
 
 static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
@@ -90,7 +90,7 @@ static struct xnvfile_regular lock_vfile = {
 	.ops = &lock_vfile_ops,
 };
 
-#endif /* XENO_DEBUG(LOCKING) */
+#endif /* CONFIG_XENO_OPT_DEBUG_LOCKING */
 
 static int latency_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
@@ -220,7 +220,7 @@ void xnprocfs_cleanup_tree(void)
 	xnvfile_destroy_regular(&lock_vfile);
 #endif
 	xnvfile_destroy_dir(&cobalt_debug_vfroot);
-#endif /* XENO_DEBUG(COBALT) */
+#endif /* XENO_OPT_DEBUG */
 	xnvfile_destroy_regular(&apc_vfile);
 	xnvfile_destroy_regular(&faults_vfile);
 	xnvfile_destroy_regular(&version_vfile);

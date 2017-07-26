@@ -1134,7 +1134,7 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 
-#if XENO_DEBUG(MUTEX_RELAXED)
+#ifdef CONFIG_XENO_OPT_DEBUG_MUTEX_RELAXED
 
 /*
  * Detect when a thread is about to sleep on a synchronization
@@ -1180,6 +1180,6 @@ void xnsynch_detect_boosted_relax(struct xnthread *owner)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-#endif /* XENO_DEBUG(MUTEX_RELAXED) */
+#endif /* CONFIG_XENO_OPT_DEBUG_MUTEX_RELAXED */
 
 /** @} */
