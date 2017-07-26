@@ -85,7 +85,7 @@ static int do_handover(int fd)
 	if (!__Tassert(magic == 0))
 		return -EINVAL;
 
-	if (!__T(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_SECONDARY, &magic)))
+	if (!__Terrno(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_SECONDARY, &magic)))
 		return ret;
 
 	if (!__Tassert(magic == RTTST_RTDM_MAGIC_SECONDARY))
@@ -98,13 +98,13 @@ static int do_handover(int fd)
 					    SCHED_FIFO, &param)))
 		return ret;
 	
-	if (!__T(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_PRIMARY, &magic)))
+	if (!__Terrno(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_PRIMARY, &magic)))
 		return ret;
 
 	if (!__Tassert(magic == RTTST_RTDM_MAGIC_PRIMARY))
 		return -EINVAL;
 
-	if (!__T(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_SECONDARY, &magic)))
+	if (!__Terrno(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_SECONDARY, &magic)))
 		return ret;
 
 	if (!__Tassert(magic == RTTST_RTDM_MAGIC_SECONDARY))
@@ -117,13 +117,13 @@ static int do_handover(int fd)
 					    SCHED_WEAK, &param)))
 		return ret;
 	
-	if (!__T(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_PRIMARY, &magic)))
+	if (!__Terrno(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_PRIMARY, &magic)))
 		return ret;
 
 	if (!__Tassert(magic == RTTST_RTDM_MAGIC_PRIMARY))
 		return -EINVAL;
 
-	if (!__T(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_SECONDARY, &magic)))
+	if (!__Terrno(ret, ioctl(fd, RTTST_RTIOC_RTDM_PING_SECONDARY, &magic)))
 		return ret;
 
 	if (!__Tassert(magic == RTTST_RTDM_MAGIC_SECONDARY))

@@ -311,7 +311,7 @@ static int do_spi_loop(int fd)
 			if (ret < 0)
 				break;
 			clock_gettime(CLOCK_MONOTONIC, &start);
-			if (!__T(ret, ioctl(fd, SPI_RTIOC_TRANSFER)))
+			if (!__Terrno(ret, ioctl(fd, SPI_RTIOC_TRANSFER)))
 				return ret;
 			if (with_latency) {
 				clock_gettime(CLOCK_MONOTONIC, &now);
@@ -382,7 +382,7 @@ static int run_spi_transfer(struct smokey_test *t, int argc, char *const argv[])
 	}
 
 	iobufs.io_len = TRANSFER_SIZE;
-	if (!__T(ret, ioctl(fd, SPI_RTIOC_SET_IOBUFS, &iobufs)))
+	if (!__Terrno(ret, ioctl(fd, SPI_RTIOC_SET_IOBUFS, &iobufs)))
 		return ret;
 
 	p = mmap(NULL, iobufs.map_len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
@@ -400,10 +400,10 @@ static int run_spi_transfer(struct smokey_test *t, int argc, char *const argv[])
 	config.mode = SPI_MODE_0;
 	config.bits_per_word = 8;
 	config.speed_hz = speed_hz;
-	if (!__T(ret, ioctl(fd, SPI_RTIOC_SET_CONFIG, &config)))
+	if (!__Terrno(ret, ioctl(fd, SPI_RTIOC_SET_CONFIG, &config)))
 		return ret;
 
-	if (!__T(ret, ioctl(fd, SPI_RTIOC_GET_CONFIG, &config)))
+	if (!__Terrno(ret, ioctl(fd, SPI_RTIOC_GET_CONFIG, &config)))
 		return ret;
 
 	smokey_trace("speed=%u hz, mode=%#x, bits=%u",
