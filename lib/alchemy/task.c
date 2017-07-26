@@ -253,6 +253,9 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	struct alchemy_task *tcb;
 	int ret;
 
+	if (threadobj_irq_p())
+		return -EPERM;
+
 	ret = check_task_priority(prio);
 	if (ret)
 		return ret;
@@ -384,7 +387,10 @@ fail_syncinit:
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered task.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
+ *
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @sideeffect
  * - When running over the Cobalt core:
@@ -699,6 +705,9 @@ out:
  * registered task.
  *
  * - -EBUSY is returned if the caller is not a regular POSIX thread.
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt handler.
  *
  * @apitags{pthread-only, switch-secondary, switch-primary}
  *

@@ -95,10 +95,10 @@ static struct registry_operations registry_ops;
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered condition variable.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Condition variables can be shared by multiple processes which
  * belong to the same Xenomai session.
@@ -156,11 +156,11 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		ret = 0;
 	}
 
-	if (syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
+	ret = syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj);
+	if (ret) {
 		registry_destroy_file(&ccb->fsobj);
 		__RT(pthread_cond_destroy(&ccb->cond));
 		xnfree(ccb);
-		ret = -EEXIST;
 	} else
 		cond->handle = mainheap_ref(ccb, uintptr_t);
 out:

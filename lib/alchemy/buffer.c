@@ -202,10 +202,10 @@ fnref_register(libalchemy, buffer_finalize);
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered buffer.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Buffers can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -263,10 +263,9 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 		warning("failed to export buffer %s to registry, %s",
 			bcb->name, symerror(ret));
 
-	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {
-		ret = -EEXIST;
+	ret = syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj);
+	if (ret)
 		goto fail_register;
-	}
 
 	bf->handle = mainheap_ref(bcb, uintptr_t);
 

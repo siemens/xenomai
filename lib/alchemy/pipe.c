@@ -124,10 +124,10 @@ DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
  *
  * - -EBUSY is returned if @a minor is already open.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  */
 #ifndef DOXYGEN_CPP
 CURRENT_IMPL(int, rt_pipe_create,
@@ -210,10 +210,9 @@ int rt_pipe_create(RT_PIPE *pipe,
 	pcb->minor = minor;
 	pcb->magic = pipe_magic;
 
-	if (syncluster_addobj(&alchemy_pipe_table, pcb->name, &pcb->cobj)) {
-		ret = -EEXIST;
+	ret = syncluster_addobj(&alchemy_pipe_table, pcb->name, &pcb->cobj);
+	if (ret)
 		goto fail_register;
-	}
 
 	pipe->handle = mainheap_ref(pcb, uintptr_t);
 

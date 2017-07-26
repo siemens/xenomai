@@ -95,10 +95,10 @@ static struct registry_operations registry_ops;
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered mutex.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Mutexes can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -152,10 +152,10 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		ret = 0;
 	}
 
-	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
+	ret = syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj);
+	if (ret) {
 		registry_destroy_file(&mcb->fsobj);
 		xnfree(mcb);
-		ret = -EEXIST;
 	} else
 		mutex->handle = mainheap_ref(mcb, uintptr_t);
 out:

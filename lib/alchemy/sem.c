@@ -167,10 +167,10 @@ fnref_register(libalchemy, sem_finalize);
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered semaphore.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Semaphores can be shared by multiple processes which belong
  * to the same Xenomai session.
@@ -224,11 +224,11 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 		ret = 0;
 	}
 
-	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
+	ret = syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj);
+	if (ret) {
 		registry_destroy_file(&scb->fsobj);
 		semobj_uninit(&scb->smobj);
 		xnfree(scb);
-		ret = -EEXIST;
 	} else
 		sem->handle = mainheap_ref(scb, uintptr_t);
 out:

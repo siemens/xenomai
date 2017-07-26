@@ -182,10 +182,10 @@ fnref_register(libalchemy, queue_finalize);
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered queue.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Queues can be shared by multiple processes which belong to
  * the same Xenomai session.
@@ -263,10 +263,9 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 		warning("failed to export queue %s to registry, %s",
 			qcb->name, symerror(ret));
 
-	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
-		ret = -EEXIST;
+	ret = syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj);
+	if (ret)
 		goto fail_register;
-	}
 
 	queue->handle = mainheap_ref(qcb, uintptr_t);
 

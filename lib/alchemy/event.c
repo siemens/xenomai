@@ -157,10 +157,10 @@ fnref_register(libalchemy, event_finalize);
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered event flag group.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Event flag groups can be shared by multiple processes which
  * belong to the same Xenomai session.
@@ -213,11 +213,11 @@ int rt_event_create(RT_EVENT *event, const char *name,
 		ret = 0;
 	}
 
-	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
+	ret = syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj);
+	if (ret) {
 		registry_destroy_file(&evcb->fsobj);
 		eventobj_uninit(&evcb->evobj);
 		xnfree(evcb);
-		ret = -EEXIST;
 	} else
 		event->handle = mainheap_ref(evcb, uintptr_t);
 out:

@@ -204,10 +204,10 @@ fnref_register(libalchemy, heap_finalize);
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered heap.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context, e.g. interrupt or non-Xenomai thread.
  *
- * @apitags{mode-unrestricted, switch-secondary}
+ * @apitags{xthread-only, mode-unrestricted, switch-secondary}
  *
  * @note Heaps can be shared by multiple processes which belong to the
  * same Xenomai session.
@@ -264,10 +264,9 @@ int rt_heap_create(RT_HEAP *heap,
 		warning("failed to export heap %s to registry, %s",
 			hcb->name, symerror(ret));
 
-	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
-		ret = -EEXIST;
+	ret = syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj);
+	if (ret)
 		goto fail_register;
-	}
 
 	heap->handle = mainheap_ref(hcb, uintptr_t);
 
