@@ -900,8 +900,13 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 			    (oldstate & XNTRAPLB) != 0)
 				goto lock_break;
 		}
-		xnthread_clear_info(thread,
-				    XNRMID|XNTIMEO|XNBREAK|XNWAKEN|XNROBBED|XNKICKED);
+		/*
+		 * Do not destroy the info left behind by yet unprocessed
+		 * wakeups when suspending a remote thread.
+		 */
+		if (thread == sched->curr)
+			xnthread_clear_info(thread, XNRMID|XNTIMEO|XNBREAK|
+						    XNWAKEN|XNROBBED|XNKICKED);
 	}
 
 	/*
