@@ -216,7 +216,7 @@ static struct xnvfile_regular apc_vfile = {
 void xnprocfs_cleanup_tree(void)
 {
 #ifdef CONFIG_XENO_OPT_DEBUG
-#ifdef CONFIG_XENO_DEBUG_LOCKING
+#ifdef CONFIG_XENO_OPT_DEBUG_LOCKING
 	xnvfile_destroy_regular(&lock_vfile);
 #endif
 	xnvfile_destroy_dir(&cobalt_debug_vfroot);
@@ -253,7 +253,7 @@ int __init xnprocfs_init_tree(void)
 	xnvfile_init_regular("apc", &apc_vfile, &cobalt_vfroot);
 #ifdef CONFIG_XENO_OPT_DEBUG
 	xnvfile_init_dir("debug", &cobalt_debug_vfroot, &cobalt_vfroot);
-#ifdef CONFIG_XENO_DEBUG_LOCKING
+#ifdef CONFIG_XENO_OPT_DEBUG_LOCKING
 	xnvfile_init_regular("lock", &lock_vfile, &cobalt_debug_vfroot);
 #endif
 #endif
