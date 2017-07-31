@@ -15,6 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+
+#include <errno.h>
+#include <stdio.h>
 #include <cobalt/uapi/kernel/trace.h>
 #include <cobalt/trace.h>
 #include <asm/xenomai/syscall.h>
@@ -60,4 +63,30 @@ int xntrace_special_u64(unsigned char id, unsigned long long v)
 	return XENOMAI_SYSCALL4(sc_cobalt_trace, __xntrace_op_special_u64, id,
 				(unsigned long)(v >> 32),
 				(unsigned long)(v & 0xFFFFFFFF));
+}
+
+int xnftrace_vprintf(const char *format, va_list args)
+{
+	char buf[256];
+	int ret;
+
+	ret = vsnprintf(buf, sizeof(buf), format, args);
+	if (ret < 0)
+		return ret;
+	if (ret >= sizeof(buf))
+		return -EOVERFLOW;
+
+	return XENOMAI_SYSCALL1(sc_cobalt_ftrace_puts, buf);
+}
+
+int xnftrace_printf(const char *format, ...)
+{
+	va_list args;
+	int ret;
+
+	va_start(args, format);
+	ret = xnftrace_vprintf(format, args);
+	va_end(args);
+
+	return ret;
 }

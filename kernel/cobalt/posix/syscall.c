@@ -182,6 +182,23 @@ static COBALT_SYSCALL(trace, current,
 	return ret;
 }
 
+static COBALT_SYSCALL(ftrace_puts, current,
+		      (const char __user *str))
+{
+	char buf[256];
+	unsigned len;
+
+	len = cobalt_strncpy_from_user(buf, str, sizeof(buf));
+	if (len < 0)
+		return -EFAULT;
+
+#ifdef CONFIG_TRACING
+	__trace_puts(_THIS_IP_, buf, len);
+#endif
+
+	return 0;
+}
+
 static COBALT_SYSCALL(archcall, current,
 		      (unsigned long a1, unsigned long a2,
 		       unsigned long a3, unsigned long a4,
