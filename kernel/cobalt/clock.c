@@ -831,19 +831,11 @@ void xnclock_tick(struct xnclock *clock)
 	requeue:
 #ifdef CONFIG_SMP
 		/*
-		 * Make sure to pick the right percpu queue, in case
-		 * the timer was migrated over its timeout
-		 * handler. Since this timer was dequeued,
-		 * xntimer_migrate() did not kick the remote CPU, so
-		 * we have to do this now if required.
+		 * If the timer was migrated over its timeout handler,
+		 * xntimer_migrate() re-queued it already.
 		 */
-		if (unlikely(timer->sched != sched)) {
-			tmq = xntimer_percpu_queue(timer);
-			xntimer_enqueue(timer, tmq);
-			if (xntimer_heading_p(timer))
-				xnclock_remote_shot(clock, timer->sched);
+		if (unlikely(timer->sched != sched))
 			continue;
-		}
 #endif
 		xntimer_enqueue(timer, tmq);
 	}
