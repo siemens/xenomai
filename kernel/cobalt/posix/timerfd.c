@@ -83,7 +83,8 @@ static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 
 		if (xntimer_periodic_p(&tfd->timer)) {
 			now = xnclock_read_raw(xntimer_clock(&tfd->timer));
-			ticks = 1 + xntimer_get_overruns(&tfd->timer, now);
+			ticks = 1 + xntimer_get_overruns(&tfd->timer,
+					 xnthread_current(), now);
 		} else
 			ticks = 1;
 

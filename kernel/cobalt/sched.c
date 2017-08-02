@@ -213,7 +213,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_init(&sched->wdtimer, &nkclock, watchdog_handler,
-		     sched, XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
+		     sched, XNTIMER_IGRAVITY);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */

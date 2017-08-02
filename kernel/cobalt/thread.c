@@ -1410,7 +1410,7 @@ int xnthread_wait_period(unsigned long *overruns_r)
 		now = xnclock_read_raw(clock);
 	}
 
-	overruns = xntimer_get_overruns(&thread->ptimer, now);
+	overruns = xntimer_get_overruns(&thread->ptimer, thread, now);
 	if (overruns) {
 		ret = -ETIMEDOUT;
 		trace_cobalt_thread_missed_period(thread);

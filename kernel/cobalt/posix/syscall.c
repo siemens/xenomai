@@ -780,7 +780,7 @@ restart:
 ret_handled:
 	/* Update the stats and userland-visible state. */
 	if (thread) {
-		xnthread_clear_localinfo(thread, XNDESCENT);
+		xnthread_clear_localinfo(thread, XNDESCENT|XNHICCUP);
 		xnstat_counter_inc(&thread->stat.xsc);
 		xnthread_sync_window(thread);
 	}

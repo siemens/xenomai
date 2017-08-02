@@ -102,7 +102,7 @@ static void xnsched_tp_init(struct xnsched *sched)
 	tp->gps = NULL;
 	INIT_LIST_HEAD(&tp->threads);
 	xntimer_init(&tp->tf_timer, &nkclock, tp_tick_handler,
-		     sched, XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
+		     sched, XNTIMER_IGRAVITY);
 	xntimer_set_name(&tp->tf_timer, timer_name);
 }
 

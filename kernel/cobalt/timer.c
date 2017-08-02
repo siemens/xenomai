@@ -305,14 +305,9 @@ EXPORT_SYMBOL_GPL(__xntimer_get_timeout);
  * @a sched is bound to, otherwise it will fire either on the current
  * CPU if real-time, or on the first real-time CPU.
  *
- * @param flags A set of flags describing the timer. The valid flags are:
- *
- * - XNTIMER_NOBLCK, the timer won't be frozen while GDB takes over
- * control of the application.
- *
- * A set of clock gravity hints can be passed via the @a flags
- * argument, used for optimizing the built-in heuristics aimed at
- * latency reduction:
+ * @param flags A set of flags describing the timer. A set of clock
+ * gravity hints can be passed via the @a flags argument, used for
+ * optimizing the built-in heuristics aimed at latency reduction:
  *
  * - XNTIMER_IGRAVITY, the timer activates a leaf timer handler.
  * - XNTIMER_KGRAVITY, the timer activates a kernel thread.
@@ -613,7 +608,9 @@ void xntimer_release_ipi(void)
  *
  * @coretags{unrestricted, atomic-entry}
  */
-unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
+unsigned long long xntimer_get_overruns(struct xntimer *timer,
+					struct xnthread *waiter,
+					xnticks_t now)
 {
 	xnticks_t period = timer->interval;
 	unsigned long long overruns = 0;
@@ -641,6 +638,10 @@ unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 	}
 
 	timer->pexpect_ticks++;
+
+	/* Hide overruns due to the most recent ptracing session. */
+	if (xnthread_test_localinfo(waiter, XNHICCUP))
+		return 0;
 
 	return overruns;
 }

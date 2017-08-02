@@ -94,8 +94,6 @@ extern struct xnclock nkclock;
 
 extern unsigned long nktimerlat;
 
-extern unsigned int nkclock_lock;
-
 int xnclock_register(struct xnclock *clock,
 		     const cpumask_t *affinity);
 

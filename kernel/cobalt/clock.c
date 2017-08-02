@@ -35,8 +35,6 @@
  */
 unsigned long nktimerlat;
 
-unsigned int nkclock_lock;
-
 static unsigned long long clockfreq;
 
 #ifdef XNARCH_HAVE_LLMULSHFT
@@ -475,17 +473,16 @@ static struct xnvfile_directory clock_vfroot;
 void print_core_clock_status(struct xnclock *clock,
 			     struct xnvfile_regular_iterator *it)
 {
-	const char *tm_status, *wd_status = "";
+	const char *wd_status = "off";
 
-	tm_status = nkclock_lock > 0 ? "locked" : "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	wd_status = "+watchdog";
+	wd_status = "on";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
-	xnvfile_printf(it, "%7s: timer=%s, clock=%s\n",
+	xnvfile_printf(it, "%8s: timer=%s, clock=%s\n",
 		       "devices", ipipe_timer_name(), ipipe_clock_name());
-	xnvfile_printf(it, "%7s: %s%s\n", "status", tm_status, wd_status);
-	xnvfile_printf(it, "%7s: %Lu\n", "setup",
+	xnvfile_printf(it, "%8s: %s\n", "watchdog", wd_status);
+	xnvfile_printf(it, "%8s: %Lu\n", "setup",
 		       xnclock_ticks_to_ns(&nkclock, nktimerlat));
 }
 
@@ -766,28 +763,6 @@ void xnclock_tick(struct xnclock *clock)
 			continue;
 		}
 
-		/* Check for a locked clock state (i.e. ptracing). */
-		if (unlikely(nkclock_lock > 0)) {
-			if (timer->status & XNTIMER_NOBLCK)
-				goto fire;
-			if (timer->status & XNTIMER_PERIODIC)
-				goto advance;
-			/*
-			 * We have no period for this blocked timer,
-			 * so have it tick again at a reasonably close
-			 * date in the future, waiting for the clock
-			 * to be unlocked at some point. Since clocks
-			 * are blocked when single-stepping into an
-			 * application using a debugger, it is fine to
-			 * wait for 250 ms for the user to continue
-			 * program execution.
-			 */
-			xntimerh_date(&timer->aplink) +=
-				xnclock_ns_to_ticks(xntimer_clock(timer),
-						250000000);
-			goto requeue;
-		}
-	fire:
 		timer->handler(timer);
 		now = xnclock_read_raw(clock);
 		timer->status |= XNTIMER_FIRED;
@@ -804,7 +779,7 @@ void xnclock_tick(struct xnclock *clock)
 			timer->periodic_ticks++;
 			xntimer_update_date(timer);
 		} while (xntimerh_date(&timer->aplink) < now);
-	requeue:
+
 #ifdef CONFIG_SMP
 		/*
 		 * If the timer was migrated over its timeout handler,

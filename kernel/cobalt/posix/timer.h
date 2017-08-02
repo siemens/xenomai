@@ -35,7 +35,8 @@ struct cobalt_timer {
 	struct cobalt_extref extref;
 };
 
-int cobalt_timer_deliver(timer_t timerid);
+int cobalt_timer_deliver(struct cobalt_thread *waiter,
+			 timer_t timerid);
 
 void cobalt_timer_reclaim(struct cobalt_process *p);
 

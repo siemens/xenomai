@@ -536,7 +536,7 @@ fail:
 	return -EINVAL;
 }
 
-int cobalt_timer_deliver(timer_t timerid) /* nklocked, IRQs off. */
+int cobalt_timer_deliver(struct cobalt_thread *waiter, timer_t timerid) /* nklocked, IRQs off. */
 {
 	struct cobalt_timer *timer;
 	xnticks_t now;
@@ -550,7 +550,8 @@ int cobalt_timer_deliver(timer_t timerid) /* nklocked, IRQs off. */
 		timer->overruns = 0;
 	else {
 		now = xnclock_read_raw(xntimer_clock(&timer->timerbase));
-		timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
+		timer->overruns = xntimer_get_overruns(&timer->timerbase,
+					       &waiter->threadbase, now);
 		if ((unsigned int)timer->overruns > COBALT_DELAYMAX)
 			timer->overruns = COBALT_DELAYMAX;
 	}

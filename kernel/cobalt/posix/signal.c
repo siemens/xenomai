@@ -297,7 +297,7 @@ done:
 	  */
 	switch (sip->si_code) {
 	case SI_TIMER:
-		overrun = cobalt_timer_deliver(sip->si_tid);
+		overrun = cobalt_timer_deliver(curr, sip->si_tid);
 		break;
 	case SI_USER:
 	case SI_MESGQ:

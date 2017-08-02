@@ -47,14 +47,13 @@ typedef enum xntmode {
 #define XNTIMER_PERIODIC  0x00000004
 #define XNTIMER_REALTIME  0x00000008
 #define XNTIMER_FIRED     0x00000010
-#define XNTIMER_NOBLCK    0x00000020
-#define XNTIMER_RUNNING   0x00000040
-#define XNTIMER_KGRAVITY  0x00000080
-#define XNTIMER_UGRAVITY  0x00000100
+#define XNTIMER_RUNNING   0x00000020
+#define XNTIMER_KGRAVITY  0x00000040
+#define XNTIMER_UGRAVITY  0x00000080
 #define XNTIMER_IGRAVITY  0	     /* most conservative */
 
 #define XNTIMER_GRAVITY_MASK	(XNTIMER_KGRAVITY|XNTIMER_UGRAVITY)
-#define XNTIMER_INIT_MASK	(XNTIMER_GRAVITY_MASK|XNTIMER_NOBLCK)
+#define XNTIMER_INIT_MASK	XNTIMER_GRAVITY_MASK
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -505,7 +504,9 @@ static inline void xntimer_dequeue(struct xntimer *timer,
 
 /** @} */
 
-unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now);
+unsigned long long xntimer_get_overruns(struct xntimer *timer,
+					struct xnthread *waiter,
+					xnticks_t now);
 
 #ifdef CONFIG_SMP
 

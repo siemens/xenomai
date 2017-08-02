@@ -226,12 +226,12 @@ static void xnsched_quota_init(struct xnsched *sched)
 #endif
 	xntimer_init(&qs->refill_timer,
 		     &nkclock, quota_refill_handler, sched,
-		     XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
+		     XNTIMER_IGRAVITY);
 	xntimer_set_name(&qs->refill_timer, refiller_name);
 
 	xntimer_init(&qs->limit_timer,
 		     &nkclock, quota_limit_handler, sched,
-		     XNTIMER_NOBLCK|XNTIMER_IGRAVITY);
+		     XNTIMER_IGRAVITY);
 	xntimer_set_name(&qs->limit_timer, limiter_name);
 }
 

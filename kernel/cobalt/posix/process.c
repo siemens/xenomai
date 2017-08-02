@@ -1017,28 +1017,6 @@ static inline void init_hostrt(void) { }
 
 #endif /* !CONFIG_XENO_OPT_HOSTRT */
 
-/* called with nklock held */
-static void register_debugged_thread(struct xnthread *thread)
-{
-	nkclock_lock++;
-
-	xnthread_set_state(thread, XNSSTEP);
-}
-
-static void unregister_debugged_thread(struct xnthread *thread)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	xnthread_clear_state(thread, XNSSTEP);
-
-	XENO_BUG_ON(COBALT, nkclock_lock == 0);
-	nkclock_lock--;
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
 static void __handle_taskexit_event(struct task_struct *p)
 {
 	struct cobalt_ppd *sys_ppd;
@@ -1053,9 +1031,6 @@ static void __handle_taskexit_event(struct task_struct *p)
 	thread = xnthread_current();
 	XENO_BUG_ON(COBALT, thread == NULL);
 	trace_cobalt_shadow_unmap(thread);
-
-	if (xnthread_test_state(thread, XNSSTEP))
-		unregister_debugged_thread(thread);
 
 	xnthread_run_handler_stack(thread, exit_thread);
 	xnsched_run();
@@ -1105,6 +1080,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 	struct task_struct *prev_task;
 	struct xnthread *next;
 	sigset_t pending;
+	spl_t s;
 
 	signal_yield();
 
@@ -1114,12 +1090,9 @@ static int handle_schedule_event(struct task_struct *next_task)
 		goto out;
 
 	/*
-	 * Check whether we need to unlock the timers, each time a
-	 * Linux task resumes from a stopped state, excluding tasks
-	 * resuming shortly for entering a stopped state asap due to
-	 * ptracing. To identify the latter, we need to check for
-	 * SIGSTOP and SIGINT in order to encompass both the NPTL and
-	 * LinuxThreads behaviours.
+	 * Track tasks leaving the ptraced state.  Check both SIGSTOP
+	 * (NPTL) and SIGINT (LinuxThreads) to detect ptrace
+	 * continuation.
 	 */
 	if (xnthread_test_state(next, XNSSTEP)) {
 		if (signal_pending(next_task)) {
@@ -1134,12 +1107,15 @@ static int handle_schedule_event(struct task_struct *next_task)
 				  &next_task->signal->shared_pending.signal);
 			if (sigismember(&pending, SIGSTOP) ||
 			    sigismember(&pending, SIGINT))
-				goto no_ptrace;
+				goto check;
 		}
-		unregister_debugged_thread(next);
+		xnlock_get_irqsave(&nklock, s);
+		xnthread_clear_state(next, XNSSTEP);
+		xnlock_put_irqrestore(&nklock, s);
+		xnthread_set_localinfo(next, XNHICCUP);
 	}
 
-no_ptrace:
+check:
 	/*
 	 * Do basic sanity checks on the incoming thread state.
 	 * NOTE: we allow ptraced threads to run shortly in order to
@@ -1192,7 +1168,7 @@ static int handle_sigwake_event(struct task_struct *p)
 		if (sigismember(&pending, SIGTRAP) ||
 		    sigismember(&pending, SIGSTOP)
 		    || sigismember(&pending, SIGINT))
-			register_debugged_thread(thread);
+			xnthread_set_state(thread, XNSSTEP);
 	}
 
 	if (xnthread_test_state(thread, XNRELAX)) {
