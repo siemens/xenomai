@@ -48,7 +48,7 @@ http://xenomai.org/installing-xenomai-3-x/
   http://git.xenomai.org/xenomai-3.git
 
   Once the repository is cloned, make sure to bootstrap the autoconf
-  system in the top-level directory by running script/bootstrap.  In
+  system in the top-level directory by running scripts/bootstrap.  In
   order to do this, you will need the GNU autotools installed on your
   workstation.
 
