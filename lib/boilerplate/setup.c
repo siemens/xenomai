@@ -576,8 +576,9 @@ static void __xenomai_init(int *argcp, char *const **argvp, const char *me)
 			early_warning("failed to lock memory");
 			goto fail;
 		}
-	}
-	trace_me("memory locked");
+		trace_me("memory locked");
+	} else
+		trace_me("memory NOT locked");
 #endif
 
 	/*
