@@ -634,7 +634,7 @@ setup:
 	free(options);
 
 #ifdef CONFIG_XENO_DEBUG
-	if (__base_setup_data.verbosity_level > 0) {
+	if (!base_init_done && __base_setup_data.verbosity_level > 0) {
 		early_warning("Xenomai compiled with %s debug enabled,\n"
 			"                              "
 			"%shigh latencies expected [--enable-debug=%s]",
