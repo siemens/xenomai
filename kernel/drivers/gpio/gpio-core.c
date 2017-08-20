@@ -424,11 +424,34 @@ LIST_HEAD(rtdm_gpio_chips);
 
 static DEFINE_MUTEX(chip_lock);
 
+struct gpiochip_holder {
+	struct gpio_chip *chip;
+	struct list_head next;
+};
+	
+struct gpiochip_match_data {
+	struct device *parent;
+	struct list_head list;
+};
+
 static int match_gpio_chip(struct gpio_chip *gc, void *data)
 {
-	struct device *dev = data;
+	struct gpiochip_match_data *d = data;
+	struct gpiochip_holder *h;
 
-	return cobalt_gpiochip_dev(gc) == dev;
+	if (cobalt_gpiochip_dev(gc) == d->parent) {
+		h = kmalloc(sizeof(*h), GFP_KERNEL);
+		if (h) {
+			h->chip = gc;
+			list_add(&h->next, &d->list);
+		}
+	}
+
+	/*
+	 * Iterate over all existing GPIO chips, we may have several
+	 * hosted by the same pin controller mapping different ranges.
+	 */
+	return 0;
 }
 
 static int add_gpio_chip(struct gpio_chip *gc, int type)
@@ -456,10 +479,11 @@ static int add_gpio_chip(struct gpio_chip *gc, int type)
 int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 			  int type)
 {
+	struct gpiochip_match_data match;
+	struct gpiochip_holder *h, *n;
 	struct device_node *np = from;
 	struct platform_device *pdev;
-	struct gpio_chip *gc;
-	int ret = -ENODEV;
+	int ret = -ENODEV, _ret;
 
 	for (;;) {
 		np = of_find_compatible_node(np, NULL, compat);
@@ -469,11 +493,20 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 		of_node_put(np);
 		if (pdev == NULL)
 			break;
-		gc = gpiochip_find(&pdev->dev, match_gpio_chip);
-		if (gc) {
-			ret = add_gpio_chip(gc, type);
+		match.parent = &pdev->dev;
+		INIT_LIST_HEAD(&match.list);
+		gpiochip_find(&match, match_gpio_chip);
+		if (!list_empty(&match.list)) {
+			ret = 0;
+			list_for_each_entry_safe(h, n, &match.list, next) {
+				list_del(&h->next);
+				_ret = add_gpio_chip(h->chip, type);
+				kfree(h);
+				if (_ret && !ret)
+					ret = _ret;
+			}
 			if (ret)
-				return ret;
+				break;
 		}
 	}
 
