@@ -232,10 +232,10 @@ fail:
 	return -EINVAL;
 }
 
-static inline char **prep_args(int argc, char *const argv[], int *largcp)
+static inline char **prep_args(int argc, char *const argv[])
 {
-	int in, out, n, maybe_arg, lim;
-	char **uargv, *p;
+	char **uargv;
+	int n;
 
 	uargv = malloc(argc * sizeof(char *));
 	if (uargv == NULL)
@@ -247,43 +247,18 @@ static inline char **prep_args(int argc, char *const argv[], int *largcp)
 			return NULL;
 	}
 
-	lim = argc;
-	in = maybe_arg = 0;
-	while (in < lim) {
-		if ((uargv[in][0] == '-' && uargv[in][1] != '-') ||
-		    (maybe_arg && uargv[in][0] != '-')) {
-			p = strdup(uargv[in]);
-			for (n = in, out = in + 1; out < argc; out++, n++) {
-				free(uargv[n]);
-				uargv[n] = strdup(uargv[out]);
-			}
-			free(uargv[argc - 1]);
-			uargv[argc - 1] = p;
-			if (*p == '-')
-				maybe_arg = 1;
-			lim--;
-		} else {
-			in++;
-			maybe_arg = 0;
-		}
-	}
-
-	*largcp = lim;
-
 	return uargv;
 }
 
-static inline void pack_args(int *argcp, int *largcp, char **argv)
+static inline void pack_args(int *argcp, char **argv)
 {
 	int in, out;
 
 	for (in = out = 0; in < *argcp; in++) {
 		if (*argv[in])
 			argv[out++] = argv[in];
-		else {
+		else
 			free(argv[in]);
-			(*largcp)--;
-		}
 	}
 
 	*argcp = out;
@@ -376,7 +351,7 @@ void xenomai_usage(void)
         fprintf(stderr, "--help				display help\n");
 }
 
-static int parse_base_options(int *argcp, int *largcp, char **uargv,
+static int parse_base_options(int *argcp, char **uargv,
 			      const struct option *options,
 			      int base_opt_start)
 {
@@ -395,7 +370,7 @@ static int parse_base_options(int *argcp, int *largcp, char **uargv,
 
 	for (;;) {
 		lindex = -1;
-		c = getopt_long(*largcp, uargv, "", options, &lindex);
+		c = getopt_long(*argcp, uargv, "-", options, &lindex);
 		if (c == EOF)
 			break;
 		if (lindex == -1)
@@ -442,13 +417,14 @@ static int parse_base_options(int *argcp, int *largcp, char **uargv,
 		 * (including any companion argument), pack_args()
 		 * will expunge all options we have already handled.
 		 *
-		 * NOTE: this code relies on the fact that only long
-		 * options with double-dash markers can be parsed here
-		 * after prep_args() did its job (we do not support
-		 * -foo as a long option). This is aimed at reserving
-		 * use of short options to the application layer,
-		 * sharing only the long option namespace with the
-		 * Xenomai core libs.
+		 * NOTE: only options with double-dash prefix may have
+		 * been recognized by getopt_long() as Xenomai
+		 * ones. This reserves short options to the
+		 * application layer, sharing only the long option
+		 * namespace with the Xenomai core libs. In addition,
+		 * the user can delimit the start of the application
+		 * arguments, preceeding them by the '--' separator on
+		 * the command line.
 		 */
 		n = optind - 1;
 		if (uargv[n][0] != '-' || uargv[n][1] != '-')
@@ -457,14 +433,14 @@ static int parse_base_options(int *argcp, int *largcp, char **uargv,
 		uargv[n][0] = '\0'; /* Clear the option switch. */
 	}
 
-	pack_args(argcp, largcp, uargv);
+	pack_args(argcp, uargv);
 
 	optind = 0;
 
 	return 0;
 }
 
-static int parse_setup_options(int *argcp, int largc, char **uargv,
+static int parse_setup_options(int *argcp, char **uargv,
 			       const struct option *options)
 {
 	struct setup_descriptor *setup;
@@ -472,7 +448,11 @@ static int parse_setup_options(int *argcp, int largc, char **uargv,
 
 	for (;;) {
 		lindex = -1;
-		c = getopt_long(largc, uargv, "", options, &lindex);
+		/*
+		 * We want to keep the original order of parameters in
+		 * the vector, disable getopt's parameter shuffling.
+		 */
+		c = getopt_long(*argcp, uargv, "-", options, &lindex);
 		if (c == EOF)
 			break;
 		if (lindex == -1)
@@ -498,7 +478,7 @@ static int parse_setup_options(int *argcp, int largc, char **uargv,
 		uargv[n][0] = '\0'; /* Clear the option switch. */
 	}
 
-	pack_args(argcp, &largc, uargv);
+	pack_args(argcp, uargv);
 
 	optind = 0;
 
@@ -507,8 +487,8 @@ static int parse_setup_options(int *argcp, int largc, char **uargv,
 
 static void __xenomai_init(int *argcp, char *const **argvp, const char *me)
 {
-	int ret, largc, base_opt_start;
 	struct setup_descriptor *setup;
+	int ret, base_opt_start;
 	struct option *options;
 	struct service svc;
 	char **uargv;
@@ -528,7 +508,7 @@ static void __xenomai_init(int *argcp, char *const **argvp, const char *me)
 	 * will be expunged from Xenomai's base options as we discover
 	 * them.
 	 */
-	uargv = prep_args(*argcp, *argvp, &largc);
+	uargv = prep_args(*argcp, *argvp);
 	if (uargv == NULL) {
 		ret = -ENOMEM;
 		goto fail;
@@ -552,7 +532,7 @@ static void __xenomai_init(int *argcp, char *const **argvp, const char *me)
 	 * Parse the base options first, to bootstrap the core with
 	 * the right config values.
 	 */
-	ret = parse_base_options(argcp, &largc, uargv,
+	ret = parse_base_options(argcp, uargv,
 				 options, base_opt_start);
 	if (ret)
 		goto fail;
@@ -600,7 +580,7 @@ setup:
 			}
 		}
 		
-		ret = parse_setup_options(argcp, largc, uargv, options);
+		ret = parse_setup_options(argcp, uargv, options);
 		if (ret)
 			goto fail;
 
