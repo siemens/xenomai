@@ -28,9 +28,8 @@
 #include <copperplate/debug.h>
 
 /*
- * We normally define the Copperplate clock as a monotonic,
- * non-adjustable one, unless the threading library has restrictions
- * to support this over Mercury.
+ * The Copperplate clock shall be monotonic unless the threading
+ * library has restrictions to support this over Mercury.
  *
  * In the normal case, this means that ongoing delays and timeouts
  * won't be affected when the host system date is changed. In the
@@ -40,15 +39,11 @@
  * The implementation maintains a per-clock epoch value, so that
  * different emulators can have different (virtual) system dates.
  */
-#ifndef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
-#ifdef CONFIG_XENO_RAW_CLOCK_ENABLED
-#define CLOCK_COPPERPLATE  CLOCK_MONOTONIC_RAW
+#ifdef CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED
+#define CLOCK_COPPERPLATE  CLOCK_REALTIME
 #else
 #define CLOCK_COPPERPLATE  CLOCK_MONOTONIC
 #endif
-#else /* CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
-#define CLOCK_COPPERPLATE  CLOCK_REALTIME
-#endif /* CONFIG_XENO_COPPERPLATE_CLOCK_RESTRICTED */
 
 struct clockobj {
 	pthread_mutex_t lock;
