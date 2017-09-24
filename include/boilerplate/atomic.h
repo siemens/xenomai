@@ -80,7 +80,7 @@ static inline void atomic_set(atomic_t *ptr, long v)
 
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
-#define barrier()	__asm__ __volatile__("": : :"memory")
+#define compiler_barrier()	__asm__ __volatile__("": : :"memory")
 
 #ifndef cpu_relax
 #define cpu_relax() __sync_synchronize()

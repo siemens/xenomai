@@ -684,7 +684,7 @@ static int spawn_daemon(const char *sessdir, int flags)
 		 */
 		while (usleep(200000) > 0) ;
 		regd_pid = pid;
-		barrier();
+		compiler_barrier();
 		sa.sa_handler = sigchld_handler;
 		sa.sa_flags = SA_RESTART;
 		sigaction(SIGCHLD, &sa, NULL);

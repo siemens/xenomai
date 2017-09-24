@@ -933,7 +933,7 @@ static void __threadobj_boost(void)
 		current->core.policy_unboosted = current->policy;
 		current->core.schedparam_unboosted = current->schedparam;
 	}
-	barrier();
+	compiler_barrier();
 
 	ret = pthread_setschedparam(current->ptid, SCHED_FIFO, &param);
 	if (ret) {
