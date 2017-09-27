@@ -9,6 +9,7 @@ includesub_HEADERS =	\
 	libc.h		\
 	list.h		\
 	lock.h		\
+	namegen.h	\
 	obstack.h	\
 	private-list.h	\
 	scope.h		\

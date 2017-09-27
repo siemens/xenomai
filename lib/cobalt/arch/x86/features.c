@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <boilerplate/atomic.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/uapi/fptest.h>
 #include "internal.h"

@@ -23,27 +23,8 @@
 #include <pthread.h>
 #include <sched.h>
 #include <string.h>
-#include <boilerplate/signal.h>
-#include <boilerplate/compiler.h>
-#include <boilerplate/atomic.h>
-
-extern pthread_mutex_t __printlock;
 
 struct error_frame;
-struct cleanup_block;
-
-struct name_generator {
-	const char *radix;
-	int length;
-	atomic_t serial;
-};
-
-#define DEFINE_NAME_GENERATOR(__name, __radix, __type, __member)	\
-	struct name_generator __name = {				\
-		.radix = __radix,					\
-		.length = sizeof ((__type *)0)->__member,		\
-		.serial = ATOMIC_INIT(0),				\
-	}
 
 #define ONE_BILLION  1000000000
 
@@ -67,8 +48,6 @@ void __namecpy_requires_character_array_as_destination(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void __run_cleanup_block(struct cleanup_block *cb);
 
 void __printout(const char *name,
 		const char *header,
@@ -102,9 +81,6 @@ void __boilerplate_init(void);
 
 const char *symerror(int errnum);
 
-char *generate_name(char *buf, const char *radix,
-		    struct name_generator *ngen);
-
 void error_hook(struct error_frame *ef);
 
 int get_static_cpu_count(void);
@@ -121,10 +97,12 @@ char *lookup_command(const char *cmd);
 
 size_t get_mem_size(const char *arg);
 
+extern const char *config_strings[];
+
+extern pthread_mutex_t __printlock;
+
 #ifdef __cplusplus
 }
 #endif
-
-extern const char *config_strings[];
 
 #endif /* _BOILERPLATE_ANCILLARIES_H */

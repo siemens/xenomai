@@ -24,9 +24,11 @@
 #include <pthread.h>
 #include <malloc.h>
 #include <errno.h>
+#include <signal.h>
 #include "boilerplate/ancillaries.h"
 #include "boilerplate/wrappers.h"
 #include "boilerplate/lock.h"
+#include "boilerplate/signal.h"
 #include "boilerplate/debug.h"
 
 static pthread_key_t btkey;

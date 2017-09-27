@@ -36,6 +36,7 @@
 #include <semaphore.h>
 #include <fuse.h>
 #include <xeno_config.h>
+#include "boilerplate/atomic.h"
 #include "boilerplate/hash.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/threadobj.h"

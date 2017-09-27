@@ -29,6 +29,7 @@
 #include "tickLib.h"
 #include "msgQLib.h"
 #include "taskHookLib.h"
+#include "boilerplate/namegen.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"

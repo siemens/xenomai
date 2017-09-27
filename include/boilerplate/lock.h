@@ -20,9 +20,7 @@
 #define _BOILERPLATE_LOCK_H
 
 #include <pthread.h>
-#include <boilerplate/atomic.h>
 #include <boilerplate/wrappers.h>
-#include <boilerplate/debug.h>
 
 /*
  * CANCEL_DEFER/RESTORE() should enclose any emulator code prior to
@@ -210,6 +208,18 @@ int __check_cancel_type(const char *locktype);
 #define mutex_type_attribute PTHREAD_MUTEX_ERRORCHECK
 #else
 #define mutex_type_attribute PTHREAD_MUTEX_NORMAL
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void __run_cleanup_block(struct cleanup_block *cb);
+
+void backtrace_check(void);
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _BOILERPLATE_LOCK_H */

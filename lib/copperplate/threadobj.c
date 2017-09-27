@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <sched.h>
 #include "boilerplate/signal.h"
+#include "boilerplate/atomic.h"
 #include "boilerplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"

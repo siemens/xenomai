@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <mqueue.h>
 #include <pthread.h>
+#include <boilerplate/atomic.h>
 #include <sys/select.h>
 #include <smokey/smokey.h>
 

@@ -36,6 +36,8 @@
 #include "boilerplate/setup.h"
 #include "boilerplate/debug.h"
 #include "boilerplate/ancillaries.h"
+#include "boilerplate/signal.h"
+#include "boilerplate/namegen.h"
 #include "xenomai/init.h"
 
 pthread_mutex_t __printlock;

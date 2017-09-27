@@ -22,8 +22,8 @@
 #define _COBALT_SEMAPHORE_H
 
 #include <boilerplate/atomic.h>
-#include <cobalt/wrappers.h>
 #include <cobalt/uapi/sem.h>
+#include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
 extern "C" {

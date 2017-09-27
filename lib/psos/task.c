@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <sched.h>
+#include "boilerplate/namegen.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"

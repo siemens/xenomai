@@ -19,8 +19,8 @@
 #define _LIB_COBALT_INTERNAL_H
 
 #include <limits.h>
-#include <cobalt/sys/cobalt.h>
 #include <boilerplate/ancillaries.h>
+#include <cobalt/sys/cobalt.h>
 #include "current.h"
 
 extern void *cobalt_umm_private;

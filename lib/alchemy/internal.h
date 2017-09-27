@@ -20,6 +20,7 @@
 #define _ALCHEMY_INTERNAL_H
 
 #include "boilerplate/ancillaries.h"
+#include "boilerplate/namegen.h"
 #include "timer.h"
 
 #define DEFINE_SYNC_LOOKUP(__name, __dsctype)				\
