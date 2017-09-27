@@ -29,7 +29,6 @@
 #include <boilerplate/sched.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/heapobj.h>
-#include <copperplate/debug.h>
 
 #ifdef CONFIG_XENO_COBALT
 
