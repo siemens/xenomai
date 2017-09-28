@@ -64,7 +64,7 @@ extern "C" {
 	
 void __invalid_operand_size(void);
 
-#define ctz(__v)							\
+#define __ctz(__v)							\
 	({								\
 		int __ret;						\
 		if (!__v)						\
@@ -83,7 +83,7 @@ void __invalid_operand_size(void);
 		__ret;							\
 	})
 
-#define clz(__v)							\
+#define __clz(__v)							\
 	({								\
 		int __ret;						\
 		if (!__v)						\

@@ -291,7 +291,7 @@ static int reserve_page_range(uint32_t *bitmap, int bitwords, int nrpages)
 		v = bitmap[n];
 		b = 0;
 		while (v != -1U) {
-			r = ctz(v);
+			r = __ctz(v);
 			if (r) {
 				seq += r;
 				if (seq >= nrpages) {
@@ -432,7 +432,7 @@ static void *alloc_block(struct shared_heap *heap, size_t size)
 	 */
 	if (size <= HOBJ_PAGE_SIZE * 2) {
 		/* Find log2(size). */
-		log2size = sizeof(size) * 8 - 1 - clz(size);
+		log2size = sizeof(size) * 8 - 1 - __clz(size);
 		if (size & (size - 1))
 			log2size++;
 		/* That is the actual block size we need. */
