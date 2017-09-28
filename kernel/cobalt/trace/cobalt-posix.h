@@ -149,8 +149,8 @@ DECLARE_EVENT_CLASS(cobalt_posix_schedparam,
 		memcpy(__get_dynamic_array(param_ex), param_ex, sizeof(*param_ex));
 	),
 
-	TP_printk("pth=%p policy=%d(%s) param={ %s }",
-		  (void *)__entry->pth, __entry->policy,
+	TP_printk("pth=%p policy=%s param={ %s }",
+		  (void *)__entry->pth,
 		  cobalt_print_sched_policy(__entry->policy),
 		  cobalt_print_sched_params(__entry->policy,
 					    (struct sched_param_ex *)
@@ -175,8 +175,8 @@ DECLARE_EVENT_CLASS(cobalt_posix_scheduler,
 		memcpy(__get_dynamic_array(param_ex), param_ex, sizeof(*param_ex));
 	),
 
-	TP_printk("pid=%d policy=%d(%s) param={ %s }",
-		  __entry->pid, __entry->policy,
+	TP_printk("pid=%d policy=%s param={ %s }",
+		  __entry->pid,
 		  cobalt_print_sched_policy(__entry->policy),
 		  cobalt_print_sched_params(__entry->policy,
 					    (struct sched_param_ex *)
