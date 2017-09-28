@@ -24,6 +24,7 @@
 #define _TRACE_COBALT_POSIX_H
 
 #include <linux/tracepoint.h>
+#include <linux/trace_seq.h>
 #include <xenomai/posix/cond.h>
 #include <xenomai/posix/mqueue.h>
 #include <xenomai/posix/event.h>
@@ -91,46 +92,12 @@ DECLARE_EVENT_CLASS(syscall_exit,
 			 {SCHED_WEAK, "weak"},			\
 			 {__SCHED_CURRENT, "<current>"})
 
-#define cobalt_print_sched_params(__policy, __p_ex)			\
-({									\
-	const unsigned char *__ret = trace_seq_buffer_ptr(p);		\
-	switch (__policy) {						\
-	case SCHED_QUOTA:						\
-		trace_seq_printf(p, "priority=%d, group=%d",		\
-				 (__p_ex)->sched_priority,		\
-				 (__p_ex)->sched_quota_group);		\
-		break;							\
-	case SCHED_TP:							\
-		trace_seq_printf(p, "priority=%d, partition=%d",	\
-				 (__p_ex)->sched_priority,		\
-				 (__p_ex)->sched_tp_partition);		\
-		break;							\
-	case SCHED_NORMAL:						\
-		break;							\
-	case SCHED_SPORADIC:						\
-		trace_seq_printf(p, "priority=%d, low_priority=%d, "	\
-				 "budget=(%ld.%09ld), period=(%ld.%09ld), "\
-				 "maxrepl=%d",				\
-				 (__p_ex)->sched_priority,		\
-				 (__p_ex)->sched_ss_low_priority,	\
-				 (__p_ex)->sched_ss_init_budget.tv_sec,	\
-				 (__p_ex)->sched_ss_init_budget.tv_nsec, \
-				 (__p_ex)->sched_ss_repl_period.tv_sec,	\
-				 (__p_ex)->sched_ss_repl_period.tv_nsec, \
-				 (__p_ex)->sched_ss_max_repl);		\
-		break;							\
-	case SCHED_RR:							\
-	case SCHED_FIFO:						\
-	case SCHED_COBALT:						\
-	case SCHED_WEAK:						\
-	default:							\
-		trace_seq_printf(p, "priority=%d",			\
-				 (__p_ex)->sched_priority);		\
-		break;							\
-	}								\
-	trace_seq_putc(p, '\0');					\
-	__ret;								\
-})
+const char *cobalt_trace_parse_sched_params(struct trace_seq *, int,
+					    struct sched_param_ex *);
+
+#define __parse_sched_params(policy, params)			\
+	cobalt_trace_parse_sched_params(p, policy,		\
+					(struct sched_param_ex *)(params))
 
 DECLARE_EVENT_CLASS(cobalt_posix_schedparam,
 	TP_PROTO(unsigned long pth, int policy,
@@ -152,9 +119,8 @@ DECLARE_EVENT_CLASS(cobalt_posix_schedparam,
 	TP_printk("pth=%p policy=%s param={ %s }",
 		  (void *)__entry->pth,
 		  cobalt_print_sched_policy(__entry->policy),
-		  cobalt_print_sched_params(__entry->policy,
-					    (struct sched_param_ex *)
-					    __get_dynamic_array(param_ex))
+		  __parse_sched_params(__entry->policy,
+				       __get_dynamic_array(param_ex))
 	)
 );
 
@@ -178,9 +144,8 @@ DECLARE_EVENT_CLASS(cobalt_posix_scheduler,
 	TP_printk("pid=%d policy=%s param={ %s }",
 		  __entry->pid,
 		  cobalt_print_sched_policy(__entry->policy),
-		  cobalt_print_sched_params(__entry->policy,
-					    (struct sched_param_ex *)
-					    __get_dynamic_array(param_ex))
+		  __parse_sched_params(__entry->policy,
+				       __get_dynamic_array(param_ex))
 	)
 );
 

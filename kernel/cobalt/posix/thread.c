@@ -863,3 +863,46 @@ void cobalt_thread_restrict(void)
 EXPORT_SYMBOL_GPL(cobalt_thread_restrict);
 
 #endif /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
+
+const char *cobalt_trace_parse_sched_params(struct trace_seq *p, int policy,
+					    struct sched_param_ex *params)
+{
+	const char *ret = trace_seq_buffer_ptr(p);
+
+	switch (policy) {
+	case SCHED_QUOTA:
+		trace_seq_printf(p, "priority=%d, group=%d",
+				 params->sched_priority,
+				 params->sched_quota_group);
+		break;
+	case SCHED_TP:
+		trace_seq_printf(p, "priority=%d, partition=%d",
+				 params->sched_priority,
+				 params->sched_tp_partition);
+		break;
+	case SCHED_NORMAL:
+		break;
+	case SCHED_SPORADIC:
+		trace_seq_printf(p, "priority=%d, low_priority=%d, "
+				 "budget=(%ld.%09ld), period=(%ld.%09ld), "
+				 "maxrepl=%d",
+				 params->sched_priority,
+				 params->sched_ss_low_priority,
+				 params->sched_ss_init_budget.tv_sec,
+				 params->sched_ss_init_budget.tv_nsec,
+				 params->sched_ss_repl_period.tv_sec,
+				 params->sched_ss_repl_period.tv_nsec,
+				 params->sched_ss_max_repl);
+		break;
+	case SCHED_RR:
+	case SCHED_FIFO:
+	case SCHED_COBALT:
+	case SCHED_WEAK:
+	default:
+		trace_seq_printf(p, "priority=%d", params->sched_priority);
+		break;
+	}
+	trace_seq_putc(p, '\0');
+
+	return ret;
+}
