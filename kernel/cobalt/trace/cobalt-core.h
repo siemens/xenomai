@@ -186,21 +186,33 @@ TRACE_EVENT(cobalt_switch_context,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, prev)
-		__field(struct xnthread *, next)
 		__string(prev_name, prev->name)
+		__field(pid_t, prev_pid)
+		__field(int, prev_prio)
+		__field(unsigned long, prev_state)
+		__field(struct xnthread *, next)
 		__string(next_name, next->name)
+		__field(pid_t, next_pid)
+		__field(int, next_prio)
 	),
 
 	TP_fast_assign(
 		__entry->prev = prev;
-		__entry->next = next;
 		__assign_str(prev_name, prev->name);
+		__entry->prev_pid = xnthread_host_pid(prev);
+		__entry->prev_prio = xnthread_current_priority(prev);
+		__entry->prev_state = prev->state;
+		__entry->next = next;
 		__assign_str(next_name, next->name);
+		__entry->next_pid = xnthread_host_pid(next);
+		__entry->next_prio = xnthread_current_priority(next);
 	),
 
-	TP_printk("prev=%p(%s) next=%p(%s)",
-		  __entry->prev, __get_str(prev_name),
-		  __entry->next, __get_str(next_name))
+	TP_printk("prev=%p(%s) prev_pid=%d prev_prio=%d prev_state=0x%lx ==> next=%p(%s) next_pid=%d next_prio=%d",
+		  __entry->prev, __get_str(prev_name), __entry->prev_pid,
+		  __entry->prev_prio, __entry->prev_state,
+		  __entry->next, __get_str(next_name), __entry->next_pid,
+		  __entry->next_prio)
 );
 
 TRACE_EVENT(cobalt_thread_init,
