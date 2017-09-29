@@ -42,6 +42,124 @@
 #define __timespec_args(__name)					\
 	__entry->tv_sec_##__name, __entry->tv_nsec_##__name
 
+#ifdef CONFIG_X86_64
+#ifdef CONFIG_X86_X32
+#define __cobalt_symbolic_syscall(name)					\
+	{sc_cobalt_##name, #name},					\
+	{sc_cobalt_##name + __COBALT_IA32_BASE, "compat-" #name},	\
+	{sc_cobalt_##name + __COBALT_X32_BASE, "x32-" #name}
+#else /* !CONFIG_X86_X32 */
+#define __cobalt_symbolic_syscall(name)					\
+	{sc_cobalt_##name, #name},					\
+	{sc_cobalt_##name + __COBALT_IA32_BASE, "compat-" #name}
+#endif
+#else /* !CONFIG_X86_64 */
+#define __cobalt_symbolic_syscall(name)					\
+	{sc_cobalt_##name, #name}
+#endif
+
+#define __cobalt_syscall_name(__nr)					\
+	__print_symbolic((__nr),					\
+		__cobalt_symbolic_syscall(bind),			\
+		__cobalt_symbolic_syscall(thread_create),		\
+		__cobalt_symbolic_syscall(thread_getpid),		\
+		__cobalt_symbolic_syscall(thread_setmode),		\
+		__cobalt_symbolic_syscall(thread_setname),		\
+		__cobalt_symbolic_syscall(thread_join),			\
+		__cobalt_symbolic_syscall(thread_kill),			\
+		__cobalt_symbolic_syscall(thread_setschedparam_ex),	\
+		__cobalt_symbolic_syscall(thread_getschedparam_ex),	\
+		__cobalt_symbolic_syscall(thread_getstat),		\
+		__cobalt_symbolic_syscall(sem_init),			\
+		__cobalt_symbolic_syscall(sem_destroy),			\
+		__cobalt_symbolic_syscall(sem_post),			\
+		__cobalt_symbolic_syscall(sem_wait),			\
+		__cobalt_symbolic_syscall(sem_trywait),			\
+		__cobalt_symbolic_syscall(sem_getvalue),		\
+		__cobalt_symbolic_syscall(sem_open),			\
+		__cobalt_symbolic_syscall(sem_close),			\
+		__cobalt_symbolic_syscall(sem_unlink),			\
+		__cobalt_symbolic_syscall(sem_timedwait),		\
+		__cobalt_symbolic_syscall(sem_inquire),			\
+		__cobalt_symbolic_syscall(sem_broadcast_np),		\
+		__cobalt_symbolic_syscall(clock_getres),		\
+		__cobalt_symbolic_syscall(clock_gettime),		\
+		__cobalt_symbolic_syscall(clock_settime),		\
+		__cobalt_symbolic_syscall(clock_nanosleep),		\
+		__cobalt_symbolic_syscall(mutex_init),			\
+		__cobalt_symbolic_syscall(mutex_check_init),		\
+		__cobalt_symbolic_syscall(mutex_destroy),		\
+		__cobalt_symbolic_syscall(mutex_lock),			\
+		__cobalt_symbolic_syscall(mutex_timedlock),		\
+		__cobalt_symbolic_syscall(mutex_trylock),		\
+		__cobalt_symbolic_syscall(mutex_unlock),		\
+		__cobalt_symbolic_syscall(cond_init),			\
+		__cobalt_symbolic_syscall(cond_destroy),		\
+		__cobalt_symbolic_syscall(cond_wait_prologue),		\
+		__cobalt_symbolic_syscall(cond_wait_epilogue),		\
+		__cobalt_symbolic_syscall(mq_open),			\
+		__cobalt_symbolic_syscall(mq_close),			\
+		__cobalt_symbolic_syscall(mq_unlink),			\
+		__cobalt_symbolic_syscall(mq_getattr),			\
+		__cobalt_symbolic_syscall(mq_timedsend),		\
+		__cobalt_symbolic_syscall(mq_timedreceive),		\
+		__cobalt_symbolic_syscall(mq_notify),			\
+		__cobalt_symbolic_syscall(sched_minprio),		\
+		__cobalt_symbolic_syscall(sched_maxprio),		\
+		__cobalt_symbolic_syscall(sched_weightprio),		\
+		__cobalt_symbolic_syscall(sched_yield),			\
+		__cobalt_symbolic_syscall(sched_setscheduler_ex),	\
+		__cobalt_symbolic_syscall(sched_getscheduler_ex),	\
+		__cobalt_symbolic_syscall(sched_setconfig_np),		\
+		__cobalt_symbolic_syscall(sched_getconfig_np),		\
+		__cobalt_symbolic_syscall(timer_create),		\
+		__cobalt_symbolic_syscall(timer_delete),		\
+		__cobalt_symbolic_syscall(timer_settime),		\
+		__cobalt_symbolic_syscall(timer_gettime),		\
+		__cobalt_symbolic_syscall(timer_getoverrun),		\
+		__cobalt_symbolic_syscall(timerfd_create),		\
+		__cobalt_symbolic_syscall(timerfd_settime),		\
+		__cobalt_symbolic_syscall(timerfd_gettime),		\
+		__cobalt_symbolic_syscall(sigwait),			\
+		__cobalt_symbolic_syscall(sigwaitinfo),			\
+		__cobalt_symbolic_syscall(sigtimedwait),		\
+		__cobalt_symbolic_syscall(sigpending),			\
+		__cobalt_symbolic_syscall(kill),			\
+		__cobalt_symbolic_syscall(sigqueue),			\
+		__cobalt_symbolic_syscall(monitor_init),		\
+		__cobalt_symbolic_syscall(monitor_destroy),		\
+		__cobalt_symbolic_syscall(monitor_enter),		\
+		__cobalt_symbolic_syscall(monitor_wait),		\
+		__cobalt_symbolic_syscall(monitor_sync),		\
+		__cobalt_symbolic_syscall(monitor_exit),		\
+		__cobalt_symbolic_syscall(event_init),			\
+		__cobalt_symbolic_syscall(event_wait),			\
+		__cobalt_symbolic_syscall(event_sync),			\
+		__cobalt_symbolic_syscall(event_destroy),		\
+		__cobalt_symbolic_syscall(event_inquire),		\
+		__cobalt_symbolic_syscall(open),			\
+		__cobalt_symbolic_syscall(socket),			\
+		__cobalt_symbolic_syscall(close),			\
+		__cobalt_symbolic_syscall(ioctl),			\
+		__cobalt_symbolic_syscall(read),			\
+		__cobalt_symbolic_syscall(write),			\
+		__cobalt_symbolic_syscall(recvmsg),			\
+		__cobalt_symbolic_syscall(sendmsg),			\
+		__cobalt_symbolic_syscall(mmap),			\
+		__cobalt_symbolic_syscall(select),			\
+		__cobalt_symbolic_syscall(fcntl),			\
+		__cobalt_symbolic_syscall(migrate),			\
+		__cobalt_symbolic_syscall(archcall),			\
+		__cobalt_symbolic_syscall(trace),			\
+		__cobalt_symbolic_syscall(corectl),			\
+		__cobalt_symbolic_syscall(get_current),			\
+		__cobalt_symbolic_syscall(mayday),			\
+		__cobalt_symbolic_syscall(backtrace),			\
+		__cobalt_symbolic_syscall(serialdbg),			\
+		__cobalt_symbolic_syscall(extend),			\
+		__cobalt_symbolic_syscall(ftrace_puts))
+
+
 DECLARE_EVENT_CLASS(syscall_entry,
 	TP_PROTO(struct xnthread *thread, unsigned int nr),
 	TP_ARGS(thread, nr),
@@ -58,8 +176,9 @@ DECLARE_EVENT_CLASS(syscall_entry,
 		__entry->nr = nr;
 	),
 
-	TP_printk("thread=%p(%s) syscall=%u",
-		  __entry->thread, __get_str(name), __entry->nr)
+	TP_printk("thread=%p(%s) syscall=%s",
+		  __entry->thread, __get_str(name),
+		  __cobalt_syscall_name(__entry->nr))
 );
 
 DECLARE_EVENT_CLASS(syscall_exit,
