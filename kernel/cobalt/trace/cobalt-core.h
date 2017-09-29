@@ -30,24 +30,19 @@ DECLARE_EVENT_CLASS(thread_event,
 	TP_ARGS(thread),
 
 	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
-		__string(name, thread->name)
 		__field(pid_t, pid)
 		__field(unsigned long, state)
 		__field(unsigned long, info)
 	),
 
 	TP_fast_assign(
-		__entry->thread = thread;
-		__assign_str(name, thread->name);
 		__entry->state = thread->state;
 		__entry->info = thread->info;
 		__entry->pid = xnthread_host_pid(thread);
 	),
 
-	TP_printk("thread=%p(%s) pid=%d state=0x%lx info=0x%lx",
-		  __entry->thread, __get_str(name), __entry->pid,
-		  __entry->state, __entry->info)
+	TP_printk("pid=%d state=0x%lx info=0x%lx",
+		  __entry->pid, __entry->state, __entry->info)
 );
 
 DECLARE_EVENT_CLASS(curr_thread_event,
@@ -202,11 +197,10 @@ TRACE_EVENT(cobalt_switch_context,
 		__entry->next_prio = xnthread_current_priority(next);
 	),
 
-	TP_printk("prev=%p(%s) prev_pid=%d prev_prio=%d prev_state=0x%lx ==> next=%p(%s) next_pid=%d next_prio=%d",
-		  __entry->prev, __get_str(prev_name), __entry->prev_pid,
+	TP_printk("prev_name=%s prev_pid=%d prev_prio=%d prev_state=0x%lx ==> next_name=%s next_pid=%d next_prio=%d",
+		  __get_str(prev_name), __entry->prev_pid,
 		  __entry->prev_prio, __entry->prev_state,
-		  __entry->next, __get_str(next_name), __entry->next_pid,
-		  __entry->next_prio)
+		  __get_str(next_name), __entry->next_pid, __entry->next_prio)
 );
 
 TRACE_EVENT(cobalt_thread_init,
@@ -231,7 +225,7 @@ TRACE_EVENT(cobalt_thread_init,
 		__entry->cprio = thread->cprio;
 	),
 
-	TP_printk("thread=%p(%s) flags=0x%lx class=%s prio=%d",
+	TP_printk("thread=%p name=%s flags=0x%lx class=%s prio=%d",
 		   __entry->thread, __get_str(thread_name), __entry->flags,
 		   __get_str(class_name), __entry->cprio)
 );
@@ -242,7 +236,7 @@ TRACE_EVENT(cobalt_thread_suspend,
 	TP_ARGS(thread, mask, timeout, timeout_mode, wchan),
 
 	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
+		__field(pid_t, pid)
 		__field(unsigned long, mask)
 		__field(xnticks_t, timeout)
 		__field(xntmode_t, timeout_mode)
@@ -250,15 +244,15 @@ TRACE_EVENT(cobalt_thread_suspend,
 	),
 
 	TP_fast_assign(
-		__entry->thread = thread;
+		__entry->pid = xnthread_host_pid(thread);
 		__entry->mask = mask;
 		__entry->timeout = timeout;
 		__entry->timeout_mode = timeout_mode;
 		__entry->wchan = wchan;
 	),
 
-	TP_printk("thread=%p mask=0x%lx timeout=%Lu timeout_mode=%d wchan=%p",
-		  __entry->thread, __entry->mask,
+	TP_printk("pid=%d mask=0x%lx timeout=%Lu timeout_mode=%d wchan=%p",
+		  __entry->pid, __entry->mask,
 		  __entry->timeout, __entry->timeout_mode, __entry->wchan)
 );
 
@@ -267,17 +261,19 @@ TRACE_EVENT(cobalt_thread_resume,
 	TP_ARGS(thread, mask),
 
 	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
+		__string(name, thread->name)
+		__field(pid_t, pid)
 		__field(unsigned long, mask)
 	),
 
 	TP_fast_assign(
-		__entry->thread = thread;
+		__assign_str(name, thread->name);
+		__entry->pid = xnthread_host_pid(thread);
 		__entry->mask = mask;
 	),
 
-	TP_printk("thread=%p mask=0x%lx",
-		  __entry->thread, __entry->mask)
+	TP_printk("name=%s pid=%d mask=0x%lx",
+		  __get_str(name), __entry->pid, __entry->mask)
 );
 
 TRACE_EVENT(cobalt_thread_fault,
@@ -304,18 +300,18 @@ TRACE_EVENT(cobalt_thread_set_current_prio,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, thread)
-		__string(name, thread->name)
+		__field(pid_t, pid)
 		__field(int, cprio)
 	),
 
 	TP_fast_assign(
-		__entry->thread	= thread;
-		__assign_str(name, thread->name);
+		__entry->thread = thread;
+		__entry->pid = xnthread_host_pid(thread);
 		__entry->cprio = xnthread_current_priority(thread);
 	),
 
-	TP_printk("thread=%p(%s) prio=%d",
-		  __entry->thread, __get_str(name), __entry->cprio)
+	TP_printk("thread=%p pid=%d prio=%d",
+		  __entry->thread, __entry->pid, __entry->cprio)
 );
 
 DEFINE_EVENT(thread_event, cobalt_thread_start,
@@ -374,18 +370,18 @@ TRACE_EVENT(cobalt_thread_migrate_passive,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, thread)
-		__string(name, thread->name)
+		__field(pid_t, pid)
 		__field(unsigned int, cpu)
 	),
 
 	TP_fast_assign(
 		__entry->thread = thread;
-		__assign_str(name, thread->name);
+		__entry->pid = xnthread_host_pid(thread);
 		__entry->cpu = cpu;
 	),
 
-	TP_printk("thread=%p(%s) cpu=%u",
-		  __entry->thread, __get_str(name), __entry->cpu)
+	TP_printk("thread=%p pid=%d cpu=%u",
+		  __entry->thread, __entry->pid, __entry->cpu)
 );
 
 DEFINE_EVENT(curr_thread_event, cobalt_shadow_gohard,
@@ -441,18 +437,18 @@ TRACE_EVENT(cobalt_shadow_map,
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, thread)
-		__string(name, thread->name)
+		__field(pid_t, pid)
 		__field(int, prio)
 	),
 
 	TP_fast_assign(
-		__entry->thread	= thread;
-		__assign_str(name, thread->name);
+		__entry->thread = thread;
+		__entry->pid = xnthread_host_pid(thread);
 		__entry->prio = xnthread_base_priority(thread);
 	),
 
-	TP_printk("thread=%p(%s) prio=%d",
-		  __entry->thread, __get_str(name), __entry->prio)
+	TP_printk("thread=%p pid=%d prio=%d",
+		  __entry->thread, __entry->pid, __entry->prio)
 );
 
 DEFINE_EVENT(curr_thread_event, cobalt_shadow_unmap,

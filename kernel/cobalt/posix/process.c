@@ -683,8 +683,6 @@ int cobalt_map_user(struct xnthread *thread, __u32 __user *u_winoff)
 	__xn_put_user(cobalt_umm_offset(umm, u_window), u_winoff);
 	xnthread_pin_initial(thread);
 
-	trace_cobalt_shadow_map(thread);
-
 	/*
 	 * CAUTION: we enable the pipeline notifier only when our
 	 * shadow TCB is consistent, so that we won't trigger false

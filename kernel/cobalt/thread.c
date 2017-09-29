@@ -257,6 +257,8 @@ void xnthread_init_shadow_tcb(struct xnthread *thread)
 	tcb->core.user_fpu_owner = p;
 #endif /* CONFIG_XENO_ARCH_FPU */
 	xnarch_init_shadow_tcb(thread);
+
+	trace_cobalt_shadow_map(thread);
 }
 
 void xnthread_init_root_tcb(struct xnthread *thread)
@@ -2508,8 +2510,6 @@ int xnthread_map(struct xnthread *thread, struct completion *done)
 
 	thread->u_window = NULL;
 	xnthread_pin_initial(thread);
-
-	trace_cobalt_shadow_map(thread);
 
 	xnthread_init_shadow_tcb(thread);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
