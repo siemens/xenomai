@@ -2078,7 +2078,7 @@ void xnthread_relax(int notify, int reason)
 	 * domain to the Linux domain.  This will cause the Linux task
 	 * to resume using the register state of the shadow thread.
 	 */
-	trace_cobalt_shadow_gorelax(thread, reason);
+	trace_cobalt_shadow_gorelax(reason);
 
 	/*
 	 * If you intend to change the following interrupt-free

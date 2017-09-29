@@ -217,7 +217,7 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 	
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_cobalt_synch_sleepon(synch, thread);
+	trace_cobalt_synch_sleepon(synch);
 
 	if ((synch->status & XNSYNCH_PRIO) == 0) /* i.e. FIFO */
 		list_add_tail(&thread->plink, &synch->pendq);
@@ -603,7 +603,7 @@ int xnsynch_try_acquire(struct xnsynch *synch)
 
 	curr = xnthread_current();
 	lockp = xnsynch_fastlock(synch);
-	trace_cobalt_synch_try_acquire(synch, curr);
+	trace_cobalt_synch_try_acquire(synch);
 
 	h = atomic_cmpxchg(lockp, XN_NO_HANDLE,
 			   get_owner_handle(curr->handle, synch));
@@ -671,7 +671,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	curr = xnthread_current();
 	currh = curr->handle;
 	lockp = xnsynch_fastlock(synch);
-	trace_cobalt_synch_acquire(synch, curr);
+	trace_cobalt_synch_acquire(synch);
 redo:
 	/* Basic form of xnsynch_try_acquire(). */
 	h = atomic_cmpxchg(lockp, XN_NO_HANDLE,

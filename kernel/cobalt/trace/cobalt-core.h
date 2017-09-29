@@ -50,24 +50,38 @@ DECLARE_EVENT_CLASS(thread_event,
 		  __entry->state, __entry->info)
 );
 
-DECLARE_EVENT_CLASS(synch_wait_event,
-	TP_PROTO(struct xnsynch *synch, struct xnthread *thread),
-	TP_ARGS(synch, thread),
+DECLARE_EVENT_CLASS(curr_thread_event,
+	TP_PROTO(struct xnthread *thread),
+	TP_ARGS(thread),
 
 	TP_STRUCT__entry(
 		__field(struct xnthread *, thread)
-		__string(name, thread->name)
+		__field(unsigned long, state)
+		__field(unsigned long, info)
+	),
+
+	TP_fast_assign(
+		__entry->state = thread->state;
+		__entry->info = thread->info;
+	),
+
+	TP_printk("state=0x%lx info=0x%lx",
+		  __entry->state, __entry->info)
+);
+
+DECLARE_EVENT_CLASS(synch_wait_event,
+	TP_PROTO(struct xnsynch *synch),
+	TP_ARGS(synch),
+
+	TP_STRUCT__entry(
 		__field(struct xnsynch *, synch)
 	),
 
 	TP_fast_assign(
-		__entry->thread	= thread;
-		__assign_str(name, thread->name);
 		__entry->synch = synch;
 	),
 
-	TP_printk("synch=%p thread=%p(%s)",
-		  __entry->synch, __entry->thread, __get_str(name))
+	TP_printk("synch=%p", __entry->synch)
 );
 
 DECLARE_EVENT_CLASS(synch_post_event,
@@ -113,26 +127,6 @@ DECLARE_EVENT_CLASS(clock_event,
 	),
 
 	TP_printk("clock_irq=%u", __entry->irq)
-);
-
-DECLARE_EVENT_CLASS(thread_migrate,
-	TP_PROTO(struct xnthread *thread, unsigned int cpu),
-	TP_ARGS(thread, cpu),
-
-	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
-		__string(name, thread->name)
-		__field(unsigned int, cpu)
-	),
-
-	TP_fast_assign(
-		__entry->thread = thread;
-		__assign_str(name, thread->name);
-		__entry->cpu = cpu;
-	),
-
-	TP_printk("thread=%p(%s) cpu=%u",
-		  __entry->thread, __get_str(name), __entry->cpu)
 );
 
 DECLARE_EVENT_CLASS(timer_event,
@@ -287,26 +281,21 @@ TRACE_EVENT(cobalt_thread_resume,
 );
 
 TRACE_EVENT(cobalt_thread_fault,
-	TP_PROTO(struct xnthread *thread, struct ipipe_trap_data *td),
-	TP_ARGS(thread, td),
+	TP_PROTO(struct ipipe_trap_data *td),
+	TP_ARGS(td),
 
 	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
-		__string(name, thread->name)
 		__field(void *,	ip)
 		__field(unsigned int, type)
 	),
 
 	TP_fast_assign(
-		__entry->thread = thread;
-		__assign_str(name, thread->name);
 		__entry->ip = (void *)xnarch_fault_pc(td);
 		__entry->type = xnarch_fault_trap(td);
 	),
 
-	TP_printk("thread=%p(%s) ip=%p type=%x",
-		  __entry->thread, __get_str(name), __entry->ip,
-		  __entry->type)
+	TP_printk("ip=%p type=%x",
+		  __entry->ip, __entry->type)
 );
 
 TRACE_EVENT(cobalt_thread_set_current_prio,
@@ -349,42 +338,67 @@ DEFINE_EVENT(thread_event, cobalt_thread_unblock,
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_thread_wait_period,
+DEFINE_EVENT(curr_thread_event, cobalt_thread_wait_period,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_thread_missed_period,
+DEFINE_EVENT(curr_thread_event, cobalt_thread_missed_period,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_thread_set_mode,
+DEFINE_EVENT(curr_thread_event, cobalt_thread_set_mode,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_migrate, cobalt_thread_migrate,
+TRACE_EVENT(cobalt_thread_migrate,
+	TP_PROTO(unsigned int cpu),
+	TP_ARGS(cpu),
+
+	TP_STRUCT__entry(
+		__field(unsigned int, cpu)
+	),
+
+	TP_fast_assign(
+		__entry->cpu = cpu;
+	),
+
+	TP_printk("cpu=%u", __entry->cpu)
+);
+
+TRACE_EVENT(cobalt_thread_migrate_passive,
 	TP_PROTO(struct xnthread *thread, unsigned int cpu),
-	TP_ARGS(thread, cpu)
+	TP_ARGS(thread, cpu),
+
+	TP_STRUCT__entry(
+		__field(struct xnthread *, thread)
+		__string(name, thread->name)
+		__field(unsigned int, cpu)
+	),
+
+	TP_fast_assign(
+		__entry->thread = thread;
+		__assign_str(name, thread->name);
+		__entry->cpu = cpu;
+	),
+
+	TP_printk("thread=%p(%s) cpu=%u",
+		  __entry->thread, __get_str(name), __entry->cpu)
 );
 
-DEFINE_EVENT(thread_migrate, cobalt_thread_migrate_passive,
-	TP_PROTO(struct xnthread *thread, unsigned int cpu),
-	TP_ARGS(thread, cpu)
-);
-
-DEFINE_EVENT(thread_event, cobalt_shadow_gohard,
+DEFINE_EVENT(curr_thread_event, cobalt_shadow_gohard,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_watchdog_signal,
+DEFINE_EVENT(curr_thread_event, cobalt_watchdog_signal,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_shadow_hardened,
+DEFINE_EVENT(curr_thread_event, cobalt_shadow_hardened,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
@@ -397,29 +411,26 @@ DEFINE_EVENT(thread_event, cobalt_shadow_hardened,
 			 { SIGDEBUG_MIGRATE_FAULT,	"fault" })
 
 TRACE_EVENT(cobalt_shadow_gorelax,
-	TP_PROTO(struct xnthread *thread, int reason),
-	TP_ARGS(thread, reason),
+	TP_PROTO(int reason),
+	TP_ARGS(reason),
 
 	TP_STRUCT__entry(
-		__field(struct xnthread *, thread)
 		__field(int, reason)
 	),
 
 	TP_fast_assign(
-		__entry->thread = thread;
 		__entry->reason = reason;
 	),
 
-	TP_printk("thread=%p reason=%s",
-		  __entry->thread, cobalt_print_relax_reason(__entry->reason))
+	TP_printk("reason=%s", cobalt_print_relax_reason(__entry->reason))
 );
 
-DEFINE_EVENT(thread_event, cobalt_shadow_relaxed,
+DEFINE_EVENT(curr_thread_event, cobalt_shadow_relaxed,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
 
-DEFINE_EVENT(thread_event, cobalt_shadow_entry,
+DEFINE_EVENT(curr_thread_event, cobalt_shadow_entry,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
@@ -444,7 +455,7 @@ TRACE_EVENT(cobalt_shadow_map,
 		  __entry->thread, __get_str(name), __entry->prio)
 );
 
-DEFINE_EVENT(thread_event, cobalt_shadow_unmap,
+DEFINE_EVENT(curr_thread_event, cobalt_shadow_unmap,
 	TP_PROTO(struct xnthread *thread),
 	TP_ARGS(thread)
 );
@@ -622,18 +633,18 @@ TRACE_EVENT(cobalt_timer_migrate,
 #endif /* CONFIG_SMP */
 
 DEFINE_EVENT(synch_wait_event, cobalt_synch_sleepon,
-	TP_PROTO(struct xnsynch *synch, struct xnthread *thread),
-	TP_ARGS(synch, thread)
+	TP_PROTO(struct xnsynch *synch),
+	TP_ARGS(synch)
 );
 
 DEFINE_EVENT(synch_wait_event, cobalt_synch_try_acquire,
-	TP_PROTO(struct xnsynch *synch, struct xnthread *thread),
-	TP_ARGS(synch, thread)
+	TP_PROTO(struct xnsynch *synch),
+	TP_ARGS(synch)
 );
 
 DEFINE_EVENT(synch_wait_event, cobalt_synch_acquire,
-	TP_PROTO(struct xnsynch *synch, struct xnthread *thread),
-	TP_ARGS(synch, thread)
+	TP_PROTO(struct xnsynch *synch),
+	TP_ARGS(synch)
 );
 
 DEFINE_EVENT(synch_post_event, cobalt_synch_release,

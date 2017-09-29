@@ -734,7 +734,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	if (xnthread_test_state(thread, XNROOT))
 		return 0;
 
-	trace_cobalt_thread_fault(thread, d);
+	trace_cobalt_thread_fault(d);
 
 	if (xnarch_fault_fpu_p(d)) {
 #ifdef CONFIG_XENO_ARCH_FPU
