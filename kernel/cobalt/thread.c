@@ -326,6 +326,16 @@ char *xnthread_format_status(unsigned long status, char *buf, int size)
 	return buf;
 }
 
+pid_t xnthread_host_pid(struct xnthread *thread)
+{
+	if (xnthread_test_state(thread, XNROOT))
+		return 0;
+	if (!xnthread_host_task(thread))
+		return -1;
+
+	return task_pid_nr(xnthread_host_task(thread));
+}
+
 int xnthread_set_clock(struct xnthread *thread, struct xnclock *newclock)
 {
 	spl_t s;
