@@ -64,14 +64,15 @@ DEFINE_PRIVATE_XNLOCK(symbol_lock);
 static const char *hash_symbol(const char *symbol)
 {
 	struct hashed_symbol *p, **h;
-	const char *s;
+	const char *str;
 	size_t len;
 	u32 hash;
+	spl_t s;
 
 	len = strlen(symbol);
 	hash = jhash(symbol, len, 0);
 
-	xnlock_get(&symbol_lock);
+	xnlock_get_irqsave(&symbol_lock, s);
 
 	h = &symbol_jhash[hash & (SYMBOL_HSLOTS - 1)];
 	p = *h;
@@ -85,7 +86,7 @@ static const char *hash_symbol(const char *symbol)
 
 	p = xnheap_alloc(&memory_pool, sizeof(*p) + len + 1);
 	if (p == NULL) {
-		s = NULL;
+		str = NULL;
 		goto out;
 	}
 
@@ -93,11 +94,11 @@ static const char *hash_symbol(const char *symbol)
 	p->next = *h;
 	*h = p;
 done:
-	s = p->symbol;
+	str = p->symbol;
 out:
-	xnlock_put(&symbol_lock);
+	xnlock_put_irqrestore(&symbol_lock, s);
 
-	return s;
+	return str;
 }
 
 /*
@@ -214,6 +215,7 @@ void xndebug_trace_relax(int nr, unsigned long *backtrace,
 	int n, depth;
 	char *tmp;
 	u32 hash;
+	spl_t s;
 
 	thread = xnthread_current();
 	if (thread == NULL)
@@ -285,7 +287,7 @@ void xndebug_trace_relax(int nr, unsigned long *backtrace,
 	strcpy(spot.thread, thread->name);
 	hash = jhash2((u32 *)&spot, sizeof(spot) / sizeof(u32), 0);
 
-	xnlock_get(&relax_lock);
+	xnlock_get_irqsave(&relax_lock, s);
 
 	h = &relax_jhash[hash & (RELAX_HSLOTS - 1)];
 	p = *h;
@@ -326,7 +328,7 @@ void xndebug_trace_relax(int nr, unsigned long *backtrace,
 out:
 	relax_overall++;
 
-	xnlock_put(&relax_lock);
+	xnlock_put_irqrestore(&relax_lock, s);
 }
 
 static DEFINE_VFILE_HOSTLOCK(relax_mutex);
@@ -343,6 +345,7 @@ static void *relax_vfile_begin(struct xnvfile_regular_iterator *it)
 {
 	struct relax_vfile_priv *priv = xnvfile_iterator_priv(it);
 	struct relax_record *p;
+	spl_t s;
 	int n;
 
 	/*
@@ -352,7 +355,7 @@ static void *relax_vfile_begin(struct xnvfile_regular_iterator *it)
 	 * holds the relax_mutex lock for us, so that we can't race
 	 * with ->store().
 	 */
-	xnlock_get(&relax_lock);
+	xnlock_get_irqsave(&relax_lock, s);
 
 	if (relax_queued == 0 || it->pos > relax_queued) {
 		xnlock_put(&relax_lock);
@@ -362,7 +365,7 @@ static void *relax_vfile_begin(struct xnvfile_regular_iterator *it)
 	priv->queued = relax_queued;
 	priv->head = relax_record_list;
 
-	xnlock_put(&relax_lock);
+	xnlock_put_irqrestore(&relax_lock, s);
 
 	if (it->pos == 0) {
 		priv->curr = NULL;
@@ -447,19 +450,20 @@ static int relax_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 static ssize_t relax_vfile_store(struct xnvfile_input *input)
 {
 	struct relax_record *p, *np;
+	spl_t s;
 
 	/*
 	 * Flush out all records. Races with ->show() are prevented
 	 * using the relax_mutex lock. The vfile layer takes care of
 	 * this internally.
 	 */
-	xnlock_get(&relax_lock);
+	xnlock_get_irqsave(&relax_lock, s);
 	p = relax_record_list;
 	relax_record_list = NULL;
 	relax_overall = 0;
 	relax_queued = 0;
 	memset(relax_jhash, 0, sizeof(relax_jhash));
-	xnlock_put(&relax_lock);
+	xnlock_put_irqrestore(&relax_lock, s);
 
 	while (p) {
 		np = p->r_next;
