@@ -285,7 +285,7 @@ static int create_pin_devices(struct rtdm_gpio_chip *rgc)
 	rtdm_lockctx_t s;
 	int n, ret;
 
-	for (n = gc->base; n < gc->base + gc->ngpio - 1; n++) {
+	for (n = gc->base; n < gc->base + gc->ngpio; n++) {
 		ret = -ENOMEM;
 		pin = kzalloc(sizeof(*pin), GFP_KERNEL);
 		if (pin == NULL)
