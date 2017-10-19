@@ -204,7 +204,7 @@ done
 
 if $stage2; then
     $verbose && set -x
-    $dryrun $cc -o "$output.tmp" -Wl,-Ur -nostdlib $stage1_args
+    $dryrun $cc -o "$output.tmp" -r -nostdlib $stage1_args
     $dryrun $cc -o "$output" "$output.tmp" $stage2_args
     $dryrun rm -f $output.tmp
 else
