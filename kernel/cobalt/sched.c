@@ -310,7 +310,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	last = sched->last;
 	sched->status &= ~XNINSW;
 
-	/* Detect a thread which called xnthread_migrate() */
+	/* Detect a thread which has migrated. */
 	if (last->sched != sched) {
 		xnsched_putback(last);
 		xnthread_clear_state(last, XNMIGRATE);

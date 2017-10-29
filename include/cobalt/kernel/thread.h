@@ -524,16 +524,10 @@ static inline int xnthread_put_resource(struct xnthread *thread)
 }
 
 #ifdef CONFIG_SMP
-int xnthread_migrate(int cpu);
 
 void xnthread_migrate_passive(struct xnthread *thread,
 			      struct xnsched *sched);
 #else
-
-static inline int xnthread_migrate(int cpu)
-{
-	return cpu ? -EINVAL : 0;
-}
 
 static inline void xnthread_migrate_passive(struct xnthread *thread,
 					    struct xnsched *sched)
