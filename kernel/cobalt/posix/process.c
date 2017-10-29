@@ -828,7 +828,6 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 {
 	struct task_struct *p = d->task;
 	struct xnthread *thread;
-	struct xnsched *sched;
 	spl_t s;
 
 	thread = xnthread_from_task(p);
@@ -836,46 +835,27 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 		return KEVENT_PROPAGATE;
 
 	/*
-	 * The CPU affinity mask is always controlled from secondary
-	 * mode, therefore we progagate any change to the real-time
-	 * affinity mask accordingly.
+	 * Detect a Cobalt thread sleeping in primary mode which is
+	 * required to migrate to another CPU by the host kernel.
+	 *
+	 * We may NOT fix up thread->sched immediately using the
+	 * passive migration call, because that latter always has to
+	 * take place on behalf of the target thread itself while
+	 * running in secondary mode. Therefore, that thread needs to
+	 * go through secondary mode first, then move back to primary
+	 * mode, so that check_affinity() does the fixup work.
+	 *
+	 * We force this by sending a SIGSHADOW signal to the migrated
+	 * thread, asking it to switch back to primary mode from the
+	 * handler, at which point the interrupted syscall may be
+	 * restarted.
 	 */
 	xnlock_get_irqsave(&nklock, s);
-	cpumask_and(&thread->affinity, &p->cpus_allowed, &cobalt_cpu_affinity);
-	xnthread_run_handler_stack(thread, move_thread, d->dest_cpu);
-	xnlock_put_irqrestore(&nklock, s);
 
-	/*
-	 * If kernel and real-time CPU affinity sets are disjoints,
-	 * there might be problems ahead for this thread next time it
-	 * moves back to primary mode, if it ends up switching to an
-	 * unsupported CPU.
-	 *
-	 * Otherwise, check_affinity() will extend the CPU affinity if
-	 * possible, fixing up the thread's affinity mask. This means
-	 * that a thread might be allowed to run with a broken
-	 * (i.e. fully cleared) affinity mask until it leaves primary
-	 * mode then switches back to it, in SMP configurations.
-	 */
-	if (cpumask_empty(&thread->affinity))
-		printk(XENO_WARNING "thread %s[%d] changed CPU affinity inconsistently\n",
-		       thread->name, xnthread_host_pid(thread));
-	else {
-		xnlock_get_irqsave(&nklock, s);
-		/*
-		 * Threads running in primary mode may NOT be forcibly
-		 * migrated by the regular kernel to another CPU. Such
-		 * migration would have to wait until the thread
-		 * switches back from secondary mode at some point
-		 * later, or issues a call to xnthread_migrate().
-		 */
-		if (!xnthread_test_state(thread, XNMIGRATE) &&
-		    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-			sched = xnsched_struct(d->dest_cpu);
-			xnthread_migrate_passive(thread, sched);
-		}
-		xnlock_put_irqrestore(&nklock, s);
-	}
+	if (xnthread_test_state(thread, XNTHREAD_BLOCK_BITS & ~XNRELAX))
+		xnthread_signal(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return KEVENT_PROPAGATE;
 }
@@ -887,15 +867,29 @@ static inline void check_affinity(struct task_struct *p) /* nklocked, IRQs off *
 	int cpu = task_cpu(p);
 
 	/*
-	 * If the task moved to another CPU while in secondary mode,
-	 * migrate the companion Xenomai shadow to reflect the new
-	 * situation.
+	 * To maintain consistency between both Cobalt and host
+	 * schedulers, reflecting a thread migration to another CPU
+	 * into the Cobalt scheduler state must happen from secondary
+	 * mode only, on behalf of the migrated thread itself once it
+	 * runs on the target CPU.
 	 *
-	 * In the weirdest case, the thread is about to switch to
-	 * primary mode on a CPU Xenomai shall not use. This is
-	 * hopeless, whine and kill that thread asap.
+	 * This means that the Cobalt scheduler state regarding the
+	 * CPU information lags behind the host scheduler state until
+	 * the migrated thread switches back to primary mode
+	 * (i.e. task_cpu(p) != xnsched_cpu(xnthread_from_task(p)->sched)).
+	 * This is ok since Cobalt does not schedule such thread until then.
+	 *
+	 * check_affinity() detects when a Cobalt thread switching
+	 * back to primary mode did move to another CPU earlier while
+	 * in secondary mode. If so, do the fixups to reflect the
+	 * change.
 	 */
 	if (!xnsched_supported_cpu(cpu)) {
+		/*
+		 * The thread is about to switch to primary mode on a
+		 * non-rt CPU, which is damn wrong and hopeless.
+		 * Whine and cancel that thread.
+		 */
 		printk(XENO_WARNING "thread %s[%d] switched to non-rt CPU%d, aborted.\n",
 		       thread->name, xnthread_host_pid(thread), cpu);
 		/*
@@ -920,6 +914,7 @@ static inline void check_affinity(struct task_struct *p) /* nklocked, IRQs off *
 	if (!cpumask_test_cpu(cpu, &thread->affinity))
 		cpumask_set_cpu(cpu, &thread->affinity);
 
+	xnthread_run_handler_stack(thread, move_thread, cpu);
 	xnthread_migrate_passive(thread, sched);
 }
 
