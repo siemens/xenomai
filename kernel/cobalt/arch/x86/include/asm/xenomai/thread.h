@@ -22,6 +22,7 @@
 
 #include <asm-generic/xenomai/thread.h>
 #include <asm/xenomai/wrappers.h>
+#include <asm/traps.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,4,0)
 typedef union thread_xstate x86_fpustate;
@@ -55,10 +56,10 @@ struct xnarchtcb {
 #define xnarch_fault_trap(d)	((d)->exception)
 #define xnarch_fault_code(d)	((d)->regs->orig_ax)
 #define xnarch_fault_pc(d)	((d)->regs->ip)
-#define xnarch_fault_fpu_p(d)	((d)->exception == 7)
-#define xnarch_fault_pf_p(d)	((d)->exception == 14)
+#define xnarch_fault_fpu_p(d)	((d)->exception == X86_TRAP_NM)
+#define xnarch_fault_pf_p(d)	((d)->exception == X86_TRAP_PF)
 #define xnarch_fault_bp_p(d)	((current->ptrace & PT_PTRACED) &&	\
-				 ((d)->exception == 1 || (d)->exception == 3))
+				 ((d)->exception == X86_TRAP_DB || (d)->exception == X86_TRAP_BP))
 #define xnarch_fault_notify(d)	(!xnarch_fault_bp_p(d))
 
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to);
