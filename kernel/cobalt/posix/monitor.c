@@ -255,9 +255,6 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	if (state->flags & COBALT_MONITOR_SIGNALED)
 		monitor_wakeup(mon);
 
-	/* Release the gate prior to waiting, all atomically. */
-	xnsynch_release(&mon->gate, &curr->threadbase);
-
 	synch = &curr->monitor_synch;
 	if (event & COBALT_MONITOR_WAITDRAIN)
 		synch = &mon->drain;
@@ -265,9 +262,24 @@ int __cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 		curr->threadbase.u_window->grant_value = 0;
 		list_add_tail(&curr->monitor_link, &mon->waiters);
 	}
+
+	/*
+	 * Tell userland that somebody is now waiting for a signal, so
+	 * that later exiting the monitor on the producer side will
+	 * trigger a wakeup syscall.
+	 *
+	 * CAUTION: we must raise the PENDED flag while holding the
+	 * gate mutex, to prevent a signal from sneaking in from a
+	 * remote CPU without the producer issuing the corresponding
+	 * wakeup call when dropping the gate lock.
+	 */
 	state->flags |= COBALT_MONITOR_PENDED;
 
 	tmode = ts ? mon->tmode : XN_RELATIVE;
+
+	/* Release the gate prior to waiting, all atomically. */
+	xnsynch_release(&mon->gate, &curr->threadbase);
+
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
 		if ((event & COBALT_MONITOR_WAITDRAIN) == 0 &&
