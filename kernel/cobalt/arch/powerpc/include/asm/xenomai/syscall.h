@@ -39,6 +39,16 @@
 #define __xn_reg_pc(__regs)	((__regs)->nip)
 #define __xn_reg_sp(__regs)	((__regs)->gpr[1])
 
+/*
+ * Returns the syscall number depending on the handling core. Cobalt
+ * and Linux syscall numbers can be fetched from GPR0, masking out the
+ * __COBALT_SYSCALL_BIT marker.
+ */
+static inline long __xn_get_syscall_nr(struct pt_regs *regs)
+{
+	return __xn_syscall(regs);
+}
+
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
 	/*
