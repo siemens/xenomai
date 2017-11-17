@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 #include "error.h"
 
 extern struct timespec calibration_start_time;
