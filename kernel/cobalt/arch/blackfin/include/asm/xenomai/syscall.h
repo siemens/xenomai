@@ -34,6 +34,16 @@
 #define __xn_reg_arg4(__regs)	((__regs)->r3)
 #define __xn_reg_arg5(__regs)	((__regs)->r4)
 
+/*
+ * Returns the syscall number depending on the handling core. Cobalt
+ * and Linux syscall numbers can be fetched from P0, masking out the
+ * __COBALT_SYSCALL_BIT marker.
+ */
+static inline long __xn_get_syscall_nr(struct pt_regs *regs)
+{
+	return __xn_syscall(regs);
+}
+
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
 	__xn_reg_rval(regs) = v;
