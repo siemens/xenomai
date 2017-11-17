@@ -21,11 +21,13 @@
 #include <linux/ipipe.h>
 #include <linux/sched.h>
 #include <linux/kconfig.h>
+#include <linux/unistd.h>
 #include <cobalt/uapi/corectl.h>
 #include <cobalt/kernel/tree.h>
 #include <cobalt/kernel/vdso.h>
 #include <cobalt/kernel/init.h>
 #include <asm-generic/xenomai/mayday.h>
+#include <asm/syscall.h>
 #include "internal.h"
 #include "thread.h"
 #include "sched.h"
@@ -643,6 +645,10 @@ ret_handled:
 	return KEVENT_STOP;
 
 linux_syscall:
+	code = __xn_get_syscall_nr(regs);
+	if (code >= NR_syscalls)
+		goto bad_syscall;
+
 	if (xnsched_root_p())
 		/*
 		 * The call originates from the Linux domain, either
@@ -653,20 +659,17 @@ linux_syscall:
 		return KEVENT_PROPAGATE;
 
 	/*
-	 * From now on, we know that we have a valid shadow thread
-	 * pointer.
-	 *
-	 * The current syscall will eventually fall back to the Linux
-	 * syscall handler if our Linux domain handler does not
-	 * intercept it. Before we let it go, ensure that the current
-	 * thread has properly entered the Linux domain.
+	 * We know this is a Cobalt thread since it runs over the head
+	 * domain, however the current syscall should be handled by
+	 * the host kernel instead.  Before this happens, we have to
+	 * re-enter the root domain.
 	 */
 	xnthread_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
 
 	return KEVENT_PROPAGATE;
 
 bad_syscall:
-	printk(XENO_WARNING "bad syscall <%#lx>\n", __xn_syscall(regs));
+	printk(XENO_WARNING "bad syscall <%#x>\n", code);
 
 	__xn_error_return(regs, -ENOSYS);
 
