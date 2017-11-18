@@ -217,8 +217,6 @@ extern "C" {
 
 void __run_cleanup_block(struct cleanup_block *cb);
 
-void backtrace_check(void);
-
 #ifdef __cplusplus
 }
 #endif
