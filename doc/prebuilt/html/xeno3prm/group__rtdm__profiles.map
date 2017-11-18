@@ -1,8 +1,0 @@
-<map id="Device Profiles" name="Device Profiles">
-<area shape="rect" id="node1" href="$group__rtdm__can.html" title="This is the common interface a RTDM&#45;compliant CAN device has to provide. " alt="" coords="299,5,402,32"/>
-<area shape="rect" id="node3" href="$group__rtdm__ipc.html" title="Profile Revision: 1 &#160;&#160;" alt="" coords="298,56,403,83"/>
-<area shape="rect" id="node4" href="$group__rtdm__udd.html" title="This profile includes all mini&#45;drivers sitting on top of the User&#45;space Device Driver framework (UDD)..." alt="" coords="273,107,428,133"/>
-<area shape="rect" id="node5" href="$group__rtdm__serial.html" title="This is the common interface a RTDM&#45;compliant serial device has to provide. " alt="" coords="297,157,404,184"/>
-<area shape="rect" id="node6" href="$group__rtdm__testing.html" title="This group of devices is intended to provide in&#45;kernel testing results. " alt="" coords="292,208,409,235"/>
-<area shape="rect" id="node7" href="$group__rtdm.html" title="The Real&#45;Time Driver Model (RTDM) provides a unified interface to both users and developers of real&#45;t..." alt="" coords="5,107,67,133"/>
-</map>

@@ -1,8 +1,0 @@
-<map id="include/rtdm/analogy.h" name="include/rtdm/analogy.h">
-<area shape="rect" id="node2" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc. " alt="" coords="5,80,140,107"/>
-<area shape="rect" id="node3" href="$calibration_8c.html" title="Analogy for Linux, device, subdevice, etc. " alt="" coords="164,80,323,107"/>
-<area shape="rect" id="node4" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features. " alt="" coords="347,80,503,107"/>
-<area shape="rect" id="node5" href="$range_8c.html" title="Analogy for Linux, range related features. " alt="" coords="527,80,658,107"/>
-<area shape="rect" id="node6" href="$sync_8c.html" title="Analogy for Linux, instruction related features. " alt="" coords="683,80,809,107"/>
-<area shape="rect" id="node7" href="$sys_8c.html" title="Analogy for Linux, descriptor related features. " alt="" coords="834,80,954,107"/>
-</map>

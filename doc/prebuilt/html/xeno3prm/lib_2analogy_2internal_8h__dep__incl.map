@@ -1,7 +1,0 @@
-<map id="lib/analogy/internal.h" name="lib/analogy/internal.h">
-<area shape="rect" id="node2" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc. " alt="" coords="5,80,140,107"/>
-<area shape="rect" id="node3" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features. " alt="" coords="164,80,320,107"/>
-<area shape="rect" id="node4" href="$range_8c.html" title="Analogy for Linux, range related features. " alt="" coords="345,80,475,107"/>
-<area shape="rect" id="node5" href="$sync_8c.html" title="Analogy for Linux, instruction related features. " alt="" coords="500,80,627,107"/>
-<area shape="rect" id="node6" href="$sys_8c.html" title="Analogy for Linux, descriptor related features. " alt="" coords="651,80,771,107"/>
-</map>
