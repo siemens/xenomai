@@ -637,7 +637,7 @@ AC_CHECK_FUNC(__vfprintf_chk,
       fi])
 
 dnl Exported CFLAGS and LDFLAGS, shared with internal flags
-XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
+XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fasynchronous-unwind-tables"
 XENO_USER_APP_LDFLAGS=
 
 if test x$use_registry = xy; then
