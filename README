@@ -8,18 +8,15 @@ about Xenomai 3.
 Also, make sure to read the per-architecture README files, i.e.:
 kernel/cobalt/arch/*/README
 
-Built-in documentation
-======================
+Documentation
+=============
 
-The Xenomai 3.x documentation package for this release is directly
-available from the source tree, in HTML and PDF formats:
+The Xenomai 3.x documentation can be built then installed this way:
 
-doc/prebuilt/{html, pdf}/README.INSTALL
-doc/prebuilt/{html, pdf}/README.APPLICATIONS
-doc/prebuilt/{html, pdf}/MIGRATION
-doc/prebuilt/{html, pdf}/TROUBLESHOOTING.COBALT
-doc/prebuilt/{html, pdf}/TROUBLESHOOTING.MERCURY
-doc/prebuilt/{html, pdf}/xeno3prm
+xenomai-3.x.y/configure --enable-doc-build --prefix=<install-dir>
+
+Asciidoc, Doxygen, W3M and Dot packages are required for building the
+documentation.
 
 Online documentation
 ====================

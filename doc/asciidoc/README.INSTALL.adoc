@@ -633,15 +633,6 @@ client applications are running over a SMP-capable kernel.
 	based on the http://asciidoc.org/[Asciidoc markup language] is
 	produced too.
 
-[normal]
-	A pre-built copy of the documentation is present in the source
-	tree, under the +doc/generated/+ file hierarchy.
-
-*--disable-doc-install*::
-
-	Disables the copying of the pre-built documentation to the
-	installation directory.
-
 _Cobalt_-specific configuration options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -114,9 +114,8 @@ o User space part:
 Documentation:
 -------------
 
-The RTDM CAN profile is documented using Doxygen in Xenomai's
-"doc/prebuilt/html/manual/index.html"
-
+The RTDM CAN profile is documented at
+http://www.xenomai.org/documentation/xenomai-3/html/xeno3prm/group__rtdm__can.html
 
 Feedback:
 --------

@@ -61,11 +61,8 @@ EXTRA_DIST :=				\
 	plaintext_postproc.awk		\
 	$(MAN1_DOCS:%.1=%.adoc)
 
-if !XENO_BUILD_DOC
-HTML_DOCSDIR = $(srcdir)/../prebuilt/
-PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
-MAN_DOCSDIR = $(srcdir)/../prebuilt/man/
-else
+if XENO_BUILD_DOC
+
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./
 MAN_DOCSDIR = ./
@@ -117,19 +114,15 @@ html/asciidoc-icons/callouts: html/asciidoc-icons
 
 .PHONY: html/asciidoc-icons
 
-endif
+include $(top_srcdir)/doc/install.rules
 
-include $(top_srcdir)/doc/install-dist.rules
-
-if XENO_INSTALL_DOC
 install-data-local: install-docs-local
 uninstall-local: uninstall-docs
+
 else
 install-data-local:
 uninstall-local:
 endif
-
-dist-hook: dist-docs-hook
 
 distclean-local: clean-local
 

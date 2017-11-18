@@ -375,15 +375,15 @@ fi
 
 dnl Documentation package.
 
+XENO_BUILD_DOC=
 XENO_DOC_GIT=
 AC_MSG_CHECKING(whether to build documentation)
 AC_ARG_ENABLE(doc-build,
 	AS_HELP_STRING([--enable-doc-build], [Build Xenomai documentation]),
 	[case "$enableval" in
 	y | yes) XENO_BUILD_DOC=y ;;
-	*) if test x$enableval = x; then
-	      unset XENO_BUILD_DOC
-	   else
+	n | no) ;;
+	*) if test \! x$enableval = x; then
 	      XENO_BUILD_DOC=y
 	      XENO_DOC_GIT=$enableval
 	   fi
@@ -391,17 +391,6 @@ AC_ARG_ENABLE(doc-build,
 	esac])
 AM_CONDITIONAL(XENO_BUILD_DOC,[test "$XENO_BUILD_DOC" = y])
 AC_SUBST(XENO_DOC_GIT)
-
-XENO_INSTALL_DOC=y
-AC_MSG_CHECKING(whether to install documentation)
-AC_ARG_ENABLE(doc-install,
-AS_HELP_STRING([--disable-doc-install], [Do not install documentation]),
-[case "$enableval" in
- y | yes);;
- *) unset XENO_INSTALL_DOC;;
-esac])
-AC_MSG_RESULT(${XENO_INSTALL_DOC:-no})
-AM_CONDITIONAL(XENO_INSTALL_DOC,[test "$XENO_INSTALL_DOC" = y])
 
 AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
 
@@ -459,12 +448,6 @@ if test x$htmldir = x'${docdir}'; then
    htmldir='${docdir}/html'
 fi
 AC_SUBST(htmldir)
-
-XENO_RUN_DOC=y
-if test x$XENO_BUILD_DOC = x -a x$XENO_INSTALL_DOC = x; then
-   unset XENO_RUN_DOC
-fi
-AM_CONDITIONAL(XENO_RUN_DOC,[test "$XENO_RUN_DOC" = y])
 
 dnl Check for Valgrind client API support.
 dnl Some GCC releases produce broken assembly code for Valgrind
