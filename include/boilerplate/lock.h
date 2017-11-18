@@ -21,6 +21,7 @@
 
 #include <pthread.h>
 #include <boilerplate/wrappers.h>
+#include <boilerplate/debug.h>
 
 /*
  * CANCEL_DEFER/RESTORE() should enclose any emulator code prior to
