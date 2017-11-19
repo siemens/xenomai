@@ -248,7 +248,17 @@ void xndebug_trace_relax(int nr, unsigned long *backtrace,
 		if (vma == NULL)
 			continue;
 
-		spot.backtrace[depth].pc = pc - vma->vm_start;
+		/*
+		 * Hack. Unlike DSOs, executables and interpreters
+		 * (e.g. dynamic linkers) are protected against write
+		 * attempts. Use this to determine when $pc should be
+		 * fixed up by subtracting the mapping base address in
+		 * the DSO case.
+		 */
+		if (!(vma->vm_flags & VM_DENYWRITE))
+			pc -= vma->vm_start;
+
+		spot.backtrace[depth].pc = pc;
 
 		/*
 		 * Even in case we can't fetch the map name, we still
