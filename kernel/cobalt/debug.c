@@ -368,7 +368,7 @@ static void *relax_vfile_begin(struct xnvfile_regular_iterator *it)
 	xnlock_get_irqsave(&relax_lock, s);
 
 	if (relax_queued == 0 || it->pos > relax_queued) {
-		xnlock_put(&relax_lock);
+		xnlock_put_irqrestore(&relax_lock, s);
 		return NULL;
 	}
 	priv->overall = relax_overall;
