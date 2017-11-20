@@ -55,11 +55,11 @@
  * the __COBALT_SYSCALL_BIT marker. Make sure to offset the number by
  * __COBALT_X32_BASE for Cobalt 32-bit compat syscalls only.
  */
-static inline long __xn_get_syscall_nr(struct pt_regs *regs)
-{
-	return __xn_syscall_p(regs) ? __xn_syscall(regs) :
-		(__xn_reg_sys(regs) & ~__COBALT_SYSCALL_BIT);
-}
+#define __xn_get_syscall_nr(__regs)					\
+	({								\
+		__xn_syscall_p(__regs) ? __xn_syscall(__regs) :		\
+			(__xn_reg_sys(__regs) & ~__COBALT_SYSCALL_BIT);	\
+	})
 
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
