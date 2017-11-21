@@ -243,8 +243,8 @@ MODULE_DESCRIPTION("Intel(R) PRO/1000 Network Driver for rtnet");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
-static int debug = NETIF_MSG_DRV | NETIF_MSG_PROBE;
-module_param(debug, int, 0);
+static int local_debug = NETIF_MSG_DRV | NETIF_MSG_PROBE;
+module_param_named(debug, local_debug, int, 0);
 MODULE_PARM_DESC(debug, "Debug level (0=none,...,16=all)");
 
 
@@ -734,7 +734,7 @@ static int e1000_probe(struct pci_dev *pdev,
 	adapter->netdev = netdev;
 	adapter->pdev = pdev;
 	adapter->hw.back = adapter;
-	adapter->msg_enable = (1 << debug) - 1;
+	adapter->msg_enable = (1 << local_debug) - 1;
 
 	mmio_start = pci_resource_start(pdev, BAR_0);
 	mmio_len = pci_resource_len(pdev, BAR_0);

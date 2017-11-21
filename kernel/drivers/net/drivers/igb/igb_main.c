@@ -277,9 +277,9 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
 #define DEFAULT_MSG_ENABLE (NETIF_MSG_DRV|NETIF_MSG_PROBE|NETIF_MSG_LINK)
-static int debug = -1;
-module_param(debug, int, 0);
-MODULE_PARM_DESC(debug, "Debug level (0=none,...,16=all)");
+static int local_debug = -1;
+module_param_named(debug, local_debug, int, 0);
+MODULE_PARM_DESC(debug, "debug level (0=none,...,16=all)");
 
 struct igb_reg_info {
 	u32 ofs;

@@ -52,7 +52,7 @@ static int multicast_filter_limit = 64;
    e.g. "options=16" for FD, "options=32" for 100mbps-only. */
 static int full_duplex[] = {-1, -1, -1, -1, -1, -1, -1, -1};
 static int options[] = {-1, -1, -1, -1, -1, -1, -1, -1};
-static int debug = -1;	/* The debug level */
+static int local_debug = -1;	/* The debug level */
 
 /* A few values that may be tweaked. */
 /* The ring sizes should be a power of two for efficiency. */
@@ -120,7 +120,7 @@ MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 MODULE_AUTHOR("Maintainer: Jan Kiszka <Jan.Kiszka@web.de>");
 MODULE_DESCRIPTION("Intel i82557/i82558/i82559 PCI EtherExpressPro driver");
 MODULE_LICENSE("GPL");
-module_param(debug, int, 0444);
+module_param_named(debug, local_debug, int, 0444);
 module_param_array(options, int, NULL, 0444);
 module_param_array(full_duplex, int, NULL, 0444);
 module_param(txfifo, int, 0444);
@@ -1823,14 +1823,14 @@ static struct pci_driver eepro100_driver = {
 
 static int __init eepro100_init_module(void)
 {
-#ifdef RTNET_DRV_EEPRO100_DBG
-	if (debug >= 0 && speedo_debug != debug)
-		printk(KERN_INFO "eepro100.c: Debug level is %d.\n", debug);
-	if (debug >= 0)
-		speedo_debug = debug;
-#else  /* !RTNET_DRV_EEPRO100_DBG */
-	debug = speedo_debug; /* touch debug variable */
-#endif /* RTNET_DRV_EEPRO100_DBG */
+#ifdef CONFIG_XENO_DRIVERS_NET_DRV_EEPRO100_DBG
+	if (local_debug >= 0 && speedo_debug != local_debug)
+		printk(KERN_INFO "eepro100.c: Debug level is %d.\n", local_debug);
+	if (local_debug >= 0)
+		speedo_debug = local_debug;
+#else  /* !CONFIG_XENO_DRIVERS_NET_DRV_EEPRO100_DBG */
+	local_debug = speedo_debug; /* touch debug variable */
+#endif /* CONFIG_XENO_DRIVERS_NET_DRV_EEPRO100_DBG */
 
 	return pci_register_driver(&eepro100_driver);
 }
