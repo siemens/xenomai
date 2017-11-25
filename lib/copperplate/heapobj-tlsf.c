@@ -77,14 +77,16 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 
 int heapobj_pkg_init_private(void)
 {
-	#ifdef CONFIG_XENO_PSHARED
-		size_t alloc_size = sysconf(_SC_PAGE_SIZE);
-	#else
-		size_t alloc_size = __copperplate_setup_data.mem_pool;
-	#endif
-	size_t available_size;
+	size_t alloc_size, available_size;
 	void *mem;
 
+#ifdef CONFIG_XENO_PSHARED
+	alloc_size = MIN_TLSF_HEAPSZ;
+#else
+	alloc_size = __copperplate_setup_data.mem_pool;
+	if (alloc_size < MIN_TLSF_HEAPSZ)
+		alloc_size = MIN_TLSF_HEAPSZ;
+#endif
 	/*
 	 * We want to know how many bytes from a memory pool TLSF will
 	 * use for its own internal use. We get the probe memory from
