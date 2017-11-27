@@ -128,9 +128,9 @@ MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 #define DEBUG_TX_SYNC 4
 #define DEBUG_TX_OTHER 8
 #define DEBUG_RUN 16
-static int debug = -1;
+static int local_debug = -1;
 static int r8169_debug = -1;
-module_param(debug, int, 0444);
+module_param_named(debug, local_debug, int, 0444);
 MODULE_PARM_DESC(debug, MODULENAME " debug level (bit mask, see docs!)");
 
 
@@ -1921,8 +1921,8 @@ static struct pci_driver rtl8169_pci_driver = {
 static int __init rtl8169_init_module (void)
 {
 	/* <kk> Enable debugging output... */
-	if (debug > 0) {
-		r8169_debug = debug;
+	if (local_debug > 0) {
+		r8169_debug = local_debug;
 	}
 	if (r8169_debug & DEBUG_RUN) printk("Initializing " MODULENAME " driver");
 	return pci_register_driver (&rtl8169_pci_driver);

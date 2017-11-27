@@ -126,7 +126,7 @@
 /* A few user-configurable values.
    These may be modified when a driver module is loaded. */
 
-static int debug = 1;			/* 1 normal messages, 0 quiet .. 7 verbose. */
+static int local_debug = 1;			/* 1 normal messages, 0 quiet .. 7 verbose. */
 static int max_interrupt_work = 20;
 
 /* Set the copy breakpoint for the copy-only-tiny-frames scheme.
@@ -247,7 +247,7 @@ MODULE_DESCRIPTION("RTnet VIA Rhine PCI Fast Ethernet driver");
 MODULE_LICENSE("GPL");
 
 module_param(max_interrupt_work, int, 0444);
-module_param(debug, int, 0444);
+module_param_named(debug, local_debug, int, 0444);
 /*** RTnet ***
 MODULE_PARM(rx_copybreak, "i");
  *** RTnet ***/
@@ -595,7 +595,7 @@ static void wait_for_reset(struct rtnet_device *dev, int chip_id, char *name) /*
 
 	}
 
-	if (debug > 1)
+	if (local_debug > 1)
 		printk(KERN_INFO "%s: Reset %s.\n", name,
 			boguscnt ? "succeeded" : "failed");
 }
@@ -1167,7 +1167,7 @@ static int via_rhine_open(struct rtnet_device *dev) /*** RTnet ***/
 		return i;
 	}
 
-	if (debug > 1)
+	if (local_debug > 1)
 		printk(KERN_DEBUG "%s: via_rhine_open() irq %d.\n",
 			   dev->name, np->pdev->irq);
 
@@ -1179,7 +1179,7 @@ static int via_rhine_open(struct rtnet_device *dev) /*** RTnet ***/
 	alloc_tbufs(dev);
 	wait_for_reset(dev, np->chip_id, dev->name);
 	init_registers(dev);
-	if (debug > 2)
+	if (local_debug > 2)
 		printk(KERN_DEBUG "%s: Done via_rhine_open(), status %4.4x "
 			   "MII status: %4.4x.\n",
 			   dev->name, readw(ioaddr + ChipCmd),
@@ -1207,7 +1207,7 @@ static void via_rhine_check_duplex(struct rtnet_device *dev) /*** RTnet ***/
 	duplex = (negotiated & 0x0100) || (negotiated & 0x01C0) == 0x0040;
 	if (np->mii_if.full_duplex != duplex) {
 		np->mii_if.full_duplex = duplex;
-		if (debug)
+		if (local_debug)
 			printk(KERN_INFO "%s: Setting %s-duplex based on MII #%d link"
 				   " partner capability of %4.4x.\n", dev->name,
 				   duplex ? "full" : "half", np->phys[0], mii_lpa);
@@ -1323,7 +1323,7 @@ static int via_rhine_start_tx(struct rtskb *skb, struct rtnet_device *dev) /*** 
 	rtdm_lock_put_irqrestore(&np->lock, context);
 /*** RTnet ***/
 
-	if (debug > 4) {
+	if (local_debug > 4) {
 		rtdm_printk(KERN_DEBUG "%s: Transmit frame #%d queued in slot %d.\n", /*** RTnet ***/
 			   dev->name, np->cur_tx-1, entry);
 	}
@@ -1355,7 +1355,7 @@ static int via_rhine_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
 
 		ret = RTDM_IRQ_HANDLED;
 
-		if (debug > 4)
+		if (local_debug > 4)
 			rtdm_printk(KERN_DEBUG "%s: Interrupt, status %8.8x.\n", /*** RTnet ***/
 				   dev->name, intr_status);
 
@@ -1386,7 +1386,7 @@ static int via_rhine_interrupt(rtdm_irq_t *irq_handle) /*** RTnet ***/
 		}
 	}
 
-	if (debug > 3)
+	if (local_debug > 3)
 		rtdm_printk(KERN_DEBUG "%s: exiting interrupt, status=%8.8x.\n", /*** RTnet ***/
 			   dev->name, readw((void *)ioaddr + IntrStatus));
 
@@ -1408,13 +1408,13 @@ static void via_rhine_tx(struct rtnet_device *dev) /*** RTnet ***/
 	/* find and cleanup dirty tx descriptors */
 	while (np->dirty_tx != np->cur_tx) {
 		txstatus = le32_to_cpu(np->tx_ring[entry].tx_status);
-		if (debug > 6)
+		if (local_debug > 6)
 			rtdm_printk(KERN_DEBUG " Tx scavenge %d status %8.8x.\n", /*** RTnet ***/
 				   entry, txstatus);
 		if (txstatus & DescOwn)
 			break;
 		if (txstatus & 0x8000) {
-			if (debug > 1)
+			if (local_debug > 1)
 				rtdm_printk(KERN_DEBUG "%s: Transmit error, Tx status %8.8x.\n", /*** RTnet ***/
 					   dev->name, txstatus);
 			np->stats.tx_errors++;
@@ -1434,7 +1434,7 @@ static void via_rhine_tx(struct rtnet_device *dev) /*** RTnet ***/
 				np->stats.collisions += (txstatus >> 3) & 0x0F;
 			else
 				np->stats.collisions += txstatus & 0x0F;
-			if (debug > 6)
+			if (local_debug > 6)
 				rtdm_printk(KERN_DEBUG "collisions: %1.1x:%1.1x\n", /*** RTnet ***/
 					(txstatus >> 3) & 0xF,
 					txstatus & 0xF);
@@ -1465,7 +1465,7 @@ static void via_rhine_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /
 	int entry = np->cur_rx % RX_RING_SIZE;
 	int boguscnt = np->dirty_rx + RX_RING_SIZE - np->cur_rx;
 
-	if (debug > 4) {
+	if (local_debug > 4) {
 		rtdm_printk(KERN_DEBUG "%s: via_rhine_rx(), entry %d status %8.8x.\n", /*** RTnet ***/
 			   dev->name, entry, le32_to_cpu(np->rx_head_desc->rx_status));
 	}
@@ -1476,7 +1476,7 @@ static void via_rhine_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /
 		u32 desc_status = le32_to_cpu(desc->rx_status);
 		int data_size = desc_status >> 16;
 
-		if (debug > 4)
+		if (local_debug > 4)
 			rtdm_printk(KERN_DEBUG "  via_rhine_rx() status is %8.8x.\n", /*** RTnet ***/
 				   desc_status);
 		if (--boguscnt < 0)
@@ -1491,7 +1491,7 @@ static void via_rhine_rx(struct rtnet_device *dev, nanosecs_abs_t *time_stamp) /
 				np->stats.rx_length_errors++;
 			} else if (desc_status & RxErr) {
 				/* There was a error. */
-				if (debug > 2)
+				if (local_debug > 2)
 					rtdm_printk(KERN_DEBUG "  via_rhine_rx() Rx error was %8.8x.\n", /*** RTnet ***/
 						   desc_status);
 				np->stats.rx_errors++;
@@ -1592,7 +1592,7 @@ static void via_rhine_restart_tx(struct rtnet_device *dev) { /*** RTnet ***/
 	}
 	else {
 		/* This should never happen */
-		if (debug > 1)
+		if (local_debug > 1)
 			rtdm_printk(KERN_WARNING "%s: via_rhine_restart_tx() " /*** RTnet ***/
 				   "Another error occured %8.8x.\n",
 				   dev->name, intr_status);
@@ -1614,7 +1614,7 @@ static void via_rhine_error(struct rtnet_device *dev, int intr_status) /*** RTne
 				mdio_write(dev, np->phys[0], MII_BMCR, 0x3300);
 		} else
 			via_rhine_check_duplex(dev);
-		if (debug)
+		if (local_debug)
 			rtdm_printk(KERN_ERR "%s: MII status changed: Autonegotiation " /*** RTnet ***/
 				   "advertising %4.4x  partner %4.4x.\n", dev->name,
 			   mdio_read(dev, np->phys[0], MII_ADVERTISE),
@@ -1626,20 +1626,20 @@ static void via_rhine_error(struct rtnet_device *dev, int intr_status) /*** RTne
 		clear_tally_counters(ioaddr);
 	}
 	if (intr_status & IntrTxAborted) {
-		if (debug > 1)
+		if (local_debug > 1)
 			rtdm_printk(KERN_INFO "%s: Abort %8.8x, frame dropped.\n", /*** RTnet ***/
 				   dev->name, intr_status);
 	}
 	if (intr_status & IntrTxUnderrun) {
 		if (np->tx_thresh < 0xE0)
 			writeb(np->tx_thresh += 0x20, ioaddr + TxConfig);
-		if (debug > 1)
+		if (local_debug > 1)
 			rtdm_printk(KERN_INFO "%s: Transmitter underrun, Tx " /*** RTnet ***/
 				   "threshold now %2.2x.\n",
 				   dev->name, np->tx_thresh);
 	}
 	if (intr_status & IntrTxDescRace) {
-		if (debug > 2)
+		if (local_debug > 2)
 			rtdm_printk(KERN_INFO "%s: Tx descriptor write-back race.\n", /*** RTnet ***/
 				   dev->name);
 	}
@@ -1648,7 +1648,7 @@ static void via_rhine_error(struct rtnet_device *dev, int intr_status) /*** RTne
 		if (np->tx_thresh < 0xE0) {
 			writeb(np->tx_thresh += 0x20, ioaddr + TxConfig);
 		}
-		if (debug > 1)
+		if (local_debug > 1)
 			rtdm_printk(KERN_INFO "%s: Unspecified error. Tx " /*** RTnet ***/
 				"threshold now %2.2x.\n",
 				dev->name, np->tx_thresh);
@@ -1660,7 +1660,7 @@ static void via_rhine_error(struct rtnet_device *dev, int intr_status) /*** RTne
 	if (intr_status & ~( IntrLinkChange | IntrStatsMax | IntrTxUnderrun |
 						 IntrTxError | IntrTxAborted | IntrNormalSummary |
 						 IntrTxDescRace )) {
-		if (debug > 1)
+		if (local_debug > 1)
 			rtdm_printk(KERN_ERR "%s: Something Wicked happened! %8.8x.\n", /*** RTnet ***/
 				   dev->name, intr_status);
 	}
@@ -1728,7 +1728,7 @@ static int via_rhine_close(struct rtnet_device *dev) /*** RTnet ***/
 
 	rtnetif_stop_queue(dev); /*** RTnet ***/
 
-	if (debug > 1)
+	if (local_debug > 1)
 		rtdm_printk(KERN_DEBUG "%s: Shutting down ethercard, status was %4.4x.\n", /*** RTnet ***/
 			   dev->name, readw((void *)ioaddr + ChipCmd));
 

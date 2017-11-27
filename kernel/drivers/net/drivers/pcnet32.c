@@ -1455,10 +1455,10 @@ static struct pci_driver pcnet32_driver = {
 };
 
 /* An additional parameter that may be passed in... */
-static int debug = -1;
+static int local_debug = -1;
 static int tx_start_pt = -1;
 
-module_param(debug, int, 0444);
+module_param_named(debug, local_debug, int, 0444);
 MODULE_PARM_DESC(debug, DRV_NAME " debug level (0-6)");
 module_param(max_interrupt_work, int, 0444);
 MODULE_PARM_DESC(max_interrupt_work, DRV_NAME " maximum events handled per interrupt");
@@ -1483,8 +1483,8 @@ static int __init pcnet32_init_module(void)
 {
     printk(KERN_INFO "%s", version);
 
-    if (debug > 0)
-	pcnet32_debug = debug;
+    if (local_debug > 0)
+	pcnet32_debug = local_debug;
 
     if ((tx_start_pt >= 0) && (tx_start_pt <= 3))
 	tx_start = tx_start_pt;

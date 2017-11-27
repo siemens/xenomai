@@ -196,7 +196,7 @@ MODULE_PARM_DESC(cards, "array of cards to be supported (e.g. 1,0,1)");
 				 NETIF_MSG_WOL		| \
 				 NETIF_MSG_RX_ERR	| \
 				 NETIF_MSG_TX_ERR)
-static int debug = -1;
+static int local_debug = -1;
 
 /* Maximum events (Rx packets, etc.) to handle at each interrupt. */
 static int max_interrupt_work = 20;
@@ -259,7 +259,7 @@ MODULE_LICENSE("GPL");
 
 module_param(max_interrupt_work, int, 0444);
 module_param(mtu, int, 0444);
-module_param(debug, int, 0444);
+module_param_named(debug, local_debug, int, 0444);
 /*** RTnet ***
 MODULE_PARM(rx_copybreak, "i");
  *** RTnet ***/
@@ -829,7 +829,7 @@ static int natsemi_probe1 (struct pci_dev *pdev,
 	pci_set_drvdata(pdev, dev);
 	np->iosize = iosize;
 	rtdm_lock_init(&np->lock);
-	np->msg_enable = (debug >= 0) ? (1<<debug)-1 : NATSEMI_DEF_MSG;
+	np->msg_enable = (local_debug >= 0) ? (1<<local_debug)-1 : NATSEMI_DEF_MSG;
 	np->hands_off = 0;
 
 	/* Reset the chip to erase previous misconfiguration. */
