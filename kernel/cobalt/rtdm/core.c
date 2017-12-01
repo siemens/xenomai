@@ -256,12 +256,13 @@ int __rtdm_dev_ioctl_core(struct rtdm_fd *fd, unsigned int request,
 			  void __user *arg)
 {
 	struct rtdm_device *dev = rtdm_fd_device(fd);
-	struct rtdm_driver *drv = dev->driver;
+	struct rtdm_driver *drv;
 	struct rtdm_device_info dev_info;
 
 	if (fd->magic != RTDM_FD_MAGIC || request != RTIOC_DEVICE_INFO)
 		return -ENOSYS;
 
+	drv = dev->driver;
 	dev_info.device_flags = drv->device_flags;
 	dev_info.device_class = drv->profile_info.class_id;
 	dev_info.device_sub_class = drv->profile_info.subclass_id;
