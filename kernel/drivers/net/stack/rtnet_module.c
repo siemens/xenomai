@@ -50,6 +50,8 @@ const char rtnet_rtdm_provider_name[] =
 
 EXPORT_SYMBOL_GPL(rtnet_rtdm_provider_name);
 
+void rtnet_corectl_register(void);
+void rtnet_corectl_unregister(void);
 
 #ifdef CONFIG_XENO_OPT_VFILE
 /***
@@ -345,6 +347,8 @@ int __init rtnet_init(void)
     if ((err = rtpc_init()) != 0)
 	goto err_out6;
 
+    rtnet_corectl_register();
+
     return 0;
 
 
@@ -376,6 +380,8 @@ err_out1:
  */
 void __exit rtnet_release(void)
 {
+    rtnet_corectl_unregister();
+
     rtpc_cleanup();
 
     rtwlan_exit();

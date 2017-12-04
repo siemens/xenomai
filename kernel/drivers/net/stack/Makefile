@@ -1,7 +1,5 @@
 ccflags-y += -Idrivers/xenomai/net/stack/include -Ikernel/
 
-obj-y += corectl.o
-
 obj-$(CONFIG_XENO_DRIVERS_NET_RTIPV4) += ipv4/
 
 obj-$(CONFIG_XENO_DRIVERS_NET_RTPACKET) += packet/
@@ -13,6 +11,7 @@ obj-$(CONFIG_XENO_DRIVERS_NET_RTCFG) += rtcfg/
 obj-$(CONFIG_XENO_DRIVERS_NET) += rtnet.o
 
 rtnet-y :=  \
+	corectl.o \
 	iovec.o \
 	rtdev.o \
 	rtdev_mgr.o \

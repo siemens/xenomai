@@ -66,9 +66,12 @@ static struct notifier_block rtnet_corectl_notifier = {
 	.notifier_call = rtnet_corectl_call,
 };
 
-static int rtnet_corectl_register(void)
+void rtnet_corectl_register(void)
 {
 	cobalt_add_config_chain(&rtnet_corectl_notifier);
-	return 0;
 }
-device_initcall(rtnet_corectl_register);
+
+void rtnet_corectl_unregister(void)
+{
+	cobalt_remove_config_chain(&rtnet_corectl_notifier);
+}
