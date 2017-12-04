@@ -345,6 +345,8 @@ static inline int rtdm_fd_is_compat(const struct rtdm_fd *fd)
 int rtdm_fd_enter(struct rtdm_fd *rtdm_fd, int ufd,
 		  unsigned int magic, struct rtdm_fd_ops *ops);
 
+int rtdm_fd_register(struct rtdm_fd *fd, int ufd);
+
 struct rtdm_fd *rtdm_fd_get(int ufd, unsigned int magic);
 
 int rtdm_fd_lock(struct rtdm_fd *fd);

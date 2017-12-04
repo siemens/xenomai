@@ -201,6 +201,10 @@ COBALT_SYSCALL(timerfd_create, lostage, (int clockid, int flags))
 	if (ret < 0)
 		goto fail;
 
+	ret = rtdm_fd_register(&tfd->fd, ufd);
+	if (ret < 0)
+		goto fail;
+
 	return ufd;
 fail:
 	xnselect_destroy(&tfd->read_select);

@@ -267,6 +267,7 @@ static struct rtdm_fd_ops mqd_ops = {
 static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)
 {
 	struct cobalt_mqd *mqd;
+	int ret;
 
 	if (cobalt_ppd_get(0) == &cobalt_kernel_ppd)
 		return -EPERM;
@@ -278,7 +279,11 @@ static inline int mqd_create(struct cobalt_mq *mq, unsigned long flags, int ufd)
 	mqd->fd.oflags = flags;
 	mqd->mq = mq;
 
-	return rtdm_fd_enter(&mqd->fd, ufd, COBALT_MQD_MAGIC, &mqd_ops);
+	ret = rtdm_fd_enter(&mqd->fd, ufd, COBALT_MQD_MAGIC, &mqd_ops);
+	if (ret < 0)
+		return ret;
+
+	return rtdm_fd_register(&mqd->fd, ufd);
 }
 
 static int mq_open(int uqd, const char *name, int oflags,

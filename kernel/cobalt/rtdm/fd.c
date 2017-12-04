@@ -145,19 +145,12 @@ static inline void set_compat_bit(struct rtdm_fd *fd)
 int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 		  struct rtdm_fd_ops *ops)
 {
-	struct rtdm_fd_index *idx;
 	struct cobalt_ppd *ppd;
-	spl_t s;
-	int ret;
 
 	secondary_mode_only();
 
 	if (magic == 0)
 		return -EINVAL;
-
-	idx = kmalloc(sizeof(*idx), GFP_KERNEL);
-	if (idx == NULL)
-		return -ENOMEM;
 
 	assign_default_dual_handlers(ops->ioctl);
 	assign_default_dual_handlers(ops->read);
@@ -174,6 +167,21 @@ int rtdm_fd_enter(struct rtdm_fd *fd, int ufd, unsigned int magic,
 	fd->owner = ppd;
 	fd->refs = 1;
 	set_compat_bit(fd);
+
+	return 0;
+}
+
+int rtdm_fd_register(struct rtdm_fd *fd, int ufd)
+{
+	struct rtdm_fd_index *idx;
+	struct cobalt_ppd *ppd;
+	spl_t s;
+	int ret = 0;
+
+	ppd = cobalt_ppd_get(0);
+	idx = kmalloc(sizeof(*idx), GFP_KERNEL);
+	if (idx == NULL)
+		return -ENOMEM;
 
 	idx->fd = fd;
 

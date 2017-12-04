@@ -174,7 +174,7 @@ int __rtdm_dev_open(const char *path, int oflag)
 
 	context->fd.minor = dev->minor;
 	context->fd.oflags = oflag;
-
+	
 	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
 	if (dev->ops.open) {
@@ -185,9 +185,12 @@ int __rtdm_dev_open(const char *path, int oflag)
 			goto fail_open;
 	}
 
-	fd_install(ufd, filp);
-
 	trace_cobalt_fd_created(&context->fd, ufd);
+	ret = rtdm_fd_register(&context->fd, ufd);
+	if (ret < 0)
+		goto fail_open;
+
+	fd_install(ufd, filp);
 
 	return ufd;
 
@@ -238,6 +241,9 @@ int __rtdm_dev_socket(int protocol_family, int socket_type,
 	}
 
 	trace_cobalt_fd_created(&context->fd, ufd);
+	ret = rtdm_fd_register(&context->fd, ufd);
+	if (ret < 0)
+		goto fail_socket;
 
 	return ufd;
 
