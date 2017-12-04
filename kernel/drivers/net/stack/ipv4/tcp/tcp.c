@@ -1822,7 +1822,7 @@ static int rt_tcp_ioctl(struct rtdm_fd *fd,
 				     setopt->optlen);
 
 	case _RTIOC_GETSOCKOPT:
-	    if (setopt->level != SOL_SOCKET)
+	    if (getopt->level != SOL_SOCKET)
 		break;
 	    return rt_tcp_getsockopt(fd, ts, getopt->level,
 				     getopt->optname, getopt->optval,
