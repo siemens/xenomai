@@ -22,6 +22,7 @@
 #include <linux/moduleparam.h>
 #include <linux/list.h>
 #include <linux/skbuff.h>
+#include <linux/err.h>
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <net/tcp_states.h>
@@ -1781,10 +1782,16 @@ static int rt_tcp_ioctl(struct rtdm_fd *fd,
 			unsigned int request, void __user *arg)
 {
     struct tcp_socket* ts = rtdm_fd_to_private(fd);
-    struct _rtdm_setsockaddr_args *setaddr = arg;
-    struct _rtdm_getsockaddr_args *getaddr = arg;
-    struct _rtdm_getsockopt_args  *getopt  = arg;
-    struct _rtdm_setsockopt_args  *setopt  = arg;
+    const struct _rtdm_setsockaddr_args *setaddr;
+    struct _rtdm_setsockaddr_args _setaddr;
+    const struct _rtdm_getsockaddr_args *getaddr;
+    struct _rtdm_getsockaddr_args _getaddr;
+    const struct _rtdm_getsockopt_args *getopt;
+    struct _rtdm_getsockopt_args _getopt;
+    const struct _rtdm_setsockopt_args *setopt;
+    struct _rtdm_setsockopt_args _setopt;
+    const long *val;
+    long _val;
     int in_rt;
 
     /* fast path for common socket IOCTLs */
@@ -1795,42 +1802,65 @@ static int rt_tcp_ioctl(struct rtdm_fd *fd,
 
     switch (request) {
 	case _RTIOC_BIND:
-	    return rt_tcp_bind(ts, setaddr->addr, setaddr->addrlen);
-
+		setaddr = rtnet_get_arg(fd, &_setaddr, arg, sizeof(_setaddr));
+		if (IS_ERR(setaddr))
+			return PTR_ERR(setaddr);
+		return rt_tcp_bind(ts, setaddr->addr, setaddr->addrlen);
 	case _RTIOC_CONNECT:
-	    if (!in_rt)
-		return -ENOSYS;
-	    return rt_tcp_connect(ts, setaddr->addr, setaddr->addrlen);
+		if (!in_rt)
+			return -ENOSYS;
+		setaddr = rtnet_get_arg(fd, &_setaddr, arg, sizeof(_setaddr));
+		if (IS_ERR(setaddr))
+			return PTR_ERR(setaddr);
+		return rt_tcp_connect(ts, setaddr->addr, setaddr->addrlen);
 
 	case _RTIOC_LISTEN:
-	    return rt_tcp_listen(ts, (unsigned long)arg);
+		val = rtnet_get_arg(fd, &_val, arg, sizeof(long));
+		if (IS_ERR(val))
+			return PTR_ERR(val);
+		return rt_tcp_listen(ts, *val);
 
 	case _RTIOC_ACCEPT:
-	    if (!in_rt)
-		return -ENOSYS;
-	    return rt_tcp_accept(ts, getaddr->addr, getaddr->addrlen);
+		if (!in_rt)
+			return -ENOSYS;
+		getaddr = rtnet_get_arg(fd, &_getaddr, arg, sizeof(_getaddr));
+		if (IS_ERR(getaddr))
+			return PTR_ERR(getaddr);
+		return rt_tcp_accept(ts, getaddr->addr, getaddr->addrlen);
 
 	case _RTIOC_SHUTDOWN:
-	    return rt_tcp_shutdown(ts, (unsigned long)arg);
+		val = rtnet_get_arg(fd, &_val, arg, sizeof(long));
+		if (IS_ERR(val))
+			return PTR_ERR(val);
+		return rt_tcp_shutdown(ts, *val);
 
 	case _RTIOC_SETSOCKOPT:
-	    if (setopt->level != SOL_SOCKET)
-		break;
+		setopt = rtnet_get_arg(fd, &_setopt, arg, sizeof(_setopt));
+		if (IS_ERR(setopt))
+			return PTR_ERR(setopt);
 
-	    return rt_tcp_setsockopt(fd, ts, setopt->level,
-				     setopt->optname, setopt->optval,
-				     setopt->optlen);
+		if (setopt->level != SOL_SOCKET)
+			break;
+
+		return rt_tcp_setsockopt(fd, ts, setopt->level,
+					 setopt->optname, setopt->optval,
+					 setopt->optlen);
 
 	case _RTIOC_GETSOCKOPT:
-	    if (getopt->level != SOL_SOCKET)
-		break;
-	    return rt_tcp_getsockopt(fd, ts, getopt->level,
-				     getopt->optname, getopt->optval,
-				     getopt->optlen);
+		getopt = rtnet_get_arg(fd, &_getopt, arg, sizeof(_getopt));
+		if (IS_ERR(getopt))
+			return PTR_ERR(getopt);
 
-	default:
-	    break;
+		if (getopt->level != SOL_SOCKET)
+			break;
+
+		return rt_tcp_getsockopt(fd, ts, getopt->level,
+					 getopt->optname, getopt->optval,
+					 getopt->optlen);
+    	default:
+		break;
     }
+    
     return rt_ip_ioctl(fd, request, arg);
 }
 
