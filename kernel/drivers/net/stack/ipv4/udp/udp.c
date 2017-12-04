@@ -26,6 +26,7 @@
 #include <linux/socket.h>
 #include <linux/in.h>
 #include <linux/ip.h>
+#include <linux/err.h>
 #include <linux/udp.h>
 #include <linux/tcp.h>
 #include <net/checksum.h>
@@ -345,26 +346,30 @@ void rt_udp_close(struct rtdm_fd *fd)
 
 
 
-int rt_udp_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
+int rt_udp_ioctl(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 {
-    struct rtsocket *sock = rtdm_fd_to_private(fd);
-    struct _rtdm_setsockaddr_args *setaddr = arg;
+	struct rtsocket *sock = rtdm_fd_to_private(fd);
+	const struct _rtdm_setsockaddr_args *setaddr;
+	struct _rtdm_setsockaddr_args _setaddr;
 
+	/* fast path for common socket IOCTLs */
+	if (_IOC_TYPE(request) == RTIOC_TYPE_NETWORK)
+		return rt_socket_common_ioctl(fd, request, arg);
 
-    /* fast path for common socket IOCTLs */
-    if (_IOC_TYPE(request) == RTIOC_TYPE_NETWORK)
-        return rt_socket_common_ioctl(fd, request, arg);
-
-    switch (request) {
+	switch (request) {
         case _RTIOC_BIND:
-            return rt_udp_bind(sock, setaddr->addr, setaddr->addrlen);
-
         case _RTIOC_CONNECT:
-            return rt_udp_connect(sock, setaddr->addr, setaddr->addrlen);
+		setaddr = rtnet_get_arg(fd, &_setaddr, arg, sizeof(_setaddr));
+		if (IS_ERR(setaddr))
+			return PTR_ERR(setaddr);
+		if (request == _RTIOC_BIND)
+			return rt_udp_bind(sock, setaddr->addr, setaddr->addrlen);
+
+		return rt_udp_connect(sock, setaddr->addr, setaddr->addrlen);
 
         default:
-            return rt_ip_ioctl(fd, request, arg);
-    }
+		return rt_ip_ioctl(fd, request, arg);
+	}
 }
 
 
