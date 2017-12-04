@@ -24,6 +24,7 @@
 
 #include <linux/module.h>
 #include <linux/sched.h>
+#include <linux/err.h>
 
 #include <rtnet_iovec.h>
 #include <rtnet_socket.h>
@@ -100,45 +101,50 @@ static void rt_packet_unlock(struct rtpacket_type *pt)
 /***
  *  rt_packet_bind
  */
-static int rt_packet_bind(struct rtsocket *sock, const struct sockaddr *addr,
-			  socklen_t addrlen)
+static int rt_packet_bind(struct rtdm_fd *fd, struct rtsocket *sock,
+			  const struct sockaddr *addr, socklen_t addrlen)
 {
-    struct sockaddr_ll      *sll = (struct sockaddr_ll *)addr;
-    struct rtpacket_type    *pt  = &sock->prot.packet.packet_type;
-    int                     new_type;
-    int                     ret;
-    rtdm_lockctx_t          context;
+	struct sockaddr_ll  _sll, *sll;
+	struct rtpacket_type    *pt  = &sock->prot.packet.packet_type;
+	int                     new_type;
+	int                     ret;
+	rtdm_lockctx_t          context;
 
+	if (addrlen < sizeof(struct sockaddr_ll))
+		return -EINVAL;
+	
+	sll = rtnet_get_arg(fd, &_sll, addr, sizeof(_sll));
+	if (IS_ERR(sll))
+		return PTR_ERR(sll);
 
-    if ((addrlen < (int)sizeof(struct sockaddr_ll)) ||
-	(sll->sll_family != AF_PACKET))
-	return -EINVAL;
+	if (sll->sll_family != AF_PACKET)
+		return -EINVAL;
+	
+	new_type = (sll->sll_protocol != 0) ? sll->sll_protocol : sock->protocol;
 
-    new_type = (sll->sll_protocol != 0) ? sll->sll_protocol : sock->protocol;
+	rtdm_lock_get_irqsave(&sock->param_lock, context);
 
-    rtdm_lock_get_irqsave(&sock->param_lock, context);
+	/* release existing binding */
+	if (pt->type != 0)
+		rtdev_remove_pack(pt);
 
-    /* release existing binding */
-    if (pt->type != 0)
-	    rtdev_remove_pack(pt);
+	pt->type = new_type;
+	sock->prot.packet.ifindex = sll->sll_ifindex;
 
-    pt->type = new_type;
-    sock->prot.packet.ifindex = sll->sll_ifindex;
+	/* if protocol is non-zero, register the packet type */
+	if (new_type != 0) {
+		pt->handler     = rt_packet_rcv;
+		pt->err_handler = NULL;
+		pt->trylock     = rt_packet_trylock;
+		pt->unlock      = rt_packet_unlock;
 
-    /* if protocol is non-zero, register the packet type */
-    if (new_type != 0) {
-	pt->handler     = rt_packet_rcv;
-	pt->err_handler = NULL;
-	pt->trylock     = rt_packet_trylock;
-	pt->unlock      = rt_packet_unlock;
+		ret = rtdev_add_pack(pt);
+	} else
+		ret = 0;
 
-	ret = rtdev_add_pack(pt);
-    } else
-	ret = 0;
+	rtdm_lock_put_irqrestore(&sock->param_lock, context);
 
-    rtdm_lock_put_irqrestore(&sock->param_lock, context);
-
-    return ret;
+	return ret;
 }
 
 
@@ -146,41 +152,52 @@ static int rt_packet_bind(struct rtsocket *sock, const struct sockaddr *addr,
 /***
  *  rt_packet_getsockname
  */
-static int rt_packet_getsockname(struct rtsocket *sock, struct sockaddr *addr,
-				 socklen_t *addrlen)
+static int rt_packet_getsockname(struct rtdm_fd *fd, struct rtsocket *sock,
+				 struct sockaddr *addr, socklen_t *addrlen)
 {
-    struct sockaddr_ll  *sll = (struct sockaddr_ll*)addr;
-    struct rtnet_device *rtdev;
-    rtdm_lockctx_t      context;
+	struct sockaddr_ll  _sll, *sll;
+	struct rtnet_device *rtdev;
+	rtdm_lockctx_t      context;
+	socklen_t _namelen, *namelen;
+	int ret;
 
+	namelen = rtnet_get_arg(fd, &_namelen, addrlen, sizeof(_namelen));
+	if (IS_ERR(namelen))
+		return PTR_ERR(namelen);
 
-    if (*addrlen < sizeof(struct sockaddr_ll))
-	return -EINVAL;
+	if (*namelen < sizeof(struct sockaddr_ll))
+		return -EINVAL;
 
-    rtdm_lock_get_irqsave(&sock->param_lock, context);
+	sll = rtnet_get_arg(fd, &_sll, addr, sizeof(_sll));
+	if (IS_ERR(sll))
+		return PTR_ERR(sll);
+   
+	rtdm_lock_get_irqsave(&sock->param_lock, context);
 
-    sll->sll_family   = AF_PACKET;
-    sll->sll_ifindex  = sock->prot.packet.ifindex;
-    sll->sll_protocol = sock->protocol;
+	sll->sll_family   = AF_PACKET;
+	sll->sll_ifindex  = sock->prot.packet.ifindex;
+	sll->sll_protocol = sock->protocol;
 
-    rtdm_lock_put_irqrestore(&sock->param_lock, context);
+	rtdm_lock_put_irqrestore(&sock->param_lock, context);
 
-    rtdev = rtdev_get_by_index(sll->sll_ifindex);
-    if (rtdev != NULL) {
-	sll->sll_hatype = rtdev->type;
-	sll->sll_halen  = rtdev->addr_len;
+	rtdev = rtdev_get_by_index(sll->sll_ifindex);
+	if (rtdev != NULL) {
+		sll->sll_hatype = rtdev->type;
+		sll->sll_halen  = rtdev->addr_len;
+		memcpy(sll->sll_addr, rtdev->dev_addr, rtdev->addr_len);
+		rtdev_dereference(rtdev);
+	} else {
+		sll->sll_hatype = 0;
+		sll->sll_halen  = 0;
+	}
 
-	memcpy(sll->sll_addr, rtdev->dev_addr, rtdev->addr_len);
+	*namelen = sizeof(struct sockaddr_ll);
 
-	rtdev_dereference(rtdev);
-    } else {
-	sll->sll_hatype = 0;
-	sll->sll_halen  = 0;
-    }
+	ret = rtnet_put_arg(fd, addr, sll, sizeof(*sll));
+	if (ret)
+		return ret;
 
-    *addrlen = sizeof(struct sockaddr_ll);
-
-    return 0;
+	return rtnet_put_arg(fd, addrlen, namelen, sizeof(*namelen));
 }
 
 
@@ -251,28 +268,35 @@ static void rt_packet_close(struct rtdm_fd *fd)
 /***
  *  rt_packet_ioctl
  */
-static int rt_packet_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
+static int rt_packet_ioctl(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 {
-    struct rtsocket *sock = rtdm_fd_to_private(fd);
-    struct _rtdm_setsockaddr_args *setaddr = arg;
-    struct _rtdm_getsockaddr_args *getaddr = arg;
+	struct rtsocket *sock = rtdm_fd_to_private(fd);
+	const struct _rtdm_setsockaddr_args *setaddr;
+	struct _rtdm_setsockaddr_args _setaddr;
+	const struct _rtdm_getsockaddr_args *getaddr;
+	struct _rtdm_getsockaddr_args _getaddr;
 
+	/* fast path for common socket IOCTLs */
+	if (_IOC_TYPE(request) == RTIOC_TYPE_NETWORK)
+		return rt_socket_common_ioctl(fd, request, arg);
 
-    /* fast path for common socket IOCTLs */
-    if (_IOC_TYPE(request) == RTIOC_TYPE_NETWORK)
-	return rt_socket_common_ioctl(fd, request, arg);
-
-    switch (request) {
+	switch (request) {
 	case _RTIOC_BIND:
-	    return rt_packet_bind(sock, setaddr->addr, setaddr->addrlen);
+		setaddr = rtnet_get_arg(fd, &_setaddr, arg, sizeof(_setaddr));
+		if (IS_ERR(setaddr))
+			return PTR_ERR(setaddr);
+		return rt_packet_bind(fd, sock, setaddr->addr, setaddr->addrlen);
 
 	case _RTIOC_GETSOCKNAME:
-	    return rt_packet_getsockname(sock, getaddr->addr,
-					 getaddr->addrlen);
+		getaddr = rtnet_get_arg(fd, &_getaddr, arg, sizeof(_getaddr));
+		if (IS_ERR(getaddr))
+			return PTR_ERR(getaddr);
+		return rt_packet_getsockname(fd, sock, getaddr->addr,
+					     getaddr->addrlen);
 
 	default:
-	    return rt_socket_if_ioctl(fd, request, arg);
-    }
+		return rt_socket_if_ioctl(fd, request, arg);
+	}
 }
 
 
