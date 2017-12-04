@@ -33,6 +33,14 @@ config XENO_DRIVERS_GPIO_SUN8I_H3
 	Suitable for the GPIO controller available from Allwinner's H3
 	SoC, as found on the NanoPI boards.
 
+config XENO_DRIVERS_GPIO_ZYNQ7000
+	depends on ARCH_ZYNQ
+	bool "Support for Zynq7000 GPIOs"
+	help
+
+	Enables support for the GPIO controller available from
+	Xilinx's Zynq7000 SoC.
+
 config XENO_DRIVERS_GPIO_DEBUG
        bool "Enable GPIO core debugging features"
 
