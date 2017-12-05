@@ -63,66 +63,6 @@ int rtipc_put_arg(struct rtdm_fd *fd, void *dst, const void *src, size_t len)
 	return rtdm_copy_to_user(fd, dst, src, len);
 }
 
-int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec **iovp,
-		    const struct user_msghdr *msg,
-		    struct iovec *iov_fast)
-{
-	size_t len = sizeof(struct iovec) * msg->msg_iovlen;
-	struct iovec *iov = iov_fast;
-
-	/*
-	 * If the I/O vector doesn't fit in the fast memory, allocate
-	 * a chunk from the system heap which is large enough to hold
-	 * it.
-	 */
-	if (msg->msg_iovlen > RTIPC_IOV_FASTMAX) {
-		iov = xnmalloc(len);
-		if (iov == NULL)
-			return -ENOMEM;
-	}
-
-	*iovp = iov;
-
-	if (!rtdm_fd_is_user(fd)) {
-		memcpy(iov, msg->msg_iov, len);
-		return 0;
-	}
-
-#ifdef CONFIG_XENO_ARCH_SYS3264
-	if (rtdm_fd_is_compat(fd))
-		return sys32_get_iovec(iov,
-			       (struct compat_iovec __user *)msg->msg_iov,
-			       msg->msg_iovlen);
-#endif
-
-	return rtdm_copy_from_user(fd, iov, msg->msg_iov, len);
-}
-
-int rtipc_put_iovec(struct rtdm_fd *fd, struct iovec *iov,
-		    const struct user_msghdr *msg,
-		    struct iovec *iov_fast)
-{
-	size_t len = sizeof(iov[0]) * msg->msg_iovlen;
-	int ret;
-
-	if (!rtdm_fd_is_user(fd)) {
-		memcpy(msg->msg_iov, iov, len);
-		ret = 0;
-	} else
-#ifdef CONFIG_XENO_ARCH_SYS3264
-		if (rtdm_fd_is_compat(fd))
-			ret = sys32_put_iovec((struct compat_iovec __user *)msg->msg_iov,
-					      iov, msg->msg_iovlen);
-		else
-#endif
-			ret = rtdm_copy_to_user(fd, msg->msg_iov, iov, len);
-
-	if (iov != iov_fast)
-		xnfree(iov);
-
-	return ret;
-}
-
 int rtipc_get_sockaddr(struct rtdm_fd *fd, struct sockaddr_ipc **saddrp,
 		       const void *arg)
 {
@@ -395,22 +335,6 @@ int rtipc_get_length(struct rtdm_fd *fd, size_t *lenp,
 	}
 
 	return rtdm_safe_copy_from_user(fd, lenp, arg, sizeof(*lenp));
-}
-
-ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen)
-{
-	ssize_t len;
-	int nvec;
-
-	/* Return the flattened vector length. */
-	for (len = 0, nvec = 0; nvec < iovlen; nvec++) {
-		ssize_t l = iov[nvec].iov_len;
-		if (l < 0 || len + l < len) /* SuS wants this. */
-			return -EINVAL;
-		len += l;
-	}
-
-	return len;
 }
 
 static int rtipc_socket(struct rtdm_fd *fd, int protocol)

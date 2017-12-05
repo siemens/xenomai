@@ -1339,6 +1339,25 @@ static inline int rtdm_in_rt_context(void)
 	return (ipipe_current_domain != ipipe_root_domain);
 }
 
+#define RTDM_IOV_FASTMAX  16
+
+int rtdm_get_iovec(struct rtdm_fd *fd, struct iovec **iov,
+		   const struct user_msghdr *msg,
+		   struct iovec *iov_fast);
+
+int rtdm_put_iovec(struct rtdm_fd *fd, struct iovec *iov,
+		   const struct user_msghdr *msg,
+		   struct iovec *iov_fast);
+
+static inline
+void rtdm_drop_iovec(struct iovec *iov, struct iovec *iov_fast)
+{
+	if (iov != iov_fast)
+		xnfree(iov);
+}
+
+ssize_t rtdm_get_iov_flatlen(struct iovec *iov, int iovlen);
+
 #endif /* !DOXYGEN_CPP */
 
 #endif /* _COBALT_RTDM_DRIVER_H */

@@ -241,7 +241,7 @@ static ssize_t __iddp_recvmsg(struct rtdm_fd *fd,
 	if (!test_bit(_IDDP_BOUND, &sk->status))
 		return -EAGAIN;
 
-	maxlen = rtipc_get_iov_flatlen(iov, iovlen);
+	maxlen = rtdm_get_iov_flatlen(iov, iovlen);
 	if (maxlen == 0)
 		return 0;
 
@@ -326,7 +326,7 @@ static ssize_t __iddp_recvmsg(struct rtdm_fd *fd,
 static ssize_t iddp_recvmsg(struct rtdm_fd *fd,
 			    struct user_msghdr *msg, int flags)
 {
-	struct iovec iov_fast[RTIPC_IOV_FASTMAX], *iov;
+	struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
 	struct sockaddr_ipc saddr;
 	ssize_t ret;
 
@@ -343,18 +343,18 @@ static ssize_t iddp_recvmsg(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	ret = rtipc_get_iovec(fd, &iov, msg, iov_fast);
+	ret = rtdm_get_iovec(fd, &iov, msg, iov_fast);
 	if (ret)
 		return ret;
 
 	ret = __iddp_recvmsg(fd, iov, msg->msg_iovlen, flags, &saddr);
 	if (ret <= 0) {
-		rtipc_drop_iovec(iov, iov_fast);
+		rtdm_drop_iovec(iov, iov_fast);
 		return ret;
 	}
 
 	/* Copy the updated I/O vector back */
-	if (rtipc_put_iovec(fd, iov, msg, iov_fast))
+	if (rtdm_put_iovec(fd, iov, msg, iov_fast))
 		return -EFAULT;
 
 	/* Copy the source address if required. */
@@ -387,7 +387,7 @@ static ssize_t __iddp_sendmsg(struct rtdm_fd *fd,
 	struct xnbufd bufd;
 	rtdm_lockctx_t s;
 
-	len = rtipc_get_iov_flatlen(iov, iovlen);
+	len = rtdm_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
 		return 0;
 
@@ -470,7 +470,7 @@ static ssize_t iddp_sendmsg(struct rtdm_fd *fd,
 			    const struct user_msghdr *msg, int flags)
 {
 	struct rtipc_private *priv = rtdm_fd_to_private(fd);
-	struct iovec iov_fast[RTIPC_IOV_FASTMAX], *iov;
+	struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
 	struct iddp_socket *sk = priv->state;
 	struct sockaddr_ipc daddr;
 	ssize_t ret;
@@ -501,18 +501,18 @@ static ssize_t iddp_sendmsg(struct rtdm_fd *fd,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	ret = rtipc_get_iovec(fd, &iov, msg, iov_fast);
+	ret = rtdm_get_iovec(fd, &iov, msg, iov_fast);
 	if (ret)
 		return ret;
 
 	ret = __iddp_sendmsg(fd, iov, msg->msg_iovlen, flags, &daddr);
 	if (ret <= 0) {
-		rtipc_drop_iovec(iov, iov_fast);
+		rtdm_drop_iovec(iov, iov_fast);
 		return ret;
 	}
 
 	/* Copy updated I/O vector back */
-	return rtipc_put_iovec(fd, iov, msg, iov_fast) ?: ret;
+	return rtdm_put_iovec(fd, iov, msg, iov_fast) ?: ret;
 }
 
 static ssize_t iddp_write(struct rtdm_fd *fd,

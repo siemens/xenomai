@@ -28,8 +28,6 @@
 #include <rtdm/compat.h>
 #include <rtdm/driver.h>
 
-#define RTIPC_IOV_FASTMAX  16
-
 struct rtipc_protocol;
 
 struct rtipc_private {
@@ -85,21 +83,6 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 	tv->tv_usec = nsecs / 1000;
 }
 
-int rtipc_get_iovec(struct rtdm_fd *fd, struct iovec **iov,
-		    const struct user_msghdr *msg,
-		    struct iovec *iov_fast);
-
-int rtipc_put_iovec(struct rtdm_fd *fd, struct iovec *iov,
-		    const struct user_msghdr *msg,
-		    struct iovec *iov_fast);
-
-static inline
-void rtipc_drop_iovec(struct iovec *iov, struct iovec *iov_fast)
-{
-	if (iov != iov_fast)
-		xnfree(iov);
-}
-
 int rtipc_get_sockaddr(struct rtdm_fd *fd,
 		       struct sockaddr_ipc **saddrp,
 		       const void *arg);
@@ -132,8 +115,6 @@ int rtipc_get_arg(struct rtdm_fd *fd, void *dst, const void *src,
 
 int rtipc_put_arg(struct rtdm_fd *fd, void *dst, const void *src,
 		  size_t len);
-
-ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen);
 
 extern struct rtipc_protocol xddp_proto_driver;
 
