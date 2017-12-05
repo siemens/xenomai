@@ -420,43 +420,70 @@ static ssize_t
 rt_packet_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int msg_flags)
 {
     struct rtsocket     *sock = rtdm_fd_to_private(fd);
-    size_t              len   = rt_iovec_len(msg->msg_iov, msg->msg_iovlen);
-    struct sockaddr_ll  *sll  = (struct sockaddr_ll*)msg->msg_name;
+    size_t              len;
+    struct sockaddr_ll  _sll, *sll;
     struct rtnet_device *rtdev;
     struct rtskb        *rtskb;
     unsigned short      proto;
     unsigned char       *addr;
     int                 ifindex;
-    int                 ret = 0;
-
+    ssize_t             ret;
+    struct user_msghdr _msg;
+    struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
 
     if (msg_flags & MSG_OOB)    /* Mirror BSD error message compatibility */
 	return -EOPNOTSUPP;
     if (msg_flags & ~MSG_DONTWAIT)
 	return -EINVAL;
 
-    if (sll == NULL) {
+    msg = rtnet_get_arg(fd, &_msg, msg, sizeof(*msg));
+    if (IS_ERR(msg))
+	    return PTR_ERR(msg);
+
+    if (msg->msg_iovlen < 0)
+	    return -EINVAL;
+
+    if (msg->msg_iovlen == 0)
+	    return 0;
+    
+    ret = rtdm_get_iovec(fd, &iov, msg, iov_fast);
+    if (ret)
+	    return ret;
+
+    if (msg->msg_name == NULL) {
 	/* Note: We do not care about races with rt_packet_bind here -
 	   the user has to do so. */
 	ifindex = sock->prot.packet.ifindex;
 	proto   = sock->prot.packet.packet_type.type;
 	addr    = NULL;
+	sll = NULL;
     } else {
-	if ((msg->msg_namelen < sizeof(struct sockaddr_ll)) ||
-	    (msg->msg_namelen <
-		(sll->sll_halen + offsetof(struct sockaddr_ll, sll_addr))) ||
-	    ((sll->sll_family != AF_PACKET) &&
-	    (sll->sll_family != AF_UNSPEC)))
-	return -EINVAL;
+	    sll = rtnet_get_arg(fd, &_sll, msg->msg_name, sizeof(_sll));
+	    if (IS_ERR(sll)) {
+		    ret = PTR_ERR(sll);
+		    goto abort;
+	    }
 
-	ifindex = sll->sll_ifindex;
-	proto   = sll->sll_protocol;
-	addr    = sll->sll_addr;
+	    if ((msg->msg_namelen < sizeof(struct sockaddr_ll)) ||
+		(msg->msg_namelen <
+		 (sll->sll_halen + offsetof(struct sockaddr_ll, sll_addr))) ||
+		((sll->sll_family != AF_PACKET) &&
+		 (sll->sll_family != AF_UNSPEC))) {
+		    ret = -EINVAL;
+		    goto abort;
+	    }
+
+	    ifindex = sll->sll_ifindex;
+	    proto   = sll->sll_protocol;
+	    addr    = sll->sll_addr;
     }
 
-    if ((rtdev = rtdev_get_by_index(ifindex)) == NULL)
-	return -ENODEV;
+    if ((rtdev = rtdev_get_by_index(ifindex)) == NULL) {
+	    ret = -ENODEV;
+	    goto abort;
+    }
 
+    len = rt_iovec_len(iov, msg->msg_iovlen);
     rtskb = alloc_rtskb(rtdev->hard_header_len + len, &sock->skb_pool);
     if (rtskb == NULL) {
 	ret = -ENOBUFS;
@@ -496,7 +523,7 @@ rt_packet_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int msg_fla
 	    goto err;
     }
 
-    rt_memcpy_fromkerneliovec(rtskb_put(rtskb, len), msg->msg_iov, len);
+    ret = rtnet_read_from_iov(fd, iov, msg->msg_iovlen, rtskb_put(rtskb, len), len);
 
     if ((rtdev->flags & IFF_UP) != 0) {
 	if ((ret = rtdev_xmit(rtskb)) == 0)
@@ -508,8 +535,10 @@ rt_packet_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int msg_fla
 
  out:
     rtdev_dereference(rtdev);
-    return ret;
+ abort:
+    rtdm_drop_iovec(iov, iov_fast);
 
+    return ret;
  err:
     kfree_rtskb(rtskb);
     goto out;
