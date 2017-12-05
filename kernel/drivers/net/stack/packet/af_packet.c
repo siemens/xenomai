@@ -305,17 +305,32 @@ static int rt_packet_ioctl(struct rtdm_fd *fd, unsigned int request, void __user
  *  rt_packet_recvmsg
  */
 static ssize_t
-rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int msg_flags)
+rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_flags)
 {
     struct rtsocket     *sock = rtdm_fd_to_private(fd);
-    size_t              len   = rt_iovec_len(msg->msg_iov, msg->msg_iovlen);
+    ssize_t             len;
     size_t              copy_len;
-    size_t              real_len;
     struct rtskb        *rtskb;
-    struct sockaddr_ll  *sll;
-    int                 ret;
+    struct sockaddr_ll  sll;
+    int			ret, flags;
     nanosecs_rel_t      timeout = sock->timeout;
+    struct user_msghdr _msg, *msg;
+    socklen_t namelen;
+    struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
 
+    msg = rtnet_get_arg(fd, &_msg, u_msg, sizeof(_msg));
+    if (IS_ERR(msg))
+	    return PTR_ERR(msg);
+   
+    if (msg->msg_iovlen < 0)
+	    return -EINVAL;
+
+    if (msg->msg_iovlen == 0)
+	    return 0;
+
+    ret = rtdm_get_iovec(fd, &iov, msg, iov_fast);
+    if (ret)
+	    return ret;
 
     /* non-blocking receive? */
     if (msg_flags & MSG_DONTWAIT)
@@ -324,50 +339,64 @@ rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int msg_flags)
     ret = rtdm_sem_timeddown(&sock->pending_sem, timeout, NULL);
     if (unlikely(ret < 0))
 	switch (ret) {
+	    default:
+		ret = -EBADF;   /* socket has been closed */
 	    case -EWOULDBLOCK:
 	    case -ETIMEDOUT:
 	    case -EINTR:
+		rtdm_drop_iovec(iov, iov_fast);
 		return ret;
-
-	    default:
-		return -EBADF;   /* socket has been closed */
 	}
 
     rtskb = rtskb_dequeue_chain(&sock->incoming);
     RTNET_ASSERT(rtskb != NULL, return -EFAULT;);
 
-    sll = msg->msg_name;
-
     /* copy the address */
-    msg->msg_namelen = sizeof(*sll);
-    if (sll != NULL) {
-	struct rtnet_device *rtdev = rtskb->rtdev;
+    namelen = sizeof(sll);
+    ret = rtnet_put_arg(fd, &msg->msg_namelen, &namelen, sizeof(namelen));
+    if (ret)
+	    goto fail;
 
-	sll->sll_family   = AF_PACKET;
-	sll->sll_hatype   = rtdev->type;
-	sll->sll_protocol = rtskb->protocol;
-	sll->sll_pkttype  = rtskb->pkt_type;
-	sll->sll_ifindex  = rtdev->ifindex;
+    /* copy the address if required. */
+    if (msg->msg_name) {
+	struct rtnet_device *rtdev = rtskb->rtdev;
+	memset(&sll, 0, sizeof(sll));
+	sll.sll_family   = AF_PACKET;
+	sll.sll_hatype   = rtdev->type;
+	sll.sll_protocol = rtskb->protocol;
+	sll.sll_pkttype  = rtskb->pkt_type;
+	sll.sll_ifindex  = rtdev->ifindex;
 
 	/* Ethernet specific - we rather need some parse handler here */
-	memcpy(sll->sll_addr, rtskb->mac.ethernet->h_source, ETH_ALEN);
-	sll->sll_halen = ETH_ALEN;
+	memcpy(sll.sll_addr, rtskb->mac.ethernet->h_source, ETH_ALEN);
+	sll.sll_halen = ETH_ALEN;
+	ret = rtnet_put_arg(fd, msg->msg_name, &sll, sizeof(sll));
+	if (ret)
+		goto fail;
     }
 
     /* Include the header in raw delivery */
     if (rtdm_fd_to_context(fd)->device->driver->socket_type != SOCK_DGRAM)
 	rtskb_push(rtskb, rtskb->data - rtskb->mac.raw);
 
-    copy_len = real_len = rtskb->len;
-
     /* The data must not be longer than the available buffer size */
+    copy_len = rtskb->len;
+    len = rt_iovec_len(iov, msg->msg_iovlen);
+    if (len < 0) {
+	    copy_len = len;
+	    goto out;
+    }
+    
     if (copy_len > len) {
 	copy_len = len;
-	msg->msg_flags |= MSG_TRUNC;
+	flags = msg->msg_flags | MSG_TRUNC;
+	ret = rtnet_put_arg(fd, &u_msg->msg_flags, &flags, sizeof(flags));
+	if (ret)
+		goto fail;
     }
 
-    rt_memcpy_tokerneliovec(msg->msg_iov, rtskb->data, copy_len);
-
+    copy_len = rtnet_write_to_iov(fd, iov, msg->msg_iovlen, rtskb->data, copy_len);
+out:
     if ((msg_flags & MSG_PEEK) == 0) {
 	kfree_rtskb(rtskb);
     } else {
@@ -375,7 +404,12 @@ rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int msg_flags)
 	rtdm_sem_up(&sock->pending_sem);
     }
 
-    return real_len;
+    rtdm_drop_iovec(iov, iov_fast);
+
+    return copy_len;
+fail:
+    copy_len = ret;
+    goto out;
 }
 
 
