@@ -8,7 +8,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -35,8 +35,9 @@ struct rtdm_gpio_pin {
 
 struct rtdm_gpio_chan {
 	int requested : 1,
-	    has_direction : 1,
-	    is_output : 1 ;
+		has_direction : 1,
+		is_output : 1,
+		is_interrupt : 1;
 };
 
 static int gpio_pin_interrupt(rtdm_irq_t *irqh)
@@ -60,11 +61,15 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 	if (trigger & ~GPIO_TRIGGER_MASK)
 		return -EINVAL;
 
-	ret = gpio_request(gpio, pin->name);
-	if (ret) {
-		if (ret != -EPROBE_DEFER)
-			printk(XENO_ERR "cannot request GPIO%d\n", gpio);
-		return ret;
+	if (!chan->requested) {
+		ret = gpio_request(gpio, pin->name);
+		if (ret) {
+			if (ret != -EPROBE_DEFER)
+				printk(XENO_ERR 
+				       "can not request GPIO%d\n", gpio);
+			return ret;
+		}
+		chan->requested = true;
 	}
 
 	ret = gpio_direction_input(gpio);
@@ -99,13 +104,14 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 		goto fail;
 	}
 
-	chan->requested = true;
 
 	rtdm_irq_enable(&pin->irqh);
+	chan->is_interrupt = true;
 
 	return 0;
 fail:
 	gpio_free(gpio);
+	chan->requested = false;
 
 	return ret;
 }
@@ -116,6 +122,7 @@ static void release_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 	rtdm_irq_free(&pin->irqh);
 	gpio_free(gpio);
 	chan->requested = false;
+	chan->is_interrupt = false;
 }
 
 static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
@@ -146,16 +153,31 @@ static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
 			chan->has_direction = true;
 		break;
 	case GPIO_RTIOC_IRQEN:
-		if (chan->requested)
+		if (chan->is_interrupt) {
 			return -EBUSY;
+		}
 		ret = rtdm_safe_copy_from_user(fd, &trigger,
-				       arg, sizeof(trigger));
+					       arg, sizeof(trigger));
 		if (ret)
 			return ret;
 		ret = request_gpio_irq(gpio, pin, chan, trigger);
 		break;
 	case GPIO_RTIOC_IRQDIS:
-		release_gpio_irq(gpio, pin, chan);
+		if (chan->is_interrupt) {
+			release_gpio_irq(gpio, pin, chan);
+			chan->requested = false;
+			chan->is_interrupt = false;
+		}
+		break;
+	case GPIO_RTIOC_REQS:
+		ret = gpio_request(gpio, pin->name);
+		if (ret)
+			return ret;
+		else
+			chan->requested = true;
+		break;
+	case GPIO_RTIOC_RELS:
+		gpio_free(gpio);
 		chan->requested = false;
 		break;
 	default:
@@ -239,6 +261,26 @@ static int gpio_pin_select(struct rtdm_fd *fd, struct xnselector *selector,
 	pin = container_of(dev, struct rtdm_gpio_pin, dev);
 
 	return rtdm_event_select(&pin->event, selector, type, index);
+}
+
+int gpio_pin_open(struct rtdm_fd *fd, int oflags)
+{
+	struct rtdm_gpio_chan *chan = rtdm_fd_to_private(fd);
+	struct rtdm_device *dev = rtdm_fd_device(fd);
+	unsigned int gpio = rtdm_fd_minor(fd);
+	int ret = 0;
+	struct rtdm_gpio_pin *pin;
+
+	pin = container_of(dev, struct rtdm_gpio_pin, dev);
+	ret = gpio_request(gpio, pin->name);
+	if (ret) {
+		printk(XENO_ERR "failed to request pin %d : %d\n", gpio, ret);
+		return ret;
+	} else {
+		chan->requested = true;
+	}
+
+	return 0;
 }
 
 static void gpio_pin_close(struct rtdm_fd *fd)
@@ -361,6 +403,7 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 	rgc->driver.device_count = gc->ngpio;
 	rgc->driver.context_size = sizeof(struct rtdm_gpio_chan);
 	rgc->driver.ops = (struct rtdm_fd_ops){
+		.open		=	gpio_pin_open,
 		.close		=	gpio_pin_close,
 		.ioctl_nrt	=	gpio_pin_ioctl_nrt,
 		.read_rt	=	gpio_pin_read_rt,
