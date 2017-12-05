@@ -25,6 +25,8 @@
 
 #include <linux/uio.h>
 
+struct user_msghdr;
+struct rtdm_fd;
 
 /***
  *  rt_iovec_len
@@ -44,7 +46,13 @@ static inline size_t rt_iovec_len(const struct iovec *iov, int iovlen)
 extern void rt_memcpy_tokerneliovec(struct iovec *iov, unsigned char *kdata, int len);
 extern void rt_memcpy_fromkerneliovec(unsigned char *kdata, struct iovec *iov, int len);
 
+ssize_t rtnet_write_to_iov(struct rtdm_fd *fd,
+			   struct iovec *iov, int iovlen,
+			   const void *data, size_t len);
 
+ssize_t rtnet_read_from_iov(struct rtdm_fd *fd,
+			    struct iovec *iov, int iovlen,
+			    void *data, size_t len);
 #endif  /* __KERNEL__ */
 
 #endif  /* __RTNET_IOVEC_H_ */
