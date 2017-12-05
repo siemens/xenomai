@@ -351,12 +351,6 @@ rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_flags)
     rtskb = rtskb_dequeue_chain(&sock->incoming);
     RTNET_ASSERT(rtskb != NULL, return -EFAULT;);
 
-    /* copy the address */
-    namelen = sizeof(sll);
-    ret = rtnet_put_arg(fd, &msg->msg_namelen, &namelen, sizeof(namelen));
-    if (ret)
-	    goto fail;
-
     /* copy the address if required. */
     if (msg->msg_name) {
 	struct rtnet_device *rtdev = rtskb->rtdev;
@@ -371,6 +365,11 @@ rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_flags)
 	memcpy(sll.sll_addr, rtskb->mac.ethernet->h_source, ETH_ALEN);
 	sll.sll_halen = ETH_ALEN;
 	ret = rtnet_put_arg(fd, msg->msg_name, &sll, sizeof(sll));
+	if (ret)
+		goto fail;
+
+	namelen = sizeof(sll);
+	ret = rtnet_put_arg(fd, &u_msg->msg_namelen, &namelen, sizeof(namelen));
 	if (ret)
 		goto fail;
     }
