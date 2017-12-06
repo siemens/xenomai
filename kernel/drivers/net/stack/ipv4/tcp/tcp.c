@@ -2069,20 +2069,43 @@ static ssize_t rt_tcp_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
  */
 static ssize_t rt_tcp_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int msg_flags)
 {
-    size_t len;
-    void *buf;
+	struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
+	struct user_msghdr _msg;
+	ssize_t ret;
+	size_t len;
+	void *buf;
 
-    if (msg_flags)
-	return -EOPNOTSUPP;
+	if (msg_flags)
+		return -EOPNOTSUPP;
 
-    /* loop over all vectors to be implemented */
-    if (msg->msg_iovlen != 1)
-	return -EOPNOTSUPP;
+	msg = rtnet_get_arg(fd, &_msg, msg, sizeof(*msg));
+	if (IS_ERR(msg))
+		return PTR_ERR(msg);
 
-    len = msg->msg_iov[0].iov_len;
-    buf = msg->msg_iov[0].iov_base;
+	/* loop over all vectors to be implemented */
+	if (msg->msg_iovlen != 1)
+		return -EOPNOTSUPP;
 
-    return rt_tcp_read(fd, buf, len);
+	ret = rtdm_get_iovec(fd, &iov, msg, iov_fast);
+	if (ret)
+		return ret;
+
+	len = iov[0].iov_len;
+	if (len > 0) {
+		buf = xnmalloc(len);
+		if (buf == NULL) {
+			ret = -ENOMEM;
+			goto out;
+		}
+		ret = rtdm_copy_from_user(fd, buf, iov[0].iov_base, len);
+		if (!ret)
+			ret = rt_tcp_read(fd, buf, len);
+		xnfree(buf);
+	}
+out:
+	rtdm_drop_iovec(iov, iov_fast);
+
+	return ret;
 }
 
 /***
@@ -2091,20 +2114,43 @@ static ssize_t rt_tcp_recvmsg(struct rtdm_fd *fd, struct user_msghdr *msg, int m
 static ssize_t rt_tcp_sendmsg(struct rtdm_fd *fd,
 			      const struct user_msghdr *msg, int msg_flags)
 {
-    size_t len;
-    void *buf;
+	struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
+	struct user_msghdr _msg;
+	ssize_t ret;
+	size_t len;
+	void *buf;
 
-    if (msg_flags)
-	return -EOPNOTSUPP;
+	if (msg_flags)
+		return -EOPNOTSUPP;
 
-    /* loop over all vectors to be implemented */
-    if (msg->msg_iovlen != 1)
-	return -EOPNOTSUPP;
+	msg = rtnet_get_arg(fd, &_msg, msg, sizeof(*msg));
+	if (IS_ERR(msg))
+		return PTR_ERR(msg);
 
-    len = msg->msg_iov[0].iov_len;
-    buf = msg->msg_iov[0].iov_base;
+	/* loop over all vectors to be implemented */
+	if (msg->msg_iovlen != 1)
+		return -EOPNOTSUPP;
 
-    return rt_tcp_write(fd, (const void*)buf, len);
+	ret = rtdm_get_iovec(fd, &iov, msg, iov_fast);
+	if (ret)
+		return ret;
+
+	len = iov[0].iov_len;
+	if (len > 0) {
+		buf = xnmalloc(len);
+		if (buf == NULL) {
+			ret = -ENOMEM;
+			goto out;
+		}
+		ret = rtdm_copy_from_user(fd, buf, iov[0].iov_base, len);
+		if (!ret)
+			ret = rt_tcp_write(fd, buf, len);
+		xnfree(buf);
+	}
+out:
+	rtdm_drop_iovec(iov, iov_fast);
+
+	return ret;
 }
 
 /***
