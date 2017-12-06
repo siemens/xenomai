@@ -534,6 +534,7 @@ struct udpfakehdr
     struct udphdr uh;
     u32 daddr;
     u32 saddr;
+    struct rtdm_fd *fd;
     struct iovec *iov;
     int iovlen;
     u32 wcheck;
@@ -548,35 +549,36 @@ static int rt_udp_getfrag(const void *p, unsigned char *to,
                           unsigned int offset, unsigned int fraglen)
 {
     struct udpfakehdr *ufh = (struct udpfakehdr *)p;
-    int i;
+    int i, ret;
 
 
     // We should optimize this function a bit (copy+csum...)!
-    if (offset==0) {
-        /* Checksum of the complete data part of the UDP message: */
-        for (i = 0; i < ufh->iovlen; i++) {
+    if (offset)
+	    return rtnet_read_from_iov(ufh->fd, ufh->iov, ufh->iovlen, to, fraglen);
+
+    /* Checksum of the complete data part of the UDP message: */
+    for (i = 0; i < ufh->iovlen; i++) {
             ufh->wcheck = csum_partial(ufh->iov[i].iov_base, ufh->iov[i].iov_len,
                                        ufh->wcheck);
-        }
-
-        rt_memcpy_fromkerneliovec(to + sizeof(struct udphdr), ufh->iov,
-                                  fraglen - sizeof(struct udphdr));
-
-        /* Checksum of the udp header: */
-        ufh->wcheck = csum_partial((unsigned char *)ufh,
-                                   sizeof(struct udphdr), ufh->wcheck);
-
-        ufh->uh.check = csum_tcpudp_magic(ufh->saddr, ufh->daddr, ntohs(ufh->uh.len),
-                                          IPPROTO_UDP, ufh->wcheck);
-
-        if (ufh->uh.check == 0)
-            ufh->uh.check = -1;
-
-        memcpy(to, ufh, sizeof(struct udphdr));
-        return 0;
     }
 
-    rt_memcpy_fromkerneliovec(to, ufh->iov, fraglen);
+    ret = rtnet_read_from_iov(ufh->fd, ufh->iov, ufh->iovlen,
+			      to + sizeof(struct udphdr),
+			      fraglen - sizeof(struct udphdr));
+    if (ret)
+	    return ret;
+
+    /* Checksum of the udp header: */
+    ufh->wcheck = csum_partial((unsigned char *)ufh,
+			       sizeof(struct udphdr), ufh->wcheck);
+    
+    ufh->uh.check = csum_tcpudp_magic(ufh->saddr, ufh->daddr, ntohs(ufh->uh.len),
+				      IPPROTO_UDP, ufh->wcheck);
+
+    if (ufh->uh.check == 0)
+            ufh->uh.check = -1;
+
+    memcpy(to, ufh, sizeof(struct udphdr));
 
     return 0;
 }
@@ -589,9 +591,9 @@ static int rt_udp_getfrag(const void *p, unsigned char *to,
 ssize_t rt_udp_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int msg_flags)
 {
     struct rtsocket     *sock = rtdm_fd_to_private(fd);
-    size_t              len   = rt_iovec_len(msg->msg_iov, msg->msg_iovlen);
-    int                 ulen  = len + sizeof(struct udphdr);
-    struct sockaddr_in  *usin;
+    size_t              len;
+    int                 ulen;
+    struct sockaddr_in  _sin, *sin;
     struct udpfakehdr   ufh;
     struct dest_route   rt;
     u32                 saddr;
@@ -599,10 +601,8 @@ ssize_t rt_udp_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int ms
     u16                 dport;
     int                 err;
     rtdm_lockctx_t      context;
-
-
-    if ((len < 0) || (len > 0xFFFF-sizeof(struct iphdr)-sizeof(struct udphdr)))
-        return -EMSGSIZE;
+    struct user_msghdr _msg;
+    struct iovec iov_fast[RTDM_IOV_FASTMAX], *iov;
 
     if (msg_flags & MSG_OOB)   /* Mirror BSD error message compatibility */
         return -EOPNOTSUPP;
@@ -610,39 +610,70 @@ ssize_t rt_udp_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int ms
     if (msg_flags & ~(MSG_DONTROUTE|MSG_DONTWAIT) )
         return -EINVAL;
 
-    if ((msg->msg_name) && (msg->msg_namelen==sizeof(struct sockaddr_in))) {
-        usin = (struct sockaddr_in*) msg->msg_name;
+    msg = rtnet_get_arg(fd, &_msg, msg, sizeof(*msg));
+    if (IS_ERR(msg))
+	    return PTR_ERR(msg);
 
-        if ((usin->sin_family != AF_INET) && (usin->sin_family != AF_UNSPEC))
-            return -EINVAL;
+    if (msg->msg_iovlen < 0)
+	    return -EINVAL;
 
-        daddr = usin->sin_addr.s_addr;
-        dport = usin->sin_port;
+    if (msg->msg_iovlen == 0)
+	    return 0;
+    
+    err = rtdm_get_iovec(fd, &iov, msg, iov_fast);
+    if (err)
+	    return err;
 
-        rtdm_lock_get_irqsave(&udp_socket_base_lock, context);
-    } else {
-        rtdm_lock_get_irqsave(&udp_socket_base_lock, context);
-
-        if (sock->prot.inet.state != TCP_ESTABLISHED) {
-	    rtdm_lock_put_irqrestore(&udp_socket_base_lock, context);
-            return -ENOTCONN;
-	}
-
-        daddr = sock->prot.inet.daddr;
-        dport = sock->prot.inet.dport;
+    len = rt_iovec_len(iov, msg->msg_iovlen);
+    if ((len < 0) || (len > 0xFFFF-sizeof(struct iphdr)-sizeof(struct udphdr))) {
+	    err = -EMSGSIZE;
+	    goto out;
     }
+
+    ulen = len + sizeof(struct udphdr);
+
+    if (msg->msg_name && msg->msg_namelen == sizeof(*sin)) {
+	    sin = rtnet_get_arg(fd, &_sin, msg->msg_name, sizeof(_sin));
+	    if (IS_ERR(sin)) {
+		    err = PTR_ERR(sin);
+		    goto out;
+	    }
+
+	    if (sin->sin_family != AF_INET && sin->sin_family != AF_UNSPEC) {
+		    err = -EINVAL;
+		    goto out;
+	    }
+
+	    daddr = sin->sin_addr.s_addr;
+	    dport = sin->sin_port;
+	    rtdm_lock_get_irqsave(&udp_socket_base_lock, context);
+    } else {
+	    rtdm_lock_get_irqsave(&udp_socket_base_lock, context);
+
+	    if (sock->prot.inet.state != TCP_ESTABLISHED) {
+		    rtdm_lock_put_irqrestore(&udp_socket_base_lock, context);
+		    err = -ENOTCONN;
+		    goto out;
+	    }
+
+	    daddr = sock->prot.inet.daddr;
+	    dport = sock->prot.inet.dport;
+    }
+    
     saddr         = sock->prot.inet.saddr;
     ufh.uh.source = sock->prot.inet.sport;
 
     rtdm_lock_put_irqrestore(&udp_socket_base_lock, context);
 
-    if ((daddr | dport) == 0)
-        return -EINVAL;
+    if ((daddr | dport) == 0) {
+	    err = -EINVAL;
+	    goto out;
+    }
 
     /* get output route */
     err = rt_ip_route_output(&rt, daddr, saddr);
     if (err)
-        return err;
+	    goto out;
 
     /* we found a route, remember the routing dest-addr could be the netmask */
     ufh.saddr     = saddr != INADDR_ANY ? saddr : rt.rtdev->local_ip;
@@ -650,18 +681,19 @@ ssize_t rt_udp_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int ms
     ufh.uh.dest   = dport;
     ufh.uh.len    = htons(ulen);
     ufh.uh.check  = 0;
+    ufh.fd        = fd;
     ufh.iov       = msg->msg_iov;
     ufh.iovlen    = msg->msg_iovlen;
     ufh.wcheck    = 0;
 
     err = rt_ip_build_xmit(sock, rt_udp_getfrag, &ufh, ulen, &rt, msg_flags);
 
+    /* Drop the reference obtained in rt_ip_route_output() */
     rtdev_dereference(rt.rtdev);
+out:
+    rtdm_drop_iovec(iov, iov_fast);
 
-    if (!err)
-        return len;
-    else
-        return err;
+    return err ?: len;
 }
 
 
