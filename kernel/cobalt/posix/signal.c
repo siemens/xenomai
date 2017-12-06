@@ -339,16 +339,11 @@ static int signal_put_siginfo(void __user *u_si, const struct siginfo *si,
 			      int overrun)
 {
 	struct siginfo __user *u_p = u_si;
-	int code, ret;
-
-	/* Translate kernel codes for userland. */
-	code = si->si_code;
-	if (code & __SI_MASK)
-		code |= __SI_MASK;
+	int ret;
 
 	ret = __xn_put_user(si->si_signo, &u_p->si_signo);
 	ret |= __xn_put_user(si->si_errno, &u_p->si_errno);
-	ret |= __xn_put_user(code, &u_p->si_code);
+	ret |= __xn_put_user(si->si_code, &u_p->si_code);
 
 	/*
 	 * Copy the generic/standard siginfo bits to userland.
