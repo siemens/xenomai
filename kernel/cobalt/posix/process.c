@@ -236,7 +236,7 @@ static inline char *get_exe_path(struct task_struct *p)
 	 * which is a heavyweight operation anyway, let's pick the
 	 * memory from the page allocator.
 	 */
-	buf = (char *)__get_free_page(GFP_TEMPORARY);
+	buf = (char *)__get_free_page(GFP_KERNEL);
 	if (buf == NULL)
 		return ERR_PTR(-ENOMEM);
 

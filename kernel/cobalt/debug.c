@@ -229,7 +229,7 @@ void xndebug_trace_relax(int nr, unsigned long *backtrace,
 	 * offsets.
 	 */
 
-	tmp = (char *)__get_free_page(GFP_TEMPORARY);
+	tmp = (char *)__get_free_page(GFP_KERNEL);
 	if (tmp == NULL)
 		/*
 		 * The situation looks really bad, but we can't do
