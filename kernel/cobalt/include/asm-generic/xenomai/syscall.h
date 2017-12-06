@@ -36,10 +36,10 @@
 	__xn_reg_arg4(regs),	\
 	__xn_reg_arg5(regs)
 
-#define __xn_copy_from_user(dstP, srcP, n)	__copy_from_user_inatomic(dstP, srcP, n)
-#define __xn_copy_to_user(dstP, srcP, n)	__copy_to_user_inatomic(dstP, srcP, n)
-#define __xn_put_user(src, dstP)		__put_user_inatomic(src, dstP)
-#define __xn_get_user(dst, srcP)		__get_user_inatomic(dst, srcP)
+#define __xn_copy_from_user(dstP, srcP, n)	raw_copy_from_user(dstP, srcP, n)
+#define __xn_copy_to_user(dstP, srcP, n)	raw_copy_to_user(dstP, srcP, n)
+#define __xn_put_user(src, dstP)		__put_user(src, dstP)
+#define __xn_get_user(dst, srcP)		__get_user(dst, srcP)
 #define __xn_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
 static inline int cobalt_copy_from_user(void *dst, const void __user *src,

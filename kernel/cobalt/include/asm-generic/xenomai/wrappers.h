@@ -38,6 +38,13 @@
  *   symbol, so that obsolete wrappers can be spotted.
  */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,11,0)
+#define raw_copy_to_user(__to, __from, __n)	__copy_to_user_inatomic(__to, __from, __n)
+#define raw_copy_from_user(__to, __from, __n)	__copy_from_user_inatomic(__to, __from, __n)
+#define raw_put_user(__from, __to)		__put_user_inatomic(__from, __to)
+#define raw_get_user(__to, __from)		__get_user_inatomic(__to, __from)
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
 #define in_ia32_syscall() (current_thread_info()->status & TS_COMPAT)
 #endif
