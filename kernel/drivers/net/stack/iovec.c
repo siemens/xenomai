@@ -29,52 +29,6 @@
 #include <rtnet_iovec.h>
 #include <rtnet_socket.h>
 
-
-/***
- *  rt_memcpy_tokerneliovec
- */
-void rt_memcpy_tokerneliovec(struct iovec *iov, unsigned char *kdata, int len)
-{
-    while (len > 0)
-    {
-        if (iov->iov_len)
-        {
-            int copy = min_t(unsigned int, iov->iov_len, len);
-
-            memcpy(iov->iov_base, kdata, copy);
-            kdata+=copy;
-            len-=copy;
-            iov->iov_len-=copy;
-            iov->iov_base+=copy;
-        }
-        iov++;
-    }
-}
-EXPORT_SYMBOL_GPL(rt_memcpy_tokerneliovec);
-
-
-/***
- *  rt_memcpy_fromkerneliovec
- */
-void rt_memcpy_fromkerneliovec(unsigned char *kdata, struct iovec *iov,int len)
-{
-    while (len > 0)
-    {
-        if (iov->iov_len)
-        {
-            int copy=min_t(unsigned int, len, iov->iov_len);
-
-            memcpy(kdata, iov->iov_base, copy);
-            len-=copy;
-            kdata+=copy;
-            iov->iov_base+=copy;
-            iov->iov_len-=copy;
-        }
-        iov++;
-    }
-}
-EXPORT_SYMBOL_GPL(rt_memcpy_fromkerneliovec);
-
 ssize_t rtnet_write_to_iov(struct rtdm_fd *fd,
 			   struct iovec *iov, int iovlen,
 			   const void *data, size_t len)

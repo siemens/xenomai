@@ -28,24 +28,6 @@
 struct user_msghdr;
 struct rtdm_fd;
 
-/***
- *  rt_iovec_len
- */
-static inline size_t rt_iovec_len(const struct iovec *iov, int iovlen)
-{
-    int i;
-    size_t len = 0;
-
-    for (i = 0; i < iovlen; i++)
-        len += iov[i].iov_len;
-
-    return len;
-}
-
-
-extern void rt_memcpy_tokerneliovec(struct iovec *iov, unsigned char *kdata, int len);
-extern void rt_memcpy_fromkerneliovec(unsigned char *kdata, struct iovec *iov, int len);
-
 ssize_t rtnet_write_to_iov(struct rtdm_fd *fd,
 			   struct iovec *iov, int iovlen,
 			   const void *data, size_t len);
