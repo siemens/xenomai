@@ -380,7 +380,7 @@ rt_packet_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_flags)
 
     /* The data must not be longer than the available buffer size */
     copy_len = rtskb->len;
-    len = rt_iovec_len(iov, msg->msg_iovlen);
+    len = rtdm_get_iov_flatlen(iov, msg->msg_iovlen);
     if (len < 0) {
 	    copy_len = len;
 	    goto out;
@@ -483,7 +483,7 @@ rt_packet_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int msg_fla
 	    goto abort;
     }
 
-    len = rt_iovec_len(iov, msg->msg_iovlen);
+    len = rtdm_get_iov_flatlen(iov, msg->msg_iovlen);
     rtskb = alloc_rtskb(rtdev->hard_header_len + len, &sock->skb_pool);
     if (rtskb == NULL) {
 	ret = -ENOBUFS;

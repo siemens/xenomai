@@ -473,7 +473,7 @@ ssize_t rt_udp_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_fl
     __rtskb_pull(skb, sizeof(struct udphdr));
 
     flags = msg->msg_flags & ~MSG_TRUNC;
-    len = rt_iovec_len(iov, msg->msg_iovlen);
+    len = rtdm_get_iov_flatlen(iov, msg->msg_iovlen);
 
     /* iterate over all IP fragments */
     do {
@@ -624,7 +624,7 @@ ssize_t rt_udp_sendmsg(struct rtdm_fd *fd, const struct user_msghdr *msg, int ms
     if (err)
 	    return err;
 
-    len = rt_iovec_len(iov, msg->msg_iovlen);
+    len = rtdm_get_iov_flatlen(iov, msg->msg_iovlen);
     if ((len < 0) || (len > 0xFFFF-sizeof(struct iphdr)-sizeof(struct udphdr))) {
 	    err = -EMSGSIZE;
 	    goto out;
