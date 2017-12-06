@@ -451,12 +451,7 @@ ssize_t rt_udp_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_fl
     uh = skb->h.uh;
     first_skb = skb;
 
-    namelen = sizeof(sin);
-    ret = rtnet_put_arg(fd, &msg->msg_namelen, &namelen, sizeof(namelen));
-    if (ret)
-	    goto fail;
-   
-    /* copy the address */
+    /* copy the address if required. */
     if (msg->msg_name) {
 	    memset(&sin, 0, sizeof(sin));
 	    sin.sin_family      = AF_INET;
@@ -465,7 +460,12 @@ ssize_t rt_udp_recvmsg(struct rtdm_fd *fd, struct user_msghdr *u_msg, int msg_fl
 	    ret = rtnet_put_arg(fd, msg->msg_name, &sin, sizeof(sin));
 	    if (ret)
 		    goto fail;
-    }
+
+	    namelen = sizeof(sin);
+	    ret = rtnet_put_arg(fd, &u_msg->msg_namelen, &namelen, sizeof(namelen));
+	    if (ret)
+		    goto fail;
+       }
 
     data_len = ntohs(uh->len) - sizeof(struct udphdr);
 
