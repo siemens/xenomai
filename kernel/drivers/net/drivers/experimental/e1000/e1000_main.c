@@ -421,9 +421,9 @@ module_param_array(cards, int, NULL, 0444);
 MODULE_PARM_DESC(cards, "array of cards to be supported (eg. 1,0,1)");
 
 
-static int debug = NETIF_MSG_DRV | NETIF_MSG_PROBE;
-module_param(debug, int, 0);
-MODULE_PARM_DESC(debug, "Debug level (0=none,...,16=all)");
+static int local_debug = NETIF_MSG_DRV | NETIF_MSG_PROBE;
+module_param(local_debug, int, 0);
+MODULE_PARM_DESC(local_debug, "Debug level (0=none,...,16=all)");
 
 /* The parameter 'pciif' might be used to use this driver for
  * PCI or PCIe only NICs.
@@ -1096,7 +1096,7 @@ static int e1000_probe(struct pci_dev *pdev,
 	adapter->netdev = netdev;
 	adapter->pdev = pdev;
 	adapter->hw.back = adapter;
-	adapter->msg_enable = (1 << debug) - 1;
+	adapter->msg_enable = (1 << local_debug) - 1;
 
 	err = -EIO;
 	adapter->hw.hw_addr = ioremap(pci_resource_start(pdev, BAR_0),
