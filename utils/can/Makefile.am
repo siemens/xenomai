@@ -4,11 +4,11 @@ bin_PROGRAMS = rtcanrecv rtcansend
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
-CPPFLAGS = 						\
+AM_CPPFLAGS = 						\
 	@XENO_USER_CFLAGS@ 				\
 	-I$(top_srcdir)/include
 
-LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
+AM_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
 
 rtcanconfig_SOURCES = rtcanconfig.c
 
