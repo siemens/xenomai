@@ -23,7 +23,7 @@
 #define _COBALT_POWERPC_ASM_SYSCALL_H
 
 #include <linux/errno.h>
-#include <asm/ptrace.h>
+#include <linux/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>
 
 #define __xn_reg_sys(__regs)	((__regs)->gpr[0])
