@@ -22,7 +22,6 @@
  *
  */
 
-#include <asm/uaccess.h>
 #include <linux/file.h>
 #include <linux/vmalloc.h>
 
