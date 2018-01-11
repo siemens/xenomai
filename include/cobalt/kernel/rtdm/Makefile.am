@@ -6,6 +6,7 @@ noinst_HEADERS =	\
 	compat.h	\
 	driver.h	\
 	fd.h		\
+	gpio.h		\
 	ipc.h		\
 	rtdm.h		\
 	serial.h	\

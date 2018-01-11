@@ -22,16 +22,7 @@
 #include <linux/irq.h>
 #include <linux/slab.h>
 #include <linux/err.h>
-#include "gpio-core.h"
-
-struct rtdm_gpio_pin {
-	struct rtdm_device dev;
-	struct list_head next;
-	rtdm_irq_t irqh;
-	rtdm_event_t event;
-	char *name;
-	struct gpio_desc *desc;
-};
+#include <rtdm/gpio.h>
 
 struct rtdm_gpio_chan {
 	int requested : 1,
@@ -59,8 +50,7 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 			    struct rtdm_gpio_chan *chan,
 			    int trigger)
 {
-	int ret, irq_trigger;
-	unsigned int irq;
+	int ret, irq_trigger, irq;
 
 	if (trigger & ~GPIO_TRIGGER_MASK)
 		return -EINVAL;
@@ -86,7 +76,17 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 	gpio_export(gpio, true);
 
 	rtdm_event_clear(&pin->event);
+
+	/*
+	 * Attempt to hook the interrupt associated to that pin. We
+	 * might fail getting a valid IRQ number, in case the GPIO
+	 * chip did not define any mapping handler (->to_irq). If so,
+	 * just assume that either we have no IRQ indeed, or interrupt
+	 * handling may be open coded elsewhere.
+	 */
 	irq = gpio_to_irq(gpio);
+	if (irq < 0)
+		goto done;
 
 	irq_trigger = 0;
 	if (trigger & GPIO_TRIGGER_EDGE_RISING)
@@ -110,6 +110,7 @@ static int request_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 
 
 	rtdm_irq_enable(&pin->irqh);
+done:
 	chan->is_interrupt = true;
 
 	return 0;
@@ -123,10 +124,12 @@ fail:
 static void release_gpio_irq(unsigned int gpio, struct rtdm_gpio_pin *pin,
 			     struct rtdm_gpio_chan *chan)
 {
-	rtdm_irq_free(&pin->irqh);
+	if (chan->is_interrupt) {
+		rtdm_irq_free(&pin->irqh);
+		chan->is_interrupt = false;
+	}
 	gpio_free(gpio);
 	chan->requested = false;
-	chan->is_interrupt = false;
 }
 
 static int gpio_pin_ioctl_nrt(struct rtdm_fd *fd,
@@ -302,25 +305,18 @@ static void gpio_pin_close(struct rtdm_fd *fd)
 
 static void delete_pin_devices(struct rtdm_gpio_chip *rgc)
 {
-	struct rtdm_gpio_pin *pin, *n;
+	struct rtdm_gpio_pin *pin;
 	struct rtdm_device *dev;
-	rtdm_lockctx_t s;
+	int offset;
 
-	rtdm_lock_get_irqsave(&rgc->lock, s);
-	
-	list_for_each_entry_safe(pin, n, &rgc->pins, next) {
-		list_del(&pin->next);
-		rtdm_lock_put_irqrestore(&rgc->lock, s);
+	for (offset = 0; offset < rgc->gc->ngpio; offset++) {
+		pin = rgc->pins + offset;
 		dev = &pin->dev;
 		rtdm_dev_unregister(dev);
 		rtdm_event_destroy(&pin->event);
 		kfree(dev->label);
 		kfree(pin->name);
-		kfree(pin);
-		rtdm_lock_get_irqsave(&rgc->lock, s);
 	}
-
-	rtdm_lock_put_irqrestore(&rgc->lock, s);
 }
 
 static int create_pin_devices(struct rtdm_gpio_chip *rgc)
@@ -328,18 +324,16 @@ static int create_pin_devices(struct rtdm_gpio_chip *rgc)
 	struct gpio_chip *gc = rgc->gc;
 	struct rtdm_gpio_pin *pin;
 	struct rtdm_device *dev;
-	rtdm_lockctx_t s;
-	int n, ret;
+	int offset, ret, gpio;
 
-	for (n = gc->base; n < gc->base + gc->ngpio; n++) {
+	for (offset = 0; offset < gc->ngpio; offset++) {
 		ret = -ENOMEM;
-		pin = kzalloc(sizeof(*pin), GFP_KERNEL);
-		if (pin == NULL)
-			goto fail;
-		pin->name = kasprintf(GFP_KERNEL, "gpio%d", n);
+		gpio = gc->base + offset;
+		pin = rgc->pins + offset;
+		pin->name = kasprintf(GFP_KERNEL, "gpio%d", gpio);
 		if (pin->name == NULL)
 			goto fail_name;
-		pin->desc = gpio_to_desc(n);
+		pin->desc = gpio_to_desc(gpio);
 		if (pin->desc == NULL) {
 			ret = -ENODEV;
 			goto fail_desc;
@@ -349,15 +343,12 @@ static int create_pin_devices(struct rtdm_gpio_chip *rgc)
 		dev->label = kasprintf(GFP_KERNEL, "%s/gpio%%d", gc->label);
 		if (dev->label == NULL)
 			goto fail_label;
-		dev->minor = n;
+		dev->minor = gpio;
 		dev->device_data = rgc;
 		ret = rtdm_dev_register(dev);
 		if (ret)
 			goto fail_register;
 		rtdm_event_init(&pin->event, 0);
-		rtdm_lock_get_irqsave(&rgc->lock, s);
-		list_add_tail(&pin->next, &rgc->pins);
-		rtdm_lock_put_irqrestore(&rgc->lock, s);
 	}
 
 	return 0;
@@ -368,8 +359,6 @@ fail_desc:
 fail_label:
 	kfree(pin->name);
 fail_name:
-	kfree(pin);
-fail:
 	delete_pin_devices(rgc);
 
 	return ret;
@@ -418,7 +407,6 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 	rtdm_drv_set_sysclass(&rgc->driver, rgc->devclass);
 
 	rgc->gc = gc;
-	INIT_LIST_HEAD(&rgc->pins);
 	rtdm_lock_init(&rgc->lock);
 
 	ret = create_pin_devices(rgc);
@@ -432,9 +420,14 @@ EXPORT_SYMBOL_GPL(rtdm_gpiochip_add);
 int rtdm_gpiochip_alloc(struct gpio_chip *gc, int gpio_subclass)
 {
 	struct rtdm_gpio_chip *rgc;
+	size_t asize;
 	int ret;
 
-	rgc = kzalloc(sizeof(*rgc), GFP_KERNEL);
+	if (gc->ngpio == 0)
+		return -EINVAL;
+
+	asize = sizeof(*rgc) + gc->ngpio * sizeof(struct rtdm_gpio_pin);
+	rgc = kzalloc(asize, GFP_KERNEL);
 	if (rgc == NULL)
 		return -ENOMEM;
 
@@ -461,6 +454,21 @@ void rtdm_gpiochip_remove(struct rtdm_gpio_chip *rgc)
 	class_destroy(rgc->devclass);
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_remove);
+
+int rtdm_gpiochip_post_event(struct rtdm_gpio_chip *rgc,
+			     unsigned int offset)
+{
+	struct rtdm_gpio_pin *pin;
+
+	if (offset >= rgc->gc->ngpio)
+		return -EINVAL;
+
+	pin = rgc->pins + offset;
+	rtdm_event_signal(&pin->event);
+	
+	return 0;
+}
+EXPORT_SYMBOL_GPL(rtdm_gpiochip_post_event);
 
 static int gpiochip_match_name(struct gpio_chip *chip, void *data)
 {

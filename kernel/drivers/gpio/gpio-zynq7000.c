@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <linux/module.h>
-#include "gpio-core.h"
+#include <rtdm/gpio.h>
 
 #define RTDM_SUBCLASS_ZYNQ7000  4
 
