@@ -48,8 +48,9 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 		      struct gpio_chip *gc,
 		      int gpio_subclass);
 
-int rtdm_gpiochip_alloc(struct gpio_chip *gc,
-			int gpio_subclass);
+struct rtdm_gpio_chip *
+rtdm_gpiochip_alloc(struct gpio_chip *gc,
+		    int gpio_subclass);
 
 void rtdm_gpiochip_remove(struct rtdm_gpio_chip *rgc);
 

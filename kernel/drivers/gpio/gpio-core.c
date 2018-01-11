@@ -376,9 +376,6 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 {
 	int ret;
 
-	if (!realtime_core_enabled())
-		return 0;
-
 	rgc->devclass = class_create(gc->owner, gc->label);
 	if (IS_ERR(rgc->devclass)) {
 		printk(XENO_ERR "cannot create sysfs class\n");
@@ -417,31 +414,32 @@ int rtdm_gpiochip_add(struct rtdm_gpio_chip *rgc,
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_add);
 
-int rtdm_gpiochip_alloc(struct gpio_chip *gc, int gpio_subclass)
+struct rtdm_gpio_chip *
+rtdm_gpiochip_alloc(struct gpio_chip *gc, int gpio_subclass)
 {
 	struct rtdm_gpio_chip *rgc;
 	size_t asize;
 	int ret;
 
 	if (gc->ngpio == 0)
-		return -EINVAL;
+		return ERR_PTR(-EINVAL);
 
 	asize = sizeof(*rgc) + gc->ngpio * sizeof(struct rtdm_gpio_pin);
 	rgc = kzalloc(asize, GFP_KERNEL);
 	if (rgc == NULL)
-		return -ENOMEM;
+		return ERR_PTR(-ENOMEM);
 
 	ret = rtdm_gpiochip_add(rgc, gc, gpio_subclass);
 	if (ret) {
 		kfree(rgc);
-		return ret;
+		return ERR_PTR(ret);
 	}
 
 	mutex_lock(&chip_lock);
 	list_add(&rgc->next, &rtdm_gpio_chips);
 	mutex_unlock(&chip_lock);
 
-	return 0;
+	return rgc;
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_alloc);
 
@@ -535,7 +533,11 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 	struct gpiochip_holder *h, *n;
 	struct device_node *np = from;
 	struct platform_device *pdev;
+	struct rtdm_gpio_chip *rgc;
 	int ret = -ENODEV, _ret;
+
+	if (!realtime_core_enabled())
+		return 0;
 
 	for (;;) {
 		np = of_find_compatible_node(np, NULL, compat);
@@ -552,7 +554,10 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 			ret = 0;
 			list_for_each_entry_safe(h, n, &match.list, next) {
 				list_del(&h->next);
-				_ret = rtdm_gpiochip_alloc(h->chip, type);
+				_ret = 0;
+				rgc = rtdm_gpiochip_alloc(h->chip, type);
+				if (IS_ERR(rgc))
+					_ret = PTR_ERR(rgc);
 				kfree(h);
 				if (_ret && !ret)
 					ret = _ret;
@@ -569,6 +574,9 @@ EXPORT_SYMBOL_GPL(rtdm_gpiochip_scan_of);
 void rtdm_gpiochip_remove_of(int type)
 {
 	struct rtdm_gpio_chip *rgc, *n;
+
+	if (!realtime_core_enabled())
+		return;
 
 	list_for_each_entry_safe(rgc, n, &rtdm_gpio_chips, next) {
 		if (rgc->driver.profile_info.subclass_id == type) {
