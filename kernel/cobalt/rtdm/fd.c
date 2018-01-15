@@ -245,11 +245,10 @@ static int fd_cleanup_thread(void *data)
 		set_cpus_allowed_ptr(current, cpu_online_mask);
 
 		do {
-			err = down_killable(&rtdm_fd_cleanup_sem);
-		} while (err && !kthread_should_stop());
-
-		if (kthread_should_stop())
-			break;
+			err = down_interruptible(&rtdm_fd_cleanup_sem);
+			if (kthread_should_stop())
+				return 0;
+		} while (err);
 
 		xnlock_get_irqsave(&fdtree_lock, s);
 		fd = list_first_entry(&rtdm_fd_cleanup_queue,
