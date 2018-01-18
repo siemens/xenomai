@@ -340,11 +340,13 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void __user *arg)
 		break;
 
 	case SIOCETHTOOL:
-	    if (rtdev->do_ioctl != NULL)
-		ret = rtdev->do_ioctl(rtdev, request, arg);
-	    else
-		ret = -EOPNOTSUPP;
-	    break;
+		if (rtdev->do_ioctl != NULL) {
+			if (rtdm_in_rt_context())
+				return -ENOSYS;
+			ret = rtdev->do_ioctl(rtdev, request, arg);
+		} else
+			ret = -EOPNOTSUPP;
+		break;
 
 	default:
 	    ret = -EOPNOTSUPP;
