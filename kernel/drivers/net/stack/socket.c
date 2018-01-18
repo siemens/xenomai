@@ -348,9 +348,16 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void __user *arg)
 			ret = -EOPNOTSUPP;
 		break;
 
+	case SIOCDEVPRIVATE ... SIOCDEVPRIVATE + 15:
+		if (rtdev->do_ioctl != NULL)
+			ret = rtdev->do_ioctl(rtdev, ifr, request);
+		else
+			ret = -EOPNOTSUPP;
+		break;
+
 	default:
-	    ret = -EOPNOTSUPP;
-	    break;
+		ret = -EOPNOTSUPP;
+		break;
     }
 
   out:
