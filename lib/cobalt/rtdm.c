@@ -269,8 +269,15 @@ COBALT_IMPL(ssize_t, recvfrom, (int fd, void *buf, size_t len, int flags,
 	int ret;
 
 	ret = do_recvmsg(fd, &msg, flags);
-	if (ret != -EBADF && ret != -ENOSYS)
-		return set_errno(ret);
+	if (ret != -EBADF && ret != -ENOSYS) {
+		if (ret < 0)
+			return set_errno(ret);
+
+		if (from)
+			*fromlen = msg.msg_namelen;
+
+		return ret;
+	}
 
 	return __STD(recvfrom(fd, buf, len, flags, from, fromlen));
 }
