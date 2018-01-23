@@ -343,7 +343,7 @@ int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void __user *arg)
 		if (rtdev->do_ioctl != NULL) {
 			if (rtdm_in_rt_context())
 				return -ENOSYS;
-			ret = rtdev->do_ioctl(rtdev, request, arg);
+			ret = rtdev->do_ioctl(rtdev, ifr, request);
 		} else
 			ret = -EOPNOTSUPP;
 		break;

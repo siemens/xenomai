@@ -519,7 +519,7 @@ static int rtl8139_close (struct rtnet_device *rtdev);
 static int rtl8139_interrupt (rtdm_irq_t *irq_handle);
 static int rtl8139_start_xmit (struct rtskb *skb, struct rtnet_device *rtdev);
 
-static int rtl8139_ioctl(struct rtnet_device *rtdev, unsigned int request, void *cmd);
+static int rtl8139_ioctl(struct rtnet_device *, struct ifreq *rq, int cmd);
 static struct net_device_stats *rtl8139_get_stats(struct rtnet_device*rtdev);
 
 static void rtl8139_init_ring (struct rtnet_device *rtdev);
@@ -1297,15 +1297,14 @@ static int rtl8139_start_xmit (struct rtskb *skb, struct rtnet_device *rtdev)
 	return 0;
 }
 
-static int rtl8139_ioctl(struct rtnet_device *rtdev, unsigned int request, void *arg)
+static int rtl8139_ioctl(struct rtnet_device *rtdev, struct ifreq *ifr, int cmd)
 {
     struct rtl8139_private *tp = rtdev->priv;
     void *ioaddr = tp->mmio_addr;
     int nReturn = 0;
-    struct ifreq *ifr = arg;
     struct ethtool_value *value;
 
-    switch (request) {
+    switch (cmd) {
 	case SIOCETHTOOL:
 	    /* TODO: user-safe parameter access, most probably one layer higher */
 	    value = (struct ethtool_value *)ifr->ifr_data;

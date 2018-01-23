@@ -216,7 +216,7 @@ static int igb_msix_ring(rtdm_irq_t *irq_handle);
 static void igb_poll(struct igb_q_vector *);
 static bool igb_clean_tx_irq(struct igb_q_vector *);
 static bool igb_clean_rx_irq(struct igb_q_vector *, int);
-static int igb_ioctl(struct rtnet_device *, unsigned cmd, void *);
+static int igb_ioctl(struct rtnet_device *, struct ifreq *ifr, int cmd);
 static void igb_reset_task(struct work_struct *);
 static void igb_vlan_mode(struct rtnet_device *netdev,
 			  netdev_features_t features);
@@ -5063,15 +5063,14 @@ static int igb_mii_ioctl(struct rtnet_device *netdev, struct ifreq *ifr, int cmd
  * @ifreq:
  * @cmd:
  **/
-static int igb_ioctl(struct rtnet_device *netdev, unsigned cmd, void *rq)
+static int igb_ioctl(struct rtnet_device *netdev, struct ifreq *ifr, int cmd)
 {
-	struct ifreq *ifr = rq;
-
 	switch (cmd) {
 	case SIOCGMIIPHY:
 	case SIOCGMIIREG:
 	case SIOCSMIIREG:
 		return igb_mii_ioctl(netdev, ifr, cmd);
+
 	default:
 		return -EOPNOTSUPP;
 	}

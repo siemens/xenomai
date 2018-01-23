@@ -112,15 +112,15 @@ static int rt2x00_radio_off(struct _rt2x00_core * core) {
 /*
  * user space io handler
  */
-static int rt2x00_ioctl(struct rtnet_device * rtnet_dev, unsigned int request, void * arg) {
-
+static int rt2x00_ioctl(struct rtnet_device *rtnet_dev, struct ifreq *ifr, int request)
+{
     struct rtwlan_device * rtwlan_dev  = rtnetdev_priv(rtnet_dev);
     struct _rt2x00_core * core     = rtwlan_priv(rtwlan_dev);
     struct rtwlan_cmd * cmd;
     u8 rate, dsss_rate, ofdm_rate;
     u32 address, value;
 
-    cmd = (struct rtwlan_cmd *)arg;
+    cmd = (struct rtwlan_cmd *)ifr->ifr_data;
 
     switch(request) {
 

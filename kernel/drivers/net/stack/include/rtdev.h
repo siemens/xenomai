@@ -152,7 +152,7 @@ struct rtnet_device {
 				   unsigned int priority);
 
     int                 (*do_ioctl)(struct rtnet_device *rtdev,
-				    unsigned int request, void * cmd);
+				    struct ifreq *ifr, int cmd);
     struct net_device_stats *(*get_stats)(struct rtnet_device *rtdev);
 
     /* DMA pre-mapping hooks */

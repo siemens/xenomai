@@ -121,11 +121,21 @@ int rtwlan_ioctl(struct rtnet_device * rtdev,
 		 unsigned long arg)
 {
     struct rtwlan_cmd cmd;
+    struct ifreq ifr;
     int ret=0;
 
     if (copy_from_user(&cmd, (void *)arg, sizeof(cmd)) != 0)
 	return -EFAULT;
 
+    /*
+     * FIXME: proper do_ioctl() should expect a __user pointer
+     * arg. This only works with the existing WLAN support because the
+     * only driver currently providing this feature is broken, not
+     * doing the copy_to/from_user dance.
+     */
+    memset(&ifr, 0, sizeof(ifr));
+    ifr.ifr_data = &cmd;
+   
     switch(request) {
     case IOC_RTWLAN_IFINFO:
 	if (cmd.args.info.ifindex > 0)
@@ -141,7 +151,7 @@ int rtwlan_ioctl(struct rtnet_device * rtdev,
 	}
 
 	if (rtdev->do_ioctl)
-	    ret = rtdev->do_ioctl(rtdev, request, &cmd);
+	    ret = rtdev->do_ioctl(rtdev, &ifr, request);
 	else
 	    ret = -ENORTWLANDEV;
 
@@ -168,11 +178,11 @@ int rtwlan_ioctl(struct rtnet_device * rtdev,
     case IOC_RTWLAN_BBPWRITE:
     case IOC_RTWLAN_BBPREAD:
     case IOC_RTWLAN_BBPSENS:
-	if (mutex_lock_interruptible(&rtdev->nrt_lock))
-	    return -ERESTARTSYS;
+            if (mutex_lock_interruptible(&rtdev->nrt_lock))
+	        return -ERESTARTSYS;
 
 	    if (rtdev->do_ioctl)
-		ret = rtdev->do_ioctl(rtdev, request, &cmd);
+	        ret = rtdev->do_ioctl(rtdev, &ifr, request);
 	    else
 		ret = -ENORTWLANDEV;
 
