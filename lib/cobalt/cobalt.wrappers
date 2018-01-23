@@ -59,7 +59,9 @@
 --wrap read
 --wrap write
 --wrap recvmsg
+--wrap recvmmsg
 --wrap sendmsg
+--wrap sendmmsg
 --wrap recvfrom
 --wrap sendto
 --wrap recv

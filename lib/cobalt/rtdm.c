@@ -227,6 +227,23 @@ COBALT_IMPL(ssize_t, recvmsg, (int fd, struct msghdr *msg, int flags))
 	return __STD(recvmsg(fd, msg, flags));
 }
 
+COBALT_IMPL(int, recvmmsg, (int fd, struct mmsghdr *msgvec, unsigned int vlen,
+			    unsigned int flags, struct timespec *timeout))
+{
+	int ret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	ret = XENOMAI_SYSCALL5(sc_cobalt_recvmmsg, fd, msgvec, vlen, flags, timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	if (ret != -EBADF && ret != -ENOSYS)
+		return set_errno(ret);
+
+	return __STD(recvmmsg(fd, msgvec, vlen, flags, timeout));
+}
+
 static ssize_t do_sendmsg(int fd, const struct msghdr *msg, int flags)
 {
 	int ret, oldtype;
@@ -249,6 +266,23 @@ COBALT_IMPL(ssize_t, sendmsg, (int fd, const struct msghdr *msg, int flags))
 		return set_errno(ret);
 
 	return __STD(sendmsg(fd, msg, flags));
+}
+
+COBALT_IMPL(int, sendmmsg, (int fd, struct mmsghdr *msgvec,
+			    unsigned int vlen, unsigned int flags))
+{
+	int ret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	ret = XENOMAI_SYSCALL4(sc_cobalt_sendmmsg, fd, msgvec, vlen, flags);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	if (ret != -EBADF && ret != -ENOSYS)
+		return set_errno(ret);
+
+	return __STD(sendmmsg(fd, msgvec, vlen, flags));
 }
 
 COBALT_IMPL(ssize_t, recvfrom, (int fd, void *buf, size_t len, int flags,

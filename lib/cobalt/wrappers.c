@@ -257,9 +257,23 @@ ssize_t __real_recvmsg(int fd, struct msghdr * msg, int flags)
 }
 
 __weak
+int __real_recvmmsg(int fd, struct mmsghdr *msgvec, unsigned int vlen,
+		    unsigned int flags, struct timespec *timeout)
+{
+	return recvmmsg(fd, msgvec, vlen, flags, timeout);
+}
+
+__weak
 ssize_t __real_sendmsg(int fd, const struct msghdr * msg, int flags)
 {
 	return sendmsg(fd, msg, flags);
+}
+
+__weak
+int __real_sendmmsg(int fd, struct mmsghdr *msgvec, unsigned int vlen,
+		    unsigned int flags)
+{
+	return sendmmsg(fd, msgvec, vlen, flags);
 }
 
 __weak

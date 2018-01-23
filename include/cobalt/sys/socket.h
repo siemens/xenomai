@@ -33,8 +33,16 @@ COBALT_DECL(int, socket(int protocol_family,
 COBALT_DECL(ssize_t, recvmsg(int fd,
 			     struct msghdr *msg, int flags));
 
+COBALT_DECL(int, recvmmsg(int fd,
+			  struct mmsghdr *msgvec, unsigned int vlen,
+			  unsigned int flags, struct timespec *timeout));
+
 COBALT_DECL(ssize_t, sendmsg(int fd,
 			     const struct msghdr *msg, int flags));
+
+COBALT_DECL(int, sendmmsg(int fd,
+			  struct mmsghdr *msgvec, unsigned int vlen,
+			  unsigned int flags));
 
 COBALT_DECL(ssize_t, recvfrom(int fd, void *buf, size_t len, int flags,
 			      struct sockaddr *from, socklen_t *fromlen));
