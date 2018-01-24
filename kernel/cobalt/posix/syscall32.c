@@ -701,7 +701,7 @@ COBALT_SYSCALL32emu(select, nonrestartable,
 		if (err)
 			return err;
 
-		if (tv.tv_usec > 1000000)
+		if (tv.tv_usec >= 1000000)
 			return -EINVAL;
 
 		timeout = clock_get_ticks(CLOCK_MONOTONIC) + tv2ns(&tv);
