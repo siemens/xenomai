@@ -119,6 +119,9 @@ int __cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 	handle = cobalt_get_handle_from_user(&u_event->handle);
 
 	if (ts) {
+		if ((unsigned long)ts->tv_nsec >= ONE_BILLION)
+			return -EINVAL;
+	
 		timeout = ts2ns(ts);
 		if (timeout) {
 			timeout++;
