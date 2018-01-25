@@ -139,8 +139,14 @@ int sys32_put_siginfo(void __user *u_si, const struct siginfo *si,
 int sys32_get_msghdr(struct user_msghdr *msg,
 		     const struct compat_msghdr __user *u_cmsg);
 
+int sys32_get_mmsghdr(struct mmsghdr *mmsg,
+		      const struct compat_mmsghdr __user *u_cmmsg);
+
 int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
 		     const struct user_msghdr *msg);
+
+int sys32_put_mmsghdr(struct compat_mmsghdr __user *u_cmmsg,
+		     const struct mmsghdr *mmsg);
 
 int sys32_get_iovec(struct iovec *iov,
 		    const struct compat_iovec __user *ciov,

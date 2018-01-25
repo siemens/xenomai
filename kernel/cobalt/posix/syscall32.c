@@ -784,6 +784,34 @@ COBALT_SYSCALL32emu(recvmsg, handover,
 	return sys32_put_msghdr(umsg, &m) ?: ret;
 }
 
+static int get_timespec32(struct timespec *ts,
+			  const void __user *u_ts)
+{
+	return sys32_get_timespec(ts, u_ts);
+}
+
+static int get_mmsg32(struct mmsghdr *mmsg, void __user *u_mmsg)
+{
+	return sys32_get_mmsghdr(mmsg, u_mmsg);
+}
+
+static int put_mmsg32(void __user **u_mmsg_p, const struct mmsghdr *mmsg)
+{
+	struct compat_mmsghdr __user **p = (struct compat_mmsghdr **)u_mmsg_p,
+		*q __user = (*p)++;
+
+	return sys32_put_mmsghdr(q, mmsg);
+}
+
+COBALT_SYSCALL32emu(recvmmsg, primary,
+	       (int ufd, struct compat_mmsghdr __user *u_msgvec, unsigned int vlen,
+		unsigned int flags, struct compat_timespec *u_timeout))
+{
+	return __rtdm_fd_recvmmsg(ufd, u_msgvec, vlen, flags, u_timeout,
+				  get_mmsg32, put_mmsg32,
+				  get_timespec32);
+}
+
 COBALT_SYSCALL32emu(sendmsg, handover,
 		    (int fd, struct compat_msghdr __user *umsg, int flags))
 {
@@ -793,6 +821,22 @@ COBALT_SYSCALL32emu(sendmsg, handover,
 	ret = sys32_get_msghdr(&m, umsg);
 
 	return ret ?: rtdm_fd_sendmsg(fd, &m, flags);
+}
+
+static int put_mmsglen32(void __user **u_mmsg_p, const struct mmsghdr *mmsg)
+{
+	struct compat_mmsghdr __user **p = (struct compat_mmsghdr **)u_mmsg_p,
+		*q __user = (*p)++;
+
+	return __xn_put_user(mmsg->msg_len, &q->msg_len);
+}
+
+COBALT_SYSCALL32emu(sendmmsg, primary,
+		    (int fd, struct compat_mmsghdr __user *u_msgvec, unsigned int vlen,
+		     unsigned int flags))
+{
+	return __rtdm_fd_sendmmsg(fd, u_msgvec, vlen, flags,
+				  get_mmsg32, put_mmsglen32);
 }
 
 COBALT_SYSCALL32emu(mmap, lostage,

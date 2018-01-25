@@ -51,8 +51,16 @@ COBALT_SYSCALL_DECL(write,
 COBALT_SYSCALL_DECL(recvmsg,
 		    (int fd, struct user_msghdr __user *umsg, int flags));
 
+COBALT_SYSCALL_DECL(recvmmsg,
+		    (int fd, struct mmsghdr __user *u_msgvec, unsigned int vlen,
+		     unsigned int flags, struct timespec *u_timeout));
+
 COBALT_SYSCALL_DECL(sendmsg,
 		    (int fd, struct user_msghdr __user *umsg, int flags));
+
+COBALT_SYSCALL_DECL(sendmmsg,
+		    (int fd, struct mmsghdr __user *u_msgvec,
+		     unsigned int vlen, unsigned int flags));
 
 COBALT_SYSCALL_DECL(mmap,
 		    (int fd, struct _rtdm_mmap_request __user *u_rma,

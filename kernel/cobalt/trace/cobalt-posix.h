@@ -157,8 +157,9 @@
 		__cobalt_symbolic_syscall(backtrace),			\
 		__cobalt_symbolic_syscall(serialdbg),			\
 		__cobalt_symbolic_syscall(extend),			\
-		__cobalt_symbolic_syscall(ftrace_puts))
-
+		__cobalt_symbolic_syscall(ftrace_puts),			\
+		__cobalt_symbolic_syscall(recvmmsg),			\
+		__cobalt_symbolic_syscall(sendmmsg))
 
 DECLARE_EVENT_CLASS(syscall_entry,
 	TP_PROTO(unsigned int nr),

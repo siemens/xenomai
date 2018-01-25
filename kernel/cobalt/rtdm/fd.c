@@ -33,6 +33,7 @@
 #include "internal.h"
 #include "posix/process.h"
 #include "posix/syscall.h"
+#include "posix/clock.h"
 
 #define RTDM_SETFL_MASK (O_NONBLOCK)
 
@@ -583,6 +584,121 @@ out:
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_recvmsg);
 
+struct cobalt_recvmmsg_timer {
+	struct xntimer timer;
+	struct xnthread *waiter;
+};
+
+static void recvmmsg_timeout_handler(struct xntimer *timer)
+{
+	struct cobalt_recvmmsg_timer *rq;
+
+	rq = container_of(timer, struct cobalt_recvmmsg_timer, timer);
+	xnthread_set_info(rq->waiter, XNTIMEO);
+	xnthread_resume(rq->waiter, XNDELAY);
+}
+
+int __rtdm_fd_recvmmsg(int ufd, void __user *u_msgvec, unsigned int vlen,
+		       unsigned int flags, void __user *u_timeout,
+		       int (*get_mmsg)(struct mmsghdr *mmsg, void __user *u_mmsg),
+		       int (*put_mmsg)(void __user **u_mmsg_p, const struct mmsghdr *mmsg),
+		       int (*get_timespec)(struct timespec *ts, const void __user *u_ts))
+{
+	struct cobalt_recvmmsg_timer rq;
+	xntmode_t tmode = XN_RELATIVE;
+	struct timespec ts = { 0 };
+	int ret, datagrams = 0;
+	xnticks_t timeout = 0;
+	struct mmsghdr mmsg;
+	struct rtdm_fd *fd;
+	void __user *u_p;
+	ssize_t len;
+	spl_t s;
+	
+	if (vlen == 0)
+		return 0;
+
+	fd = rtdm_fd_get(ufd, 0);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
+
+	set_compat_bit(fd);
+
+	trace_cobalt_fd_recvmmsg(current, fd, ufd, flags);
+
+	if (u_timeout) {
+		ret = get_timespec(&ts, u_timeout);
+		if (ret)
+			goto fail;
+
+		if ((unsigned long)ts.tv_nsec >= ONE_BILLION) {
+			ret = -EINVAL;
+			goto fail;
+		}
+
+		tmode = XN_ABSOLUTE;
+		timeout = ts2ns(&ts);
+		if (timeout == 0)
+			flags |= MSG_DONTWAIT;
+		else {
+			timeout += xnclock_read_monotonic(&nkclock);
+			rq.waiter = xnthread_current();
+			xntimer_init(&rq.timer, &nkclock,
+				     recvmmsg_timeout_handler,
+				     NULL, XNTIMER_IGRAVITY);
+			xnlock_get_irqsave(&nklock, s);
+			ret = xntimer_start(&rq.timer, timeout,
+					    XN_INFINITE, tmode);
+			xnlock_put_irqrestore(&nklock, s);
+		}
+	}
+
+	if (fd->oflags & O_NONBLOCK)
+		flags |= MSG_DONTWAIT;
+
+	for (u_p = u_msgvec; vlen > 0; vlen--) {
+		ret = get_mmsg(&mmsg, u_p);
+		if (ret)
+			break;
+		len = fd->ops->recvmsg_rt(fd, &mmsg.msg_hdr, flags);
+		if (len < 0) {
+			ret = len;
+			break;
+		}
+		mmsg.msg_len = (unsigned int)len;
+		ret = put_mmsg(&u_p, &mmsg);
+		if (ret)
+			break;
+		datagrams++;
+		/* OOB data requires immediate handling. */
+		if (mmsg.msg_hdr.msg_flags & MSG_OOB)
+			break;
+		if (flags & MSG_WAITFORONE)
+			flags |= MSG_DONTWAIT;
+	}
+
+	if (timeout) {
+		xnlock_get_irqsave(&nklock, s);
+		xntimer_destroy(&rq.timer);
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	if (datagrams > 0 &&
+	    (ret == 0 || ret == -ETIMEDOUT || ret == -EWOULDBLOCK)) {
+		/* NOTE: SO_ERROR should be honored for other errors. */
+		rtdm_fd_put(fd);
+		return datagrams;
+	}
+fail:
+	rtdm_fd_put(fd);
+out:
+	trace_cobalt_fd_recvmmsg_status(current, fd, ufd, ret);
+
+	return ret;
+}
+
 ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg, int flags)
 {
 	struct rtdm_fd *fd;
@@ -617,6 +733,62 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_sendmsg);
+
+int __rtdm_fd_sendmmsg(int ufd, void __user *u_msgvec, unsigned int vlen,
+		       unsigned int flags,
+		       int (*get_mmsg)(struct mmsghdr *mmsg, void __user *u_mmsg),
+		       int (*put_mmsg)(void __user **u_mmsg_p, const struct mmsghdr *mmsg))
+{
+	int ret, datagrams = 0;
+	struct mmsghdr mmsg;
+	struct rtdm_fd *fd;
+	void __user *u_p;
+	ssize_t len;
+	
+	if (vlen == 0)
+		return 0;
+
+	fd = rtdm_fd_get(ufd, 0);
+	if (IS_ERR(fd)) {
+		ret = PTR_ERR(fd);
+		goto out;
+	}
+
+	set_compat_bit(fd);
+
+	trace_cobalt_fd_sendmmsg(current, fd, ufd, flags);
+
+	if (fd->oflags & O_NONBLOCK)
+		flags |= MSG_DONTWAIT;
+
+	for (u_p = u_msgvec; vlen > 0; vlen--) {
+		ret = get_mmsg(&mmsg, u_p);
+		if (ret)
+			break;
+		len = fd->ops->sendmsg_rt(fd, &mmsg.msg_hdr, flags);
+		if (len < 0) {
+			ret = len;
+			break;
+		}
+		mmsg.msg_len = (unsigned int)len;
+		ret = put_mmsg(&u_p, &mmsg);
+		if (ret)
+			break;
+		datagrams++;
+	}
+
+	if (datagrams > 0 && (ret == 0 || ret == -EWOULDBLOCK)) {
+		/* NOTE: SO_ERROR should be honored for other errors. */
+		rtdm_fd_put(fd);
+		return datagrams;
+	}
+
+	rtdm_fd_put(fd);
+out:
+	trace_cobalt_fd_sendmmsg_status(current, fd, ufd, ret);
+
+	return ret;
+}
 
 static void
 __fd_close(struct cobalt_ppd *p, struct rtdm_fd_index *idx, spl_t s)

@@ -359,6 +359,18 @@ int sys32_get_msghdr(struct user_msghdr *msg,
 }
 EXPORT_SYMBOL_GPL(sys32_get_msghdr);
 
+int sys32_get_mmsghdr(struct mmsghdr *mmsg,
+		      const struct compat_mmsghdr __user *u_cmmsg)
+{
+	if (u_cmmsg == NULL ||
+	    !access_rok(u_cmmsg, sizeof(*u_cmmsg)) ||
+	    __xn_get_user(mmsg->msg_len, &u_cmmsg->msg_len))
+		return -EFAULT;
+
+	return sys32_get_msghdr(&mmsg->msg_hdr, &u_cmmsg->msg_hdr);
+}
+EXPORT_SYMBOL_GPL(sys32_get_mmsghdr);
+
 int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
 		     const struct user_msghdr *msg)
 {
@@ -376,6 +388,18 @@ int sys32_put_msghdr(struct compat_msghdr __user *u_cmsg,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(sys32_put_msghdr);
+
+int sys32_put_mmsghdr(struct compat_mmsghdr __user *u_cmmsg,
+		     const struct mmsghdr *mmsg)
+{
+	if (u_cmmsg == NULL ||
+	    !access_wok(u_cmmsg, sizeof(*u_cmmsg)) ||
+	    __xn_put_user(mmsg->msg_len, &u_cmmsg->msg_len))
+		return -EFAULT;
+
+	return sys32_put_msghdr(&u_cmmsg->msg_hdr, &mmsg->msg_hdr);
+}
+EXPORT_SYMBOL_GPL(sys32_put_mmsghdr);
 
 int sys32_get_iovec(struct iovec *iov,
 		    const struct compat_iovec __user *u_ciov,

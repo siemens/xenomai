@@ -93,6 +93,33 @@ COBALT_SYSCALL(recvmsg, handover,
 	return cobalt_copy_to_user(umsg, &m, sizeof(*umsg)) ?: ret;
 }
 
+static int get_timespec(struct timespec *ts,
+			const void __user *u_ts)
+{
+	return cobalt_copy_from_user(ts, u_ts, sizeof(*ts));
+}
+
+static int get_mmsg(struct mmsghdr *mmsg, void __user *u_mmsg)
+{
+	return cobalt_copy_from_user(mmsg, u_mmsg, sizeof(*mmsg));
+}
+
+static int put_mmsg(void __user **u_mmsg_p, const struct mmsghdr *mmsg)
+{
+	struct mmsghdr __user **p = (struct mmsghdr **)u_mmsg_p,
+		*q __user = (*p)++;
+
+	return cobalt_copy_to_user(q, mmsg, sizeof(*q));
+}
+
+COBALT_SYSCALL(recvmmsg, primary,
+	       (int fd, struct mmsghdr __user *u_msgvec, unsigned int vlen,
+		unsigned int flags, struct timespec *u_timeout))
+{
+	return __rtdm_fd_recvmmsg(fd, u_msgvec, vlen, flags, u_timeout,
+				  get_mmsg, put_mmsg, get_timespec);
+}
+
 COBALT_SYSCALL(sendmsg, handover,
 	       (int fd, struct user_msghdr __user *umsg, int flags))
 {
@@ -102,6 +129,22 @@ COBALT_SYSCALL(sendmsg, handover,
 	ret = cobalt_copy_from_user(&m, umsg, sizeof(m));
 
 	return ret ?: rtdm_fd_sendmsg(fd, &m, flags);
+}
+
+static int put_mmsglen(void __user **u_mmsg_p, const struct mmsghdr *mmsg)
+{
+	struct mmsghdr __user **p = (struct mmsghdr **)u_mmsg_p,
+		*q __user = (*p)++;
+
+	return __xn_put_user(mmsg->msg_len, &q->msg_len);
+}
+
+COBALT_SYSCALL(sendmmsg, primary,
+	       (int fd, struct mmsghdr __user *u_msgvec,
+		unsigned int vlen, unsigned int flags))
+{
+	return __rtdm_fd_sendmmsg(fd, u_msgvec, vlen, flags,
+				  get_mmsg, put_mmsglen);
 }
 
 COBALT_SYSCALL(mmap, lostage,

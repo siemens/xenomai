@@ -190,9 +190,18 @@ COBALT_SYSCALL32emu_DECL(recvmsg,
 			 (int fd, struct compat_msghdr __user *umsg,
 			  int flags));
 
+COBALT_SYSCALL32emu_DECL(recvmmsg,
+			 (int fd, struct compat_mmsghdr __user *u_msgvec,
+			  unsigned int vlen,
+			  unsigned int flags, struct compat_timespec *u_timeout));
+
 COBALT_SYSCALL32emu_DECL(sendmsg,
 			 (int fd, struct compat_msghdr __user *umsg,
 			  int flags));
+
+COBALT_SYSCALL32emu_DECL(sendmmsg,
+			 (int fd, struct compat_mmsghdr __user *u_msgvec, unsigned int vlen,
+			  unsigned int flags));
 
 COBALT_SYSCALL32emu_DECL(mmap,
 			 (int fd,

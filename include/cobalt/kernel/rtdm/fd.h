@@ -367,8 +367,19 @@ int rtdm_fd_close(int ufd, unsigned int magic);
 
 ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags);
 
+int __rtdm_fd_recvmmsg(int ufd, void __user *u_msgvec, unsigned int vlen,
+		       unsigned int flags, void __user *u_timeout,
+		       int (*get_mmsg)(struct mmsghdr *mmsg, void __user *u_mmsg),
+		       int (*put_mmsg)(void __user **u_mmsg_p, const struct mmsghdr *mmsg),
+		       int (*get_timespec)(struct timespec *ts, const void __user *u_ts));
+
 ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg,
 			int flags);
+
+int __rtdm_fd_sendmmsg(int ufd, void __user *u_msgvec, unsigned int vlen,
+		       unsigned int flags,
+		       int (*get_mmsg)(struct mmsghdr *mmsg, void __user *u_mmsg),
+		       int (*put_mmsg)(void __user **u_mmsg_p, const struct mmsghdr *mmsg));
 
 int rtdm_fd_mmap(int ufd, struct _rtdm_mmap_request *rma,
 		 void **u_addrp);

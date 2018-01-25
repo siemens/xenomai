@@ -268,7 +268,21 @@ DEFINE_EVENT(fd_request, cobalt_fd_sendmsg,
 	TP_ARGS(task, fd, ufd, flags)
 );
 
+DEFINE_EVENT(fd_request, cobalt_fd_sendmmsg,
+	TP_PROTO(struct task_struct *task,
+		 struct rtdm_fd *fd, int ufd,
+		 unsigned long flags),
+	TP_ARGS(task, fd, ufd, flags)
+);
+
 DEFINE_EVENT(fd_request, cobalt_fd_recvmsg,
+	TP_PROTO(struct task_struct *task,
+		 struct rtdm_fd *fd, int ufd,
+		 unsigned long flags),
+	TP_ARGS(task, fd, ufd, flags)
+);
+
+DEFINE_EVENT(fd_request, cobalt_fd_recvmmsg,
 	TP_PROTO(struct task_struct *task,
 		 struct rtdm_fd *fd, int ufd,
 		 unsigned long flags),
@@ -357,7 +371,21 @@ DEFINE_EVENT(fd_request_status, cobalt_fd_recvmsg_status,
 	TP_ARGS(task, fd, ufd, status)
 );
 
+DEFINE_EVENT(fd_request_status, cobalt_fd_recvmmsg_status,
+	TP_PROTO(struct task_struct *task,
+		 struct rtdm_fd *fd, int ufd,
+		 int status),
+	TP_ARGS(task, fd, ufd, status)
+);
+
 DEFINE_EVENT(fd_request_status, cobalt_fd_sendmsg_status,
+	TP_PROTO(struct task_struct *task,
+		 struct rtdm_fd *fd, int ufd,
+		 int status),
+	TP_ARGS(task, fd, ufd, status)
+);
+
+DEFINE_EVENT(fd_request_status, cobalt_fd_sendmmsg_status,
 	TP_PROTO(struct task_struct *task,
 		 struct rtdm_fd *fd, int ufd,
 		 int status),
