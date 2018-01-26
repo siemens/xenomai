@@ -563,6 +563,9 @@ ssize_t rtdm_fd_recvmsg(int ufd, struct user_msghdr *msg, int flags)
 
 	trace_cobalt_fd_recvmsg(current, fd, ufd, flags);
 
+	if (fd->oflags & O_NONBLOCK)
+		flags |= MSG_DONTWAIT;
+
 	if (ipipe_root_p)
 		ret = fd->ops->recvmsg_nrt(fd, msg, flags);
 	else
@@ -594,6 +597,9 @@ ssize_t rtdm_fd_sendmsg(int ufd, const struct user_msghdr *msg, int flags)
 	set_compat_bit(fd);
 
 	trace_cobalt_fd_sendmsg(current, fd, ufd, flags);
+
+	if (fd->oflags & O_NONBLOCK)
+		flags |= MSG_DONTWAIT;
 
 	if (ipipe_root_p)
 		ret = fd->ops->sendmsg_nrt(fd, msg, flags);
