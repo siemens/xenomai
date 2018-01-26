@@ -355,12 +355,12 @@ static void xnintr_vec_handler(unsigned int irq, void *cookie)
 out:
 	xnstat_exectime_switch(sched, prev);
 
+	trace_cobalt_irq_exit(irq);
+
 	if (--sched->inesting == 0) {
 		sched->lflags &= ~XNINIRQ;
 		xnsched_run();
 	}
-
-	trace_cobalt_irq_exit(irq);
 }
 
 /*
@@ -441,12 +441,12 @@ static void xnintr_edge_vec_handler(unsigned int irq, void *cookie)
 out:
 	xnstat_exectime_switch(sched, prev);
 
+	trace_cobalt_irq_exit(irq);
+
 	if (--sched->inesting == 0) {
 		sched->lflags &= ~XNINIRQ;
 		xnsched_run();
 	}
-
-	trace_cobalt_irq_exit(irq);
 }
 
 static inline int xnintr_irq_attach(struct xnintr *intr)
