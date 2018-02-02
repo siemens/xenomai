@@ -394,6 +394,7 @@ int rtdm_dev_register(struct rtdm_device *dev)
 	int ret, major, minor;
 	xnkey_t id;
 	dev_t rdev;
+	const char *dev_name;
 
 	secondary_mode_only();
 
@@ -446,8 +447,12 @@ int rtdm_dev_register(struct rtdm_device *dev)
 			ret = -ENOMEM;
 			goto fail;
 		}
-
-		ret = xnregistry_enter(dev->name, dev,
+		if (dev->name[0] == '/') {
+			dev_name = dev->name+1;
+		} else {
+			dev_name = dev->name;
+		}
+		ret = xnregistry_enter(dev_name, dev,
 				       &dev->named.handle, NULL);
 		if (ret)
 			goto fail;
