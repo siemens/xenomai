@@ -1,7 +1,7 @@
 menu "Real-time GPIO drivers"
 
 config XENO_DRIVERS_GPIO
-       tristate "GPIO controller"
+       bool "GPIO controller"
        depends on GPIOLIB
        help
 
@@ -11,7 +11,7 @@ if XENO_DRIVERS_GPIO
 
 config XENO_DRIVERS_GPIO_BCM2835
 	depends on MACH_BCM2708 || ARCH_BCM2835
-	bool "Support for BCM2835 GPIOs"
+	tristate "Support for BCM2835 GPIOs"
 	help
 
 	Enables support for the GPIO controller available from
@@ -19,7 +19,7 @@ config XENO_DRIVERS_GPIO_BCM2835
 
 config XENO_DRIVERS_GPIO_MXC
 	depends on GPIO_MXC
-	bool "Support for MXC GPIOs"
+	tristate "Support for MXC GPIOs"
 	help
 
 	Suitable for the GPIO controller available from
@@ -27,7 +27,7 @@ config XENO_DRIVERS_GPIO_MXC
 
 config XENO_DRIVERS_GPIO_SUN8I_H3
 	depends on MACH_SUN8I && PINCTRL_SUN8I_H3
-	bool "Support for SUN8I H3 GPIOs"
+	tristate "Support for SUN8I H3 GPIOs"
 	help
 
 	Suitable for the GPIO controller available from Allwinner's H3
@@ -35,7 +35,7 @@ config XENO_DRIVERS_GPIO_SUN8I_H3
 
 config XENO_DRIVERS_GPIO_ZYNQ7000
 	depends on ARCH_ZYNQ
-	bool "Support for Zynq7000 GPIOs"
+	tristate "Support for Zynq7000 GPIOs"
 	help
 
 	Enables support for the GPIO controller available from
@@ -43,7 +43,7 @@ config XENO_DRIVERS_GPIO_ZYNQ7000
 
 config XENO_DRIVERS_GPIO_XILINX
 	depends on ARCH_ZYNQ
-	bool "Support for Xilinx GPIOs"
+	tristate "Support for Xilinx GPIOs"
 	help
 
 	Enables support for the GPIO controller available from
