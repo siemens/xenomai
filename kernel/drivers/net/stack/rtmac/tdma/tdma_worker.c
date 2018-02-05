@@ -173,12 +173,14 @@ static struct tdma_job *do_reply_cal_job(struct tdma_priv *tdma,
 
 void tdma_worker(void *arg)
 {
-    struct tdma_priv    *tdma = (struct tdma_priv *)arg;
+    struct tdma_priv    *tdma = arg;
     struct tdma_job     *job;
     rtdm_lockctx_t      lockctx;
+    int ret;
 
-
-    rtdm_event_wait(&tdma->worker_wakeup);
+    ret = rtdm_event_wait(&tdma->worker_wakeup);
+    if (ret)
+	    return;
 
     rtdm_lock_get_irqsave(&tdma->lock, lockctx);
 
@@ -189,7 +191,9 @@ void tdma_worker(void *arg)
         switch (job->id) {
             case WAIT_ON_SYNC:
                 rtdm_lock_put_irqrestore(&tdma->lock, lockctx);
-                rtdm_event_wait(&tdma->sync_event);
+                ret = rtdm_event_wait(&tdma->sync_event);
+		if (ret)
+			return;
                 rtdm_lock_get_irqsave(&tdma->lock, lockctx);
                 break;
 
