@@ -261,6 +261,6 @@ int rt_stack_mgr_init (struct rtnet_mgr *mgr)
  */
 void rt_stack_mgr_delete (struct rtnet_mgr *mgr)
 {
-    rtdm_task_destroy(&mgr->task);
     rtdm_event_destroy(&mgr->event);
+    rtdm_task_destroy(&mgr->task);
 }

@@ -138,6 +138,6 @@ int __init nomac_proto_init(void)
 
 void nomac_proto_cleanup(void)
 {
-    rtdm_task_destroy(&wrapper_task);
     rtdm_event_destroy(&wakeup_sem);
+    rtdm_task_destroy(&wrapper_task);
 }

@@ -567,8 +567,8 @@ int __init rtcfg_init_frames(void)
     return 0;
 
   error2:
-    rtdm_task_destroy(&rx_task);
     rtdm_event_destroy(&rx_event);
+    rtdm_task_destroy(&rx_task);
 
   error1:
     rtskb_pool_release(&rtcfg_pool);
@@ -585,8 +585,8 @@ void rtcfg_cleanup_frames(void)
 
     rtdev_remove_pack(&rtcfg_packet_type);
 
-    rtdm_task_destroy(&rx_task);
     rtdm_event_destroy(&rx_event);
+    rtdm_task_destroy(&rx_task);
 
     while ((rtskb = rtskb_dequeue(&rx_queue)) != NULL) {
 	kfree_rtskb(rtskb);
