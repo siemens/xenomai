@@ -221,6 +221,27 @@ int __cobalt_clock_settime(clockid_t clock_id, const struct timespec *ts)
 	return 0;
 }
 
+int __cobalt_clock_adjtime(clockid_t clock_id, struct timex *tx)
+{
+	int _ret, ret = 0;
+
+	switch (clock_id) {
+	case CLOCK_REALTIME:
+	case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC_RAW:
+	case CLOCK_HOST_REALTIME:
+		return -EOPNOTSUPP;
+	default:
+		_ret = do_ext_clock(clock_id, adjust_time, ret, tx);
+		if (_ret || ret)
+			return _ret ?: ret;
+	}
+
+	trace_cobalt_clock_adjtime(clock_id, tx);
+
+	return 0;
+}
+
 COBALT_SYSCALL(clock_settime, current,
 	       (clockid_t clock_id, const struct timespec __user *u_ts))
 {
@@ -230,6 +251,22 @@ COBALT_SYSCALL(clock_settime, current,
 		return -EFAULT;
 
 	return __cobalt_clock_settime(clock_id, &ts);
+}
+
+COBALT_SYSCALL(clock_adjtime, current,
+	       (clockid_t clock_id, struct timex __user *u_tx))
+{
+	struct timex tx;
+	int ret;
+
+	if (cobalt_copy_from_user(&tx, u_tx, sizeof(tx)))
+		return -EFAULT;
+
+	ret = __cobalt_clock_adjtime(clock_id, &tx);
+	if (ret)
+		return ret;
+
+	return cobalt_copy_to_user(u_tx, &tx, sizeof(tx));
 }
 
 int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,

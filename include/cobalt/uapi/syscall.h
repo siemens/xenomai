@@ -120,6 +120,7 @@
 #define sc_cobalt_ftrace_puts			97
 #define sc_cobalt_recvmmsg			98
 #define sc_cobalt_sendmmsg			99
+#define sc_cobalt_clock_adjtime			100
 
 #define __NR_COBALT_SYSCALLS			128 /* Power of 2 */
 

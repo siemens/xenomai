@@ -162,6 +162,23 @@ COBALT_SYSCALL32emu(clock_settime, current,
 	return __cobalt_clock_settime(clock_id, &ts);
 }
 
+COBALT_SYSCALL32emu(clock_adjtime, current,
+		    (clockid_t clock_id, struct compat_timex __user *u_tx))
+{
+	struct timex tx;
+	int ret;
+
+	ret = sys32_get_timex(&tx, u_tx);
+	if (ret)
+		return ret;
+
+	ret = __cobalt_clock_adjtime(clock_id, &tx);
+	if (ret)
+		return ret;
+
+	return sys32_put_timex(u_tx, &tx);
+}
+
 COBALT_SYSCALL32emu(clock_nanosleep, nonrestartable,
 		    (clockid_t clock_id, int flags,
 		     const struct compat_timespec __user *u_rqt,

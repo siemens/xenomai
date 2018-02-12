@@ -160,7 +160,8 @@
 		__cobalt_symbolic_syscall(extend),			\
 		__cobalt_symbolic_syscall(ftrace_puts),			\
 		__cobalt_symbolic_syscall(recvmmsg),			\
-		__cobalt_symbolic_syscall(sendmmsg))
+		__cobalt_symbolic_syscall(sendmmsg),			\
+		__cobalt_symbolic_syscall(clock_adjtime))
 
 DECLARE_EVENT_CLASS(syscall_entry,
 	TP_PROTO(unsigned int nr),
@@ -747,6 +748,26 @@ DEFINE_EVENT(cobalt_clock_timespec, cobalt_clock_gettime,
 DEFINE_EVENT(cobalt_clock_timespec, cobalt_clock_settime,
 	TP_PROTO(clockid_t clk_id, const struct timespec *time),
 	TP_ARGS(clk_id, time)
+);
+
+TRACE_EVENT(cobalt_clock_adjtime,
+	TP_PROTO(clockid_t clk_id, struct timex *tx),
+	TP_ARGS(clk_id, tx),
+
+	TP_STRUCT__entry(
+		__field(clockid_t, clk_id)
+		__field(struct timex *, tx)
+	),
+
+	TP_fast_assign(
+		__entry->clk_id = clk_id;
+		__entry->tx = tx;
+	),
+
+	TP_printk("clock_id=%d timex=%p",
+		  __entry->clk_id,
+		  __entry->tx
+	)
 );
 
 #define cobalt_print_timer_flags(__flags)			\

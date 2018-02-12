@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <linux/err.h>
+#include <linux/memory.h>
 #include <linux/module.h>
 #include <cobalt/kernel/compat.h>
 #include <asm/xenomai/syscall.h>
@@ -78,6 +79,68 @@ int sys32_put_timeval(struct compat_timeval __user *ctv,
 		__xn_put_user(tv->tv_usec, &ctv->tv_usec)) ? -EFAULT : 0;
 }
 EXPORT_SYMBOL_GPL(sys32_put_timeval);
+
+int sys32_get_timex(struct timex *tx,
+		    const struct compat_timex __user *ctx)
+{
+	memset(tx, 0, sizeof(*tx));
+
+	if (!access_rok(ctx, sizeof(*ctx)) ||
+	    __xn_get_user(tx->modes, &ctx->modes) ||
+	    __xn_get_user(tx->offset, &ctx->offset) ||
+	    __xn_get_user(tx->freq, &ctx->freq) ||
+	    __xn_get_user(tx->maxerror, &ctx->maxerror) ||
+	    __xn_get_user(tx->esterror, &ctx->esterror) ||
+	    __xn_get_user(tx->status, &ctx->status) ||
+	    __xn_get_user(tx->constant, &ctx->constant) ||
+	    __xn_get_user(tx->precision, &ctx->precision) ||
+	    __xn_get_user(tx->tolerance, &ctx->tolerance) ||
+	    __xn_get_user(tx->time.tv_sec, &ctx->time.tv_sec) ||
+	    __xn_get_user(tx->time.tv_usec, &ctx->time.tv_usec) ||
+	    __xn_get_user(tx->tick, &ctx->tick) ||
+	    __xn_get_user(tx->ppsfreq, &ctx->ppsfreq) ||
+	    __xn_get_user(tx->jitter, &ctx->jitter) ||
+	    __xn_get_user(tx->shift, &ctx->shift) ||
+	    __xn_get_user(tx->stabil, &ctx->stabil) ||
+	    __xn_get_user(tx->jitcnt, &ctx->jitcnt) ||
+	    __xn_get_user(tx->calcnt, &ctx->calcnt) ||
+	    __xn_get_user(tx->errcnt, &ctx->errcnt) ||
+	    __xn_get_user(tx->stbcnt, &ctx->stbcnt))
+	  return -EFAULT;
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(sys32_get_timex);
+
+int sys32_put_timex(struct compat_timex __user *ctx,
+		    const struct timex *tx)
+{
+	if (!access_wok(ctx, sizeof(*ctx)) ||
+	    __xn_put_user(tx->modes, &ctx->modes) ||
+	    __xn_put_user(tx->offset, &ctx->offset) ||
+	    __xn_put_user(tx->freq, &ctx->freq) ||
+	    __xn_put_user(tx->maxerror, &ctx->maxerror) ||
+	    __xn_put_user(tx->esterror, &ctx->esterror) ||
+	    __xn_put_user(tx->status, &ctx->status) ||
+	    __xn_put_user(tx->constant, &ctx->constant) ||
+	    __xn_put_user(tx->precision, &ctx->precision) ||
+	    __xn_put_user(tx->tolerance, &ctx->tolerance) ||
+	    __xn_put_user(tx->time.tv_sec, &ctx->time.tv_sec) ||
+	    __xn_put_user(tx->time.tv_usec, &ctx->time.tv_usec) ||
+	    __xn_put_user(tx->tick, &ctx->tick) ||
+	    __xn_put_user(tx->ppsfreq, &ctx->ppsfreq) ||
+	    __xn_put_user(tx->jitter, &ctx->jitter) ||
+	    __xn_put_user(tx->shift, &ctx->shift) ||
+	    __xn_put_user(tx->stabil, &ctx->stabil) ||
+	    __xn_put_user(tx->jitcnt, &ctx->jitcnt) ||
+	    __xn_put_user(tx->calcnt, &ctx->calcnt) ||
+	    __xn_put_user(tx->errcnt, &ctx->errcnt) ||
+	    __xn_put_user(tx->stbcnt, &ctx->stbcnt))
+	  return -EFAULT;
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(sys32_put_timex);
 
 ssize_t sys32_get_fdset(fd_set *fds, const compat_fd_set __user *cfds,
 			size_t cfdsize)

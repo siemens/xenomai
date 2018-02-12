@@ -53,6 +53,8 @@ struct xnclock {
 		xnticks_t (*read_monotonic)(struct xnclock *clock);
 		int (*set_time)(struct xnclock *clock,
 				const struct timespec *ts);
+		int (*adjust_time)(struct xnclock *clock,
+				   struct timex *tx);
 		xnsticks_t (*ns_to_ticks)(struct xnclock *clock,
 					  xnsticks_t ns);
 		xnsticks_t (*ticks_to_ns)(struct xnclock *clock,
@@ -251,6 +253,15 @@ static inline int xnclock_set_time(struct xnclock *clock,
 }
 
 #endif /* !CONFIG_XENO_OPT_EXTCLOCK */
+
+static inline int xnclock_adjust_time(struct xnclock *clock,
+				      struct timex *tx)
+{
+	if (clock->ops.adjust_time == NULL)
+		return -EOPNOTSUPP;
+
+	return clock->ops.adjust_time(clock, tx);
+}
 
 static inline xnticks_t xnclock_get_offset(struct xnclock *clock)
 {

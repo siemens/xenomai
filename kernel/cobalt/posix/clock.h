@@ -88,6 +88,9 @@ int __cobalt_clock_gettime(clockid_t clock_id,
 int __cobalt_clock_settime(clockid_t clock_id,
 			   const struct timespec *ts);
 
+int __cobalt_clock_adjtime(clockid_t clock_id,
+			   struct timex *tx);
+
 int __cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 			     const struct timespec *rqt,
 			     struct timespec *rmt);
@@ -100,6 +103,9 @@ COBALT_SYSCALL_DECL(clock_gettime,
 
 COBALT_SYSCALL_DECL(clock_settime,
 		    (clockid_t clock_id, const struct timespec __user *u_ts));
+
+COBALT_SYSCALL_DECL(clock_adjtime,
+		    (clockid_t clock_id, struct timex __user *u_tx));
 
 COBALT_SYSCALL_DECL(clock_nanosleep,
 		    (clockid_t clock_id, int flags,
