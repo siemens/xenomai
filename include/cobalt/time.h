@@ -39,6 +39,9 @@ COBALT_DECL(int, clock_gettime(clockid_t clock_id,
 COBALT_DECL(int, clock_settime(clockid_t clock_id,
 			       const struct timespec *tp));
 
+COBALT_DECL(int, clock_adjtime(clockid_t clock_id,
+			       struct timex *tx));
+
 COBALT_DECL(int, clock_nanosleep(clockid_t clock_id,
 				 int flags,
 				 const struct timespec *rqtp,

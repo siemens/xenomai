@@ -246,6 +246,21 @@ COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 	return 0;
 }
 
+/* @apitags{unrestricted} */
+
+COBALT_IMPL(int, clock_adjtime, (clockid_t clock_id, struct timex *tx))
+{
+	int ret;
+
+	ret = -XENOMAI_SYSCALL2(sc_cobalt_clock_adjtime, clock_id, tx);
+	if (ret < 0) {
+		errno = ret;
+		return -1;
+	}
+
+	return ret;
+}
+
 /**
  * Sleep some amount of time.
  *

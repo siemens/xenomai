@@ -25,6 +25,7 @@
 --wrap clock_getres
 --wrap clock_gettime
 --wrap clock_settime
+--wrap clock_adjtime
 --wrap clock_nanosleep
 --wrap nanosleep
 --wrap pthread_mutex_init
