@@ -11,7 +11,7 @@ Package: xenomai-runtime
 Section: devel
 Architecture: amd64 arm armeb armel armhf i386 powerpc powerpcspe
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: xenomai-kernel-source, xenomai-doc
+Suggests: xenomai-kernel-source
 Replaces: xenomai
 Conflicts: xenomai
 Description: Xenomai runtime utilities
@@ -48,7 +48,7 @@ Package: libxenomai1
 Section: libs
 Architecture: amd64 arm armeb armel armhf i386 powerpc powerpcspe
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Suggests: xenomai-kernel-source, xenomai-doc
+Suggests: xenomai-kernel-source
 Replaces: xenomai
 Conflicts: xenomai
 Description: Shared libraries for Xenomai
@@ -64,7 +64,7 @@ Package: libxenomai-dev
 Section: libdevel
 Architecture: amd64 arm armeb armel armhf i386 powerpc powerpcspe
 Depends: libxenomai1 (= ${binary:Version}), ${misc:Depends}
-Suggests: xenomai-kernel-source, xenomai-doc
+Suggests: xenomai-kernel-source
 Replaces: xenomai
 Conflicts: xenomai
 Description: Headers and static libs for Xenomai
@@ -76,19 +76,3 @@ Description: Headers and static libs for Xenomai
  .
  This package contains development files (header files), the static libraries
  and scripts used to compile realtime applications.
-
-Package: xenomai-doc
-Section: doc
-Architecture: all
-Depends: ${misc:Depends}
-Suggests: xenomai
-Conflicts: xenomai-docs
-Replaces: xenomai-docs
-Description: Xenomai documentation
- Xenomai is a real-time development framework cooperating with the Linux
- kernel in order to provide a pervasive, interface-agnostic, hard real-time
- support to user-space applications, seamlessly integrated into the GNU/Linux
- environment. Xenomai provides its own API and emulation layers ("skins") to
- make migration from other RTOS easier. Examples are: pSOS+, VxWorks, POSIX.
- .
- Documentation for Xenomai realtime API.
