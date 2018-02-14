@@ -62,5 +62,14 @@ config XENO_DRIVERS_NET_RTIPV4_ROUTER
 
     See Documentation/README.routing for further information.
 
+config XENO_DRIVERS_NET_RTIPV4_DEBUG
+    bool "RTipv4 Debugging"
+    depends on XENO_DRIVERS_NET_RTIPV4
+    default n
+    
+    ---help---
+    Enables debug message output of the RTipv4 layer. Typically, you
+    may want to turn this on for tracing issues in packet delivery.
+
 source "drivers/xenomai/net/stack/ipv4/udp/Kconfig"
 # source "drivers/xenomai/net/stack/ipv4/tcp/Kconfig"

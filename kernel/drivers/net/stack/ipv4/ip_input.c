@@ -105,7 +105,8 @@ static inline void rt_ip_local_deliver(struct rtskb *skb)
         rt_ip_fallback_handler(skb);
 #endif /* CONFIG_XENO_DRIVERS_NET_ADDON_PROXY */
     } else {
-        rtdm_printk("RTnet: no protocol found\n");
+	if (IS_ENABLED(CONFIG_XENO_DRIVERS_NET_RTIPV4_DEBUG))
+		rtdm_printk("RTnet: no protocol found\n");
         kfree_rtskb(skb);
     }
 }
