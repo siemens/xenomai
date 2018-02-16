@@ -689,6 +689,7 @@ else
 	AC_DEFINE_UNQUOTED(CONFIG_XENO_TLS_MODEL,"initial-exec",[TLS model])
 	XENO_LIB_LDFLAGS="-Wl,-z -Wl,nodlopen"
 fi
+AM_CONDITIONAL(CONFIG_XENO_LIBS_DLOPEN,[test x$CONFIG_XENO_LIBS_DLOPEN = xy])
 
 AC_MSG_CHECKING(whether to enable TLS support)
 AC_ARG_ENABLE([tls],
@@ -879,6 +880,7 @@ AC_CONFIG_FILES([ \
 	testsuite/spitest/Makefile \
 	testsuite/smokey/Makefile \
 	testsuite/smokey/arith/Makefile \
+	testsuite/smokey/dlopen/Makefile \
 	testsuite/smokey/sched-quota/Makefile \
 	testsuite/smokey/sched-tp/Makefile \
 	testsuite/smokey/setsched/Makefile \
