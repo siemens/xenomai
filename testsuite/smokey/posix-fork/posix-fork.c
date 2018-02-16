@@ -47,7 +47,7 @@ static int run_posix_fork(struct smokey_test *t, int argc, char *const argv[])
 		 * Re-exec ourselves without running any test, this is
 		 * enough for creating a shadow context.
 		 */
-		execl(CONFIG_XENO_PREFIX "/bin/smokey", "smokey", NULL);
+		execl(XENO_TEST_DIR "/smokey", "smokey", NULL);
 		_exit(99);
 	default:
 		req.tv_sec = 0;
