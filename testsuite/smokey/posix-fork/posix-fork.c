@@ -7,11 +7,6 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <error.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <xeno_config.h>
 #include <boilerplate/libc.h>
 #include <smokey/smokey.h>
@@ -20,12 +15,6 @@ smokey_test_plugin(posix_fork,
 		   SMOKEY_NOARGS,
 		   "Check POSIX fork->exec sequence."
 );
-
-#ifdef HAVE_FORK
-#define do_fork fork
-#else
-#define do_fork vfork
-#endif
 
 /*
  * The purpose of this test is to check whether Cobalt detects and
@@ -39,30 +28,9 @@ smokey_test_plugin(posix_fork,
  */
 static int run_posix_fork(struct smokey_test *t, int argc, char *const argv[])
 {
-	int wstatus = 0;
-	pid_t pid;
-
-	pid = do_fork();
-	switch (pid) {
-	case -1:
-		error(1, errno, "fork/vfork");
-	case 0:
-		/*
-		 * Re-exec ourselves without running any test, this is
-		 * enough for creating a shadow context.
-		 */
-		execl(XENO_TEST_DIR "/smokey", "smokey", NULL);
-		error(1, errno, "execl %s/smokey", XENO_TEST_DIR);
-	default:
-		waitpid(pid, &wstatus, 0);
-	}
-
-	if WIFEXITED(wstatus)
-		return WEXITSTATUS(wstatus);
-
-	if WIFSIGNALED(wstatus)
-		fprintf(stderr, "%s %s\n",
-			strsignal(WTERMSIG(wstatus)),
-			WCOREDUMP(wstatus) ? "(core dumped)" : "");
-	return 1;
+	/*
+	 * Re-exec ourselves without running any test, this is
+	 * enough for creating a shadow context.
+	 */
+	return smokey_fork_exec(XENO_TEST_DIR "/smokey", "smokey");
 }

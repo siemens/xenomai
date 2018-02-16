@@ -20,7 +20,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <error.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <boilerplate/ancillaries.h>
 #include <smokey/smokey.h>
 
@@ -238,4 +242,31 @@ void smokey_barrier_release(struct smokey_barrier *b)
 	b->signaled = 1;
 	__RT(pthread_cond_broadcast(&b->barrier));
 	__RT(pthread_mutex_unlock(&b->lock));
+}
+
+int smokey_fork_exec(const char *path, const char *arg)
+{
+	int wstatus = 0;
+	pid_t pid;
+
+	pid = do_fork();
+	switch (pid) {
+	case -1:
+		error(1, errno, "fork/vfork");
+	case 0:
+		execl(path, arg, NULL);
+		error(1, errno, "execl %s", path);
+	default:
+		waitpid(pid, &wstatus, 0);
+	}
+
+	if WIFEXITED(wstatus)
+		return WEXITSTATUS(wstatus);
+
+	if WIFSIGNALED(wstatus)
+		fprintf(stderr, "%s %s\n",
+			strsignal(WTERMSIG(wstatus)),
+			WCOREDUMP(wstatus) ? "(core dumped)" : "");
+	return 1;
+
 }
