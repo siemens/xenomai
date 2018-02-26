@@ -52,14 +52,30 @@ static void __do_printout(const char *name, const char *header,
 {
 	FILE *fp = stderr;
 
-	fprintf(fp, "%4u\"%.3u.%.3u| ", ms / 1000, ms % 1000, us);
+	__RT(fprintf(fp, "%4u\"%.3u.%.3u| ", ms / 1000, ms % 1000, us));
 
 	if (header)
-		fputs(header, fp);
+		__RT(fputs(header, fp));
 
-	fprintf(fp, "[%s] ", name ?: "main");
-	vfprintf(fp, fmt, ap);
-	fputc('\n', fp);
+	__RT(fprintf(fp, "[%s] ", name ?: "main"));
+	__RT(vfprintf(fp, fmt, ap));
+	__RT(fputc('\n', fp));
+}
+
+static void __do_early_printout(const char *name, const char *header,
+			  unsigned int ms, unsigned int us,
+			  const char *fmt, va_list ap)
+{
+	FILE *fp = stderr;
+
+	__STD(fprintf(fp, "%4u\"%.3u.%.3u| ", ms / 1000, ms % 1000, us));
+
+	if (header)
+		__STD(fputs(header, fp));
+
+	__STD(fprintf(fp, "[%s] ", name ?: "main"));
+	__STD(vfprintf(fp, fmt, ap));
+	__STD(fputc('\n', fp));
 	fflush(fp);
 }
 
@@ -77,7 +93,7 @@ void __printout(const char *name, const char *header,
 	 * uncontended.
 	 */
 	if (!init_done) {
-		__do_printout(name, header, 0, 0, fmt, ap);
+		__do_early_printout(name, header, 0, 0, fmt, ap);
 		return;
 	}
 	
@@ -110,6 +126,7 @@ void ___panic(const char *fn, const char *name,
 	if (asprintf(&p, "BUG in %s(): ", fn) < 0)
 		p = "BUG: ";
 	__printout(name, p, fmt, ap);
+	rt_print_flush_buffers();
 	exit(1);
 }
 
