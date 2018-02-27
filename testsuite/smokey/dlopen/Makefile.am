@@ -60,4 +60,4 @@ libdlopen_a_SOURCES = dlopen.c
 libdlopen_a_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@			\
 	-DXENO_TEST_DIR='"$(XENO_TEST_DIR)"'	\
-	-I$(top_srcdir)
+	-I$(top_srcdir)/include
