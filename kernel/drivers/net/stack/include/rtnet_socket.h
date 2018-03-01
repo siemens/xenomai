@@ -88,6 +88,12 @@ static inline struct rtdm_fd *rt_socket_fd(struct rtsocket *sock)
     return rtdm_private_to_fd(sock);
 }
 
+void *rtnet_get_arg(struct rtdm_fd *fd, void *tmp,
+		    const void *src, size_t len);
+
+int rtnet_put_arg(struct rtdm_fd *fd, void *dst,
+		  const void *src, size_t len);
+
 #define rt_socket_reference(sock)   \
     rtdm_fd_lock(rt_socket_fd(sock))
 #define rt_socket_dereference(sock) \
@@ -99,8 +105,8 @@ int __rt_socket_init(struct rtdm_fd *fd, unsigned short protocol,
     __rt_socket_init(fd, proto, THIS_MODULE)
 
 void rt_socket_cleanup(struct rtdm_fd *fd);
-int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg);
-int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg);
+int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void __user *arg);
+int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void __user *arg);
 int rt_socket_select_bind(struct rtdm_fd *fd,
 			  rtdm_selector_t *selector,
 			  enum rtdm_selecttype type,

@@ -27,6 +27,7 @@
 #include <linux/spinlock.h>
 #include <linux/socket.h>
 #include <linux/in.h>
+#include <linux/err.h>
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <asm/bitops.h>
@@ -141,23 +142,32 @@ EXPORT_SYMBOL_GPL(rt_socket_cleanup);
 /***
  *  rt_socket_common_ioctl
  */
-int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg)
+int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void __user *arg)
 {
     struct rtsocket         *sock = rtdm_fd_to_private(fd);
     int                     ret = 0;
-    struct rtnet_callback   *callback = arg;
-    unsigned int            rtskbs;
+    struct rtnet_callback   *callback;
+    const unsigned int *val;
+    unsigned int _val;
+    const nanosecs_rel_t *timeout;
+    nanosecs_rel_t _timeout;
     rtdm_lockctx_t          context;
 
 
     switch (request) {
 	case RTNET_RTIOC_XMITPARAMS:
-	    sock->priority = *(unsigned int *)arg;
-	    break;
+		val = rtnet_get_arg(fd, &_val, arg, sizeof(_val));
+		if (IS_ERR(val))
+			return PTR_ERR(val);
+		sock->priority = *val;
+		break;
 
 	case RTNET_RTIOC_TIMEOUT:
-	    sock->timeout = *(nanosecs_rel_t *)arg;
-	    break;
+		timeout = rtnet_get_arg(fd, &_timeout, arg, sizeof(_timeout));
+		if (IS_ERR(timeout))
+			return PTR_ERR(timeout);
+		sock->timeout = *timeout;
+		break;
 
 	case RTNET_RTIOC_CALLBACK:
 	    if (rtdm_fd_is_user(fd))
@@ -165,6 +175,7 @@ int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg)
 
 	    rtdm_lock_get_irqsave(&sock->param_lock, context);
 
+	    callback = arg;
 	    sock->callback_func = callback->func;
 	    sock->callback_arg  = callback->arg;
 
@@ -172,44 +183,48 @@ int rt_socket_common_ioctl(struct rtdm_fd *fd, int request, void *arg)
 	    break;
 
 	case RTNET_RTIOC_EXTPOOL:
-	    rtskbs = *(unsigned int *)arg;
+		val = rtnet_get_arg(fd, &_val, arg, sizeof(_val));
+		if (IS_ERR(val))
+			return PTR_ERR(val);
 
-	    if (rtdm_in_rt_context())
-		return -ENOSYS;
+		if (rtdm_in_rt_context())
+			return -ENOSYS;
 
-	    mutex_lock(&sock->pool_nrt_lock);
+		mutex_lock(&sock->pool_nrt_lock);
 
-	    if (test_bit(SKB_POOL_CLOSED, &sock->flags)) {
+		if (test_bit(SKB_POOL_CLOSED, &sock->flags)) {
+			mutex_unlock(&sock->pool_nrt_lock);
+			return -EBADF;
+		}
+		ret = rtskb_pool_extend(&sock->skb_pool, *val);
+		sock->pool_size += ret;
+
 		mutex_unlock(&sock->pool_nrt_lock);
-		return -EBADF;
-	    }
-	    ret = rtskb_pool_extend(&sock->skb_pool, rtskbs);
-	    sock->pool_size += ret;
 
-	    mutex_unlock(&sock->pool_nrt_lock);
+		if (ret == 0 && *val > 0)
+			ret = -ENOMEM;
 
-	    if (ret == 0 && rtskbs > 0)
-		ret = -ENOMEM;
-
-	    break;
+		break;
 
 	case RTNET_RTIOC_SHRPOOL:
-	    rtskbs = *(unsigned int *)arg;
+		val = rtnet_get_arg(fd, &_val, arg, sizeof(_val));
+		if (IS_ERR(val))
+			return PTR_ERR(val);
 
-	    if (rtdm_in_rt_context())
-		return -ENOSYS;
+		if (rtdm_in_rt_context())
+			return -ENOSYS;
 
-	    mutex_lock(&sock->pool_nrt_lock);
+		mutex_lock(&sock->pool_nrt_lock);
 
-	    ret = rtskb_pool_shrink(&sock->skb_pool, rtskbs);
-	    sock->pool_size -= ret;
+		ret = rtskb_pool_shrink(&sock->skb_pool, *val);
+		sock->pool_size -= ret;
 
-	    mutex_unlock(&sock->pool_nrt_lock);
+		mutex_unlock(&sock->pool_nrt_lock);
 
-	    if (ret == 0 && rtskbs > 0)
-		ret = -EBUSY;
+		if (ret == 0 && *val > 0)
+			ret = -EBUSY;
 
-	    break;
+		break;
 
 	default:
 	    ret = -EOPNOTSUPP;
@@ -225,87 +240,104 @@ EXPORT_SYMBOL_GPL(rt_socket_common_ioctl);
 /***
  *  rt_socket_if_ioctl
  */
-int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void *arg)
+int rt_socket_if_ioctl(struct rtdm_fd *fd, int request, void __user *arg)
 {
     struct rtnet_device *rtdev;
-    struct ifreq        *ifr = arg;
-    struct sockaddr_in  *sin;
-    int                 ret = 0;
+    struct ifreq _ifr, *ifr, *u_ifr;
+    struct sockaddr_in  _sin;
+    struct ifconf _ifc, *ifc, *u_ifc;
+    int ret = 0, size = 0, i;
+    short flags;
 
 
     if (request == SIOCGIFCONF) {
-	struct ifconf       *ifc = arg;
-	struct ifreq        *cur_ifr = ifc->ifc_req;
-	int                 size = 0;
-	int                 i;
+	u_ifc = arg;
+	ifc = rtnet_get_arg(fd, &_ifc, u_ifc, sizeof(_ifc));
+	if (IS_ERR(ifc))
+		return PTR_ERR(ifc);
 
-	for (i = 1; i <= MAX_RT_DEVICES; i++) {
-	    rtdev = rtdev_get_by_index(i);
-	    if (rtdev != NULL) {
+	for (u_ifr = ifc->ifc_req, i = 1; i <= MAX_RT_DEVICES; i++, u_ifr++) {
+		rtdev = rtdev_get_by_index(i);
+		if (rtdev == NULL)
+			continue;
+
 		if ((rtdev->flags & IFF_UP) == 0) {
-		    rtdev_dereference(rtdev);
-		    continue;
+			rtdev_dereference(rtdev);
+			continue;
 		}
 
 		size += sizeof(struct ifreq);
 		if (size > ifc->ifc_len) {
-		    rtdev_dereference(rtdev);
-		    size = ifc->ifc_len;
-		    break;
+			rtdev_dereference(rtdev);
+			size = ifc->ifc_len;
+			break;
 		}
 
-		strlcpy(cur_ifr->ifr_name, rtdev->name,
-			IFNAMSIZ);
-		sin = (struct sockaddr_in *)&cur_ifr->ifr_addr;
-		sin->sin_family      = AF_INET;
-		sin->sin_addr.s_addr = rtdev->local_ip;
-
-		cur_ifr++;
+		ret = rtnet_put_arg(fd, u_ifr->ifr_name, rtdev->name, IFNAMSIZ);
+		if (ret == 0) {
+			memset(&_sin, 0, sizeof(_sin));
+			_sin.sin_family      = AF_INET;
+			_sin.sin_addr.s_addr = rtdev->local_ip;
+			ret = rtnet_put_arg(fd, &u_ifr->ifr_addr, &_sin, sizeof(_sin));
+		}
+		
 		rtdev_dereference(rtdev);
-	    }
+		if (ret)
+			return ret;
 	}
 
-	ifc->ifc_len = size;
-	return 0;
+	return rtnet_put_arg(fd, &u_ifc->ifc_len, &size, sizeof(size));
     }
+
+    u_ifr = arg;
+    ifr = rtnet_get_arg(fd, &_ifr, u_ifr, sizeof(_ifr));
+    if (IS_ERR(ifr))
+	    return PTR_ERR(ifr);
+
     if (request == SIOCGIFNAME) {
         rtdev = rtdev_get_by_index(ifr->ifr_ifindex);
         if (rtdev == NULL)
             return -ENODEV;
-        strlcpy(ifr->ifr_name, rtdev->name, IFNAMSIZ);
-	ret = 0;
+	ret = rtnet_put_arg(fd, u_ifr->ifr_name, rtdev->name, IFNAMSIZ);
 	goto out;
     }
 
     rtdev = rtdev_get_by_name(ifr->ifr_name);
     if (rtdev == NULL)
-	return -ENODEV;
+	    return -ENODEV;
 
     switch (request) {
 	case SIOCGIFINDEX:
-	    ifr->ifr_ifindex = rtdev->ifindex;
-	    break;
+		ret = rtnet_put_arg(fd, &u_ifr->ifr_ifindex, &rtdev->ifindex,
+				    sizeof(u_ifr->ifr_ifindex));
+		break;
 
 	case SIOCGIFFLAGS:
-	    ifr->ifr_flags = rtdev->flags;
-            if ((ifr->ifr_flags & IFF_UP)
+		flags = rtdev->flags;
+		if ((ifr->ifr_flags & IFF_UP)
 		    && (rtdev->link_state
-			    & (RTNET_LINK_STATE_PRESENT
-				    | RTNET_LINK_STATE_NOCARRIER))
+			& (RTNET_LINK_STATE_PRESENT
+			   | RTNET_LINK_STATE_NOCARRIER))
                     == RTNET_LINK_STATE_PRESENT)
-                    ifr->ifr_flags |= IFF_RUNNING;
-	    break;
+			flags |= IFF_RUNNING;
+		ret = rtnet_put_arg(fd, &u_ifr->ifr_flags, &flags,
+				    sizeof(u_ifr->ifr_flags));
+		break;
 
 	case SIOCGIFHWADDR:
-	    memcpy(ifr->ifr_hwaddr.sa_data, rtdev->dev_addr, rtdev->addr_len);
-	    ifr->ifr_hwaddr.sa_family = rtdev->type;
-	    break;
+		ret = rtnet_put_arg(fd, &u_ifr->ifr_hwaddr.sa_data,
+				    rtdev->dev_addr, rtdev->addr_len);
+		if (!ret)
+			ret = rtnet_put_arg(fd, &u_ifr->ifr_hwaddr.sa_family,
+					    &rtdev->type, sizeof(u_ifr->ifr_hwaddr.sa_family));
+		break;
 
 	case SIOCGIFADDR:
-	    sin = (struct sockaddr_in *)&ifr->ifr_addr;
-	    sin->sin_family      = AF_INET;
-	    sin->sin_addr.s_addr = rtdev->local_ip;
-	    break;
+		memset(&_sin, 0, sizeof(_sin));
+		_sin.sin_family      = AF_INET;
+		_sin.sin_addr.s_addr = rtdev->local_ip;
+		ret = rtnet_put_arg(fd, &u_ifr->ifr_addr, &_sin, sizeof(_sin));
+		break;
 
 	case SIOCETHTOOL:
 	    if (rtdev->do_ioctl != NULL)
@@ -344,3 +376,30 @@ int rt_socket_select_bind(struct rtdm_fd *fd,
     return -EINVAL;
 }
 EXPORT_SYMBOL_GPL(rt_socket_select_bind);
+
+void *rtnet_get_arg(struct rtdm_fd *fd, void *tmp, const void *src, size_t len)
+{
+	int ret;
+	
+	if (!rtdm_fd_is_user(fd))
+		return (void *)src;
+
+	ret = rtdm_copy_from_user(fd, tmp, src, len);
+	if (ret)
+		return ERR_PTR(ret);
+
+	return tmp;
+}
+EXPORT_SYMBOL_GPL(rtnet_get_arg);
+
+int rtnet_put_arg(struct rtdm_fd *fd, void *dst, const void *src, size_t len)
+{
+	if (!rtdm_fd_is_user(fd)) {
+		if (dst != src)
+			memcpy(dst, src, len);
+		return 0;
+	}
+
+	return rtdm_copy_to_user(fd, dst, src, len);
+}
+EXPORT_SYMBOL_GPL(rtnet_put_arg);
