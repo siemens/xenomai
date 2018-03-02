@@ -53,8 +53,6 @@ struct xnclock {
 		xnticks_t (*read_monotonic)(struct xnclock *clock);
 		int (*set_time)(struct xnclock *clock,
 				const struct timespec *ts);
-		int (*adjust_time)(struct xnclock *clock,
-				   struct timex *tx);
 		xnsticks_t (*ns_to_ticks)(struct xnclock *clock,
 					  xnsticks_t ns);
 		xnsticks_t (*ticks_to_ns)(struct xnclock *clock,
@@ -66,6 +64,8 @@ struct xnclock {
 		void (*program_remote_shot)(struct xnclock *clock,
 					    struct xnsched *sched);
 #endif
+		int (*adjust_time)(struct xnclock *clock,
+				   struct timex *tx);
 		int (*set_gravity)(struct xnclock *clock,
 				   const struct xnclock_gravity *p);
 		void (*reset_gravity)(struct xnclock *clock);
