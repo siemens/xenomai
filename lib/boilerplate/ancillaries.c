@@ -126,7 +126,9 @@ void ___panic(const char *fn, const char *name,
 	if (asprintf(&p, "BUG in %s(): ", fn) < 0)
 		p = "BUG: ";
 	__printout(name, p, fmt, ap);
+#ifdef CONFIG_XENO_COBALT
 	rt_print_flush_buffers();
+#endif /* CONFIG_XENO_COBALT */
 	exit(1);
 }
 
