@@ -208,6 +208,7 @@ int __xnthread_init(struct xnthread *thread,
 	thread->entry = NULL;
 	thread->cookie = NULL;
 	init_completion(&thread->exited);
+	memset(xnthread_archtcb(thread), 0, sizeof(struct xnarchtcb));
 
 	gravity = flags & XNUSER ? XNTIMER_UGRAVITY : XNTIMER_KGRAVITY;
 	xntimer_init(&thread->rtimer, &nkclock, timeout_handler,
@@ -256,7 +257,6 @@ void xnthread_init_shadow_tcb(struct xnthread *thread)
 	 */
 	__ipipe_share_current(0);
 
-	memset(tcb, 0, sizeof(*tcb));
 	tcb->core.host_task = p;
 	tcb->core.tsp = &p->thread;
 	tcb->core.mm = p->mm;
@@ -275,7 +275,6 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = current;
 
-	memset(tcb, 0, sizeof(*tcb));
 	tcb->core.host_task = p;
 	tcb->core.tsp = &tcb->core.ts;
 	tcb->core.mm = p->mm;
