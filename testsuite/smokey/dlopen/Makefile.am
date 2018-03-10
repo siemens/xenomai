@@ -43,6 +43,7 @@ dlopentest_SOURCES = dlopentest.c
 
 dlopentest_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@			\
+	-Wno-format-security			\
 	-DXENO_TEST_DIR='"$(XENO_TEST_DIR)"'	\
 	-I$(top_srcdir)/include
 
