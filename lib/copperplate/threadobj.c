@@ -1564,10 +1564,13 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 	sobj = thobj->wait_sobj;
 	if (sobj) {
 		ret = syncobj_lock(sobj, &syns);
+		/*
+		 * Remove PEND (+DELAY timeout).
+		 * CAUTION: thobj->wait_obj goes NULL upon flush.
+		 */
 		if (ret == 0) {
-			/* Remove PEND (+DELAY timeout) */
-			syncobj_flush(thobj->wait_sobj);
-			syncobj_unlock(thobj->wait_sobj, &syns);
+			syncobj_flush(sobj);
+			syncobj_unlock(sobj, &syns);
 			return 0;
 		}
 	}
