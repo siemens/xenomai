@@ -106,6 +106,7 @@ static void sporadic_schedule_drop(struct xnthread *thread)
 	 * the thread is running, trading cycles at firing time
 	 * against cycles when arming the timer.
 	 */
+	xntimer_set_affinity(&pss->drop_timer, thread->sched);
 	ret = xntimer_start(&pss->drop_timer, now + pss->budget,
 			    XN_INFINITE, XN_ABSOLUTE);
 	if (ret == -ETIMEDOUT) {
@@ -141,7 +142,7 @@ retry:
 	} while(--pss->repl_pending > 0);
 
 	if (pss->repl_pending > 0) {
-		xntimer_set_sched(&pss->repl_timer, thread->sched);
+		xntimer_set_affinity(&pss->repl_timer, thread->sched);
 		ret = xntimer_start(&pss->repl_timer, pss->repl_data[r].date,
 				    XN_INFINITE, XN_ABSOLUTE);
 		if (ret == -ETIMEDOUT)
@@ -194,6 +195,7 @@ static void sporadic_post_recharge(struct xnthread *thread, xnticks_t budget)
 	pss->repl_in = (r + 1) % MAX_REPLENISH;
 
 	if (pss->repl_pending++ == 0) {
+		xntimer_set_affinity(&pss->repl_timer, thread->sched);
 		ret = xntimer_start(&pss->repl_timer, pss->repl_data[r].date,
 				    XN_INFINITE, XN_ABSOLUTE);
 		/*

@@ -522,14 +522,23 @@ int xntimer_setup_ipi(void);
 
 void xntimer_release_ipi(void);
 
-bool xntimer_set_sched(struct xntimer *timer,
-		       struct xnsched *sched);
+void __xntimer_set_affinity(struct xntimer *timer,
+			    struct xnsched *sched);
+
+static inline void xntimer_set_affinity(struct xntimer *timer,
+					struct xnsched *sched)
+{
+	if (sched != xntimer_sched(timer))
+		__xntimer_set_affinity(timer, sched);
+}
 
 #else /* ! CONFIG_SMP */
 
 static inline void xntimer_migrate(struct xntimer *timer,
 				   struct xnsched *sched)
-{ }
+{
+	timer->sched = sched;
+}
 
 static inline int xntimer_setup_ipi(void)
 {
@@ -538,10 +547,10 @@ static inline int xntimer_setup_ipi(void)
 
 static inline void xntimer_release_ipi(void) { }
 
-static inline bool xntimer_set_sched(struct xntimer *timer,
-				     struct xnsched *sched)
+static inline void xntimer_set_affinity(struct xntimer *timer,
+					struct xnsched *sched)
 {
-	return true;
+	xntimer_migrate(timer, sched);
 }
 
 #endif /* CONFIG_SMP */

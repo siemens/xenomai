@@ -329,34 +329,6 @@ xnticks_t xnclock_core_read_monotonic(void)
 }
 EXPORT_SYMBOL_GPL(xnclock_core_read_monotonic);
 
-#ifdef CONFIG_SMP
-
-int xnclock_get_default_cpu(struct xnclock *clock, int cpu)
-{
-	cpumask_t set;
-	/*
-	 * Check a CPU number against the possible set of CPUs
-	 * receiving events from the underlying clock device. If the
-	 * suggested CPU does not receive events from this device,
-	 * return the first one which does.  We also account for the
-	 * dynamic set of real-time CPUs.
-	 *
-	 * A clock device with no percpu semantics causes this routine
-	 * to return CPU0 unconditionally.
-	 */
-	if (cpumask_empty(&clock->affinity))
-		return 0;
-	
-	cpumask_and(&set, &clock->affinity, &cobalt_cpu_affinity);
-	if (!cpumask_empty(&set) && !cpumask_test_cpu(cpu, &set))
-		cpu = cpumask_first(&set);
-
-	return cpu;
-}
-EXPORT_SYMBOL_GPL(xnclock_get_default_cpu);
-
-#endif /* !CONFIG_SMP */
-
 #ifdef CONFIG_XENO_OPT_STATS
 
 static struct xnvfile_directory timerlist_vfroot;
@@ -657,7 +629,7 @@ int xnclock_register(struct xnclock *clock, const cpumask_t *affinity)
 		cpumask_and(&clock->affinity, affinity, &xnsched_realtime_cpus);
 		if (cpumask_empty(&clock->affinity))
 			return -EINVAL;
-	} else	/* No percpu semantics. */
+	} else	/* Device is global without particular IRQ affinity. */
 		cpumask_clear(&clock->affinity);
 #endif
 
@@ -669,8 +641,9 @@ int xnclock_register(struct xnclock *clock, const cpumask_t *affinity)
 	/*
 	 * POLA: init all timer slots for the new clock, although some
 	 * of them might remain unused depending on the CPU affinity
-	 * of the event source(s). If the clock device has no percpu
-	 * semantics, all timers will be queued to slot #0.
+	 * of the event source(s). If the clock device is global
+	 * without any particular IRQ affinity, all timers will be
+	 * queued to CPU0.
 	 */
 	for_each_online_cpu(cpu) {
 		tmd = xnclock_percpu_timerdata(clock, cpu);
@@ -732,8 +705,8 @@ EXPORT_SYMBOL_GPL(xnclock_deregister);
  * @coretags{coreirq-only, atomic-entry}
  *
  * @note The current CPU must be part of the real-time affinity set
- * unless the clock device has no percpu semantics, otherwise weird
- * things may happen.
+ * unless the clock device has no particular IRQ affinity, otherwise
+ * weird things may happen.
  */
 void xnclock_tick(struct xnclock *clock)
 {
@@ -748,8 +721,9 @@ void xnclock_tick(struct xnclock *clock)
 
 #ifdef CONFIG_SMP
 	/*
-	 * Some external clock devices may have no percpu semantics,
-	 * in which case all timers are queued to slot #0.
+	 * Some external clock devices may be global without any
+	 * particular IRQ affinity, in which case the associated
+	 * timers will be queued to CPU0.
 	 */
 	if (IS_ENABLED(CONFIG_XENO_OPT_EXTCLOCK) &&
 	    clock != &nkclock &&

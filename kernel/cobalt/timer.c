@@ -337,7 +337,6 @@ void __xntimer_init(struct xntimer *timer,
 		    int flags)
 {
 	spl_t s __maybe_unused;
-	int cpu;
 
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
 	timer->clock = clock;
@@ -348,19 +347,16 @@ void __xntimer_init(struct xntimer *timer,
 	timer->status = (XNTIMER_DEQUEUED|(flags & XNTIMER_INIT_MASK));
 	timer->handler = handler;
 	timer->interval_ns = 0;
+	timer->sched = NULL;
+
 	/*
-	 * If the CPU the caller is affine to does not receive timer
-	 * events, or no affinity was specified (i.e. sched == NULL),
-	 * assign the timer to the first possible CPU which can
-	 * receive interrupt events from the clock device backing this
-	 * timer.
-	 *
-	 * If the clock device has no percpu semantics,
-	 * xnclock_get_default_cpu() makes the timer always affine to
-	 * CPU0 unconditionally.
+	 * Set the timer affinity, preferably to xnsched_cpu(sched) if
+	 * sched was given, CPU0 otherwise.
 	 */
-	cpu = xnclock_get_default_cpu(clock, sched ? xnsched_cpu(sched) : 0);
-	timer->sched = xnsched_struct(cpu);
+	if (sched == NULL)
+		sched = xnsched_struct(0);
+
+	xntimer_set_affinity(timer, sched);
 
 #ifdef CONFIG_XENO_OPT_STATS
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
@@ -427,21 +423,6 @@ void __xntimer_switch_tracking(struct xntimer *timer,
 
 #endif /* CONFIG_XENO_OPT_STATS */
 
-static inline void __xntimer_set_clock(struct xntimer *timer,
-				       struct xnclock *newclock)
-{
-#ifdef CONFIG_SMP
-	int cpu;
-	/*
-	 * Make sure the timer lives on a CPU the backing clock device
-	 * ticks on.
-	 */
-	cpu = xnclock_get_default_cpu(newclock, xnsched_cpu(timer->sched));
-	xntimer_migrate(timer, xnsched_struct(cpu));
-#endif
-	__xntimer_switch_tracking(timer, newclock);
-}
-
 /**
  * @brief Set the reference clock of a timer.
  *
@@ -457,9 +438,15 @@ static inline void __xntimer_set_clock(struct xntimer *timer,
 void xntimer_set_clock(struct xntimer *timer,
 		       struct xnclock *newclock)
 {
-	xntimer_stop(timer);
-	timer->clock = newclock;
-	__xntimer_set_clock(timer, newclock);
+	if (timer->clock != newclock) {
+		xntimer_stop(timer);
+		timer->clock = newclock;
+		/*
+		 * Since the timer was stopped, we can wait until it
+		 * is restarted for fixing its CPU affinity.
+		 */
+		__xntimer_switch_tracking(timer, newclock);
+	}
 }
 
 #endif /* CONFIG_XENO_OPT_EXTCLOCK */
@@ -512,12 +499,9 @@ EXPORT_SYMBOL_GPL(xntimer_destroy);
  * @coretags{unrestricted, atomic-entry}
  */
 void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
-{				/* nklocked, IRQs off */
+{				/* nklocked, IRQs off, sched != timer->sched */
 	struct xnclock *clock;
 	xntimerq_t *q;
-
-	if (sched == timer->sched)
-		return;
 
 	trace_cobalt_timer_migrate(timer, xnsched_cpu(sched));
 
@@ -526,9 +510,6 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 	 * for which we do not expect any clock events/IRQs from the
 	 * associated clock device. If so, the timer would never fire
 	 * since clock ticks would never happen on that CPU.
-	 *
-	 * A clock device with an empty affinity mask has no percpu
-	 * semantics, which disables the check.
 	 */
 	XENO_WARN_ON_SMP(COBALT,
 			 !cpumask_empty(&xntimer_clock(timer)->affinity) &&
@@ -548,23 +529,57 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 }
 EXPORT_SYMBOL_GPL(__xntimer_migrate);
 
-bool xntimer_set_sched(struct xntimer *timer,
-		       struct xnsched *sched)
+static inline int get_clock_cpu(struct xnclock *clock, int cpu)
 {
 	/*
-	 * We may deny the request if the target CPU does not receive
-	 * any event from the clock device backing the timer, or the
-	 * clock device has no percpu semantics.
+	 * Check a CPU number against the possible set of CPUs
+	 * receiving events from the underlying clock device. If the
+	 * suggested CPU does not receive events from this device,
+	 * return the first one which does instead.
+	 *
+	 * A global clock device with no particular IRQ affinity may
+	 * tick on any CPU, but timers should always be queued on
+	 * CPU0.
+	 *
+	 * NOTE: we have scheduler slots initialized for all online
+	 * CPUs, we can program and receive clock ticks on any of
+	 * them. So there is no point in restricting the valid CPU set
+	 * to cobalt_cpu_affinity, which specifically refers to the
+	 * set of CPUs which may run real-time threads. Although
+	 * receiving a clock tick for waking up a thread living on a
+	 * remote CPU is not optimal since this involves IPI-signaled
+	 * rescheds, this is still a valid case.
 	 */
-	if (cpumask_test_cpu(xnsched_cpu(sched),
-			     &xntimer_clock(timer)->affinity)) {
-		xntimer_migrate(timer, sched);
-		return true;
-	}
+	if (cpumask_empty(&clock->affinity))
+		return 0;
 
-	return false;
+	if (cpumask_test_cpu(cpu, &clock->affinity))
+		return cpu;
+	
+	return cpumask_first(&clock->affinity);
 }
-EXPORT_SYMBOL_GPL(xntimer_set_sched);
+
+void __xntimer_set_affinity(struct xntimer *timer, struct xnsched *sched)
+{				/* nklocked, IRQs off */
+	struct xnclock *clock = xntimer_clock(timer);
+	int cpu;
+
+	/*
+	 * Figure out which CPU is best suited for managing this
+	 * timer, preferably picking xnsched_cpu(sched) if the ticking
+	 * device moving the timer clock beats on that CPU. Otherwise,
+	 * pick the first CPU from the clock affinity mask if set. If
+	 * not, the timer is backed by a global device with no
+	 * particular IRQ affinity, so it should always be queued to
+	 * CPU0.
+	 */
+	cpu = 0;
+	if (!cpumask_empty(&clock->affinity))
+		cpu = get_clock_cpu(clock, xnsched_cpu(sched));
+
+	xntimer_migrate(timer, xnsched_struct(cpu));
+}
+EXPORT_SYMBOL_GPL(__xntimer_set_affinity);
 
 int xntimer_setup_ipi(void)
 {

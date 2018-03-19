@@ -254,15 +254,6 @@ static inline int xnclock_set_time(struct xnclock *clock,
 
 #endif /* !CONFIG_XENO_OPT_EXTCLOCK */
 
-#ifdef CONFIG_SMP
-int xnclock_get_default_cpu(struct xnclock *clock, int cpu);
-#else
-static inline int xnclock_get_default_cpu(struct xnclock *clock, int cpu)
-{
-	return cpu;
-}
-#endif
-
 static inline xnticks_t xnclock_get_offset(struct xnclock *clock)
 {
 	return clock->wallclock_offset;

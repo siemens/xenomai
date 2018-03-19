@@ -326,11 +326,8 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 	/*
 	 * No extension, or operation not handled. Default to plain
 	 * POSIX behavior.
-	 */
-
-	/*
-	 * If the target thread vanished, simply don't start the
-	 * timer.
+	 *
+	 * If the target thread vanished, just don't start the timer.
 	 */
 	thread = cobalt_thread_find(timer->target);
 	if (thread == NULL)
@@ -338,9 +335,9 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 
 	/*
 	 * Make the timer affine to the CPU running the thread to be
-	 * signaled.
+	 * signaled if possible.
 	 */
-	xntimer_set_sched(&timer->timerbase, thread->threadbase.sched);
+	xntimer_set_affinity(&timer->timerbase, thread->threadbase.sched);
 
 	return __cobalt_timer_setval(&timer->timerbase,
 				     clock_flag(flags, timer->clockid), value);

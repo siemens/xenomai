@@ -119,7 +119,7 @@ timerfd_select(struct rtdm_fd *fd, struct xnselector *selector,
 		return -ENOMEM;
 
 	xnlock_get_irqsave(&nklock, s);
-	xntimer_set_sched(&tfd->timer, xnsched_current());
+	xntimer_set_affinity(&tfd->timer, xnthread_current()->sched);
 	err = xnselect_bind(&tfd->read_select, binding, selector, type,
 			index, tfd->flags & COBALT_TFD_TICKED);
 	xnlock_put_irqrestore(&nklock, s);
@@ -268,7 +268,7 @@ int __cobalt_timerfd_settime(int fd, int flags,
 	if (ovalue)
 		__cobalt_timer_getval(&tfd->timer, ovalue);
 
-	xntimer_set_sched(&tfd->timer, xnsched_current());
+	xntimer_set_affinity(&tfd->timer, xnthread_current()->sched);
 
 	ret = __cobalt_timer_setval(&tfd->timer,
 				    clock_flag(cflag, tfd->clockid), value);

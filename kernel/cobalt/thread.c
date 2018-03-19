@@ -57,23 +57,6 @@ static void timeout_handler(struct xntimer *timer)
 	xnthread_resume(thread, XNDELAY);
 }
 
-static inline void fixup_ptimer_affinity(struct xnthread *thread)
-{
-#ifdef CONFIG_SMP
-	struct xntimer *timer = &thread->ptimer;
-	int cpu;
-	/*
-	 * The thread a periodic timer is affine to might have been
-	 * migrated to another CPU while passive. Fix this up.
-	 */
-	if (thread->sched != timer->sched) {
-		cpu = xnclock_get_default_cpu(xntimer_clock(timer),
-					      xnsched_cpu(thread->sched));
-		xntimer_set_sched(timer, xnsched_struct(cpu));
-	}
-#endif
-}
-
 static void periodic_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, struct xnthread, ptimer);
@@ -84,7 +67,11 @@ static void periodic_handler(struct xntimer *timer)
 	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnthread_resume(thread, XNDELAY);
 
-	fixup_ptimer_affinity(thread);
+	/*
+	 * The periodic thread might have migrated to another CPU
+	 * while passive, fix the timer affinity if need be.
+	 */
+	xntimer_set_affinity(&thread->ptimer, thread->sched);
 }
 
 static inline void enlist_new_thread(struct xnthread *thread)
@@ -912,7 +899,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 	 * Don't start the timer for a thread delayed indefinitely.
 	 */
 	if (timeout != XN_INFINITE || timeout_mode != XN_RELATIVE) {
-		xntimer_set_sched(&thread->rtimer, thread->sched);
+		xntimer_set_affinity(&thread->rtimer, thread->sched);
 		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
 				  timeout_mode)) {
 			/* (absolute) timeout value in the past, bail out. */
@@ -1293,7 +1280,7 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
 int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 			  xntmode_t timeout_mode, xnticks_t period)
 {
-	int ret = 0, cpu;
+	int ret = 0;
 	spl_t s;
 
 	if (thread == NULL) {
@@ -1322,16 +1309,7 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 		goto unlock_and_exit;
 	}
 
-	/*
-	 * Pin the periodic timer to a proper CPU, by order of
-	 * preference: the CPU the timed thread runs on if possible,
-	 * or the first CPU by logical number which can receive events
-	 * from the clock device backing the timer, among the dynamic
-	 * set of real-time CPUs currently enabled.
-	 */
-	cpu = xnclock_get_default_cpu(xntimer_clock(&thread->ptimer),
-				      xnsched_cpu(thread->sched));
-	xntimer_set_sched(&thread->ptimer, xnsched_struct(cpu));
+	xntimer_set_affinity(&thread->ptimer, thread->sched);
 
 	if (idate == XN_INFINITE)
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
