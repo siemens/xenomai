@@ -175,7 +175,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	}
 
 	sched->status = 0;
-	sched->lflags = 0;
+	sched->lflags = XNIDLE;
 	sched->inesting = 0;
 	sched->curr = &sched->rootcb;
 

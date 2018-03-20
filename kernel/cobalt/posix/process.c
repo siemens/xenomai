@@ -822,6 +822,12 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	return KEVENT_PROPAGATE;
 }
 
+bool ipipe_enter_idle_hook(void) /* hw IRQs off */
+{
+	struct xnsched *sched = xnsched_current();
+	return !!(sched->lflags & XNIDLE);
+}
+
 #ifdef CONFIG_SMP
 
 static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)

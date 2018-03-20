@@ -143,8 +143,10 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	 */
 	tmd = xnclock_this_timerdata(&nkclock);
 	h = xntimerq_head(&tmd->q);
-	if (h == NULL)
+	if (h == NULL) {
+		sched->lflags |= XNIDLE;
 		return;
+	}
 
 	/*
 	 * Here we try to defer the host tick heading the timer queue,
@@ -166,7 +168,7 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	 * or a timer with an earlier timeout date is scheduled,
 	 * whichever comes first.
 	 */
-	sched->lflags &= ~XNHDEFER;
+	sched->lflags &= ~(XNHDEFER|XNIDLE);
 	timer = container_of(h, struct xntimer, aplink);
 	if (unlikely(timer == &sched->htimer)) {
 		if (xnsched_resched_p(sched) ||

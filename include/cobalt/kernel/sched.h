@@ -42,6 +42,7 @@
 #define XNINTCK		0x40000000	/* In master tick handler context */
 
 /* Sched local flags */
+#define XNIDLE		0x00010000	/* Idle (no outstanding timer) */
 #define XNHTICK		0x00008000	/* Host tick pending  */
 #define XNINIRQ		0x00004000	/* In IRQ handling context */
 #define XNHDEFER	0x00002000	/* Host tick deferred */
