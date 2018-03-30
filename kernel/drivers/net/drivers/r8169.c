@@ -589,6 +589,7 @@ static int rtl8169_init_board ( struct pci_dev *pdev, struct rtnet_device **dev_
 	rtdev_alloc_name(rtdev, "rteth%d");
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
 	rtdev->vers = RTDEV_VERS_2_0;
+	rtdev->sysbind = &pdev->dev;
 	/*** /RTnet ***/
 
 	priv = rtdev->priv;
