@@ -316,6 +316,7 @@ static int __init at91ether_probe(struct platform_device *pdev)
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
 	dev->vers = RTDEV_VERS_2_0;
+	dev->sysbind = &pdev->dev;
 
 	lp = rtnetdev_priv(dev);
 	lp->pdev = pdev;
