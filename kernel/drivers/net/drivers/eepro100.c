@@ -681,6 +681,7 @@ static int speedo_found1(struct pci_dev *pdev,
 	memset(rtdev->priv, 0, sizeof(struct speedo_private));
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
 	rtdev->vers = RTDEV_VERS_2_0;
+	rtdev->sysbind = &pdev->dev;
 	// *** RTnet ***
 
 	if (rtdev->mem_start > 0)
