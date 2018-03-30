@@ -3949,6 +3949,7 @@ static int e1000_probe(struct pci_dev *pdev,
 	rtdev_alloc_name(netdev, "rteth%d");
 	rt_rtdev_connect(netdev, &RTDEV_manager);
 	netdev->vers = RTDEV_VERS_2_0;
+	netdev->sysbind = &pdev->dev;
 
 	netdev->irq = pdev->irq;
 

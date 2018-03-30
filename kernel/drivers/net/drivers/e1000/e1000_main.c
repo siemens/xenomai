@@ -728,6 +728,7 @@ static int e1000_probe(struct pci_dev *pdev,
 
 	// SET_NETDEV_DEV(netdev, &pdev->dev);
 	netdev->vers = RTDEV_VERS_2_0;
+	netdev->sysbind = &pdev->dev;
 
 	pci_set_drvdata(pdev, netdev);
 	adapter = netdev->priv;
