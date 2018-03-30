@@ -787,6 +787,7 @@ static int natsemi_probe1 (struct pci_dev *pdev,
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
 	dev->vers = RTDEV_VERS_2_0;
+	dev->sysbind = &pdev->dev;
 /*** RTnet ***/
 
 	i = pci_request_regions(pdev, dev->name);
