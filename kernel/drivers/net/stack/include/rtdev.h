@@ -70,6 +70,7 @@ struct rtnet_device {
     unsigned int        vers;
 
     char                name[IFNAMSIZ];
+    struct device	*sysbind;   /* device bound in sysfs (optional) */
 
     unsigned long       rmem_end;   /* shmem "recv" end     */
     unsigned long       rmem_start; /* shmem "recv" start   */
@@ -90,6 +91,7 @@ struct rtnet_device {
     int                 ifindex;
     atomic_t            refcount;
 
+    struct device	*sysdev;    /* node in driver model for sysfs */
     struct module       *rt_owner;  /* like classic owner, but      *
 				     * forces correct macro usage   */
 

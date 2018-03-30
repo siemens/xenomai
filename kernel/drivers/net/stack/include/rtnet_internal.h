@@ -28,9 +28,8 @@
 #define __RTNET_INTERNAL_H_
 
 #include <linux/module.h>
-
+#include <linux/mutex.h>
 #include <rtdm/driver.h>
-
 
 #ifdef CONFIG_XENO_DRIVERS_NET_CHECKED
 #define RTNET_ASSERT(expr, func) \
@@ -76,6 +75,6 @@ extern const char rtnet_rtdm_provider_name[];
 extern struct xnvfile_directory rtnet_proc_root;
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-#include <linux/mutex.h>
+extern struct class *rtnet_class;
 
 #endif /* __RTNET_INTERNAL_H_ */

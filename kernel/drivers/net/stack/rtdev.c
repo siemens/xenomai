@@ -507,8 +507,8 @@ int rt_register_rtnetdev(struct rtnet_device *rtdev)
 
     ifindex = __rtdev_new_index();
     if (ifindex < 0) {
-	mutex_unlock(&rtnet_devices_nrt_lock);
-	return ifindex;
+	    err = ifindex;
+	    goto fail;
     }
     rtdev->ifindex = ifindex;
 
@@ -516,15 +516,27 @@ int rt_register_rtnetdev(struct rtnet_device *rtdev)
 	rtdev_alloc_name(rtdev, rtdev->name);
 
     if (__rtdev_get_by_name(rtdev->name) != NULL) {
-	mutex_unlock(&rtnet_devices_nrt_lock);
-	return -EEXIST;
+	    err = -EEXIST;
+	    goto fail;
     }
 
-    err = rtdev_map_all_rtskbs(rtdev);
-    if (err) {
-	mutex_unlock(&rtnet_devices_nrt_lock);
-	return err;
+    rtdev->sysdev = device_create(rtnet_class, NULL,
+		  MKDEV(0, rtdev->ifindex), rtdev, rtdev->name);
+    if (rtdev->sysdev == NULL) {
+	    err = PTR_ERR(rtdev->sysdev);
+	    goto fail;
     }
+
+    if (rtdev->sysbind) {
+	    err = sysfs_create_link(&rtdev->sysdev->kobj,
+				    &rtdev->sysbind->kobj, "adapter");
+	    if (err)
+		    goto fail_link;
+    }
+   
+    err = rtdev_map_all_rtskbs(rtdev);
+    if (err)
+	    goto fail_map;
 
     rtdm_lock_get_irqsave(&rtnet_devices_rt_lock, context);
 
@@ -532,8 +544,8 @@ int rt_register_rtnetdev(struct rtnet_device *rtdev)
 	/* allow only one loopback device */
 	if (loopback_device) {
 	    rtdm_lock_put_irqrestore(&rtnet_devices_rt_lock, context);
-	    mutex_unlock(&rtnet_devices_nrt_lock);
-	    return -EEXIST;
+	    err = -EEXIST;
+	    goto fail_loopback;
 	}
 	loopback_device = rtdev;
     }
@@ -555,6 +567,18 @@ int rt_register_rtnetdev(struct rtnet_device *rtdev)
     printk("RTnet: registered %s\n", rtdev->name);
 
     return 0;
+
+fail_loopback:
+    rtdev_unmap_all_rtskbs(rtdev);
+fail_map:
+    if (rtdev->sysbind)
+	    sysfs_remove_link(&rtdev->sysdev->kobj, "adapter");
+fail_link:
+    device_destroy(rtnet_class, MKDEV(0, rtdev->ifindex));
+fail:
+    mutex_unlock(&rtnet_devices_nrt_lock);
+
+    return err;
 }
 
 
@@ -569,10 +593,14 @@ int rt_unregister_rtnetdev(struct rtnet_device *rtdev)
     struct rtdev_event_hook *hook;
     rtdm_lockctx_t          context;
 
-
     RTNET_ASSERT(rtdev->ifindex != 0,
 	printk("RTnet: device %s/%p was not registered\n", rtdev->name, rtdev);
 	return -ENODEV;);
+
+    if (rtdev->sysbind)
+	    sysfs_remove_link(&rtdev->sysdev->kobj, "adapter");
+
+    device_destroy(rtnet_class, MKDEV(0, rtdev->ifindex));
 
     mutex_lock(&rtnet_devices_nrt_lock);
     rtdm_lock_get_irqsave(&rtnet_devices_rt_lock, context);

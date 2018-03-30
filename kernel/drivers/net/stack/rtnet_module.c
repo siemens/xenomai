@@ -39,6 +39,8 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("RTnet stack core");
 
 
+struct class *rtnet_class;
+
 struct rtnet_mgr STACK_manager;
 struct rtnet_mgr RTDEV_manager;
 
@@ -323,6 +325,10 @@ int __init rtnet_init(void)
     printk("\n*** RTnet for Xenomai v" XENO_VERSION_STRING " ***\n\n");
     printk("RTnet: initialising real-time networking\n");
 
+    rtnet_class = class_create(THIS_MODULE, "rtnet");
+    if (IS_ERR(rtnet_class))
+	    return PTR_ERR(rtnet_class);
+
     if ((err = rtskb_pools_init()) != 0)
 	goto err_out1;
 
@@ -371,6 +377,8 @@ err_out2:
     rtskb_pools_release();
 
 err_out1:
+    class_destroy(rtnet_class);
+   
     return err;
 }
 
@@ -396,6 +404,8 @@ void __exit rtnet_release(void)
 #ifdef CONFIG_XENO_OPT_VFILE
     rtnet_proc_unregister();
 #endif
+
+    class_destroy(rtnet_class);
 
     printk("RTnet: unloaded\n");
 }
