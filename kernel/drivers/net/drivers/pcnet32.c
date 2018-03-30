@@ -644,6 +644,7 @@ static int pcnet32_probe1(unsigned long ioaddr, unsigned int irq_line, int share
     rtdev_alloc_name(dev, "rteth%d");
     rt_rtdev_connect(dev, &RTDEV_manager);
     dev->vers = RTDEV_VERS_2_0;
+    dev->sysbind = &pdev->dev;
 /*** RTnet ***/
 
     printk(KERN_INFO PFX "%s at %#3lx,", chipname, ioaddr);
