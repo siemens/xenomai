@@ -1643,6 +1643,7 @@ static int fec_probe(struct platform_device *pdev)
 	rtdev_alloc_name(ndev, "rteth%d");
 	rt_rtdev_connect(ndev, &RTDEV_manager);
 	ndev->vers = RTDEV_VERS_2_0;
+	ndev->sysbind = &pdev->dev;
 
 	/* setup board info structure */
 	fep = rtnetdev_priv(ndev);
