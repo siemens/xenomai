@@ -959,6 +959,7 @@ static int tulip_init_one (struct pci_dev *pdev,
 	//rtdev_alloc_name(rtdev, "eth%d");//Done by register_rtdev()
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
 	rtdev->vers = RTDEV_VERS_2_0;
+	rtdev->sysbind = &pdev->dev;
 
 	if (pci_resource_len (pdev, 0) < tulip_tbl[chip_idx].io_size) {
 		printk(KERN_ERR PFX "%s: I/O region (0x%llx@0x%llx) too small, "
