@@ -1580,6 +1580,7 @@ static int __init macb_probe(struct platform_device *pdev)
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
 	dev->vers = RTDEV_VERS_2_0;
+	dev->sysbind = &pdev->dev;
 
 	/* TODO: Actually, we have some interesting features... */
 	dev->features |= 0;
