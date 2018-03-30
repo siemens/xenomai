@@ -647,6 +647,7 @@ static int rtl8139_init_board (struct pci_dev *pdev,
 	rt_rtdev_connect(rtdev, &RTDEV_manager);
 
 	rtdev->vers = RTDEV_VERS_2_0;
+	rtdev->sysbind = &pdev->dev;
 	tp = rtdev->priv;
 	tp->pci_dev = pdev;
 
