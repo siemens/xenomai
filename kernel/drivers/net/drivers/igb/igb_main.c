@@ -2045,6 +2045,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	rt_rtdev_connect(netdev, &RTDEV_manager);
 
 	netdev->vers = RTDEV_VERS_2_0;
+	netdev->sysbind = &pdev->dev;
 
 	pci_set_drvdata(pdev, netdev);
 	adapter = rtnetdev_priv(netdev);
