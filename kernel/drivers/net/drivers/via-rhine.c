@@ -690,6 +690,7 @@ static int via_rhine_init_one (struct pci_dev *pdev,
 	rtdev_alloc_name(dev, "rteth%d");
 	rt_rtdev_connect(dev, &RTDEV_manager);
 	dev->vers = RTDEV_VERS_2_0;
+	dev->sysbind = &pdev->dev;
 /*** RTnet ***/
 
 	if (pci_request_regions(pdev, shortname))
