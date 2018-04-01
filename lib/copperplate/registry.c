@@ -717,7 +717,7 @@ static int connect_regd(const char *sessdir, char **mountpt, int flags)
 	sun.sun_path[0] = '\0';
 
 	for (retries = 0; retries < 3; retries++) {
-		s = __STD(socket(AF_UNIX, SOCK_SEQPACKET, 0));
+		s = __STD(socket(AF_UNIX, SOCK_SEQPACKET|SOCK_CLOEXEC, 0));
 		if (s < 0) {
 			ret = -errno;
 			free(*mountpt);
