@@ -237,7 +237,7 @@ static inline char **prep_args(int argc, char *const argv[])
 	char **uargv;
 	int n;
 
-	uargv = malloc(argc * sizeof(char *));
+	uargv = malloc((argc + 1) * sizeof(char *));
 	if (uargv == NULL)
 		return NULL;
 
@@ -246,6 +246,8 @@ static inline char **prep_args(int argc, char *const argv[])
 		if (uargv[n] == NULL)
 			return NULL;
 	}
+
+	uargv[argc] = NULL;
 
 	return uargv;
 }
@@ -261,6 +263,7 @@ static inline void pack_args(int *argcp, char **argv)
 			free(argv[in]);
 	}
 
+	argv[out] = NULL;
 	*argcp = out;
 }
 
