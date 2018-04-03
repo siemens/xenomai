@@ -173,8 +173,8 @@ COBALT_SYSCALL(timerfd_create, lostage, (int clockid, int flags))
 		return -EINVAL;
 
 	clock = cobalt_clock_find(clockid);
-	if (clock == NULL)
-		return -EINVAL;
+	if (IS_ERR(clock))
+		return PTR_ERR(clock);
 
 	tfd = xnmalloc(sizeof(*tfd));
 	if (tfd == NULL)
