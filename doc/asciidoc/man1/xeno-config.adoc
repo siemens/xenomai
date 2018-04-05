@@ -86,8 +86,8 @@ POSIX API.
 
 [NOTE]
 *--native* and *--skin=native* are accepted for backward compatibility
-purpose. They are stricly equivalent as passing *--alchemy --compat*.
-Likewise, passing *--rtdm* or *--skin=rtdm* is stricly equivalent as
+purpose. They are stricly equivalent to passing *--alchemy --compat*.
+Likewise, passing *--rtdm* or *--skin=rtdm* is stricly equivalent to
 passing *--posix*, enabling POSIX I/O routines to be wrapped to their
 respective Xenomai implementation.
 
@@ -118,17 +118,17 @@ Xenomai libraries.
 *--auto-init*::
 *--no-auto-init*::
 
-All Xenomai APIs but POSIX are based on the Copperplate library, which
-automatically initializes when the application process
-starts. *--no-auto-init* can be passed to disable such
-initialization. In such a case, the application code shall call the
-+copperplate_init()+ routine manually, as part of its initialization
-chores on behalf on the +main()+ routine, *before* any real-time
-service is invoked.
+By default, a process started from an executable linked with flags
+returned by *xeno-config --ldflags* performs Xenomai-related inits
+automatically, before the +main()+ routine is entered.
 
-This flag makes sense when passed along with --ldflags
-only. *xeno-config* enables the Copperplate auto-init feature by
-default.
+Building with *--no-auto-init* disables such initialization. In this
+case, the application code shall call the +xenomai_init()+ routine
+manually, as part of its initialization chores on behalf on the
++main()+ routine, *before* any real-time service is invoked. See
++include/xenomai/init.h+.
+
+NOTE: This flag only makes sense when passed along with --ldflags.
 
 *--mode-check*::
 *--no-mode-check*::
