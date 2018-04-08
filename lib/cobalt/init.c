@@ -44,6 +44,55 @@
  * The Cobalt/POSIX interface is an implementation of a subset of the
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/">
  * Single Unix specification</a> over the Cobalt core.
+ *
+ * The routines from this subset are implemented as wrapper functions
+ * as defined by the linker (--wrap option, see man ld(1)).  The
+ * linker flags for enabling symbol wrapping can be obtained from the
+ * following command: *xeno-config --posix --ldflags*.
+ * The full documentation for *xeno-config* can be found at
+ * https://xenomai.org/documentation/xenomai-3/html/man1/xeno-config/index.html.
+ *
+ * When symbol wrapping is enabled:
+ *
+ *   - calls to POSIX services for which Cobalt provides a (real-time)
+ * implementation are redirected to the library implementing the
+ * wrapper, by default libcobalt. A list of wrapped symbols libcobalt
+ * overrides can be found in the source tree, in
+ * lib/cobalt/cobalt.wrappers.
+ *
+ * With or without symbol wrapping:
+ *
+ *   - the wrapper function of a POSIX routine can be explicitly
+ * invoked by enclosing the function call with the __RT() macro. Since
+ * the wrapper symbol is weak, it may be overriden by a 3rd party
+ * library, typically to implement its own version of the POSIX call,
+ * instead or on top of libcobalt's. e.g. __RT(sem_init(&sem, 0, 0))
+ * would initialize a real-time semaphore, usually from libcobalt
+ * unless a stronger sem_init() wrapper has been provided by a 3rd
+ * party library.
+ *
+ *   - the libcobalt implementation of a POSIX routine can be
+ * explicitly invoked by enclosing the function call with the
+ * __COBALT() macro.  e.g. __COBALT(sem_init(&sem, 0, 0)) would always
+ * initialize a Cobalt semaphore (strong symbol).
+ *
+ *   - the regular *libc implementation of a POSIX routine can be
+ * explicitly invoked by enclosing the function call with the __STD()
+ * macro. This form basically prevents the symbol wrapping to take
+ * place. e.g.  __STD(sem_init(&sem, 0, 0)) would always initialize a
+ * regular *libc semaphore. This is strictly equivalent to calling the
+ * __real_* form of such routine as documented for ld(1).
+ *
+ * Qualifying POSIX calls explicitly as described above may prove
+ * useful for invoking real-time services selectively within a large
+ * POSIX code base, for which globally enabling symbol wrapping would
+ * be unpractical. This may also help in implementing real-time
+ * service libraries for which depending on the linker's symbol
+ * wrapping mechanism is not suitable.
+ *
+ * This said, conforming to the POSIX standard unspoiled by macro
+ * tricks for developing an application may be a significant upside as
+ * well. YMMV.
  */
 
 __weak int __cobalt_control_bind = 0;
