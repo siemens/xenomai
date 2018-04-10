@@ -822,10 +822,12 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	return KEVENT_PROPAGATE;
 }
 
-bool ipipe_enter_idle_hook(void) /* hw IRQs off */
+/*
+ * Legacy idle hook, unconditionally allow entering the idle state.
+ */
+bool ipipe_enter_idle_hook(void)
 {
-	struct xnsched *sched = xnsched_current();
-	return !!(sched->lflags & XNIDLE);
+	return true;
 }
 
 #ifdef CONFIG_SMP
