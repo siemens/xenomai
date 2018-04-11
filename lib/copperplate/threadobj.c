@@ -1625,25 +1625,28 @@ int threadobj_set_periodic(struct threadobj *thobj,
 {				/* thobj->lock held */
 	struct itimerspec its;
 	struct sigevent sev;
+	timer_t timer;
 	int ret;
 
 	__threadobj_check_locked(thobj);
 
-	if (thobj->periodic_timer == NULL) {
+	timer = thobj->periodic_timer;
+	if (timer == NULL) {
 		memset(&sev, 0, sizeof(sev));
 		sev.sigev_signo = SIGPERIOD;
 		sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
 		sev.sigev_notify_thread_id = threadobj_get_pid(thobj);
-		ret = __RT(timer_create(CLOCK_COPPERPLATE, &sev,
-					&thobj->periodic_timer));
+		ret = __RT(timer_create(CLOCK_COPPERPLATE, &sev, &timer));
 		if (ret)
 			return __bt(-errno);
-	}
+		thobj->periodic_timer = timer;
+	} else if (!timespec_scalar(idate) && !timespec_scalar(period))
+		thobj->periodic_timer = NULL;
 
 	its.it_value = *idate;
 	its.it_interval = *period;
 
-	ret = __RT(timer_settime(thobj->periodic_timer, TIMER_ABSTIME, &its, NULL));
+	ret = __RT(timer_settime(timer, TIMER_ABSTIME, &its, NULL));
 	if (ret)
 		return __bt(-errno);
 
@@ -1655,6 +1658,9 @@ int threadobj_wait_period(unsigned long *overruns_r)
 	struct threadobj *current = threadobj_current();
 	siginfo_t si;
 	int sig;
+
+	if (current->periodic_timer == NULL)
+		return -EWOULDBLOCK;
 
 	for (;;) {
 		current->run_state = __THREAD_S_DELAYED;
