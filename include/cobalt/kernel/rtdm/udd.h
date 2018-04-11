@@ -147,20 +147,24 @@
  * @endcode
  *
  * This will make such region accessible via the mapper device using
- * the following sequence of code, via the default ->mmap() handler
- * from the UDD core:
+ * the following sequence of code (see note), via the default
+ * ->mmap() handler from the UDD core:
  *
  * @code
  * int fd, fdm;
  * void *p;
  *
- * fd = open("/dev/foocard", O_RDWR);
- * fdm = open("/dev/foocard,mapper@2", O_RDWR);
- * p = mmap(NULL, 4096, PROT_READ|PROT_WRITE, 0, fdm, 0);
+ * fd = open("/dev/rtdm/foocard", O_RDWR);
+ * fdm = open("/dev/rtdm/foocard,mapper2", O_RDWR);
+ * p = mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_SHARED, fdm, 0);
  * @endcode
  *
- * @note No mapper device is created unless a valid region has been
- * declared in the udd_device.mem_regions[] array.
+ * if no valid region has been declared in the
+ * udd_device.mem_regions[] array, no mapper device is created.
+ *
+ * @note The example code assumes that @ref cobalt_api POSIX symbol
+ * wrapping is in effect, so that RTDM performs the memory mapping
+ * operation (not the regular kernel).
  */
 struct udd_memregion {
 	/** Name of the region (informational but required) */

@@ -40,6 +40,7 @@
 /**
  * @ingroup cobalt
  * @defgroup cobalt_api POSIX interface
+ * @anchor cobalt_api
  *
  * The Cobalt/POSIX interface is an implementation of a subset of the
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/">
