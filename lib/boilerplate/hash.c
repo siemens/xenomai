@@ -277,6 +277,7 @@ int __hash_enter_probe(struct hash_table *t,
 {
 	struct hash_bucket *bucket;
 	struct hashobj *obj, *tmp;
+	struct service svc;
 	int ret;
 
 	holder_init(&newobj->link);
@@ -285,7 +286,7 @@ int __hash_enter_probe(struct hash_table *t,
 		return ret;
 
 	bucket = do_hash(t, key, len);
-	push_cleanup_lock(&t->lock);
+	CANCEL_DEFER(svc);
 	write_lock(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
@@ -311,7 +312,7 @@ int __hash_enter_probe(struct hash_table *t,
 	list_append(&newobj->link, &bucket->obj_list);
 out:
 	write_unlock(&t->lock);
-	pop_cleanup_lock(&t->lock);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -322,10 +323,11 @@ struct hashobj *hash_search_probe(struct hash_table *t,
 {
 	struct hash_bucket *bucket;
 	struct hashobj *obj, *tmp;
+	struct service svc;
 
 	bucket = do_hash(t, key, len);
 
-	push_cleanup_lock(&t->lock);
+	CANCEL_DEFER(svc);
 	write_lock(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
@@ -345,7 +347,7 @@ struct hashobj *hash_search_probe(struct hash_table *t,
 	obj = NULL;
 out:
 	write_unlock(&t->lock);
-	pop_cleanup_lock(&t->lock);
+	CANCEL_RESTORE(svc);
 
 	return obj;
 }
