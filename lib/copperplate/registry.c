@@ -116,13 +116,13 @@ int registry_add_dir(const char *fmt, ...)
 
 	write_lock_safe(&p->lock, state);
 
-	d = pvmalloc(sizeof(*d));
+	d = __STD(malloc(sizeof(*d)));
 	if (d == NULL) {
 		ret = -ENOMEM;
 		goto done;
 	}
 	pvholder_init(&d->link);
-	d->path = pvstrdup(path);
+	d->path = strdup(path);
 
 	if (strcmp(path, "/")) {
 		d->basename = d->path + (basename - path) + 1;
@@ -149,8 +149,8 @@ int registry_add_dir(const char *fmt, ...)
 			   &pvhash_operations);
 	if (ret) {
 	fail:
-		pvfree(d->path);
-		pvfree(d);
+		__STD(free(d->path));
+		__STD(free(d));
 	}
 done:
 	write_unlock_safe(&p->lock, state);
@@ -203,7 +203,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	if (basename == NULL)
 		return __bt(-EINVAL);
 
-	fsobj->path = pvstrdup(path);
+	fsobj->path = strdup(path);
 	fsobj->basename = fsobj->path + (basename - path) + 1;
 	fsobj->mode = mode & O_ACCMODE;
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &fsobj->ctime));
@@ -224,7 +224,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 		ret = -ENOENT;
 	fail:
 		pvhash_remove(&p->files, &fsobj->hobj, &pvhash_operations);
-		pvfree(fsobj->path);
+		__STD(free(fsobj->path));
 		fsobj->path = NULL;
 		goto done;
 	}
@@ -263,7 +263,7 @@ void registry_destroy_file(struct fsobj *fsobj)
 	pvlist_remove(&fsobj->link);
 	d->nfiles--;
 	assert(d->nfiles >= 0);
-	pvfree(fsobj->path);
+	__STD(free(fsobj->path));
 	__RT(pthread_mutex_unlock(&fsobj->lock));
 out:
 	__RT(pthread_mutex_destroy(&fsobj->lock));
@@ -693,7 +693,7 @@ static int spawn_daemon(const char *sessdir, int flags)
 		break;
 	}
 
-	free(path);
+	__STD(free(path));
 
 	return ret;
 }
@@ -720,7 +720,7 @@ static int connect_regd(const char *sessdir, char **mountpt, int flags)
 		s = __STD(socket(AF_UNIX, SOCK_SEQPACKET|SOCK_CLOEXEC, 0));
 		if (s < 0) {
 			ret = -errno;
-			free(*mountpt);
+			__STD(free(*mountpt));
 			return ret;
 		}
 		ret = __STD(connect(s, (struct sockaddr *)&sun, addrlen));
@@ -736,7 +736,7 @@ static int connect_regd(const char *sessdir, char **mountpt, int flags)
 		ret = -EAGAIN;
 	}
 
-	free(*mountpt);
+	__STD(free(*mountpt));
 
 	early_warning("cannot connect to registry daemon");
 
@@ -868,13 +868,13 @@ int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
 		       obstack_grow(&o->obstack, p, n);
 
 	       if (p != buf)
-		       pvfree(p);
+		       __STD(free(p));
 
 	       if (n < len)
 		       return n < 0 ? -EINVAL : n;
 
 	       len = n + 1;
-	       p = pvmalloc(len);
+	       p = __STD(malloc(len));
 	       if (p == NULL)
 		       break;
 	   }
