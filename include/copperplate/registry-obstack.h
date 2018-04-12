@@ -29,11 +29,12 @@ struct threadobj;
 struct syncobj;
 
 /*
- * Assume we may want fast allocation of private memory from real-time
- * mode when growing the obstack.
+ * Obstacks are grown from handlers called by the fusefs server
+ * thread, which has no real-time requirement: malloc/free is fine for
+ * memory management.
  */
-#define obstack_chunk_alloc	pvmalloc
-#define obstack_chunk_free	pvfree
+#define obstack_chunk_alloc	malloc
+#define obstack_chunk_free	free
 
 struct threadobj;
 
