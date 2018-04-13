@@ -200,11 +200,9 @@ static void dump_marks_on_error(struct traceobj *trobj)
 
 	CANCEL_DEFER(svc);
 
-	push_cleanup_lock(&trobj->lock);
 	read_lock(&trobj->lock);
 	dump_marks(trobj);
 	read_unlock(&trobj->lock);
-	pop_cleanup_lock(&trobj->lock);
 
 	CANCEL_RESTORE(svc);
 }
