@@ -22,6 +22,7 @@
 
 #ifdef CONFIG_XENO_REGISTRY
 
+#include <stdlib.h>
 #include <boilerplate/obstack.h>
 #include <copperplate/heapobj.h>
 
