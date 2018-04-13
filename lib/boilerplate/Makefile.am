@@ -6,6 +6,7 @@ libboilerplate_la_LIBADD = libversion.la libiniparser.la
 libboilerplate_la_SOURCES =	\
 	ancillaries.c		\
 	avl.c			\
+	heapmem.c		\
 	hash.c			\
 	setup.c			\
 	time.c

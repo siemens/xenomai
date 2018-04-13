@@ -7,6 +7,7 @@ includesub_HEADERS =	\
 	compiler.h	\
 	debug.h		\
 	hash.h		\
+	heapmem.h	\
 	libc.h		\
 	list.h		\
 	lock.h		\
