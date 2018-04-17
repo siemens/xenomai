@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <memory.h>
+#include <time.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <string.h>
@@ -25,10 +26,6 @@ smokey_test_plugin(sched_tp,
 		   SMOKEY_NOARGS,
 		   "Check the SCHED_TP scheduling policy"
 );
-
-int clock_nanosleep(clockid_t __clock_id, int __flags,
-		    __const struct timespec *__req,
-		    struct timespec *__rem);
 
 static pthread_t threadA, threadB, threadC;
 
