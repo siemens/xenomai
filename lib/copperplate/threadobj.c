@@ -1631,6 +1631,14 @@ int threadobj_set_periodic(struct threadobj *thobj,
 	__threadobj_check_locked(thobj);
 
 	timer = thobj->periodic_timer;
+	if (!timespec_scalar(idate) && !timespec_scalar(period)) {
+		if (timer) {
+			thobj->periodic_timer = NULL;
+			__RT(timer_delete(timer));
+		}
+		return 0;
+	}
+	
 	if (timer == NULL) {
 		memset(&sev, 0, sizeof(sev));
 		sev.sigev_signo = SIGPERIOD;
@@ -1640,8 +1648,7 @@ int threadobj_set_periodic(struct threadobj *thobj,
 		if (ret)
 			return __bt(-errno);
 		thobj->periodic_timer = timer;
-	} else if (!timespec_scalar(idate) && !timespec_scalar(period))
-		thobj->periodic_timer = NULL;
+	}
 
 	its.it_value = *idate;
 	its.it_interval = *period;
