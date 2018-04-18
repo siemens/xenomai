@@ -1193,7 +1193,7 @@ static void uninit_thread(struct threadobj *thobj)
 static void destroy_thread(struct threadobj *thobj)
 {
 	threadobj_cleanup_corespec(thobj);
-	if (thobj->periodic_timer)
+	if (thobj->status & __THREAD_S_PERIODIC)
 		__RT(timer_delete(thobj->periodic_timer));
 	uninit_thread(thobj);
 }
@@ -1632,14 +1632,14 @@ int threadobj_set_periodic(struct threadobj *thobj,
 
 	timer = thobj->periodic_timer;
 	if (!timespec_scalar(idate) && !timespec_scalar(period)) {
-		if (timer) {
-			thobj->periodic_timer = NULL;
+		if (thobj->status & __THREAD_S_PERIODIC) {
+			thobj->status &= ~__THREAD_S_PERIODIC;
 			__RT(timer_delete(timer));
 		}
 		return 0;
 	}
 	
-	if (timer == NULL) {
+	if (!(thobj->status & __THREAD_S_PERIODIC)) {
 		memset(&sev, 0, sizeof(sev));
 		sev.sigev_signo = SIGPERIOD;
 		sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
@@ -1648,6 +1648,7 @@ int threadobj_set_periodic(struct threadobj *thobj,
 		if (ret)
 			return __bt(-errno);
 		thobj->periodic_timer = timer;
+		thobj->status |= __THREAD_S_PERIODIC;
 	}
 
 	its.it_value = *idate;
@@ -1666,7 +1667,7 @@ int threadobj_wait_period(unsigned long *overruns_r)
 	siginfo_t si;
 	int sig;
 
-	if (current->periodic_timer == NULL)
+	if (!(current->status & __THREAD_S_PERIODIC))
 		return -EWOULDBLOCK;
 
 	for (;;) {
