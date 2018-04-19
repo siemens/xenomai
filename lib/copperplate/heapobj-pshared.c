@@ -226,7 +226,7 @@ static int init_heap(struct shared_heap *heap, void *base,
 	extent->bitmap = __shoff(base, mem) + bmapoff;
 	extent->bitwords = bmapwords;
 	extent->membase = __shoff(base, mem) + metasz;
-	extent->memlim = extent->membase + size;
+	extent->memlim = __shoff(base, mem) + size;
 	init_extent(base, extent);
 	__list_append(base, &extent->link, &heap->extents);
 
