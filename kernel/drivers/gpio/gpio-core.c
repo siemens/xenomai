@@ -597,12 +597,18 @@ void rtdm_gpiochip_remove_of(int type)
 	if (!realtime_core_enabled())
 		return;
 
+	mutex_lock(&chip_lock);
+
 	list_for_each_entry_safe(rgc, n, &rtdm_gpio_chips, next) {
 		if (rgc->driver.profile_info.subclass_id == type) {
+			mutex_unlock(&chip_lock);
 			rtdm_gpiochip_remove(rgc);
 			kfree(rgc);
+			mutex_lock(&chip_lock);
 		}
 	}
+
+	mutex_unlock(&chip_lock);
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_remove_of);
 
