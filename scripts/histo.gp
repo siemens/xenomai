@@ -11,7 +11,7 @@ set output output_file
 
 set title graph_title
 set xlabel "user-space latency in microseconds"
-set ylabel "occurences + 1 (log)"
+set ylabel "occurrences + 1 (log)"
 set logscale y
 set key off
 set grid
