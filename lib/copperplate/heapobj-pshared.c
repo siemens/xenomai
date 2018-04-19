@@ -156,7 +156,7 @@ static void init_extent(void *base, struct shared_extent *extent)
 	assert(lastpgnum >= 1);
 
 	/* Mark all pages as free in the page map. */
-	memset(extent->pagemap, 0, lastpgnum * sizeof(struct page_entry));
+	memset(extent->pagemap, 0, (lastpgnum + 1) * sizeof(struct page_entry));
 
 	/* Clear the allocation bitmap. */
 	p = __shref(base, extent->bitmap);
