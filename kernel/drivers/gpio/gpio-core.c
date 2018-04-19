@@ -571,6 +571,25 @@ int rtdm_gpiochip_scan_of(struct device_node *from, const char *compat,
 }
 EXPORT_SYMBOL_GPL(rtdm_gpiochip_scan_of);
 
+int rtdm_gpiochip_scan_array_of(struct device_node *from,
+				const char *compat[],
+				int nentries, int type)
+{
+	int ret = -ENODEV, _ret, n;
+
+	for (n = 0; n < nentries; n++) {
+		_ret = rtdm_gpiochip_scan_of(from, compat[n], type);
+		if (_ret) {
+			if (_ret != -ENODEV)
+				return _ret;
+		} else
+			ret = 0;
+	}
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(rtdm_gpiochip_scan_array_of);
+
 void rtdm_gpiochip_remove_of(int type)
 {
 	struct rtdm_gpio_chip *rgc, *n;

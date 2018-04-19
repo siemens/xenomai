@@ -65,6 +65,10 @@ int rtdm_gpiochip_post_event(struct rtdm_gpio_chip *rgc,
 int rtdm_gpiochip_scan_of(struct device_node *from,
 			  const char *compat, int type);
 
+int rtdm_gpiochip_scan_array_of(struct device_node *from,
+				const char *compat[],
+				int nentries, int type);
+
 void rtdm_gpiochip_remove_of(int type);
 
 #endif
