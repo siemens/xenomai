@@ -20,10 +20,16 @@
 
 #define RTDM_SUBCLASS_MXC  2
 
+static const char *compat_array[] = {
+	"fsl,imx6q-gpio",
+	"fsl,imx7d-gpio",
+};
+
 static int __init mxc_gpio_init(void)
 {
-	return rtdm_gpiochip_scan_of(NULL, "fsl,imx6q-gpio",
-				     RTDM_SUBCLASS_MXC);
+	return rtdm_gpiochip_scan_array_of(NULL, compat_array,
+					   ARRAY_SIZE(compat_array),
+					   RTDM_SUBCLASS_MXC);
 }
 module_init(mxc_gpio_init);
 
