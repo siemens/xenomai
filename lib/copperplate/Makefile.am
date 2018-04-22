@@ -43,7 +43,11 @@ endif
 if XENO_TLSF
 libcopperplate_la_SOURCES += heapobj-tlsf.c
 else
+if XENO_HEAPMEM
+libcopperplate_la_SOURCES += heapobj-heapmem.c
+else
 libcopperplate_la_SOURCES += heapobj-malloc.c
+endif
 endif
 
 SUBDIRS = .

@@ -139,7 +139,71 @@ static inline char *pvstrdup(const char *ptr)
 	return strcpy(str, ptr);
 }
 
-#else /* !CONFIG_XENO_TLSF, i.e. malloc */
+#elif defined(CONFIG_XENO_HEAPMEM)
+
+#include <boilerplate/heapmem.h>
+
+extern struct heap_memory heapmem_main;
+
+static inline
+void pvheapobj_destroy(struct heapobj *hobj)
+{
+	heapmem_destroy(hobj->pool);
+}
+
+static inline
+int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
+{
+	return heapmem_extend(hobj->pool, mem, size);
+}
+
+static inline
+void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
+{
+	return heapmem_alloc(hobj->pool, size);
+}
+
+static inline
+void pvheapobj_free(struct heapobj *hobj, void *ptr)
+{
+	heapmem_free(hobj->pool, ptr);
+}
+
+static inline
+size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
+{
+	ssize_t size = heapmem_check(hobj->pool, ptr);
+	return size < 0 ? 0 : size;
+}
+
+static inline
+size_t pvheapobj_inquire(struct heapobj *hobj)
+{
+	return heapmem_used_size(hobj->pool);
+}
+
+static inline void *pvmalloc(size_t size)
+{
+	return heapmem_alloc(&heapmem_main, size);
+}
+
+static inline void pvfree(void *ptr)
+{
+	heapmem_free(&heapmem_main, ptr);
+}
+
+static inline char *pvstrdup(const char *ptr)
+{
+	char *str;
+
+	str = (char *)pvmalloc(strlen(ptr) + 1);
+	if (str == NULL)
+		return NULL;
+
+	return strcpy(str, ptr);
+}
+
+#else /* !CONFIG_XENO_HEAPMEM, i.e. malloc */
 
 #include <malloc.h>
 
@@ -176,7 +240,7 @@ size_t pvheapobj_inquire(struct heapobj *hobj);
 
 size_t pvheapobj_validate(struct heapobj *hobj, void *ptr);
 
-#endif /* !CONFIG_XENO_TLSF */
+#endif /* !CONFIG_XENO_HEAPMEM */
 
 #ifdef CONFIG_XENO_PSHARED
 

@@ -327,6 +327,26 @@ if test x$use_pshared = xy; then
 fi
 AM_CONDITIONAL(XENO_PSHARED,[test x$use_pshared = xy])
 
+dnl Allocator selection
+
+localmem_allocator=heapmem
+AC_MSG_CHECKING([for process-local memory allocator])
+AC_ARG_WITH(localmem,
+    AS_HELP_STRING([--with-localmem=<heapmem | tlsf>],[Select process-local memory allocator]),
+    [
+	case "$withval" in
+	"" | y | ye | yes | n | no)
+	    AC_MSG_ERROR([You must supply an argument to --with-localmem])
+	  ;;
+	heapmem|tlsf)
+	   localmem_allocator=$withval
+	   ;;
+	*)
+	    AC_MSG_ERROR([--localmem-allocator=<heapmem | tlsf>])
+	esac
+    ])
+AC_MSG_RESULT($localmem_allocator)
+
 dnl Registry support in user-space (FUSE-based, default: off)
 
 use_registry=
@@ -610,12 +630,31 @@ AM_CONDITIONAL(CONFIG_XENO_SHARED,[test "$enable_shared" = 'yes'])
 # Default sampling period (ns) used in various tests
 AC_DEFINE_UNQUOTED(CONFIG_XENO_DEFAULT_PERIOD,$CONFIG_XENO_DEFAULT_PERIOD,[config])
 
-dnl Allocator for Copperplate
-dnl Note: in dual kernel mode, we don't want malloc, no matter what.
-dnl We switch to malloc only over the Mercury core in debug mode, to ease
-dnl debugging with valgrind, instrumented glibc etc.
-AM_CONDITIONAL(XENO_TLSF,[test $rtcore_type = cobalt -o x$debug_mode = x])
-test $rtcore_type = cobalt -o x$debug_mode = x && AC_DEFINE(CONFIG_XENO_TLSF,1,[config])
+dnl Allocator for Copperplate. Note: in dual kernel mode, we don't
+dnl want malloc, no matter what: pick either heapmem or tlsf, defaults
+dnl to heapmem. Force switch to malloc over the Mercury core in debug
+dnl mode, to ease debugging with valgrind, instrumented glibc etc.
+
+if test $rtcore_type = cobalt -o x$debug_mode = x; then
+   case $localmem_allocator in
+   heapmem)
+	    AC_DEFINE(CONFIG_XENO_HEAPMEM,1,[config])
+	    use_heapmem=y
+	    use_tlsf=
+   	    ;;
+   tlsf)    
+   	    AC_DEFINE(CONFIG_XENO_TLSF,1,[config])
+	    use_tlsf=y
+	    use_heapmem=
+   	    ;;
+   esac
+else
+	use_heapmem=
+	use_tlsf=
+        AC_MSG_WARN([using malloc() for private memory in debug mode])
+fi
+AM_CONDITIONAL(XENO_TLSF,[test x$use_tlsf = xy])
+AM_CONDITIONAL(XENO_HEAPMEM,[test x$use_heapmem = xy])
 
 dnl Check for atomic builtins. For now we only check for the legacy
 dnl interface, i.e. __sync_*.

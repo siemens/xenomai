@@ -71,12 +71,11 @@ libiniparser_la_CPPFLAGS	=		\
 
 EXTRA_DIST = iniparser/README iniparser/LICENSE
 
-# We always build the tlsf/malloc support. In the pshared case, it
-# will provide for private memory allocation.
-if XENO_TLSF
+# Always build TLSF for benchmarking purpose via the
+# smokey testsuite.
+
 libboilerplate_la_LIBADD +=	libtlsf.la
 noinst_LTLIBRARIES += libtlsf.la
-endif
 
 libtlsf_la_SOURCES =	\
 	tlsf/tlsf.c	\
