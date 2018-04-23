@@ -105,6 +105,11 @@ struct smokey_test {
 #define SMOKEY_ARG_BOOL(__plugin, __arg)   (!!SMOKEY_ARG_INT(__plugin, __arg))
 #define SMOKEY_ARG_STRING(__plugin, __arg) (SMOKEY_ARG(__plugin, __arg)->u.s_val)
 
+#define smokey_arg_isset(__t, __name)      (smokey_lookup_arg(__t, __name)->matched)
+#define smokey_arg_int(__t, __name)	   (smokey_lookup_arg(__t, __name)->u.n_val)
+#define smokey_arg_bool(__t, __name)       (!!smokey_arg_int(__t, __name))
+#define smokey_arg_string(__t, __name)     (smokey_lookup_arg(__t, __name)->u.s_val)
+
 #define smokey_check_errno(__expr)					\
 	({                                                              \
 		int __ret = (__expr);					\
