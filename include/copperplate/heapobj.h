@@ -304,6 +304,8 @@ size_t heapobj_validate(struct heapobj *hobj,
 
 size_t heapobj_inquire(struct heapobj *hobj);
 
+size_t heapobj_get_size(struct heapobj *hobj);
+
 int heapobj_bind_session(const char *session);
 
 void heapobj_unbind_session(void);

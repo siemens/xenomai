@@ -1092,6 +1092,12 @@ size_t heapobj_inquire(struct heapobj *hobj)
 	return heap->ubytes;
 }
 
+size_t heapobj_get_size(struct heapobj *hobj)
+{
+	struct shared_heap *heap = __mptr(hobj->pool_ref);
+	return heap->total;
+}
+
 void *xnmalloc(size_t size)
 {
 	return alloc_block(&main_heap.heap, size);
