@@ -85,6 +85,28 @@ int smokey_string(const char *s, struct smokey_arg *arg)
 	return ret;
 }
 
+int smokey_size(const char *s, struct smokey_arg *arg)
+{
+	char *name, *p;
+	int ret;
+
+	ret = sscanf(s, "%m[_a-z]=%m[^\n]", &name, &p);
+	if (ret != 2)
+		return 0;
+
+	ret = !strcmp(name, arg->name);
+	if (ret) {
+		arg->u.l_val = get_mem_size(p);
+		if (arg->u.l_val == 0)
+			ret = 0;
+	}
+
+	free(p);
+	free(name);
+
+	return ret;
+}
+
 int smokey_parse_args(struct smokey_test *t,
 		      int argc, char *const argv[])
 {

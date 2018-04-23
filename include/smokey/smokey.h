@@ -49,6 +49,12 @@
 	 .matched = 0,			\
 	 }
 
+#define SMOKEY_SIZE(__name) {		\
+	 .name = # __name,		\
+	 .parser = smokey_size,		\
+	 .matched = 0,			\
+	 }
+
 #define SMOKEY_ARGLIST(__args...)  ((struct smokey_arg[]){ __args })
 
 #define SMOKEY_NOARGS  (((struct smokey_arg[]){ { .name = NULL } }))
@@ -60,6 +66,7 @@ struct smokey_arg {
 	union {
 		int n_val;
 		char *s_val;
+		size_t l_val;
 	} u;
 	int matched;
 };
@@ -104,11 +111,13 @@ struct smokey_test {
 #define SMOKEY_ARG_INT(__plugin, __arg)	   (SMOKEY_ARG(__plugin, __arg)->u.n_val)
 #define SMOKEY_ARG_BOOL(__plugin, __arg)   (!!SMOKEY_ARG_INT(__plugin, __arg))
 #define SMOKEY_ARG_STRING(__plugin, __arg) (SMOKEY_ARG(__plugin, __arg)->u.s_val)
+#define SMOKEY_ARG_SIZE(__plugin, __arg)   (SMOKEY_ARG(__plugin, __arg)->u.l_val)
 
 #define smokey_arg_isset(__t, __name)      (smokey_lookup_arg(__t, __name)->matched)
 #define smokey_arg_int(__t, __name)	   (smokey_lookup_arg(__t, __name)->u.n_val)
 #define smokey_arg_bool(__t, __name)       (!!smokey_arg_int(__t, __name))
 #define smokey_arg_string(__t, __name)     (smokey_lookup_arg(__t, __name)->u.s_val)
+#define smokey_arg_size(__t, __name)       (smokey_lookup_arg(__t, __name)->u.l_val)
 
 #define smokey_check_errno(__expr)					\
 	({                                                              \
@@ -215,6 +224,8 @@ int smokey_int(const char *s, struct smokey_arg *arg);
 int smokey_bool(const char *s, struct smokey_arg *arg);
 
 int smokey_string(const char *s, struct smokey_arg *arg);
+
+int smokey_size(const char *s, struct smokey_arg *arg);
 
 struct smokey_arg *smokey_lookup_arg(struct smokey_test *t,
 				     const char *arg);
