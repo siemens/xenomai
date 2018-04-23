@@ -106,12 +106,6 @@ static struct heapobj main_pool;
 #define __shref(b, o)		((void *)((caddr_t)(b) + (o)))
 #define __shref_check(b, o)	((o) ? __shref(b, o) : NULL)
 
-static inline size_t __align_to(size_t size, size_t al)
-{
-	/* The alignment value must be a power of 2 */
-	return ((size+al-1)&(~(al-1)));
-}
-
 static inline size_t get_pagemap_size(size_t h,
 				      memoff_t *bmapoff, int *bmapwords)
 {

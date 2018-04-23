@@ -46,6 +46,14 @@
 #define __weak		__attribute__((__weak__))
 #endif
 
+#ifndef __const
+#define __const		__attribute__((__const__))
+#endif
+
+#ifndef __pure
+#define __pure		__attribute__((__pure__))
+#endif
+
 #ifndef __maybe_unused
 #define __maybe_unused	__attribute__((__unused__))
 #endif
@@ -57,6 +65,16 @@
 #ifndef __deprecated
 #define __deprecated	__attribute__((__deprecated__))
 #endif
+
+#ifndef __packed
+#define __packed	__attribute__((__packed__))
+#endif
+
+#ifndef __alloc_size
+#define __alloc_size(__args)	__attribute__((__alloc_size__(__args)))
+#endif
+
+#define __align_to(__size, __al)  (((__size) + (__al) - 1) & (~((__al) - 1)))
 
 #ifdef __cplusplus
 extern "C" {
