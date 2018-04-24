@@ -685,6 +685,7 @@ AC_MSG_RESULT(${CONFIG_XENO_LIBS_DLOPEN:-no})
 if test x$CONFIG_XENO_LIBS_DLOPEN = xy; then
 	AC_DEFINE(CONFIG_XENO_LIBS_DLOPEN,1,[config])
 	AC_DEFINE_UNQUOTED(CONFIG_XENO_TLS_MODEL,"global-dynamic",[TLS model])
+	XENO_LIB_LDFLAGS="-Wl,-z -Wl,nodelete"
 else
 	AC_DEFINE_UNQUOTED(CONFIG_XENO_TLS_MODEL,"initial-exec",[TLS model])
 	XENO_LIB_LDFLAGS="-Wl,-z -Wl,nodlopen"
