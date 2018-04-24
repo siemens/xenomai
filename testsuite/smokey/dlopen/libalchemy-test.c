@@ -33,7 +33,7 @@ static size_t def_mem_pool_size = SIZE_MAX;
 
 static int alchemy_tune(void)
 {
-	if (getenv("XENO_TEST_DLOPEN_NO_INIT") || ran_init)
+	if (ran_init)
 		return 0;
 	def_mem_pool_size = get_config_tunable(mem_pool_size);
 	set_config_tunable(mem_pool_size, 2*def_mem_pool_size);

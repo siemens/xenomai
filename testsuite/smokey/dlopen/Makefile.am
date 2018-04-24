@@ -42,16 +42,10 @@ test_PROGRAMS = dlopentest
 dlopentest_SOURCES = dlopentest.c
 
 dlopentest_CPPFLAGS =				\
-	@XENO_USER_CFLAGS@			\
 	-Wno-format-security			\
-	-DXENO_TEST_DIR='"$(XENO_TEST_DIR)"'	\
-	-I$(top_srcdir)/include
-
-dlopentest_LDFLAGS = @XENO_AUTOINIT_LDFLAGS@ $(XENO_POSIX_WRAPPERS)
+	-DXENO_TEST_DIR='"$(XENO_TEST_DIR)"'
 
 dlopentest_LDADD =		\
-	@XENO_CORE_LDADD@	\
-	@XENO_USER_LDADD@	\
 	-ldl
 
 noinst_LIBRARIES = libdlopen.a
