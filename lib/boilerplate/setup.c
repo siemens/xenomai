@@ -701,12 +701,6 @@ void __register_setup_call(struct setup_descriptor *p, int id)
 	pvlist_prepend(&p->__reserved.next, &setup_list);
 }
 
-void __unregister_setup_call(struct setup_descriptor *p, int id)
-{
-	pvlist_remove(&p->__reserved.next);
-}
-
-
 const char *get_program_name(void)
 {
 	return basename(__base_setup_data.arg0 ?: "program");

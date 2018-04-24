@@ -78,16 +78,10 @@ struct setup_descriptor {
 #define __early_ctor		__attribute__ ((constructor(210)))
 #define __bootstrap_ctor	__attribute__ ((constructor(220)))
 
-#define __setup_dtor		__attribute__ ((destructor(200)))
-
 #define __setup_call(__name, __id)			\
 static __setup_ctor void __declare_ ## __name(void)	\
 {							\
 	__register_setup_call(&(__name), __id);		\
-}							\
-static __setup_dtor void __undeclare_ ## __name(void)	\
-{							\
-	__unregister_setup_call(&(__name), __id);	\
 }
 
 #define core_setup_call(__name)		__setup_call(__name, 0)
@@ -102,7 +96,6 @@ extern "C" {
 #endif
 
 void __register_setup_call(struct setup_descriptor *p, int id);
-void __unregister_setup_call(struct setup_descriptor *p, int id);
 
 extern pid_t __node_id;
 
