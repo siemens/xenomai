@@ -219,7 +219,7 @@ static void *gpiopwm_udp_ctrl_thread(void *cookie)
 	saddr.sin_port = htons(port);
 	saddr.sin_family = AF_INET;
 
-	if (bind(sockfd, &saddr, sizeof(saddr)) < 0)
+	if (bind(sockfd, (struct sockaddr *)&saddr, sizeof(saddr)) < 0)
 		perror("bind");
 
 	clen = sizeof(caddr);
@@ -230,7 +230,7 @@ static void *gpiopwm_udp_ctrl_thread(void *cookie)
 		print_config("UDP Server\n");
 
 		memset(buf,'\0', blen);
-		ret = recvfrom(sockfd, buf, blen - 1, 0, &caddr, &clen);
+		ret = recvfrom(sockfd, buf, blen - 1, 0, (struct sockaddr *)&caddr, &clen);
 		if (ret < 0)
 			perror("recvfrom");
 

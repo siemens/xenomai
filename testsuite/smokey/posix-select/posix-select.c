@@ -30,6 +30,9 @@
 #include <pthread.h>
 #include <boilerplate/atomic.h>
 #include <sys/select.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <smokey/smokey.h>
 
 smokey_test_plugin(posix_select,
