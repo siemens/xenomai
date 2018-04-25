@@ -89,7 +89,7 @@ rtnet_rtcfg_add_client(int fd, const char *hwaddr, const char *ipaddr)
 	cmd.args.add.ip_addr = ip.s_addr;
 	cmd.args.add.timeout = 3000;
 	memcpy(cmd.args.add.mac_addr, mac.ether_addr_octet,
-		sizeof(cmd.args.add.mac_addr));
+		sizeof(mac.ether_addr_octet));
 
 	check_unix(ioctl(fd, RTCFG_IOC_ADD, &cmd));
 }
