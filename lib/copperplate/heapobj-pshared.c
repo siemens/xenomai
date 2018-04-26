@@ -289,8 +289,12 @@ static int reserve_page_range(uint32_t *bitmap, int bitwords, int nrpages)
 	 */
 	for (n = 0, seq = 0; n < bitwords; n++) {
 		v = bitmap[n];
+		if (v == -1U) {
+			seq = 0;
+			continue;
+		}
 		b = 0;
-		while (v != -1U) {
+		for (;;) {
 			r = __ctz(v);
 			if (r) {
 				seq += r;
@@ -316,8 +320,11 @@ static int reserve_page_range(uint32_t *bitmap, int bitwords, int nrpages)
 			 * keep searching for one which is at least
 			 * nrpages-bit long.
 			 */
-			if (v == -1U && b < 32)
-				seq = 0;
+			if (v == -1U) {
+				if (b < 32)
+					seq = 0;
+				break;
+			}
 		}
 	}
 	
