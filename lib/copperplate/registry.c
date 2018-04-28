@@ -116,13 +116,13 @@ int registry_add_dir(const char *fmt, ...)
 
 	write_lock_safe(&p->lock, state);
 
-	d = __STD(malloc(sizeof(*d)));
+	d = pvmalloc(sizeof(*d));
 	if (d == NULL) {
 		ret = -ENOMEM;
 		goto done;
 	}
 	pvholder_init(&d->link);
-	d->path = strdup(path);
+	d->path = pvstrdup(path);
 
 	if (strcmp(path, "/")) {
 		d->basename = d->path + (basename - path) + 1;
@@ -149,8 +149,8 @@ int registry_add_dir(const char *fmt, ...)
 			   &pvhash_operations);
 	if (ret) {
 	fail:
-		__STD(free(d->path));
-		__STD(free(d));
+		pvfree(d->path);
+		pvfree(d);
 	}
 done:
 	write_unlock_safe(&p->lock, state);
@@ -203,7 +203,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	if (basename == NULL)
 		return __bt(-EINVAL);
 
-	fsobj->path = strdup(path);
+	fsobj->path = pvstrdup(path);
 	fsobj->basename = fsobj->path + (basename - path) + 1;
 	fsobj->mode = mode & O_ACCMODE;
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &fsobj->ctime));
@@ -224,7 +224,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 		ret = -ENOENT;
 	fail:
 		pvhash_remove(&p->files, &fsobj->hobj, &pvhash_operations);
-		__STD(free(fsobj->path));
+		pvfree(fsobj->path);
 		fsobj->path = NULL;
 		goto done;
 	}
@@ -263,7 +263,7 @@ void registry_destroy_file(struct fsobj *fsobj)
 	pvlist_remove(&fsobj->link);
 	d->nfiles--;
 	assert(d->nfiles >= 0);
-	__STD(free(fsobj->path));
+	pvfree(fsobj->path);
 	__RT(pthread_mutex_unlock(&fsobj->lock));
 out:
 	__RT(pthread_mutex_destroy(&fsobj->lock));
@@ -693,7 +693,7 @@ static int spawn_daemon(const char *sessdir, int flags)
 		break;
 	}
 
-	__STD(free(path));
+	free(path);
 
 	return ret;
 }
