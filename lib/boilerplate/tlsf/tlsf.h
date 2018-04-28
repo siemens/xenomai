@@ -22,7 +22,7 @@
 #include <sys/types.h>
 
 /* A basic heap size which won't be rejected by init_memory_pool(). */
-#define MIN_TLSF_HEAPSZ 8192
+#define MIN_TLSF_HEAPSZ 65536
 
 extern size_t init_memory_pool(size_t, void *);
 extern size_t get_used_size(void *);
