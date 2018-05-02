@@ -942,7 +942,7 @@ bool xnsynch_release(struct xnsynch *synch, struct xnthread *curr)
 	 */
 	xnlock_get_irqsave(&nklock, s);
 
-	if (synch->status & XNSYNCH_PP) {
+	if (synch->status & XNSYNCH_CEILING) {
 		clear_pp_boost(synch, curr);
 		need_resched = true;
 	}
