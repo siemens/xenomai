@@ -691,8 +691,8 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 
 	poolsz = sk->poolsz;
 	if (poolsz > 0) {
-		poolsz = xnheap_rounded_size(poolsz);
-		poolsz += xnheap_rounded_size(sk->reqbufsz);
+		poolsz = PAGE_ALIGN(poolsz);
+		poolsz += PAGE_ALIGN(sk->reqbufsz);
 		poolmem = xnheap_vmalloc(poolsz);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;

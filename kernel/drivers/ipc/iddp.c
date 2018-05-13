@@ -569,7 +569,7 @@ static int __iddp_bind_socket(struct rtdm_fd *fd,
 	 */
 	poolsz = sk->poolsz;
 	if (poolsz > 0) {
-		poolsz = xnheap_rounded_size(poolsz);
+		poolsz = PAGE_ALIGN(poolsz);
 		poolmem = xnheap_vmalloc(poolsz);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
