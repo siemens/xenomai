@@ -14,6 +14,12 @@ config XENO_DRIVERS_SWITCHTEST
 	Kernel-based driver for unit testing context switches and
 	FPU switches.
 
+config XENO_DRIVERS_HEAPCHECK
+	tristate "Memory allocator test driver"
+	default y
+	help
+	Kernel-based driver for testing Cobalt's memory allocator.
+
 config XENO_DRIVERS_RTDMTEST
 	depends on m
 	tristate "RTDM unit tests driver"

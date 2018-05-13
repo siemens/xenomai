@@ -87,6 +87,37 @@ struct rttst_swtest_error {
 #define RTTST_RTDM_MAGIC_PRIMARY	0xfefbfefb
 #define RTTST_RTDM_MAGIC_SECONDARY	0xa5b9a5b9
 
+#define RTTST_HEAPCHECK_ZEROOVRD   1
+#define RTTST_HEAPCHECK_SHUFFLE    2
+#define RTTST_HEAPCHECK_PATTERN    4
+#define RTTST_HEAPCHECK_HOT        8
+
+struct rttst_heap_parms {
+	__u64 heap_size;
+	__u64 block_size;
+	int flags;
+	int nrstats;
+};
+
+struct rttst_heap_stats {
+	__u64 heap_size;
+	__u64 user_size;
+	__u64 block_size;
+	__s64 alloc_avg_ns;
+	__s64 alloc_max_ns;
+	__s64 free_avg_ns;
+	__s64 free_max_ns;
+	__u64 maximum_free;
+	__u64 largest_free;
+	int nrblocks;
+	int flags;
+};
+
+struct rttst_heap_stathdr {
+	int nrstats;
+	struct rttst_heap_stats *buf;
+};
+
 #define RTIOC_TYPE_TESTING		RTDM_CLASS_TESTING
 
 /*!
@@ -100,6 +131,8 @@ struct rttst_swtest_error {
 #define RTDM_SUBCLASS_SWITCHTEST	2
 /** subclase name: "rtdm" */
 #define RTDM_SUBCLASS_RTDMTEST		3
+/** subclase name: "heapcheck" */
+#define RTDM_SUBCLASS_HEAPCHECK		4
 /** @} */
 
 /*!
@@ -153,7 +186,13 @@ struct rttst_swtest_error {
   
 #define RTTST_RTIOC_RTDM_PING_SECONDARY \
 	_IOR(RTIOC_TYPE_TESTING, 0x43, __u32)
-  
+
+#define RTTST_RTIOC_HEAP_CHECK \
+	_IOR(RTIOC_TYPE_TESTING, 0x44, struct rttst_heap_parms)
+
+#define RTTST_RTIOC_HEAP_STAT_COLLECT \
+	_IOR(RTIOC_TYPE_TESTING, 0x45, int)
+
 /** @} */
 
 #endif /* !_RTDM_UAPI_TESTING_H */
