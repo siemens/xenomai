@@ -35,10 +35,10 @@
  */
 #define HEAPMEM_MAX		(HEAPMEM_PAGE_SHIFT - HEAPMEM_MIN_LOG2)
 #define HEAPMEM_MIN_ALIGN	(1U << HEAPMEM_MIN_LOG2)
-/* Max size of an extent (2Gb). */
-#define HEAPMEM_MAX_EXTSZ	(1U << 31)
+/* Max size of an extent (4Gb - HEAPMEM_PAGE_SIZE). */
+#define HEAPMEM_MAX_EXTSZ	(4294967295U - HEAPMEM_PAGE_SIZE + 1)
 /* Bits we need for encoding a page # */
-#define HEAPMEM_PGENT_BITS       (31 - HEAPMEM_PAGE_SHIFT - 1)
+#define HEAPMEM_PGENT_BITS      (32 - HEAPMEM_PAGE_SHIFT)
 
 /* Each page is represented by a page map entry. */
 #define HEAPMEM_PGMAP_BYTES	sizeof(struct heapmem_pgentry)
