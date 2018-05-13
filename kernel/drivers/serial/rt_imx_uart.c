@@ -963,6 +963,13 @@ static int rt_imx_uart_ioctl(struct rtdm_fd *fd,
 		struct rtser_config config_buf;
 		uint64_t *hist_buf = NULL;
 
+		/*
+		 * We may call regular kernel services ahead, ask for
+		 * re-entering secondary mode if need be.
+		 */
+		if (rtdm_in_rt_context())
+			return -ENOSYS;
+
 		config = (struct rtser_config *)arg;
 
 		if (rtdm_fd_is_user(fd)) {
@@ -984,13 +991,6 @@ static int rt_imx_uart_ioctl(struct rtdm_fd *fd,
 			return -EINVAL;
 
 		if (config->config_mask & RTSER_SET_TIMESTAMP_HISTORY) {
-			/*
-			 * Reflect the call to non-RT as we will likely
-			 * allocate or free the buffer.
-			 */
-			if (rtdm_in_rt_context())
-				return -ENOSYS;
-
 			if (config->timestamp_history &
 						RTSER_RX_TIMESTAMP_HISTORY)
 				hist_buf = kmalloc(IN_BUFFER_SIZE *
@@ -1000,7 +1000,8 @@ static int rt_imx_uart_ioctl(struct rtdm_fd *fd,
 
 		rt_imx_uart_set_config(ctx, config, &hist_buf);
 
-		kfree(hist_buf);
+		if (hist_buf)
+			kfree(hist_buf);
 		break;
 	}
 
