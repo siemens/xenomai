@@ -364,6 +364,13 @@ config XENO_OPT_DEBUG_COBALT
 	  This option activates various assertions inside the Cobalt
 	  kernel. This option has limited overhead.
 
+config XENO_OPT_DEBUG_MEMORY
+	bool "Cobalt memory checks"
+	help
+	  This option enables memory debug checks inside the Cobalt
+	  kernel. This option may induce significant overhead with large
+	  heaps.
+
 config XENO_OPT_DEBUG_CONTEXT
        bool "Check for calling context"
        help
