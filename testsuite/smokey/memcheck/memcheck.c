@@ -776,7 +776,7 @@ int memcheck_run(struct memcheck_descriptor *md,
 	for (heap_size = md->seq_min_heap_size;
 	     heap_size < md->seq_max_heap_size; heap_size <<= 1) {
 		for (runs = 0; runs < md->random_rounds; runs++) {
-			block_size = (random() % heap_size) ?: 1;
+			block_size = (random() % (heap_size / 2)) ?: 1;
 			ret = test_seq(md, heap_size, block_size, 0);
 			if (ret) {
 				smokey_trace("failed with %zuk heap, "
@@ -846,7 +846,7 @@ int memcheck_run(struct memcheck_descriptor *md,
 		 * between loops.
 		 */
 		__RT(clock_nanosleep(CLOCK_MONOTONIC, 0, &idle, NULL));
-		block_size = (random() % (heap_size / 2)) ?: 1;
+		block_size = (random() % (md->pattern_heap_size / 2)) ?: 1;
 		ret = test_seq(md, md->pattern_heap_size, block_size,
 			       test_flags(md, MEMCHECK_SHUFFLE|MEMCHECK_PATTERN));
 		if (ret) {
