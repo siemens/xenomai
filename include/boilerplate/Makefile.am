@@ -4,6 +4,8 @@ includesub_HEADERS =	\
 	ancillaries.h	\
 	atomic.h	\
 	avl.h		\
+	shavl.h		\
+	avl-inner.h	\
 	compiler.h	\
 	debug.h		\
 	hash.h		\

@@ -1,11 +1,10 @@
 
-noinst_LTLIBRARIES = libversion.la libiniparser.la libboilerplate.la
+noinst_LTLIBRARIES = libavl.la libversion.la libiniparser.la libboilerplate.la
 libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -lpthread
-libboilerplate_la_LIBADD = libversion.la libiniparser.la
+libboilerplate_la_LIBADD = libavl.la libversion.la libiniparser.la
 
 libboilerplate_la_SOURCES =	\
 	ancillaries.c		\
-	avl.c			\
 	heapmem.c		\
 	hash.c			\
 	setup.c			\
@@ -58,6 +57,27 @@ libboilerplate_la_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
+
+libavl_la_SOURCES = avl.c
+
+libavl_la_CPPFLAGS = 			\
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include		\
+	-include boilerplate/avl.h
+
+if XENO_PSHARED
+
+noinst_LTLIBRARIES += libshavl.la
+libboilerplate_la_LIBADD += libshavl.la
+
+libshavl_la_SOURCES = avl.c
+
+libshavl_la_CPPFLAGS = 			\
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include		\
+	-include boilerplate/shavl.h
+
+endif
 
 libiniparser_la_SOURCES	=	\
 	iniparser/dictionary.c	\
