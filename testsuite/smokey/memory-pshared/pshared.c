@@ -16,7 +16,7 @@ smokey_test_plugin(memory_pshared,
 
 #define MIN_HEAP_SIZE  8192
 #define MAX_HEAP_SIZE  (1024 * 1024 * 2)
-#define RANDOM_ROUNDS  128
+#define RANDOM_ROUNDS  1024
 
 #define PATTERN_HEAP_SIZE  (128*1024)
 #define PATTERN_ROUNDS     128

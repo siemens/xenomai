@@ -25,6 +25,7 @@
 #include <sys/mman.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -45,24 +46,10 @@
 #include "xenomai/init.h"
 #include "internal.h"
 
-enum {				/* FIXME: page_free redundant with bitmap */
+enum sheapmem_pgtype {
 	page_free =0,
 	page_cont =1,
 	page_list =2
-};
-
-struct page_entry {
-	unsigned int type : 8;	  /* free, cont, list or log2 */
-	unsigned int bcount : 24; /* Number of active blocks. */
-};
-
-struct shared_extent {
-	struct holder link;
-	memoff_t membase;	/* Base offset of page array */
-	memoff_t memlim;	/* Offset limit of page array */
-	memoff_t bitmap;	/* Offset of allocation bitmap */
-	int bitwords;		/* 32bit words in bitmap */
-	struct page_entry pagemap[0]; /* Start of page map */
 };
 
 /*
@@ -70,7 +57,7 @@ struct shared_extent {
  * additional session-wide information.
  */
 struct session_heap {
-	struct shared_heap heap;
+	struct shared_heap_memory heap;
 	int cpid;
 	memoff_t maplen;
 	struct hash_table catalog;
@@ -101,83 +88,649 @@ struct sysgroup *__main_sysgroup;
 
 static struct heapobj main_pool;
 
-#define __shoff(b, p)		((caddr_t)(p) - (caddr_t)(b))
+#define __shoff(b, p)		((void *)(p) - (void *)(b))
 #define __shoff_check(b, p)	((p) ? __shoff(b, p) : 0)
-#define __shref(b, o)		((void *)((caddr_t)(b) + (o)))
+#define __shref(b, o)		((void *)((void *)(b) + (o)))
 #define __shref_check(b, o)	((o) ? __shref(b, o) : NULL)
 
-static inline size_t get_pagemap_size(size_t h,
-				      memoff_t *bmapoff, int *bmapwords)
+static inline uint32_t __attribute__ ((always_inline))
+gen_block_mask(int log2size)
 {
-	int nrpages = h >> HOBJ_PAGE_SHIFT, bitmapw;
-	size_t pagemapsz;
-
-	/*
-	 * Return the size of the meta data required to map 'h' bytes
-	 * of user memory in pages of HOBJ_PAGE_SIZE bytes. The meta
-	 * data includes the length of the extent descriptor, plus the
-	 * length of the page mapping array followed by the allocation
-	 * bitmap. 'h' must be a multiple of HOBJ_PAGE_SIZE on entry.
-	 */
-	assert((h & ~HOBJ_PAGE_MASK) == 0);
-	pagemapsz = __align_to(nrpages * sizeof(struct page_entry),
-			       sizeof(uint32_t));
-	bitmapw =__align_to(nrpages, 32) / 32;
-	if (bmapoff)
-		*bmapoff = offsetof(struct shared_extent, pagemap) + pagemapsz;
-	if (bmapwords)
-		*bmapwords = bitmapw;
-
-	return __align_to(pagemapsz
-			  + sizeof(struct shared_extent)
-			  + bitmapw * sizeof(uint32_t),
-			  HOBJ_MINALIGNSZ);
+	return -1U >> (32 - (SHEAPMEM_PAGE_SIZE >> log2size));
 }
 
-static void init_extent(void *base, struct shared_extent *extent)
+static inline  __attribute__ ((always_inline))
+int addr_to_pagenr(struct sheapmem_extent *ext, void *p)
 {
-	int lastpgnum;
-	uint32_t *p;
-
-	__holder_init_nocheck(base, &extent->link);
-
-	lastpgnum = ((extent->memlim - extent->membase) >> HOBJ_PAGE_SHIFT) - 1;
-	/*
-	 * An extent must contain at least two addressable pages to
-	 * cope with allocation sizes between PAGESIZE and 2 *
-	 * PAGESIZE.
-	 */
-	assert(lastpgnum >= 1);
-
-	/* Mark all pages as free in the page map. */
-	memset(extent->pagemap, 0, (lastpgnum + 1) * sizeof(struct page_entry));
-
-	/* Clear the allocation bitmap. */
-	p = __shref(base, extent->bitmap);
-	memset(p, 0, extent->bitwords * sizeof(uint32_t));
-	/*
-	 * Mark the unused trailing bits (due to alignment) as busy,
-	 * we don't want to pick them since they don't map any actual
-	 * memory from the page pool.
-	 */
-	p[lastpgnum / 32] |= ~(-1U >> (31 - (lastpgnum & 31)));
+	return (p - __shref(main_base, ext->membase)) >> SHEAPMEM_PAGE_SHIFT;
 }
 
-static int init_heap(struct shared_heap *heap, void *base,
-		     const char *name,
-		     void *mem, size_t size)
+static inline  __attribute__ ((always_inline))
+void *pagenr_to_addr(struct sheapmem_extent *ext, int pg)
 {
-	struct shared_extent *extent;
+	return __shref(main_base, ext->membase + (pg << SHEAPMEM_PAGE_SHIFT));
+}
+
+#ifdef CONFIG_XENO_DEBUG_FULL
+/*
+ * Setting page_cont/page_free in the page map is only required for
+ * enabling full checking of the block address in free requests, which
+ * may be extremely time-consuming when deallocating huge blocks
+ * spanning thousands of pages. We only do such marking when running
+ * in full debug mode.
+ */
+static inline bool
+page_is_valid(struct sheapmem_extent *ext, int pg)
+{
+	switch (ext->pagemap[pg].type) {
+	case page_free:
+	case page_cont:
+		return false;
+	case page_list:
+	default:
+		return true;
+	}
+}
+
+static void mark_pages(struct sheapmem_extent *ext,
+		       int pg, int nrpages,
+		       enum sheapmem_pgtype type)
+{
+	while (nrpages-- > 0)
+		ext->pagemap[pg].type = type;
+}
+
+#else
+
+static inline bool
+page_is_valid(struct sheapmem_extent *ext, int pg)
+{
+	return true;
+}
+
+static void mark_pages(struct sheapmem_extent *ext,
+		       int pg, int nrpages,
+		       enum sheapmem_pgtype type)
+{ }
+
+#endif
+
+ssize_t sheapmem_check(struct shared_heap_memory *heap, void *block)
+{
+	struct sheapmem_extent *ext;
+	memoff_t pg, pgoff, boff;
+	ssize_t ret = -EINVAL;
+	size_t bsize;
+
+	read_lock_nocancel(&heap->lock);
+
+	/*
+	 * Find the extent the checked block is originating from.
+	 */
+	__list_for_each_entry(main_base, ext, &heap->extents, next) {
+		if (__shoff(main_base, block) >= ext->membase &&
+		    __shoff(main_base, block) < ext->memlim)
+			goto found;
+	}
+	goto out;
+found:
+	/* Calculate the page number from the block address. */
+	pgoff = __shoff(main_base, block) - ext->membase;
+	pg = pgoff >> SHEAPMEM_PAGE_SHIFT;
+	if (page_is_valid(ext, pg)) {
+		if (ext->pagemap[pg].type == page_list)
+			bsize = ext->pagemap[pg].bsize;
+		else {
+			bsize = (1 << ext->pagemap[pg].type);
+			boff = pgoff & ~SHEAPMEM_PAGE_MASK;
+			if ((boff & (bsize - 1)) != 0) /* Not at block start? */
+				goto out;
+		}
+		ret = (ssize_t)bsize;
+	}
+out:
+	read_unlock(&heap->lock);
+
+	return ret;
+}
+
+static inline struct sheapmem_range *
+find_suitable_range(struct sheapmem_extent *ext, size_t size)
+{
+	struct sheapmem_range lookup;
+	struct shavlh *node;
+
+	lookup.size = size;
+	node = shavl_search_ge(&ext->size_tree, &lookup.size_node);
+	if (node == NULL)
+		return NULL;
+
+	return container_of(node, struct sheapmem_range, size_node);
+}
+
+static int reserve_page_range(struct sheapmem_extent *ext, size_t size)
+{
+	struct sheapmem_range *new, *splitr;
+
+	new = find_suitable_range(ext, size);
+	if (new == NULL)
+		return -1;
+
+	shavl_delete(&ext->size_tree, &new->size_node);
+	if (new->size == size) {
+		shavl_delete(&ext->addr_tree, &new->addr_node);
+		return addr_to_pagenr(ext, new);
+	}
+
+	/*
+	 * The free range fetched is larger than what we need: split
+	 * it in two, the upper part goes to the user, the lower part
+	 * is returned to the free list, which makes reindexing by
+	 * address pointless.
+	 */
+	splitr = new;
+	splitr->size -= size;
+	new = (struct sheapmem_range *)((void *)new + splitr->size);
+	shavlh_init(&splitr->size_node);
+	shavl_insert_back(&ext->size_tree, &splitr->size_node);
+
+	return addr_to_pagenr(ext, new);
+}
+
+static inline struct sheapmem_range *
+find_left_neighbour(struct sheapmem_extent *ext, struct sheapmem_range *r)
+{
+	struct shavlh *node;
+
+	node = shavl_search_le(&ext->addr_tree, &r->addr_node);
+	if (node == NULL)
+		return NULL;
+
+	return container_of(node, struct sheapmem_range, addr_node);
+}
+
+static inline struct sheapmem_range *
+find_right_neighbour(struct sheapmem_extent *ext, struct sheapmem_range *r)
+{
+	struct shavlh *node;
+
+	node = shavl_search_ge(&ext->addr_tree, &r->addr_node);
+	if (node == NULL)
+		return NULL;
+
+	return container_of(node, struct sheapmem_range, addr_node);
+}
+
+static inline struct sheapmem_range *
+find_next_neighbour(struct sheapmem_extent *ext, struct sheapmem_range *r)
+{
+	struct shavlh *node;
+
+	node = shavl_next(&ext->addr_tree, &r->addr_node);
+	if (node == NULL)
+		return NULL;
+
+	return container_of(node, struct sheapmem_range, addr_node);
+}
+
+static inline bool
+ranges_mergeable(struct sheapmem_range *left, struct sheapmem_range *right)
+{
+	return (void *)left + left->size == (void *)right;
+}
+
+static void release_page_range(struct sheapmem_extent *ext,
+			       void *page, size_t size)
+{
+	struct sheapmem_range *freed = page, *left, *right;
+	bool addr_linked = false;
+
+	freed->size = size;
+
+	left = find_left_neighbour(ext, freed);
+	if (left && ranges_mergeable(left, freed)) {
+		shavl_delete(&ext->size_tree, &left->size_node);
+		left->size += freed->size;
+		freed = left;
+		addr_linked = true;
+		right = find_next_neighbour(ext, freed);
+	} else
+		right = find_right_neighbour(ext, freed);
+
+	if (right && ranges_mergeable(freed, right)) {
+		shavl_delete(&ext->size_tree, &right->size_node);
+		freed->size += right->size;
+		if (addr_linked)
+			shavl_delete(&ext->addr_tree, &right->addr_node);
+		else
+			shavl_replace(&ext->addr_tree, &right->addr_node,
+				      &freed->addr_node);
+	} else if (!addr_linked) {
+		shavlh_init(&freed->addr_node);
+		if (left)
+			shavl_insert(&ext->addr_tree, &freed->addr_node);
+		else
+			shavl_prepend(&ext->addr_tree, &freed->addr_node);
+	}
+
+	shavlh_init(&freed->size_node);
+	shavl_insert_back(&ext->size_tree, &freed->size_node);
+	mark_pages(ext, addr_to_pagenr(ext, page),
+		   size >> SHEAPMEM_PAGE_SHIFT, page_free);
+}
+
+static void add_page_front(struct shared_heap_memory *heap,
+			   struct sheapmem_extent *ext,
+			   int pg, int log2size)
+{
+	struct sheapmem_pgentry *new, *head, *next;
+	int ilog;
+
+	/* Insert page at front of the per-bucket page list. */
+	
+	ilog = log2size - SHEAPMEM_MIN_LOG2;
+	new = &ext->pagemap[pg];
+	if (heap->buckets[ilog] == -1U) {
+		heap->buckets[ilog] = pg;
+		new->prev = new->next = pg;
+	} else {
+		head = &ext->pagemap[heap->buckets[ilog]];
+		new->prev = heap->buckets[ilog];
+		new->next = head->next;
+		next = &ext->pagemap[new->next];
+		next->prev = pg;
+		head->next = pg;
+		heap->buckets[ilog] = pg;
+	}
+}
+
+static void remove_page(struct shared_heap_memory *heap,
+			struct sheapmem_extent *ext,
+			int pg, int log2size)
+{
+	struct sheapmem_pgentry *old, *prev, *next;
+	int ilog = log2size - SHEAPMEM_MIN_LOG2;
+
+	/* Remove page from the per-bucket page list. */
+
+	old = &ext->pagemap[pg];
+	if (pg == old->next)
+		heap->buckets[ilog] = -1U;
+	else {
+		if (pg == heap->buckets[ilog])
+			heap->buckets[ilog] = old->next;
+		prev = &ext->pagemap[old->prev];
+		prev->next = old->next;
+		next = &ext->pagemap[old->next];
+		next->prev = old->prev;
+	}
+}
+
+static void move_page_front(struct shared_heap_memory *heap,
+			    struct sheapmem_extent *ext,
+			    int pg, int log2size)
+{
+	int ilog = log2size - SHEAPMEM_MIN_LOG2;
+
+	/* Move page at front of the per-bucket page list. */
+	
+	if (heap->buckets[ilog] == pg)
+		return;	 /* Already at front, no move. */
+		
+	remove_page(heap, ext, pg, log2size);
+	add_page_front(heap, ext, pg, log2size);
+}
+
+static void move_page_back(struct shared_heap_memory *heap,
+			   struct sheapmem_extent *ext,
+			   int pg, int log2size)
+{
+	struct sheapmem_pgentry *old, *last, *head, *next;
+	int ilog;
+
+	/* Move page at end of the per-bucket page list. */
+	
+	old = &ext->pagemap[pg];
+	if (pg == old->next) /* Singleton, no move. */
+		return;
+		
+	remove_page(heap, ext, pg, log2size);
+
+	ilog = log2size - SHEAPMEM_MIN_LOG2;
+	head = &ext->pagemap[heap->buckets[ilog]];
+	last = &ext->pagemap[head->prev];
+	old->prev = head->prev;
+	old->next = last->next;
+	next = &ext->pagemap[old->next];
+	next->prev = pg;
+	last->next = pg;
+}
+
+static void *add_free_range(struct shared_heap_memory *heap, size_t bsize, int log2size)
+{
+	struct sheapmem_extent *ext;
+	size_t rsize;
+	int pg;
+
+	/*
+	 * Scanning each extent, search for a range of contiguous
+	 * pages in the extent. The range must be at least @bsize
+	 * long. @pg is the heading page number on success.
+	 */
+	rsize =__align_to(bsize, SHEAPMEM_PAGE_SIZE);
+	__list_for_each_entry(main_base, ext, &heap->extents, next) {
+		pg = reserve_page_range(ext, rsize);
+		if (pg >= 0)
+			goto found;
+	}
+
+	return NULL;
+
+found:	
+	/*
+	 * Update the page entry.  If @log2size is non-zero
+	 * (i.e. bsize < SHEAPMEM_PAGE_SIZE), bsize is (1 << log2Size)
+	 * between 2^SHEAPMEM_MIN_LOG2 and 2^(SHEAPMEM_PAGE_SHIFT - 1).
+	 * Save the log2 power into entry.type, then update the
+	 * per-page allocation bitmap to reserve the first block.
+	 *
+	 * Otherwise, we have a larger block which may span multiple
+	 * pages: set entry.type to page_list, indicating the start of
+	 * the page range, and entry.bsize to the overall block size.
+	 */
+	if (log2size) {
+		ext->pagemap[pg].type = log2size;
+		/*
+		 * Mark the first object slot (#0) as busy, along with
+		 * the leftmost bits we won't use for this log2 size.
+		 */
+		ext->pagemap[pg].map = ~gen_block_mask(log2size) | 1;
+		/*
+		 * Insert the new page at front of the per-bucket page
+		 * list, enforcing the assumption that pages with free
+		 * space live close to the head of this list.
+		 */
+		add_page_front(heap, ext, pg, log2size);
+	} else {
+		ext->pagemap[pg].type = page_list;
+		ext->pagemap[pg].bsize = (uint32_t)bsize;
+		mark_pages(ext, pg + 1,
+			   (bsize >> SHEAPMEM_PAGE_SHIFT) - 1, page_cont);
+	}
+
+	heap->used_size += bsize;
+
+	return pagenr_to_addr(ext, pg);
+}
+
+static void *sheapmem_alloc(struct shared_heap_memory *heap, size_t size)
+{
+	struct sheapmem_extent *ext;
+	int log2size, ilog, pg, b;
+	uint32_t bmask;
+	size_t bsize;
+	void *block;
+
+	if (size == 0)
+		return NULL;
+
+	if (size < SHEAPMEM_MIN_ALIGN) {
+		bsize = size = SHEAPMEM_MIN_ALIGN;
+		log2size = SHEAPMEM_MIN_LOG2;
+	} else {
+		log2size = sizeof(size) * CHAR_BIT - 1 - __clz(size);
+		if (log2size < SHEAPMEM_PAGE_SHIFT) {
+			if (size & (size - 1))
+				log2size++;
+			bsize = 1 << log2size;
+		} else
+			bsize = __align_to(size, SHEAPMEM_PAGE_SIZE);
+	}
+	
+	/*
+	 * Allocate entire pages directly from the pool whenever the
+	 * block is larger or equal to SHEAPMEM_PAGE_SIZE.  Otherwise,
+	 * use bucketed memory.
+	 *
+	 * NOTE: Fully busy pages from bucketed memory are moved back
+	 * at the end of the per-bucket page list, so that we may
+	 * always assume that either the heading page has some room
+	 * available, or no room is available from any page linked to
+	 * this list, in which case we should immediately add a fresh
+	 * page.
+	 */
+	if (bsize < SHEAPMEM_PAGE_SIZE) {
+		ilog = log2size - SHEAPMEM_MIN_LOG2;
+		assert(ilog >= 0 && ilog < SHEAPMEM_MAX);
+
+		write_lock_nocancel(&heap->lock);
+
+		__list_for_each_entry(main_base, ext, &heap->extents, next) {
+			pg = heap->buckets[ilog];
+			if (pg < 0) /* Empty page list? */
+				continue;
+
+			/*
+			 * Find a block in the heading page. If there
+			 * is none, there won't be any down the list:
+			 * add a new page right away.
+			 */
+			bmask = ext->pagemap[pg].map;
+			if (bmask == -1U)
+				break;
+			b = __ctz(~bmask);
+
+			/*
+			 * Got one block from the heading per-bucket
+			 * page, tag it as busy in the per-page
+			 * allocation map.
+			 */
+			ext->pagemap[pg].map |= (1U << b);
+			heap->used_size += bsize;
+			block = __shref(main_base, ext->membase) +
+				(pg << SHEAPMEM_PAGE_SHIFT) +
+				(b << log2size);
+			if (ext->pagemap[pg].map == -1U)
+				move_page_back(heap, ext, pg, log2size);
+			goto out;
+		}
+
+		/* No free block in bucketed memory, add one page. */
+		block = add_free_range(heap, bsize, log2size);
+	} else {
+		write_lock_nocancel(&heap->lock);
+		/* Add a range of contiguous free pages. */
+		block = add_free_range(heap, bsize, 0);
+	}
+out:
+	write_unlock(&heap->lock);
+
+	return block;
+}
+
+static int sheapmem_free(struct shared_heap_memory *heap, void *block)
+{
+	int log2size, ret = 0, pg, n;
+	struct sheapmem_extent *ext;
+	memoff_t pgoff, boff;
+	uint32_t oldmap;
+	size_t bsize;
+
+	write_lock_nocancel(&heap->lock);
+
+	/*
+	 * Find the extent from which the returned block is
+	 * originating from.
+	 */
+	__list_for_each_entry(main_base, ext, &heap->extents, next) {
+		if (__shoff(main_base, block) >= ext->membase &&
+		    __shoff(main_base, block) < ext->memlim)
+			goto found;
+	}
+
+	goto bad;
+found:
+	/* Compute the heading page number in the page map. */
+	pgoff = __shoff(main_base, block) - ext->membase;
+	pg = pgoff >> SHEAPMEM_PAGE_SHIFT;
+	if (!page_is_valid(ext, pg))
+		goto bad;
+	
+	switch (ext->pagemap[pg].type) {
+	case page_list:
+		bsize = ext->pagemap[pg].bsize;
+		assert((bsize & (SHEAPMEM_PAGE_SIZE - 1)) == 0);
+		release_page_range(ext, pagenr_to_addr(ext, pg), bsize);
+		break;
+
+	default:
+		log2size = ext->pagemap[pg].type;
+		bsize = (1 << log2size);
+		assert(bsize < SHEAPMEM_PAGE_SIZE);
+		boff = pgoff & ~SHEAPMEM_PAGE_MASK;
+		if ((boff & (bsize - 1)) != 0) /* Not at block start? */
+			goto bad;
+
+		n = boff >> log2size; /* Block position in page. */
+		oldmap = ext->pagemap[pg].map;
+		ext->pagemap[pg].map &= ~(1U << n);
+
+		/*
+		 * If the page the block was sitting on is fully idle,
+		 * return it to the pool. Otherwise, check whether
+		 * that page is transitioning from fully busy to
+		 * partially busy state, in which case it should move
+		 * toward the front of the per-bucket page list.
+		 */
+		if (ext->pagemap[pg].map == ~gen_block_mask(log2size)) {
+			remove_page(heap, ext, pg, log2size);
+			release_page_range(ext, pagenr_to_addr(ext, pg),
+					   SHEAPMEM_PAGE_SIZE);
+		} else if (oldmap == -1U)
+			move_page_front(heap, ext, pg, log2size);
+	}
+
+	heap->used_size -= bsize;
+out:
+	write_unlock(&heap->lock);
+
+	return __bt(ret);
+bad:
+	ret = -EINVAL;
+	goto out;
+}
+
+static inline int compare_range_by_size(const struct shavlh *l, const struct shavlh *r)
+{
+	struct sheapmem_range *rl = container_of(l, typeof(*rl), size_node);
+	struct sheapmem_range *rr = container_of(r, typeof(*rl), size_node);
+
+	return avl_sign((long)(rl->size - rr->size));
+}
+static DECLARE_SHAVL_SEARCH(search_range_by_size, compare_range_by_size);
+
+static inline int compare_range_by_addr(const struct shavlh *l, const struct shavlh *r)
+{
+	uintptr_t al = (uintptr_t)l, ar = (uintptr_t)r;
+
+	return avl_cmp_sign(al, ar);
+}
+static DECLARE_SHAVL_SEARCH(search_range_by_addr, compare_range_by_addr);
+
+static int add_extent(struct shared_heap_memory *heap, void *base,
+		      void *mem, size_t size)
+{
+	size_t user_size, overhead;
+	struct sheapmem_extent *ext;
+	int nrpages, state;
+
+	/*
+	 * @size must include the overhead memory we need for storing
+	 * our meta data as calculated by SHEAPMEM_ARENA_SIZE(), find
+	 * this amount back.
+	 *
+	 * o = overhead
+	 * e = sizeof(sheapmem_extent)
+	 * p = SHEAPMEM_PAGE_SIZE
+	 * m = SHEAPMEM_PGMAP_BYTES
+	 *
+	 * o = align_to(((a * m + e * p) / (p + m)), minlog2)
+	 */
+	overhead = __align_to((size * SHEAPMEM_PGMAP_BYTES +
+			       sizeof(*ext) * SHEAPMEM_PAGE_SIZE) /
+			      (SHEAPMEM_PAGE_SIZE + SHEAPMEM_PGMAP_BYTES),
+			      SHEAPMEM_MIN_ALIGN);
+
+	user_size = size - overhead;
+	if (user_size & ~SHEAPMEM_PAGE_MASK)
+		return -EINVAL;
+
+	if (user_size < SHEAPMEM_PAGE_SIZE ||
+	    user_size > SHEAPMEM_MAX_EXTSZ)
+		return -EINVAL;
+		
+	/*
+	 * Setup an extent covering user_size bytes of user memory
+	 * starting at @mem. user_size must be a multiple of
+	 * SHEAPMEM_PAGE_SIZE.  The extent starts with a descriptor,
+	 * followed by the array of page entries.
+	 *
+	 * Page entries contain per-page metadata for managing the
+	 * page pool.
+	 *
+	 * +-------------------+ <= mem
+	 * | extent descriptor |
+	 * /...................\
+	 * \...page entries[]../
+	 * /...................\
+	 * +-------------------+ <= extent->membase
+	 * |                   |
+	 * |                   |
+	 * |    (page pool)    |
+	 * |                   |
+	 * |                   |
+	 * +-------------------+
+	 *                       <= extent->memlim == mem + size
+	 */
+	nrpages = user_size >> SHEAPMEM_PAGE_SHIFT;
+	ext = mem;
+	ext->membase = __shoff(base, mem) + overhead;
+	ext->memlim = __shoff(base, mem) + size;
+		      
+	memset(ext->pagemap, 0, nrpages * sizeof(struct sheapmem_pgentry));
+
+	/*
+	 * The free page pool is maintained as a set of ranges of
+	 * contiguous pages indexed by address and size in AVL
+	 * trees. Initially, we have a single range in those trees
+	 * covering the whole user memory we have been given for the
+	 * extent. Over time, that range will be split then possibly
+	 * re-merged back as allocations and deallocations take place.
+	 */
+	shavl_init(&ext->size_tree, search_range_by_size, compare_range_by_size);
+	shavl_init(&ext->addr_tree, search_range_by_addr, compare_range_by_addr);
+	release_page_range(ext, __shref(base, ext->membase), user_size);
+
+	write_lock_safe(&heap->lock, state);
+	__list_append(base, &ext->next, &heap->extents);
+	heap->arena_size += size;
+	heap->usable_size += user_size;
+	write_unlock_safe(&heap->lock, state);
+
+	return 0;
+}
+
+static int sheapmem_init(struct shared_heap_memory *heap, void *base,
+			 const char *name,
+			 void *mem, size_t size)
+{
 	pthread_mutexattr_t mattr;
-	int ret, bmapwords;
-	memoff_t bmapoff;
-	size_t metasz;
+	int ret, n;
 
 	namecpy(heap->name, name);
-
-	heap->ubytes = 0;
-	heap->total = size;
-	heap->maxcont = heap->total;
+	heap->used_size = 0;
+	heap->usable_size = 0;
+	heap->arena_size = 0;
 	__list_init_nocheck(base, &heap->extents);
 
 	pthread_mutexattr_init(&mattr);
@@ -189,40 +742,15 @@ static int init_heap(struct shared_heap *heap, void *base,
 	if (ret)
 		return ret;
 
-	memset(heap->buckets, 0, sizeof(heap->buckets));
+	/* Reset bucket page lists, all empty. */
+	for (n = 0; n < SHEAPMEM_MAX; n++)
+		heap->buckets[n] = -1U;
 
-	/*
-	 * The heap descriptor is followed in memory by the initial
-	 * extent covering the 'size' bytes of user memory, which is a
-	 * multiple of HOBJ_PAGE_SIZE. The extent starts with a
-	 * descriptor, which is in turn followed by a page mapping
-	 * array. The length of the page mapping array depends on the
-	 * size of the user memory to map.
-	 *
-	 * +-------------------+
-	 * |  heap descriptor  |
-	 * +-------------------+
-	 * | extent descriptor |
-	 * /...................\
-	 * \....(page map)...../
-	 * /...................\
-	 * \.....(bitmap)....../
-	 * /...................\
-	 * +-------------------+ <= extent->membase
-	 * |                   |
-	 * |    (page pool)    |
-	 * |                   |
-	 * +-------------------+
-	 *                       <= extent->memlim
-	 */
-	extent = mem;
-	metasz = get_pagemap_size(size, &bmapoff, &bmapwords);
-	extent->bitmap = __shoff(base, mem) + bmapoff;
-	extent->bitwords = bmapwords;
-	extent->membase = __shoff(base, mem) + metasz;
-	extent->memlim = extent->membase + size;
-	init_extent(base, extent);
-	__list_append(base, &extent->link, &heap->extents);
+	ret = add_extent(heap, base, mem, size);
+	if (ret) {
+		__RT(pthread_mutex_destroy(&heap->lock));
+		return ret;
+	}
 
 	return 0;
 }
@@ -233,7 +761,7 @@ static int init_main_heap(struct session_heap *m_heap,
 	pthread_mutexattr_t mattr;
 	int ret;
 
-	ret = init_heap(&m_heap->heap, m_heap, "main", m_heap + 1, size);
+	ret = sheapmem_init(&m_heap->heap, m_heap, "main", m_heap + 1, size);
 	if (ret)
 		return __bt(ret);
 
@@ -257,441 +785,6 @@ static int init_main_heap(struct session_heap *m_heap,
 	return 0;
 }
 
-static inline void flip_page_range(uint32_t *p, int b, int nr)
-{
-	for (;;) {
-		*p ^= (1 << b);
-		if (--nr == 0)
-			return;
-		if (--b < 0) {
-			b = 31;
-			p--;
-		}
-	}
-}
-
-static int reserve_page_range(uint32_t *bitmap, int bitwords, int nrpages)
-{
-	int n, b, r, seq, beg, end;
-	uint32_t v = -1U;
-
-	/*
-	 * Look for a free contiguous range of at least nrpages
-	 * page(s) in the bitmap. Once found, flip the corresponding
-	 * bit sequence from clear to set, then return the heading
-	 * page number. Otherwise, return -1 on failure.
-	 */
-	for (n = 0, seq = 0; n < bitwords; n++) {
-		v = bitmap[n];
-		if (v == -1U) {
-			seq = 0;
-			continue;
-		}
-		b = 0;
-		for (;;) {
-			r = __ctz(v);
-			if (r) {
-				seq += r;
-				if (seq >= nrpages) {
-					beg = n * 32 + b + r - seq;
-					end = beg + nrpages - 1;
-					flip_page_range(bitmap + end / 32,
-							end & 31, nrpages);
-					return beg;
-				}
-			} else {
-				seq = 0;
-				r = 1;
-			}
-			b += r;
-			v >>= r;
-			v |= -1U << (32 - r);
-			/*
-			 * No more zero bits on the left, and not at
-			 * the leftmost position: any ongoing zero bit
-			 * sequence stops here in the current word,
-			 * short of free bits. Reset the sequence, and
-			 * keep searching for one which is at least
-			 * nrpages-bit long.
-			 */
-			if (v == -1U) {
-				if (b < 32)
-					seq = 0;
-				break;
-			}
-		}
-	}
-	
-	return -1;
-}
-
-static inline
-caddr_t get_page_addr(void *base,
-		      struct shared_extent *extent, int pgnum)
-{
-	return __shref(base, extent->membase) + (pgnum << HOBJ_PAGE_SHIFT);
-}
-
-static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2size)
-{
-	struct shared_extent *extent;
-	void *base = main_base;
-	caddr_t block, eblock;
-	uint32_t *bitmap;
-	size_t areasz;
-	int pstart, n;
-
-	/*
-	 * Scanning each extent, search for a range of contiguous
-	 * pages in the extent's bitmap. The range must be at least
-	 * 'bsize' long.
-	 */
-
-	areasz =__align_to(bsize, HOBJ_PAGE_SIZE) >> HOBJ_PAGE_SHIFT;
-	__list_for_each_entry(base, extent, &heap->extents, link) {
-		bitmap = __shref(base, extent->bitmap);
-		pstart = reserve_page_range(bitmap, extent->bitwords, areasz);
-		if (pstart >= 0)
-			goto splitpage;
-	}
-
-	return NULL;
-
-splitpage:	
-	/*
-	 * pstart is the starting page number of a range of contiguous
-	 * free pages larger or equal than 'bsize'.
-	 */
-	if (bsize < HOBJ_PAGE_SIZE) {
-		/*
-		 * If the allocation size is smaller than the internal
-		 * page size, split the page in smaller blocks of this
-		 * size, building a free list of bucketed free blocks.
-		 */
-		for (block = get_page_addr(base, extent, pstart),
-		     eblock = block + HOBJ_PAGE_SIZE - bsize;
-		     block < eblock; block += bsize)
-			*((memoff_t *)block) = __shoff(base, block) + bsize;
-
-		*((memoff_t *)eblock) = 0;
-	}
-
-	/*
-	 * Update the page map.  If log2size is non-zero (i.e. bsize
-	 * <= 2 * PAGESIZE), store it in the slot heading the page
-	 * range to record the exact block size (which is a power of
-	 * two).
-	 *
-	 * Otherwise, store the special marker page_list, indicating
-	 * the start of a block which size is a multiple of the
-	 * standard page size, but not necessarily a power of two.
-	 *
-	 * Page slots following the heading one bear the page_cont
-	 * marker.
-	 */
-	extent->pagemap[pstart].type = log2size ?: page_list;
-	extent->pagemap[pstart].bcount = 1;
-
-	for (n = bsize >> HOBJ_PAGE_SHIFT; n > 1; n--) {
-		extent->pagemap[pstart + n - 1].type = page_cont;
-		extent->pagemap[pstart + n - 1].bcount = 0;
-	}
-
-	return get_page_addr(base, extent, pstart);
-}
-
-static inline size_t  __attribute__ ((always_inline))
-align_alloc_size(size_t size)
-{
-	/*
-	 * Sizes greater than the page size are rounded to a multiple
-	 * of the page size.
-	 */
-	if (size > HOBJ_PAGE_SIZE)
-		return __align_to(size, HOBJ_PAGE_SIZE);
-
-	return __align_to(size, HOBJ_MINALIGNSZ);
-}
-
-static void *alloc_block(struct shared_heap *heap, size_t size)
-{
-	struct shared_extent *extent;
-	void *base = main_base;
-	size_t pgnum, bsize;
-	int log2size, ilog;
-	caddr_t block;
-
-	if (size == 0)
-		return NULL;
-
-	size = align_alloc_size(size);
-	/*
-	 * It becomes more space efficient to directly allocate pages
-	 * from the free page pool whenever the requested size is
-	 * greater than 2 times the page size. Otherwise, use the
-	 * bucketed memory blocks.
-	 */
-	if (size <= HOBJ_PAGE_SIZE * 2) {
-		/* Find log2(size). */
-		log2size = sizeof(size) * 8 - 1 - __clz(size);
-		if (size & (size - 1))
-			log2size++;
-		/* That is the actual block size we need. */
-		bsize = 1 << log2size;
-		ilog = log2size - HOBJ_MINLOG2;
-		assert(ilog < HOBJ_NBUCKETS);
-
-		write_lock_nocancel(&heap->lock);
-
-		block = __shref_check(base, heap->buckets[ilog].freelist);
-		if (block == NULL) {
-			block = get_free_range(heap, bsize, log2size);
-			if (block == NULL)
-				goto done;
-			if (bsize < HOBJ_PAGE_SIZE) {
-				heap->buckets[ilog].fcount += (HOBJ_PAGE_SIZE >> log2size) - 1;
-				heap->buckets[ilog].freelist = *((memoff_t *)block);
-			}
-		} else {
-			if (bsize < HOBJ_PAGE_SIZE)
-				--heap->buckets[ilog].fcount;
-
-			/* Search for the source extent of block. */
-			__list_for_each_entry(base, extent, &heap->extents, link) {
-				if (__shoff(base, block) >= extent->membase &&
-				    __shoff(base, block) < extent->memlim)
-					goto found;
-			}
-			assert(0);
-		found:
-			pgnum = (__shoff(base, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
-			++extent->pagemap[pgnum].bcount;
-			heap->buckets[ilog].freelist = *((memoff_t *)block);
-		}
-
-		heap->ubytes += bsize;
-	} else {
-		if (size > heap->maxcont)
-			return NULL;
-
-		write_lock_nocancel(&heap->lock);
-
-		/* Directly request a free page range. */
-		block = get_free_range(heap, size, 0);
-		if (block)
-			heap->ubytes += size;
-	}
-done:
-	write_unlock(&heap->lock);
-
-	return block;
-}
-
-static int free_block(struct shared_heap *heap, void *block)
-{
-	int log2size, ret = 0, nblocks, xpage, ilog, pagenr,
-		maxpages, pghead, pgtail, n;
-	struct shared_extent *extent;
-	memoff_t *tailp, pgoff, boff;
-	caddr_t freep, startp, endp;
-	void *base = main_base;
-	uint32_t *bitmap;
-	size_t bsize;
-
-	write_lock_nocancel(&heap->lock);
-
-	/*
-	 * Find the extent from which the returned block is
-	 * originating from.
-	 */
-	__list_for_each_entry(base, extent, &heap->extents, link) {
-		if (__shoff(base, block) >= extent->membase &&
-		    __shoff(base, block) < extent->memlim)
-			goto found;
-	}
-
-	ret = -EFAULT;
-	goto out;
-found:
-	/* Compute the heading page number in the page map. */
-	pgoff = __shoff(base, block) - extent->membase;
-	pghead = pgoff >> HOBJ_PAGE_SHIFT;
-	boff = pgoff & ~HOBJ_PAGE_MASK;
-
-	switch (extent->pagemap[pghead].type) {
-	case page_free:	/* Unallocated page? */
-	case page_cont:	/* Not a range heading page? */
-		ret = -EINVAL;
-		goto out;
-
-	case page_list:
-		pagenr = 1;
-		maxpages = (extent->memlim - extent->membase) >> HOBJ_PAGE_SHIFT;
-		while (pagenr < maxpages &&
-		       extent->pagemap[pghead + pagenr].type == page_cont)
-			pagenr++;
-		bsize = pagenr * HOBJ_PAGE_SIZE;
-
-	free_pages:
-		/* Mark the released pages as free in the extent's page map. */
-		for (n = 0; n < pagenr; n++)
-			extent->pagemap[pghead + n].type = page_free;
-
-		/* Likewise for the allocation bitmap. */
-		bitmap = __shref(base, extent->bitmap);
-		pgtail = pghead + pagenr - 1;
-		/*
-		 * Mark the released page(s) as free in the
-		 * bitmap. Caution: this is a reverse scan from the
-		 * end of the bitfield mapping the area.
-		 */
-		flip_page_range(bitmap + pgtail / 32, pgtail & 31, pagenr);
-		break;
-
-	default:
-		log2size = extent->pagemap[pghead].type;
-		bsize = (1 << log2size);
-		if ((boff & (bsize - 1)) != 0) { /* Not at block start? */
-			ret = -EINVAL;
-			goto out;
-		}
-		/*
-		 * Return the page to the free pool if we've just
-		 * freed its last busy block. Pages from multi-page
-		 * blocks are always pushed to the free pool (bcount
-		 * value for the heading page is always 1).
-		 */
-		ilog = log2size - HOBJ_MINLOG2;
-		if (--extent->pagemap[pghead].bcount > 0) {
-			/*
-			 * Page is still busy after release, return
-			 * the block to the free list then bail out.
-			 */
-			*((memoff_t *)block) = heap->buckets[ilog].freelist;
-			heap->buckets[ilog].freelist = __shoff(base, block);
-			++heap->buckets[ilog].fcount;
-			break;
-		}
-
-		/*
-		 * The page the block was sitting on is idle, return
-		 * it to the pool.
-		 */
-		pagenr = bsize >> HOBJ_PAGE_SHIFT;
-		/*
-		 * In the simplest case, we only have a single block
-		 * to deal with, which spans multiple consecutive
-		 * pages: release it as a range of pages.
-		 */
-		if (pagenr > 1)
-			goto free_pages;
-
-		pagenr = 1;
-		nblocks = HOBJ_PAGE_SIZE >> log2size;
-		/*
-		 * Decrease the free bucket count by the number of
-		 * blocks that the empty page we are returning to the
-		 * pool may contain. The block we are releasing can't
-		 * be part of the free list by definition, hence
-		 * nblocks - 1.
-		 */
-		heap->buckets[ilog].fcount -= (nblocks - 1);
-		assert(heap->buckets[ilog].fcount >= 0);
-
-		/*
-		 * Easy case: all free blocks are laid on a single
-		 * page we are now releasing. Just clear the bucket
-		 * and bail out.
-		 */
-		if (heap->buckets[ilog].fcount == 0) {
-			heap->buckets[ilog].freelist = 0;
-			goto free_pages;
-		}
-
-		/*
-		 * Worst case: multiple pages are traversed by the
-		 * bucket list. Scan the list to remove all blocks
-		 * belonging to the freed page. We are done whenever
-		 * all possible blocks from the freed page have been
-		 * traversed, or we hit the end of list, whichever
-		 * comes first.
-		 */
-		startp = get_page_addr(base, extent, pghead);
-		endp = startp + HOBJ_PAGE_SIZE;
-		for (tailp = &heap->buckets[ilog].freelist,
-			     freep = __shref_check(base, *tailp), xpage = 1;
-		     freep && nblocks > 0;
-		     freep = __shref_check(base, *((memoff_t *)freep))) {
-			if (freep < startp || freep >= endp) {
-				if (xpage) { /* Limit random writes */
-					*tailp = __shoff(base, freep);
-					xpage = 0;
-				}
-				tailp = (memoff_t *)freep;
-			} else {
-				--nblocks;
-				xpage = 1;
-			}
-		}
-		*tailp = __shoff_check(base, freep);
-
-		goto free_pages;
-	}
-
-	heap->ubytes -= bsize;
-out:
-	write_unlock(&heap->lock);
-
-	return __bt(ret);
-}
-
-static size_t check_block(struct shared_heap *heap, void *block)
-{
-	size_t pgnum, pgoff, boff, bsize, ret = 0;
-	struct shared_extent *extent;
-	int ptype, maxpages, pagenr;
-	void *base = main_base;
-
-	read_lock_nocancel(&heap->lock);
-
-	/*
-	 * Find the extent the checked block is originating from.
-	 */
-	__list_for_each_entry(base, extent, &heap->extents, link) {
-		if (__shoff(base, block) >= extent->membase &&
-		    __shoff(base, block) < extent->memlim)
-			goto found;
-	}
-	goto out;
-found:
-	/* Compute the heading page number in the page map. */
-	pgoff = __shoff(base, block) - extent->membase;
-	pgnum = pgoff >> HOBJ_PAGE_SHIFT;
-	ptype = extent->pagemap[pgnum].type;
-	if (ptype == page_free || ptype == page_cont)
-		goto out;
-
-	if (ptype == page_list) {
-		pagenr = 1;
-		maxpages = (extent->memlim - extent->membase) >> HOBJ_PAGE_SHIFT;
-		while (pagenr < maxpages &&
-		       extent->pagemap[pgnum + pagenr].type == page_cont)
-			pagenr++;
-		bsize = pagenr * HOBJ_PAGE_SIZE;
-	} else {
-		bsize = (1 << ptype);
-		boff = pgoff & ~HOBJ_PAGE_MASK;
-		if ((boff & (bsize - 1)) != 0) /* Not at block start? */
-			goto out;
-	}
-
-	ret = bsize;
-out:
-	read_unlock(&heap->lock);
-
-	return ret;
-}
-
 #ifndef CONFIG_XENO_REGISTRY
 static void unlink_main_heap(void)
 {
@@ -708,33 +801,27 @@ static void unlink_main_heap(void)
 static int create_main_heap(pid_t *cnode_r)
 {
 	const char *session = __copperplate_setup_data.session_label;
+	size_t size = __copperplate_setup_data.mem_pool, pagesz;
 	gid_t gid =__copperplate_setup_data.session_gid;
-	size_t size = __copperplate_setup_data.mem_pool;
 	struct heapobj *hobj = &main_pool;
 	struct session_heap *m_heap;
 	struct stat sbuf;
 	memoff_t len;
 	int ret, fd;
 
+	*cnode_r = -1;
+	pagesz = sysconf(_SC_PAGESIZE);
+
 	/*
 	 * A storage page should be obviously larger than an extent
 	 * header, but we still make sure of this in debug mode, so
 	 * that we can rely on __align_to() for rounding to the
 	 * minimum size in production builds, without any further
-	 * test (e.g. like size >= sizeof(struct shared_extent)).
+	 * test (e.g. like size >= sizeof(struct sheapmem_extent)).
 	 */
-	assert(HOBJ_PAGE_SIZE > sizeof(struct shared_extent));
-
-	*cnode_r = -1;
-	size = __align_to(size, HOBJ_PAGE_SIZE);
-	if (size > HOBJ_MAXEXTSZ)
-		return __bt(-EINVAL);
-
-	if (size < HOBJ_PAGE_SIZE * 2)
-		size = HOBJ_PAGE_SIZE * 2;
-
-	len = size + sizeof(*m_heap);
-	len += get_pagemap_size(size, NULL, NULL);
+	assert(SHEAPMEM_PAGE_SIZE > sizeof(struct sheapmem_extent));
+	size = SHEAPMEM_ARENA_SIZE(size);
+	len = __align_to(size + sizeof(*m_heap), pagesz);
 
 	/*
 	 * Bind to (and optionally create) the main session's heap:
@@ -829,6 +916,8 @@ init:
 		goto unlink_fail;
 	}
 
+	__main_heap = m_heap;
+
 	m_heap->maplen = len;
 	/* CAUTION: init_main_heap() depends on hobj->pool_ref. */
 	hobj->pool_ref = __moff(&m_heap->heap);
@@ -839,13 +928,12 @@ init:
 	}
 
 	/* We need these globals set up before updating a sysgroup. */
-	__main_heap = m_heap;
 	__main_sysgroup = &m_heap->sysgroup;
 	sysgroup_add(heap, &m_heap->heap.memspec);
 done:
 	flock(fd, LOCK_UN);
 	__STD(close(fd));
-	hobj->size = m_heap->heap.total;
+	hobj->size = m_heap->heap.usable_size;
 	__main_catalog = &m_heap->catalog;
 
 	return 0;
@@ -908,7 +996,7 @@ static int bind_main_heap(const char *session)
 	}
 
 	hobj->pool_ref = __moff(&m_heap->heap);
-	hobj->size = m_heap->heap.total;
+	hobj->size = m_heap->heap.usable_size;
 	__main_heap = m_heap;
 	__main_catalog = &m_heap->catalog;
 	__main_sysgroup = &m_heap->sysgroup;
@@ -925,8 +1013,8 @@ fail:
 
 int pshared_check(void *__heap, void *__addr)
 {
-	struct shared_heap *heap = __heap;
-	struct shared_extent *extent;
+	struct shared_heap_memory *heap = __heap;
+	struct sheapmem_extent *extent;
 	struct session_heap *m_heap;
 
 	/*
@@ -954,7 +1042,7 @@ int pshared_check(void *__heap, void *__addr)
 	 */
 	assert(!list_empty(&heap->extents));
 
-	__list_for_each_entry(main_base, extent, &heap->extents, link) {
+	__list_for_each_entry(main_base, extent, &heap->extents, next) {
 		if (__shoff(main_base, __addr) >= extent->membase &&
 		    __shoff(main_base, __addr) < extent->memlim)
 			return 1;
@@ -966,25 +1054,18 @@ int pshared_check(void *__heap, void *__addr)
 int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 {
 	const char *session = __copperplate_setup_data.session_label;
-	struct shared_heap *heap;
+	struct shared_heap_memory *heap;
 	size_t len;
 
-	size = __align_to(size, HOBJ_PAGE_SIZE);
-	if (size > HOBJ_MAXEXTSZ)
-		return __bt(-EINVAL);
-
-	if (size < HOBJ_PAGE_SIZE * 2)
-		size = HOBJ_PAGE_SIZE * 2;
-
+	size = SHEAPMEM_ARENA_SIZE(size);
 	len = size + sizeof(*heap);
-	len += get_pagemap_size(size, NULL, NULL);
 
 	/*
 	 * Create a heap nested in the main shared heap to hold data
 	 * we can share among processes which belong to the same
 	 * session.
 	 */
-	heap = alloc_block(&main_heap.heap, len);
+	heap = sheapmem_alloc(&main_heap.heap, len);
 	if (heap == NULL) {
 		warning("%s() failed for %Zu bytes, raise --mem-pool-size?",
 			__func__, len);
@@ -998,9 +1079,9 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 		snprintf(hobj->name, sizeof(hobj->name), "%s.%p",
 			 session, hobj);
 
-	init_heap(heap, main_base, hobj->name, heap + 1, size);
+	sheapmem_init(heap, main_base, hobj->name, heap + 1, size);
 	hobj->pool_ref = __moff(heap);
-	hobj->size = heap->total;
+	hobj->size = heap->usable_size;
 	sysgroup_add(heap, &heap->memspec);
 
 	return 0;
@@ -1009,19 +1090,19 @@ int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 int heapobj_init_array(struct heapobj *hobj, const char *name,
 		       size_t size, int elems)
 {
-	size = align_alloc_size(size);
+	size = __align_to(size, SHEAPMEM_MIN_ALIGN);
 	return __bt(heapobj_init(hobj, name, size * elems));
 }
 
 void heapobj_destroy(struct heapobj *hobj)
 {
-	struct shared_heap *heap = __mptr(hobj->pool_ref);
+	struct shared_heap_memory *heap = __mptr(hobj->pool_ref);
 	int cpid;
 
 	if (hobj != &main_pool) {
 		__RT(pthread_mutex_destroy(&heap->lock));
 		sysgroup_remove(heap, &heap->memspec);
-		free_block(&main_heap.heap, heap);
+		sheapmem_free(&main_heap.heap, heap);
 		return;
 	}
 
@@ -1040,72 +1121,65 @@ void heapobj_destroy(struct heapobj *hobj)
 
 int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 {
-	struct shared_heap *heap = __mptr(hobj->pool_ref);
-	struct shared_extent *extent;
-	int state, bmapwords;
-	memoff_t bmapoff;
-	size_t metasz;
+	struct shared_heap_memory *heap = __mptr(hobj->pool_ref);
+	void *mem;
+	int ret;
 
 	if (hobj == &main_pool)	/* Can't extend the main pool. */
 		return __bt(-EINVAL);
 
-	size = __align_to(size, HOBJ_PAGE_SIZE);
-	metasz = get_pagemap_size(size, &bmapoff, &bmapwords);
-	extent = alloc_block(&main_heap.heap, size + metasz);
-	if (extent == NULL)
+	size = SHEAPMEM_ARENA_SIZE(size);
+	mem = sheapmem_alloc(&main_heap.heap, size);
+	if (mem == NULL)
 		return __bt(-ENOMEM);
 
-	extent->bitmap = __shoff(main_base, extent) + bmapoff;
-	extent->bitwords = bmapwords;
-	extent->membase = __shoff(main_base, extent) + metasz;
-	extent->memlim = extent->membase + size;
-	init_extent(main_base, extent);
-	write_lock_safe(&heap->lock, state);
-	__list_append(heap, &extent->link, &heap->extents);
-	if (size > heap->maxcont)
-		heap->maxcont = size;
-	heap->total += size;
+	ret = add_extent(heap, main_base, mem, size);
+	if (ret) {
+		sheapmem_free(&main_heap.heap, mem);
+		return __bt(ret);
+	}
+
 	hobj->size += size;
-	write_unlock_safe(&heap->lock, state);
 
 	return 0;
 }
 
 void *heapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	return alloc_block(__mptr(hobj->pool_ref), size);
+	return sheapmem_alloc(__mptr(hobj->pool_ref), size);
 }
 
 void heapobj_free(struct heapobj *hobj, void *ptr)
 {
-	free_block(__mptr(hobj->pool_ref), ptr);
+	sheapmem_free(__mptr(hobj->pool_ref), ptr);
 }
 
 size_t heapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	return __bt(check_block(__mptr(hobj->pool_ref), ptr));
+	ssize_t ret = sheapmem_check(__mptr(hobj->pool_ref), ptr);
+	return ret < 0 ? 0 : ret;
 }
 
 size_t heapobj_inquire(struct heapobj *hobj)
 {
-	struct shared_heap *heap = __mptr(hobj->pool_ref);
-	return heap->ubytes;
+	struct shared_heap_memory *heap = __mptr(hobj->pool_ref);
+	return heap->used_size;
 }
 
 size_t heapobj_get_size(struct heapobj *hobj)
 {
-	struct shared_heap *heap = __mptr(hobj->pool_ref);
-	return heap->total;
+	struct shared_heap_memory *heap = __mptr(hobj->pool_ref);
+	return heap->usable_size;
 }
 
 void *xnmalloc(size_t size)
 {
-	return alloc_block(&main_heap.heap, size);
+	return sheapmem_alloc(&main_heap.heap, size);
 }
 
 void xnfree(void *ptr)
 {
-	free_block(&main_heap.heap, ptr);
+	sheapmem_free(&main_heap.heap, ptr);
 }
 
 char *xnstrdup(const char *ptr)
