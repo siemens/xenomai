@@ -971,6 +971,7 @@ AC_CONFIG_FILES([ \
 	testsuite/smokey/tsc/Makefile \
 	testsuite/smokey/leaks/Makefile \
 	testsuite/smokey/memcheck/Makefile \
+	testsuite/smokey/memory-coreheap/Makefile \
 	testsuite/smokey/memory-heapmem/Makefile \
 	testsuite/smokey/memory-tlsf/Makefile \
 	testsuite/smokey/memory-pshared/Makefile \

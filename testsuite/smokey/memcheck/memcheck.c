@@ -24,26 +24,44 @@ struct chunk {
 	enum pattern pattern;
 };
 
-struct runstats {
-	size_t heap_size;
-	size_t user_size;
-	size_t block_size;
-	int nrblocks;
-	long alloc_avg_ns;
-	long alloc_max_ns;
-	long free_avg_ns;
-	long free_max_ns;
-	int flags;
-	double overhead;
-	double fragmentation;
-	struct runstats *next;
-};
-
-static struct runstats *statistics;
+static struct memcheck_stat *statistics;
 
 static int nrstats;
 
 static int max_results = 4;
+
+#ifdef CONFIG_XENO_COBALT
+
+#include <sys/cobalt.h>
+
+static inline void breathe(int loops)
+{
+	struct timespec idle = {
+		.tv_sec = 0,
+		.tv_nsec = 300000,
+	};
+
+	/*
+	 * There is not rt throttling over Cobalt, so we may need to
+	 * keep the host kernel breathing by napping during the test
+	 * sequences.
+	 */
+	if ((loops % 1000) == 0)
+		__RT(clock_nanosleep(CLOCK_MONOTONIC, 0, &idle, NULL));
+}
+
+static inline void harden(void)
+{
+	cobalt_thread_harden();
+}
+
+#else
+
+static inline void breathe(int loops) { }
+
+static inline void harden(void) { }
+
+#endif
 
 static inline long diff_ts(struct timespec *left, struct timespec *right)
 {
@@ -69,6 +87,7 @@ static void random_shuffle(void *vbase, size_t nmemb, const size_t size)
 	double u;
 
 	for(j = nmemb; j > 0; j--) {
+		breathe(j);
 		u = (double)random() / RAND_MAX;
 		k = (unsigned int)(j * u) + 1;
 		if (j == k)
@@ -88,37 +107,39 @@ static void random_shuffle(void *vbase, size_t nmemb, const size_t size)
 
 static int sort_by_heap_size(const void *l, const void *r)
 {
-	const struct runstats *ls = l, *rs = r;
+	const struct memcheck_stat *ls = l, *rs = r;
 
 	return compare_values(rs->heap_size, ls->heap_size);
 }
 
 static int sort_by_alloc_time(const void *l, const void *r)
 {
-	const struct runstats *ls = l, *rs = r;
+	const struct memcheck_stat *ls = l, *rs = r;
 
 	return compare_values(rs->alloc_max_ns, ls->alloc_max_ns);
 }
 
 static int sort_by_free_time(const void *l, const void *r)
 {
-	const struct runstats *ls = l, *rs = r;
+	const struct memcheck_stat *ls = l, *rs = r;
 
 	return compare_values(rs->free_max_ns, ls->free_max_ns);
 }
 
 static int sort_by_frag(const void *l, const void *r)
 {
-	const struct runstats *ls = l, *rs = r;
+	const struct memcheck_stat *ls = l, *rs = r;
 
-	return compare_values(rs->fragmentation, ls->fragmentation);
+	return compare_values(rs->maximum_free - rs->largest_free,
+			      ls->maximum_free - ls->largest_free);
 }
 
 static int sort_by_overhead(const void *l, const void *r)
 {
-	const struct runstats *ls = l, *rs = r;
+	const struct memcheck_stat *ls = l, *rs = r;
 
-	return compare_values(rs->overhead, ls->overhead);
+	return compare_values(rs->heap_size - rs->user_size,
+			      ls->heap_size - ls->user_size);
 }
 
 static inline const char *get_debug_state(void)
@@ -132,45 +153,12 @@ static inline const char *get_debug_state(void)
 #endif
 }
 
-#ifdef CONFIG_XENO_COBALT
-
-#include <sys/cobalt.h>
-
-static inline void breathe(int loops)
-{
-	struct timespec idle = {
-		.tv_sec = 0,
-		.tv_nsec = 1000000,
-	};
-
-	/*
-	 * There is not rt throttling over Cobalt, so we may need to
-	 * keep the host kernel breathing by napping during the test
-	 * sequences.
-	 */
-	if ((loops % 10000) == 0)
-		__RT(clock_nanosleep(CLOCK_MONOTONIC, 0, &idle, NULL));
-}
-
-static inline void harden(void)
-{
-	cobalt_thread_harden();
-}
-
-#else
-
-static inline void breathe(int loops) { }
-
-static inline void harden(void) { }
-
-#endif
-
 static void __dump_stats(struct memcheck_descriptor *md,
-			 struct runstats *stats,
+			 struct memcheck_stat *stats,
 			 int (*sortfn)(const void *l, const void *r),
 			 int nr, const char *key)
 {
-	struct runstats *p;
+	struct memcheck_stat *p;
 	int n;
 
 	qsort(stats, nrstats, sizeof(*p), sortfn);
@@ -190,11 +178,11 @@ static void __dump_stats(struct memcheck_descriptor *md,
 			     (double)p->free_avg_ns/1000.0,
 			     (double)p->alloc_max_ns/1000.0,
 			     (double)p->free_max_ns/1000.0,
-			     p->overhead,
-			     p->fragmentation,
+			     100.0 - (p->user_size * 100.0 / p->heap_size),
+			     (1.0 - ((double)p->largest_free / p->maximum_free)) * 100.0,
 			     p->alloc_avg_ns == 0 && p->free_avg_ns == 0 ? "FAILED " : "",
 			     p->flags & MEMCHECK_SHUFFLE ? "+shuffle " : "",
-			     p->flags & MEMCHECK_REALLOC ? "+realloc" : "");
+			     p->flags & MEMCHECK_HOT ? "+hot" : "");
 	}
 
 	if (nr < nrstats)
@@ -207,7 +195,7 @@ static int dump_stats(struct memcheck_descriptor *md, const char *title)
 	double overhead_sum = 0.0, frag_sum = 0.0;
 	long max_alloc_sum = 0, max_free_sum = 0;
 	long avg_alloc_sum = 0, avg_free_sum = 0;
-	struct runstats *stats, *p, *next;
+	struct memcheck_stat *stats, *p, *next;
 	int n;
 
 	stats = __STD(malloc(sizeof(*p) * nrstats));
@@ -232,7 +220,7 @@ static int dump_stats(struct memcheck_descriptor *md, const char *title)
 	smokey_trace("OVRH%	overhead");
 	smokey_trace("FRAG%	external fragmentation");
 	smokey_trace("FLAGS	+shuffle: randomized free");
-	smokey_trace("    	+realloc: measure after initial alloc/free pass (hot heap)");
+	smokey_trace("    	+hot: measure after initial alloc/free pass (hot heap)");
 
 	if (max_results > 0) {
 		if (max_results > nrstats)
@@ -251,8 +239,8 @@ static int dump_stats(struct memcheck_descriptor *md, const char *title)
 		max_free_sum += p->free_max_ns;
 		avg_alloc_sum += p->alloc_avg_ns;
 		avg_free_sum += p->free_avg_ns;
-		overhead_sum += p->overhead;
-		frag_sum += p->fragmentation;
+		overhead_sum += 100.0 - (p->user_size * 100.0 / p->heap_size);
+		frag_sum += (1.0 - ((double)p->largest_free / p->maximum_free)) * 100.0;
 		if (p->alloc_max_ns > worst_alloc_max)
 			worst_alloc_max = p->alloc_max_ns;
 		if (p->free_max_ns > worst_free_max)
@@ -357,32 +345,43 @@ static size_t find_largest_free(struct memcheck_descriptor *md,
 	return free_size;
 }
 
-static int test_seq(struct memcheck_descriptor *md,
+/*
+ * The default test helper can exercise heap managers implemented in
+ * userland.
+ */
+static int default_test_seq(struct memcheck_descriptor *md,
 		    size_t heap_size, size_t block_size, int flags)
 {
+	size_t arena_size, user_size, largest_free, maximum_free, freed;
 	long alloc_sum_ns, alloc_avg_ns, free_sum_ns, free_avg_ns,
 		alloc_max_ns, free_max_ns, d;
-	size_t arena_size, user_size, largest_free, freed;
 	int ret, n, k, maxblocks, nrblocks;
 	struct timespec start, end;
-	struct runstats *stats;
+	struct memcheck_stat *st;
+	struct sched_param param;
 	struct chunk *chunks;
 	bool done_frag;
 	void *mem, *p;
-	double frag;
 
-	arena_size = md->get_arena_size(heap_size);
-	if (arena_size == 0) {
-		smokey_trace("cannot get arena size for heap size %zu",
-			     heap_size);
-		return -ENOMEM;
+	/* This switches to real-time mode over Cobalt. */
+	param.sched_priority = 1;
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+
+	arena_size = heap_size;
+	if (md->get_arena_size) {
+		arena_size = md->get_arena_size(heap_size);
+		if (arena_size == 0) {
+			smokey_trace("cannot get arena size for heap size %zu",
+				     heap_size);
+			return -ENOMEM;
+		}
 	}
 	
-	maxblocks = heap_size / block_size;
-
 	mem = __STD(malloc(arena_size));
 	if (mem == NULL)
 		return -ENOMEM;
+
+	maxblocks = heap_size / block_size;
 
 	ret = md->init(md->heap, mem, arena_size);
 	if (ret) {
@@ -408,7 +407,8 @@ static int test_seq(struct memcheck_descriptor *md,
 	free_avg_ns = 0;
 	alloc_max_ns = 0;
 	free_max_ns = 0;
-	frag = 0.0;
+	largest_free = 0;
+	maximum_free = 0;
 
 	/*
 	 * With Cobalt, make sure to run in primary mode before the
@@ -504,6 +504,7 @@ static int test_seq(struct memcheck_descriptor *md,
 						     k, chunks[k].pattern);
 					goto bad;
 				}
+				breathe(k);
 			}
 		}
 		freed += block_size;
@@ -518,7 +519,7 @@ static int test_seq(struct memcheck_descriptor *md,
 		if (!done_frag && freed >= user_size / 2) {
 			/* Calculate the external fragmentation. */
 			largest_free = find_largest_free(md, freed, block_size);
-			frag = (1.0 - ((double)largest_free / freed)) * 100.0;
+			maximum_free = freed;
 			done_frag = true;
 		}
 		breathe(n);
@@ -529,7 +530,7 @@ static int test_seq(struct memcheck_descriptor *md,
 	 * able to reproduce the same allocation pattern with the same
 	 * outcome, check this.
 	 */
-	if (flags & MEMCHECK_REALLOC) {
+	if (flags & MEMCHECK_HOT) {
 		for (n = 0, alloc_max_ns = alloc_sum_ns = 0; ; n++) {
 			__RT(clock_gettime(CLOCK_MONOTONIC, &start));
 			p = md->alloc(md->heap, block_size);
@@ -541,7 +542,7 @@ static int test_seq(struct memcheck_descriptor *md,
 			if (p == NULL)
 				break;
 			if (n >= maxblocks) {
-				smokey_trace("too many blocks fetched during realloc"
+				smokey_trace("too many blocks fetched during hot pass"
 					     " (heap=%zu, block=%zu, "
 					     "got more than %d blocks)",
 					     heap_size, block_size, maxblocks);
@@ -551,7 +552,7 @@ static int test_seq(struct memcheck_descriptor *md,
 			breathe(n);
 		}
 		if (n != nrblocks) {
-			smokey_trace("inconsistent block count fetched during realloc"
+			smokey_trace("inconsistent block count fetched during hot pass"
 				     " (heap=%zu, block=%zu, "
 				     "got %d blocks vs %d during alloc)",
 				     heap_size, block_size, n, nrblocks);
@@ -562,7 +563,7 @@ static int test_seq(struct memcheck_descriptor *md,
 			ret = md->free(md->heap, chunks[n].ptr);
 			__RT(clock_gettime(CLOCK_MONOTONIC, &end));
 			if (ret) {
-				smokey_trace("failed to free block %p during realloc"
+				smokey_trace("failed to free block %p during hot pass"
 					     "(heap=%zu, block=%zu)",
 					     chunks[n].ptr, heap_size, block_size);
 				goto bad;
@@ -597,26 +598,24 @@ do_stats:
 	breathe(0);
 	ret = 0;
 	if (!(flags & MEMCHECK_PATTERN)) {
-		stats = __STD(malloc(sizeof(*stats)));
-		if (stats == NULL) {
+		st = __STD(malloc(sizeof(*st)));
+		if (st == NULL) {
 			smokey_warning("failed allocating memory");
 			ret = -ENOMEM;
 			goto oom;
 		}
-		stats->heap_size = heap_size;
-		stats->user_size = user_size;
-		stats->block_size = block_size;
-		stats->nrblocks = nrblocks;
-		stats->alloc_avg_ns = alloc_avg_ns;
-		stats->alloc_max_ns = alloc_max_ns;
-		stats->free_avg_ns = free_avg_ns;
-		stats->free_max_ns = free_max_ns;
-		stats->overhead = 100.0 - (user_size * 100.0 / heap_size);
-		stats->fragmentation = frag;
-		stats->flags = flags;
-		stats->next = statistics;
-		statistics = stats;
-		nrstats++;
+		st->heap_size = heap_size;
+		st->user_size = user_size;
+		st->block_size = block_size;
+		st->nrblocks = nrblocks;
+		st->alloc_avg_ns = alloc_avg_ns;
+		st->alloc_max_ns = alloc_max_ns;
+		st->free_avg_ns = free_avg_ns;
+		st->free_max_ns = free_max_ns;
+		st->largest_free = largest_free;
+		st->maximum_free = maximum_free;
+		st->flags = flags;
+		memcheck_log_stat(st);
 	}
 
 done:
@@ -625,18 +624,21 @@ no_chunks:
 	md->destroy(md->heap);
 out:
 	if (ret)
-		smokey_trace("** '%s' FAILED(overhead %s, %sshuffle, %scheck, %srealloc): heapsz=%zuk, "
+		smokey_trace("** '%s' FAILED(overhead %s, %sshuffle, %scheck, %shot): heapsz=%zuk, "
 			     "blocksz=%zu, overhead=%zu (%.1f%%)",
 			     md->name,
 			     flags & MEMCHECK_ZEROOVRD ? "disallowed" : "allowed",
 			     flags & MEMCHECK_SHUFFLE ? "" : "no ",
 			     flags & MEMCHECK_PATTERN ? "" : "no ",
-			     flags & MEMCHECK_REALLOC ? "" : "no ",
+			     flags & MEMCHECK_HOT ? "" : "no ",
 			     heap_size / 1024, block_size,
 			     arena_size - heap_size,
 			     (arena_size * 100.0 / heap_size) - 100.0);
 oom:
 	__STD(free(mem));
+
+	param.sched_priority = 0;
+	pthread_setschedparam(pthread_self(), SCHED_OTHER, &param);
 
 	return ret;
 bad:
@@ -649,13 +651,20 @@ static inline int test_flags(struct memcheck_descriptor *md, int flags)
 	return md->valid_flags & flags;
 }
 
+void memcheck_log_stat(struct memcheck_stat *st)
+{
+	st->next = statistics;
+	statistics = st;
+	nrstats++;
+}
+
 int memcheck_run(struct memcheck_descriptor *md,
 		 struct smokey_test *t,
 		 int argc, char *const argv[])
 {
-	struct timespec idle = { .tv_sec = 0, .tv_nsec = 1000000 };
+	int (*test_seq)(struct memcheck_descriptor *md,
+			size_t heap_size, size_t block_size, int flags);
 	size_t heap_size, block_size;
-	struct sched_param param;
 	cpu_set_t affinity;
 	unsigned long seed;
 	int ret, runs;
@@ -683,11 +692,15 @@ int memcheck_run(struct memcheck_descriptor *md,
 	if (smokey_arg_isset(t, "max_results"))
 		max_results = smokey_arg_int(t, "max_results");
 
+	test_seq = md->test_seq;
+	if (test_seq == NULL)
+		test_seq = default_test_seq;
+
 	now = time(NULL);
 	seed = (unsigned long)now * getpid();
 	srandom(seed);
 
-	smokey_trace("== memcheck started at %s", ctime(&now));
+	smokey_trace("== memcheck started for %s at %s", md->name, ctime(&now));
 	smokey_trace("     seq_heap_size=%zuk", md->seq_max_heap_size / 1024);
 	smokey_trace("     random_alloc_rounds=%d", md->random_rounds);
 	smokey_trace("     pattern_heap_size=%zuk", md->pattern_heap_size / 1024);
@@ -700,10 +713,6 @@ int memcheck_run(struct memcheck_descriptor *md,
 		smokey_warning("failed setting CPU affinity");
 		return -ret;
 	}
-
-	/* This switches to real-time mode over Cobalt. */
-	param.sched_priority = 1;
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
 	/*
 	 * Create a series of heaps of increasing size, allocating
@@ -720,7 +729,7 @@ int memcheck_run(struct memcheck_descriptor *md,
 		for (block_size = 16;
 		     block_size < heap_size / 2; block_size <<= 1) {
 			ret = test_seq(md, heap_size, block_size,
-				       test_flags(md, MEMCHECK_ZEROOVRD));
+					   test_flags(md, MEMCHECK_ZEROOVRD));
 			if (ret) {
 				smokey_trace("failed with %zuk heap, "
 					     "%zu-byte block (pow2)",
@@ -731,10 +740,10 @@ int memcheck_run(struct memcheck_descriptor *md,
 		for (block_size = 16;
 		     block_size < heap_size / 2; block_size <<= 1) {
 			ret = test_seq(md, heap_size, block_size,
-			       test_flags(md, MEMCHECK_ZEROOVRD|MEMCHECK_REALLOC));
+			   test_flags(md, MEMCHECK_ZEROOVRD|MEMCHECK_HOT));
 			if (ret) {
 				smokey_trace("failed with %zuk heap, "
-					     "%zu-byte block (pow2, realloc)",
+					     "%zu-byte block (pow2, hot)",
 					     heap_size / 1024, block_size);
 				return ret;
 			}
@@ -753,10 +762,10 @@ int memcheck_run(struct memcheck_descriptor *md,
 		for (block_size = 16;
 		     block_size < heap_size / 2; block_size <<= 1) {
 			ret = test_seq(md, heap_size, block_size,
-			       test_flags(md, MEMCHECK_ZEROOVRD|MEMCHECK_REALLOC|MEMCHECK_SHUFFLE));
+			       test_flags(md, MEMCHECK_ZEROOVRD|MEMCHECK_HOT|MEMCHECK_SHUFFLE));
 			if (ret) {
 				smokey_trace("failed with %zuk heap, "
-					     "%zu-byte block (pow2, shuffle, realloc)",
+					     "%zu-byte block (pow2, shuffle, hot)",
 					     heap_size / 1024, block_size);
 				return ret;
 			}
@@ -792,10 +801,10 @@ int memcheck_run(struct memcheck_descriptor *md,
 		for (runs = 0; runs < md->random_rounds; runs++) {
 			block_size = (random() % (heap_size / 2)) ?: 1;
 			ret = test_seq(md, heap_size, block_size,
-				       test_flags(md, MEMCHECK_REALLOC));
+				       test_flags(md, MEMCHECK_HOT));
 			if (ret) {
 				smokey_trace("failed with %zuk heap, "
-					     "%zu-byte block (random, realloc)",
+					     "%zu-byte block (random, hot)",
 					     heap_size / 1024, block_size);
 				return ret;
 			}
@@ -822,10 +831,10 @@ int memcheck_run(struct memcheck_descriptor *md,
 		for (runs = 0; runs < md->random_rounds; runs++) {
 			block_size = (random() % (heap_size / 2)) ?: 1;
 			ret = test_seq(md, heap_size, block_size,
-			       test_flags(md, MEMCHECK_REALLOC|MEMCHECK_SHUFFLE));
+			       test_flags(md, MEMCHECK_HOT|MEMCHECK_SHUFFLE));
 			if (ret) {
 				smokey_trace("failed with %zuk heap, "
-					     "%zu-byte block (random, shuffle, realloc)",
+					     "%zu-byte block (random, shuffle, hot)",
 					     heap_size / 1024, block_size);
 				return ret;
 			}
@@ -840,12 +849,6 @@ int memcheck_run(struct memcheck_descriptor *md,
 		     " -- this may take some time)", md->name);
 
 	for (runs = 0; runs < md->pattern_rounds; runs++) {
-		/*
-		 * pattern check is CPU-consuming and tends to starve
-		 * the host kernel from CPU for too long, relax a bit
-		 * between loops.
-		 */
-		__RT(clock_nanosleep(CLOCK_MONOTONIC, 0, &idle, NULL));
 		block_size = (random() % (md->pattern_heap_size / 2)) ?: 1;
 		ret = test_seq(md, md->pattern_heap_size, block_size,
 			       test_flags(md, MEMCHECK_SHUFFLE|MEMCHECK_PATTERN));
@@ -858,7 +861,8 @@ int memcheck_run(struct memcheck_descriptor *md,
 	}
 	
 	now = time(NULL);
-	smokey_trace("\n== memcheck finished at %s", ctime(&now));
+	smokey_trace("\n== memcheck finished for %s at %s",
+		     md->name, ctime(&now));
 
 	return ret;
 }

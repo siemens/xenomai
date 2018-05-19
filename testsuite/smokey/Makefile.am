@@ -16,6 +16,7 @@ COBALT_SUBDIRS = 	\
 	fpu-stress	\
 	iddp		\
 	leaks		\
+	memory-coreheap	\
 	memory-heapmem	\
 	memory-tlsf	\
 	memcheck	\
