@@ -143,11 +143,13 @@
  * Any program linked against the Smokey API implicitly recognizes the
  * following options:
  *
- * - --list dumps the list of tests implemented in the program to
- *   stdout. The information given includes the description strings
- *   provided in the plugin declarators (smokey_test_plugin()).  The
- *   position and symbolic name of each test is also issued, which may
- *   be used in id specifications with the --run option (see below).
+ * - --list[=<id[,id...]>] dumps the list of tests implemented in the
+ *   program to stdout. This list may be restricted to the tests
+ *   matching the optional regular expression (see --run). The
+ *   information given includes the description strings provided in
+ *   the plugin declarators (smokey_test_plugin()).  The position and
+ *   symbolic name of each test is also issued, which may be used in
+ *   id specifications with the --run option (see below).
  *
  * @note Test positions may vary depending on changes to the host
  * program like adding or removing other tests, the symbolic name
@@ -297,7 +299,7 @@ static const struct option smokey_options[] = {
 	{
 #define list_opt	2
 		.name = "list",
-		.has_arg = no_argument,
+		.has_arg = optional_argument,
 		.flag = &do_list,
 		.val = 1,
 	},
@@ -319,13 +321,13 @@ static const struct option smokey_options[] = {
 static void smokey_help(void)
 {
         fprintf(stderr, "--keep-going			don't stop upon test error\n");
-	fprintf(stderr, "--list				list all tests\n");
+	fprintf(stderr, "--list[=<id[,id...]>]]		list [matching] tests\n");
 	fprintf(stderr, "--run[=<id[,id...]>]]		run [portion of] the test list\n");
 	fprintf(stderr, "--exclude=<id[,id...]>]	exclude test(s) from the run list\n");
 	fprintf(stderr, "--vm				hint about running in a virtual environment\n");
 }
 
-static void pick_test_range(int start, int end)
+static void pick_test_range(struct pvlistobj *dst, int start, int end)
 {
 	struct smokey_test *t, *tmp;
 
@@ -336,7 +338,7 @@ static void pick_test_range(int start, int end)
 			if (t->__reserved.id >= start &&
 			    t->__reserved.id <= end) {
 				pvlist_remove(&t->__reserved.next);
-				pvlist_append(&t->__reserved.next, &smokey_test_list);
+				pvlist_append(&t->__reserved.next, dst);
 			}
 		}
 	} else {
@@ -344,13 +346,13 @@ static void pick_test_range(int start, int end)
 			if (t->__reserved.id >= end &&
 			    t->__reserved.id <= start) {
 				pvlist_remove(&t->__reserved.next);
-				pvlist_append(&t->__reserved.next, &smokey_test_list);
+				pvlist_append(&t->__reserved.next, dst);
 			}
 		}
 	} 
 }
 
-static void drop_test_range(int start, int end)
+static void drop_test_range(struct pvlistobj *dst, int start, int end)
 {
 	struct smokey_test *t, *tmp;
 
@@ -363,7 +365,7 @@ static void drop_test_range(int start, int end)
 		if (t->__reserved.id >= start &&
 		    t->__reserved.id <= end) {
 			pvlist_remove(&t->__reserved.next);
-			pvlist_append(&t->__reserved.next, &exclude_list);
+			pvlist_append(&t->__reserved.next, dst);
 		}
 	}
 }
@@ -376,8 +378,8 @@ static int resolve_id(const char *s)
 		return atoi(s);
 
 	/*
-	 * CAUTION: as we transfer items from register_list to
-	 * smokey_test_list, we may end up with an empty source list,
+	 * CAUTION: as we transfer items from register_list to a
+	 * destination list, we may end up with an empty source list,
 	 * which is a perfectly valid situation. Unlike having an
 	 * empty registration list at startup, which would mean that
 	 * no test is available from the current program.
@@ -392,7 +394,7 @@ static int resolve_id(const char *s)
 	return -1;
 }
 
-static int do_glob_match(const char *s, struct pvlistobj *list)
+static int glob_match(struct pvlistobj *dst, const char *s)
 {
 	struct smokey_test *t, *tmp;
 	int matches = 0;
@@ -403,7 +405,7 @@ static int do_glob_match(const char *s, struct pvlistobj *list)
 	pvlist_for_each_entry_safe(t, tmp, &register_list, __reserved.next) {
 		if (!fnmatch(s, t->name, FNM_PATHNAME)) {
 			pvlist_remove(&t->__reserved.next);
-			pvlist_append(&t->__reserved.next, list);
+			pvlist_append(&t->__reserved.next, dst);
 			matches++;
 		}
 	}
@@ -411,19 +413,10 @@ static int do_glob_match(const char *s, struct pvlistobj *list)
 	return matches;
 }
 
-static int glob_match_include(const char *s)
-{
-	return do_glob_match(s, &smokey_test_list);
-}
-
-static int glob_match_exclude(const char *s)
-{
-	return do_glob_match(s, &exclude_list);
-}
-
 static int apply_test_filter(const char *test_enum,
-			     void (*filter_action)(int start, int end),
-			     int (*glob_match)(const char *s))
+			     struct pvlistobj *dst,
+			     void (*filter_action)(struct pvlistobj *dst,
+						   int start, int end))
 {
 	char *s = strdup(test_enum), *n, *range, *range_p = NULL, *id, *id_r;
 	int start, end;
@@ -437,7 +430,7 @@ static int apply_test_filter(const char *test_enum,
 			end = test_count - 1;
 		id = strtok_r(range, "-", &id_r);
 		if (id) {
-			if (glob_match(id)) {
+			if (glob_match(dst, id)) {
 				if (strtok_r(NULL, "-", &id_r))
 					goto fail;
 				n = NULL;
@@ -460,7 +453,7 @@ static int apply_test_filter(const char *test_enum,
 			start = 0;
 			end = test_count - 1;
 		}
-		filter_action(start, end);
+		filter_action(dst, start, end);
 		n = NULL;
 	}
 
@@ -476,26 +469,36 @@ fail:
 
 static int run_include_filter(const char *include_enum)
 {
-	return apply_test_filter(include_enum,
-				 pick_test_range, glob_match_include);
+	return apply_test_filter(include_enum, &smokey_test_list,
+				 pick_test_range);
 }
 
 static int run_exclude_filter(const char *exclude_enum)
 {
-	return apply_test_filter(exclude_enum,
-				 drop_test_range, glob_match_exclude);
+	return apply_test_filter(exclude_enum, &exclude_list,
+				 drop_test_range);
 }
 
-static void list_all_tests(void)
+static int list_tests(void)
 {
+	struct pvlistobj list;
 	struct smokey_test *t;
+	int ret = 0;
 
-	if (pvlist_empty(&register_list))
-		return;
-
-	pvlist_for_each_entry(t, &register_list, __reserved.next)
-		printf("#%-3d %s\n\t%s\n",
-		       t->__reserved.id, t->name, t->description);
+	pvlist_init(&list);
+	
+	if (include_arg) {
+		ret = apply_test_filter(include_arg, &list,
+				pick_test_range);
+		free(include_arg);
+	} else
+		pick_test_range(&list, 0, test_count);
+	
+	if (!pvlist_empty(&list))
+		pvlist_for_each_entry(t, &list, __reserved.next)
+			printf("#%-3d %s\n\t%s\n",
+			       t->__reserved.id, t->name, t->description);
+	return ret;
 }
 
 void smokey_register_plugin(struct smokey_test *t)
@@ -507,6 +510,7 @@ void smokey_register_plugin(struct smokey_test *t)
 static int smokey_parse_option(int optnum, const char *optarg)
 {
 	switch (optnum) {
+	case list_opt:
 	case run_opt:
 		if (optarg)
 			include_arg = strdup(optarg);
@@ -514,7 +518,6 @@ static int smokey_parse_option(int optnum, const char *optarg)
 	case exclude_opt:
 		exclude_arg = strdup(optarg);
 		break;
-	case list_opt:
 	case keep_going_opt:
 	case vm_opt:
 		break;
@@ -530,7 +533,7 @@ static int smokey_init(void)
 	int ret = 0;
 
 	if (do_list)
-		list_all_tests();
+		return list_tests();
 
 	if (do_run) {
 		if (pvlist_empty(&register_list)) {
@@ -547,7 +550,7 @@ static int smokey_init(void)
 			ret = run_include_filter(include_arg);
 			free(include_arg);
 		} else
-			pick_test_range(0, test_count);
+			pick_test_range(&smokey_test_list, 0, test_count);
 	
 		if (pvlist_empty(&smokey_test_list)) {
 			warning("no test selected");
