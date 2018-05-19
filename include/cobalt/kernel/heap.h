@@ -108,6 +108,12 @@ size_t xnheap_get_size(const struct xnheap *heap)
 }
 
 static inline
+size_t xnheap_get_used(const struct xnheap *heap)
+{
+	return heap->used_size;
+}
+
+static inline
 size_t xnheap_get_free(const struct xnheap *heap)
 {
 	return heap->usable_size - heap->used_size;
