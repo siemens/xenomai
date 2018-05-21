@@ -45,7 +45,7 @@ pathologically high latencies.
 
 This means that the kernel crashes before the console is enabled. You
 should enable the +CONFIG_EARLY_PRINTK+ option. For some architectures
-(blackfin, x86, arm), enabling this option also requires passing the
+(x86, arm), enabling this option also requires passing the
 +earlyprintk+ parameter on the kernel command line. See
 'Documentation/kernel-parameters.txt' for possible values.
 

@@ -119,7 +119,6 @@ In order to cross-compile the Linux kernel, pass an ARCH and
 CROSS_COMPILE variable on make command line. See sections
 <<cobalt-core-arm,"Building a _Cobalt/arm_ kernel">>,
 <<cobalt-core-powerpc,"Building a _Cobalt/powerpc_ kernel">>,
-<<cobalt-core-blackfin,"Building a _Cobalt/blackfin_ kernel">>,
 <<cobalt-core-x86,"Building a _Cobalt/x86_ kernel">>,
 for examples.
 
@@ -267,27 +266,6 @@ $ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig
 $ make ARCH=powerpc CROSS_COMPILE=powerpc-linux- uImage modules
 ------------------------------------------------------------------------------
 ...manually install the kernel image and modules to the proper location
-
-[[cobalt-core-blackfin]]
-Building a _Cobalt/blackfin_ kernel
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The Blackfin is a MMU-less, DSP-type architecture running uClinux.
-
-------------------------------------------------------------------------------
-$ cd $linux_tree
-$ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
-  --ipipe=ipipe-core-X.Y.Z-x86-NN.patch
-$ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig
-------------------------------------------------------------------------------
-...select the kernel and Xenomai options, then compile with:
-------------------------------------------------------------------------------
-$ make linux image
-------------------------------------------------------------------------------
-...then install as needed
-------------------------------------------------------------------------------
-$ cp images/linux /tftpboot/...
-------------------------------------------------------------------------------
 
 [[cobalt-core-arm]]
 Building  _Cobalt/arm_ kernel
@@ -792,27 +770,6 @@ $ $xenomai_root/configure --host=powerpc64-unknown-linux-gnu \
   --with-core=cobalt --enable-smp
 $ make DESTDIR=$staging_dir install
 ------------------------------------------------------------------------------
-
-
-Building the Blackfin libraries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Another cross-compilation setup, in order to build the _Cobalt_
-libraries for the Blackfin architecture. We use
-http://blackfin.uclinux.org/doku.php?id=toolchain:installing[ADI's
-toolchain] for this purpose:
-
-------------------------------------------------------------------------------
-$ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --host=bfin-linux-uclibc --with-core=cobalt
-$ make DESTDIR=$staging_dir install
-------------------------------------------------------------------------------
-
-[NOTE]
-Xenomai uses the FDPIC shared library format on this architecture. In
-case of problem running the testsuite, try restarting the last two
-build steps, passing the `--disable-shared` option to the "configure"
-script.
 
 
 Building the ARM libraries

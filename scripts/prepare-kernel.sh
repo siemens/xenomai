@@ -275,9 +275,6 @@ while : ; do
    powerpc*|ppc*)
       linux_arch=powerpc
       ;;
-   bfin*|blackfin)
-      linux_arch=blackfin
-      ;;
    nios2)
       linux_arch=nios2
       ;;
