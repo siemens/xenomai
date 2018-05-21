@@ -275,17 +275,11 @@ while : ; do
    powerpc*|ppc*)
       linux_arch=powerpc
       ;;
-   nios2)
-      linux_arch=nios2
-      ;;
    arm)
       linux_arch=arm
       ;;
    arm64)
       linux_arch=arm64
-      ;;
-   sh|sh4)
-      linux_arch=sh
       ;;
    *)
       echo "$me: unsupported architecture: $linux_arch" >&2
