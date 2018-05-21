@@ -94,11 +94,7 @@ static inline void xnarch_get_latencies(struct xnclock_gravity *p)
 
 #ifndef __sched_latency
 /* Platform is unknown: pick a default value. */
-#ifdef CONFIG_PPC64
-#define __sched_latency 1000
-#else
 #define __sched_latency 4000
-#endif
 #endif
 	p->user = xnclock_ns_to_ticks(&nkclock, __sched_latency);
 	p->kernel = xnclock_ns_to_ticks(&nkclock, CONFIG_XENO_OPT_TIMING_KSCHEDLAT);

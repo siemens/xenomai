@@ -248,8 +248,8 @@ have to install the proper cross-compilation toolchain for the target
 system first.
 
 [[cobalt-core-powerpc]]
-Building a _Cobalt/powerpc_ kernel (32/64bit)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building a _Cobalt/powerpc_ kernel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A typical cross-compilation setup, in order to build Xenomai for a
 ppc-6xx architecture running a 3.10.32 kernel. We use the DENX ELDK
@@ -757,20 +757,6 @@ $ $xenomai_root/configure --host=powerpc-linux --with-core=cobalt \
   --enable-debug=symbols
 $ make DESTDIR=$staging_dir install
 ------------------------------------------------------------------------------
-
-Building the PPC64 libraries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Same process than for a 32bit PowerPC target, using a crosstool-built
-toolchain for ppc64/SMP.
-
-------------------------------------------------------------------------------
-$ cd $build_root
-$ $xenomai_root/configure --host=powerpc64-unknown-linux-gnu \
-  --with-core=cobalt --enable-smp
-$ make DESTDIR=$staging_dir install
-------------------------------------------------------------------------------
-
 
 Building the ARM libraries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

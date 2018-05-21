@@ -20,12 +20,6 @@
 
 static inline unsigned long long cobalt_read_tsc(void)
 {
-#if defined(__powerpc64__)
-	unsigned long long t;
-
-	__asm__ __volatile__("mftb %0\n":"=r"(t));
-	return t;
-#else	/* !__powerpc64__ */
 	union {
 		unsigned long long t;
 		unsigned long v[2];
@@ -39,7 +33,6 @@ static inline unsigned long long cobalt_read_tsc(void)
 			     "bne- 1b\n":"=r"(u.v[0]),
 			     "=r"(u.v[1]), "=r"(__tbu));
 	return u.t;
-#endif /* __powerpc64__ */
 }
 
 #endif /* !_LIB_COBALT_POWERPC_TSC_H */

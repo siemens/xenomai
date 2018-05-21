@@ -125,16 +125,6 @@ article] from the Knowledge Base.
 
 See <<no-timer, this entry>>.
 
-==== system init failed, code -22
-
-On the ppc64 platform, check whether +CONFIG_PPC_64K_PAGES+ is defined
-in your kernel configuration. If so, then you likely need to raise all
-Xenomai parameters defining the size of internal heaps, such as
-+CONFIG_XENO_OPT_SYS_HEAPSZ+, +CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ+ and
-+CONFIG_XENO_OPT_SEM_HEAPSZ+, so that (size / 64k) > 2. The default
-values for these parameters are currently based on the assumption that
-PAGE_SIZE = 4k.
-
 ==== Local APIC absent or disabled!
 
 The Xenomai 2.x _nucleus_ issues this warning if the kernel

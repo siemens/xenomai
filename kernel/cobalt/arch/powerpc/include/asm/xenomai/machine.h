@@ -29,13 +29,8 @@
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
-#ifdef CONFIG_PPC64
-	__asm__ ("cntlzd %0, %1" : "=r" (ul) : "r" (ul & (-ul)));
-	return 63 - ul;
-#else
 	__asm__ ("cntlzw %0, %1":"=r"(ul):"r"(ul & (-ul)));
 	return 31 - ul;
-#endif
 }
 
 /* Read this last to enable default settings. */

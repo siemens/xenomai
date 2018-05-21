@@ -126,7 +126,7 @@ case "$build_for" in
 	target_cpu_arch=x86
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
- ppc-*|powerpc-*|powerpc64-*|ppc64-*)
+ ppc-*|powerpc-*)
 	use_tls=yes
 	target_cpu_arch=powerpc
 	CONFIG_XENO_DEFAULT_PERIOD=100000
