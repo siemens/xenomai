@@ -125,8 +125,10 @@ sem_open(struct cobalt_process *process,
 	}
 
 	u = xnmalloc(sizeof(*u));
-	if (u == NULL)
+	if (u == NULL) {
+		__cobalt_sem_destroy(handle);
 		return ERR_PTR(-ENOMEM);
+	}
 
 	u->sem = sem;
 	u->usem = ushadow;
