@@ -95,6 +95,8 @@ sem_open(struct cobalt_process *process,
 			xnlock_put_irqrestore(&nklock, s);
 			goto retry_bind;
 		}
+
+		__cobalt_sem_shadow_init(sem, COBALT_NAMED_SEM_MAGIC, &shadow);
 		break;
 
 	case -EWOULDBLOCK:
@@ -112,16 +114,17 @@ sem_open(struct cobalt_process *process,
 			return ERR_PTR(rc);
 		}
 
-		if (cobalt_copy_to_user(ushadow, &shadow, sizeof(shadow))) {
-			__cobalt_sem_destroy(shadow.handle);
-			return ERR_PTR(-EFAULT);
-		}
 		sem->pathname = filename;
 		handle = shadow.handle;
 		break;
 
 	default:
 		return ERR_PTR(rc);
+	}
+
+	if (cobalt_copy_to_user(ushadow, &shadow, sizeof(shadow))) {
+		__cobalt_sem_destroy(handle);
+		return ERR_PTR(-EFAULT);
 	}
 
 	u = xnmalloc(sizeof(*u));

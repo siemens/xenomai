@@ -76,6 +76,9 @@ struct cobalt_sem *
 __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sem,
 		  int flags, unsigned value);
 
+void __cobalt_sem_shadow_init(struct cobalt_sem *sem, __u32 magic,
+			      struct cobalt_sem_shadow *sm);
+
 COBALT_SYSCALL_DECL(sem_init,
 		    (struct cobalt_sem_shadow __user *u_sem,
 		     int flags, unsigned value));

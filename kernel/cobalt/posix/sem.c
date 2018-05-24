@@ -153,12 +153,10 @@ __cobalt_sem_init(const char *name, struct cobalt_sem_shadow *sm,
 	sem->refs = name ? 2 : 1;
 	sem->pathname = NULL;
 
-	sm->magic = name ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
-	sm->handle = sem->resnode.handle;
-	sm->state_offset = cobalt_umm_offset(&sys_ppd->umm, state);
-	if (flags & SEM_PSHARED)
-		sm->state_offset = -sm->state_offset;
 	xnlock_put_irqrestore(&nklock, s);
+
+	__cobalt_sem_shadow_init(sem,
+			name ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC, sm);
 
 	trace_cobalt_psem_init(name ?: "anon",
 			       sem->resnode.handle, flags, value);
@@ -174,6 +172,21 @@ out:
 	trace_cobalt_psem_init_failed(name ?: "anon", flags, value, ret);
 
 	return ERR_PTR(ret);
+}
+
+void __cobalt_sem_shadow_init(struct cobalt_sem *sem, __u32 magic,
+			      struct cobalt_sem_shadow *sm)
+{
+	__u32 flags = sem->state->flags;
+	struct cobalt_ppd *sys_ppd;
+
+	sys_ppd = cobalt_ppd_get(!!(flags & SEM_PSHARED));
+
+	sm->magic = magic;
+	sm->handle = sem->resnode.handle;
+	sm->state_offset = cobalt_umm_offset(&sys_ppd->umm, sem->state);
+	if (sem->state->flags & SEM_PSHARED)
+		sm->state_offset = -sm->state_offset;
 }
 
 static int sem_destroy(struct cobalt_sem_shadow *sm)
