@@ -73,7 +73,7 @@ echo 0 > /proc/xenomai/latency || :
 
 testdir=@testdir@
 
-$testdir/smokey --run $keep_going
+$testdir/smokey --run $keep_going random_alloc_rounds=64 pattern_check_rounds=64
 $testdir/clocktest -D -T 30 -C CLOCK_HOST_REALTIME || $testdir/clocktest -T 30
 $testdir/switchtest -T 30
 
