@@ -211,8 +211,8 @@ int open_heaps(struct fsobj *fsobj, void *priv)
 {
 	struct sysgroup_memspec *obj, *tmp;
 	struct heap_data *heap_data, *p;
+	struct shared_heap_memory *heap;
 	struct fsobstack *o = priv;
-	struct shared_heap *heap;
 	int ret, count, len = 0;
 
 	ret = heapobj_bind_session(__copperplate_setup_data.session_label);
@@ -244,10 +244,10 @@ int open_heaps(struct fsobj *fsobj, void *priv)
 	for_each_sysgroup(obj, tmp, heap) {
 		if (p - heap_data >= count)
 			break;
-		heap = container_of(obj, struct shared_heap, memspec);
+		heap = container_of(obj, struct shared_heap_memory, memspec);
 		namecpy(p->name, heap->name);
-		p->used = heap->ubytes;
-		p->total = heap->total;
+		p->used = heap->used_size;
+		p->total = heap->usable_size;
 		p++;
 	}
 
