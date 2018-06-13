@@ -148,38 +148,39 @@ extern struct heap_memory heapmem_main;
 static inline
 void pvheapobj_destroy(struct heapobj *hobj)
 {
-	heapmem_destroy(hobj->pool);
+	heapmem_destroy((struct heap_memory *)hobj->pool);
 }
 
 static inline
 int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 {
-	return heapmem_extend(hobj->pool, mem, size);
+	return heapmem_extend((struct heap_memory *)hobj->pool,
+			      mem, size);
 }
 
 static inline
 void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	return heapmem_alloc(hobj->pool, size);
+	return heapmem_alloc((struct heap_memory *)hobj->pool, size);
 }
 
 static inline
 void pvheapobj_free(struct heapobj *hobj, void *ptr)
 {
-	heapmem_free(hobj->pool, ptr);
+	heapmem_free((struct heap_memory *)hobj->pool, ptr);
 }
 
 static inline
 size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	ssize_t size = heapmem_check(hobj->pool, ptr);
+	ssize_t size = heapmem_check((struct heap_memory *)hobj->pool, ptr);
 	return size < 0 ? 0 : size;
 }
 
 static inline
 size_t pvheapobj_inquire(struct heapobj *hobj)
 {
-	return heapmem_used_size(hobj->pool);
+	return heapmem_used_size((struct heap_memory *)hobj->pool);
 }
 
 static inline void *pvmalloc(size_t size)
