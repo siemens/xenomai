@@ -459,12 +459,13 @@ static int avl_delete_2children(struct __AVL_T (avl) * const avl,
 }
 
 int __AVL(prepend)(struct __AVL_T(avl) * const avl,
-		   struct __AVL_T(avlh) * const holder)
+		   struct __AVL_T(avlh) * const holder,
+		   const struct __AVL_T(avl_searchops) * ops)
 {
 	struct __AVL_T (avlh) * const parent = __AVL(head)(avl);
 	int type = parent == NULL ? AVL_RIGHT : AVL_LEFT;
 
-	if (parent == NULL || __AVL(cmp)(avl)(holder, parent) < 0) {
+	if (parent == NULL || ops->cmp(holder, parent) < 0) {
 		avl_insert_inner(avl, parent, holder, type);
 		return 0;
 	}
@@ -488,12 +489,13 @@ int __AVL(insert_at)(struct __AVL_T(avl) * const avl,
 }
 
 int __AVL(insert)(struct __AVL_T(avl) * const avl,
-		  struct __AVL_T(avlh) * const holder)
+		  struct __AVL_T(avlh) * const holder,
+		  const struct __AVL_T(avl_searchops) * ops)
 {
 	int delta;
 	struct __AVL_T (avlh) * parent;
 
-	parent = __AVL(search_inner)(avl, holder, &delta);
+	parent = __AVL(search_inner)(avl, holder, &delta, ops);
 	if (delta == 0)
 		return -EBUSY;
 
@@ -503,35 +505,38 @@ int __AVL(insert)(struct __AVL_T(avl) * const avl,
 }
 
 int __AVL(insert_front)(struct __AVL_T(avl) * const avl,
-			struct __AVL_T(avlh) * const holder)
+			struct __AVL_T(avlh) * const holder,
+			const struct __AVL_T(avl_searchops) * ops)
 {
 	int delta;
 	struct __AVL_T (avlh) * parent;
 
-	parent = __AVL(searchfn)(avl)(avl, holder, &delta, AVL_LEFT);
+	parent = ops->search(avl, holder, &delta, AVL_LEFT);
 
 	avl_insert_inner(avl, parent, holder, delta ? : AVL_LEFT);
 	return 0;
 }
 
 int __AVL(insert_back)(struct __AVL_T(avl) * const avl,
-		       struct __AVL_T(avlh) * const holder)
+		       struct __AVL_T(avlh) * const holder,
+		       const struct __AVL_T(avl_searchops) * ops)
 {
 	int delta;
 	struct __AVL_T (avlh) * parent;
 
-	parent = __AVL(searchfn)(avl)(avl, holder, &delta, AVL_RIGHT);
+	parent = ops->search(avl, holder, &delta, AVL_RIGHT);
 
 	avl_insert_inner(avl, parent, holder, delta ? : AVL_RIGHT);
 	return 0;
 }
 
 int __AVL(append)(struct __AVL_T(avl) * const avl,
-		  struct __AVL_T(avlh) * const holder)
+		  struct __AVL_T(avlh) * const holder,
+		  const struct __AVL_T(avl_searchops) * ops)
 {
 	struct __AVL_T (avlh) * const parent = __AVL(tail)(avl);
 
-	if (parent == NULL || __AVL(cmp)(avl)(holder, parent) > 0) {
+	if (parent == NULL || ops->cmp(holder, parent) > 0) {
 		avl_insert_inner(avl, parent, holder, AVL_RIGHT);
 		return 0;
 	}
@@ -544,15 +549,16 @@ int __AVL(append)(struct __AVL_T(avl) * const avl,
  * the avl, much faster than remove + add
  */
 int __AVL(replace)(struct __AVL_T(avl) * avl, struct __AVL_T(avlh) * oldh,
-		   struct __AVL_T(avlh) * newh)
+		   struct __AVL_T(avlh) * newh,
+		   const struct __AVL_T(avl_searchops) * ops)
 {
 	struct __AVL_T (avlh) * prev, *next;
 
 	prev = __AVL(prev)(avl, oldh);
 	next = __AVL(next)(avl, oldh);
 
-	if ((prev && __AVL(cmp)(avl)(newh, prev) < 0)
-	    || (next && __AVL(cmp)(avl)(newh, next) > 0))
+	if ((prev && ops->cmp(newh, prev) < 0)
+	    || (next && ops->cmp(newh, next) > 0))
 		return -EINVAL;
 
 	avlh_replace(avl, oldh, newh);
@@ -565,14 +571,15 @@ int __AVL(replace)(struct __AVL_T(avl) * avl, struct __AVL_T(avlh) * oldh,
 }
 
 struct __AVL_T (avlh) * __AVL(update)(struct __AVL_T(avl) * const avl,
-				      struct __AVL_T(avlh) * const holder)
+				      struct __AVL_T(avlh) * const holder,
+				      const struct __AVL_T(avl_searchops) * ops)
 {
 	int delta;
 	struct __AVL_T (avlh) * const oldh =
-		__AVL(search_inner)(avl, holder, &delta);
+		__AVL(search_inner)(avl, holder, &delta, ops);
 
 	if (!delta) {
-		__AVL(replace)(avl, oldh, holder);
+		__AVL(replace)(avl, oldh, holder, ops);
 		return oldh;
 	}
 
@@ -580,29 +587,27 @@ struct __AVL_T (avlh) * __AVL(update)(struct __AVL_T(avl) * const avl,
 }
 
 struct __AVL_T (avlh) * __AVL(set)(struct __AVL_T(avl) * const avl,
-				   struct __AVL_T(avlh) * const holder)
+				   struct __AVL_T(avlh) * const holder,
+				   const struct __AVL_T(avl_searchops) * ops)
 {
 	int delta;
 	struct __AVL_T (avlh) * const oldh =
-		__AVL(search_inner)(avl, holder, &delta);
+		__AVL(search_inner)(avl, holder, &delta, ops);
 
 	if (delta) {
 		avl_insert_inner(avl, oldh, holder, delta);
 		return NULL;
 	}
 
-	__AVL(replace)(avl, oldh, holder);
+	__AVL(replace)(avl, oldh, holder, ops);
 	return oldh;
 }
 
-void __AVL(init)(struct __AVL_T(avl) * const avl,
-		 __AVL_T(avl_search_t) * searchfn, __AVL_T(avlh_cmp_t) * cmp)
+void __AVL(init)(struct __AVL_T(avl) * const avl)
 {
 	__AVLH(init)(__AVL(anchor)(avl));	/* this must be first. */
-	__AVL(cmp)(avl) = cmp;
 	__AVL(height)(avl) = 0;
 	__AVL(count)(avl) = 0;
-	__AVL(searchfn)(avl) = searchfn;
 	avl_set_top(avl, NULL);
 
 	avl_set_head(avl, NULL);
@@ -611,7 +616,7 @@ void __AVL(init)(struct __AVL_T(avl) * const avl,
 
 void __AVL(destroy)(struct __AVL_T(avl) * const avl)
 {
-	__AVL(init)(avl, NULL, NULL);
+	__AVL(init)(avl);
 }
 
 void __AVL(clear)(struct __AVL_T(avl) * const avl,
@@ -627,7 +632,7 @@ void __AVL(clear)(struct __AVL_T(avl) * const avl,
 		}
 	}
 
-	__AVL(init)(avl, NULL, NULL);
+	__AVL(init)(avl);
 }
 
 static inline
@@ -745,7 +750,8 @@ check_balance:
 	return 0;
 }
 
-int __AVL(check)(const struct __AVL_T(avl) * avl)
+int __AVL(check)(const struct __AVL_T(avl) * avl,
+		 const struct __AVL_T(avl_searchops) * ops)
 {
 	struct __AVL_T (avlh) * holder = __AVL(gettop)(avl), *last;
 	int err;
@@ -761,7 +767,7 @@ int __AVL(check)(const struct __AVL_T(avl) * avl)
 	for (holder = __AVL(gethead)(avl); holder;
 	     holder = __AVL(next)(avl, holder)) {
 		if (last != NULL)
-			if (__AVL(cmp)(avl)(holder, last) < 0) {
+			if (ops->cmp(holder, last) < 0) {
 				fprintf(stderr, "disordered nodes\n");
 				return -EINVAL;
 			}

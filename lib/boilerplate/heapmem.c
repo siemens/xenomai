@@ -40,6 +40,9 @@ enum heapmem_pgtype {
 	page_list =2
 };
 
+static struct avl_searchops size_search_ops;
+static struct avl_searchops addr_search_ops;
+
 static inline uint32_t __attribute__ ((always_inline))
 gen_block_mask(int log2size)
 {
@@ -148,7 +151,8 @@ find_suitable_range(struct heapmem_extent *ext, size_t size)
 	struct avlh *node;
 
 	lookup.size = size;
-	node = avl_search_ge(&ext->size_tree, &lookup.size_node);
+	node = avl_search_ge(&ext->size_tree, &lookup.size_node,
+			     &size_search_ops);
 	if (node == NULL)
 		return NULL;
 
@@ -179,7 +183,8 @@ static int reserve_page_range(struct heapmem_extent *ext, size_t size)
 	splitr->size -= size;
 	new = (struct heapmem_range *)((void *)new + splitr->size);
 	avlh_init(&splitr->size_node);
-	avl_insert_back(&ext->size_tree, &splitr->size_node);
+	avl_insert_back(&ext->size_tree, &splitr->size_node,
+			&size_search_ops);
 
 	return addr_to_pagenr(ext, new);
 }
@@ -189,7 +194,8 @@ find_left_neighbour(struct heapmem_extent *ext, struct heapmem_range *r)
 {
 	struct avlh *node;
 
-	node = avl_search_le(&ext->addr_tree, &r->addr_node);
+	node = avl_search_le(&ext->addr_tree, &r->addr_node,
+			     &addr_search_ops);
 	if (node == NULL)
 		return NULL;
 
@@ -201,7 +207,8 @@ find_right_neighbour(struct heapmem_extent *ext, struct heapmem_range *r)
 {
 	struct avlh *node;
 
-	node = avl_search_ge(&ext->addr_tree, &r->addr_node);
+	node = avl_search_ge(&ext->addr_tree, &r->addr_node,
+			     &addr_search_ops);
 	if (node == NULL)
 		return NULL;
 
@@ -251,17 +258,20 @@ static void release_page_range(struct heapmem_extent *ext,
 			avl_delete(&ext->addr_tree, &right->addr_node);
 		else
 			avl_replace(&ext->addr_tree, &right->addr_node,
-				    &freed->addr_node);
+				    &freed->addr_node, &addr_search_ops);
 	} else if (!addr_linked) {
 		avlh_init(&freed->addr_node);
 		if (left)
-			avl_insert(&ext->addr_tree, &freed->addr_node);
+			avl_insert(&ext->addr_tree, &freed->addr_node,
+				   &addr_search_ops);
 		else
-			avl_prepend(&ext->addr_tree, &freed->addr_node);
+			avl_prepend(&ext->addr_tree, &freed->addr_node,
+				    &addr_search_ops);
 	}
 
 	avlh_init(&freed->size_node);
-	avl_insert_back(&ext->size_tree, &freed->size_node);
+	avl_insert_back(&ext->size_tree, &freed->size_node,
+			&size_search_ops);
 	mark_pages(ext, addr_to_pagenr(ext, page),
 		   size >> HEAPMEM_PAGE_SHIFT, page_free);
 }
@@ -575,6 +585,11 @@ static inline int compare_range_by_size(const struct avlh *l, const struct avlh 
 }
 static DECLARE_AVL_SEARCH(search_range_by_size, compare_range_by_size);
 
+static struct avl_searchops size_search_ops = {
+	.search = search_range_by_size,
+	.cmp = compare_range_by_size,
+};
+
 static inline int compare_range_by_addr(const struct avlh *l, const struct avlh *r)
 {
 	uintptr_t al = (uintptr_t)l, ar = (uintptr_t)r;
@@ -583,6 +598,11 @@ static inline int compare_range_by_addr(const struct avlh *l, const struct avlh 
 }
 static DECLARE_AVL_SEARCH(search_range_by_addr, compare_range_by_addr);
 
+static struct avl_searchops addr_search_ops = {
+	.search = search_range_by_addr,
+	.cmp = compare_range_by_addr,
+};
+		
 static int add_extent(struct heap_memory *heap, void *mem, size_t size)
 {
 	size_t user_size, overhead;
@@ -651,8 +671,8 @@ static int add_extent(struct heap_memory *heap, void *mem, size_t size)
 	 * extent. Over time, that range will be split then possibly
 	 * re-merged back as allocations and deallocations take place.
 	 */
-	avl_init(&ext->size_tree, search_range_by_size, compare_range_by_size);
-	avl_init(&ext->addr_tree, search_range_by_addr, compare_range_by_addr);
+	avl_init(&ext->size_tree);
+	avl_init(&ext->addr_tree);
 	release_page_range(ext, ext->membase, user_size);
 
 	write_lock_safe(&heap->lock, state);

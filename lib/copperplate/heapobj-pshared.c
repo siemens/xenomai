@@ -52,6 +52,9 @@ enum sheapmem_pgtype {
 	page_list =2
 };
 
+static struct shavl_searchops size_search_ops;
+static struct shavl_searchops addr_search_ops;
+
 /*
  * The main heap consists of a shared heap at its core, with
  * additional session-wide information.
@@ -201,7 +204,8 @@ find_suitable_range(struct sheapmem_extent *ext, size_t size)
 	struct shavlh *node;
 
 	lookup.size = size;
-	node = shavl_search_ge(&ext->size_tree, &lookup.size_node);
+	node = shavl_search_ge(&ext->size_tree, &lookup.size_node,
+			       &size_search_ops);
 	if (node == NULL)
 		return NULL;
 
@@ -232,7 +236,8 @@ static int reserve_page_range(struct sheapmem_extent *ext, size_t size)
 	splitr->size -= size;
 	new = (struct sheapmem_range *)((void *)new + splitr->size);
 	shavlh_init(&splitr->size_node);
-	shavl_insert_back(&ext->size_tree, &splitr->size_node);
+	shavl_insert_back(&ext->size_tree, &splitr->size_node,
+			  &size_search_ops);
 
 	return addr_to_pagenr(ext, new);
 }
@@ -242,7 +247,8 @@ find_left_neighbour(struct sheapmem_extent *ext, struct sheapmem_range *r)
 {
 	struct shavlh *node;
 
-	node = shavl_search_le(&ext->addr_tree, &r->addr_node);
+	node = shavl_search_le(&ext->addr_tree, &r->addr_node,
+			       &addr_search_ops);
 	if (node == NULL)
 		return NULL;
 
@@ -254,7 +260,8 @@ find_right_neighbour(struct sheapmem_extent *ext, struct sheapmem_range *r)
 {
 	struct shavlh *node;
 
-	node = shavl_search_ge(&ext->addr_tree, &r->addr_node);
+	node = shavl_search_ge(&ext->addr_tree, &r->addr_node,
+			       &addr_search_ops);
 	if (node == NULL)
 		return NULL;
 
@@ -304,17 +311,20 @@ static void release_page_range(struct sheapmem_extent *ext,
 			shavl_delete(&ext->addr_tree, &right->addr_node);
 		else
 			shavl_replace(&ext->addr_tree, &right->addr_node,
-				      &freed->addr_node);
+				      &freed->addr_node, &addr_search_ops);
 	} else if (!addr_linked) {
 		shavlh_init(&freed->addr_node);
 		if (left)
-			shavl_insert(&ext->addr_tree, &freed->addr_node);
+			shavl_insert(&ext->addr_tree, &freed->addr_node,
+				&addr_search_ops);
 		else
-			shavl_prepend(&ext->addr_tree, &freed->addr_node);
+			shavl_prepend(&ext->addr_tree, &freed->addr_node,
+				      &addr_search_ops);
 	}
 
 	shavlh_init(&freed->size_node);
-	shavl_insert_back(&ext->size_tree, &freed->size_node);
+	shavl_insert_back(&ext->size_tree, &freed->size_node,
+			  &size_search_ops);
 	mark_pages(ext, addr_to_pagenr(ext, page),
 		   size >> SHEAPMEM_PAGE_SHIFT, page_free);
 }
@@ -629,6 +639,11 @@ static inline int compare_range_by_size(const struct shavlh *l, const struct sha
 }
 static DECLARE_SHAVL_SEARCH(search_range_by_size, compare_range_by_size);
 
+static struct shavl_searchops size_search_ops = {
+	.search = search_range_by_size,
+	.cmp = compare_range_by_size,
+};
+
 static inline int compare_range_by_addr(const struct shavlh *l, const struct shavlh *r)
 {
 	uintptr_t al = (uintptr_t)l, ar = (uintptr_t)r;
@@ -636,6 +651,11 @@ static inline int compare_range_by_addr(const struct shavlh *l, const struct sha
 	return avl_cmp_sign(al, ar);
 }
 static DECLARE_SHAVL_SEARCH(search_range_by_addr, compare_range_by_addr);
+
+static struct shavl_searchops addr_search_ops = {
+	.search = search_range_by_addr,
+	.cmp = compare_range_by_addr,
+};
 
 static int add_extent(struct shared_heap_memory *heap, void *base,
 		      void *mem, size_t size)
@@ -707,8 +727,8 @@ static int add_extent(struct shared_heap_memory *heap, void *base,
 	 * extent. Over time, that range will be split then possibly
 	 * re-merged back as allocations and deallocations take place.
 	 */
-	shavl_init(&ext->size_tree, search_range_by_size, compare_range_by_size);
-	shavl_init(&ext->addr_tree, search_range_by_addr, compare_range_by_addr);
+	shavl_init(&ext->size_tree);
+	shavl_init(&ext->addr_tree);
 	release_page_range(ext, __shref(base, ext->membase), user_size);
 
 	write_lock_safe(&heap->lock, state);

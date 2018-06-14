@@ -72,10 +72,13 @@ __AVL_T(avl_search_t)(const struct __AVL_T(avl) *,
 typedef int __AVL_T(avlh_prn_t)(char *, size_t,
 				const struct __AVL_T(avlh) *const);
 
-struct __AVL_T(avl) {
-	struct __AVL_T(avlh) anchor;
+struct __AVL_T(avl_searchops) {
 	__AVL_T(avl_search_t) *search;
 	__AVL_T(avlh_cmp_t) *cmp;
+};
+
+struct __AVL_T(avl) {
+	struct __AVL_T(avlh) anchor;
 	union {
 		ptrdiff_t offset;
 		struct __AVL_T(avlh) *ptr;
@@ -123,8 +126,6 @@ shavl_set_end(struct shavl *const avl, int dir, struct shavlh *holder)
 	avl->end[avl_type2index(dir)].offset = (void *)holder - (void *)avl;
 }
 
-#define shavl_searchfn(avl)	((avl)->search)
-#define shavl_cmp(avl)		((avl)->cmp)
 #define shavl_count(avl)	((avl)->count)
 #define shavl_height(avl)	((avl)->height)
 #define shavl_anchor(avl)	(&(avl)->anchor)
@@ -202,8 +203,6 @@ avl_set_end(struct avl *const avl, int dir, struct avlh *holder)
 	avl_end(avl, dir) = holder;
 }
 
-#define avl_searchfn(avl) ((avl)->search)
-#define avl_cmp(avl)	  ((avl)->cmp)
 #define avl_count(avl)	  ((avl)->count)
 #define avl_height(avl)	  ((avl)->height)
 #define avl_anchor(avl)	  (&(avl)->anchor)
@@ -280,9 +279,10 @@ avl_set_end(struct avl *const avl, int dir, struct avlh *holder)
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_inner)(const struct __AVL_T(avl) *const avl,
-		    const struct __AVL_T(avlh) *n, int *delta)
+		    const struct __AVL_T(avlh) *n, int *delta,
+		    const struct __AVL_T(avl_searchops) *ops)
 {
-	return __AVL(searchfn)(avl)(avl, n, delta, 0);
+	return ops->search(avl, n, delta, 0);
 }
 
 static inline
@@ -371,12 +371,13 @@ static inline void __AVLH(init)(struct __AVL_T(avlh) *const holder)
 
 static inline struct __AVL_T(avlh) *
 __AVL(search)(const struct __AVL_T(avl) *const avl,
-	      const struct __AVL_T(avlh) *node)
+	      const struct __AVL_T(avlh) *node,
+	      const struct __AVL_T(avl_searchops) *ops)
 {
 	struct __AVL_T(avlh) *holder;
 	int delta;
 
-	holder = __AVL(search_inner)(avl, node, &delta);
+	holder = __AVL(search_inner)(avl, node, &delta, ops);
 	if (!delta)
 		return holder;
 
@@ -385,12 +386,13 @@ __AVL(search)(const struct __AVL_T(avl) *const avl,
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_nearest)(const struct __AVL_T(avl) *const avl,
-		      const struct __AVL_T(avlh) *node, int dir)
+		      const struct __AVL_T(avlh) *node, int dir,
+		      const struct __AVL_T(avl_searchops) *ops)
 {
 	struct __AVL_T(avlh) *holder;
 	int delta;
 
-	holder = __AVL(search_inner)(avl, node, &delta);
+	holder = __AVL(search_inner)(avl, node, &delta, ops);
 	if (!holder || delta != dir)
 		return holder;
 
@@ -399,26 +401,29 @@ __AVL(search_nearest)(const struct __AVL_T(avl) *const avl,
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_le)(const struct __AVL_T(avl) *const avl,
-		 const struct __AVL_T(avlh) *node)
+		 const struct __AVL_T(avlh) *node,
+		 const struct __AVL_T(avl_searchops) *ops)
 {
-	return __AVL(search_nearest)(avl, node, AVL_LEFT);
+	return __AVL(search_nearest)(avl, node, AVL_LEFT, ops);
 }
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_ge)(const struct __AVL_T(avl) *const avl,
-		 const struct __AVL_T(avlh) *node)
+		 const struct __AVL_T(avlh) *node,
+		 const struct __AVL_T(avl_searchops) *ops)
 {
-	return __AVL(search_nearest)(avl, node, AVL_RIGHT);
+	return __AVL(search_nearest)(avl, node, AVL_RIGHT, ops);
 }
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_multi)(const struct __AVL_T(avl) *const avl,
-		    const struct __AVL_T(avlh) *node, int dir)
+		    const struct __AVL_T(avlh) *node, int dir,
+		    const struct __AVL_T(avl_searchops) *ops)
 {
 	struct __AVL_T(avlh) *holder;
 	int delta;
 
-	holder = __AVL(searchfn)(avl)(avl, node, &delta, dir);
+	holder = ops->search(avl, node, &delta, dir);
 	if (!delta)
 		return holder;
 
@@ -430,63 +435,73 @@ __AVL(search_multi)(const struct __AVL_T(avl) *const avl,
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_first)(const struct __AVL_T(avl) *const avl,
-		    const struct __AVL_T(avlh) *node)
+		    const struct __AVL_T(avlh) *node,
+		    const struct __AVL_T(avl_searchops) *ops)
 {
-	return __AVL(search_multi)(avl, node, AVL_LEFT);
+	return __AVL(search_multi)(avl, node, AVL_LEFT, ops);
 }
 
 static inline struct __AVL_T(avlh) *
 __AVL(search_last)(const struct __AVL_T(avl) *const avl,
-		   const struct __AVL_T(avlh) *node)
+		   const struct __AVL_T(avlh) *node,
+		   const struct __AVL_T(avl_searchops) *ops)
 {
-	return __AVL(search_multi)(avl, node, AVL_RIGHT);
+	return __AVL(search_multi)(avl, node, AVL_RIGHT, ops);
 }
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-void __AVL(init)(struct __AVL_T(avl) *const avl,
-	      __AVL_T(avl_search_t) *searchfn, __AVL_T(avlh_cmp_t) *cmp);
+void __AVL(init)(struct __AVL_T(avl) *const avl);
   
 void __AVL(destroy)(struct __AVL_T(avl) *const avl);
 
 int __AVL(insert)(struct __AVL_T(avl) *const avl,
-		  struct __AVL_T(avlh) *const holder);
+		  struct __AVL_T(avlh) *const holder,
+		  const struct __AVL_T(avl_searchops) *ops);
 	
 int __AVL(insert_front)(struct __AVL_T(avl) *avl,
-			struct __AVL_T(avlh) *holder);
+			struct __AVL_T(avlh) *holder,
+			const struct __AVL_T(avl_searchops) *ops);
 
 int __AVL(insert_back)(struct __AVL_T(avl) *avl,
-		       struct __AVL_T(avlh) *holder);
+		       struct __AVL_T(avlh) *holder,
+		       const struct __AVL_T(avl_searchops) *ops);
 
 int __AVL(insert_at)(struct __AVL_T(avl) *const avl,
-		  struct __AVL_T(avlh) *parent, int dir,
+		     struct __AVL_T(avlh) *parent, int dir,
 		     struct __AVL_T(avlh) *child);
 
 int __AVL(prepend)(struct __AVL_T(avl) *const avl,
-		   struct __AVL_T(avlh) *const holder);
+		   struct __AVL_T(avlh) *const holder,
+		   const struct __AVL_T(avl_searchops) *ops);
 
 int __AVL(append)(struct __AVL_T(avl) *const avl,
-		  struct __AVL_T(avlh) *const holder);
+		  struct __AVL_T(avlh) *const holder,
+		  const struct __AVL_T(avl_searchops) *ops);
 	
 int __AVL(delete)(struct __AVL_T(avl) *const avl,
 		  struct __AVL_T(avlh) *node);
 
 int __AVL(replace)(struct __AVL_T(avl) *avl,
 		   struct __AVL_T(avlh) *oldh,
-		   struct __AVL_T(avlh) *newh);
+		   struct __AVL_T(avlh) *newh,
+		   const struct __AVL_T(avl_searchops) *ops);
 
 struct __AVL_T(avlh) *__AVL(update)(struct __AVL_T(avl) *const avl,
-				    struct __AVL_T(avlh) *const holder);
+				    struct __AVL_T(avlh) *const holder,
+				    const struct __AVL_T(avl_searchops) *ops);
 
 struct __AVL_T(avlh) *__AVL(set)(struct __AVL_T(avl) *const avl,
-				 struct __AVL_T(avlh) *const holder);
+				 struct __AVL_T(avlh) *const holder,
+				 const struct __AVL_T(avl_searchops) *ops);
 
 void __AVL(clear)(struct __AVL_T(avl) *const avl,
 		  void (*destruct)(struct __AVL_T(avlh) *));
 
-int __AVL(check)(const struct __AVL_T(avl) *avl);
+int __AVL(check)(const struct __AVL_T(avl) *avl,
+		 const struct __AVL_T(avl_searchops) *ops);
 	
 void __AVL(dump)(FILE *file, const struct __AVL_T(avl) *const avl,
 		 __AVL_T(avlh_prn_t) *prn, unsigned int indent,
