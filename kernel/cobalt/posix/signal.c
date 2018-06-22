@@ -345,17 +345,23 @@ done:
 		goto out;	/* Return signo only. */
 
 #ifdef CONFIG_XENO_ARCH_SYS3264
-	if (compat)
+	if (compat) {
 		ret = sys32_put_siginfo(u_si, sip, overrun);
-	else
+		if (!ret)
+			/* Allow an extended target to receive more data. */
+			cobalt_call_extension(signal_copyinfo_compat,
+					      &curr->extref, ret, u_si, sip,
+					      overrun);
+	} else
 #endif
+	{
 		ret = signal_put_siginfo(u_si, sip, overrun);
-	if (ret)
-		goto out;
+		if (!ret)
+			/* Allow an extended target to receive more data. */
+			cobalt_call_extension(signal_copyinfo, &curr->extref,
+					      ret, u_si, sip, overrun);
+	}
 
-	/* Allow an extended target to receive more data. */
-	cobalt_call_extension(signal_copyinfo, &curr->extref,
-			      ret, u_si, sip, overrun);
 out:
 	/*
 	 * If we pulled the signal information from a sigpending

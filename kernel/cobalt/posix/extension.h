@@ -54,6 +54,10 @@ struct cobalt_extension {
 				       void __user *u_si,
 				       const struct siginfo *si,
 				       int overrun);
+		int (*signal_copyinfo_compat)(struct cobalt_extref *refthread,
+					      void __user *u_si,
+					      const struct siginfo *si,
+					      int overrun);
 		int (*sched_yield)(struct cobalt_extref *curref);
 		int (*thread_setsched)(struct cobalt_extref *refthread, /* nklocked, IRQs off. */
 				       struct xnsched_class *sched_class,
