@@ -17,6 +17,7 @@
  */
 #include <linux/sched.h>
 #include <cobalt/kernel/assert.h>
+#include <cobalt/kernel/compat.h>
 #include "internal.h"
 #include "signal.h"
 #include "thread.h"
@@ -241,10 +242,7 @@ static int signal_put_siginfo(void __user *u_si, const struct siginfo *si,
 }
 
 static int signal_wait(sigset_t *set, xnticks_t timeout,
-		       void __user *u_si,
-		       int (*put_siginfo)(void __user *u_si,
-					  const struct siginfo *si,
-					  int overrun))
+		       void __user *u_si, bool compat)
 {
 	struct cobalt_sigpending *sigp = NULL;
 	struct cobalt_sigwait_context swc;
@@ -346,7 +344,12 @@ done:
 	if (u_si == NULL)
 		goto out;	/* Return signo only. */
 
-	ret = put_siginfo(u_si, sip, overrun);
+#ifdef CONFIG_XENO_ARCH_SYS3264
+	if (compat)
+		ret = sys32_put_siginfo(u_si, sip, overrun);
+	else
+#endif
+		ret = signal_put_siginfo(u_si, sip, overrun);
 	if (ret)
 		goto out;
 
@@ -376,7 +379,7 @@ fail:
 
 int __cobalt_sigwait(sigset_t *set)
 {
-	return signal_wait(set, XN_INFINITE, NULL, NULL);
+	return signal_wait(set, XN_INFINITE, NULL, false);
 }
 
 COBALT_SYSCALL(sigwait, primary,
@@ -388,7 +391,7 @@ COBALT_SYSCALL(sigwait, primary,
 	if (cobalt_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
-	sig = signal_wait(&set, XN_INFINITE, NULL, NULL);
+	sig = signal_wait(&set, XN_INFINITE, NULL, false);
 	if (sig < 0)
 		return sig;
 
@@ -398,9 +401,7 @@ COBALT_SYSCALL(sigwait, primary,
 int __cobalt_sigtimedwait(sigset_t *set,
 			  const struct timespec *timeout,
 			  void __user *u_si,
-			  int (*put_siginfo)(void __user *u_si,
-					     const struct siginfo *si,
-					     int overrun))
+			  bool compat)
 {
 	xnticks_t ticks;
 
@@ -411,7 +412,7 @@ int __cobalt_sigtimedwait(sigset_t *set,
 	if (ticks++ == 0)
 		ticks = XN_NONBLOCK;
 
-	return signal_wait(set, ticks, u_si, put_siginfo);
+	return signal_wait(set, ticks, u_si, compat);
 }
 
 COBALT_SYSCALL(sigtimedwait, nonrestartable,
@@ -428,16 +429,14 @@ COBALT_SYSCALL(sigtimedwait, nonrestartable,
 	if (cobalt_copy_from_user(&timeout, u_timeout, sizeof(timeout)))
 		return -EFAULT;
 
-	return __cobalt_sigtimedwait(&set, &timeout, u_si, signal_put_siginfo);
+	return __cobalt_sigtimedwait(&set, &timeout, u_si, false);
 }
 
 int __cobalt_sigwaitinfo(sigset_t *set,
 			 void __user *u_si,
-			 int (*put_siginfo)(void __user *u_si,
-					    const struct siginfo *si,
-					    int overrun))
+			 bool compat)
 {
-	return signal_wait(set, XN_INFINITE, u_si, put_siginfo);
+	return signal_wait(set, XN_INFINITE, u_si, compat);
 }
 
 COBALT_SYSCALL(sigwaitinfo, nonrestartable,
@@ -448,7 +447,7 @@ COBALT_SYSCALL(sigwaitinfo, nonrestartable,
 	if (cobalt_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
-	return __cobalt_sigwaitinfo(&set, u_si, signal_put_siginfo);
+	return __cobalt_sigwaitinfo(&set, u_si, false);
 }
 
 COBALT_SYSCALL(sigpending, primary, (old_sigset_t __user *u_set))

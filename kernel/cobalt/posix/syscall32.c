@@ -613,7 +613,7 @@ COBALT_SYSCALL32emu(sigtimedwait, nonrestartable,
 	if (ret)
 		return ret;
 
-	return __cobalt_sigtimedwait(&set, &timeout, u_si, sys32_put_siginfo);
+	return __cobalt_sigtimedwait(&set, &timeout, u_si, true);
 }
 
 COBALT_SYSCALL32emu(sigwaitinfo, nonrestartable,
@@ -627,7 +627,7 @@ COBALT_SYSCALL32emu(sigwaitinfo, nonrestartable,
 	if (ret)
 		return ret;
 
-	return __cobalt_sigwaitinfo(&set, u_si, sys32_put_siginfo);
+	return __cobalt_sigwaitinfo(&set, u_si, true);
 }
 
 COBALT_SYSCALL32emu(sigpending, primary, (compat_old_sigset_t __user *u_set))
