@@ -209,6 +209,37 @@ void cobalt_signal_flush(struct cobalt_thread *thread)
 	sigemptyset(&thread->sigpending);
 }
 
+static int signal_put_siginfo(void __user *u_si, const struct siginfo *si,
+			      int overrun)
+{
+	struct siginfo __user *u_p = u_si;
+	int ret;
+
+	ret = __xn_put_user(si->si_signo, &u_p->si_signo);
+	ret |= __xn_put_user(si->si_errno, &u_p->si_errno);
+	ret |= __xn_put_user(si->si_code, &u_p->si_code);
+
+	/*
+	 * Copy the generic/standard siginfo bits to userland.
+	 */
+	switch (si->si_code) {
+	case SI_TIMER:
+		ret |= __xn_put_user(si->si_tid, &u_p->si_tid);
+		ret |= __xn_put_user(si->si_ptr, &u_p->si_ptr);
+		ret |= __xn_put_user(overrun, &u_p->si_overrun);
+		break;
+	case SI_QUEUE:
+	case SI_MESGQ:
+		ret |= __xn_put_user(si->si_ptr, &u_p->si_ptr);
+		/* falldown wanted. */
+	case SI_USER:
+		ret |= __xn_put_user(si->si_pid, &u_p->si_pid);
+		ret |= __xn_put_user(si->si_uid, &u_p->si_uid);
+	}
+
+	return ret;
+}
+
 static int signal_wait(sigset_t *set, xnticks_t timeout,
 		       void __user *u_si,
 		       int (*put_siginfo)(void __user *u_si,
@@ -339,37 +370,6 @@ out:
 	return ret ?: sig;
 fail:
 	xnlock_put_irqrestore(&nklock, s);
-
-	return ret;
-}
-
-static int signal_put_siginfo(void __user *u_si, const struct siginfo *si,
-			      int overrun)
-{
-	struct siginfo __user *u_p = u_si;
-	int ret;
-
-	ret = __xn_put_user(si->si_signo, &u_p->si_signo);
-	ret |= __xn_put_user(si->si_errno, &u_p->si_errno);
-	ret |= __xn_put_user(si->si_code, &u_p->si_code);
-
-	/*
-	 * Copy the generic/standard siginfo bits to userland.
-	 */
-	switch (si->si_code) {
-	case SI_TIMER:
-		ret |= __xn_put_user(si->si_tid, &u_p->si_tid);
-		ret |= __xn_put_user(si->si_ptr, &u_p->si_ptr);
-		ret |= __xn_put_user(overrun, &u_p->si_overrun);
-		break;
-	case SI_QUEUE:
-	case SI_MESGQ:
-		ret |= __xn_put_user(si->si_ptr, &u_p->si_ptr);
-		/* falldown wanted. */
-	case SI_USER:
-		ret |= __xn_put_user(si->si_pid, &u_p->si_pid);
-		ret |= __xn_put_user(si->si_uid, &u_p->si_uid);
-	}
 
 	return ret;
 }
