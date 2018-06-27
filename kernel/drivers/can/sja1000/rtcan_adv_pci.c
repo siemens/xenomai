@@ -158,14 +158,15 @@ static int rtcan_adv_pci_add_chan(struct pci_dev *pdev,
 			(struct rtcan_adv_pci *)(*master_dev)->board_priv;
 		master_board->slave_dev = dev;
 
-		if (offset)
+		if (offset) {
 			base_addr = master_board->base_addr+offset;
-		else
+		} else {
 			base_addr = pci_iomap(pdev, bar, ADV_PCI_BASE_SIZE);
 			if (!base_addr) {
 				ret = -EIO;
 				goto failure;
 			}
+		}
 	} else {
 		base_addr = pci_iomap(pdev, bar, ADV_PCI_BASE_SIZE) + offset;
 		if (!base_addr) {
