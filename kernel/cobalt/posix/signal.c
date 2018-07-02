@@ -176,6 +176,7 @@ void cobalt_signal_flush(struct cobalt_thread *thread)
 {
 	struct cobalt_sigpending *sigp, *tmp;
 	struct list_head *sigq;
+	spl_t s;
 	int n;
 
 	/*
@@ -194,8 +195,15 @@ void cobalt_signal_flush(struct cobalt_thread *thread)
 		 * detect this fact when deleting their respective
 		 * owners.
 		 */
-		list_for_each_entry_safe(sigp, tmp, sigq, next)
+		list_for_each_entry_safe(sigp, tmp, sigq, next) {
 			list_del_init(&sigp->next);
+			if ((void *)sigp >= sigpending_mem &&
+			    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE) {
+				xnlock_get_irqsave(&nklock, s);
+				list_add_tail(&sigp->next, &sigpending_pool);
+				xnlock_put_irqrestore(&nklock, s);
+			}
+		}
 	}
 
 	sigemptyset(&thread->sigpending);
