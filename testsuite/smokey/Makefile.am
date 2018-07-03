@@ -40,31 +40,55 @@ COBALT_SUBDIRS = 	\
 	xddp
 
 MERCURY_SUBDIRS =	\
-	memcheck	\
 	memory-heapmem	\
-	memory-tlsf
+	memory-tlsf	\
+	memcheck
 
-LEFTOUT_SUBDIRS =
-
-if XENO_PSHARED
-COBALT_SUBDIRS += memory-pshared
-MERCURY_SUBDIRS += memory-pshared
-else
-LEFTOUT_SUBDIRS += memory-pshared
-endif
-
-if CONFIG_XENO_LIBS_DLOPEN
-COBALT_SUBDIRS += dlopen
-else
-LEFTOUT_SUBDIRS += dlopen
-endif
-
-DIST_SUBDIRS = $(COBALT_SUBDIRS) $(MERCURY_SUBDIRS) $(LEFTOUT_SUBDIRS)
+DIST_SUBDIRS = 		\
+	arith 		\
+	bufp		\
+	cpu-affinity	\
+	dlopen		\
+	fpu-stress	\
+	iddp		\
+	leaks		\
+	memory-coreheap	\
+	memory-heapmem	\
+	memory-pshared	\
+	memory-tlsf	\
+	memcheck	\
+	net_packet_dgram\
+	net_packet_raw	\
+	net_udp		\
+	net_common	\
+	posix-clock	\
+	posix-cond 	\
+	posix-fork	\
+	posix-mutex 	\
+	posix-select 	\
+	rtdm 		\
+	sched-quota 	\
+	sched-tp 	\
+	setsched	\
+	sigdebug	\
+	timerfd		\
+	tsc		\
+	vdso-access 	\
+	xddp
 
 if XENO_COBALT
+if CONFIG_XENO_LIBS_DLOPEN
+COBALT_SUBDIRS += dlopen
+endif
+if XENO_PSHARED
+COBALT_SUBDIRS += memory-pshared
+endif
 wrappers = $(XENO_POSIX_WRAPPERS)
 SUBDIRS = $(COBALT_SUBDIRS)
 else
+if XENO_PSHARED
+MERCURY_SUBDIRS += memory-pshared
+endif
 SUBDIRS = $(MERCURY_SUBDIRS)
 wrappers =
 endif
