@@ -8,6 +8,7 @@ includesub_HEADERS +=	\
 	autotune.h	\
 	can.h		\
 	gpio.h		\
+	gpiopwm.h	\
 	ipc.h		\
 	serial.h	\
 	spi.h		\

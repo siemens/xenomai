@@ -1,9 +1,8 @@
 #include <xenomai/init.h>
-#include <rtdm/rtdm.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include <signal.h>
-#include <gpiopwm.h>
+#include <rtdm/gpiopwm.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <errno.h>
