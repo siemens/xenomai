@@ -865,7 +865,6 @@ static inline void enter_root(struct xnthread *root)
 	if (rootcb->core.mm == NULL)
 		set_ti_thread_flag(rootcb->core.tip, TIF_MMSWITCH_INT);
 #endif
-	ipipe_unmute_pic();
 }
 
 static inline void leave_root(struct xnthread *root)
@@ -874,7 +873,6 @@ static inline void leave_root(struct xnthread *root)
 	struct task_struct *p = current;
 
 	ipipe_notify_root_preemption();
-	ipipe_mute_pic();
 	/* Remember the preempted Linux task pointer. */
 	rootcb->core.host_task = p;
 	rootcb->core.tsp = &p->thread;
