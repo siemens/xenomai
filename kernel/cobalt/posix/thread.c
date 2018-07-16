@@ -625,6 +625,9 @@ cobalt_thread_shadow(struct task_struct *p,
 	struct sched_param_ex param_ex;
 	int ret;
 
+	if (xnthread_current())
+		return ERR_PTR(-EBUSY);
+
 	param_ex.sched_priority = 0;
 	trace_cobalt_pthread_create(hkey->u_pth, SCHED_NORMAL, &param_ex);
 	ret = pthread_create(&thread, SCHED_NORMAL, &param_ex, p);
