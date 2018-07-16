@@ -752,7 +752,7 @@ int cobalt_sched_setscheduler_ex(pid_t pid,
 		thread = cobalt_current_thread();
 
 	if (thread == NULL) {
-		if (u_winoff == NULL)
+		if (u_winoff == NULL || pid != task_pid_vnr(current))
 			return -ESRCH;
 			
 		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
