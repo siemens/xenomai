@@ -480,7 +480,7 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
 		if (u_winoff == NULL)
 			return -EINVAL;
 			
-		thread = cobalt_thread_shadow(current, &hkey, u_winoff);
+		thread = cobalt_thread_shadow(&hkey, u_winoff);
 		if (IS_ERR(thread))
 			return PTR_ERR(thread);
 
@@ -617,8 +617,7 @@ COBALT_SYSCALL(thread_create, init,
 }
 
 struct cobalt_thread *
-cobalt_thread_shadow(struct task_struct *p,
-		     struct cobalt_local_hkey *hkey,
+cobalt_thread_shadow(struct cobalt_local_hkey *hkey,
 		     __u32 __user *u_winoff)
 {
 	struct cobalt_thread *thread = NULL;
@@ -630,7 +629,7 @@ cobalt_thread_shadow(struct task_struct *p,
 
 	param_ex.sched_priority = 0;
 	trace_cobalt_pthread_create(hkey->u_pth, SCHED_NORMAL, &param_ex);
-	ret = pthread_create(&thread, SCHED_NORMAL, &param_ex, p);
+	ret = pthread_create(&thread, SCHED_NORMAL, &param_ex, current);
 	if (ret)
 		return ERR_PTR(ret);
 
@@ -640,7 +639,7 @@ cobalt_thread_shadow(struct task_struct *p,
 		return ERR_PTR(ret);
 	}
 
-	if (!thread_hash(hkey, thread, task_pid_vnr(p))) {
+	if (!thread_hash(hkey, thread, task_pid_vnr(current))) {
 		ret = -EAGAIN;
 		goto fail;
 	}

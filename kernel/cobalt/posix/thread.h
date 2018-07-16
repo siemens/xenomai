@@ -151,8 +151,7 @@ COBALT_SYSCALL_DECL(thread_create,
 		     int xid, __u32 __user *u_winoff));
 
 struct cobalt_thread *
-cobalt_thread_shadow(struct task_struct *p,
-		     struct cobalt_local_hkey *lhkey,
+cobalt_thread_shadow(struct cobalt_local_hkey *lhkey,
 		     __u32 __user *u_winoff);
 
 COBALT_SYSCALL_DECL(thread_setmode,
