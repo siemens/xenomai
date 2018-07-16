@@ -607,7 +607,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 {
 	int ret, promoted, std_policy;
 	struct sched_param std_param;
-	__u32 u_winoff;
+	__u32 u_winoff, *u_winoff_ptr;
 
 	/*
 	 * If we enter this call over a relaxed context, take the
@@ -637,9 +637,12 @@ int pthread_setschedparam_ex(pthread_t thread,
 			return ret;
 	}
 
+	/* only request promotion when this targets the current thread */
+	u_winoff_ptr = thread == pthread_self() ? &u_winoff : NULL;
+
 	ret = -XENOMAI_SYSCALL5(sc_cobalt_thread_setschedparam_ex,
 				thread, policy, param_ex,
-				&u_winoff, &promoted);
+				u_winoff_ptr, &promoted);
 
 	if (ret == 0 && promoted) {
 		cobalt_sigshadow_install_once();
