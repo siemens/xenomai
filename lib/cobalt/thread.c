@@ -648,7 +648,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 	 * If the kernel has no reference to the target thread. let glibc
 	 * handle the call.
 	 */
-	if (!u_winoff_ptr && ret == EINVAL) {
+	if (ret == ESRCH) {
 		std_policy = cobalt_xlate_schedparam(policy, param_ex,
 						     &std_param);
 		return __STD(pthread_setschedparam(thread, std_policy,
