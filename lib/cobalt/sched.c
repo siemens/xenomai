@@ -308,6 +308,16 @@ int sched_setscheduler_ex(pid_t pid,
 				pid, policy, param_ex,
 				&u_winoff, &promoted);
 
+	/*
+	 * If the kernel has no reference to the target thread, let glibc
+	 * handle the call.
+	 */
+	if (ret == ESRCH) {
+		std_policy = cobalt_xlate_schedparam(policy, param_ex,
+						     &std_param);
+		return __STD(sched_setscheduler(pid, std_policy, &std_param));
+	}
+
 	if (ret == 0 && promoted) {
 		cobalt_sigshadow_install_once();
 		cobalt_set_tsd(u_winoff);
