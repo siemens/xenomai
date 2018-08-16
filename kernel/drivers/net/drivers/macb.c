@@ -36,7 +36,7 @@
 #include <linux/pinctrl/consumer.h>
 
 #include <rtdev.h>
-#include <rtnet.h>
+#include <rtdm/net.h>
 #include <rtnet_port.h>
 #include <rtskb.h>
 

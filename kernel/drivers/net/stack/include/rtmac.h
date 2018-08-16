@@ -44,8 +44,6 @@
 
 #include <rtdm/rtdm.h>
 
-#include <rtnet.h> /* for nanosecs wrapping */
-
 
 /* sub-classes: RTDM_CLASS_RTMAC */
 #define RTDM_SUBCLASS_TDMA          0

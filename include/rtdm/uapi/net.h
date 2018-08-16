@@ -1,7 +1,5 @@
 /***
  *
- *  rtnet.h
- *
  *  RTnet - real-time networking subsystem
  *  Copyright (C) 2005-2011 Jan Kiszka <jan.kiszka@web.de>
  *
@@ -39,27 +37,8 @@
  *
  */
 
-#ifndef __RTNET_H_
-#define __RTNET_H_
-
-#include <rtdm/rtdm.h>
-
-
-/* RTDM_API_VER < 5 is lacking generic time types */
-#if !(defined RTDM_API_VER) || (RTDM_API_VER < 5)
-
-#ifndef __KERNEL__
-#include <stdint.h>
-#endif /* !__KERNEL__ */
-
-typedef uint64_t                nanosecs_abs_t;
-typedef int64_t                 nanosecs_rel_t;
-
-#define RTDM_TIMEOUT_INFINITE   0
-#define RTDM_TIMEOUT_NONE       (-1)
-
-#endif /* !RTDM_API_VER */
-
+#ifndef _RTDM_UAPI_NET_H
+#define _RTDM_UAPI_NET_H
 
 /* sub-classes: RTDM_CLASS_NETWORK */
 #define RTDM_SUBCLASS_RTNET     0
@@ -93,29 +72,4 @@ typedef int64_t                 nanosecs_rel_t;
 /* argument construction for RTNET_RTIOC_XMITPARAMS */
 #define SOCK_XMIT_PARAMS(priority, channel) ((priority) | ((channel) << 16))
 
-
-#ifdef __KERNEL__
-
-#include <rtdm/driver.h>
-
-struct rtnet_callback {
-    void    (*func)(struct rtdm_fd *, void *);
-    void    *arg;
-};
-
-#define RTNET_RTIOC_CALLBACK    _IOW(RTIOC_TYPE_NETWORK, 0x12, \
-				     struct rtnet_callback)
-
-/* utility functions */
-
-/* provided by rt_ipv4 */
-unsigned long rt_inet_aton(const char *ip);
-
-/* provided by rt_packet */
-int rt_eth_aton(unsigned char *addr_buf, const char *mac);
-
-#define RTNET_RTDM_VER 914
-
-#endif  /* __KERNEL__ */
-
-#endif  /* __RTNET_H_ */
+#endif  /* !_RTDM_UAPI_NET_H */

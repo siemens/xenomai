@@ -32,7 +32,7 @@
 #include <linux/tcp.h>
 #include <asm/bitops.h>
 
-#include <rtnet.h>
+#include <rtdm/net.h>
 #include <rtnet_internal.h>
 #include <rtnet_iovec.h>
 #include <rtnet_socket.h>

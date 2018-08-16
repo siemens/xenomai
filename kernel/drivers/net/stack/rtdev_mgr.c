@@ -23,7 +23,7 @@
 #include <linux/netdevice.h>
 
 #include <rtdev.h>
-#include <rtnet.h>
+#include <rtdm/net.h>
 #include <rtnet_internal.h>
 
 /***
