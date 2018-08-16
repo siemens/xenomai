@@ -10,6 +10,7 @@ includesub_HEADERS +=	\
 	gpio.h		\
 	gpiopwm.h	\
 	ipc.h		\
+	net.h		\
 	serial.h	\
 	spi.h		\
 	testing.h	\

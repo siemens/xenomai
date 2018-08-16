@@ -31,11 +31,9 @@
 #include <linux/list.h>
 
 #include <rtdev.h>
-#include <rtnet.h>
+#include <rtdm/net.h>
 #include <rtdm/driver.h>
 #include <stack_mgr.h>
-
-#include <rtdm/driver.h>
 
 
 struct rtsocket {

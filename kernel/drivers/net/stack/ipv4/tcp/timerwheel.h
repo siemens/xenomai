@@ -23,7 +23,7 @@
 #define __TIMERWHEEL_H_
 
 #include <linux/list.h>
-#include <rtnet.h>
+#include <rtdm/net.h>
 
 #define TIMERWHEEL_TIMER_UNUSED    -1
 

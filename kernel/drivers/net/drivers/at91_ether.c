@@ -34,7 +34,7 @@
 #include <linux/of_net.h>
 
 #include <rtdev.h>
-#include <rtnet.h>
+#include <rtdm/net.h>
 #include <rtnet_port.h>
 #include <rtskb.h>
 #include "rt_macb.h"
