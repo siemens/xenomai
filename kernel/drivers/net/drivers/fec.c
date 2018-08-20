@@ -1323,6 +1323,7 @@ fec_enet_open(struct rtnet_device *ndev)
 		return ret;
 	}
 	phy_start(fep->phy_dev);
+	rtnetif_carrier_on(ndev);
 	rtnetif_start_queue(ndev);
 	fep->opened = 1;
 	return 0;
